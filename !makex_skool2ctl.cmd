@@ -1,0 +1,1 @@
+C:\bin\skoolkit-8.2\skool2ctl.py -h commando.skool >new.ctl

@@ -1,0 +1,1 @@
+C:\bin\skoolkit-8.2\skool2asm.py -H -c commando.skool >commando.asm

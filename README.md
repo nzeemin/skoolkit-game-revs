@@ -1,5 +1,5 @@
 # skoolkit-game-revs
-Reverse engineering games using SkoolKit.
+Reverse engineering games using [SkoolKit](https://github.com/skoolkid/skoolkit).
 
 
 ## Highway Encounter

@@ -517,6 +517,7 @@ s $B392
 t $B39A
 b $B39D
 c $B3A0
+R $B3A0 I:IX Object address = $E33B
 c $B470
 C $B4F6,3 Convert char coords HL to ZX screen address
 c $B572
@@ -536,11 +537,21 @@ c $B7BB
 c $B836
 c $B837
 c $B885
+C $B885,4 check "moving" bit
 C $B8CF,3 Get screen attribute address
+C $B932,4 set "moving" bit
+C $B969,4 clear "moving" bit
 c $B972
+C $B972,4 check "moving" bit
 C $B9BF,3 Get screen attribute address
+C $BA24,4 set "moving" bit
+C $BA5B,4 clear "moving" bit
 c $BA64
+C $BA64,4 check "moving" bit
 C $BA90,3 Get screen attribute address
+C $BAE4,4 set "moving" bit
+C $BBFC,4 set "moving" bit
+C $BD62,4 clear "moving" bit
 c $BD83
 C $BD95,3 Random
 b $BDA9
@@ -664,9 +675,26 @@ c $DED9
 c $DEE5
 c $DEF1
 b $DEFD
+B $DF25,,16 Table: Angle 0..15 -> (DX, DY)
+B $DF45
 c $DFD5
+C $DFFF,3 get Angle 0..15
 R $DFD5 I:IX Object address = $E33B
+C $E006,3 Table base address
+C $E00A,1 get DX value for the Angle
+C $E00F,1 get DY value for the Angle
+C $E013,4 check "moving" bit
+C $E019,4 clear DX value
+C $E01D,4 clear DY value
+C $E021,3 get X value
+C $E027,3 add DX
+C $E02A,3 set X value
+C $E08D,3 get Y value
+C $E090,3 add DY
+C $E093,3 set Y value
+C $E1D5,3 get Angle 0..15
 C $E1E4,3 Diver sprites base address
+C $E1E7,1 now HL = diver sprite address
 C $E1FA,3 set Row
 C $E220,3 set Column
 C $E224,3 get Row
@@ -682,29 +710,40 @@ c $E2DB Read keyboard input
 R $E2DB I:IX Object address = $E33B
 C $E2E0,3 get Angle
 C $E2E7,3 get bit mask for Clockwise key
+C $E2F0,1 rotate clockwise
 C $E2F5,3 get bit mask for Anticlockwise key
+C $E2FE,1 rotate anticlockwise
 C $E302,3 set Angle 0..15
 C $E309,3 get bit mask for Accelerate key
+C $E315,4 set "moving" bit
 C $E323,3 get bit mask for Decelerate key
+C $E332,4 clear "moving" bit
 b $E33B Object record
 B $E33B,1 (IX+$00) Column 0..31
 B $E33C,1 (IX+$01) Row
-B $E33F,1 (IX+$04) ??? $00 $FE
-B $E340,1 (IX+$05) ??? $00
+B $E33F,1 (IX+$04) DX value for the Angle, see table #R$DF25
+B $E340,1 (IX+$05) DY value for the Angle, see table #R$DF25
 B $E341,1 (IX+$06) Angle 0..15, initially 4
 W $E344,2 (IX+$09) Sprite address
 W $E346,2 (IX+$0B) Sprite address
 B $E348,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
-B $E349,1 (IX+$0E) ???
+B $E349,1 (IX+$0E) ??? 12 20 40 100
 B $E34A,1 (IX+$0F) ??? $03
-B $E34B,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7
+B $E34B,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
+. bit0: 1 = diver moving, 0 = diver stopped
+B $E34C,1 (IX+$11) ??? $00 $FF
+B $E34E,1 (IX+$13) X value
+B $E34F,1 (IX+$14) Y value
+B $E350,1 (IX+$15) X shift 0..7
+B $E351,1 (IX+$16) Y shift 0..7
+B $E352,1 (IX+$17) ???
 B $E353,1 (IX+$18) Column 0..31
 B $E354,1 (IX+$19) Row
 B $E35A,1 (IX+$1F) Row??
 B $E35B,1 (IX+$20) ??? $03
 B $E35C,1 (IX+$21) ???
 B $E35D,1 (IX+$22) ??? $F5
-W $E35F,2 (IX+$24) ???
+W $E35F,2 (IX+$24) Sprite address
 B $E361,1 (IX+$26) ??? bits 0/1/2/3/4/5/6
 B $E362,1 (IX+$27) ???
 B $E363,1 (IX+$28) ???
@@ -714,6 +753,7 @@ C $E373,3 Game level 1..4
 C $E38F,3 Explosion
 C $E3B6,3 Get screen attribute address
 C $E3CD,3 Explosion
+C $E3DD,4 clear "moving" bit
 C $E3E5,3 get Angle 0..15
 C $E3E9,2 0 / 4 / 8 / 12
 C $E3EB,1 0 / 8 / 16 / 24
@@ -730,6 +770,7 @@ C $E424,2 0..15
 C $E426,3 set Angle
 c $E43A Diver explosion ??
 R $E43A I:IX Object address = $E33B
+C $E447,4 clear "moving" bit
 C $E44B,3 get Angle 0..15
 C $E44F,3 Explosion sprite address
 C $E469,3 Play melody
@@ -761,17 +802,49 @@ c $E682
 c $E6AB
 C $E6AB,4 Diver object record address
 C $E6B5,3 get Number of lives
+C $E6F1,4 clear DX value
+C $E6F5,4 clear DY value
+C $E72D,3 set X value
 C $E730,3 get Number of lives
+C $E73F,3 get X value
+C $E74E,3 set X value
+C $E759,3 Sprite diver sitting on the boat
+C $E75C,6 set sprite address
+C $E762,4 set "moving" bit
 c $E767
+C $E771,4 clear DX value
+C $E775,4 clear DY value
+C $E788,4 set DX value = -2
 C $E790,3 get bit mask for Accelerate key
+C $E794,2 Read from port for the key
+C $E797,1 Return if not pressed
 C $E79B,3 Play melody
+C $E7A8,3 Sprite diver sitting on the boat
+C $E7AB,6 set sprite address
+C $E7B5,4 set DX value = -1
+C $E7C2,3 Sprite diver directing up-right
+C $E7C9,6 set sprite address
+C $E7D3,4 set DX value = +2
+C $E7FF,6 set sprite address
+C $E805,3 address right after last diver sprite
+C $E810,4 clear DX value
+C $E814,4 clear DY value
+C $E820,4 clear "moving" bit
 C $E824,3 Game level 1..4
+C $E856,6 set sprite address
+C $E873,4 clear "moving" bit
 C $E877,3 Game level 1..4
 C $E894,3 Play melody
 C $E8F1,3 Play melody
 C $E8F7,3 Play melody
 c $E915
+C $E947,4 clear DX value
+C $E969,4 clear DX value
+C $E96D,4 set DY = -1
+C $E98A,3 Sprite diver climbing on the boat
+C $E98D,6 set sprite address
 c $E9B0
+R $E9B0 I:IX Object address = $E33B
 C $E9C4,3 get Number of lives
 s $E9D1
 t $E9DA

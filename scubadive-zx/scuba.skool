@@ -3530,6 +3530,8 @@ b$B39D DEFB $1D,$02,$32
 ; Routine at B3A0
 ;
 ; Used by the routine at #R$B470.
+;
+; I:IX Object address = $E33B
 c$B3A0 BIT 4,(IX+$0D) ;
  $B3A4 JR Z,$B3AB     ;
 ; This entry point is used by the routine at #R$DFD5.
@@ -4174,7 +4176,7 @@ c$B837 LD A,$06       ;
  $B884 RET            ;
 
 ; Routine at B885
-c$B885 BIT 0,(IX+$10)  ;
+c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B889 JP NZ,$B941     ;
  $B88C BIT 7,(IX+$11)  ;
  $B890 LD A,(IX+$00)   ;
@@ -4250,7 +4252,7 @@ c$B885 BIT 0,(IX+$10)  ;
  $B927 LD (IX+$0C),H   ;
  $B92A LD (IX+$11),$00 ;
  $B92E LD (IX+$12),$00 ;
- $B932 SET 0,(IX+$10)  ;
+ $B932 SET 0,(IX+$10)  ; set "moving" bit
  $B936 LD A,(IY+$0C)   ;
  $B939 LD (IX+$19),A   ;
  $B93C SLA (IX+$0E)    ;
@@ -4270,12 +4272,12 @@ c$B885 BIT 0,(IX+$10)  ;
  $B960 LD (IX+$0A),H   ;
  $B963 LD (IX+$0B),L   ;
  $B966 LD (IX+$0C),H   ;
- $B969 RES 0,(IX+$10)  ;
+ $B969 RES 0,(IX+$10)  ; clear "moving" bit
  $B96D SRL (IX+$0E)    ;
  $B971 RET             ;
 
 ; Routine at B972
-c$B972 BIT 0,(IX+$10)  ;
+c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $B976 JP NZ,$BA33     ;
  $B979 BIT 7,(IX+$12)  ;
  $B97D LD A,(IX+$01)   ;
@@ -4359,7 +4361,7 @@ c$B972 BIT 0,(IX+$10)  ;
  $BA1D XOR A           ;
  $BA1E LD (IX+$11),A   ;
  $BA21 LD (IX+$12),A   ;
- $BA24 SET 0,(IX+$10)  ;
+ $BA24 SET 0,(IX+$10)  ; set "moving" bit
  $BA28 LD A,(IY+$0C)   ;
  $BA2B LD (IX+$19),A   ;
  $BA2E SLA (IX+$0E)    ;
@@ -4379,12 +4381,12 @@ c$B972 BIT 0,(IX+$10)  ;
  $BA52 LD (IX+$0A),H   ;
  $BA55 LD (IX+$0B),L   ;
  $BA58 LD (IX+$0C),H   ;
- $BA5B RES 0,(IX+$10)  ;
+ $BA5B RES 0,(IX+$10)  ; clear "moving" bit
  $BA5F SRL (IX+$0E)    ;
  $BA63 RET             ;
 
 ; Routine at BA64
-c$BA64 BIT 0,(IX+$10)  ;
+c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BA68 JP NZ,$BC8F     ;
  $BA6B SET 5,(IX+$10)  ;
  $BA6F BIT 2,(IX+$0D)  ;
@@ -4441,7 +4443,7 @@ c$BA64 BIT 0,(IX+$10)  ;
  $BADD RET             ;
 *$BADE LD (IX+$0B),E   ;
  $BAE1 LD (IX+$0C),D   ;
- $BAE4 SET 0,(IX+$10)  ;
+ $BAE4 SET 0,(IX+$10)  ; set "moving" bit
  $BAE8 RES 7,(IX+$10)  ;
  $BAEC SLA (IX+$0E)    ;
  $BAF0 LD L,(IX+$00)   ;
@@ -4567,7 +4569,7 @@ c$BA64 BIT 0,(IX+$10)  ;
  $BBF5 RET             ;
 *$BBF6 LD (IX+$0B),E   ;
  $BBF9 LD (IX+$0C),D   ;
- $BBFC SET 0,(IX+$10)  ;
+ $BBFC SET 0,(IX+$10)  ; set "moving" bit
  $BC00 SET 7,(IX+$10)  ;
  $BC04 SLA (IX+$0E)    ;
  $BC08 LD L,(IX+$00)   ;
@@ -4705,7 +4707,7 @@ c$BA64 BIT 0,(IX+$10)  ;
  $BD59 LD (IX+$0C),A   ;
  $BD5C LD A,(IX+$09)   ;
  $BD5F LD (IX+$0B),A   ;
- $BD62 RES 0,(IX+$10)  ;
+ $BD62 RES 0,(IX+$10)  ; clear "moving" bit
  $BD66 RES 1,(IX+$10)  ;
  $BD6A LD A,(IX+$18)   ;
  $BD6D BIT 6,(IX+$10)  ;
@@ -5901,10 +5903,10 @@ b$DEFD DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF0D DEFB $00,$30,$00,$00,$00,$00,$00,$00
  $DF15 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF1D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF25 DEFB $00,$FE,$01,$FE,$02,$FE,$02,$FF
- $DF2D DEFB $02,$00,$02,$01,$02,$02,$01,$02
- $DF35 DEFB $00,$02,$FF,$02,$FE,$02,$FE,$01
- $DF3D DEFB $FE,$00,$FE,$FF,$FE,$FE,$FF,$FE
+ $DF25 DEFB $00,$FE,$01,$FE,$02,$FE,$02,$FF,$02,$00,$02,$01,$02,$02,$01,$02 ; {Table:
+ $DF35 DEFB $00,$02,$FF,$02,$FE,$02,$FE,$01,$FE,$00,$FE,$FF,$FE,$FE,$FF,$FE ; Angle
+                                                                            ; 0..15 ->
+                                                                            ; (DX, DY)}
  $DF45 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF4D DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF55 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -5942,25 +5944,25 @@ c$DFD5 LD HL,($B7B9)   ;
  $DFF6 LD (IX+$0C),A   ;
  $DFF9 BIT 7,(IX+$10)  ;
  $DFFD JR Z,$E021      ;
- $DFFF LD A,(IX+$06)   ;
+ $DFFF LD A,(IX+$06)   ; get Angle 0..15
  $E002 ADD A,A         ;
  $E003 LD C,A          ;
  $E004 LD B,$00        ;
- $E006 LD HL,$DF25     ;
+ $E006 LD HL,$DF25     ; Table base address
  $E009 ADD HL,BC       ;
- $E00A LD A,(HL)       ;
+ $E00A LD A,(HL)       ; get DX value for the Angle
  $E00B LD (IX+$04),A   ;
  $E00E INC HL          ;
- $E00F LD A,(HL)       ;
+ $E00F LD A,(HL)       ; get DY value for the Angle
  $E010 LD (IX+$05),A   ;
- $E013 BIT 0,(IX+$10)  ;
+ $E013 BIT 0,(IX+$10)  ; check "moving" bit
  $E017 JR NZ,$E021     ;
- $E019 LD (IX+$04),$00 ;
- $E01D LD (IX+$05),$00 ;
-*$E021 LD A,(IX+$13)   ;
+ $E019 LD (IX+$04),$00 ; clear DX value
+ $E01D LD (IX+$05),$00 ; clear DY value
+*$E021 LD A,(IX+$13)   ; get X value
  $E024 LD HL,($5B03)   ;
- $E027 ADD A,(IX+$04)  ;
- $E02A LD (IX+$13),A   ;
+ $E027 ADD A,(IX+$04)  ; add DX
+ $E02A LD (IX+$13),A   ; set X value
  $E02D SRL A           ;
  $E02F AND $07         ;
  $E031 CP (IX+$02)     ;
@@ -5997,9 +5999,9 @@ c$DFD5 LD HL,($B7B9)   ;
  $E085 LD (IX+$00),A   ;
  $E088 SET 2,(IX+$10)  ;
  $E08C INC L           ;
-*$E08D LD A,(IX+$14)   ;
- $E090 ADD A,(IX+$05)  ;
- $E093 LD (IX+$14),A   ;
+*$E08D LD A,(IX+$14)   ; get Y value
+ $E090 ADD A,(IX+$05)  ; add DY
+ $E093 LD (IX+$14),A   ; set Y value
  $E096 SRL A           ;
  $E098 AND $07         ;
  $E09A CP (IX+$03)     ;
@@ -6116,7 +6118,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E1CD LD (IX+$0C),A   ;
  $E1D0 JR $E1F4        ;
 *$E1D2 INC (IX+$17)    ;
- $E1D5 LD H,(IX+$06)   ;
+ $E1D5 LD H,(IX+$06)   ; get Angle 0..15
  $E1D8 LD A,(IX+$17)   ;
  $E1DB AND $03         ;
  $E1DD RRCA            ;
@@ -6125,7 +6127,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E1E0 SRL H           ;
  $E1E2 RR L            ;
  $E1E4 LD DE,$92CC     ; Diver sprites base address
- $E1E7 ADD HL,DE       ;
+ $E1E7 ADD HL,DE       ; now HL = diver sprite address
  $E1E8 LD (IX+$0A),H   ;
  $E1EB LD (IX+$0C),H   ;
  $E1EE LD (IX+$09),L   ;
@@ -6248,14 +6250,14 @@ c$E2DB BIT 3,(IX+$10) ;
  $E2EB IN A,(C)       ;
  $E2ED AND D          ;
  $E2EE JR NZ,$E2F1    ;
- $E2F0 INC E          ;
+ $E2F0 INC E          ; rotate clockwise
 *$E2F1 LD BC,($5B3B)  ;
  $E2F5 LD A,($5B3D)   ; get bit mask for Anticlockwise key
  $E2F8 LD D,A         ;
  $E2F9 IN A,(C)       ;
  $E2FB AND D          ;
  $E2FC JR NZ,$E2FF    ;
- $E2FE DEC E          ;
+ $E2FE DEC E          ; rotate anticlockwise
 *$E2FF LD A,$0F       ;
  $E301 AND E          ;
  $E302 LD (IX+$06),A  ; set Angle 0..15
@@ -6266,7 +6268,7 @@ c$E2DB BIT 3,(IX+$10) ;
  $E30F AND D          ;
  $E310 JR NZ,$E31F    ;
  $E312 LD A,(IX+$0E)  ;
- $E315 SET 0,(IX+$10) ;
+ $E315 SET 0,(IX+$10) ; set "moving" bit
  $E319 CP $08         ;
  $E31B RET Z          ;
  $E31C DEC (IX+$0E)   ;
@@ -6279,38 +6281,47 @@ c$E2DB BIT 3,(IX+$10) ;
  $E32B LD A,(IX+$0E)  ;
  $E32E CP $14         ;
  $E330 JR NZ,$E337    ;
- $E332 RES 0,(IX+$10) ;
+ $E332 RES 0,(IX+$10) ; clear "moving" bit
  $E336 RET            ;
 *$E337 INC (IX+$0E)   ;
  $E33A RET            ;
 
 ; Object record
-b$E33B DEFB $0A                         ; (IX+$00) Column 0..31
- $E33C DEFB $0A                         ; (IX+$01) Row
+b$E33B DEFB $0A                 ; (IX+$00) Column 0..31
+ $E33C DEFB $0A                 ; (IX+$01) Row
  $E33D DEFB $04,$04
- $E33F DEFB $00                         ; (IX+$04) ??? $00 $FE
- $E340 DEFB $00                         ; (IX+$05) ??? $00
- $E341 DEFB $04                         ; (IX+$06) Angle 0..15, initially 4
+ $E33F DEFB $00                 ; (IX+$04) DX value for the Angle, see table
+                                ; #R$DF25
+ $E340 DEFB $00                 ; (IX+$05) DY value for the Angle, see table
+                                ; #R$DF25
+ $E341 DEFB $04                 ; (IX+$06) Angle 0..15, initially 4
  $E342 DEFB $8D,$DF
- $E344 DEFW $0000                       ; (IX+$09) Sprite address
- $E346 DEFW $0000                       ; (IX+$0B) Sprite address
- $E348 DEFB $18                         ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
- $E349 DEFB $14                         ; (IX+$0E) ???
- $E34A DEFB $14                         ; (IX+$0F) ??? $03
- $E34B DEFB $00                         ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7
- $E34C DEFB $00,$00,$08,$08,$00,$00,$00
- $E353 DEFB $00                         ; (IX+$18) Column 0..31
- $E354 DEFB $00                         ; (IX+$19) Row
+ $E344 DEFW $0000               ; (IX+$09) Sprite address
+ $E346 DEFW $0000               ; (IX+$0B) Sprite address
+ $E348 DEFB $18                 ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
+ $E349 DEFB $14                 ; (IX+$0E) ??? 12 20 40 100
+ $E34A DEFB $14                 ; (IX+$0F) ??? $03
+ $E34B DEFB $00                 ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
+                                ; bit0: 1 = diver moving, 0 = diver stopped
+ $E34C DEFB $00                 ; (IX+$11) ??? $00 $FF
+ $E34D DEFB $00
+ $E34E DEFB $08                 ; (IX+$13) X value
+ $E34F DEFB $08                 ; (IX+$14) Y value
+ $E350 DEFB $00                 ; (IX+$15) X shift 0..7
+ $E351 DEFB $00                 ; (IX+$16) Y shift 0..7
+ $E352 DEFB $00                 ; (IX+$17) ???
+ $E353 DEFB $00                 ; (IX+$18) Column 0..31
+ $E354 DEFB $00                 ; (IX+$19) Row
  $E355 DEFB $0A,$12,$03,$12,$03
- $E35A DEFB $40                         ; (IX+$1F) Row??
- $E35B DEFB $00                         ; (IX+$20) ??? $03
- $E35C DEFB $00                         ; (IX+$21) ???
- $E35D DEFB $00                         ; (IX+$22) ??? $F5
+ $E35A DEFB $40                 ; (IX+$1F) Row??
+ $E35B DEFB $00                 ; (IX+$20) ??? $03
+ $E35C DEFB $00                 ; (IX+$21) ???
+ $E35D DEFB $00                 ; (IX+$22) ??? $F5
  $E35E DEFB $00
- $E35F DEFW $0000                       ; (IX+$24) ???
- $E361 DEFB $00                         ; (IX+$26) ??? bits 0/1/2/3/4/5/6
- $E362 DEFB $00                         ; (IX+$27) ???
- $E363 DEFB $00                         ; (IX+$28) ???
+ $E35F DEFW $0000               ; (IX+$24) Sprite address
+ $E361 DEFB $00                 ; (IX+$26) ??? bits 0/1/2/3/4/5/6
+ $E362 DEFB $00                 ; (IX+$27) ???
+ $E363 DEFB $00                 ; (IX+$28) ???
 
 ; Routine at E364
 ;
@@ -6376,7 +6387,7 @@ c$E364 BIT 5,(IX+$10)  ;
  $E3D3 JR NZ,$E418     ;
  $E3D5 SET 3,(IX+$10)  ;
  $E3D9 LD (IX+$0E),$0A ;
- $E3DD RES 0,(IX+$10)  ;
+ $E3DD RES 0,(IX+$10)  ; clear "moving" bit
  $E3E1 SET 4,(IX+$10)  ;
  $E3E5 LD A,(IX+$06)   ; get Angle 0..15
  $E3E8 INC A           ;
@@ -6429,7 +6440,7 @@ c$E43A BIT 3,(IX+$26) ;
  $E43E RET NZ         ;
  $E43F SET 5,(IX+$10) ;
  $E443 SET 3,(IX+$10) ;
- $E447 RES 0,(IX+$10) ;
+ $E447 RES 0,(IX+$10) ; clear "moving" bit
  $E44B LD A,(IX+$06)  ; get Angle 0..15
  $E44E INC A          ;
  $E44F LD HL,$9B4C    ; Explosion sprite address
@@ -6768,8 +6779,8 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E6E7 SET 3,(IX+$10)  ;
  $E6EB LD A,($C4F2)    ;
  $E6EE LD (IX+$27),A   ;
- $E6F1 LD (IX+$04),$00 ;
- $E6F5 LD (IX+$05),$00 ;
+ $E6F1 LD (IX+$04),$00 ; clear DX value
+ $E6F5 LD (IX+$05),$00 ; clear DY value
  $E6F9 LD (IX+$28),$00 ;
  $E6FD LD (IX+$1A),$06 ;
  $E701 LD (IX+$10),$00 ;
@@ -6793,7 +6804,7 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E727 INC (IX+$00)    ;
  $E72A AND $07         ;
 *$E72C ADD A,A         ;
- $E72D LD (IX+$13),A   ;
+ $E72D LD (IX+$13),A   ; set X value
  $E730 LD A,($5B37)    ; get Number of lives
  $E733 CP $03          ;
  $E735 JR Z,$E759      ;
@@ -6801,20 +6812,20 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E739 CP $02          ;
  $E73B JR Z,$E73F      ;
  $E73D LD B,$14        ;
-*$E73F LD A,(IX+$13)   ;
+*$E73F LD A,(IX+$13)   ; get X value
  $E742 ADD A,B         ;
 *$E743 SUB $10         ;
  $E745 JR C,$E74C      ;
  $E747 INC (IX+$00)    ;
  $E74A JR $E743        ;
 *$E74C ADD A,$10       ;
- $E74E LD (IX+$13),A   ;
+ $E74E LD (IX+$13),A   ; set X value
  $E751 LD (IX+$20),$01 ;
  $E755 LD (IX+$0F),$02 ;
-*$E759 LD HL,$9BAC     ;
- $E75C LD (IX+$24),L   ;
- $E75F LD (IX+$25),H   ;
- $E762 SET 0,(IX+$10)  ;
+*$E759 LD HL,$9BAC     ; Sprite diver sitting on the boat
+ $E75C LD (IX+$24),L   ; {set sprite address
+ $E75F LD (IX+$25),H   ; }
+ $E762 SET 0,(IX+$10)  ; set "moving" bit
  $E766 RET             ;
 
 ; Routine at E767
@@ -6823,39 +6834,39 @@ c$E6AB LD IX,$E33B     ; Diver object record address
 c$E767 BIT 0,(IX+$26)  ;
  $E76B JR NZ,$E7E0     ;
  $E76D LD (IX+$20),$03 ;
- $E771 LD (IX+$0F),$03 ;
- $E775 LD (IX+$04),$00 ;
+ $E771 LD (IX+$0F),$03 ; clear DX value
+ $E775 LD (IX+$04),$00 ; clear DY value
  $E779 LD (IX+$05),$00 ;
  $E77D LD A,($C4F2)    ;
  $E780 CP (IX+$27)     ;
  $E783 JR Z,$E78C      ;
  $E785 LD (IX+$27),A   ;
- $E788 LD (IX+$04),$FE ;
+ $E788 LD (IX+$04),$FE ; set DX value = -2
 *$E78C LD BC,($5B3E)   ;
  $E790 LD A,($5B40)    ; get bit mask for Accelerate key
  $E793 LD L,A          ;
- $E794 IN A,(C)        ;
+ $E794 IN A,(C)        ; Read from port for the key
  $E796 AND L           ;
- $E797 RET NZ          ;
+ $E797 RET NZ          ; Return if not pressed
  $E798 LD HL,$E634     ;
  $E79B CALL $E5EC      ; Play melody
  $E79E BIT 2,(IX+$26)  ;
  $E7A2 JR NZ,$E7C2     ;
  $E7A4 LD (IX+$0E),$0C ;
- $E7A8 LD HL,$9BAC     ;
- $E7AB LD (IX+$24),L   ;
- $E7AE LD (IX+$25),H   ;
+ $E7A8 LD HL,$9BAC     ; Sprite diver sitting on the boat
+ $E7AB LD (IX+$24),L   ; {set sprite address
+ $E7AE LD (IX+$25),H   ; }
  $E7B1 SET 0,(IX+$26)  ;
- $E7B5 LD (IX+$04),$FF ;
+ $E7B5 LD (IX+$04),$FF ; set DX value = -1
  $E7B9 LD (IX+$05),$02 ;
  $E7BD SET 1,(IX+$26)  ;
  $E7C1 RET             ;
-*$E7C2 LD HL,$934C     ;
+*$E7C2 LD HL,$934C     ; Sprite diver directing up-right
  $E7C5 LD (IX+$0E),$14 ;
- $E7C9 LD (IX+$24),L   ;
- $E7CC LD (IX+$25),H   ;
+ $E7C9 LD (IX+$24),L   ; {set sprite address
+ $E7CC LD (IX+$25),H   ; }
  $E7CF SET 0,(IX+$26)  ;
- $E7D3 LD (IX+$04),$02 ;
+ $E7D3 LD (IX+$04),$02 ; set DX value = +2
  $E7D7 LD (IX+$05),$02 ;
  $E7DB SET 1,(IX+$26)  ;
  $E7DF RET             ;
@@ -6870,18 +6881,18 @@ c$E767 BIT 0,(IX+$26)  ;
  $E7F8 LD L,(IX+$24)   ;
  $E7FB LD BC,$0020     ;
  $E7FE ADD HL,BC       ;
- $E7FF LD (IX+$24),L   ;
- $E802 LD (IX+$25),H   ;
- $E805 LD DE,$9C4C     ;
+ $E7FF LD (IX+$24),L   ; {set sprite address
+ $E802 LD (IX+$25),H   ; }
+ $E805 LD DE,$9C4C     ; address right after last diver sprite
  $E808 OR A            ;
  $E809 SBC HL,DE       ;
  $E80B RET NZ          ;
  $E80C LD (IX+$0E),$14 ;
- $E810 LD (IX+$04),$00 ;
- $E814 LD (IX+$05),$00 ;
+ $E810 LD (IX+$04),$00 ; clear DX value
+ $E814 LD (IX+$05),$00 ; clear DY value
  $E818 LD (IX+$06),$04 ;
  $E81C SET 7,(IX+$10)  ;
- $E820 RES 0,(IX+$10)  ;
+ $E820 RES 0,(IX+$10)  ; clear "moving" bit
  $E824 LD A,($5B10)    ; Game level 1..4
  $E827 LD C,A          ;
  $E828 LD A,$05        ;
@@ -6901,8 +6912,8 @@ c$E767 BIT 0,(IX+$26)  ;
  $E84F LD L,(IX+$24)   ;
  $E852 LD BC,$0080     ;
  $E855 ADD HL,BC       ;
- $E856 LD (IX+$24),L   ;
- $E859 LD (IX+$25),H   ;
+ $E856 LD (IX+$24),L   ; {set sprite address
+ $E859 LD (IX+$25),H   ; }
  $E85C LD DE,$954C     ;
  $E85F OR A            ;
  $E860 SBC HL,DE       ;
@@ -6911,7 +6922,7 @@ c$E767 BIT 0,(IX+$26)  ;
  $E867 LD (IX+$05),$00 ;
  $E86B LD (IX+$06),$04 ;
  $E86F SET 7,(IX+$10)  ;
- $E873 RES 0,(IX+$10)  ;
+ $E873 RES 0,(IX+$10)  ; clear "moving" bit
  $E877 LD A,($5B10)    ; Game level 1..4
  $E87A LD C,A          ;
  $E87B LD A,$05        ;
@@ -6999,7 +7010,7 @@ c$E915 LD DE,($C4F0)   ;
  $E940 RES 0,(IX+$0D)  ;
  $E944 PUSH IY         ;
  $E946 PUSH BC         ;
- $E947 LD (IX+$04),$00 ;
+ $E947 LD (IX+$04),$00 ; clear DX value
  $E94B LD HL,($5B03)   ;
  $E94E PUSH HL         ;
  $E94F CALL $DFD5      ;
@@ -7010,8 +7021,8 @@ c$E915 LD DE,($C4F0)   ;
  $E95F SET 3,(IX+$26)  ;
  $E963 LD A,($C4F2)    ;
  $E966 LD (IX+$27),A   ;
- $E969 LD (IX+$04),$00 ;
- $E96D LD (IX+$05),$FF ;
+ $E969 LD (IX+$04),$00 ; clear DX value
+ $E96D LD (IX+$05),$FF ; set DY = -1
  $E971 POP BC          ;
  $E972 LD A,($5B03)    ;
  $E975 CP L            ;
@@ -7024,9 +7035,9 @@ c$E915 LD DE,($C4F0)   ;
  $E982 ADD A,A         ;
  $E983 LD (IX+$13),A   ;
  $E986 LD (IX+$28),$00 ;
- $E98A LD HL,$9B8C     ;
- $E98D LD (IX+$24),L   ;
- $E990 LD (IX+$25),H   ;
+ $E98A LD HL,$9B8C     ; Sprite diver climbing on the boat
+ $E98D LD (IX+$24),L   ; {set sprite address
+ $E990 LD (IX+$25),H   ; }
  $E993 SET 0,(IX+$0D)  ;
  $E997 RES 1,(IX+$0D)  ;
  $E99B CALL $DFD5      ;
@@ -7040,6 +7051,8 @@ c$E915 LD DE,($C4F0)   ;
 ; Routine at E9B0
 ;
 ; Used by the routine at #R$DFD5.
+;
+; I:IX Object address = $E33B
 c$E9B0 SET 5,(IX+$26) ;
  $E9B4 PUSH HL        ;
  $E9B5 PUSH DE        ;

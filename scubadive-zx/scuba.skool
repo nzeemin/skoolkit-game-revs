@@ -1632,7 +1632,7 @@ c$9C56 DI             ;
 *$9C6C PUSH BC        ;
  $9C6D PUSH IX        ;
  $9C6F EX DE,HL       ;
- $9C70 CALL $9D56     ;
+ $9C70 CALL $9D56     ; Calc address in #R$AC5D and Get
  $9C73 PUSH AF        ;
  $9C74 EX DE,HL       ;
  $9C75 CP $1C         ;
@@ -1704,7 +1704,7 @@ c$9C56 DI             ;
  $9CE3 BIT 7,(IY+$00) ;
  $9CE7 JR Z,$9CEB     ;
  $9CE9 LD C,$06       ;
-*$9CEB LD (IX+$00),C  ;
+*$9CEB LD (IX+$00),C  ; set Column value = 6
  $9CEE INC IY         ;
  $9CF0 INC IX         ;
  $9CF2 INC L          ;
@@ -1754,7 +1754,7 @@ c$9C56 DI             ;
  $9D3C CALL $B0A9     ;
  $9D3F RET            ;
 
-; Calculate address ???
+; Calculate address in #R$AC5D table
 ;
 ; Used by the routines at #R$9D56 and #R$9D79.
 ;
@@ -1773,7 +1773,7 @@ c$9D40 LD A,L        ;
  $9D54 ADD HL,DE     ; HL := $AC5D + H * 32 + L
  $9D55 RET           ;
 
-; Calculate address and Get ???
+; Calculate address in #R$AC5D and Get
 ;
 ; Used by the routines at #R$9C56, #R$9D5F, #R$9F81, #R$A03B and #R$A193.
 ;
@@ -1781,7 +1781,7 @@ c$9D40 LD A,L        ;
 ; O:A Value
 c$9D56 PUSH HL       ;
  $9D57 PUSH DE       ;
- $9D58 CALL $9D40    ;
+ $9D58 CALL $9D40    ; Calculate address in #R$AC5D table
  $9D5B LD A,(HL)     ;
  $9D5C POP DE        ;
  $9D5D POP HL        ;
@@ -1798,7 +1798,7 @@ c$9D5F PUSH HL       ;
  $9D66 LD A,H        ;
  $9D67 AND $E0       ;
  $9D69 JR NZ,$9D73   ;
- $9D6B CALL $9D56    ;
+ $9D6B CALL $9D56    ; Calc address in #R$AC5D and Get
  $9D6E LD L,A        ;
  $9D6F POP AF        ;
  $9D70 DEC L         ;
@@ -1810,7 +1810,7 @@ c$9D5F PUSH HL       ;
  $9D77 POP HL        ;
  $9D78 RET           ;
 
-; Calculate address and Set ???
+; Calculate address in #R$AC5D and Set
 ;
 ; Used by the routines at #R$9DAA, #R$9F81 and #R$A03B.
 ;
@@ -1819,7 +1819,7 @@ c$9D5F PUSH HL       ;
 c$9D79 PUSH HL       ;
  $9D7A PUSH DE       ;
  $9D7B PUSH AF       ;
- $9D7C CALL $9D40    ;
+ $9D7C CALL $9D40    ; Calculate address in #R$AC5D table
  $9D7F POP AF        ;
  $9D80 LD (HL),A     ;
  $9D81 POP DE        ;
@@ -1881,16 +1881,16 @@ c$9DA5 LD (HL),A     ;
 c$9DAA LD HL,$ACBF   ;
  $9DAD LD B,$1C      ;
  $9DAF LD A,$16      ;
- $9DB1 CALL $9DA5    ; Fill block at HL with A
- $9DB4 LD (HL),$06   ;
- $9DB6 INC HL        ;
+ $9DB1 CALL $9DA5    ; Fill block at $ACBF with $16
+ $9DB4 LD (HL),$06   ; ($ACDB) <- $06
+ $9DB6 INC HL        ; HL = $ACDC
  $9DB7 LD B,$22      ;
  $9DB9 LD A,$01      ;
- $9DBB CALL $9DA5    ; Fill block at HL with A
- $9DBE INC HL        ;
+ $9DBB CALL $9DA5    ; Fill block at HL with $01
+ $9DBE INC HL        ; HL = $ACFF
  $9DBF LD A,$1A      ;
  $9DC1 LD B,$1C      ;
- $9DC3 CALL $9DA5    ; Fill block at HL with A
+ $9DC3 CALL $9DA5    ; Fill block at $ACFF with $1A
  $9DC6 INC HL        ;
  $9DC7 INC HL        ;
  $9DC8 LD (HL),$02   ;
@@ -1901,14 +1901,14 @@ c$9DAA LD HL,$ACBF   ;
  $9DD1 INC HL        ;
  $9DD2 LD B,$1C      ;
  $9DD4 LD A,$16      ;
- $9DD6 CALL $9DA5    ; Fill block at HL with A
+ $9DD6 CALL $9DA5    ; Fill block at HL with $16
  $9DD9 INC HL        ;
  $9DDA INC HL        ;
  $9DDB LD B,$00      ;
  $9DDD LD A,$01      ;
- $9DDF CALL $9DA5    ; Fill block at HL with A, 256 bytes
- $9DE2 CALL $9DA5    ; Fill block at HL with A, 256 bytes
- $9DE5 CALL $9DA5    ; Fill block at HL with A, 256 bytes
+ $9DDF CALL $9DA5    ; Fill block at HL with $01, 256 bytes
+ $9DE2 CALL $9DA5    ; Fill block at HL with $01, 256 bytes
+ $9DE5 CALL $9DA5    ; Fill block at HL with $01, 256 bytes
  $9DE8 CALL $9D84    ; Random
  $9DEB LD A,H        ;
  $9DEC AND $0F       ;
@@ -1916,19 +1916,19 @@ c$9DAA LD HL,$ACBF   ;
  $9DF0 LD L,A        ;
  $9DF1 LD H,$03      ;
  $9DF3 XOR A         ;
- $9DF4 CALL $9D79    ;
+ $9DF4 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9DF7 INC L         ;
- $9DF8 CALL $9D79    ;
+ $9DF8 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9DFB LD H,$05      ;
- $9DFD CALL $9D79    ;
+ $9DFD CALL $9D79    ; Calc address in #R$AC5D and set
  $9E00 DEC L         ;
- $9E01 CALL $9D79    ;
+ $9E01 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E04 DEC H         ;
  $9E05 LD A,$1C      ;
- $9E07 CALL $9D79    ;
+ $9E07 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E0A INC A         ;
  $9E0B INC L         ;
- $9E0C CALL $9D79    ;
+ $9E0C CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E0F LD HL,$ACBD   ; $ACBD = $AC5D + 3 * 32
  $9E12 LD B,$A0      ;
 *$9E14 LD A,(HL)     ;
@@ -1961,15 +1961,15 @@ c$9DAA LD HL,$ACBF   ;
  $9E45 LD L,A        ;
  $9E46 LD H,$07      ;
  $9E48 XOR A         ;
- $9E49 CALL $9D79    ;
+ $9E49 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E4C INC L         ;
- $9E4D CALL $9D79    ;
+ $9E4D CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E50 INC H         ;
  $9E51 LD A,$1D      ;
- $9E53 CALL $9D79    ;
+ $9E53 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E56 DEC A         ;
  $9E57 DEC L         ;
- $9E58 CALL $9D79    ;
+ $9E58 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E5B DEC L         ;
  $9E5C LD ($5B07),HL ;
 *$9E5F LD HL,($5B07) ;
@@ -1999,7 +1999,7 @@ c$9DAA LD HL,$ACBF   ;
  $9E88 BIT 1,D       ;
  $9E8A JR Z,$9E8D    ;
  $9E8C INC A         ;
-*$9E8D CALL $9D79    ;
+*$9E8D CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E90 DJNZ $9E7D    ;
  $9E92 CALL $A193    ;
  $9E95 CALL $B1D4    ;
@@ -2017,7 +2017,7 @@ c$9DAA LD HL,$ACBF   ;
  $9EA8 BIT 6,D       ;
  $9EAA JR Z,$9EAD    ;
  $9EAC INC A         ;
-*$9EAD CALL $9D79    ;
+*$9EAD CALL $9D79    ; Calc address in #R$AC5D and Set
  $9EB0 JP $9F0E      ;
 *$9EB3 LD A,E        ;
  $9EB4 AND $C0       ;
@@ -2031,7 +2031,7 @@ c$9DAA LD HL,$ACBF   ;
  $9EC1 CP C          ;
  $9EC2 JR Z,$9ED8    ;
  $9EC4 LD A,$05      ;
- $9EC6 CALL $9D79    ;
+ $9EC6 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9EC9 DEC L         ;
  $9ECA LD ($5B07),HL ;
  $9ECD INC L         ;
@@ -2053,7 +2053,7 @@ c$9DAA LD HL,$ACBF   ;
  $9EF0 INC L         ;
  $9EF1 LD ($5B07),HL ;
  $9EF4 LD A,$04      ;
- $9EF6 CALL $9D79    ;
+ $9EF6 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9EF9 JR $9F0E      ;
 *$9EFB DEC L         ;
  $9EFC CALL $9D5F    ;
@@ -2062,7 +2062,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F01 POP AF        ;
  $9F02 JR NZ,$9EB8   ;
  $9F04 LD A,$0B      ;
- $9F06 CALL $9D79    ;
+ $9F06 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F09 PUSH BC       ;
  $9F0A CALL $9F81    ;
  $9F0D POP BC        ;
@@ -2070,7 +2070,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F11 LD B,A        ;
  $9F12 XOR A         ;
 *$9F13 INC L         ;
- $9F14 CALL $9D79    ;
+ $9F14 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F17 DJNZ $9F13    ;
  $9F19 INC L         ;
  $9F1A PUSH HL       ;
@@ -2086,7 +2086,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F29 BIT 6,D       ;
  $9F2B JR NZ,$9F2E   ;
  $9F2D INC A         ;
-*$9F2E CALL $9D79    ;
+*$9F2E CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F31 JP $9F78      ;
 *$9F34 LD A,E        ;
  $9F35 AND $C0       ;
@@ -2099,7 +2099,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F43 LD ($5B0A),A  ;
  $9F46 DEC L         ;
  $9F47 LD A,$08      ;
- $9F49 CALL $9D79    ;
+ $9F49 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F4C JP $9F78      ;
 *$9F4F LD A,L        ;
  $9F50 CP $1E        ;
@@ -2108,7 +2108,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F55 CP C          ;
  $9F56 JR Z,$9F27    ;
  $9F58 LD A,$09      ;
- $9F5A CALL $9D79    ;
+ $9F5A CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F5D LD A,($5B0A)  ;
  $9F60 INC A         ;
  $9F61 LD ($5B0A),A  ;
@@ -2120,7 +2120,7 @@ c$9DAA LD HL,$ACBF   ;
  $9F6D POP AF        ;
  $9F6E JR NZ,$9F39   ;
  $9F70 LD A,$0A      ;
- $9F72 CALL $9D79    ;
+ $9F72 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F75 CALL $A03B    ;
 *$9F78 LD A,($5B0A)  ;
  $9F7B LD ($5B09),A  ;
@@ -2145,43 +2145,43 @@ c$9F81 LD ($5B01),HL ;
  $9F97 CP $FF        ;
  $9F99 JR NZ,$9FB6   ;
  $9F9B LD L,$1F      ;
- $9F9D CALL $9D56    ;
+ $9F9D CALL $9D56    ; Calc address in #R$AC5D and Get
  $9FA0 CP $14        ;
  $9FA2 JR NZ,$9FB4   ;
  $9FA4 LD A,$0B      ;
- $9FA6 CALL $9D79    ;
+ $9FA6 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9FA9 LD L,$00      ;
  $9FAB LD A,$0A      ;
- $9FAD CALL $9D79    ;
+ $9FAD CALL $9D79    ; Calc address in #R$AC5D and Set
  $9FB0 LD HL,($5B01) ;
  $9FB3 RET           ;
 *$9FB4 LD L,$FF      ;
 *$9FB6 INC L         ;
  $9FB7 LD A,$15      ;
- $9FB9 CALL $9D79    ;
+ $9FB9 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9FBC LD HL,($5B01) ;
  $9FBF RET           ;
 *$9FC0 INC L         ;
  $9FC1 BIT 7,E       ;
  $9FC3 JR Z,$9FE0    ;
  $9FC5 DEC H         ;
- $9FC6 CALL $9D56    ;
+ $9FC6 CALL $9D56    ; Calc address in #R$AC5D and Get
  $9FC9 INC H         ;
  $9FCA SUB $10       ;
  $9FCC JR C,$9FE0    ;
  $9FCE CP $04        ;
  $9FD0 JR NC,$9FE0   ;
  $9FD2 LD A,$18      ;
- $9FD4 CALL $9D79    ;
+ $9FD4 CALL $9D79    ; Calc address in #R$AC5D and Get
  $9FD7 DEC H         ;
  $9FD8 INC A         ;
- $9FD9 CALL $9D79    ;
+ $9FD9 CALL $9D79    ; Calc address in #R$AC5D and Get
  $9FDC INC H         ;
  $9FDD JP $9F84      ;
 *$9FE0 LD A,D        ;
  $9FE1 AND $03       ;
  $9FE3 ADD A,$10     ;
- $9FE5 CALL $9D79    ;
+ $9FE5 CALL $9D79    ; Calc address in #R$AC5D and Get
  $9FE8 JP $9F84      ;
 *$9FEB BIT 6,E       ;
  $9FED JR NZ,$A011   ;
@@ -2198,10 +2198,10 @@ c$9F81 LD ($5B01),HL ;
  $A000 JR $9F90      ;
 *$A002 INC L         ;
  $A003 LD A,$0D      ;
- $A005 CALL $9D79    ;
+ $A005 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A008 DEC H         ;
  $A009 DEC A         ;
- $A00A CALL $9D79    ;
+ $A00A CALL $9D79    ; Calc address in #R$AC5D and Get
  $A00D INC H         ;
  $A00E JP $9F84      ;
 *$A011 LD A,$09      ;
@@ -2220,10 +2220,10 @@ c$9F81 LD ($5B01),HL ;
  $A029 JP $9F90      ;
 *$A02C LD A,$0E      ;
  $A02E INC L         ;
- $A02F CALL $9D79    ;
+ $A02F CALL $9D79    ; Calc address in #R$AC5D and Get
  $A032 INC H         ;
  $A033 INC A         ;
- $A034 CALL $9D79    ;
+ $A034 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A037 DEC H         ;
  $A038 JP $9F84      ;
 
@@ -2246,43 +2246,43 @@ c$A03B LD ($5B01),HL ;
  $A051 AND $1F       ;
  $A053 JR NZ,$A06F   ;
  $A055 LD L,A        ;
- $A056 CALL $9D56    ;
+ $A056 CALL $9D56    ; Calc address in #R$AC5D and Get
  $A059 CP $15        ;
  $A05B JR NZ,$A06D   ;
  $A05D LD A,$0A      ;
- $A05F CALL $9D79    ;
+ $A05F CALL $9D79    ; Calc address in #R$AC5D and Get
  $A062 LD L,$1F      ;
  $A064 LD A,$0B      ;
- $A066 CALL $9D79    ;
+ $A066 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A069 LD HL,($5B01) ;
  $A06C RET           ;
 *$A06D LD L,$20      ;
 *$A06F DEC L         ;
  $A070 LD A,$14      ;
- $A072 CALL $9D79    ;
+ $A072 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A075 LD HL,($5B01) ;
  $A078 RET           ;
 *$A079 DEC L         ;
  $A07A BIT 7,E       ;
  $A07C JR Z,$A09A    ;
  $A07E DEC H         ;
- $A07F CALL $9D56    ;
+ $A07F CALL $9D56    ; Calc address in #R$AC5D and Get
  $A082 INC H         ;
  $A083 SUB $10       ;
  $A085 JR C,$A09A    ;
  $A087 CP $04        ;
  $A089 JR NC,$A09A   ;
  $A08B LD A,$18      ;
- $A08D CALL $9D79    ;
+ $A08D CALL $9D79    ; Calc address in #R$AC5D and Get
  $A090 DEC H         ;
  $A091 LD A,$19      ;
- $A093 CALL $9D79    ;
+ $A093 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A096 INC H         ;
  $A097 JP $A03E      ;
 *$A09A LD A,D        ;
  $A09B AND $03       ;
  $A09D ADD A,$10     ;
- $A09F CALL $9D79    ;
+ $A09F CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0A2 JP $A03E      ;
 *$A0A5 BIT 6,E       ;
  $A0A7 JR NZ,$A0CB   ;
@@ -2299,10 +2299,10 @@ c$A03B LD ($5B01),HL ;
  $A0BA JR $A04A      ;
 *$A0BC DEC L         ;
  $A0BD LD A,$0F      ;
- $A0BF CALL $9D79    ;
+ $A0BF CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0C2 DEC H         ;
  $A0C3 DEC A         ;
- $A0C4 CALL $9D79    ;
+ $A0C4 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0C7 INC H         ;
  $A0C8 JP $A03E      ;
 *$A0CB LD A,$09      ;
@@ -2321,26 +2321,28 @@ c$A03B LD ($5B01),HL ;
  $A0E3 JP $A04A      ;
 *$A0E6 LD A,$0C      ;
  $A0E8 DEC L         ;
- $A0E9 CALL $9D79    ;
+ $A0E9 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0EC INC H         ;
  $A0ED INC A         ;
- $A0EE CALL $9D79    ;
+ $A0EE CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0F1 DEC H         ;
  $A0F2 JP $A03E      ;
 
 ; Calculate address ???
 ;
 ; Used by the routine at #R$A129.
-c$A0F5 PUSH HL       ;
- $A0F6 SRL H         ;
- $A0F8 SRL H         ;
+;
+; I:HL Char coords H = row, L = column 0..31
+c$A0F5 PUSH HL       ; {HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
+ $A0F6 SRL H         ; as a result, we have HL[9:0] filled with significant bits;
+ $A0F8 SRL H         ; 10 bits means 1024 addressed bytes
  $A0FA SRL H         ;
  $A0FC SRL H         ;
  $A0FE RR L          ;
  $A100 SRL H         ;
  $A102 RR L          ;
  $A104 SRL H         ;
- $A106 RR L          ;
+ $A106 RR L          ; }
  $A108 LD DE,$AC5D   ;
  $A10B ADD HL,DE     ;
  $A10C LD H,(HL)     ;
@@ -2368,6 +2370,8 @@ c$A0F5 PUSH HL       ;
 ; Calculate address and Get ???
 ;
 ; Used by the routines at #R$B885, #R$B972 and #R$BA64.
+;
+; I:HL Char coords H = row, L = column 0..31
 c$A129 PUSH HL       ;
  $A12A PUSH DE       ;
  $A12B CALL $A0F5    ;
@@ -2481,7 +2485,7 @@ c$A193 LD HL,$20FF   ;
  $A1AC LD A,$80      ;
  $A1AE LD (DE),A     ;
  $A1AF RET           ;
-*$A1B0 CALL $9D56    ;
+*$A1B0 CALL $9D56    ; Calc address in #R$AC5D and Get
  $A1B3 LD C,A        ;
  $A1B4 PUSH HL       ;
  $A1B5 CP $14        ;
@@ -2981,116 +2985,108 @@ b$AC5D DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $AD45 DEFB $16,$16,$16,$16,$16,$16,$16,$16
  $AD4D DEFB $16,$16,$16,$16,$16,$16,$16,$16
  $AD55 DEFB $16,$16,$16,$16,$16,$16,$08,$01
- $AD5D DEFB $3E,$3F,$08,$52,$3E,$4B
+ $AD5D DEFB $3E,$3F,$08,$52,$3E,$4B,$08,$58
+ $AD65 DEFB $3F,$31,$08,$72,$3E,$71,$08,$98
+ $AD6D DEFB $3F,$B3,$00,$C4,$3E,$40,$00,$CA
+ $AD75 DEFB $3E,$28,$00,$CD,$3E,$15,$08,$D4
+ $AD7D DEFB $3E,$DB,$08,$E0,$3F,$81,$0A,$20
+ $AD85 DEFB $1F,$64,$0A,$28,$1F,$1D,$0A,$38
+ $AD8D DEFB $1F,$6B,$0A,$5C,$1E,$36,$0A,$62
+ $AD95 DEFB $1E,$77,$0A,$65,$1E,$1C,$0A,$8A
+ $AD9D DEFB $1E,$2E,$0A,$9A,$1E,$4D,$0A,$AA
+ $ADA5 DEFB $1E,$50,$0A,$AD,$1E,$39,$0A,$B4
+ $ADAD DEFB $1E,$27,$0A,$B8,$1F,$0C,$0A,$C2
+ $ADB5 DEFB $1E,$65,$0A,$C5,$1E,$02,$0A,$CC
+ $ADBD DEFB $1E,$08,$0A,$D4,$1E,$1E,$80,$5A
+ $ADC5 DEFB $1E,$7F,$0A,$5D,$1E,$44,$0A,$62
+ $ADCD DEFB $1E,$7D,$0A,$65,$1E,$7A,$0A,$68
+ $ADD5 DEFB $1F,$4B,$0A,$70,$1F,$40,$0A,$7A
+ $ADDD DEFB $1E,$69,$0A,$7D,$1E,$16,$0A,$80
+ $ADE5 DEFB $1F,$57,$0A,$88,$1F,$7C,$0A,$98
+ $ADED DEFB $1F,$72,$0A,$A2,$1E,$23,$80,$05
+ $ADF5 DEFB $5C,$F3,$DD,$00,$00,$00,$00,$00
+ $ADFD DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE05 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE0D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE15 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE1D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE25 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE2D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE35 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE3D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE45 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE4D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE55 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE5D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE65 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE6D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE75 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE7D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE85 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE8D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE95 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AE9D DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEA5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEAD DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEB5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEBD DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEC5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AECD DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AED5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEDD DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEE5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEED DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $AEF5 DEFB $00,$00,$00,$00,$00,$01,$01,$01
+ $AEFD DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF05 DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF0D DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF15 DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF1D DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF25 DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF2D DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF35 DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $AF3D DEFB $01,$01,$01,$01,$09,$01,$01,$01
+ $AF45 DEFB $01,$01,$01,$08,$32,$01,$01,$01
+ $AF4D DEFB $01,$01,$01,$12,$32,$01,$01,$01
+ $AF55 DEFB $01,$01,$0B,$00,$32,$01,$01,$01
+ $AF5D DEFB $01,$01,$30,$00,$32,$01,$01,$01
+ $AF65 DEFB $01,$01,$01,$31,$32,$01,$01,$01
+ $AF6D DEFB $01,$01,$01,$01,$11,$01,$01,$01
+ $AF75 DEFB $01,$01,$01,$01,$03,$01,$01,$01
+ $AF7D DEFB $01,$01,$01,$01,$29,$01,$01,$01
+ $AF85 DEFB $01,$01,$01,$01,$0A,$01,$01,$01
+ $AF8D DEFB $09,$15,$16,$17,$00,$01,$01,$01
+ $AF95 DEFB $02,$00,$04,$26,$03,$01,$01,$01
+ $AF9D DEFB $01,$25,$01,$01,$2A,$01,$01,$01
+ $AFA5 DEFB $01,$01,$01,$01,$2B,$01,$01,$01
+ $AFAD DEFB $01,$01,$01,$01,$08,$01,$01,$01
+ $AFB5 DEFB $01,$01,$01,$01,$30,$12,$00,$00
+ $AFBD DEFB $00,$00,$00,$00,$00,$02,$00,$00
+ $AFC5 DEFB $00,$00,$00,$00,$00,$01,$27,$30
+ $AFCD DEFB $00,$00,$00,$00,$00,$01,$01,$01
+ $AFD5 DEFB $31,$00,$00,$00,$00,$01,$01,$01
+ $AFDD DEFB $2B,$00,$00,$00,$00,$01,$01,$01
+ $AFE5 DEFB $01,$03,$00,$00,$00,$01,$01,$01
+ $AFED DEFB $01,$01,$25,$24,$02,$01,$01,$01
+ $AFF5 DEFB $01,$01,$01,$01,$28,$01,$01,$01
+ $AFFD DEFB $01,$01,$01,$01,$09,$01,$01,$01
+ $B005 DEFB $01,$0B,$14,$15,$00,$09,$15,$17
+ $B00D DEFB $16,$32,$00,$00,$00,$13,$32,$32
+ $B015 DEFB $32,$00,$00,$00,$00,$03,$32,$32
+ $B01D DEFB $00,$00,$00,$00,$00,$2A,$32,$00
+ $B025 DEFB $00,$00,$00,$00,$00,$0B,$00,$00
+ $B02D DEFB $00,$00,$00,$00,$00,$13,$00,$00
+ $B035 DEFB $00,$00,$00,$00,$00,$0F,$01,$01
+ $B03D DEFB $01,$01,$01,$01,$01,$32,$0E,$01
+ $B045 DEFB $01,$01,$01,$01,$01,$32,$00,$14
+ $B04D DEFB $15,$16,$0D,$01,$01,$32,$00,$00
+ $B055 DEFB $00,$00,$05,$01,$01,$32,$00,$1C
 
-; Data block at AD63
-b$AD63 DEFB $08,$58,$3F,$31
-
-; Data block at AD67
-b$AD67 DEFB $08,$72,$3E,$71
-
-; Data block at AD6B
-b$AD6B DEFB $08,$98,$3F,$B3,$00,$C4,$3E,$40
- $AD73 DEFB $00,$CA,$3E,$28,$00,$CD,$3E,$15
- $AD7B DEFB $08,$D4,$3E,$DB,$08,$E0,$3F,$81
- $AD83 DEFB $0A,$20,$1F,$64,$0A,$28,$1F,$1D
- $AD8B DEFB $0A,$38,$1F,$6B,$0A,$5C,$1E,$36
- $AD93 DEFB $0A,$62,$1E,$77,$0A,$65,$1E,$1C
- $AD9B DEFB $0A,$8A,$1E,$2E,$0A,$9A,$1E,$4D
- $ADA3 DEFB $0A,$AA,$1E,$50,$0A,$AD,$1E,$39
- $ADAB DEFB $0A,$B4,$1E,$27,$0A,$B8,$1F,$0C
- $ADB3 DEFB $0A,$C2,$1E,$65,$0A,$C5,$1E,$02
- $ADBB DEFB $0A,$CC,$1E,$08,$0A,$D4,$1E,$1E
- $ADC3 DEFB $80,$5A,$1E,$7F,$0A,$5D,$1E,$44
- $ADCB DEFB $0A,$62,$1E,$7D,$0A,$65,$1E,$7A
- $ADD3 DEFB $0A,$68,$1F,$4B,$0A,$70,$1F,$40
- $ADDB DEFB $0A,$7A,$1E,$69,$0A,$7D,$1E,$16
- $ADE3 DEFB $0A,$80,$1F,$57,$0A,$88,$1F,$7C
- $ADEB DEFB $0A,$98,$1F,$72,$0A,$A2,$1E,$23
- $ADF3 DEFB $80,$05,$5C,$F3,$DD,$00,$00,$00
- $ADFB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE03 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE0B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE13 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE1B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE23 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE2B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE33 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE3B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE43 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE4B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE53 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE5B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE63 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE6B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE73 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE7B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE83 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE8B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE93 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AE9B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEA3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEAB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEB3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEBB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEC3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AECB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AED3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEDB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEE3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEEB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AEF3 DEFB $00,$00,$00,$00,$00,$00,$00,$01
- $AEFB DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF03 DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF0B DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF13 DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF1B DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF23 DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF2B DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF33 DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $AF3B DEFB $01,$01,$01,$01,$01,$01,$09,$01
- $AF43 DEFB $01,$01,$01,$01,$01,$08,$32,$01
- $AF4B DEFB $01,$01,$01,$01,$01,$12,$32,$01
- $AF53 DEFB $01,$01,$01,$01,$0B,$00,$32,$01
- $AF5B DEFB $01,$01,$01,$01,$30,$00,$32,$01
- $AF63 DEFB $01,$01,$01,$01,$01,$31,$32,$01
- $AF6B DEFB $01,$01,$01,$01,$01,$01,$11,$01
- $AF73 DEFB $01,$01,$01,$01,$01,$01,$03,$01
- $AF7B DEFB $01,$01,$01,$01,$01,$01,$29,$01
- $AF83 DEFB $01,$01,$01,$01,$01,$01,$0A,$01
- $AF8B DEFB $01,$01,$09,$15,$16,$17,$00,$01
- $AF93 DEFB $01,$01,$02,$00,$04,$26,$03,$01
- $AF9B DEFB $01,$01,$01,$25,$01,$01,$2A,$01
- $AFA3 DEFB $01,$01,$01,$01,$01,$01,$2B,$01
- $AFAB DEFB $01,$01,$01,$01,$01,$01,$08,$01
- $AFB3 DEFB $01,$01,$01,$01,$01,$01,$30,$12
- $AFBB DEFB $00,$00,$00,$00,$00,$00,$00,$02
- $AFC3 DEFB $00,$00,$00,$00,$00,$00,$00,$01
- $AFCB DEFB $27,$30,$00,$00,$00,$00,$00,$01
- $AFD3 DEFB $01,$01,$31,$00,$00,$00,$00,$01
- $AFDB DEFB $01,$01,$2B,$00,$00,$00,$00,$01
- $AFE3 DEFB $01,$01,$01,$03,$00,$00,$00,$01
- $AFEB DEFB $01,$01,$01,$01,$25,$24,$02,$01
- $AFF3 DEFB $01,$01,$01,$01,$01,$01,$28,$01
- $AFFB DEFB $01,$01,$01,$01,$01,$01,$09,$01
- $B003 DEFB $01,$01,$01,$0B,$14,$15,$00,$09
- $B00B DEFB $15,$17,$16,$32,$00,$00,$00,$13
- $B013 DEFB $32,$32,$32
-
-; Data block at B016
-b$B016 DEFB $00,$00,$00,$00,$03,$32,$32,$00
- $B01E DEFB $00,$00,$00,$00,$2A,$32,$00,$00
- $B026 DEFB $00,$00,$00,$00,$0B,$00,$00,$00
- $B02E DEFB $00,$00,$00,$00,$13,$00,$00,$00
- $B036 DEFB $00,$00,$00,$00,$0F,$01,$01,$01
- $B03E DEFB $01,$01,$01,$01,$32,$0E,$01,$01
- $B046 DEFB $01,$01,$01,$01,$32,$00,$14,$15
- $B04E DEFB $16,$0D,$01,$01,$32,$00,$00,$00
- $B056 DEFB $00,$05,$01,$01,$32,$00,$1C,$01
- $B05E DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $B066 DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $B06E DEFB $01,$01,$01,$01,$01,$01,$01,$01
- $B076 DEFB $01,$01,$01,$01,$01,$01,$01
+; Data block at B05D
+b$B05D DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $B065 DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $B06D DEFB $01,$01,$01,$01,$01,$01,$01,$01
+ $B075 DEFB $01,$01,$01,$01,$01,$01,$01,$01
 
 ; ???
 b$B07D DEFB $01,$01,$01,$01,$01,$21,$01,$01
@@ -3151,44 +3147,44 @@ c$B0A9 LD DE,($5B03)   ;
  $B0F7 INC IY          ;
  $B0F9 INC IY          ;
  $B0FB SET 0,(HL)      ;
- $B0FD LD C,$46        ;
+ $B0FD LD C,$46        ; screen attribute for chest
  $B0FF LD DE,$B1B4     ; Sprite 16x8 Chest
- $B102 BIT 6,(HL)      ;
+ $B102 BIT 6,(HL)      ; check "chest" bit
  $B104 JR NZ,$B151     ;
- $B106 LD C,$47        ;
+ $B106 LD C,$47        ; screen attribute for oxygen
  $B108 LD DE,$B1AC     ; Sprite 8x8 Oxygen
- $B10B BIT 5,(HL)      ;
+ $B10B BIT 5,(HL)      ; check "oxygen" bit
  $B10D JR NZ,$B160     ;
- $B10F LD C,$07        ;
- $B111 BIT 1,(HL)      ;
+ $B10F LD C,$07        ; screen attribute for shells
+ $B111 BIT 1,(HL)      ; check "big/small" bit
  $B113 JR Z,$B121      ;
  $B115 LD DE,$B1CC     ; Sprite 8x8 Small shell opened
- $B118 BIT 3,(HL)      ;
+ $B118 BIT 3,(HL)      ; check "closed/opened" bit
  $B11A JR Z,$B160      ;
  $B11C LD DE,$B1C4     ; Sprite 8x8 Small shell closed
  $B11F JR $B160        ;
 *$B121 LD DE,$B16C     ; Sprite 16x16 Big shell opened
- $B124 BIT 3,(HL)      ;
+ $B124 BIT 3,(HL)      ; check "closed/opened" bit
  $B126 JR Z,$B12B      ;
  $B128 LD DE,$B18C     ; Sprite 16x16 Big shell closed
 *$B12B POP HL          ;
- $B12C PUSH HL         ;
+ $B12C PUSH HL         ; save (row, column)
  $B12D CALL $A14C      ; Get screen attribute address
- $B130 LD (HL),C       ;
+ $B130 LD (HL),C       ; set screen attribute
  $B131 INC HL          ;
- $B132 LD (HL),C       ;
+ $B132 LD (HL),C       ; set screen attribute
  $B133 PUSH BC         ;
  $B134 LD BC,$0020     ;
  $B137 OR A            ;
  $B138 SBC HL,BC       ; one char line upper
  $B13A POP BC          ;
- $B13B LD (HL),C       ;
+ $B13B LD (HL),C       ; set screen attribute
  $B13C DEC HL          ;
- $B13D LD (HL),C       ;
- $B13E POP HL          ;
+ $B13D LD (HL),C       ; set screen attribute
+ $B13E POP HL          ; restore (row, column)
  $B13F PUSH HL         ;
  $B140 CALL $A176      ; Draw tile 16x8 at the screen
- $B143 POP HL          ;
+ $B143 POP HL          ; restore (row, column)
  $B144 DEC H           ; One char line upper
  $B145 CALL $A176      ; Draw tile 16x8 at the screen
 *$B148 POP DE          ;
@@ -3200,16 +3196,16 @@ c$B0A9 LD DE,($5B03)   ;
  $B152 POP HL          ;
  $B153 PUSH HL         ;
  $B154 CALL $A14C      ; Get screen attribute address
- $B157 LD (HL),C       ;
+ $B157 LD (HL),C       ; set screen attribute
  $B158 INC HL          ;
- $B159 LD (HL),C       ;
+ $B159 LD (HL),C       ; set screen attribute
  $B15A POP HL          ;
  $B15B CALL $A176      ; Draw tile 16x8 at the screen
  $B15E JR $B148        ;
 *$B160 POP HL          ;
  $B161 PUSH HL         ;
  $B162 CALL $A14C      ; Get screen attribute address
- $B165 LD (HL),C       ;
+ $B165 LD (HL),C       ; set screen attribute
  $B166 POP HL          ;
  $B167 CALL $A187      ; Draw tile 8x8 at the screen
  $B16A JR $B148        ;
@@ -3396,7 +3392,7 @@ c$B2C0 LD HL,$B2CD   ;
 ; I:HL Char coords H = 0..23, L = 0..31
 ; I:DE Tile address
 c$B2CE CALL $A164    ; Convert char coords HL to ZX screen address
- $B2D1 LD B,$08      ;
+ $B2D1 LD B,$08      ; tile height 8 pixels
 *$B2D3 LD A,(DE)     ;
  $B2D4 XOR (HL)      ;
  $B2D5 LD (HL),A     ;
@@ -3412,7 +3408,7 @@ c$B2CE CALL $A164    ; Convert char coords HL to ZX screen address
 ; I:HL Char coords H = 0..23, L = 0..31
 ; I:DE Tile address
 c$B2DB CALL $A164    ; Convert char coords HL to ZX screen address
- $B2DE LD B,$08      ;
+ $B2DE LD B,$08      ; tile height 8 pixels
 *$B2E0 LD A,(DE)     ;
  $B2E1 XOR (HL)      ;
  $B2E2 LD (HL),A     ;
@@ -3645,6 +3641,8 @@ c$B3A0 BIT 4,(IX+$0D) ;
 ; Routine at B470
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
+;
+; I:IX ???
 c$B470 BIT 0,(IX+$0D) ;
  $B474 JR Z,$B479     ;
  $B476 CALL $B3A0     ;
@@ -3763,7 +3761,7 @@ c$B470 BIT 0,(IX+$0D) ;
  $B55A POP DE         ;
  $B55B INC HL         ;
  $B55C LD B,(IY+$09)  ;
- $B55F CALL $B572     ;
+ $B55F CALL $B572     ; Copy records forward
  $B562 DEC DE         ;
  $B563 XOR A          ;
  $B564 LD (DE),A      ;
@@ -3775,9 +3773,14 @@ c$B470 BIT 0,(IX+$0D) ;
  $B56D LD L,(IX+$07)  ;
  $B570 JR $B5A4       ;
 
-; Routine at B572
+; Copy records forward
 ;
 ; Used by the routines at #R$B470 and #R$B5A4.
+;
+; I:HL source address
+; I:DE destination address
+; I:IY ??? (IY+$0A) is record size
+; I:B number of records to copy
 c$B572 PUSH BC       ;
  $B573 LD C,(IY+$0A) ;
  $B576 LD B,$00      ;
@@ -3789,7 +3792,9 @@ c$B572 PUSH BC       ;
 ; Routine at B57E
 ;
 ; Used by the routine at #R$B470.
-c$B57E LD E,(IY+$0A) ;
+;
+; I:IY ???
+c$B57E LD E,(IY+$0A) ; get record size
  $B581 LD D,$00      ;
  $B583 LD B,(IY+$09) ;
 *$B586 ADD HL,DE     ;
@@ -3799,15 +3804,20 @@ c$B57E LD E,(IY+$0A) ;
  $B58B LD E,L        ;
  $B58C DEC HL        ;
  $B58D LD B,(IY+$09) ;
- $B590 CALL $B598    ;
+ $B590 CALL $B598    ; Copy records backward
  $B593 INC DE        ;
  $B594 XOR A         ;
  $B595 LD (DE),A     ;
  $B596 JR $B565      ;
 
-; Routine at B598
+; Copy records backward
 ;
 ; Used by the routines at #R$B57E and #R$B5A4.
+;
+; I:HL source address
+; I:DE destination address
+; I:IY ??? (IY+$0A) is record size
+; I:B number of records to copy
 c$B598 PUSH BC       ;
  $B599 LD C,(IY+$0A) ;
  $B59C LD B,$00      ;
@@ -3819,6 +3829,9 @@ c$B598 PUSH BC       ;
 ; Routine at B5A4
 ;
 ; Used by the routine at #R$B470.
+;
+; I:IX ???
+; I:IY ???
 c$B5A4 BIT 7,(IX+$12) ;
  $B5A8 JR NZ,$B5C1    ;
  $B5AA PUSH HL        ;
@@ -3827,7 +3840,7 @@ c$B5A4 BIT 7,(IX+$12) ;
  $B5B0 ADD HL,DE      ;
  $B5B1 POP DE         ;
  $B5B2 LD B,(IY+$08)  ;
- $B5B5 CALL $B572     ;
+ $B5B5 CALL $B572     ; Copy records forward
  $B5B8 LD B,(IY+$0A)  ;
  $B5BB XOR A          ;
 *$B5BC LD (DE),A      ;
@@ -3845,7 +3858,7 @@ c$B5A4 BIT 7,(IX+$12) ;
  $B5CF POP DE         ;
  $B5D0 EX DE,HL       ;
  $B5D1 LD B,(IY+$08)  ;
- $B5D4 CALL $B598     ;
+ $B5D4 CALL $B598     ; Copy records backward
  $B5D7 LD B,(IY+$0A)  ;
  $B5DA XOR A          ;
 *$B5DB LD (DE),A      ;
@@ -3856,6 +3869,9 @@ c$B5A4 BIT 7,(IX+$12) ;
 ; Routine at B5E0
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
+;
+; I:IX ???
+; I:IY ???
 c$B5E0 RES 1,(IX+$0D) ;
  $B5E4 BIT 0,(IX+$0D) ;
  $B5E8 JR Z,$B5EE     ;
@@ -3930,6 +3946,9 @@ s$B676 DEFS $10
 ; Routine at B686
 ;
 ; Used by the routines at #R$B737 and #R$B7BB.
+;
+; I:IX ???
+; I:IY ???
 c$B686 BIT 5,(IX+$0D) ;
  $B68A JR Z,$B6D6     ;
  $B68C LD L,(IY+$00)  ;
@@ -3995,6 +4014,9 @@ c$B686 BIT 5,(IX+$0D) ;
 ; Routine at B70F
 ;
 ; Used by the routines at #R$B686 and #R$B837.
+;
+; I:IX ???
+; I:IY ???
 c$B70F LD A,H        ;
  $B710 AND $E0       ;
  $B712 RET NZ        ;
@@ -4025,6 +4047,8 @@ c$B70F LD A,H        ;
 ; Routine at B737
 ;
 ; Used by the routines at #R$BE40, #R$BE6D, #R$BE9A and #R$C431.
+;
+; I:IX ???
 c$B737 LD D,(IX+$14)  ;
  $B73A LD E,(IX+$13)  ;
  $B73D PUSH DE        ;
@@ -4069,14 +4093,13 @@ c$B737 LD D,(IX+$14)  ;
  $B7A7 LD A,(IX+$03)  ;
 *$B7AA CP $04         ;
  $B7AC RET NZ         ;
- $B7AD LD HL,$B7B8    ;
- $B7B0 PUSH HL        ;
+ $B7AD LD HL,$B7B8    ; {address of the return point - put on the stack
+ $B7B0 PUSH HL        ; }
  $B7B1 LD H,(IX+$06)  ;
  $B7B4 LD L,(IX+$05)  ;
  $B7B7 JP (HL)        ;
-
-; Routine at B7B8
-c$B7B8 RET           ;
+; Point of return
+ $B7B8 RET            ;
 
 ; Unused
 s$B7B9 DEFS $02
@@ -4084,6 +4107,8 @@ s$B7B9 DEFS $02
 ; Routine at B7BB
 ;
 ; Used by the routines at #R$BE58, #R$BE85, #R$BEB2 and #R$C45C.
+;
+; I:IX ???
 c$B7BB LD A,(IX+$0D)  ;
  $B7BE AND $9E        ;
  $B7C0 LD (IX+$0D),A  ;
@@ -4268,10 +4293,10 @@ c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B955 JR $B95D        ;
 *$B957 LD L,(IY+$12)   ;
  $B95A LD H,(IY+$13)   ;
-*$B95D LD (IX+$09),L   ;
- $B960 LD (IX+$0A),H   ;
- $B963 LD (IX+$0B),L   ;
- $B966 LD (IX+$0C),H   ;
+*$B95D LD (IX+$09),L   ; {set sprite address
+ $B960 LD (IX+$0A),H   ; }
+ $B963 LD (IX+$0B),L   ; {set sprite address
+ $B966 LD (IX+$0C),H   ; }
  $B969 RES 0,(IX+$10)  ; clear "moving" bit
  $B96D SRL (IX+$0E)    ;
  $B971 RET             ;
@@ -4663,8 +4688,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BCDE LD H,(IY+$05)   ;
  $BCE1 PUSH HL         ;
  $BCE2 POP IY          ;
- $BCE4 LD (IX+$13),L   ;
- $BCE7 LD (IX+$14),H   ;
+ $BCE4 LD (IX+$13),L   ; set X value
+ $BCE7 LD (IX+$14),H   ; set Y value
 *$BCEA LD A,(IX+$1A)   ;
  $BCED LD (IX+$00),A   ;
  $BCF0 LD A,(IX+$1B)   ;
@@ -4722,6 +4747,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 ; Routine at BD83
 ;
 ; Used by the routines at #R$BEDB, #R$BFB0 and #R$C009.
+;
+; I:A ???
 c$BD83 LD A,L        ;
  $BD84 AND C         ;
  $BD85 ADD A,C       ;
@@ -4742,14 +4769,14 @@ c$BD83 LD A,L        ;
  $BDA0 JR NC,$BDA3   ;
  $BDA2 INC H         ;
 *$BDA3 LD A,(HL)     ;
- $BDA4 LD (IX+$04),A ;
+ $BDA4 LD (IX+$04),A ; set DX value
  $BDA7 POP DE        ;
  $BDA8 RET           ;
 
 ; Data block at BDA9
-b$BDA9 DEFB $00,$41,$44,$05,$45,$02,$42,$43
- $BDB1 DEFB $40,$05,$45,$02,$42,$43,$03,$40
- $BDB9 DEFB $41
+b$BDA9 DEFB $00
+ $BDAA DEFB $41,$44,$05,$45,$02,$42,$43,$40
+ $BDB2 DEFB $05,$45,$02,$42,$43,$03,$40,$41
 
 ; Routine at BDBA
 ;
@@ -4928,10 +4955,10 @@ c$BEC7 LD HL,$B676   ;
 c$BEDB CALL $BEC7      ;
  $BEDE LD HL,$BDAA     ;
  $BEE1 LD ($BD9C),HL   ;
- $BEE4 LD HL,$C20A     ;
+ $BEE4 LD HL,$C20A     ; {Copy 21 byte from $C20A to $C4F0
  $BEE7 LD DE,$C4F0     ;
  $BEEA LD BC,$0015     ;
- $BEED LDIR            ;
+ $BEED LDIR            ; }
  $BEEF LD A,($5B13)    ;
  $BEF2 LD B,A          ;
 *$BEF3 PUSH BC         ;
@@ -5013,6 +5040,10 @@ b$BFA0 DEFB $05,$00,$AD,$C3,$1A,$00,$00,$0F
 ; Routine at BFB0
 ;
 ; Used by the routine at #R$BEDB.
+;
+; I:HL ???
+; I:IY ???
+; I:A ???
 c$BFB0 LD ($BFC4),IY ;
  $BFB4 LD ($C007),HL ;
  $BFB7 LD B,A        ;
@@ -5023,7 +5054,7 @@ c$BFB0 LD ($BFC4),IY ;
  $BFBE AND $0E       ;
  $BFC0 LD E,A        ;
  $BFC1 LD D,$00      ;
- $BFC3 LD HL,$0000   ;
+ $BFC3 LD HL,$0000   ; !!! mutable argument
  $BFC6 ADD HL,DE     ;
  $BFC7 LD C,(HL)     ;
  $BFC8 INC HL        ;
@@ -5060,8 +5091,8 @@ c$BFB0 LD ($BFC4),IY ;
  $C004 DJNZ $BFB8    ;
  $C006 RET           ;
 
-; Unused
-s$C007 DEFS $02
+; Data block at C007
+b$C007 DEFW $0000    ; ???
 
 ; Routine at C009
 ;
@@ -5463,7 +5494,7 @@ c$DA39 LD ($5B4A),A  ;
  $DA56 JR NZ,$DA51   ;
  $DA58 RET           ;
 
-; Routine at DA59
+; Print char and shift current position right
 ;
 ; Used by the routine at #R$DA98.
 c$DA59 LD HL,($DC7E) ;
@@ -5471,11 +5502,12 @@ c$DA59 LD HL,($DC7E) ;
  $DA5D LD ($DC7E),HL ;
  $DA60 DEC L         ;
  $DA61 JR $DA6B      ;
-; Entry point
+; Print char and shift current position down
  $DA63 LD HL,($DC7E) ;
  $DA66 INC H         ;
  $DA67 LD ($DC7E),HL ;
  $DA6A DEC H         ;
+; Print char
 *$DA6B PUSH HL       ;
  $DA6C PUSH AF       ;
  $DA6D CALL $A164    ; Convert char coords HL to ZX screen address
@@ -5505,15 +5537,20 @@ c$DA59 LD HL,($DC7E) ;
  $DA96 LD (HL),A     ;
  $DA97 RET           ;
 
-; Routine at DA98
+; Print string
 ;
 ; Used by the routines at #R$DAAD and #R$EEAD.
+;
+; I:HL String address
+; I:BC Row and column
+; I:DE Print char procedure address
 c$DA98 LD ($DAA3),DE ;
 ; This entry point is used by the routines at #R$DAAD and #R$EEAD.
 *$DA9C LD ($DC7E),BC ;
  $DAA0 LD A,(HL)     ;
 *$DAA1 PUSH HL       ;
- $DAA2 CALL $DA59    ; !!! mutable argument
+ $DAA2 CALL $DA59    ; Print char and shift !!! mutable argument #R$DA59 /
+                     ; #R$DA63
  $DAA5 POP HL        ;
  $DAA6 INC HL        ;
  $DAA7 LD A,(HL)     ;
@@ -5530,8 +5567,8 @@ c$DAAD LD A,$30      ;
  $DAB4 OUT ($FE),A   ;
  $DAB6 LD HL,$DC09   ; Indicator top border
  $DAB9 LD BC,$0018   ;
- $DABC LD DE,$DA59   ;
- $DABF CALL $DA98    ;
+ $DABC LD DE,$DA59   ; Procedure Print char and shift right
+ $DABF CALL $DA98    ; Print string
  $DAC2 LD HL,$DC12   ; Indicator bottom border
  $DAC5 LD BC,$1718   ;
  $DAC8 CALL $DA9C    ;
@@ -5546,8 +5583,8 @@ c$DAAD LD A,$30      ;
  $DAE3 CALL $DA9C    ;
  $DAE6 LD HL,$DC32   ; Indicator left/right border
  $DAE9 LD BC,$0118   ;
- $DAEC LD DE,$DA63   ;
- $DAEF CALL $DA98    ;
+ $DAEC LD DE,$DA63   ; Procedure Print char and shift down
+ $DAEF CALL $DA98    ; Print string
  $DAF2 LD HL,$DC32   ; Indicator left/right border
  $DAF5 LD BC,$011F   ;
  $DAF8 CALL $DA9C    ;
@@ -5951,10 +5988,10 @@ c$DFD5 LD HL,($B7B9)   ;
  $E006 LD HL,$DF25     ; Table base address
  $E009 ADD HL,BC       ;
  $E00A LD A,(HL)       ; get DX value for the Angle
- $E00B LD (IX+$04),A   ;
+ $E00B LD (IX+$04),A   ; set DX value
  $E00E INC HL          ;
  $E00F LD A,(HL)       ; get DY value for the Angle
- $E010 LD (IX+$05),A   ;
+ $E010 LD (IX+$05),A   ; set DY value
  $E013 BIT 0,(IX+$10)  ; check "moving" bit
  $E017 JR NZ,$E021     ;
  $E019 LD (IX+$04),$00 ; clear DX value
@@ -5972,7 +6009,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E03B JR Z,$E068      ;
  $E03D CP $07          ;
  $E03F JR NZ,$E08D     ;
- $E041 BIT 7,(IX+$04)  ;
+ $E041 BIT 7,(IX+$04)  ; set DX value
  $E045 JR Z,$E08D      ;
  $E047 BIT 7,(IX+$11)  ;
  $E04B JR Z,$E08D      ;
@@ -6011,7 +6048,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E0A5 JR Z,$E0EA      ;
  $E0A7 CP $07          ;
  $E0A9 JP NZ,$E120     ;
- $E0AC BIT 7,(IX+$05)  ;
+ $E0AC BIT 7,(IX+$05)  ; check DY value - moving up?
  $E0B0 JR Z,$E120      ;
  $E0B2 BIT 7,(IX+$12)  ;
  $E0B6 JR Z,$E120      ;
@@ -6021,7 +6058,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E0C0 LD A,(IX+$03)   ;
  $E0C3 LD (IX+$16),A   ;
  $E0C6 ADD A,A         ;
- $E0C7 LD (IX+$14),A   ;
+ $E0C7 LD (IX+$14),A   ; set Y value
  $E0CA JR $E120        ;
 *$E0CC DEC (IX+$01)    ;
  $E0CF DEC (IX+$1A)    ;
@@ -6034,7 +6071,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E0E3 DEC H           ;
  $E0E4 SET 2,(IX+$10)  ;
  $E0E8 JR $E120        ;
-*$E0EA BIT 7,(IX+$05)  ;
+*$E0EA BIT 7,(IX+$05)  ; check DY value - moving up?
  $E0EE JR NZ,$E120     ;
  $E0F0 BIT 7,(IX+$12)  ;
  $E0F4 JR NZ,$E120     ;
@@ -6264,7 +6301,7 @@ c$E2DB BIT 3,(IX+$10) ;
  $E305 LD BC,($5B3E)  ;
  $E309 LD A,($5B40)   ; get bit mask for Accelerate key
  $E30C LD D,A         ;
- $E30D IN A,(C)       ;
+ $E30D IN A,(C)       ; read the port for Accelerate key
  $E30F AND D          ;
  $E310 JR NZ,$E31F    ;
  $E312 LD A,(IX+$0E)  ;
@@ -6275,53 +6312,57 @@ c$E2DB BIT 3,(IX+$10) ;
 *$E31F LD BC,($5B41)  ;
  $E323 LD A,($5B43)   ; get bit mask for Decelerate key
  $E326 LD D,A         ;
- $E327 IN A,(C)       ;
+ $E327 IN A,(C)       ; read the port for Decelerate key
  $E329 AND D          ;
  $E32A RET NZ         ;
  $E32B LD A,(IX+$0E)  ;
  $E32E CP $14         ;
  $E330 JR NZ,$E337    ;
- $E332 RES 0,(IX+$10) ; clear "moving" bit
+ $E332 RES 0,(IX+$10) ; clear "moving" bit - diver stopped
  $E336 RET            ;
 *$E337 INC (IX+$0E)   ;
  $E33A RET            ;
 
 ; Object record
-b$E33B DEFB $0A                 ; (IX+$00) Column 0..31
- $E33C DEFB $0A                 ; (IX+$01) Row
- $E33D DEFB $04,$04
- $E33F DEFB $00                 ; (IX+$04) DX value for the Angle, see table
-                                ; #R$DF25
- $E340 DEFB $00                 ; (IX+$05) DY value for the Angle, see table
-                                ; #R$DF25
- $E341 DEFB $04                 ; (IX+$06) Angle 0..15, initially 4
- $E342 DEFB $8D,$DF
- $E344 DEFW $0000               ; (IX+$09) Sprite address
- $E346 DEFW $0000               ; (IX+$0B) Sprite address
- $E348 DEFB $18                 ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
- $E349 DEFB $14                 ; (IX+$0E) ??? 12 20 40 100
- $E34A DEFB $14                 ; (IX+$0F) ??? $03
- $E34B DEFB $00                 ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
-                                ; bit0: 1 = diver moving, 0 = diver stopped
- $E34C DEFB $00                 ; (IX+$11) ??? $00 $FF
- $E34D DEFB $00
- $E34E DEFB $08                 ; (IX+$13) X value
- $E34F DEFB $08                 ; (IX+$14) Y value
- $E350 DEFB $00                 ; (IX+$15) X shift 0..7
- $E351 DEFB $00                 ; (IX+$16) Y shift 0..7
- $E352 DEFB $00                 ; (IX+$17) ???
- $E353 DEFB $00                 ; (IX+$18) Column 0..31
- $E354 DEFB $00                 ; (IX+$19) Row
- $E355 DEFB $0A,$12,$03,$12,$03
- $E35A DEFB $40                 ; (IX+$1F) Row??
- $E35B DEFB $00                 ; (IX+$20) ??? $03
- $E35C DEFB $00                 ; (IX+$21) ???
- $E35D DEFB $00                 ; (IX+$22) ??? $F5
+b$E33B DEFB $0A      ; (IX+$00) Column 0..31
+ $E33C DEFB $0A      ; (IX+$01) Row
+ $E33D DEFB $04      ; (IX+$02) ???
+ $E33E DEFB $04
+ $E33F DEFB $00      ; (IX+$04) DX value for the Angle, -2..2, see table
+                     ; #R$DF25
+ $E340 DEFB $00      ; (IX+$05) DY value for the Angle, -2..2, see table
+                     ; #R$DF25
+ $E341 DEFB $04      ; (IX+$06) Angle 0..15, initially 4
+ $E342 DEFB $8D
+ $E343 DEFB $DF      ; (IX+$08) ???
+ $E344 DEFW $0000    ; (IX+$09) Sprite address
+ $E346 DEFW $0000    ; (IX+$0B) Sprite address
+ $E348 DEFB $18      ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
+ $E349 DEFB $14      ; (IX+$0E) ??? 12 20 40 100
+ $E34A DEFB $14      ; (IX+$0F) ??? $03
+ $E34B DEFB $00      ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
+                     ; bit0: 1 = diver moving, 0 = diver stopped
+ $E34C DEFB $00      ; (IX+$11) ??? $00 $FF
+ $E34D DEFB $00      ; (IX+$12) ??? $00
+ $E34E DEFB $08      ; (IX+$13) X value
+ $E34F DEFB $08      ; (IX+$14) Y value
+ $E350 DEFB $00      ; (IX+$15) X shift 0..7
+ $E351 DEFB $00      ; (IX+$16) Y shift 0..7
+ $E352 DEFB $00      ; (IX+$17) ???
+ $E353 DEFB $00      ; (IX+$18) Column 0..31
+ $E354 DEFB $00      ; (IX+$19) Row
+ $E355 DEFB $0A,$12
+ $E357 DEFB $03      ; (IX+$1C) ???
+ $E358 DEFB $12,$03
+ $E35A DEFB $40      ; (IX+$1F) Row??
+ $E35B DEFB $00      ; (IX+$20) ??? $03
+ $E35C DEFB $00      ; (IX+$21) ???
+ $E35D DEFB $00      ; (IX+$22) ??? $F5
  $E35E DEFB $00
- $E35F DEFW $0000               ; (IX+$24) Sprite address
- $E361 DEFB $00                 ; (IX+$26) ??? bits 0/1/2/3/4/5/6
- $E362 DEFB $00                 ; (IX+$27) ???
- $E363 DEFB $00                 ; (IX+$28) ???
+ $E35F DEFW $0000    ; (IX+$24) Sprite address
+ $E361 DEFB $00      ; (IX+$26) ??? bits 0/1/2/3/4/5/6
+ $E362 DEFB $00      ; (IX+$27) ???
+ $E363 DEFB $00      ; (IX+$28) ???
 
 ; Routine at E364
 ;
@@ -6775,7 +6816,7 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E6D7 LD (IX+$12),$00 ;
  $E6DB LD (IX+$0D),$00 ;
  $E6DF LD (IX+$01),$06 ;
- $E6E3 LD (IX+$14),$0C ;
+ $E6E3 LD (IX+$14),$0C ; set Y value = 12
  $E6E7 SET 3,(IX+$10)  ;
  $E6EB LD A,($C4F2)    ;
  $E6EE LD (IX+$27),A   ;
@@ -6795,13 +6836,13 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E716 LD A,C          ;
  $E717 SUB L           ;
  $E718 ADD A,$03       ;
- $E71A LD (IX+$00),A   ;
+ $E71A LD (IX+$00),A   ; set Column value
  $E71D LD C,A          ;
  $E71E LD A,($C4F2)    ;
  $E721 ADD A,$03       ;
  $E723 BIT 3,A         ;
  $E725 JR Z,$E72C      ;
- $E727 INC (IX+$00)    ;
+ $E727 INC (IX+$00)    ; one Column right
  $E72A AND $07         ;
 *$E72C ADD A,A         ;
  $E72D LD (IX+$13),A   ; set X value
@@ -6816,7 +6857,7 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E742 ADD A,B         ;
 *$E743 SUB $10         ;
  $E745 JR C,$E74C      ;
- $E747 INC (IX+$00)    ;
+ $E747 INC (IX+$00)    ; one Column right
  $E74A JR $E743        ;
 *$E74C ADD A,$10       ;
  $E74E LD (IX+$13),A   ; set X value
@@ -6834,9 +6875,9 @@ c$E6AB LD IX,$E33B     ; Diver object record address
 c$E767 BIT 0,(IX+$26)  ;
  $E76B JR NZ,$E7E0     ;
  $E76D LD (IX+$20),$03 ;
- $E771 LD (IX+$0F),$03 ; clear DX value
- $E775 LD (IX+$04),$00 ; clear DY value
- $E779 LD (IX+$05),$00 ;
+ $E771 LD (IX+$0F),$03 ;
+ $E775 LD (IX+$04),$00 ; clear DX value
+ $E779 LD (IX+$05),$00 ; clear DY value
  $E77D LD A,($C4F2)    ;
  $E780 CP (IX+$27)     ;
  $E783 JR Z,$E78C      ;
@@ -6858,7 +6899,7 @@ c$E767 BIT 0,(IX+$26)  ;
  $E7AE LD (IX+$25),H   ; }
  $E7B1 SET 0,(IX+$26)  ;
  $E7B5 LD (IX+$04),$FF ; set DX value = -1
- $E7B9 LD (IX+$05),$02 ;
+ $E7B9 LD (IX+$05),$02 ; set DY value = +2
  $E7BD SET 1,(IX+$26)  ;
  $E7C1 RET             ;
 *$E7C2 LD HL,$934C     ; Sprite diver directing up-right
@@ -6918,8 +6959,8 @@ c$E767 BIT 0,(IX+$26)  ;
  $E85F OR A            ;
  $E860 SBC HL,DE       ;
  $E862 RET NZ          ;
- $E863 LD (IX+$04),$00 ;
- $E867 LD (IX+$05),$00 ;
+ $E863 LD (IX+$04),$00 ; clear DX value
+ $E867 LD (IX+$05),$00 ; clear DY value
  $E86B LD (IX+$06),$04 ;
  $E86F SET 7,(IX+$10)  ;
  $E873 RES 0,(IX+$10)  ; clear "moving" bit
@@ -7030,7 +7071,7 @@ c$E915 LD DE,($C4F0)   ;
  $E978 LD A,$08        ;
  $E97A ADD A,C         ;
  $E97B LD C,A          ;
-*$E97C LD (IX+$00),C   ;
+*$E97C LD (IX+$00),C   ; set Column value
  $E97F LD A,(IX+$27)   ;
  $E982 ADD A,A         ;
  $E983 LD (IX+$13),A   ;
@@ -7613,9 +7654,9 @@ c$EEAD LD A,($5C79)  ;
  $EEE6 PUSH IX       ;
  $EEE8 PUSH IY       ;
  $EEEA LD BC,$001A   ;
- $EEED LD DE,$DA63   ;
+ $EEED LD DE,$DA63   ; Procedure Print char and shift down
  $EEF0 LD HL,$EF3A   ;
- $EEF3 CALL $DA98    ;
+ $EEF3 CALL $DA98    ; Print string
  $EEF6 INC HL        ;
  $EEF7 LD BC,$001B   ;
  $EEFA CALL $DA9C    ;
@@ -7652,14 +7693,14 @@ c$EEAD LD A,($5C79)  ;
 
 ; Data block at EF3A
 b$EF3A DEFB $89,$8A,$00,$8B,$8C,$00,$8D,$8E
- $EF42 DEFB $00,$8F,$90,$00,$91,$92,$FF,$93
- $EF4A DEFB $94,$00,$95,$96,$00,$97,$98,$00
- $EF52 DEFB $99,$9A,$00,$9B,$9C,$FF,$9D,$9E
- $EF5A DEFB $00,$9F,$A0,$00,$A1,$A2,$00,$A3
- $EF62 DEFB $A4,$FF,$A5,$A6,$00,$A7,$A8,$00
- $EF6A DEFB $A9,$AA,$00,$AB,$AC,$FF,$12,$00
- $EF72 DEFB $13,$00,$14,$00,$15,$00,$11,$00
- $EF7A DEFB $10,$07,$16,$15,$01
+ $EF42 DEFB $00,$8F,$90,$00,$91,$92,$FF
+ $EF49 DEFB $93,$94,$00,$95,$96,$00,$97,$98
+ $EF51 DEFB $00,$99,$9A,$00,$9B,$9C,$FF
+ $EF58 DEFB $9D,$9E,$00,$9F,$A0,$00,$A1,$A2
+ $EF60 DEFB $00,$A3,$A4,$FF,$A5,$A6,$00,$A7
+ $EF68 DEFB $A8,$00,$A9,$AA,$00,$AB,$AC,$FF
+ $EF70 DEFB $12,$00,$13,$00,$14,$00,$15,$00
+ $EF78 DEFB $11,$00,$10,$07,$16,$15,$01
 
 ; Message at EF7F
 t$EF7F DEFM $16,$0B,$05,$11,$00,$10,$06

@@ -7,40 +7,40 @@ i $5BD7
 b $7100 Sprites
   $7100,2048,8
 b $7900 Data block
-N $8D52 Referenced from #R$92CE, #R$9822, #R$985E, #R$9898, #R$98DC
-B $8D52
+w $7A00 Table with sprite addresses
+W $7A00,,16
+b $7B00 Global objects table, 16 bytes per record, max 240 records
+B $7B00,,16
+b $8A00 Objects table, 9 fixed records, 16 bytes each record
+B $8A00,,16
+b $8A90 Objects table, 44 dynamic records, 16 bytes each
+B $8A90,,16
+w $8D52 List of objects to draw, order from far to nearest by Z-coord
+W $8D52,,16
+b $8E00 Table used in object movement procedure, 8 bytes each record
+B $8E00,,8
 b $8F00 Variables
-N $8F00 Referenced from #R$9172, #R$A388, #R$9662
-B $8F00,1,1
-N $8F01 Referenced from #R$A394, #R$92F5, #R$9C7B, #R$985A, #R$A64C, #R$91CA, #R$A11B, #R$91F1, #R$A1FB, #R$A1D5, #R$9CBF, #R$9BB3, #R$9D70
-W $8F01,2,2
-N $8F03 Referenced from #R$9837, #R$9343, #R$990D, #R$A586
-W $8F03,2,2
-N $8F05 Referenced from #R$9340, #R$93CE, #R$9D57
-W $8F05,2,2
-N $8F07 Referenced from #R$9332, #R$9CA8
-W $8F07,2,2
-N $8F09 Referenced from #R$987F, #R$9339, #R$A562
-W $8F09,2,2
+B $8F00,1,1 Zone number
+W $8F01,2,2 Object table address, 16 bytes per record; first record is currently active Vorton
+W $8F03,2,2 Current zone offset, used to draw sprites
+W $8F05,2,2 Current zone low pos = base pos - 128.
+W $8F07,2,2 Current zone high pos
+W $8F09,2,2 Current zone base pos = high pos - 48.
 N $8F0B Referenced from #R$9861, #R$9AD8, #R$98A5, #R$98B0, #R$98C3
-N $8F14 Referenced from #R$A34D, #R$A07C, #R$A129, #R$A0AD, #R$A0D6, #R$A105, #R$A1B0
-B $8F14,1,1
+B $8F14,1,1 Current action in animation mode (see A34D routine)
 N $8F15 Referenced from #R$9B6E, #R$9AEF
 B $8F15,1,1
-N $8F16 Referenced from #R$9BE2, #R$9BE8
-B $8F16,1,1
-N $8F17 Referenced from #R$91CD, #R$91FE
-B $8F17,1,1
-N $8F18 Referenced from #R$A1E7, #R$A1F0, #R$A10C, #R$A112
-B $8F18,1,1
-N $8F19 Referenced from #R$9195, #R$91A2
-B $8F19,1,1
+B $8F16,1,1 Counter for Lasertron movement indicator
+B $8F17,1,1 Current vorton indicator offset
+B $8F18,1,1 Current Power indicator offset
+B $8F19,1,1 Mission Time high counter
 N $8F1A Referenced from #R$918C, #R$91C3
 B $8F1A,1
 N $8F1C Referenced from #R$9765, #R$934B, #R$A6B4, #R$A8D6
 B $8F1C,1,1
 N $8F23 Referenced from #R$B195, #R$9118
 B $8F23,1,1
+N $8F25 Initial values for the Variables block
 B $8F4A
 c $8F79 Redirects
 D $8F79 Used by the routine at #R$B0DE.
@@ -52,47 +52,114 @@ N $8F82 This entry point is used by the routines at #R$B41B and #R$B4D0.
   $8F82,3 Draw sprite with no shift
 N $8F85 This entry point is used by the routines at #R$B41B and #R$B4D0.
   $8F85,3 Draw sprite with shift by -2px
-c $8F89
+c $8F89 Routine ?? work on table $7B00
 B $8F89
-C $8F8A Routine
 D $8F8A Used by the routine at #R$90F2.
+C $8F8A,4 global objects table
+C $8F97,3 get movement pattern
+C $8FA0,3 alter movement
+C $8FA6,2 next record
+C $8FAE,2 repeat
 b $8FB0 Text
 B $8FB0 Text to print by #R$B890 routine
+w $9000 Continuation points, see 9E6C
 W $9000,240,16
 W $90F0
 c $90F2 Routine: GAME MODE
 D $90F2 Used by the routine at #R$B0DE.
+C $90F2,3 check score
+C $90F5,3 Score
+C $90F8,2 counter = 6
+C $90FA,2 clear score digit
+C $90FD,2 repeat
+C $9101,3 print score
+C $9104,3 init spd lvl
 N $9107 This entry point is used by the routine at #R$A694.
+C $9107,3 Intro
+C $910E,2 Check for abort key
+C $9113,3 "MISSION ABORTED"
+C $911B,3 print text
+C $911E,1 Exit GAME MODE
+C $9127,3 "PAUSE MODE"
+C $912A,3 print text
+C $9163,3 Remove objects from the shadow screen
+C $9166,3 Objects logic
+C $9169,3 Process object movement
+C $916C,3 Prepare table 8D52 (sort out objects by depth), and draw the objects
+C $916F,3 redraw changes
+C $9172,3 get zone number
+C $9175,2 zone 30.?
+C $9177,3 less => jump
+N $917A Zone >= 30
+C $917A,3 Lasertron object + $01
+C $9189,3 => Animation in Zone 30
+C $918C,3 get Mission Time low counter
+C $918F,1 time's ticking
+C $9192,1 time's out?
+C $9193,2 no => jump
+N $9195 Show Mission Time change
+C $9195,3 get high counter
+C $91A6,2 7 lines
+N $91B2 Mission Time is out
+C $91B2,3 "TOO LATE MISSION TERMINATED"
+C $91B5,3 Print text and Exit
+C $91D4,2 dead Vorton?
+C $91D6,3 no => continue main loop
+C $91DC,1 next record
+C $91DE,1 next Vorton indicator
+C $91E0,2 Are we out of Vortons?
+N $91E5 Sorry, all Vortons are dead, game over
+C $91E5,3 "GAME OVER ALL VORTONS DESTROYED"
+C $91E8,3 Print text and Exit
+C $91EC,2 skip?
+N $91FD HL points to (+$08) of Auto-Vorton to convert into Main Vorton
+C $9221,2 set base sprite number = Main Vorton
+C $9227,2 set sprite number offset
+N $9229 Reset the scene to continue with the new Main Vorton
+C $922F,3 continue main loop
 b $9232 Text
-B $9232 Text to print by #R$B890 routine
-B $92A0 Text to print by #R$B890 routine
-c $92CE Routine
+B $9232 "MISSION ABORTED" - Text to print by #R$B890 routine
+B $9247 "TOO LATE - MISSION TERMINATED"
+B $926F "GAME OVER - ALL VORTONS - DESTROYED"
+B $92A0 "PAUSE MODE" - text to print by #R$B890 routine
+c $92CE Prepare objects for the current Zone
 D $92CE Used by the routines at #R$90F2, #R$9C7B, #R$A291 and #R$A367.
 N $92F5 This entry point is used by the routine at #R$A291.
-c $9394 Routine
+c $9394 Draw digit with size of 16x24 pixels into the ZONE indicator
 D $9394 Used by the routine at #R$92CE.
 c $93B7 Routine
 D $93B7 Used by the routine at #R$92CE.
-c $9423 Routine
-D $9423 Used by the routine at #R$A291.
+N $93B7 First, we select objects from $7B00 table to $8A90 table
+N $9400 Mark as empty all records with (IX+$05) between 128 and 224
+c $9423 Initializing objects tables
+D $9423 Called before starting animation. Used by the routine at #R$A291.
 b $9536
 b $95E3
-c $95EF Routine: Show the screen
+c $95EF Prepare shadow screen, show the screen
 D $95EF Used by the routines at #R$90F2, #R$9C7B, #R$A291 and #R$A367.
-c $9633 Routine
+C $9630,3 go to Draw zone land
+c $9633 Draw zone border line
 D $9633 Used by the routine at #R$95EF.
 N $9658 Referenced from #R$965F, #R$9692, #R$96E0, #R$96E4, #R$96EC, #R$970D
-c $9658 Vars and Code
-B $9658,1,1
+c $9658 Draw zone land
+B $9658,1,1 Pattern column height, in char-lines
 N $9659 Referenced from #R$967E, #R$96D6, #R$96F9, #R$974B
 W $9659,2,2
 N $965B Referenced from #R$969F, #R$96AA, #R$96C9, #R$9714, #R$971F, #R$973E
 W $965B,2,2
 D $965D Used by the routine at #R$95EF.
+C $965D,2 initial column height
+C $9662,3 get zone number
+C $966B,1 x16
+C $966E,1 x32
+C $966F,1 x48
+C $9765,3 get zone number
+C $9768,2 zone >= 31?
+C $976A,3 yes => draw zone specials
   $97A9,3 Screen address
 c $9822 Routine
 D $9822 Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
-c $985A Routine
+c $985A Sort Objects
 D $985A Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 N $98E2 This entry point is used by the routine at #R$9980.
   $9915,3 Draw sprite with shift by 4px
@@ -132,7 +199,7 @@ c $9A70 Draw sprite with no shift
 D $9A70 Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
 R $9A70 BC ??
 R $9A70 DE Mask and Sprite address
-c $9A9B Routine
+c $9A9B Redraw changes
 D $9A9B Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 N $9B2C Sound. This entry point is used by the routine at #R$A694.
   $9B30,1 Border 0
@@ -147,7 +214,8 @@ N $9B5B Sound. This entry point is used by the routine at #R$A694.
   $9B60,2 Output EAR/MIC
   $9B62,2 wait
   $9B65,2 loop
-B $9BFC Data block: 18 records used to draw the shadow screen
+b $9BFC Redraw table: 18 records used to draw the shadow screen
+B $9BFC,,7
 c $9C7B Routine
 D $9C7B Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 c $A03B Routine
@@ -163,7 +231,7 @@ B $A28D,1,1
 B $A28E,1,1
 B $A28F,1,1
 B $A290,1,1
-c $A291 Routine
+c $A291 Intro
 D $A291 Used by the routines at #R$90F2 and #R$A367.
 c $A34D Routine (the most used one)
 D $A34D Used by the routines at #R$A291, #R$A617 and #R$A694.
@@ -179,13 +247,14 @@ c $A414 Routine
 D $A414 Used by the routines at #R$9A9B, #R$9C7B and #R$A617.
 N $A42B This entry point is used by the routines at #R$90F2 and #R$A3D3.
 N $A431 This entry point is used by the routine at #R$A450.
-c $A450 Routine
+c $A450 Check Score
 D $A450 Used by the routine at #R$90F2.
+  $AA61,3 Spacecraft sprite data
 N $A478 This entry point is used by the routine at #R$A3D3.
 b $A480 Data block
 B $A4C7 Text to print by #R$B890 routine
 B $A4D6 Text to print by #R$B890 routine
-c $A546 Routine
+c $A546 Draw Rough
 D $A546 Used by the routine at #R$965D.
   $A592,3 Draw sprite with shift by 4px
   $A59A,3 Draw sprite with shift by 2px
@@ -202,15 +271,30 @@ D $A694 Used by the routine at #R$A617.
   $A81B,3 Print Text
 c $A8C5 Routine
 D $A8C5 Used by the routines at #R$A367 and #R$A694.
-c $A8D6 Routine
+c $A8D6 Draw zone specials
+C $A8D6,3 get zone number
 D $A8D6 Used by the routine at #R$965D.
+C $A8EB,3 Draw zone special 0
+C $A8EF,3 Draw zone special 1
+C $A8F3,3 Draw zone special 2
+C $A8F7,3 Draw zone special 3
+C $A8FB,3 Draw zone special 4
+C $A8FF,3 Draw zone special 5
+N $A902 Draw zone special 0
+N $A91D Draw zone special 1
+N $A922 Draw zone special 2
+N $A962 Draw zone special 3
+N $A99E Draw zone special 4
+N $AA61 Draw zone special 5
 B $AA90
 B $AAFF
   $AAC9,3 Draw sprite with shift by -2px
   $AAD1,3 Draw sprite with no shift
   $AAD9,3 Draw sprite with shift by 2px
   $AAE1,3 Draw sprite with shift by 4px
-c $B0DE Start point?
+b $AAFF Spacecraft sprite data
+N $AAFF Number of tiles = 12 + 13 + 17 + 18 + 21 + 21 + 21 + 21 + 19 + 17 + 8 = 188 tiles = 1504 bytes
+c $B0DE Start point
 N $B0E1 Point of return from block #R$B4D0.
   $B0E4,3 Sound
   $B0EF,3 Prepare shadow screen
@@ -236,7 +320,17 @@ R $B203 HL ??
   $B21B,2 repeat
 b $B21E Text
 N $B21E Referenced from #R$B104
-B $B21E Text to print by #R$B890 routine
+N $B21E Text to print by #R$B890 routine
+B $B21E,25,16
+B $B237,12,12
+B $B243,14,14
+B $B251,17,17
+B $B262,14,14
+B $B270,16,16
+B $B280,17,17
+B $B291,19,16
+B $B2A4,16,16
+B $B2B4,36,16
 c $B2DA Routine: Prepare shadow screen
 D $B2DA Used by the routines at #R$B0DE and #R$B4D0.
 c $B33C Routine
@@ -315,6 +409,9 @@ D $B4D0 Used by the routine at #R$B0DE.
   $B50E,3 Prepare screen with attributes
   $B511,3 Print Small Font Signs
   $B517,3 Print Text
+  $B520,2 wait for key unpress
+  $B528,2 wait for key press
+  $B52A,3 Return to menu
 c $B52D Print Small Font Signs on the Info Screen
 D $B52D Used by the routine at #R$B4D0.
   $B52D,3 Info Screen Small Font Signs
@@ -322,7 +419,38 @@ b $B5D7 Small Font
 B $B5D7,80
 B $B627,5 Buffer
 t $B62C Info Screen Small Font Signs
-T $B62C,37
+B $B62C,3
+T $B62F,34
+B $B651,3
+T $B654,40
+B $B67C,3
+T $B67F,28
+B $B69B,3
+T $B69E,29
+B $B6BB,3
+T $B6BE,27
+B $B6D9,3
+T $B6DC,32
+B $B6FC,3
+T $B6FF,27
+B $B71A,3
+T $B71D,28
+B $B739,3
+T $B73C,30
+B $B75A,3
+T $B75D,7
+B $B764,3
+T $B767,7
+B $B76E,3
+T $B771,7
+B $B778,3
+T $B77B,8
+B $B783,3
+T $B786,17
+B $B797,3
+T $B79A,7
+B $B7A1,3
+T $B7A4,17
 b $B7B5 Info Screen Text
 B $B7B5 Text to print by #R$B890 routine
 c $B890 Routine: Print Text

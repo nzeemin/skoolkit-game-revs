@@ -361,20 +361,25 @@ B $9C0C,32,16 #HTML[#UDGARRAY2,,,2,,;$9C0C-$9C2B-1-16(divervar4)]
 B $9C2C,32,16 #HTML[#UDGARRAY2,,,2,,;$9C2C-$9C4B-1-16(divervar5)]
 B $9C4C
 c $9C56
+C $9C70,3 Calc address in #R$AC5D and Get
 C $9CB7,1 *8
 C $9CB8,3 base address for relief blocks 8x8
-c $9D40 Calculate address ???
+C $9CEB,3 set Column value = 6
+c $9D40 Calculate address in #R$AC5D table
 R $9D40 I:HL H = row, L = column 0..31
 C $9D4D,2 HL shifted right 3 bits
 C $9D50,1 HL := H * 32 + L
 C $9D54,1 HL := $AC5D + H * 32 + L
-c $9D56 Calculate address and Get ???
+c $9D56 Calculate address in #R$AC5D and Get
 R $9D56 I:HL H = row, L = column 0..31
 R $9D56 O:A Value
+C $9D58,3 Calculate address in #R$AC5D table
 c $9D5F
-c $9D79 Calculate address and Set ???
+C $9D6B,3 Calc address in #R$AC5D and Get
+c $9D79 Calculate address in #R$AC5D and Set
 R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
+C $9D7C,3 Calculate address in #R$AC5D table
 c $9D84 Random
 N $9D84 Calculate next number in pseudo-random sequence
 C $9D89,1 x2
@@ -399,30 +404,83 @@ R $9DA5 I:HL Block address
 R $9DA5 I:A Value
 R $9DA5 I:B Length of the block to fill
 c $9DAA
-C $9DB1,3 Fill block at HL with A
-C $9DBB,3 Fill block at HL with A
-C $9DC3,3 Fill block at HL with A
-C $9DD6,3 Fill block at HL with A
-C $9DDF,3 Fill block at HL with A, 256 bytes
-C $9DE2,3 Fill block at HL with A, 256 bytes
-C $9DE5,3 Fill block at HL with A, 256 bytes
+C $9DB1,3 Fill block at $ACBF with $16
+C $9DB4,2 ($ACDB) <- $06
+C $9DB6,1 HL = $ACDC
+C $9DBB,3 Fill block at HL with $01
+C $9DBE,1 HL = $ACFF
+C $9DC3,3 Fill block at $ACFF with $1A
+C $9DD6,3 Fill block at HL with $16
+C $9DDF,3 Fill block at HL with $01, 256 bytes
+C $9DE2,3 Fill block at HL with $01, 256 bytes
+C $9DE5,3 Fill block at HL with $01, 256 bytes
 C $9DE8,3 Random
+C $9DF4,3 Calc address in #R$AC5D and Set
+C $9DF8,3 Calc address in #R$AC5D and Set
+C $9DFD,3 Calc address in #R$AC5D and set
+C $9E01,3 Calc address in #R$AC5D and Set
+C $9E07,3 Calc address in #R$AC5D and Set
+C $9E0C,3 Calc address in #R$AC5D and Set
 C $9E0F,3 $ACBD = $AC5D + 3 * 32
 C $9E2C,3 Random
 C $9E3D,3 Random
+C $9E49,3 Calc address in #R$AC5D and Set
+C $9E4D,3 Calc address in #R$AC5D and Set
+C $9E53,3 Calc address in #R$AC5D and Set
+C $9E58,3 Calc address in #R$AC5D and Set
 C $9E6C,3 Game level 1..4
 C $9E6F,1 *2
 C $9E70,1 *4
 C $9E71,2 *4 + 16
 C $9E7F,3 Random
+C $9E8D,3 Calc address in #R$AC5D and Set
 C $9E9B,3 Random
+C $9EAD,3 Calc address in #R$AC5D and Set
+C $9EC6,3 Calc address in #R$AC5D and Set
 C $9F1C,3 Random
+C $9EF6,3 Calc address in #R$AC5D and Set
+C $9F06,3 Calc address in #R$AC5D and Set
+C $9F14,3 Calc address in #R$AC5D and Set
+C $9F2E,3 Calc address in #R$AC5D and Set
+C $9F49,3 Calc address in #R$AC5D and Set
+C $9F5A,3 Calc address in #R$AC5D and Set
+C $9F72,3 Calc address in #R$AC5D and Set
 c $9F81
 C $9F86,3 Random
+C $9F9D,3 Calc address in #R$AC5D and Get
+C $9FA6,3 Calc address in #R$AC5D and Set
+C $9FAD,3 Calc address in #R$AC5D and Set
+C $9FB9,3 Calc address in #R$AC5D and Set
+C $9FC6,3 Calc address in #R$AC5D and Get
+C $9FD4,3 Calc address in #R$AC5D and Get
+C $9FD9,3 Calc address in #R$AC5D and Get
+C $9FE5,3 Calc address in #R$AC5D and Get
+C $A005,3 Calc address in #R$AC5D and Get
+C $A00A,3 Calc address in #R$AC5D and Get
+C $A02F,3 Calc address in #R$AC5D and Get
+C $A034,3 Calc address in #R$AC5D and Get
 c $A03B
 C $A040,3 Random
+C $A056,3 Calc address in #R$AC5D and Get
+C $A05F,3 Calc address in #R$AC5D and Get
+C $A066,3 Calc address in #R$AC5D and Get
+C $A072,3 Calc address in #R$AC5D and Get
+C $A07F,3 Calc address in #R$AC5D and Get
+C $A08D,3 Calc address in #R$AC5D and Get
+C $A093,3 Calc address in #R$AC5D and Get
+C $A09F,3 Calc address in #R$AC5D and Get
+C $A0BF,3 Calc address in #R$AC5D and Get
+C $A0C4,3 Calc address in #R$AC5D and Get
+C $A0E9,3 Calc address in #R$AC5D and Get
+C $A0EE,3 Calc address in #R$AC5D and Get
 c $A0F5 Calculate address ???
+R $A0F5 I:HL Char coords H = row, L = column 0..31
+C $A0F5,19
+. HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
+. as a result, we have HL[9:0] filled with significant bits;
+. 10 bits means 1024 addressed bytes
 c $A129 Calculate address and Get ???
+R $A129 I:HL Char coords H = row, L = column 0..31
 b $A132
 c $A14C Get screen attribute address
 R $A14C I:HL Char coords H = row, L = column 0..31
@@ -438,6 +496,7 @@ C $A187,3 Convert char coords HL to ZX screen address
 R $A187 I:HL Char coords H = row 0..23, L = column 0..31
 R $A187 I:DE Tile address; 8 bytes
 c $A193
+C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
 C $A26E,3 get current Random
 b $A27E
@@ -445,26 +504,41 @@ t $A414
 b $A417
 b $A4DD ???
 b $AC5D ???
-b $AD63
-b $AD67
-b $AD6B
-b $B016
+b $B05D
 b $B07D ???
 c $B0A9
+C $B0FD,2 screen attribute for chest
 C $B0FF,3 Sprite 16x8 Chest
+C $B102,2 check "chest" bit
+C $B106,2 screen attribute for oxygen
 C $B108,3 Sprite 8x8 Oxygen
+C $B10B,2 check "oxygen" bit
+C $B10F,2 screen attribute for shells
+C $B111,2 check "big/small" bit
 C $B115,3 Sprite 8x8 Small shell opened
+C $B118,2 check "closed/opened" bit
 C $B121,3 Sprite 16x16 Big shell opened
+C $B124,2 check "closed/opened" bit
 C $B128,3 Sprite 16x16 Big shell closed
 C $B11C,3 Sprite 8x8 Small shell closed
+C $B12C,1 save (row, column)
 C $B12D,3 Get screen attribute address
+C $B130,1 set screen attribute
+C $B132,1 set screen attribute
 C $B138,2 one char line upper
+C $B13B,1 set screen attribute
+C $B13D,1 set screen attribute
+C $B13E,1 restore (row, column)
 C $B140,3 Draw tile 16x8 at the screen
+C $B143,1 restore (row, column)
 C $B144,1 One char line upper
 C $B145,3 Draw tile 16x8 at the screen
 C $B154,3 Get screen attribute address
+C $B157,1 set screen attribute
+C $B159,1 set screen attribute
 C $B15B,3 Draw tile 16x8 at the screen
 C $B162,3 Get screen attribute address
+C $B165,1 set screen attribute
 C $B167,3 Draw tile 8x8 at the screen
 b $B16C Sprites for objects
 N $B16C Sprite 16x16 Big shell opened; first lower part then upper
@@ -501,10 +575,12 @@ c $B2CE Draw tile 8x8 with XOR
 R $B2CE I:HL Char coords H = 0..23, L = 0..31
 R $B2CE I:DE Tile address
 C $B2CE,3 Convert char coords HL to ZX screen address
+C $B2D1,2 tile height 8 pixels
 c $B2DB Draw tile 16x8 with XOR
 R $B2DB I:HL Char coords H = 0..23, L = 0..31
 R $B2DB I:DE Tile address
 C $B2DB,3 Convert char coords HL to ZX screen address
+C $B2DE,2 tile height 8 pixels
 b $B2EE Sprite 8x8 address, 8 bytes
 B $B2EE,8,8 #HTML[#UDGARRAY1,,,1,,;$B2EE-$B2F5-1-8(sprB2EE)]
 b $B2F6 Sprite 16x16, 32 bytes; first lower part then upper
@@ -519,27 +595,55 @@ b $B39D
 c $B3A0
 R $B3A0 I:IX Object address = $E33B
 c $B470
+R $B470 I:IX ???
 C $B4F6,3 Convert char coords HL to ZX screen address
-c $B572
+C $B55F,3 Copy records forward
+c $B572 Copy records forward
+R $B572 I:HL source address
+R $B572 I:DE destination address
+R $B572 I:IY ??? (IY+$0A) is record size
+R $B572 I:B number of records to copy
 c $B57E
-c $B598
+R $B57E I:IY ???
+C $B57E,3 get record size
+C $B590,3 Copy records backward
+c $B598 Copy records backward
+R $B598 I:HL source address
+R $B598 I:DE destination address
+R $B598 I:IY ??? (IY+$0A) is record size
+R $B598 I:B number of records to copy
 c $B5A4
+R $B5A4 I:IX ???
+R $B5A4 I:IY ???
+C $B5B5,3 Copy records forward
+C $B5D4,3 Copy records backward
 c $B5E0
+R $B5E0 I:IX ???
+R $B5E0 I:IY ???
 s $B676
 c $B686
+R $B686 I:IX ???
+R $B686 I:IY ???
 C $B6C9,3 Get screen attribute address
 c $B70F
+R $B70F I:IX ???
+R $B70F I:IY ???
 C $B726,3 Get screen attribute address
 c $B737
-c $B7B8
+R $B737 I:IX ???
+C $B7AD,4 address of the return point - put on the stack
+N $B7B8 Point of return
 s $B7B9
 c $B7BB
+R $B7BB I:IX ???
 c $B836
 c $B837
 c $B885
 C $B885,4 check "moving" bit
 C $B8CF,3 Get screen attribute address
 C $B932,4 set "moving" bit
+C $B95D,6 set sprite address
+C $B963,6 set sprite address
 C $B969,4 clear "moving" bit
 c $B972
 C $B972,4 check "moving" bit
@@ -551,12 +655,16 @@ C $BA64,4 check "moving" bit
 C $BA90,3 Get screen attribute address
 C $BAE4,4 set "moving" bit
 C $BBFC,4 set "moving" bit
+C $BCE4,3 set X value
+C $BCE7,3 set Y value
 C $BD62,4 clear "moving" bit
 c $BD83
+R $BD83 I:A ???
 C $BD95,3 Random
 b $BDA9
 c $BDBA
 s $BDE9
+B $BDAA,8
 c $BDEA
 c $BE40
 c $BE58
@@ -566,15 +674,21 @@ c $BE9A
 c $BEB2
 c $BEC7
 c $BEDB
+C $BEE4,11 Copy 21 byte from $C20A to $C4F0
 C $BF00,3 Random
 C $BF15,3 get current Random
 C $BF2A,3 Random
 b $BFA0
 c $BFB0
+R $BFB0 I:HL ???
+R $BFB0 I:IY ???
+R $BFB0 I:A ???
 C $BFBA,3 Random
+C $BFC3,3 !!! mutable argument
 C $BFDE,3 get current Random
 C $BFFA,3 Random
-s $C007
+b $C007
+W $C007,2 ???
 c $C009
 C $C03C,3 Random
 b $C092
@@ -602,23 +716,31 @@ C $DA25,1 One live less
 C $DA26,3 set Number of lives
 C $DA33,2 Ending the Game routine, the game is over
 c $DA39 Clear screen, fill attributes with A
-c $DA59
-N $DA63 Entry point
+c $DA59 Print char and shift current position right
+N $DA63 Print char and shift current position down
+N $DA6B Print char
 C $DA6D,3 Convert char coords HL to ZX screen address
 C $DA79,1 *8
 C $DA7E,3 ROM font address, for chars $20..$7F
 C $DA83,3 Tiles 8x8 address, for chars $80..$AE
 C $DA90,3 Get screen attribute address
-c $DA98
-C $DAA2,3 !!! mutable argument
+c $DA98 Print string
+R $DA98 I:HL String address
+R $DA98 I:BC Row and column
+R $DA98 I:DE Print char procedure address
+C $DAA2,3 Print char and shift !!! mutable argument #R$DA59 / #R$DA63
 c $DAAD
 C $DAAF,3 Clear screen with attribute A
 C $DAB6,3 Indicator top border
+C $DABC,3 Procedure Print char and shift right
+C $DABF,3 Print string
 C $DAC2,3 Indicator bottom border
 C $DACB,3 "HIGH"
 C $DAD4,3 "SCORE"
 C $DADD,3 "HELD"
 C $DAE6,3 Indicator left/right border
+C $DAEC,3 Procedure Print char and shift down
+C $DAEF,3 Print string
 C $DAF2,3 Indicator left/right border
 C $DAFB,3 "OXYGEN"
 C $DB04,3 "DEPTH"
@@ -672,6 +794,7 @@ R $DE85 I:B ??? $00 $02
 R $DE85 I:HL ???
 R $DE85 I:DE ??? $4059 $4099 $40DA
 c $DED9
+C $BDA4,3 set DX value
 c $DEE5
 c $DEF1
 b $DEFD
@@ -682,16 +805,22 @@ C $DFFF,3 get Angle 0..15
 R $DFD5 I:IX Object address = $E33B
 C $E006,3 Table base address
 C $E00A,1 get DX value for the Angle
+C $E00B,3 set DX value
 C $E00F,1 get DY value for the Angle
+C $E010,3 set DY value
 C $E013,4 check "moving" bit
 C $E019,4 clear DX value
 C $E01D,4 clear DY value
 C $E021,3 get X value
 C $E027,3 add DX
 C $E02A,3 set X value
+C $E041,4 set DX value
 C $E08D,3 get Y value
 C $E090,3 add DY
 C $E093,3 set Y value
+C $E0AC,4 check DY value - moving up?
+C $E0C7,3 set Y value
+C $E0EA,4 check DY value - moving up?
 C $E1D5,3 get Angle 0..15
 C $E1E4,3 Diver sprites base address
 C $E1E7,1 now HL = diver sprite address
@@ -715,15 +844,19 @@ C $E2F5,3 get bit mask for Anticlockwise key
 C $E2FE,1 rotate anticlockwise
 C $E302,3 set Angle 0..15
 C $E309,3 get bit mask for Accelerate key
+C $E30D,2 read the port for Accelerate key
 C $E315,4 set "moving" bit
 C $E323,3 get bit mask for Decelerate key
-C $E332,4 clear "moving" bit
+C $E327,2 read the port for Decelerate key
+C $E332,4 clear "moving" bit - diver stopped
 b $E33B Object record
 B $E33B,1 (IX+$00) Column 0..31
 B $E33C,1 (IX+$01) Row
-B $E33F,1 (IX+$04) DX value for the Angle, see table #R$DF25
-B $E340,1 (IX+$05) DY value for the Angle, see table #R$DF25
+B $E33D,1 (IX+$02) ???
+B $E33F,1 (IX+$04) DX value for the Angle, -2..2, see table #R$DF25
+B $E340,1 (IX+$05) DY value for the Angle, -2..2, see table #R$DF25
 B $E341,1 (IX+$06) Angle 0..15, initially 4
+B $E343,1 (IX+$08) ???
 W $E344,2 (IX+$09) Sprite address
 W $E346,2 (IX+$0B) Sprite address
 B $E348,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
@@ -732,6 +865,7 @@ B $E34A,1 (IX+$0F) ??? $03
 B $E34B,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
 . bit0: 1 = diver moving, 0 = diver stopped
 B $E34C,1 (IX+$11) ??? $00 $FF
+B $E34D,1 (IX+$12) ??? $00
 B $E34E,1 (IX+$13) X value
 B $E34F,1 (IX+$14) Y value
 B $E350,1 (IX+$15) X shift 0..7
@@ -739,6 +873,7 @@ B $E351,1 (IX+$16) Y shift 0..7
 B $E352,1 (IX+$17) ???
 B $E353,1 (IX+$18) Column 0..31
 B $E354,1 (IX+$19) Row
+B $E357,1 (IX+$1C) ???
 B $E35A,1 (IX+$1F) Row??
 B $E35B,1 (IX+$20) ??? $03
 B $E35C,1 (IX+$21) ???
@@ -802,18 +937,22 @@ c $E682
 c $E6AB
 C $E6AB,4 Diver object record address
 C $E6B5,3 get Number of lives
+C $E6E3,4 set Y value = 12
 C $E6F1,4 clear DX value
 C $E6F5,4 clear DY value
+C $E71A,3 set Column value
+C $E727,3 one Column right
 C $E72D,3 set X value
 C $E730,3 get Number of lives
 C $E73F,3 get X value
+C $E747,3 one Column right
 C $E74E,3 set X value
 C $E759,3 Sprite diver sitting on the boat
 C $E75C,6 set sprite address
 C $E762,4 set "moving" bit
 c $E767
-C $E771,4 clear DX value
-C $E775,4 clear DY value
+C $E775,4 clear DX value
+C $E779,4 clear DY value
 C $E788,4 set DX value = -2
 C $E790,3 get bit mask for Accelerate key
 C $E794,2 Read from port for the key
@@ -822,9 +961,11 @@ C $E79B,3 Play melody
 C $E7A8,3 Sprite diver sitting on the boat
 C $E7AB,6 set sprite address
 C $E7B5,4 set DX value = -1
+C $E7B9,4 set DY value = +2
 C $E7C2,3 Sprite diver directing up-right
 C $E7C9,6 set sprite address
 C $E7D3,4 set DX value = +2
+C $E7B9,4 set DY value = +2
 C $E7FF,6 set sprite address
 C $E805,3 address right after last diver sprite
 C $E810,4 clear DX value
@@ -832,6 +973,8 @@ C $E814,4 clear DY value
 C $E820,4 clear "moving" bit
 C $E824,3 Game level 1..4
 C $E856,6 set sprite address
+C $E863,4 clear DX value
+C $E867,4 clear DY value
 C $E873,4 clear "moving" bit
 C $E877,3 Game level 1..4
 C $E894,3 Play melody
@@ -841,6 +984,7 @@ c $E915
 C $E947,4 clear DX value
 C $E969,4 clear DX value
 C $E96D,4 set DY = -1
+C $E97C,3 set Column value
 C $E98A,3 Sprite diver climbing on the boat
 C $E98D,6 set sprite address
 c $E9B0
@@ -948,8 +1092,12 @@ C $EEB6,3 Game level 1..4
 C $EEBB,3 Clear screen with attribute A
 C $EEDD,3 "PRESS ANY KEY"
 C $EEE3,3 ROM call PR-STRING
+C $EEED,3 Procedure Print char and shift down
+C $EEF3,3 Print string
 C $EF25,3 ROM call KEYBOARD
 b $EF3A
+B $EF3A,15
+B $EF49,15
 t $EF7F
 T $EF86
 b $EF93

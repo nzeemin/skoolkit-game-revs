@@ -279,6 +279,56 @@ B $8DF4,64,8 #HTML[#UDGARRAY1,,,1,,;$8DF4-$8E33-1-8(tiles2)]
 B $8E34
 
 N $9134 Relief tiles 8x8 pixels
+B $9134,8,8 #HTML[#UDGARRAY1,,,1,,;$9134-$913B-1-8(tile00)] $00
+B $913C,8,8 #HTML[#UDGARRAY1,,,1,,;$913C-$9143-1-8(tile01)] $01
+B $9144,8,8 #HTML[#UDGARRAY1,,,1,,;$9144-$914B-1-8(tile02)] $02
+B $914C,8,8 #HTML[#UDGARRAY1,,,1,,;$914C-$9153-1-8(tile03)] $03
+B $9154,8,8 #HTML[#UDGARRAY1,,,1,,;$9154-$915B-1-8(tile04)] $04
+B $915C,8,8 #HTML[#UDGARRAY1,,,1,,;$915C-$9163-1-8(tile05)] $05
+B $9164,8,8 #HTML[#UDGARRAY1,,,1,,;$9164-$916B-1-8(tile06)] $06
+B $916C,8,8 #HTML[#UDGARRAY1,,,1,,;$916C-$9173-1-8(tile07)] $07
+B $9174,8,8 #HTML[#UDGARRAY1,,,1,,;$9174-$917B-1-8(tile08)] $08
+B $917C,8,8 #HTML[#UDGARRAY1,,,1,,;$917C-$9183-1-8(tile09)] $09
+B $9184,8,8 #HTML[#UDGARRAY1,,,1,,;$9184-$918B-1-8(tile0A)] $0A
+B $918C,8,8 #HTML[#UDGARRAY1,,,1,,;$918C-$9193-1-8(tile0B)] $0B
+B $9194,8,8 #HTML[#UDGARRAY1,,,1,,;$9194-$919B-1-8(tile0C)] $0C
+B $919C,8,8 #HTML[#UDGARRAY1,,,1,,;$919C-$91A3-1-8(tile0D)] $0D
+B $91A4,8,8 #HTML[#UDGARRAY1,,,1,,;$91A4-$91AB-1-8(tile0E)] $0E
+B $91AC,8,8 #HTML[#UDGARRAY1,,,1,,;$91AC-$91B3-1-8(tile0F)] $0F
+B $91B4,8,8 #HTML[#UDGARRAY1,,,1,,;$91B4-$91BB-1-8(tile10)] $10
+B $91BC,8,8 #HTML[#UDGARRAY1,,,1,,;$91BC-$91C3-1-8(tile11)] $11
+B $91C4,8,8 #HTML[#UDGARRAY1,,,1,,;$91C4-$91CB-1-8(tile12)] $12
+B $91CC,8,8 #HTML[#UDGARRAY1,,,1,,;$91CC-$91D3-1-8(tile13)] $13
+B $91D4,8,8 #HTML[#UDGARRAY1,,,1,,;$91D4-$91DB-1-8(tile14)] $14
+B $91DC,8,8 #HTML[#UDGARRAY1,,,1,,;$91DC-$91E3-1-8(tile15)] $15
+B $91E4,8,8 #HTML[#UDGARRAY1,,,1,,;$91E4-$91EB-1-8(tile16)] $16
+B $91EC,8,8 #HTML[#UDGARRAY1,,,1,,;$91EC-$91F3-1-8(tile17)] $17
+B $91F4,8,8 #HTML[#UDGARRAY1,,,1,,;$91F4-$91FB-1-8(tile18)] $18
+B $91FC,8,8 #HTML[#UDGARRAY1,,,1,,;$91FC-$9203-1-8(tile19)] $19
+B $9204,8,8 #HTML[#UDGARRAY1,,,1,,;$9204-$920B-1-8(tile1A)] $1A
+B $920C,8,8 #HTML[#UDGARRAY1,,,1,,;$920C-$9213-1-8(tile1B)] $1B
+B $9214,8,8 #HTML[#UDGARRAY1,,,1,,;$9214-$921B-1-8(tile1C)] $1C
+B $921C,8,8 #HTML[#UDGARRAY1,,,1,,;$921C-$9223-1-8(tile1D)] $1D
+B $9224,8,8 #HTML[#UDGARRAY1,,,1,,;$9224-$922B-1-8(tile1E)] $1E
+B $922C,8,8 #HTML[#UDGARRAY1,,,1,,;$922C-$9233-1-8(tile1F)] $1F
+B $9234,8,8 #HTML[#UDGARRAY1,,,1,,;$9234-$923B-1-8(tile20)] $20
+B $923C,8,8 #HTML[#UDGARRAY1,,,1,,;$923C-$9243-1-8(tile21)] $21
+B $9244,8,8 #HTML[#UDGARRAY1,,,1,,;$9244-$924B-1-8(tile22)] $22
+B $924C,8,8 #HTML[#UDGARRAY1,,,1,,;$924C-$9253-1-8(tile23)] $23
+B $9254,8,8 #HTML[#UDGARRAY1,,,1,,;$9254-$925B-1-8(tile24)] $24
+B $925C,8,8 #HTML[#UDGARRAY1,,,1,,;$925C-$9263-1-8(tile25)] $25
+B $9264,8,8 #HTML[#UDGARRAY1,,,1,,;$9264-$926B-1-8(tile26)] $26
+B $926C,8,8 #HTML[#UDGARRAY1,,,1,,;$926C-$9273-1-8(tile27)] $27
+B $9274,8,8 #HTML[#UDGARRAY1,,,1,,;$9274-$927B-1-8(tile28)] $28
+B $927C,8,8 #HTML[#UDGARRAY1,,,1,,;$927C-$9283-1-8(tile29)] $29
+B $9284,8,8 #HTML[#UDGARRAY1,,,1,,;$9284-$928B-1-8(tile2A)] $2A
+B $928C,8,8 #HTML[#UDGARRAY1,,,1,,;$928C-$9293-1-8(tile2B)] $2B
+B $9294,8,8 #HTML[#UDGARRAY1,,,1,,;$9294-$929B-1-8(tile2C)] $2C
+B $929C,8,8 #HTML[#UDGARRAY1,,,1,,;$929C-$92A3-1-8(tile2D)] $2D
+B $92A4,8,8 #HTML[#UDGARRAY1,,,1,,;$92A4-$92AB-1-8(tile2E)] $2E
+B $92AC,8,8 #HTML[#UDGARRAY1,,,1,,;$92AC-$92B3-1-8(tile2F)] $2F
+B $92B4,8,8 #HTML[#UDGARRAY1,,,1,,;$92B4-$92BB-1-8(tile30)] $30
+B $92BC,8,8 #HTML[#UDGARRAY1,,,1,,;$92BC-$92C3-1-8(tile31)] $31
 
 N $92CC Scuba diver sprites; width 2 height 2 chars
 B $92CC,32,16 #HTML[#UDGARRAY2,,,2,,;$92CC-$92EB-1-16(diver0a)]
@@ -366,27 +416,26 @@ C $9C70,3 Calc address in #R$AC5D and Get
 C $9C9D,3 base address for relief blocks, 8x8 tiles each block
 C $9CB7,1 *8
 C $9CB8,3 base address for relief tiles, 8x8 pixels each tile
-C $9CEB,3 set Column value = 6
-c $9D40 Calculate address in #R$AC5D table
+c $9D40 Calculate address in the mini-map (#R$AC5D table)
 R $9D40 I:HL H = row, L = column 0..31
 C $9D4D,2 HL shifted right 3 bits
 C $9D50,1 HL := H * 32 + L
 C $9D54,1 HL := $AC5D + H * 32 + L
-c $9D56 Calculate address in #R$AC5D and Get
+c $9D56 Calculate address in the mini-map (#R$AC5D table) and Get
 R $9D56 I:HL H = row, L = column 0..31
 R $9D56 O:A Value
 C $9D58,3 Calculate address in #R$AC5D table
-c $9D5F Check value in #R$AC5D table, if row and column in range 0..31
+c $9D5F Check value in the mini-map (#R$AC5D table), if row and column in range 0..31
 R $9D5F I:HL H = row, L = column
 N $9D5F If column or row is out of range 0..31 - returns flag Z=0;
 . else, gets value from #R$AC5D table; if this value is $01, returns flag Z=1, in other case flag Z=0
 C $9D62,2 Column value out of range 0..31 ?
 C $9D67,2 Row value out of range 0..31 ?
 C $9D6B,3 Calc address in #R$AC5D and Get
-c $9D79 Calculate address in #R$AC5D and Set
+c $9D79 Calculate address in the mini-map (#R$AC5D table) and Set
 R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
-C $9D7C,3 Calculate address in #R$AC5D table
+C $9D7C,3 Calculate address in the mini-map (#R$AC5D table)
 c $9D84 Random
 N $9D84 Calculate next number in pseudo-random sequence
 C $9D89,1 x2
@@ -411,7 +460,7 @@ c $9DA5 Fill block at HL with A
 R $9DA5 I:HL Block address
 R $9DA5 I:A Value
 R $9DA5 I:B Length of the block to fill
-c $9DAA Prepare #R$AC5D table
+c $9DAA Prepare the mini-map (#R$AC5D table)
 C $9DAA,3 $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
 C $9DB1,3 Fill block at $ACBF with $16
 C $9DB4,2 ($ACDB) <- $06
@@ -566,7 +615,9 @@ B $AB5D,64,8 #HTML[<img src="images/blocks/block1A.png" />] $1A
 B $AB9D,64,8 #HTML[<img src="images/blocks/block1B.png" />] $1B
 B $ABDD,64,8 #HTML[<img src="images/blocks/block1C.png" />] $1C
 B $AC1D,64,8 #HTML[<img src="images/blocks/block1D.png" />] $1D
-b $AC5D ???
+b $AC5D Relief mini-map 32x32 = 256 bytes
+N $AC5D Each byte is relief block number (see #R$A4DD), each relief block is 8x8 tiles, and tiles are 8x8 pixels.
+. So this mini-map defines the world of 256x256 tiles, or 2048 x 2048 pixels.
 B $AC5D,,32
 b $B05D
 b $B07D ???
@@ -770,7 +821,7 @@ s $C500
 c $D990 Game
 C $D99E,2 Number of lives
 C $D9A0,3 set the initial value
-C $D9A3,3 Prepare #R$AC5D table
+C $D9A3,3 Prepare the world mini-map (#R$AC5D table)
 C $D9A6,3 Initialize variables depending of Game level
 C $D9B1,3 Prepare game screen and some variables
 C $D9C9,4 Diver object record address

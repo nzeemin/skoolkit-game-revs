@@ -1,53 +1,54 @@
 b $4000 Screen
 D $4000 #UDGTABLE { #SCR(loading) } TABLE#
-  $4000,6144,32 Pixels
-  $5800,768,32 Attributes
+B $4000,6144,32 Pixels
+B $5800,768,32 Attributes
 @ $5B00 org
 b $5B00 Variables
-B $5B00,1 ???
-W $5B01,2 ???
-W $5B03,2 ???
-W $5B05,2 Current number in pseudo-random sequence, see routine #R$9D84
-W $5B07,2 ???
-B $5B09,1 ???
-B $5B0A,1 ???
-W $5B0B,2 ???
-B $5B0D,1 Delay value: 7 / 5 / 3 / 1 depending on Game level 1..4
-B $5B0E,1 Delay value: 10 / 8 / 6 / 4 depending on Game level 1..4
-B $5B0F,1 ???
-B $5B10,1 Game level selected: 1..4
-W $5B11,2 ???
-B $5B13,1 ???
-B $5B14,1 ???
-B $5B15,1 ???
-B $5B16,1 ???
-B $5B17,1 ???
-B $5B18,1 ???
-B $5B19,1 ???
-B $5B1A,1 ???
-B $5B1B,1 ???
-B $5B1C,1 ???
-B $5B1D,1 ???
-B $5B1E,1 ???
-W $5B1F,2 ???
-W $5B21,2 ???
-W $5B23,2 ???
-W $5B25,2 ???
-W $5B35,2 ???
-B $5B37,1 Number of lives
-W $5B38,2 Port for Clockwise key
-B $5B3A,1 Bit mask for Clockwise key
-W $5B3B,2 Port for Anticlockwise key
-B $5B3D,1 Bit mask for Anticlockwise key
-W $5B3E,2 Port for Accelerate key
-B $5B40,1 Bit mask for Accelerate key
-W $5B41,2 Port for Decelerate key
-B $5B43,1 Bit mask for Decelerate key
-W $5B44,2 ???
-W $5B46,2 ??? $0000 at game start
-W $5B48,2 ??? $0000 at game start
-B $5B4A,1 Screen attribute, see routine #R$DA39
-W $5B4B,2 ???
+B $5B00,1,1 ???
+W $5B01,2,2 ???
+W $5B03,2,2 ???
+W $5B05,2,2 Current number in pseudo-random sequence, see routine #R$9D84
+W $5B07,2,2 ???
+B $5B09,1,1 ???
+B $5B0A,1,1 ???
+W $5B0B,2,2 ???
+B $5B0D,1,1 Delay value: 7 / 5 / 3 / 1, depending on Game level 1..4
+B $5B0E,1,1 Delay value: 10 / 8 / 6 / 4, depending on Game level 1..4
+B $5B0F,1,1 ???
+B $5B10,1,1 Game level selected: 1..4
+W $5B11,2,2 ???
+B $5B13,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
+B $5B14,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
+B $5B15,1,1 Value 27 / 35 / 43 / 51, depending on Game level 1..4
+B $5B16,1,1 Value 18 / 22 / 26 / 31, depending on Game level 1..4
+B $5B17,1,1 Value 26 / 34 / 42 / 50, depending on Game level 1..4
+B $5B18,1,1 Value 5 / 10 / 15 / 20, depending on Game level 1..4
+B $5B19,1,1 Value 12 / 27 / 42 / 57, depending on Game level 1..4
+B $5B1A,1,1 ???
+B $5B1B,1,1 ???
+B $5B1C,1,1 ???
+B $5B1D,1,1 ???
+B $5B1E,1,1 ???
+W $5B1F,2,2 ???
+W $5B21,2,2 ???
+W $5B23,2,2 ???
+W $5B25,2,2 Value 150 / 100 / 50 / 1, depending on Game level 1..4
+W $5B27,14,14 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
+W $5B35,2,2 ???
+B $5B37,1,1 Number of lives
+W $5B38,2,2 Port for Clockwise key
+B $5B3A,1,1 Bit mask for Clockwise key
+W $5B3B,2,2 Port for Anticlockwise key
+B $5B3D,1,1 Bit mask for Anticlockwise key
+W $5B3E,2,2 Port for Accelerate key
+B $5B40,1,1 Bit mask for Accelerate key
+W $5B41,2,2 Port for Decelerate key
+B $5B43,1,1 Bit mask for Decelerate key
+W $5B44,2,2 ???
+W $5B46,2,2 ??? $0000 at game start
+W $5B48,2,2 ??? $0000 at game start
+B $5B4A,1,1 Screen attribute, see routine #R$DA39
+W $5B4B,2,2 ???
 b $5B4D
 t $5CD0
 b $5CD5
@@ -277,7 +278,7 @@ B $8DB4,64,8 #HTML[#UDGARRAY1,,,1,,;$8DB4-$8DF3-1-8(tiles1)]
 B $8DF4,64,8 #HTML[#UDGARRAY1,,,1,,;$8DF4-$8E33-1-8(tiles2)]
 B $8E34
 
-N $9134 Relief blocks 8x8 pixels
+N $9134 Relief tiles 8x8 pixels
 
 N $92CC Scuba diver sprites; width 2 height 2 chars
 B $92CC,32,16 #HTML[#UDGARRAY2,,,2,,;$92CC-$92EB-1-16(diver0a)]
@@ -362,8 +363,9 @@ B $9C2C,32,16 #HTML[#UDGARRAY2,,,2,,;$9C2C-$9C4B-1-16(divervar5)]
 B $9C4C
 c $9C56
 C $9C70,3 Calc address in #R$AC5D and Get
+C $9C9D,3 base address for relief blocks, 8x8 tiles each block
 C $9CB7,1 *8
-C $9CB8,3 base address for relief blocks 8x8
+C $9CB8,3 base address for relief tiles, 8x8 pixels each tile
 C $9CEB,3 set Column value = 6
 c $9D40 Calculate address in #R$AC5D table
 R $9D40 I:HL H = row, L = column 0..31
@@ -374,7 +376,12 @@ c $9D56 Calculate address in #R$AC5D and Get
 R $9D56 I:HL H = row, L = column 0..31
 R $9D56 O:A Value
 C $9D58,3 Calculate address in #R$AC5D table
-c $9D5F
+c $9D5F Check value in #R$AC5D table, if row and column in range 0..31
+R $9D5F I:HL H = row, L = column
+N $9D5F If column or row is out of range 0..31 - returns flag Z=0;
+. else, gets value from #R$AC5D table; if this value is $01, returns flag Z=1, in other case flag Z=0
+C $9D62,2 Column value out of range 0..31 ?
+C $9D67,2 Row value out of range 0..31 ?
 C $9D6B,3 Calc address in #R$AC5D and Get
 c $9D79 Calculate address in #R$AC5D and Set
 R $9D79 I:HL H = row, L = column 0..31
@@ -399,35 +406,48 @@ C $9D9A,1 x1508
 C $9D9B,1 x1509
 C $9DA0,3 ($5B05) := ($5B05) * 1509 + 41
 b $9DA4
+B $9DA4,1,1
 c $9DA5 Fill block at HL with A
 R $9DA5 I:HL Block address
 R $9DA5 I:A Value
 R $9DA5 I:B Length of the block to fill
-c $9DAA
+c $9DAA Prepare #R$AC5D table
+C $9DAA,3 $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
 C $9DB1,3 Fill block at $ACBF with $16
 C $9DB4,2 ($ACDB) <- $06
 C $9DB6,1 HL = $ACDC
-C $9DBB,3 Fill block at HL with $01
+C $9DBB,3 Fill block at $ACDC with $01
 C $9DBE,1 HL = $ACFF
 C $9DC3,3 Fill block at $ACFF with $1A
-C $9DD6,3 Fill block at HL with $16
-C $9DDF,3 Fill block at HL with $01, 256 bytes
-C $9DE2,3 Fill block at HL with $01, 256 bytes
-C $9DE5,3 Fill block at HL with $01, 256 bytes
+C $9DCD,2 ($AD3C) <- $06
+C $9DD1,1 HL = $AD3F
+C $9DD6,3 Fill block at $AD3F with $16
+C $9DDA,1 HL = $AD5D; $AD5D = $AC5D + $100: row 8 column 0
+C $9DDF,3 Fill block at $AD5D with $01, 256 bytes: fill rows 8..15
+C $9DE2,3 Fill block at $AE5D with $01, 256 bytes: fill rows 16..23
+C $9DE5,3 Fill block at $AF5D with $01, 256 bytes: fill rows 24..31
 C $9DE8,3 Random
-C $9DF4,3 Calc address in #R$AC5D and Set
-C $9DF8,3 Calc address in #R$AC5D and Set
-C $9DFD,3 Calc address in #R$AC5D and set
-C $9E01,3 Calc address in #R$AC5D and Set
-C $9E07,3 Calc address in #R$AC5D and Set
-C $9E0C,3 Calc address in #R$AC5D and Set
-C $9E0F,3 $ACBD = $AC5D + 3 * 32
+C $9DEE,2 A = (Random:H) & 15 + 7 => 7..22
+C $9DF0,1 column
+C $9DF1,2 row = 3
+C $9DF4,3 Calc address in #R$AC5D and Set value = 0
+C $9DF7,1 next column; column = 4
+C $9DF8,3 Calc address in #R$AC5D and Set value = 0
+C $9DFB,2 row = 5
+C $9DFD,3 Calc address in #R$AC5D and set value = 0
+C $9E00,1 previous column; column = 3
+C $9E01,3 Calc address in #R$AC5D and Set value = 0
+C $9E04,1 previous row; row = 4
+C $9E07,3 Calc address in #R$AC5D and Set value = $1C
+C $9E0B,1 next column; column = 4
+C $9E0C,3 Calc address in #R$AC5D and Set value = $1D
+C $9E0F,3 $ACBD = $AC5D + 3 * 32: row 3 column 0
 C $9E2C,3 Random
 C $9E3D,3 Random
-C $9E49,3 Calc address in #R$AC5D and Set
-C $9E4D,3 Calc address in #R$AC5D and Set
-C $9E53,3 Calc address in #R$AC5D and Set
-C $9E58,3 Calc address in #R$AC5D and Set
+C $9E49,3 Calc address in #R$AC5D and Set value = 0
+C $9E4D,3 Calc address in #R$AC5D and Set value = 0
+C $9E53,3 Calc address in #R$AC5D and Set value = $1D
+C $9E58,3 Calc address in #R$AC5D and Set value = $1C
 C $9E6C,3 Game level 1..4
 C $9E6F,1 *2
 C $9E70,1 *4
@@ -437,16 +457,19 @@ C $9E8D,3 Calc address in #R$AC5D and Set
 C $9E9B,3 Random
 C $9EAD,3 Calc address in #R$AC5D and Set
 C $9EC6,3 Calc address in #R$AC5D and Set
-C $9F1C,3 Random
 C $9EF6,3 Calc address in #R$AC5D and Set
+C $9EFC,3 Check value in #R$AC5D table
 C $9F06,3 Calc address in #R$AC5D and Set
 C $9F14,3 Calc address in #R$AC5D and Set
+C $9F1C,3 Random
 C $9F2E,3 Calc address in #R$AC5D and Set
 C $9F49,3 Calc address in #R$AC5D and Set
 C $9F5A,3 Calc address in #R$AC5D and Set
+C $9F68,3 Check value in #R$AC5D table
 C $9F72,3 Calc address in #R$AC5D and Set
 c $9F81
 C $9F86,3 Random
+C $9F91,3 Check value in #R$AC5D table
 C $9F9D,3 Calc address in #R$AC5D and Get
 C $9FA6,3 Calc address in #R$AC5D and Set
 C $9FAD,3 Calc address in #R$AC5D and Set
@@ -455,12 +478,17 @@ C $9FC6,3 Calc address in #R$AC5D and Get
 C $9FD4,3 Calc address in #R$AC5D and Get
 C $9FD9,3 Calc address in #R$AC5D and Get
 C $9FE5,3 Calc address in #R$AC5D and Get
+C $9FF0,3 Check value in #R$AC5D table
+C $9FF9,3 Check value in #R$AC5D table
 C $A005,3 Calc address in #R$AC5D and Get
 C $A00A,3 Calc address in #R$AC5D and Get
+C $A018,3 Check value in #R$AC5D table
+C $A022,3 Check value in #R$AC5D table
 C $A02F,3 Calc address in #R$AC5D and Get
 C $A034,3 Calc address in #R$AC5D and Get
 c $A03B
 C $A040,3 Random
+C $A04B,3 Check value in #R$AC5D table
 C $A056,3 Calc address in #R$AC5D and Get
 C $A05F,3 Calc address in #R$AC5D and Get
 C $A066,3 Calc address in #R$AC5D and Get
@@ -469,8 +497,12 @@ C $A07F,3 Calc address in #R$AC5D and Get
 C $A08D,3 Calc address in #R$AC5D and Get
 C $A093,3 Calc address in #R$AC5D and Get
 C $A09F,3 Calc address in #R$AC5D and Get
+C $A0AA,3 Check value in #R$AC5D table
+C $A0B3,3 Check value in #R$AC5D table
 C $A0BF,3 Calc address in #R$AC5D and Get
 C $A0C4,3 Calc address in #R$AC5D and Get
+C $A0D2,3 Check value in #R$AC5D table
+C $A0DC,3 Check value in #R$AC5D table
 C $A0E9,3 Calc address in #R$AC5D and Get
 C $A0EE,3 Calc address in #R$AC5D and Get
 c $A0F5 Calculate address ???
@@ -488,13 +520,13 @@ c $A164 Convert char coords HL to ZX screen address
 R $A164 I:HL Char coords H = row 0..23, L = column 0..31
 R $A164 O:HL Address on the ZX screen
 c $A176 Draw tile 16x8 at the screen
-C $A176 Convert char coords HL to ZX screen address
 R $A176 I:HL Char coords H = row 0..23, L = column 0..31
 R $A176 I:DE Tile address; 16 bytes
+C $A176,3 Convert char coords HL to ZX screen address
 c $A187 Draw tile 8x8 at the screen
-C $A187,3 Convert char coords HL to ZX screen address
 R $A187 I:HL Char coords H = row 0..23, L = column 0..31
 R $A187 I:DE Tile address; 8 bytes
+C $A187,3 Convert char coords HL to ZX screen address
 c $A193
 C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
@@ -502,8 +534,40 @@ C $A26E,3 get current Random
 b $A27E
 t $A414
 b $A417
-b $A4DD ???
+b $A4DD Relief construction blocks, 8x8 tiles = 64x64 pixels
+N $A4DD Each block has 8*8 = 64 tiles, tiles defined at #R$9134
+B $A4DD,64,8 #HTML[<img src="images/blocks/block00.png" />] $00
+B $A51D,64,8 #HTML[<img src="images/blocks/block01.png" />] $01
+B $A55D,64,8 #HTML[<img src="images/blocks/block02.png" />] $02
+B $A59D,64,8 #HTML[<img src="images/blocks/block03.png" />] $03
+B $A5DD,64,8 #HTML[<img src="images/blocks/block04.png" />] $04
+B $A61D,64,8 #HTML[<img src="images/blocks/block05.png" />] $05
+B $A65D,64,8 #HTML[<img src="images/blocks/block06.png" />] $06
+B $A69D,64,8 #HTML[<img src="images/blocks/block07.png" />] $07
+B $A6DD,64,8 #HTML[<img src="images/blocks/block08.png" />] $08
+B $A71D,64,8 #HTML[<img src="images/blocks/block09.png" />] $09
+B $A75D,64,8 #HTML[<img src="images/blocks/block0A.png" />] $0A
+B $A79D,64,8 #HTML[<img src="images/blocks/block0B.png" />] $0B
+B $A7DD,64,8 #HTML[<img src="images/blocks/block0C.png" />] $0C
+B $A81D,64,8 #HTML[<img src="images/blocks/block0D.png" />] $0D
+B $A85D,64,8 #HTML[<img src="images/blocks/block0E.png" />] $0E
+B $A89D,64,8 #HTML[<img src="images/blocks/block0F.png" />] $0F
+B $A8DD,64,8 #HTML[<img src="images/blocks/block10.png" />] $10
+B $A91D,64,8 #HTML[<img src="images/blocks/block11.png" />] $11
+B $A95D,64,8 #HTML[<img src="images/blocks/block12.png" />] $12
+B $A99D,64,8 #HTML[<img src="images/blocks/block13.png" />] $13
+B $A9DD,64,8 #HTML[<img src="images/blocks/block14.png" />] $14
+B $AA1D,64,8 #HTML[<img src="images/blocks/block15.png" />] $15
+B $AA5D,64,8 #HTML[<img src="images/blocks/block16.png" />] $16
+B $AA9D,64,8 #HTML[<img src="images/blocks/block17.png" />] $17
+B $AADD,64,8 #HTML[<img src="images/blocks/block18.png" />] $18
+B $AB1D,64,8 #HTML[<img src="images/blocks/block19.png" />] $19
+B $AB5D,64,8 #HTML[<img src="images/blocks/block1A.png" />] $1A
+B $AB9D,64,8 #HTML[<img src="images/blocks/block1B.png" />] $1B
+B $ABDD,64,8 #HTML[<img src="images/blocks/block1C.png" />] $1C
+B $AC1D,64,8 #HTML[<img src="images/blocks/block1D.png" />] $1D
 b $AC5D ???
+B $AC5D,,32
 b $B05D
 b $B07D ???
 c $B0A9
@@ -517,10 +581,10 @@ C $B10F,2 screen attribute for shells
 C $B111,2 check "big/small" bit
 C $B115,3 Sprite 8x8 Small shell opened
 C $B118,2 check "closed/opened" bit
+C $B11C,3 Sprite 8x8 Small shell closed
 C $B121,3 Sprite 16x16 Big shell opened
 C $B124,2 check "closed/opened" bit
 C $B128,3 Sprite 16x16 Big shell closed
-C $B11C,3 Sprite 8x8 Small shell closed
 C $B12C,1 save (row, column)
 C $B12D,3 Get screen attribute address
 C $B130,1 set screen attribute
@@ -559,7 +623,7 @@ c $B1D4
 C $B1E2,3 Random
 b $B210
 c $B213
-C $B21C,3 Random
+C $B21C,3 get value 7 / 5 / 3 / 1, depending on Game level 1..4
 C $B269,3 Get screen attribute address
 C $B289,3 Random
 C $B2A8,3 sprite 8x8 address, 8 bytes
@@ -569,8 +633,8 @@ C $B2B5,3 Draw tile 16x8 with XOR
 C $B2B9,1 one line upper
 C $B2BA,3 Draw tile 16x8 with XOR
 c $B2C0
-C $B2C5,3 get delay value
-B $B2CD,1
+C $B2C5,3 get value 10 / 8 / 6 / 4, depending on Game level 1..4
+B $B2CD,1,1
 c $B2CE Draw tile 8x8 with XOR
 R $B2CE I:HL Char coords H = 0..23, L = 0..31
 R $B2CE I:DE Tile address
@@ -586,6 +650,7 @@ B $B2EE,8,8 #HTML[#UDGARRAY1,,,1,,;$B2EE-$B2F5-1-8(sprB2EE)]
 b $B2F6 Sprite 16x16, 32 bytes; first lower part then upper
 B $B2F6,16,8 #HTML[#UDGARRAY2,,,2,,;$B2F6-$B305-1-16(sprB2F6)]
 B $B306,16,8 #HTML[#UDGARRAY2,,,2,,;$B306-$B315-1-16(sprB306)]
+B $B316,1,1
 c $B317
 C $B349,3 Base tile address
 c $B35D
@@ -661,6 +726,7 @@ C $BD62,4 clear "moving" bit
 c $BD83
 R $BD83 I:A ???
 C $BD95,3 Random
+C $BDA4,3 set DX value
 b $BDA9
 c $BDBA
 s $BDE9
@@ -688,7 +754,7 @@ C $BFC3,3 !!! mutable argument
 C $BFDE,3 get current Random
 C $BFFA,3 Random
 b $C007
-W $C007,2 ???
+W $C007,2,2 ???
 c $C009
 C $C03C,3 Random
 b $C092
@@ -696,15 +762,19 @@ W $C092,,8
 c $C431
 c $C45C
 c $C481
-c $C4D5
+c $C4D5 Delay ??
+C $C4D7,4 get value 150 / 100 / 50 / 1, depending on Game level
 b $C4E7
 b $C4F0
 s $C500
 c $D990 Game
 C $D99E,2 Number of lives
 C $D9A0,3 set the initial value
-C $D9DB,3 get Number of lives
+C $D9A3,3 Prepare #R$AC5D table
+C $D9A6,3 Initialize variables depending of Game level
+C $D9B1,3 Prepare game screen and some variables
 C $D9C9,4 Diver object record address
+C $D9DB,3 get Number of lives
 C $D9E4,3 set Number of lives
 C $D9E7,3 Game level 1..4
 C $D9EF,3 Save game level 1..4
@@ -729,53 +799,74 @@ R $DA98 I:HL String address
 R $DA98 I:BC Row and column
 R $DA98 I:DE Print char procedure address
 C $DAA2,3 Print char and shift !!! mutable argument #R$DA59 / #R$DA63
-c $DAAD
+c $DAAD Prepare game screen and some variables
 C $DAAF,3 Clear screen with attribute A
 C $DAB6,3 Indicator top border
 C $DABC,3 Procedure Print char and shift right
 C $DABF,3 Print string
 C $DAC2,3 Indicator bottom border
+C $DAC8,3 Print string
 C $DACB,3 "HIGH"
+C $DAD1,3 Print string
 C $DAD4,3 "SCORE"
+C $DADA,3 Print string
 C $DADD,3 "HELD"
+C $DAE3,3 Print string
 C $DAE6,3 Indicator left/right border
 C $DAEC,3 Procedure Print char and shift down
 C $DAEF,3 Print string
 C $DAF2,3 Indicator left/right border
+C $DAF8,3 Print string
 C $DAFB,3 "OXYGEN"
+C $DB01,3 Print string
 C $DB04,3 "DEPTH"
+C $DB0A,3 Print string
 C $DB0D,3 "SKILL LIVES"
+C $DB13,3 Print string
 C $DB1B,3 Vertical gauge
 C $DB24,3 Vertical gauge
+C $DB2A,3 Print string
 C $DB32,3 "1 2 3 4"
+C $DB38,3 Print string
 C $DB3B,3 "1 2 3 4"
+C $DB41,3 Print string
 C $DB53,3 Game level 1..4
 C $DB62,3 get Number of lives
 C $DB74,4 Diver object record address
 C $DB81,3 Game level 1..4
+C $DB88,1 A = ([Game level] - 1) * 16 => 0 / 16 / 32 / 48
+C $DB8F,1 HL = $DDF0 + ([Game level] - 1) * 16
 C $DB98,3 Game level 1..4
 C $DBAF,3 Game level 1..4
 C $DBB9,3 = 10 - [Game level] * 2 + 2 => 10 / 8 / 6 / 4
 C $DBBE,3 = 10 - [Game level] * 2 + 2 - 3 => 7 / 5 / 3 / 1
-c $DBC2
+c $DBC2 Initialize variables depending of Game level
 C $DBC2,3 Game level 1..4
+C $DBC6,1 *4
+C $DBC7,2 A = [Game level] * 4 + 9 => 13 / 17 / 21 / 25
+C $DBCF,2 A = [Game level] * 4 + 9 + 5 => 18 / 22 / 26 / 31
+C $DBD7,1 A = ([Game level] * 4 + 9) * 2 + 1 => 27 / 35 / 43 / 51
+C $DBDB,1 A = ([Game level] * 4 + 9) * 2 => 26 / 34 / 42 / 50
 C $DBDF,3 Game level 1..4
 C $DBF7,3 Game level 1..4
+C $DBE5,1 A = [Game level] * 5 => 5 / 10 / 15 / 20
+C $DBEC,2 A = [Game level] * 5 * 3 - 3 => 12 / 27 / 42 / 57
+C $DBFC,2 3 / 2 / 1 / 0
 b $DC09
 B $DC09,9,9 Indicator top border
 B $DC12,9,9 Indicator bottom border
-B $DC1B,5 "HIGH"
-B $DC20,7 "000000"
-B $DC27,6 "SCORE"
-B $DC2D,5 "HELD"
+B $DC1B,5,5 "HIGH"
+B $DC20,7,7 "000000"
+B $DC27,6,6 "SCORE"
+B $DC2D,5,5 "HELD"
 B $DC32,23 Indicator left/right border
-B $DC49,7 "OXYGEN"
-B $DC50,6 "DEPTH"
+B $DC49,7,7 "OXYGEN"
+B $DC50,6,6 "DEPTH"
 B $DC56,15 "SKILL    LIVES"
 B $DC65,17 Vertical gauge
-B $DC76,8 "1 2 3 4"
+B $DC76,8,8 "1 2 3 4"
 b $DC7E
-W $DC7E,2 ???
+W $DC7E,2,2 ???
 b $DC80 Tiles 8x8
 B $DC80,64,8 #HTML[#UDGARRAY1,,,1,,;$DC80-$DCBF-1-8(tiles80)]
 B $DCC0,64,8 #HTML[#UDGARRAY1,,,1,,;$DCC0-$DCFF-1-8(tiles81)]
@@ -783,26 +874,33 @@ B $DD00,64,8 #HTML[#UDGARRAY1,,,1,,;$DD00-$DD3F-1-8(tiles82)]
 B $DD40,64,8 #HTML[#UDGARRAY1,,,1,,;$DD40-$DD7F-1-8(tiles83)]
 B $DD80,64,8 #HTML[#UDGARRAY1,,,1,,;$DD80-$DDBF-1-8(tiles84)]
 B $DDC0,48,8 #HTML[#UDGARRAY1,,,1,,;$DDC0-$DDEF-1-8(tiles85)]
-b $DDF0 Buffer??
-B $DDF0,,14
+b $DDF0 Blocks of 14 bytes to copy to #R$5B27, blocks aligned to 16 bytes
+W $DDF0,16,16 Level 1
+W $DE00,16,16 Level 2
+W $DE10,16,16 Level 3
+W $DE20,16,14 Level 4
 c $DE2E
 c $DE3E
 b $DE55
+W $DE55,2,2 ???
+W $DE57,2,2 ???
+W $DE59,2,2 ???
+W $DE5B,2,2 ???
 c $DE5D
 c $DE85
 R $DE85 I:B ??? $00 $02
 R $DE85 I:HL ???
 R $DE85 I:DE ??? $4059 $4099 $40DA
 c $DED9
-C $BDA4,3 set DX value
 c $DEE5
 c $DEF1
 b $DEFD
-B $DF25,,16 Table: Angle 0..15 -> (DX, DY)
-B $DF45
+b $DF25 Table: Angle 0..15 -> (DX, DY)
+B $DF25,,16
+b $DF45
 c $DFD5
-C $DFFF,3 get Angle 0..15
 R $DFD5 I:IX Object address = $E33B
+C $DFFF,3 get Angle 0..15
 C $E006,3 Table base address
 C $E00A,1 get DX value for the Angle
 C $E00B,3 set DX value
@@ -834,54 +932,70 @@ C $E261,3 get Column
 C $E279,3 one Row down
 c $E2A8
 C $E2A8,4 Diver object record address
+C $E2B1,3 get speed factor
 C $E2D4,3 Read keyboard input
 c $E2DB Read keyboard input
 R $E2DB I:IX Object address = $E33B
 C $E2E0,3 get Angle
+C $E2E3,4 get port for Clockwise key
 C $E2E7,3 get bit mask for Clockwise key
+C $E2EB,2 read the port for Clockwise key
+C $E2EE,2 not pressed => skip rotate
 C $E2F0,1 rotate clockwise
+C $E2F1,4 get port for Anticlockwise key
 C $E2F5,3 get bit mask for Anticlockwise key
+C $E2F9,2 read the port for Anticlockwise key
+C $E2FC,2 not pressed => skip rotate
 C $E2FE,1 rotate anticlockwise
 C $E302,3 set Angle 0..15
+C $E305,4 get port for Accelerate key
 C $E309,3 get bit mask for Accelerate key
+C $E310,2 not pressed => skip
 C $E30D,2 read the port for Accelerate key
 C $E315,4 set "moving" bit
+C $E31F,4 get port for Decelerate key
 C $E323,3 get bit mask for Decelerate key
 C $E327,2 read the port for Decelerate key
+C $E32A,1 not pressed => return
 C $E332,4 clear "moving" bit - diver stopped
 b $E33B Object record
-B $E33B,1 (IX+$00) Column 0..31
-B $E33C,1 (IX+$01) Row
-B $E33D,1 (IX+$02) ???
-B $E33F,1 (IX+$04) DX value for the Angle, -2..2, see table #R$DF25
-B $E340,1 (IX+$05) DY value for the Angle, -2..2, see table #R$DF25
-B $E341,1 (IX+$06) Angle 0..15, initially 4
-B $E343,1 (IX+$08) ???
-W $E344,2 (IX+$09) Sprite address
-W $E346,2 (IX+$0B) Sprite address
-B $E348,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
-B $E349,1 (IX+$0E) ??? 12 20 40 100
-B $E34A,1 (IX+$0F) ??? $03
-B $E34B,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
+B $E33B,1,1 (IX+$00) Column 0..31
+B $E33C,1,1 (IX+$01) Row
+B $E33D,1,1 (IX+$02) ???
+B $E33E,1,1
+B $E33F,1,1 (IX+$04) DX value for the Angle, -2..2, see table #R$DF25
+B $E340,1,1 (IX+$05) DY value for the Angle, -2..2, see table #R$DF25
+B $E341,1,1 (IX+$06) Angle 0..15, initially 4
+B $E342,1,1
+B $E343,1,1 (IX+$08) ???
+W $E344,2,2 (IX+$09) Sprite address
+W $E346,2,2 (IX+$0B) Sprite address
+B $E348,1,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
+B $E349,1,1 (IX+$0E) speed factor ??? 12 20 40 100; $08 max speed, $14 min speed
+B $E34A,1,1 (IX+$0F) ??? $03
+B $E34B,1,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
 . bit0: 1 = diver moving, 0 = diver stopped
-B $E34C,1 (IX+$11) ??? $00 $FF
-B $E34D,1 (IX+$12) ??? $00
-B $E34E,1 (IX+$13) X value
-B $E34F,1 (IX+$14) Y value
-B $E350,1 (IX+$15) X shift 0..7
-B $E351,1 (IX+$16) Y shift 0..7
-B $E352,1 (IX+$17) ???
-B $E353,1 (IX+$18) Column 0..31
-B $E354,1 (IX+$19) Row
-B $E357,1 (IX+$1C) ???
-B $E35A,1 (IX+$1F) Row??
-B $E35B,1 (IX+$20) ??? $03
-B $E35C,1 (IX+$21) ???
-B $E35D,1 (IX+$22) ??? $F5
-W $E35F,2 (IX+$24) Sprite address
-B $E361,1 (IX+$26) ??? bits 0/1/2/3/4/5/6
-B $E362,1 (IX+$27) ???
-B $E363,1 (IX+$28) ???
+B $E34C,1,1 (IX+$11) ??? $00 $FF
+B $E34D,1,1 (IX+$12) ??? $00
+B $E34E,1,1 (IX+$13) X value
+B $E34F,1,1 (IX+$14) Y value
+B $E350,1,1 (IX+$15) X shift 0..7
+B $E351,1,1 (IX+$16) Y shift 0..7
+B $E352,1,1 (IX+$17) ???
+B $E353,1,1 (IX+$18) Column 0..31
+B $E354,1,1 (IX+$19) Row
+B $E355,2,2
+B $E357,1,1 (IX+$1C) ???
+B $E358,2,2
+B $E35A,1,1 (IX+$1F) Row??
+B $E35B,1,1 (IX+$20) ??? $03
+B $E35C,1,1 (IX+$21) ???
+B $E35D,1,1 (IX+$22) ??? $F5
+B $E35E,1,1
+W $E35F,2,2 (IX+$24) Sprite address
+B $E361,1,1 (IX+$26) ??? bits 0/1/2/3/4/5/6
+B $E362,1,1 (IX+$27) ???
+B $E363,1,1 (IX+$28) ???
 c $E364
 R $E364 I:IX Object address = $E33B
 C $E373,3 Game level 1..4
@@ -911,10 +1025,13 @@ C $E44F,3 Explosion sprite address
 C $E469,3 Play melody
 c $E476
 R $E476 I:IX Object address = $E33B
+C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
 C $E512,3 Get screen attribute address
 C $E522,3 Make sound
 C $E54D,3 Make sound
+C $E575,3 get value 2 / 4 / 6 / 8, depending on Game level
 C $E598,3 Make sound
+C $E5CD,3 get value 5 / 10 / 15 / 20, depending on Game level
 c $E5D2
 b $E5E0
 c $E5EC Play melody
@@ -940,6 +1057,7 @@ C $E6B5,3 get Number of lives
 C $E6E3,4 set Y value = 12
 C $E6F1,4 clear DX value
 C $E6F5,4 clear DY value
+C $E705,4 speed factor = min speed
 C $E71A,3 set Column value
 C $E727,3 one Column right
 C $E72D,3 set X value
@@ -954,6 +1072,7 @@ c $E767
 C $E775,4 clear DX value
 C $E779,4 clear DY value
 C $E788,4 set DX value = -2
+C $E78C,4 get port for Accelerate key
 C $E790,3 get bit mask for Accelerate key
 C $E794,2 Read from port for the key
 C $E797,1 Return if not pressed
@@ -963,9 +1082,10 @@ C $E7AB,6 set sprite address
 C $E7B5,4 set DX value = -1
 C $E7B9,4 set DY value = +2
 C $E7C2,3 Sprite diver directing up-right
+C $E7C5,4 speed factor = min speed
 C $E7C9,6 set sprite address
 C $E7D3,4 set DX value = +2
-C $E7B9,4 set DY value = +2
+C $E7D7,4 set DY value = +2
 C $E7FF,6 set sprite address
 C $E805,3 address right after last diver sprite
 C $E810,4 clear DX value
@@ -1047,10 +1167,12 @@ C $EC90,3 ROM CLS subroutine
 C $EC9B,3 ROM call CHAN-OPEN
 C $EC9E,3 ROM call KEYBOARD
 C $ECAD,3 ROM call PR-STRING
+C $ECB3,4 set port for Clockwise key
 C $ECB7,3 Save key for Clockwise
 C $ECBD,3 ROM call PR-STRING
 C $ECC7,3 Save key for Anticlockwise
 C $ECCD,3 ROM call PR-STRING
+C $ECD3,4 set port for Accelerate key
 C $ECD7,3 Save key for Accelerate
 C $ECDD,3 ROM call PR-STRING
 C $ECE7,3 Save key for Decelerate
@@ -1090,6 +1212,7 @@ C $EE8C,3 Play melody
 c $EEAD
 C $EEB6,3 Game level 1..4
 C $EEBB,3 Clear screen with attribute A
+C $EECA,3 Initialize variables depending of Game level
 C $EEDD,3 "PRESS ANY KEY"
 C $EEE3,3 ROM call PR-STRING
 C $EEED,3 Procedure Print char and shift down

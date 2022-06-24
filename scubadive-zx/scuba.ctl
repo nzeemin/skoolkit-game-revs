@@ -272,12 +272,12 @@ B $8D43,16,8 #HTML[#UDGARRAY1,,,1,,;$8D43-$8D52-1-8(meduza0)]
 B $8D53,16,8 #HTML[#UDGARRAY1,,,1,,;$8D53-$8D62-1-8(meduza1)]
 B $8D63,16,8 #HTML[#UDGARRAY1,,,1,,;$8D63-$8D72-1-8(meduza2)]
 B $8D73,1,1
-N $8D74 Tiles 8x8 pixels
-B $8D74,64,8 #HTML[#UDGARRAY1,,,1,,;$8D74-$8DB3-1-8(tiles0)]
-B $8DB4,64,8 #HTML[#UDGARRAY1,,,1,,;$8DB4-$8DF3-1-8(tiles1)]
-B $8DF4,64,8 #HTML[#UDGARRAY1,,,1,,;$8DF4-$8E33-1-8(tiles2)]
-B $8E34
-
+N $8D74 Octopus phases 0..4, each phase 4*6*8 = 192 bytes
+B $8D74,192,16 #HTML[#UDGARRAY6,,,1,,;$8D74-$8E33-8(octopus0)] 0
+B $8E34,192,16 #HTML[#UDGARRAY6,,,1,,;$8E34-$8EF3-8(octopus1)] 1
+B $8EF4,192,16 #HTML[#UDGARRAY6,,,1,,;$8EF4-$8FB3-8(octopus2)] 2
+B $8FB4,192,16 #HTML[#UDGARRAY6,,,1,,;$8FB4-$9073-8(octopus3)] 3
+B $9074,192,16 #HTML[#UDGARRAY6,,,1,,;$9074-$9133-8(octopus4)] 4
 N $9134 Relief tiles 8x8 pixels
 B $9134,8,8 #HTML[#UDGARRAY1,,,1,,;$9134-$913B-1-8(tile00)] $00
 B $913C,8,8 #HTML[#UDGARRAY1,,,1,,;$913C-$9143-1-8(tile01)] $01
@@ -411,11 +411,23 @@ B $9BEC,32,16 #HTML[#UDGARRAY2,,,2,,;$9BEC-$9C0B-1-16(divervar3)]
 B $9C0C,32,16 #HTML[#UDGARRAY2,,,2,,;$9C0C-$9C2B-1-16(divervar4)]
 B $9C2C,32,16 #HTML[#UDGARRAY2,,,2,,;$9C2C-$9C4B-1-16(divervar5)]
 B $9C4C
-c $9C56
-C $9C70,3 Calc address in #R$AC5D and Get
+b $9C50
+B $9C50,1,1 $00 = no Octopus, $01 = we have Octopus on the game screen
+W $9C51,2,2 Octopus row/column
+W $9C53,2,2 ???
+B $9C55,1,1 Octopus phase
+c $9C56 Draw game screen
+C $9C66,2 Game screen 3 blocks high = 24 tiles
+C $9C6A,2 Game screen 3 blocks wide = 24 tiles
+C $9C70,3 Calc address in #R$AC5D and Get block number
+C $9C75,2 place for Octopus?
+C $9C79,3 save the Octopus row/column
 C $9C9D,3 base address for relief blocks, 8x8 tiles each block
+C $9CA5,2 height for block of tiles = 8
+C $9CAB,3 get tile number
 C $9CB7,1 *8
 C $9CB8,3 base address for relief tiles, 8x8 pixels each tile
+C $9D35,3 Draw Octopus
 c $9D40 Calculate address in the mini-map (#R$AC5D table)
 R $9D40 I:HL H = row, L = column 0..31
 C $9D4D,2 HL shifted right 3 bits
@@ -487,7 +499,9 @@ C $9DFD,3 Calc address in #R$AC5D and set value = 0
 C $9E00,1 previous column; column = 3
 C $9E01,3 Calc address in #R$AC5D and Set value = 0
 C $9E04,1 previous row; row = 4
+C $9E05,2 $1C = place for Octopus, left block
 C $9E07,3 Calc address in #R$AC5D and Set value = $1C
+C $9E0A,1 = $1D = place for Octopus, right block
 C $9E0B,1 next column; column = 4
 C $9E0C,3 Calc address in #R$AC5D and Set value = $1D
 C $9E0F,3 $ACBD = $AC5D + 3 * 32: row 3 column 0
@@ -495,7 +509,9 @@ C $9E2C,3 Random
 C $9E3D,3 Random
 C $9E49,3 Calc address in #R$AC5D and Set value = 0
 C $9E4D,3 Calc address in #R$AC5D and Set value = 0
+C $9E51,2 $1D = place for Octopus, right block
 C $9E53,3 Calc address in #R$AC5D and Set value = $1D
+C $9E56,1 = $1C = place for Octopus, left block
 C $9E58,3 Calc address in #R$AC5D and Set value = $1C
 C $9E6C,3 Game level 1..4
 C $9E6F,1 *2
@@ -583,6 +599,7 @@ C $A26E,3 get current Random
 b $A27E
 t $A414
 b $A417
+b $A41B
 b $A4DD Relief construction blocks, 8x8 tiles = 64x64 pixels
 N $A4DD Each block has 8*8 = 64 tiles, tiles defined at #R$9134
 B $A4DD,64,8 #HTML[<img src="images/blocks/block00.png" />] $00
@@ -613,8 +630,8 @@ B $AADD,64,8 #HTML[<img src="images/blocks/block18.png" />] $18
 B $AB1D,64,8 #HTML[<img src="images/blocks/block19.png" />] $19
 B $AB5D,64,8 #HTML[<img src="images/blocks/block1A.png" />] $1A
 B $AB9D,64,8 #HTML[<img src="images/blocks/block1B.png" />] $1B
-B $ABDD,64,8 #HTML[<img src="images/blocks/block1C.png" />] $1C
-B $AC1D,64,8 #HTML[<img src="images/blocks/block1D.png" />] $1D
+B $ABDD,64,8 #HTML[<img src="images/blocks/block1C.png" />] $1C place for Octupus, left block
+B $AC1D,64,8 #HTML[<img src="images/blocks/block1D.png" />] $1D place for Octupus, right block
 b $AC5D Relief mini-map 32x32 = 256 bytes
 N $AC5D Each byte is relief block number (see #R$A4DD), each relief block is 8x8 tiles, and tiles are 8x8 pixels.
 . So this mini-map defines the world of 256x256 tiles, or 2048 x 2048 pixels.
@@ -703,8 +720,10 @@ B $B2F6,16,8 #HTML[#UDGARRAY2,,,2,,;$B2F6-$B305-1-16(sprB2F6)]
 B $B306,16,8 #HTML[#UDGARRAY2,,,2,,;$B306-$B315-1-16(sprB306)]
 B $B316,1,1
 c $B317
-C $B349,3 Base tile address
-c $B35D
+C $B349,3 Base address for Octopus phases
+c $B35D Draw Octopus sprite
+R $B35D DE Octopus sprite address, 6x4 tiles 8x8 pixels, 192 bytes
+C $B368,3 get Octopus row/column
 s $B392
 t $B39A
 b $B39D
@@ -824,6 +843,7 @@ C $D9A0,3 set the initial value
 C $D9A3,3 Prepare the world mini-map (#R$AC5D table)
 C $D9A6,3 Initialize variables depending of Game level
 C $D9B1,3 Prepare game screen and some variables
+C $D9BA,3 Draw game screen
 C $D9C9,4 Diver object record address
 C $D9DB,3 get Number of lives
 C $D9E4,3 set Number of lives
@@ -970,6 +990,7 @@ C $E093,3 set Y value
 C $E0AC,4 check DY value - moving up?
 C $E0C7,3 set Y value
 C $E0EA,4 check DY value - moving up?
+C $E142,3 Draw game screen
 C $E1D5,3 get Angle 0..15
 C $E1E4,3 Diver sprites base address
 C $E1E7,1 now HL = diver sprite address

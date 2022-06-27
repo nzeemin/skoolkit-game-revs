@@ -6,14 +6,14 @@ B $5800,768,32 Attributes
 b $5B00 Variables
 B $5B00,1,1 ???
 W $5B01,2,2 ???
-W $5B03,2,2 ???
+W $5B03,2,2 Screen position on mini-map (H = row, L = column)
 W $5B05,2,2 Current number in pseudo-random sequence, see routine #R$9D84
 W $5B07,2,2 ???
 B $5B09,1,1 ???
 B $5B0A,1,1 ???
 W $5B0B,2,2 ???
 B $5B0D,1,1 Delay value: 7 / 5 / 3 / 1, depending on Game level 1..4
-B $5B0E,1,1 Delay value: 10 / 8 / 6 / 4, depending on Game level 1..4
+B $5B0E,1,1 Delay value for Octopus: 10 / 8 / 6 / 4, depending on Game level 1..4
 B $5B0F,1,1 ???
 B $5B10,1,1 Game level selected: 1..4
 W $5B11,2,2 ???
@@ -33,7 +33,7 @@ W $5B1F,2,2 ???
 W $5B21,2,2 ???
 W $5B23,2,2 ???
 W $5B25,2,2 Value 150 / 100 / 50 / 1, depending on Game level 1..4
-W $5B27,14,14 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
+W $5B27,14,8 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
 W $5B35,2,2 ???
 B $5B37,1,1 Number of lives
 W $5B38,2,2 Port for Clockwise key
@@ -50,18 +50,7 @@ W $5B48,2,2 ??? $0000 at game start
 B $5B4A,1,1 Screen attribute, see routine #R$DA39
 W $5B4B,2,2 ???
 b $5B4D
-t $5CD0
-b $5CD5
-t $5D34
-b $5D39
-t $5D41
-b $5D4C
-t $5D4D
-b $5D52
-t $5D58
-b $5D5C
-t $5D71
-b $5D7C
+B $5B4D,,16
 b $6000 Sprites
 N $6000 Small squid horizontal sprites; width 3 height 1 chars, 24 bytes each
 B $6000,24,12 #HTML[#UDGARRAY3,,,3,,;$6000-$6017-1-24(smsquidh0)]
@@ -150,6 +139,7 @@ B $7550,168,21 #HTML[#UDGARRAY7,,,7,,;$7550-$75F7-1-56(sharkH)]
 B $75F8,168,21 #HTML[#UDGARRAY7,,,7,,;$75F8-$769F-1-56(sharkI)]
 B $76A0,168,21 #HTML[#UDGARRAY7,,,7,,;$76A0-$7747-1-56(sharkJ)]
 N $7748 Small fish cloud sprites
+B $7748,,16
 N $7BCE Long fish sprites
 B $7BCE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BCE-$7BED-1-32(longfish0)]
 B $7BEE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BEE-$7C0D-1-32(longfish1)]
@@ -417,6 +407,7 @@ W $9C51,2,2 Octopus row/column
 W $9C53,2,2 ???
 B $9C55,1,1 Octopus phase
 c $9C56 Draw game screen
+R $9C56 HL Screen position on mini-map
 C $9C66,2 Game screen 3 blocks high = 24 tiles
 C $9C6A,2 Game screen 3 blocks wide = 24 tiles
 C $9C70,3 Calc address in #R$AC5D and Get block number
@@ -597,9 +588,9 @@ C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
 C $A26E,3 get current Random
 b $A27E
-t $A414
-b $A417
+B $A27E,,16
 b $A41B
+B $A41B,,16
 b $A4DD Relief construction blocks, 8x8 tiles = 64x64 pixels
 N $A4DD Each block has 8*8 = 64 tiles, tiles defined at #R$9134
 B $A4DD,64,8 #HTML[<img src="images/blocks/block00.png" />] $00
@@ -639,6 +630,7 @@ B $AC5D,,32
 b $B05D
 b $B07D ???
 c $B0A9
+C $B0A9,4 get Screen position on mini-map
 C $B0FD,2 screen attribute for chest
 C $B0FF,3 Sprite 16x8 Chest
 C $B102,2 check "chest" bit
@@ -690,7 +682,11 @@ B $B1CC,8,8 #HTML[#UDGARRAY1,,,1,,;$B1CC-$B1D3-1-8(sprB1CC)]
 c $B1D4
 C $B1E2,3 Random
 b $B210
+B $B210,1,1 ???
+B $B211,1,1 ???
+B $B212,1,1 ???
 c $B213
+C $B213,3 Octopus delay and process
 C $B21C,3 get value 7 / 5 / 3 / 1, depending on Game level 1..4
 C $B269,3 Get screen attribute address
 C $B289,3 Random
@@ -700,8 +696,9 @@ C $B2B1,3 sprite 16x16 address, 32 bytes
 C $B2B5,3 Draw tile 16x8 with XOR
 C $B2B9,1 one line upper
 C $B2BA,3 Draw tile 16x8 with XOR
-c $B2C0
+c $B2C0 Octopus delay and process
 C $B2C5,3 get value 10 / 8 / 6 / 4, depending on Game level 1..4
+C $B2C9,3 Process Octopus, draw if needed
 B $B2CD,1,1
 c $B2CE Draw tile 8x8 with XOR
 R $B2CE I:HL Char coords H = 0..23, L = 0..31
@@ -718,15 +715,15 @@ B $B2EE,8,8 #HTML[#UDGARRAY1,,,1,,;$B2EE-$B2F5-1-8(sprB2EE)]
 b $B2F6 Sprite 16x16, 32 bytes; first lower part then upper
 B $B2F6,16,8 #HTML[#UDGARRAY2,,,2,,;$B2F6-$B305-1-16(sprB2F6)]
 B $B306,16,8 #HTML[#UDGARRAY2,,,2,,;$B306-$B315-1-16(sprB306)]
+b $B316
 B $B316,1,1
-c $B317
+c $B317 Process Octopus, draw if needed
 C $B349,3 Base address for Octopus phases
+C $B359,3 Draw Octopus sprite
 c $B35D Draw Octopus sprite
 R $B35D DE Octopus sprite address, 6x4 tiles 8x8 pixels, 192 bytes
 C $B368,3 get Octopus row/column
-s $B392
-t $B39A
-b $B39D
+b $B392 Unused?
 c $B3A0
 R $B3A0 I:IX Object address = $E33B
 c $B470
@@ -843,6 +840,7 @@ C $D9A0,3 set the initial value
 C $D9A3,3 Prepare the world mini-map (#R$AC5D table)
 C $D9A6,3 Initialize variables depending of Game level
 C $D9B1,3 Prepare game screen and some variables
+C $D9B7,3 get Screen position on mini-map
 C $D9BA,3 Draw game screen
 C $D9C9,4 Diver object record address
 C $D9DB,3 get Number of lives
@@ -981,6 +979,7 @@ C $E013,4 check "moving" bit
 C $E019,4 clear DX value
 C $E01D,4 clear DY value
 C $E021,3 get X value
+C $E024,3 get Screen position on mini-map
 C $E027,3 add DX
 C $E02A,3 set X value
 C $E041,4 set DX value
@@ -990,6 +989,7 @@ C $E093,3 set Y value
 C $E0AC,4 check DY value - moving up?
 C $E0C7,3 set Y value
 C $E0EA,4 check DY value - moving up?
+C $E13F,3 set Screen position on mini-map
 C $E142,3 Draw game screen
 C $E1D5,3 get Angle 0..15
 C $E1E4,3 Diver sprites base address
@@ -1126,6 +1126,7 @@ c $E682
 c $E6AB
 C $E6AB,4 Diver object record address
 C $E6B5,3 get Number of lives
+C $E6CC,3 set Screen position on mini-map
 C $E6E3,4 set Y value = 12
 C $E6F1,4 clear DX value
 C $E6F5,4 clear DY value
@@ -1174,8 +1175,10 @@ C $E8F1,3 Play melody
 C $E8F7,3 Play melody
 c $E915
 C $E947,4 clear DX value
+C $E94B,3 get Screen position on mini-map
 C $E969,4 clear DX value
 C $E96D,4 set DY = -1
+C $E972,3 get Screen position (column) on mini-map
 C $E97C,3 set Column value
 C $E98A,3 Sprite diver climbing on the boat
 C $E98D,6 set sprite address
@@ -1239,14 +1242,19 @@ C $EC90,3 ROM CLS subroutine
 C $EC9B,3 ROM call CHAN-OPEN
 C $EC9E,3 ROM call KEYBOARD
 C $ECAD,3 ROM call PR-STRING
+C $ECB0,3 Sound
 C $ECB3,4 set port for Clockwise key
 C $ECB7,3 Save key for Clockwise
 C $ECBD,3 ROM call PR-STRING
+C $ECC0,3 Sound
 C $ECC7,3 Save key for Anticlockwise
 C $ECCD,3 ROM call PR-STRING
+C $ECD0,3 Sound
 C $ECD3,4 set port for Accelerate key
 C $ECD7,3 Save key for Accelerate
 C $ECDD,3 ROM call PR-STRING
+C $ECE0,3 Sound
+C $ECE3,4 set port for Decelerate
 C $ECE7,3 Save key for Decelerate
 c $ECEB Sound??
 C $ED10,3 ROM BEEPER subroutine
@@ -1278,17 +1286,24 @@ C $EE51,3 "LOAD ? (Y/N)"
 C $EE57,3 ROM call PR-STRING
 C $EE69,2 'N' ?
 C $EE6D,2 'Y' ?
+C $EE75,2 'S' ?
 C $EE7D,2 -'1'
+C $EE85,1 1..4
 C $EE86,3 Save game level 1..4
 C $EE8C,3 Play melody
 c $EEAD
 C $EEB6,3 Game level 1..4
 C $EEBB,3 Clear screen with attribute A
 C $EECA,3 Initialize variables depending of Game level
+C $EED3,3 set Screen position on mini-map
+C $EED6,3 Draw game screen
 C $EEDD,3 "PRESS ANY KEY"
 C $EEE3,3 ROM call PR-STRING
 C $EEED,3 Procedure Print char and shift down
 C $EEF3,3 Print string
+C $EEFA,3 Print string
+C $EF01,3 Print string
+C $EF08,3 Print string
 C $EF25,3 ROM call KEYBOARD
 b $EF3A
 B $EF3A,15

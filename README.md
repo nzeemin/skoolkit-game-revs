@@ -50,4 +50,4 @@ Original: for ZX Spectrum, 1983, Durell Software.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 
-Status: Started, have a good progress (49K .ctl file).
+Status: Started, have a good progress (50K .ctl file).

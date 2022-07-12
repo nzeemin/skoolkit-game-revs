@@ -51,6 +51,10 @@ B $5B4A,1,1 Screen attribute, see routine #R$DA39
 W $5B4B,2,2 ???
 b $5B4D
 B $5B4D,,16
+B $5C05
+B $5C08,,16
+B $5C7B,,16
+B $5C8D,,16
 b $6000 Sprites
 N $6000 Small squid horizontal sprites; width 3 height 1 chars, 24 bytes each
 B $6000,24,12 #HTML[#UDGARRAY3,,,3,,;$6000-$6017-1-24(smsquidh0)]
@@ -826,6 +830,9 @@ c $C009
 C $C03C,3 Random
 b $C092
 W $C092,,8
+B $C20A,,21
+B $C2EB
+B $C331
 c $C431
 c $C45C
 c $C481
@@ -964,6 +971,7 @@ c $DED9
 c $DEE5
 c $DEF1
 b $DEFD
+B $DEFF
 b $DF25 Table: Angle 0..15 -> (DX, DY)
 B $DF25,,16
 b $DF45
@@ -1117,6 +1125,7 @@ C $E618,3 Play melody
 b $E61C Melodies
 B $E629
 B $E630
+B $E632
 B $E634
 B $E638
 c $E645 Play melody $E629
@@ -1185,27 +1194,8 @@ C $E98D,6 set sprite address
 c $E9B0
 R $E9B0 I:IX Object address = $E33B
 C $E9C4,3 get Number of lives
-s $E9D1
-t $E9DA
-b $E9E0
-t $E9EA
-b $E9F0
-t $E9FA
-b $EA00
-t $EA0A
-b $EA10
-t $EA1A
-b $EA20
-t $EA2A
-b $EA30
-t $EA3A
-b $EA40
-t $EA4A
-b $EA50
-t $EA5A
-b $EA60
-t $EA6A
-b $EA70
+b $E9D1
+B $E9D8,,16
 c $EA7A
 c $EADE
 C $EADE,4 Diver object record address
@@ -1233,6 +1223,7 @@ T $EBF5,14
 T $EC03,7
 T $EC2A,$1F
 T $EC4B,3
+T $EC53,6
 T $EC59,7
 c $EC7C Redefine keys ??
 C $EC7E,3 ROM call CHAN-OPEN

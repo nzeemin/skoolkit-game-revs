@@ -44,15 +44,16 @@ W $5B3E,2,2 Port for Accelerate key
 B $5B40,1,1 Bit mask for Accelerate key
 W $5B41,2,2 Port for Decelerate key
 B $5B43,1,1 Bit mask for Decelerate key
-W $5B44,2,2 ???
+W $5B44,2,2 Score value
 W $5B46,2,2 ??? $0000 at game start
 W $5B48,2,2 ??? $0000 at game start
 B $5B4A,1,1 Screen attribute, see routine #R$DA39
-W $5B4B,2,2 ???
+W $5B4B,2,2 High score value
 b $5B4D
 B $5B4D,,16
 B $5C05
-B $5C08,,16
+B $5C08,1,1 LAST-K - Last key pressed
+B $5C09,,16
 B $5C7B,,16
 B $5C8D,,16
 b $6000 Sprites
@@ -842,6 +843,8 @@ b $C4E7
 b $C4F0
 s $C500
 c $D990 Game
+C $D998,3 reset Score value
+C $D99B,3 reset HELD value
 C $D99E,2 Number of lives
 C $D9A0,3 set the initial value
 C $D9A3,3 Prepare the world mini-map (#R$AC5D table)
@@ -909,6 +912,9 @@ C $DB41,3 Print string
 C $DB53,3 Game level 1..4
 C $DB62,3 get Number of lives
 C $DB74,4 Diver object record address
+C $DB78,3 Print high score number
+C $DB7B,3 Print score number
+C $DB7E,3 Print HELD number
 C $DB81,3 Game level 1..4
 C $DB88,1 A = ([Game level] - 1) * 16 => 0 / 16 / 32 / 48
 C $DB8F,1 HL = $DDF0 + ([Game level] - 1) * 16
@@ -928,7 +934,7 @@ C $DBF7,3 Game level 1..4
 C $DBE5,1 A = [Game level] * 5 => 5 / 10 / 15 / 20
 C $DBEC,2 A = [Game level] * 5 * 3 - 3 => 12 / 27 / 42 / 57
 C $DBFC,2 3 / 2 / 1 / 0
-b $DC09
+b $DC09 Texts for indicator panel
 B $DC09,9,9 Indicator top border
 B $DC12,9,9 Indicator bottom border
 B $DC1B,5,5 "HIGH"
@@ -941,8 +947,7 @@ B $DC50,6,6 "DEPTH"
 B $DC56,15 "SKILL    LIVES"
 B $DC65,17 Vertical gauge
 B $DC76,8,8 "1 2 3 4"
-b $DC7E
-W $DC7E,2,2 ???
+W $DC7E,2,2 Char coords for printing on the screen, see #R$DA59
 b $DC80 Tiles 8x8
 B $DC80,64,8 #HTML[#UDGARRAY1,,,1,,;$DC80-$DCBF-1-8(tiles80)]
 B $DCC0,64,8 #HTML[#UDGARRAY1,,,1,,;$DCC0-$DCFF-1-8(tiles81)]
@@ -963,15 +968,25 @@ W $DE57,2,2 ???
 W $DE59,2,2 ???
 W $DE5B,2,2 ???
 c $DE5D
-c $DE85
+C $DE79,3 Play melody $E629
+c $DE85 Print decimal number
 R $DE85 I:B ??? $00 $02
-R $DE85 I:HL ???
-R $DE85 I:DE ??? $4059 $4099 $40DA
-c $DED9
-c $DEE5
-c $DEF1
+R $DE85 I:HL Number to print
+R $DE85 I:DE Address on the screen: $4059 $4099 $40DA
+C $DE89,4 address for list of dividers: 10000, 1000, 100, 10, 1
+C $DE8F,6 get divider in DE
+C $DEC0,3 ZX Charset (3D00) + $80 = address of char '0'
+c $DED9 Print high score number
+C $DEE1,3 Print decimal number
+c $DEE5 Print score number
+C $DEE7,3 get Score value
+C $DEED,3 Print decimal number
+c $DEF1 Print HELD number
+C $DEF3,3 get HELD value
+C $DEF9,3 Print decimal number
 b $DEFD
-B $DEFF
+W $DEFF,2,2 HELD value
+B $DF0F,2,2
 b $DF25 Table: Angle 0..15 -> (DX, DY)
 B $DF25,,16
 b $DF45
@@ -1089,6 +1104,8 @@ C $E3EB,1 0 / 8 / 16 / 24
 C $E3EC,1 0 / 16 / 32 / 48
 C $E3ED,1 0 / 32 / 64 / 96
 C $E3F1,3 Base address for 4 sprites of drowned diver
+C $E405,6 reset HELD value
+C $E40B,3 Print HELD number
 C $E412,3 Melody address
 C $E415,3 Play melody
 c $E41B
@@ -1103,17 +1120,29 @@ C $E447,4 clear "moving" bit
 C $E44B,3 get Angle 0..15
 C $E44F,3 Explosion sprite address
 C $E469,3 Play melody
+C $E46C,6 reset HELD value
+C $E472,3 Print HELD number
 c $E476
 R $E476 I:IX Object address = $E33B
 C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
+C $E4FF,4 set HELD value
+C $E509,3 get HELD value
+C $E50D,3 set HELD value
 C $E512,3 Get screen attribute address
-C $E522,3 Make sound
-C $E54D,3 Make sound
+C $E51F,3 Print HELD number
+C $E522,3 Play melody $E60B
+C $E541,3 set HELD value
+C $E54A,3 Print HELD number
+C $E54D,3 Play melody $E60B
 C $E575,3 get value 2 / 4 / 6 / 8, depending on Game level
-C $E598,3 Make sound
+C $E595,3 Print HELD number
+C $E598,3 Play melody $E60B
 C $E5CD,3 get value 5 / 10 / 15 / 20, depending on Game level
 c $E5D2
-b $E5E0
+C $E5D2,4 get HELD value
+b $E5E0 Dividers used to print decimal number, see #R$DE85
+W $E5E0,10,10 10000, 1000, 100, 10, 1
+W $E5EA,2,2
 c $E5EC Play melody
 R $E5EC I:HL Melody address
 C $E5FB,3 ROM Beeper subroutine
@@ -1180,8 +1209,16 @@ C $E867,4 clear DY value
 C $E873,4 clear "moving" bit
 C $E877,3 Game level 1..4
 C $E894,3 Play melody
+C $E8A5,3 get HELD value
+C $E8A8,4 get Score value
+C $E8AD,3 set Score value
+C $E8B0,6 reset HELD value
+C $E8DF,4 get Score value
+C $E8E7,3 Print score number
 C $E8F1,3 Play melody
 C $E8F7,3 Play melody
+C $E8B6,3 Print HELD number
+C $E8B9,3 Print score number
 c $E915
 C $E947,4 clear DX value
 C $E94B,3 get Screen position on mini-map
@@ -1195,10 +1232,16 @@ c $E9B0
 R $E9B0 I:IX Object address = $E33B
 C $E9C4,3 get Number of lives
 b $E9D1
-B $E9D8,,16
+B $E9D8,2,2
+b $E9DA Score table, 160 bytes
+B $E9DA,,16
+B $EA74,,16
 c $EA7A
+C $EA8D,4 Score table address
+C $EAAB,3 Score table address
 c $EADE
 C $EADE,4 Diver object record address
+C $EAEC,3 set ATTR-P - Permanent current colours
 C $EAF1,3 ROM call CHAN-OPEN
 C $EAF6,3 ROM call inside BORDER subroutine
 C $EAFB,3 ROM call CHAN-OPEN
@@ -1206,18 +1249,21 @@ C $EAFE,3 ROM CLS subroutine
 C $EB03,3 ROM call CHAN-OPEN
 C $EB06,3 Table of records text
 C $EB0C,3 ROM call PR-STRING
+C $EB13,3 address of last line of the score table
 C $EB3C,3 ROM call PR-STRING
 C $EB40,4 Diver object record address
 C $EB50,3 Convert char coords HL to ZX screen address
+C $EB59,3 Print decimal number
 C $EB74,3 ROM call PR-STRING
 C $EB77,3 "ENTER SKILL (1TO4),K,L OR S."
 C $EB7D,3 ROM call PR-STRING
 c $EB82
 C $EB8C,3 ROM call PR-STRING
+C $EB9C,3 get LAST-K - Last key pressed
 C $EBCC,3 ROM call PR-STRING
 c $EBDB
 C $EBE9,3 ROM OUT-NUM-1 subroutine
-t $EBEE
+t $EBEE Texts used for indicator panel
 T $EBEE,7
 T $EBF5,14
 T $EC03,7
@@ -1225,19 +1271,24 @@ T $EC2A,$1F
 T $EC4B,3
 T $EC53,6
 T $EC59,7
-c $EC7C Redefine keys ??
+c $EC7C Redefine keys
 C $EC7E,3 ROM call CHAN-OPEN
 C $EC83,3 ROM call inside BORDER subroutine
 C $EC88,3 ROM call CHAN-OPEN
+C $EC8D,3 set ATTR-P - Permanent current colours
 C $EC90,3 ROM CLS subroutine
+C $EC93,3 UDG symbols used for Redefine keys
+C $EC96,3 set UDG - Address of first user defined graphic
 C $EC9B,3 ROM call CHAN-OPEN
 C $EC9E,3 ROM call KEYBOARD
+C $ECA7,3 text for keys redefining
 C $ECAD,3 ROM call PR-STRING
 C $ECB0,3 Sound
 C $ECB3,4 set port for Clockwise key
 C $ECB7,3 Save key for Clockwise
 C $ECBD,3 ROM call PR-STRING
 C $ECC0,3 Sound
+C $ECC3,4 set port for Anticlockwise key
 C $ECC7,3 Save key for Anticlockwise
 C $ECCD,3 ROM call PR-STRING
 C $ECD0,3 Sound
@@ -1249,25 +1300,37 @@ C $ECE3,4 set port for Decelerate
 C $ECE7,3 Save key for Decelerate
 c $ECEB Sound??
 C $ED10,3 ROM BEEPER subroutine
-b $ED23
-b $ED43
+b $ED23 UDG symbols $90..$93 used for Redefine keys
+B $ED23,8,8 #HTML[#UDG$ED23(udg0)] $90
+B $ED2B,8,8 #HTML[#UDG$ED2B(udg1)] $91
+B $ED33,8,8 #HTML[#UDG$ED33(udg2)] $92
+B $ED3B,8,8 #HTML[#UDG$ED3B(udg3)] $93
+b $ED43 Text for Redefine keys
 T $ED4A
-b $ED60
-t $ED63
-b $ED79
-t $ED7C
-b $ED92
-t $ED97
-b $EDA1
-t $EDA5
-b $EDB3
-t $EDB7
-b $EDC4
-t $EDC9
+B $ED60
+T $ED63
+B $ED79
+T $ED7C
+B $ED92
+T $ED97
+B $EDA1
+T $EDA5
+B $EDB3
+T $EDB7
+B $EDC4
+T $EDC9
 B $EDD4
 b $EDD5 Melody
-b $EDDF
+c $EDDF Starting point
+C $EDE6,3 ROM call CHAN-OPEN
+C $EDEB,3 set ATTR-P - Permanent current colours
+C $EDFC,2 set bit to mark we already started the program
+C $EE04,3 ROM call PR-STRING
+C $EE07,3 "ENTER SKILL (1TO4),K,L OR S."
+C $EE0D,3 ROM call PR-STRING
+C $EE16,3 Play melody
 c $EE1C
+C $EE36,3 get LAST-K - Last key pressed
 C $EE39,2 'K' ?
 C $EE3D,3 Redefine keys
 C $EE45,2 'L' ?
@@ -1275,13 +1338,20 @@ C $EE49,3 ROM CLS subroutine
 C $EE4E,3 ROM call CHAN-OPEN
 C $EE51,3 "LOAD ? (Y/N)"
 C $EE57,3 ROM call PR-STRING
+C $EE66,3 get LAST-K - Last key pressed
 C $EE69,2 'N' ?
 C $EE6D,2 'Y' ?
+C $EE74,1 Returning to BASIC, loading score table
 C $EE75,2 'S' ?
+C $EE7C,1 Returning to BASIC, saving score table
 C $EE7D,2 -'1'
 C $EE85,1 1..4
 C $EE86,3 Save game level 1..4
+N $EE89 Game level selected, starting the game
 C $EE8C,3 Play melody
+C $EE98,3 get High Score value from the score table
+C $EE9B,3 set High Score value for indicator
+C $EE9E,3 Game
 c $EEAD
 C $EEB6,3 Game level 1..4
 C $EEBB,3 Clear screen with attribute A

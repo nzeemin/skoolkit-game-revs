@@ -275,11 +275,11 @@ b$5B00 DEFB $00                     ; ???
  $5B40 DEFB $01                     ; Bit mask for Accelerate key
  $5B41 DEFW $7FFE                   ; Port for Decelerate key
  $5B43 DEFB $02                     ; Bit mask for Decelerate key
- $5B44 DEFW $03E8                   ; ???
+ $5B44 DEFW $03E8                   ; Score value
  $5B46 DEFW $0000                   ; ??? $0000 at game start
  $5B48 DEFW $0000                   ; ??? $0000 at game start
  $5B4A DEFB $00                     ; Screen attribute, see routine #R$DA39
- $5B4B DEFW $0000                   ; ???
+ $5B4B DEFW $0000                   ; High score value
 
 ; Data block at 5B4D
 b$5B4D DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -295,14 +295,17 @@ b$5B4D DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $5BED DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $5BFD DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $5C05 DEFB $00,$00,$00
- $5C08 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C18 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C28 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C38 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C48 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C58 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C68 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $5C78 DEFB $00,$00,$00
+ $5C08 DEFB $00                                                             ; LAST-K -
+                                                                            ; Last key
+                                                                            ; pressed
+ $5C09 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C19 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C29 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C39 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C49 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C59 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C69 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $5C79 DEFB $00,$00
  $5C7B DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $5C8B DEFB $00,$00
  $5C8D DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -5105,8 +5108,8 @@ c$D990 DI             ;
  $D991 PUSH IX        ;
  $D993 PUSH IY        ;
  $D995 LD HL,$0000    ;
- $D998 LD ($5B44),HL  ;
- $D99B LD ($DEFF),HL  ;
+ $D998 LD ($5B44),HL  ; reset Score value
+ $D99B LD ($DEFF),HL  ; reset HELD value
  $D99E LD A,$03       ; Number of lives
  $D9A0 LD ($5B37),A   ; set the initial value
 *$D9A3 CALL $9DAA     ; Prepare the world mini-map (#R$AC5D table)
@@ -5342,9 +5345,9 @@ c$DAAD LD A,$30      ;
  $DB6F LD ($DE59),HL ;
  $DB72 LD (HL),$4F   ;
  $DB74 LD IX,$E33B   ; Diver object record address
- $DB78 CALL $DED9    ;
- $DB7B CALL $DEE5    ;
- $DB7E CALL $DEF1    ;
+ $DB78 CALL $DED9    ; Print high score number
+ $DB7B CALL $DEE5    ; Print score number
+ $DB7E CALL $DEF1    ; Print HELD number
  $DB81 LD A,($5B10)  ; Game level 1..4
  $DB84 DEC A         ;
  $DB85 ADD A,A       ;
@@ -5421,7 +5424,7 @@ c$DBC2 LD A,($5B10)  ; Game level 1..4
  $DC05 LD ($5B25),A  ;
  $DC08 RET           ;
 
-; Data block at DC09
+; Texts for indicator panel
 b$DC09 DEFB $80,$81,$81,$81,$81,$81,$81,$85,$FF ; Indicator top border
  $DC12 DEFB $83,$81,$81,$81,$81,$81,$81,$84,$FF ; Indicator bottom border
  $DC1B DEFB $28,$29,$27,$28,$FF                 ; "HIGH"
@@ -5439,9 +5442,8 @@ b$DC09 DEFB $80,$81,$81,$81,$81,$81,$81,$85,$FF ; Indicator top border
  $DC6D DEFB $87,$87,$87,$87,$87,$87,$87,$88     ;
  $DC75 DEFB $FF                                 ; }
  $DC76 DEFB $11,$00,$12,$00,$13,$00,$14,$FF     ; "1 2 3 4"
-
-; Data block at DC7E
-b$DC7E DEFW $0000    ; ???
+ $DC7E DEFW $0000                               ; Char coords for printing on
+                                                ; the screen, see #R$DA59
 
 ; Tiles 8x8
 b$DC80 DEFB $00,$7F,$40,$58,$58,$40,$43,$42 ; {#HTML[#UDGARRAY1,,,1,,;$DC80-$DCBF-1-8(tiles80)]
@@ -5551,25 +5553,25 @@ c$DE5D LD ($DE5B),HL ;
  $DE72 LD HL,($DE57) ;
  $DE75 CP $0E        ;
  $DE77 JR C,$DE7E    ;
- $DE79 CALL $E645    ;
+ $DE79 CALL $E645    ; Play melody $E629
  $DE7C LD C,$10      ;
 *$DE7E CALL $DE2E    ;
  $DE81 LD ($DE57),HL ;
  $DE84 RET           ;
 
-; Routine at DE85
+; Print decimal number
 ;
 ; Used by the routines at #R$DED9, #R$DEE5, #R$DEF1 and #R$EADE.
 ;
 ; I:B ??? $00 $02
-; I:HL ???
-; I:DE ??? $4059 $4099 $40DA
+; I:HL Number to print
+; I:DE Address on the screen: $4059 $4099 $40DA
 c$DE85 LD (IX+$23),B  ;
  $DE88 PUSH DE        ;
- $DE89 LD IY,$E5E0    ;
+ $DE89 LD IY,$E5E0    ; address for list of dividers: 10000, 1000, 100, 10, 1
 *$DE8D LD C,$FF       ;
- $DE8F LD E,(IY+$00)  ;
- $DE92 LD D,(IY+$01)  ;
+ $DE8F LD E,(IY+$00)  ; {get divider in DE
+ $DE92 LD D,(IY+$01)  ; }
  $DE95 BIT 7,D        ;
  $DE97 JR Z,$DEA0     ;
  $DE99 LD (IX+$23),D  ;
@@ -5593,7 +5595,7 @@ c$DE85 LD (IX+$23),B  ;
  $DEBA SLA C          ;
  $DEBC SLA C          ;
  $DEBE SLA C          ;
- $DEC0 LD HL,$3D80    ;
+ $DEC0 LD HL,$3D80    ; ZX Charset (3D00) + $80 = address of char '0'
  $DEC3 ADD HL,BC      ;
  $DEC4 LD B,$08       ;
  $DEC6 PUSH DE        ;
@@ -5611,40 +5613,42 @@ c$DE85 LD (IX+$23),B  ;
  $DED7 POP DE         ;
  $DED8 RET            ;
 
-; Routine at DED9
+; Print high score number
 ;
 ; Used by the routine at #R$DAAD.
 c$DED9 LD B,$00      ;
  $DEDB LD HL,($5B4B) ;
  $DEDE LD DE,$4059   ;
- $DEE1 CALL $DE85    ;
+ $DEE1 CALL $DE85    ; Print decimal number
  $DEE4 RET           ;
 
-; Routine at DEE5
+; Print score number
 ;
 ; Used by the routines at #R$DAAD and #R$E767.
 c$DEE5 LD B,$00      ;
- $DEE7 LD HL,($5B44) ;
+ $DEE7 LD HL,($5B44) ; get Score value
  $DEEA LD DE,$4099   ;
- $DEED CALL $DE85    ;
+ $DEED CALL $DE85    ; Print decimal number
  $DEF0 RET           ;
 
-; Routine at DEF1
+; Print HELD number
 ;
 ; Used by the routines at #R$DAAD, #R$E364, #R$E43A, #R$E476 and #R$E767.
 c$DEF1 LD B,$02      ;
- $DEF3 LD HL,($DEFF) ;
+ $DEF3 LD HL,($DEFF) ; get HELD value
  $DEF6 LD DE,$40DA   ;
- $DEF9 CALL $DE85    ;
+ $DEF9 CALL $DE85    ; Print decimal number
  $DEFC RET           ;
 
 ; Data block at DEFD
 b$DEFD DEFB $00,$00
- $DEFF DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF07 DEFB $02,$03,$02,$03,$18,$10,$00,$30
- $DF0F DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF17 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF1F DEFB $00,$00,$00,$00,$00,$00
+ $DEFF DEFW $0000                           ; HELD value
+ $DF01 DEFB $00,$00,$00,$00,$00,$00,$02,$03
+ $DF09 DEFB $02,$03,$18,$10,$00,$30
+ $DF0F DEFB $00,$00
+ $DF11 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $DF19 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $DF21 DEFB $00,$00,$00,$00
 
 ; Table: Angle 0..15 -> (DX, DY)
 b$DF25 DEFB $00,$FE,$01,$FE,$02,$FE,$02,$FF,$02,$00,$02,$01,$02,$02,$01,$02
@@ -6153,9 +6157,9 @@ c$E364 BIT 5,(IX+$10)  ;
  $E3FB LD (IX+$0A),H   ;
  $E3FE LD (IX+$0C),H   ;
  $E401 LD (IX+$21),$E6 ;
- $E405 LD HL,$0000     ;
- $E408 LD ($DEFF),HL   ;
- $E40B CALL $DEF1      ;
+ $E405 LD HL,$0000     ; {reset HELD value
+ $E408 LD ($DEFF),HL   ; }
+ $E40B CALL $DEF1      ; Print HELD number
  $E40E RES 6,(IX+$10)  ;
  $E412 LD HL,$E604     ; Melody address
  $E415 CALL $E5EC      ; Play melody
@@ -6203,9 +6207,9 @@ c$E43A BIT 3,(IX+$26) ;
  $E463 LD (IX+$0C),H  ;
  $E466 LD HL,$E61C    ;
  $E469 CALL $E5EC     ; Play melody
- $E46C LD HL,$0000    ;
- $E46F LD ($DEFF),HL  ;
- $E472 CALL $DEF1     ;
+ $E46C LD HL,$0000    ; {reset HELD value
+ $E46F LD ($DEFF),HL  ; }
+ $E472 CALL $DEF1     ; Print HELD number
  $E475 RET            ;
 
 ; Routine at E476
@@ -6286,12 +6290,12 @@ c$E476 LD IY,$B07D    ;
  $E4F7 JR C,$E533     ;
  $E4F9 JR $E509       ;
 *$E4FB LD BC,($5B33)  ;
- $E4FF LD ($DEFF),BC  ;
+ $E4FF LD ($DEFF),BC  ; set HELD value
  $E503 SET 6,(IX+$10) ;
  $E507 JR $E510       ;
-*$E509 LD HL,($DEFF)  ;
+*$E509 LD HL,($DEFF)  ; get HELD value
  $E50C ADD HL,BC      ;
- $E50D LD ($DEFF),HL  ;
+ $E50D LD ($DEFF),HL  ; set HELD value
 *$E510 POP DE         ;
  $E511 EX DE,HL       ;
  $E512 CALL $A14C     ; Get screen attribute address
@@ -6302,8 +6306,8 @@ c$E476 LD IY,$B07D    ;
  $E51B LD A,(BC)      ;
  $E51C SET 3,A        ;
  $E51E LD (BC),A      ;
- $E51F CALL $DEF1     ;
- $E522 CALL $E615     ; Make sound
+ $E51F CALL $DEF1     ; Print HELD number
+ $E522 CALL $E615     ; Play melody $E60B
  $E525 LD HL,$5B0F    ;
  $E528 INC (HL)       ;
  $E529 LD HL,($5B48)  ;
@@ -6321,12 +6325,12 @@ c$E476 LD IY,$B07D    ;
  $E53C LD A,H         ;
  $E53D LD (DE),A      ;
  $E53E LD HL,($5B33)  ;
- $E541 LD ($DEFF),HL  ;
+ $E541 LD ($DEFF),HL  ; set HELD value
  $E544 SET 6,(IX+$10) ;
  $E548 POP DE         ;
  $E549 POP BC         ;
- $E54A CALL $DEF1     ;
- $E54D CALL $E615     ; Make sound
+ $E54A CALL $DEF1     ; Print HELD number
+ $E54D CALL $E615     ; Play melody $E60B
  $E550 JP $E418       ;
 *$E553 BIT 1,A        ;
  $E555 JR Z,$E5A9     ;
@@ -6360,8 +6364,8 @@ c$E476 LD IY,$B07D    ;
  $E591 LD A,(BC)      ;
  $E592 SET 4,A        ;
  $E594 LD (BC),A      ;
- $E595 CALL $DEF1     ;
- $E598 CALL $E615     ; Make sound
+ $E595 CALL $DEF1     ; Print HELD number
+ $E598 CALL $E615     ; Play melody $E60B
  $E59B LD HL,$5B00    ;
  $E59E DEC (HL)       ;
  $E59F LD HL,($5B46)  ;
@@ -6394,7 +6398,7 @@ c$E476 LD IY,$B07D    ;
 ; Routine at E5D2
 ;
 ; Used by the routine at #R$E476.
-c$E5D2 LD BC,($DEFF) ;
+c$E5D2 LD BC,($DEFF) ; get HELD value
  $E5D6 LD DE,($5B33) ;
  $E5DA EX DE,HL      ;
  $E5DB OR A          ;
@@ -6402,14 +6406,14 @@ c$E5D2 LD BC,($DEFF) ;
  $E5DE EX DE,HL      ;
  $E5DF RET           ;
 
-; Data block at E5E0
-b$E5E0 DEFB $10,$27,$E8,$03,$64,$00,$0A,$00
- $E5E8 DEFB $01,$00,$FF,$FF
+; Dividers used to print decimal number, see #R$DE85
+b$E5E0 DEFW $2710,$03E8,$0064,$000A,$0001 ; 10000, 1000, 100, 10, 1
+ $E5EA DEFW $FFFF
 
 ; Play melody
 ;
-; Used by the routines at #R$E364, #R$E43A, #R$E615, #R$E645, #R$E767 and
-; #R$EE1C.
+; Used by the routines at #R$E364, #R$E43A, #R$E615, #R$E645, #R$E767, #R$EDDF
+; and #R$EE1C.
 ;
 ; I:HL Melody address
 c$E5EC LD E,(HL)     ;
@@ -6693,14 +6697,14 @@ c$E767 BIT 0,(IX+$26)  ;
  $E89E LD A,(IX+$03)   ;
  $E8A1 CP $07          ;
  $E8A3 JR NZ,$E8FA     ;
- $E8A5 LD HL,($DEFF)   ;
- $E8A8 LD DE,($5B44)   ;
+ $E8A5 LD HL,($DEFF)   ; get HELD value
+ $E8A8 LD DE,($5B44)   ; get Score value
  $E8AC ADD HL,DE       ;
- $E8AD LD ($5B44),HL   ;
- $E8B0 LD HL,$0000     ;
- $E8B3 LD ($DEFF),HL   ;
- $E8B6 CALL $DEF1      ;
- $E8B9 CALL $DEE5      ;
+ $E8AD LD ($5B44),HL   ; set Score value
+ $E8B0 LD HL,$0000     ; {reset HELD value
+ $E8B3 LD ($DEFF),HL   ; }
+ $E8B6 CALL $DEF1      ; Print HELD number
+ $E8B9 CALL $DEE5      ; Print score number
  $E8BC LD HL,$FFFF     ;
  $E8BF CALL $DE5D      ;
  $E8C2 RES 6,(IX+$10)  ;
@@ -6713,10 +6717,10 @@ c$E767 BIT 0,(IX+$26)  ;
  $E8D8 CP $03          ;
  $E8DA JR NZ,$E8FA     ;
  $E8DC LD HL,($5B31)   ;
- $E8DF LD DE,($5B44)   ;
+ $E8DF LD DE,($5B44)   ; get Score value
  $E8E3 ADD HL,DE       ;
  $E8E4 LD ($5B44),HL   ;
- $E8E7 CALL $DEE5      ;
+ $E8E7 CALL $DEE5      ; Print score number
  $E8EA SET 4,(IX+$26)  ;
  $E8EE LD HL,$E638     ;
  $E8F1 CALL $E5EC      ; Play melody
@@ -6824,17 +6828,20 @@ c$E9B0 SET 5,(IX+$26) ;
 
 ; Data block at E9D1
 b$E9D1 DEFB $00,$00,$00,$00,$00,$00,$00
- $E9D8 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $E9E8 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $E9F8 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA08 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA18 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA28 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA38 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA48 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA58 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA68 DEFB $00,$00,$44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00
- $EA78 DEFB $00,$00
+ $E9D8 DEFB $00,$00
+
+; Score table, 160 bytes
+b$E9DA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $E9EA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $E9FA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA0A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA1A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA2A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA3A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA4A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA5A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
+ $EA6A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00
+ $EA74 DEFB $0A,$00,$00,$00,$00,$00
 
 ; Routine at EA7A
 ;
@@ -6849,7 +6856,7 @@ c$EA7A LD ($E9D8),IX  ;
  $EA89 SBC A,H        ;
  $EA8A JR C,$EADE     ;
  $EA8C EX DE,HL       ;
- $EA8D LD IX,$E9DA    ;
+ $EA8D LD IX,$E9DA    ; Score table address
  $EA91 LD DE,$0010    ;
  $EA94 LD B,$0A       ;
 *$EA96 LD A,L         ;
@@ -6864,7 +6871,7 @@ c$EA7A LD ($E9D8),IX  ;
  $EAA7 OR A           ;
  $EAA8 SBC HL,DE      ;
  $EAAA PUSH HL        ;
- $EAAB LD DE,$E9DA    ;
+ $EAAB LD DE,$E9DA    ; Score table address
  $EAAE LD A,$0A       ;
  $EAB0 SUB B          ;
  $EAB1 ADD A,A        ;
@@ -6903,7 +6910,7 @@ c$EADE LD IX,$E33B     ; Diver object record address
  $EAE2 LD (IX+$1F),$07 ;
  $EAE6 LD IX,($E9D8)   ;
  $EAEA LD A,$0F        ;
- $EAEC LD ($5C8D),A    ;
+ $EAEC LD ($5C8D),A    ; set ATTR-P - Permanent current colours
  $EAEF LD A,$02        ;
  $EAF1 CALL $1601      ; ROM call CHAN-OPEN
  $EAF4 LD A,$01        ;
@@ -6918,7 +6925,7 @@ c$EADE LD IX,$E33B     ; Diver object record address
  $EB0C CALL $203C      ; ROM call PR-STRING
  $EB0F LD B,$0A        ;
  $EB11 LD C,$05        ;
- $EB13 LD HL,$EA6A     ;
+ $EB13 LD HL,$EA6A     ; address of last line of the score table
 *$EB16 PUSH BC         ;
  $EB17 BIT 7,(HL)      ;
  $EB19 JR Z,$EB20      ;
@@ -6957,7 +6964,7 @@ c$EADE LD IX,$E33B     ; Diver object record address
  $EB54 EX DE,HL        ;
  $EB55 LD B,$00        ;
  $EB57 PUSH IY         ;
- $EB59 CALL $DE85      ;
+ $EB59 CALL $DE85      ; Print decimal number
  $EB5C POP IY          ;
  $EB5E POP HL          ;
  $EB5F LD DE,$FFE4     ;
@@ -6992,7 +6999,7 @@ c$EB82 LD B,$06      ;
 *$EB96 LD A,($5C05)  ;
  $EB99 OR A          ;
  $EB9A JR Z,$EB96    ;
- $EB9C LD A,($5C08)  ;
+ $EB9C LD A,($5C08)  ; get LAST-K - Last key pressed
  $EB9F CP $0C        ;
  $EBA1 JR Z,$EBB9    ;
  $EBA3 CP $0D        ;
@@ -7053,7 +7060,7 @@ c$EBDB PUSH HL       ;
  $EBEC POP HL        ;
  $EBED RET           ;
 
-; Message at EBEE
+; Texts used for indicator panel
 t$EBEE DEFM $10,$07,$11,$01,$16,$01,$09
  $EBF5 DEFM "* SCUBA DIVE *"
  $EC03 DEFM $10,$00,$11,$06,$16,$05,$00
@@ -7066,7 +7073,7 @@ t$EBEE DEFM $10,$07,$11,$01,$16,$01,$09
  $EC59 DEFM $16,$15,$01,$11,$01,$10,$06
  $EC60 DEFM "ENTER SKILL (1TO4),K,L OR S."
 
-; Redefine keys ??
+; Redefine keys
 ;
 ; Used by the routine at #R$EE1C.
 c$EC7C LD A,$02      ;
@@ -7076,17 +7083,17 @@ c$EC7C LD A,$02      ;
  $EC86 LD A,$02      ;
  $EC88 CALL $1601    ; ROM call CHAN-OPEN
  $EC8B LD A,$20      ;
- $EC8D LD ($5C8D),A  ;
+ $EC8D LD ($5C8D),A  ; set ATTR-P - Permanent current colours
  $EC90 CALL $0D6B    ; ROM CLS subroutine
- $EC93 LD HL,$ED23   ;
- $EC96 LD ($5C7B),HL ;
+ $EC93 LD HL,$ED23   ; UDG symbols used for Redefine keys
+ $EC96 LD ($5C7B),HL ; set UDG - Address of first user defined graphic
  $EC99 LD A,$02      ;
  $EC9B CALL $1601    ; ROM call CHAN-OPEN
 *$EC9E CALL $02BF    ; ROM call KEYBOARD
  $ECA1 LD A,($5C05)  ;
  $ECA4 OR A          ;
  $ECA5 JR NZ,$EC9E   ;
- $ECA7 LD DE,$ED43   ;
+ $ECA7 LD DE,$ED43   ; text for keys redefining
  $ECAA LD BC,$005F   ;
  $ECAD CALL $203C    ; ROM call PR-STRING
  $ECB0 CALL $ECEB    ; Sound
@@ -7095,7 +7102,7 @@ c$EC7C LD A,$02      ;
  $ECBA LD BC,$0012   ;
  $ECBD CALL $203C    ; ROM call PR-STRING
  $ECC0 CALL $ECEB    ; Sound
- $ECC3 LD ($5B3B),BC ;
+ $ECC3 LD ($5B3B),BC ; set port for Anticlockwise key
  $ECC7 LD ($5B3D),A  ; Save key for Anticlockwise
  $ECCA LD BC,$0012   ;
  $ECCD CALL $203C    ; ROM call PR-STRING
@@ -7151,66 +7158,58 @@ c$ECEB LD C,$FE      ;
  $ED21 LD A,L        ;
  $ED22 RET           ;
 
-; Data block at ED23
-b$ED23 DEFB $18,$24,$42,$87,$87,$42,$20,$18
- $ED2B DEFB $18,$20,$42,$87,$87,$42,$24,$18
- $ED33 DEFB $08,$0C,$0E,$FF,$FF,$0E,$0C,$08
- $ED3B DEFB $00,$00,$10,$30,$7E,$30,$10,$00
+; UDG symbols $90..$93 used for Redefine keys
+b$ED23 DEFB $18,$24,$42,$87,$87,$42,$20,$18 ; #HTML[#UDG$ED23(udg0)] $90
+ $ED2B DEFB $18,$20,$42,$87,$87,$42,$24,$18 ; #HTML[#UDG$ED2B(udg1)] $91
+ $ED33 DEFB $08,$0C,$0E,$FF,$FF,$0E,$0C,$08 ; #HTML[#UDG$ED33(udg2)] $92
+ $ED3B DEFB $00,$00,$10,$30,$7E,$30,$10,$00 ; #HTML[#UDG$ED3B(udg3)] $93
 
-; Data block at ED43
+; Text for Redefine keys
 b$ED43 DEFB $10,$00,$11,$06,$16,$03,$05
  $ED4A DEFM "                      "
-
-; Data block at ED60
-b$ED60 DEFB $16,$04,$05
-
-; Message at ED63
-t$ED63 DEFM " PRESS ANY KEY FOR :- "
-
-; Data block at ED79
-b$ED79 DEFB $16,$05,$05
-
-; Message at ED7C
-t$ED7C DEFM "                      "
-
-; Data block at ED92
-b$ED92 DEFB $16,$08,$0B,$11,$04
-
-; Message at ED97
-t$ED97 DEFM "Clockwise "
-
-; Data block at EDA1
-b$EDA1 DEFB $90,$16,$08,$07
-
-; Message at EDA5
-t$EDA5 DEFM "Anticlockwise "
-
-; Data block at EDB3
-b$EDB3 DEFB $91,$16,$08,$07
-
-; Message at EDB7
-t$EDB7 DEFM "  Accelerate "
-
-; Data block at EDC4
-b$EDC4 DEFB $92,$20,$16,$08,$09
-
-; Message at EDC9
-t$EDC9 DEFM "Decelerate "
+ $ED60 DEFB $16,$04,$05
+ $ED63 DEFM " PRESS ANY KEY FOR :- "
+ $ED79 DEFB $16,$05,$05
+ $ED7C DEFM "                      "
+ $ED92 DEFB $16,$08,$0B,$11,$04
+ $ED97 DEFM "Clockwise "
+ $EDA1 DEFB $90,$16,$08,$07
+ $EDA5 DEFM "Anticlockwise "
+ $EDB3 DEFB $91,$16,$08,$07
+ $EDB7 DEFM "  Accelerate "
+ $EDC4 DEFB $92,$20,$16,$08,$09
+ $EDC9 DEFM "Decelerate "
  $EDD4 DEFB $93
 
 ; Melody
 b$EDD5 DEFB $12,$80,$01,$1E,$00,$01,$0C,$40
  $EDDD DEFB $01,$FF
 
-; Data block at EDDF
-b$EDDF DEFB $3E,$08,$32,$6A,$5C,$3E,$02,$CD
- $EDE7 DEFB $01,$16,$3E,$0F,$32,$8D,$5C,$2A
- $EDEF DEFB $78,$5C,$22,$05,$5B,$21,$4D,$5B
- $EDF7 DEFB $CB,$46,$C2,$A7,$EE,$CB,$C6,$11
- $EDFF DEFB $70,$EF,$01,$0F,$00,$CD,$3C,$20
- $EE07 DEFB $11,$60,$EC,$01,$1C,$00,$CD,$3C
- $EE0F DEFB $20,$06,$0A,$C5,$21,$D5,$ED,$CD
- $EE17 DEFB $EC,$E5,$C1,$10,$F6
+; Starting point
+c$EDDF LD A,$08      ;
+ $EDE1 LD ($5C6A),A  ;
+ $EDE4 LD A,$02      ;
+ $EDE6 CALL $1601    ; ROM call CHAN-OPEN
+ $EDE9 LD A,$0F      ;
+ $EDEB LD ($5C8D),A  ; set ATTR-P - Permanent current colours
+ $EDEE LD HL,($5C78) ;
+ $EDF1 LD ($5B05),HL ;
+ $EDF4 LD HL,$5B4D   ;
+ $EDF7 BIT 0,(HL)    ;
+ $EDF9 JP NZ,$EEA7   ;
+ $EDFC SET 0,(HL)    ; set bit to mark we already started the program
+ $EDFE LD DE,$EF70   ;
+ $EE01 LD BC,$000F   ;
+ $EE04 CALL $203C    ; ROM call PR-STRING
+ $EE07 LD DE,$EC60   ; "ENTER SKILL (1TO4),K,L OR S."
+ $EE0A LD BC,$001C   ;
+ $EE0D CALL $203C    ; ROM call PR-STRING
+ $EE10 LD B,$0A      ;
+*$EE12 PUSH BC       ;
+ $EE13 LD HL,$EDD5   ;
+ $EE16 CALL $E5EC    ; Play melody
+ $EE19 POP BC        ;
+ $EE1A DJNZ $EE12    ;
 
 ; Routine at EE1C
 c$EE1C LD HL,$0000   ;
@@ -7225,7 +7224,7 @@ c$EE1C LD HL,$0000   ;
  $EE32 EI            ;
  $EE33 OR A          ;
  $EE34 JR Z,$EE2C    ;
- $EE36 LD A,($5C08)  ;
+ $EE36 LD A,($5C08)  ; get LAST-K - Last key pressed
  $EE39 CP $4B        ; 'K' ?
  $EE3B JR NZ,$EE45   ;
  $EE3D CALL $EC7C    ; Redefine keys
@@ -7245,33 +7244,35 @@ c$EE1C LD HL,$0000   ;
 *$EE60 LD A,($5C05)  ;
  $EE63 OR A          ;
  $EE64 JR NZ,$EE60   ;
- $EE66 LD A,($5C08)  ;
+ $EE66 LD A,($5C08)  ; get LAST-K - Last key pressed
  $EE69 CP $4E        ; 'N' ?
  $EE6B JR Z,$EEA7    ;
  $EE6D CP $59        ; 'Y' ?
  $EE6F JR NZ,$EE5A   ;
  $EE71 LD BC,$0000   ;
- $EE74 RET           ;
+ $EE74 RET           ; Returning to BASIC, loading score table
 *$EE75 CP $53        ; 'S' ?
  $EE77 JR NZ,$EE7D   ;
  $EE79 LD BC,$0001   ;
- $EE7C RET           ;
+ $EE7C RET           ; Returning to BASIC, saving score table
 *$EE7D SUB $31       ; -'1'
  $EE7F JR C,$EE1C    ;
  $EE81 CP $04        ;
  $EE83 JR NC,$EE1C   ;
  $EE85 INC A         ; 1..4
  $EE86 LD ($5B10),A  ; Save game level 1..4
+; Game level selected, starting the game
  $EE89 LD HL,$EDD5   ;
  $EE8C CALL $E5EC    ; Play melody
  $EE8F LD HL,$0000   ;
  $EE92 LD ($5B46),HL ;
  $EE95 LD ($5B48),HL ;
- $EE98 LD HL,($EA74) ;
- $EE9B LD ($5B4B),HL ;
- $EE9E CALL $D990    ;
+ $EE98 LD HL,($EA74) ; get High Score value from the score table
+ $EE9B LD ($5B4B),HL ; set High Score value for indicator
+ $EE9E CALL $D990    ; Game
  $EEA1 CALL $EA7A    ;
  $EEA4 JP $EE1C      ;
+; This entry point is used by the routine at #R$EDDF.
 *$EEA7 CALL $EADE    ;
  $EEAA JP $EE1C      ;
 

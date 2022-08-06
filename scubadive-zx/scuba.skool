@@ -226,6 +226,7 @@ b$5B00 DEFB $00                     ; ???
  $5B01 DEFW $0000                   ; ???
  $5B03 DEFW $0000                   ; Screen position on mini-map (H = row, L =
                                     ; column)
+@label=RANDOM
  $5B05 DEFW $0167                   ; Current number in pseudo-random sequence,
                                     ; see routine #R$9D84
  $5B07 DEFW $0000                   ; ???
@@ -237,6 +238,7 @@ b$5B00 DEFB $00                     ; ???
  $5B0E DEFB $08                     ; Delay value for Octopus: 10 / 8 / 6 / 4,
                                     ; depending on Game level 1..4
  $5B0F DEFB $00                     ; ???
+@label=LEVEL
  $5B10 DEFB $04                     ; Game level selected: 1..4
  $5B11 DEFW $0000                   ; ???
  $5B13 DEFB $19                     ; Value 13 / 17 / 21 / 25, depending on
@@ -266,6 +268,7 @@ b$5B00 DEFB $00                     ; ???
  $5B27 DEFW $0000,$0000,$0000,$0000 ; {14 bytes copied from #R$DDF0 + ([Game
  $5B2F DEFW $0000,$0000,$0000       ; level] - 1) * 16}
  $5B35 DEFW $DF45                   ; ???
+@label=LIVES
  $5B37 DEFB $03                     ; Number of lives
  $5B38 DEFW $FEFE                   ; Port for Clockwise key
  $5B3A DEFB $04                     ; Bit mask for Clockwise key
@@ -275,10 +278,12 @@ b$5B00 DEFB $00                     ; ???
  $5B40 DEFB $01                     ; Bit mask for Accelerate key
  $5B41 DEFW $7FFE                   ; Port for Decelerate key
  $5B43 DEFB $02                     ; Bit mask for Decelerate key
+@label=SCORE
  $5B44 DEFW $03E8                   ; Score value
  $5B46 DEFW $0000                   ; ??? $0000 at game start
  $5B48 DEFW $0000                   ; ??? $0000 at game start
  $5B4A DEFB $00                     ; Screen attribute, see routine #R$DA39
+@label=HSCORE
  $5B4B DEFW $0000                   ; High score value
 
 ; Data block at 5B4D
@@ -1456,6 +1461,7 @@ b$9C50 DEFB $00      ; $00 = no Octopus, $01 = we have Octopus on the game
 ; Used by the routines at #R$D990, #R$DFD5 and #R$EEAD.
 ;
 ; HL Screen position on mini-map
+@label=DrawGameScr
 c$9C56 DI             ;
  $9C57 LD DE,$4000    ;
  $9C5A XOR A          ;
@@ -1677,6 +1683,7 @@ c$9D79 PUSH HL       ;
 ; .
 ;
 ; Calculate next number in pseudo-random sequence
+@label=NextRandom
 c$9D84 LD HL,($5B05) ;
  $9D87 LD D,H        ;
  $9D88 LD E,L        ;
@@ -1713,6 +1720,7 @@ b$9DA4 DEFB $AF
 ; I:HL Block address
 ; I:A Value
 ; I:B Length of the block to fill
+@label=FillBlock
 c$9DA5 LD (HL),A     ;
  $9DA6 INC HL        ;
  $9DA7 DJNZ $9DA5    ;
@@ -1721,6 +1729,7 @@ c$9DA5 LD (HL),A     ;
 ; Prepare the mini-map (#R$AC5D table)
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
+@label=PrepareMiniMap
 c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
  $9DAD LD B,$1C      ;
  $9DAF LD A,$16      ;
@@ -2237,6 +2246,7 @@ b$A132 DEFB $E5,$D5,$F5,$CD,$F5,$A0,$F1,$5F
 ; #R$DA59, #R$E364 and #R$E476.
 ;
 ; I:HL Char coords H = row, L = column 0..31
+@label=GetScrAttrAddr
 c$A14C PUSH DE       ;
  $A14D LD A,L        ;
  $A14E LD L,$00      ;
@@ -2472,7 +2482,13 @@ c$A193 LD HL,$20FF   ;
  $A27A POP HL        ;
  $A27B JP $A1A2      ;
 
-; Data block at A27E
+; Table of objects on the map; each record is 4 bytes wide
+;
+; .
+;
+; .
+;
+; 1st byte = flags; 2nd byte = column 0..255, 3rd byte = row 0..255
 b$A27E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $A28E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $A29E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -2497,8 +2513,8 @@ b$A27E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $A3CE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $A3DE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $A3EE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- $A3FE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$B2,$1D
- $A40E DEFB $EA,$53,$DE,$69,$DE,$01,$53,$48,$46,$B5,$7A,$EA,$5E
+ $A3FE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $A40C DEFB $B2,$1D,$EA,$53,$DE,$69,$DE,$01,$53,$48,$46,$B5,$7A,$EA,$5E
 
 ; Data block at A41B
 b$A41B DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -2810,15 +2826,20 @@ b$B05D DEFB $01,$01,$01,$01,$01,$01,$01,$01
  $B06D DEFB $01,$01,$01,$01,$01,$01,$01,$01
  $B075 DEFB $01,$01,$01,$01,$01,$01,$01,$01
 
-; ???
-b$B07D DEFB $01,$01,$01,$01,$01,$21,$01,$01
- $B085 DEFB $01,$01,$01,$01,$01,$0C,$01,$09
- $B08D DEFB $14,$16,$17,$0D,$01,$32,$14,$00
- $B095 DEFB $00,$00,$00,$00,$23,$32,$00,$00
- $B09D DEFB $00,$00,$00,$00,$0C,$32,$06,$27
+; Table of objects on the screen
+b$B07D DEFB $01,$01,$01,$01
+ $B081 DEFB $01,$21,$01,$01
+ $B085 DEFB $01,$01,$01,$01
+ $B089 DEFB $01,$0C,$01,$09
+ $B08D DEFB $14,$16,$17,$0D
+ $B091 DEFB $01,$32,$14,$00
+ $B095 DEFB $00,$00,$00,$00
+ $B099 DEFB $23,$32,$00,$00
+ $B09D DEFB $00,$00,$00,$00
+ $B0A1 DEFB $0C,$32,$06,$27
  $B0A5 DEFB $03,$00,$00,$00
 
-; Routine at B0A9
+; Draw static objects on the screen; prepare LB07D table
 ;
 ; Used by the routine at #R$9C56.
 c$B0A9 LD DE,($5B03)   ; get Screen position on mini-map
@@ -3771,7 +3792,7 @@ c$B70F LD A,H        ;
 ;
 ; Used by the routines at #R$BE40, #R$BE6D, #R$BE9A and #R$C431.
 ;
-; I:IX ???
+; I:IX ??? $C4F0
 c$B737 LD D,(IX+$14)  ;
  $B73A LD E,(IX+$13)  ;
  $B73D PUSH DE        ;
@@ -4505,7 +4526,7 @@ b$BDA9 DEFB $00
 ;
 ; Used by the routines at #R$D990, #R$DFD5 and #R$EEAD.
 c$BDBA CALL $BEC7    ;
- $BDBD LD A,($5B04)  ;
+ $BDBD LD A,($5B04)  ; get screen position (row) on mini-map
  $BDC0 CP $03        ;
  $BDC2 JR NC,$BDCB   ;
  $BDC4 CALL $BEB2    ;
@@ -5365,8 +5386,8 @@ c$DAAD LD A,$30      ;
  $DB9B LD C,A        ;
  $DB9C LD A,$05      ;
  $DB9E SUB C         ;
- $DB9F LD (IX+$1C),A ;
- $DBA2 LD (IX+$1E),A ;
+ $DB9F LD (IX+$1C),A ; = 5 - [Game level] = 4 / 3 / 2 / 1
+ $DBA2 LD (IX+$1E),A ; = 5 - [Game level] = 4 / 3 / 2 / 1
  $DBA5 LD C,A        ;
  $DBA6 LD A,$16      ;
  $DBA8 SUB C         ;
@@ -5386,6 +5407,7 @@ c$DAAD LD A,$30      ;
 ; Initialize variables depending of Game level
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
+@label=InitLevelVars
 c$DBC2 LD A,($5B10)  ; Game level 1..4
  $DBC5 ADD A,A       ;
  $DBC6 ADD A,A       ; *4
@@ -5499,9 +5521,10 @@ b$DDF0 DEFW $0002,$0005,$004B,$0019,$0032,$00FA,$0019,$0000 ; Level 1
  $DE10 DEFW $0006,$000F,$0096,$00E1,$004B,$02EE,$004B,$0000 ; Level 3
  $DE20 DEFW $0008,$0014,$0064,$00C8,$012C,$03E8,$0064       ; Level 4
 
-; Routine at DE2E
+; Update gauge indicator on the screen
 ;
 ; Used by the routines at #R$DE3E and #R$DE5D.
+@label=UpdateGauge
 c$DE2E LD (HL),$38   ;
  $DE30 RRCA          ;
  $DE31 RRCA          ;
@@ -5516,9 +5539,10 @@ c$DE2E LD (HL),$38   ;
  $DE3C LD (HL),C     ;
  $DE3D RET           ;
 
-; Routine at DE3E
+; Update Depth indicator
 ;
 ; Used by the routine at #R$DFD5.
+@label=UpdateDepth
 c$DE3E LD HL,($DE55) ;
  $DE41 LD DE,$58FB   ;
  $DE44 LD C,$28      ;
@@ -5536,9 +5560,12 @@ b$DE55 DEFW $0000    ; ???
  $DE59 DEFW $0000    ; ???
  $DE5B DEFW $FFFF    ; ???
 
-; Routine at DE5D
+; Update Oxygen indicator
 ;
 ; Used by the routines at #R$E364, #R$E476 and #R$E767.
+;
+; I:HL New value for Oxygen
+@label=UpdateOxygen
 c$DE5D LD ($DE5B),HL ;
  $DE60 LD A,H        ;
  $DE61 SRL A         ;
@@ -5566,6 +5593,7 @@ c$DE5D LD ($DE5B),HL ;
 ; I:B ??? $00 $02
 ; I:HL Number to print
 ; I:DE Address on the screen: $4059 $4099 $40DA
+@label=PrintDec
 c$DE85 LD (IX+$23),B  ;
  $DE88 PUSH DE        ;
  $DE89 LD IY,$E5E0    ; address for list of dividers: 10000, 1000, 100, 10, 1
@@ -5616,6 +5644,7 @@ c$DE85 LD (IX+$23),B  ;
 ; Print high score number
 ;
 ; Used by the routine at #R$DAAD.
+@label=PrintHighScore
 c$DED9 LD B,$00      ;
  $DEDB LD HL,($5B4B) ;
  $DEDE LD DE,$4059   ;
@@ -5625,6 +5654,7 @@ c$DED9 LD B,$00      ;
 ; Print score number
 ;
 ; Used by the routines at #R$DAAD and #R$E767.
+@label=PrintScore
 c$DEE5 LD B,$00      ;
  $DEE7 LD HL,($5B44) ; get Score value
  $DEEA LD DE,$4099   ;
@@ -5634,6 +5664,7 @@ c$DEE5 LD B,$00      ;
 ; Print HELD number
 ;
 ; Used by the routines at #R$DAAD, #R$E364, #R$E43A, #R$E476 and #R$E767.
+@label=PrintHeld
 c$DEF1 LD B,$02      ;
  $DEF3 LD HL,($DEFF) ; get HELD value
  $DEF6 LD DE,$40DA   ;
@@ -5642,6 +5673,7 @@ c$DEF1 LD B,$02      ;
 
 ; Data block at DEFD
 b$DEFD DEFB $00,$00
+@label=HELD
  $DEFF DEFW $0000                           ; HELD value
  $DF01 DEFB $00,$00,$00,$00,$00,$00,$02,$03
  $DF09 DEFB $02,$03,$18,$10,$00,$30
@@ -5989,6 +6021,7 @@ c$E2A8 LD IX,$E33B     ; Diver object record address
 ; Used by the routine at #R$E2A8.
 ;
 ; I:IX Object address = $E33B
+@label=ReadKeyboard
 c$E2DB BIT 3,(IX+$10) ;
  $E2DF RET NZ         ;
  $E2E0 LD E,(IX+$06)  ; get Angle
@@ -5998,6 +6031,7 @@ c$E2DB BIT 3,(IX+$10) ;
  $E2EB IN A,(C)       ; read the port for Clockwise key
  $E2ED AND D          ;
  $E2EE JR NZ,$E2F1    ; not pressed => skip rotate
+; Clockwise key pressed
  $E2F0 INC E          ; rotate clockwise
 *$E2F1 LD BC,($5B3B)  ; get port for Anticlockwise key
  $E2F5 LD A,($5B3D)   ; get bit mask for Anticlockwise key
@@ -6005,6 +6039,7 @@ c$E2DB BIT 3,(IX+$10) ;
  $E2F9 IN A,(C)       ; read the port for Anticlockwise key
  $E2FB AND D          ;
  $E2FC JR NZ,$E2FF    ; not pressed => skip rotate
+; Anticlockwise key pressed
  $E2FE DEC E          ; rotate anticlockwise
 *$E2FF LD A,$0F       ;
  $E301 AND E          ;
@@ -6015,26 +6050,29 @@ c$E2DB BIT 3,(IX+$10) ;
  $E30D IN A,(C)       ; read the port for Accelerate key
  $E30F AND D          ;
  $E310 JR NZ,$E31F    ; not pressed => skip
- $E312 LD A,(IX+$0E)  ;
+; Accelerate key pressed
+ $E312 LD A,(IX+$0E)  ; get speed factor
  $E315 SET 0,(IX+$10) ; set "moving" bit
  $E319 CP $08         ;
  $E31B RET Z          ;
- $E31C DEC (IX+$0E)   ;
+ $E31C DEC (IX+$0E)   ; decrement speed factor
 *$E31F LD BC,($5B41)  ; get port for Decelerate key
  $E323 LD A,($5B43)   ; get bit mask for Decelerate key
  $E326 LD D,A         ;
  $E327 IN A,(C)       ; read the port for Decelerate key
  $E329 AND D          ;
  $E32A RET NZ         ; not pressed => return
- $E32B LD A,(IX+$0E)  ;
- $E32E CP $14         ;
+; Decelerate key pressed
+ $E32B LD A,(IX+$0E)  ; get speed factor
+ $E32E CP $14         ; = 20 ?
  $E330 JR NZ,$E337    ;
  $E332 RES 0,(IX+$10) ; clear "moving" bit - diver stopped
  $E336 RET            ;
 *$E337 INC (IX+$0E)   ;
  $E33A RET            ;
 
-; Object record
+; Diver object record
+@label=DiverObj
 b$E33B DEFB $0A      ; (IX+$00) Column 0..31
  $E33C DEFB $0A      ; (IX+$01) Row
  $E33D DEFB $04      ; (IX+$02) ???
@@ -6049,9 +6087,9 @@ b$E33B DEFB $0A      ; (IX+$00) Column 0..31
  $E344 DEFW $0000    ; (IX+$09) Sprite address
  $E346 DEFW $0000    ; (IX+$0B) Sprite address
  $E348 DEFB $18      ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
- $E349 DEFB $14      ; (IX+$0E) speed factor ??? 12 20 40 100; $08 max speed,
-                     ; $14 min speed
- $E34A DEFB $14      ; (IX+$0F) ??? $03
+ $E349 DEFB $14      ; (IX+$0E) speed factor: 12 20 40 100; $08 max speed, $14
+                     ; min speed
+ $E34A DEFB $14      ; (IX+$0F) speed counter
  $E34B DEFB $00      ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
                      ; bit0: 1 = diver moving, 0 = diver stopped
  $E34C DEFB $00      ; (IX+$11) ??? $00 $FF
@@ -6212,7 +6250,7 @@ c$E43A BIT 3,(IX+$26) ;
  $E472 CALL $DEF1     ; Print HELD number
  $E475 RET            ;
 
-; Routine at E476
+; Process objects on the screen - like take Oxygen or pick up pearls
 ;
 ; Used by the routine at #R$E364.
 ;
@@ -6289,7 +6327,7 @@ c$E476 LD IY,$B07D    ;
  $E4F5 JR Z,$E4FB     ;
  $E4F7 JR C,$E533     ;
  $E4F9 JR $E509       ;
-*$E4FB LD BC,($5B33)  ;
+*$E4FB LD BC,($5B33)  ; get value depending of game level
  $E4FF LD ($DEFF),BC  ; set HELD value
  $E503 SET 6,(IX+$10) ;
  $E507 JR $E510       ;
@@ -6324,7 +6362,7 @@ c$E476 LD IY,$B07D    ;
  $E53B INC DE         ;
  $E53C LD A,H         ;
  $E53D LD (DE),A      ;
- $E53E LD HL,($5B33)  ;
+ $E53E LD HL,($5B33)  ; get value depending of game level
  $E541 LD ($DEFF),HL  ; set HELD value
  $E544 SET 6,(IX+$10) ;
  $E548 POP DE         ;
@@ -6395,15 +6433,15 @@ c$E476 LD IY,$B07D    ;
  $E5CD LD HL,($5B29)  ; get value 5 / 10 / 15 / 20, depending on Game level
  $E5D0 JR $E578       ;
 
-; Routine at E5D2
+; DE = (L5B33) - HELD
 ;
 ; Used by the routine at #R$E476.
 c$E5D2 LD BC,($DEFF) ; get HELD value
- $E5D6 LD DE,($5B33) ;
+ $E5D6 LD DE,($5B33) ; get value depending of game level
  $E5DA EX DE,HL      ;
  $E5DB OR A          ;
  $E5DC SBC HL,BC     ;
- $E5DE EX DE,HL      ;
+ $E5DE EX DE,HL      ; DE = (L5B33) - HELD
  $E5DF RET           ;
 
 ; Dividers used to print decimal number, see #R$DE85
@@ -6416,6 +6454,7 @@ b$E5E0 DEFW $2710,$03E8,$0064,$000A,$0001 ; 10000, 1000, 100, 10, 1
 ; and #R$EE1C.
 ;
 ; I:HL Melody address
+@label=PlayMelody
 c$E5EC LD E,(HL)     ;
  $E5ED LD A,E        ;
  $E5EE INC A         ;
@@ -6716,7 +6755,7 @@ c$E767 BIT 0,(IX+$26)  ;
  $E8D5 LD A,($5B0F)    ;
  $E8D8 CP $03          ;
  $E8DA JR NZ,$E8FA     ;
- $E8DC LD HL,($5B31)   ;
+ $E8DC LD HL,($5B31)   ; get value depending of game level
  $E8DF LD DE,($5B44)   ; get Score value
  $E8E3 ADD HL,DE       ;
  $E8E4 LD ($5B44),HL   ;
@@ -7076,6 +7115,7 @@ t$EBEE DEFM $10,$07,$11,$01,$16,$01,$09
 ; Redefine keys
 ;
 ; Used by the routine at #R$EE1C.
+@label=RedefineKeys
 c$EC7C LD A,$02      ;
  $EC7E CALL $1601    ; ROM call CHAN-OPEN
  $EC81 LD A,$04      ;
@@ -7186,6 +7226,7 @@ b$EDD5 DEFB $12,$80,$01,$1E,$00,$01,$0C,$40
  $EDDD DEFB $01,$FF
 
 ; Starting point
+@label=Start
 c$EDDF LD A,$08      ;
  $EDE1 LD ($5C6A),A  ;
  $EDE4 LD A,$02      ;

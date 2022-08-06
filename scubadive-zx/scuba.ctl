@@ -8,6 +8,7 @@ B $5B00,1,1 ???
 W $5B01,2,2 ???
 W $5B03,2,2 Screen position on mini-map (H = row, L = column)
 W $5B05,2,2 Current number in pseudo-random sequence, see routine #R$9D84
+@ $5B05 label=RANDOM
 W $5B07,2,2 ???
 B $5B09,1,1 ???
 B $5B0A,1,1 ???
@@ -16,6 +17,7 @@ B $5B0D,1,1 Delay value: 7 / 5 / 3 / 1, depending on Game level 1..4
 B $5B0E,1,1 Delay value for Octopus: 10 / 8 / 6 / 4, depending on Game level 1..4
 B $5B0F,1,1 ???
 B $5B10,1,1 Game level selected: 1..4
+@ $5B10 label=LEVEL
 W $5B11,2,2 ???
 B $5B13,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
 B $5B14,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
@@ -36,6 +38,7 @@ W $5B25,2,2 Value 150 / 100 / 50 / 1, depending on Game level 1..4
 W $5B27,14,8 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
 W $5B35,2,2 ???
 B $5B37,1,1 Number of lives
+@ $5B37 label=LIVES
 W $5B38,2,2 Port for Clockwise key
 B $5B3A,1,1 Bit mask for Clockwise key
 W $5B3B,2,2 Port for Anticlockwise key
@@ -45,10 +48,12 @@ B $5B40,1,1 Bit mask for Accelerate key
 W $5B41,2,2 Port for Decelerate key
 B $5B43,1,1 Bit mask for Decelerate key
 W $5B44,2,2 Score value
+@ $5B44 label=SCORE
 W $5B46,2,2 ??? $0000 at game start
 W $5B48,2,2 ??? $0000 at game start
 B $5B4A,1,1 Screen attribute, see routine #R$DA39
 W $5B4B,2,2 High score value
+@ $5B4B label=HSCORE
 b $5B4D
 B $5B4D,,16
 B $5C05
@@ -412,6 +417,7 @@ W $9C51,2,2 Octopus row/column
 W $9C53,2,2 ???
 B $9C55,1,1 Octopus phase
 c $9C56 Draw game screen
+@ $9C56 label=DrawGameScr
 R $9C56 HL Screen position on mini-map
 C $9C66,2 Game screen 3 blocks high = 24 tiles
 C $9C6A,2 Game screen 3 blocks wide = 24 tiles
@@ -445,6 +451,7 @@ R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
 C $9D7C,3 Calculate address in the mini-map (#R$AC5D table)
 c $9D84 Random
+@ $9D84 label=NextRandom
 N $9D84 Calculate next number in pseudo-random sequence
 C $9D89,1 x2
 C $9D8A,1 x4
@@ -465,10 +472,12 @@ C $9DA0,3 ($5B05) := ($5B05) * 1509 + 41
 b $9DA4
 B $9DA4,1,1
 c $9DA5 Fill block at HL with A
+@ $9DA5 label=FillBlock
 R $9DA5 I:HL Block address
 R $9DA5 I:A Value
 R $9DA5 I:B Length of the block to fill
 c $9DAA Prepare the mini-map (#R$AC5D table)
+@ $9DAA label=PrepareMiniMap
 C $9DAA,3 $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
 C $9DB1,3 Fill block at $ACBF with $16
 C $9DB4,2 ($ACDB) <- $06
@@ -576,6 +585,7 @@ c $A129 Calculate address and Get ???
 R $A129 I:HL Char coords H = row, L = column 0..31
 b $A132
 c $A14C Get screen attribute address
+@ $A14C label=GetScrAttrAddr
 R $A14C I:HL Char coords H = row, L = column 0..31
 c $A164 Convert char coords HL to ZX screen address
 R $A164 I:HL Char coords H = row 0..23, L = column 0..31
@@ -592,8 +602,10 @@ c $A193
 C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
 C $A26E,3 get current Random
-b $A27E
+b $A27E Table of objects on the map; each record is 4 bytes wide
+N $A27E 1st byte = flags; 2nd byte = column 0..255, 3rd byte = row 0..255
 B $A27E,,16
+B $A40C,,16
 b $A41B
 B $A41B,,16
 b $A4DD Relief construction blocks, 8x8 tiles = 64x64 pixels
@@ -633,8 +645,9 @@ N $AC5D Each byte is relief block number (see #R$A4DD), each relief block is 8x8
 . So this mini-map defines the world of 256x256 tiles, or 2048 x 2048 pixels.
 B $AC5D,,32
 b $B05D
-b $B07D ???
-c $B0A9
+b $B07D Table of objects on the screen
+B $B07D,,4
+c $B0A9 Draw static objects on the screen; prepare LB07D table
 C $B0A9,4 get Screen position on mini-map
 C $B0FD,2 screen attribute for chest
 C $B0FF,3 Sprite 16x8 Chest
@@ -767,7 +780,7 @@ R $B70F I:IX ???
 R $B70F I:IY ???
 C $B726,3 Get screen attribute address
 c $B737
-R $B737 I:IX ???
+R $B737 I:IX ??? $C4F0
 C $B7AD,4 address of the return point - put on the stack
 N $B7B8 Point of return
 s $B7B9
@@ -801,6 +814,7 @@ C $BD95,3 Random
 C $BDA4,3 set DX value
 b $BDA9
 c $BDBA
+C $BDBD,3 get screen position (row) on mini-map
 s $BDE9
 B $BDAA,8
 c $BDEA
@@ -919,10 +933,13 @@ C $DB81,3 Game level 1..4
 C $DB88,1 A = ([Game level] - 1) * 16 => 0 / 16 / 32 / 48
 C $DB8F,1 HL = $DDF0 + ([Game level] - 1) * 16
 C $DB98,3 Game level 1..4
+C $DB9F,3 = 5 - [Game level] = 4 / 3 / 2 / 1
+C $DBA2,3 = 5 - [Game level] = 4 / 3 / 2 / 1
 C $DBAF,3 Game level 1..4
 C $DBB9,3 = 10 - [Game level] * 2 + 2 => 10 / 8 / 6 / 4
 C $DBBE,3 = 10 - [Game level] * 2 + 2 - 3 => 7 / 5 / 3 / 1
 c $DBC2 Initialize variables depending of Game level
+@ $DBC2 label=InitLevelVars
 C $DBC2,3 Game level 1..4
 C $DBC6,1 *4
 C $DBC7,2 A = [Game level] * 4 + 9 => 13 / 17 / 21 / 25
@@ -960,16 +977,21 @@ W $DDF0,16,16 Level 1
 W $DE00,16,16 Level 2
 W $DE10,16,16 Level 3
 W $DE20,16,14 Level 4
-c $DE2E
-c $DE3E
+c $DE2E Update gauge indicator on the screen
+@ $DE2E label=UpdateGauge
+c $DE3E Update Depth indicator
+@ $DE3E label=UpdateDepth
 b $DE55
 W $DE55,2,2 ???
 W $DE57,2,2 ???
 W $DE59,2,2 ???
 W $DE5B,2,2 ???
-c $DE5D
+c $DE5D Update Oxygen indicator
+@ $DE5D label=UpdateOxygen
+R $DE5D I:HL New value for Oxygen
 C $DE79,3 Play melody $E629
 c $DE85 Print decimal number
+@ $DE85 label=PrintDec
 R $DE85 I:B ??? $00 $02
 R $DE85 I:HL Number to print
 R $DE85 I:DE Address on the screen: $4059 $4099 $40DA
@@ -977,15 +999,19 @@ C $DE89,4 address for list of dividers: 10000, 1000, 100, 10, 1
 C $DE8F,6 get divider in DE
 C $DEC0,3 ZX Charset (3D00) + $80 = address of char '0'
 c $DED9 Print high score number
+@ $DED9 label=PrintHighScore
 C $DEE1,3 Print decimal number
 c $DEE5 Print score number
+@ $DEE5 label=PrintScore
 C $DEE7,3 get Score value
 C $DEED,3 Print decimal number
 c $DEF1 Print HELD number
+@ $DEF1 label=PrintHeld
 C $DEF3,3 get HELD value
 C $DEF9,3 Print decimal number
 b $DEFD
 W $DEFF,2,2 HELD value
+@ $DEFF label=HELD
 B $DF0F,2,2
 b $DF25 Table: Angle 0..15 -> (DX, DY)
 B $DF25,,16
@@ -1030,31 +1056,41 @@ C $E2A8,4 Diver object record address
 C $E2B1,3 get speed factor
 C $E2D4,3 Read keyboard input
 c $E2DB Read keyboard input
+@ $E2DB label=ReadKeyboard
 R $E2DB I:IX Object address = $E33B
 C $E2E0,3 get Angle
 C $E2E3,4 get port for Clockwise key
 C $E2E7,3 get bit mask for Clockwise key
 C $E2EB,2 read the port for Clockwise key
 C $E2EE,2 not pressed => skip rotate
+N $E2F0 Clockwise key pressed
 C $E2F0,1 rotate clockwise
 C $E2F1,4 get port for Anticlockwise key
 C $E2F5,3 get bit mask for Anticlockwise key
 C $E2F9,2 read the port for Anticlockwise key
 C $E2FC,2 not pressed => skip rotate
+N $E2FE Anticlockwise key pressed
 C $E2FE,1 rotate anticlockwise
 C $E302,3 set Angle 0..15
 C $E305,4 get port for Accelerate key
 C $E309,3 get bit mask for Accelerate key
 C $E310,2 not pressed => skip
+N $E312 Accelerate key pressed
+C $E312,3 get speed factor
 C $E30D,2 read the port for Accelerate key
 C $E315,4 set "moving" bit
+C $E31C,3 decrement speed factor
 C $E31F,4 get port for Decelerate key
 C $E323,3 get bit mask for Decelerate key
 C $E327,2 read the port for Decelerate key
 C $E32A,1 not pressed => return
+N $E32B Decelerate key pressed
+C $E32B,3 get speed factor
+C $E32E,2 = 20 ?
 C $E332,4 clear "moving" bit - diver stopped
-b $E33B Object record
+b $E33B Diver object record
 B $E33B,1,1 (IX+$00) Column 0..31
+@ $E33B label=DiverObj
 B $E33C,1,1 (IX+$01) Row
 B $E33D,1,1 (IX+$02) ???
 B $E33E,1,1
@@ -1066,8 +1102,8 @@ B $E343,1,1 (IX+$08) ???
 W $E344,2,2 (IX+$09) Sprite address
 W $E346,2,2 (IX+$0B) Sprite address
 B $E348,1,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
-B $E349,1,1 (IX+$0E) speed factor ??? 12 20 40 100; $08 max speed, $14 min speed
-B $E34A,1,1 (IX+$0F) ??? $03
+B $E349,1,1 (IX+$0E) speed factor: 12 20 40 100; $08 max speed, $14 min speed
+B $E34A,1,1 (IX+$0F) speed counter
 B $E34B,1,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
 . bit0: 1 = diver moving, 0 = diver stopped
 B $E34C,1,1 (IX+$11) ??? $00 $FF
@@ -1122,15 +1158,17 @@ C $E44F,3 Explosion sprite address
 C $E469,3 Play melody
 C $E46C,6 reset HELD value
 C $E472,3 Print HELD number
-c $E476
+c $E476 Process objects on the screen - like take Oxygen or pick up pearls
 R $E476 I:IX Object address = $E33B
 C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
 C $E4FF,4 set HELD value
+C $E4FB,4 get value depending of game level
 C $E509,3 get HELD value
 C $E50D,3 set HELD value
 C $E512,3 Get screen attribute address
 C $E51F,3 Print HELD number
 C $E522,3 Play melody $E60B
+C $E53E,3 get value depending of game level
 C $E541,3 set HELD value
 C $E54A,3 Print HELD number
 C $E54D,3 Play melody $E60B
@@ -1138,12 +1176,15 @@ C $E575,3 get value 2 / 4 / 6 / 8, depending on Game level
 C $E595,3 Print HELD number
 C $E598,3 Play melody $E60B
 C $E5CD,3 get value 5 / 10 / 15 / 20, depending on Game level
-c $E5D2
+c $E5D2 DE = (L5B33) - HELD
 C $E5D2,4 get HELD value
+C $E5D6,4 get value depending of game level
+C $E5DE,1 DE = (L5B33) - HELD
 b $E5E0 Dividers used to print decimal number, see #R$DE85
 W $E5E0,10,10 10000, 1000, 100, 10, 1
 W $E5EA,2,2
 c $E5EC Play melody
+@ $E5EC label=PlayMelody
 R $E5EC I:HL Melody address
 C $E5FB,3 ROM Beeper subroutine
 C $E602,2 continue
@@ -1213,6 +1254,7 @@ C $E8A5,3 get HELD value
 C $E8A8,4 get Score value
 C $E8AD,3 set Score value
 C $E8B0,6 reset HELD value
+C $E8DC,3 get value depending of game level
 C $E8DF,4 get Score value
 C $E8E7,3 Print score number
 C $E8F1,3 Play melody
@@ -1272,6 +1314,7 @@ T $EC4B,3
 T $EC53,6
 T $EC59,7
 c $EC7C Redefine keys
+@ $EC7C label=RedefineKeys
 C $EC7E,3 ROM call CHAN-OPEN
 C $EC83,3 ROM call inside BORDER subroutine
 C $EC88,3 ROM call CHAN-OPEN
@@ -1322,6 +1365,7 @@ T $EDC9
 B $EDD4
 b $EDD5 Melody
 c $EDDF Starting point
+@ $EDDF label=Start
 C $EDE6,3 ROM call CHAN-OPEN
 C $EDEB,3 set ATTR-P - Permanent current colours
 C $EDFC,2 set bit to mark we already started the program

@@ -148,11 +148,30 @@ B $74A8,168,21 #HTML[#UDGARRAY7,,,7,,;$74A8-$754F-1-56(sharkG)]
 B $7550,168,21 #HTML[#UDGARRAY7,,,7,,;$7550-$75F7-1-56(sharkH)]
 B $75F8,168,21 #HTML[#UDGARRAY7,,,7,,;$75F8-$769F-1-56(sharkI)]
 B $76A0,168,21 #HTML[#UDGARRAY7,,,7,,;$76A0-$7747-1-56(sharkJ)]
-N $7748 Small fish cloud sprites
-B $7748,,16
-B $7869,,16
-B $798A,,16
+N $7748 Fish cloud sprites
+B $7748,72,12 #HTML[#UDGARRAY3,,,3,,;$7748-$778F-1-24(fcloud0)]
+B $7790,72,12 #HTML[#UDGARRAY3,,,3,,;$7790-$77D7-1-24(fcloud1)]
+B $77D8,72,12 #HTML[#UDGARRAY3,,,3,,;$77D8-$781F-1-24(fcloud2)]
+B $7821,72,12 #HTML[#UDGARRAY3,,,3,,;$7821-$7868-1-24(fcloud3)]
+B $7869,72,12 #HTML[#UDGARRAY3,,,3,,;$7869-$78B0-1-24(fcloud4)]
+B $78B1,72,12 #HTML[#UDGARRAY3,,,3,,;$78B1-$78F8-1-24(fcloud5)]
+B $78F9,72,12 #HTML[#UDGARRAY3,,,3,,;$78F9-$7940-1-24(fcloud6)]
+B $7942,72,12 #HTML[#UDGARRAY3,,,3,,;$7942-$7988-1-24(fcloud7)]
+N $798A Electric eel
+B $798A,24,12 #HTML[#UDGARRAY3,,,3,,;$798A-$79A1-1-24(elceel0)]
+B $79A2,24,12 #HTML[#UDGARRAY3,,,3,,;$79A2-$79B9-1-24(elceel1)]
+B $79BA,24,12 #HTML[#UDGARRAY3,,,3,,;$79BA-$79D1-1-24(elceel2)]
+B $79D3,,16
+B $79EB,,16
+B $7A1B,,16
+B $7A64,,16
+B $7A7C,,16
+B $7AAC,,16
 B $7AF5,,16
+B $7B3E,,16
+B $7B56,,16
+B $7B86,,16
+B $7B9E,,16
 N $7BCE Long fish sprites
 B $7BCE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BCE-$7BED-1-32(longfish0)]
 B $7BEE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BEE-$7C0D-1-32(longfish1)]
@@ -861,22 +880,23 @@ W $C007,2,2 ???
 c $C009
 C $C03C,3 Random
 b $C092
-W $C092,,32
-W $C0A2,,32
-W $C0B2,,32
-W $C0CE,,32
-W $C0EA,,32
-W $C102,,32
-W $C11A,,32
-W $C132,,32
-W $C14A,,32
-W $C166,,32
-W $C182,,32
-W $C1BA,,32
-W $C1D6,,32
-W $C19E,,32
-W $C1F2,,32
+W $C092,,16
+W $C0A2,,16
+W $C0B2,,16
+W $C0CE,,16
+W $C0EA,,16
+W $C102,,16
+W $C11A,,16
+W $C132,,16
+W $C14A,,16
+W $C166,,16
+W $C182,,16
+W $C1BA,,16
+W $C1D6,,16
+W $C19E,,16
+W $C1F2,,16
 b $C20A Record templates
+N $C20A These templates are used to create records in #R$C4F0 area.
 N $C20A Record template for 21-byte record - Boat
 B $C20A,5,5
 W $C20F,2,2

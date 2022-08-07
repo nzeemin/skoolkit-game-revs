@@ -150,6 +150,9 @@ B $75F8,168,21 #HTML[#UDGARRAY7,,,7,,;$75F8-$769F-1-56(sharkI)]
 B $76A0,168,21 #HTML[#UDGARRAY7,,,7,,;$76A0-$7747-1-56(sharkJ)]
 N $7748 Small fish cloud sprites
 B $7748,,16
+B $7869,,16
+B $798A,,16
+B $7AF5,,16
 N $7BCE Long fish sprites
 B $7BCE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BCE-$7BED-1-32(longfish0)]
 B $7BEE,32,16 #HTML[#UDGARRAY4,,,4,,;$7BEE-$7C0D-1-32(longfish1)]
@@ -431,15 +434,18 @@ C $9CB7,1 *8
 C $9CB8,3 base address for relief tiles, 8x8 pixels each tile
 C $9D35,3 Draw Octopus
 c $9D40 Calculate address in the mini-map (#R$AC5D table)
+@ $9D40 label=MiniMap_Addr
 R $9D40 I:HL H = row, L = column 0..31
 C $9D4D,2 HL shifted right 3 bits
 C $9D50,1 HL := H * 32 + L
 C $9D54,1 HL := $AC5D + H * 32 + L
 c $9D56 Calculate address in the mini-map (#R$AC5D table) and Get
+@ $9D56 label=MiniMap_Get
 R $9D56 I:HL H = row, L = column 0..31
 R $9D56 O:A Value
 C $9D58,3 Calculate address in #R$AC5D table
 c $9D5F Check value in the mini-map (#R$AC5D table), if row and column in range 0..31
+@ $9D5F label=MiniMap_Check
 R $9D5F I:HL H = row, L = column
 N $9D5F If column or row is out of range 0..31 - returns flag Z=0;
 . else, gets value from #R$AC5D table; if this value is $01, returns flag Z=1, in other case flag Z=0
@@ -447,6 +453,7 @@ C $9D62,2 Column value out of range 0..31 ?
 C $9D67,2 Row value out of range 0..31 ?
 C $9D6B,3 Calc address in #R$AC5D and Get
 c $9D79 Calculate address in the mini-map (#R$AC5D table) and Set
+@ $9D79 label=MiniMap_Set
 R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
 C $9D7C,3 Calculate address in the mini-map (#R$AC5D table)
@@ -582,19 +589,23 @@ C $A0F5,19
 . as a result, we have HL[9:0] filled with significant bits;
 . 10 bits means 1024 addressed bytes
 c $A129 Calculate address and Get ???
+@ $A129 label=GetTileInBlock
 R $A129 I:HL Char coords H = row, L = column 0..31
 b $A132
 c $A14C Get screen attribute address
 @ $A14C label=GetScrAttrAddr
 R $A14C I:HL Char coords H = row, L = column 0..31
 c $A164 Convert char coords HL to ZX screen address
+@ $A164 label=GetScrAddr
 R $A164 I:HL Char coords H = row 0..23, L = column 0..31
 R $A164 O:HL Address on the ZX screen
 c $A176 Draw tile 16x8 at the screen
+@ $A176 label=DrawTile16x8
 R $A176 I:HL Char coords H = row 0..23, L = column 0..31
 R $A176 I:DE Tile address; 16 bytes
 C $A176,3 Convert char coords HL to ZX screen address
 c $A187 Draw tile 8x8 at the screen
+@ $A187 label=DrawTile8x8
 R $A187 I:HL Char coords H = row 0..23, L = column 0..31
 R $A187 I:DE Tile address; 8 bytes
 C $A187,3 Convert char coords HL to ZX screen address
@@ -603,6 +614,7 @@ C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
 C $A26E,3 get current Random
 b $A27E Table of objects on the map; each record is 4 bytes wide
+@ $A27E label=TableStatics
 N $A27E 1st byte = flags; 2nd byte = column 0..255, 3rd byte = row 0..255
 B $A27E,,16
 B $A40C,,16
@@ -640,7 +652,8 @@ B $AB5D,64,8 #HTML[<img src="images/blocks/block1A.png" />] $1A
 B $AB9D,64,8 #HTML[<img src="images/blocks/block1B.png" />] $1B
 B $ABDD,64,8 #HTML[<img src="images/blocks/block1C.png" />] $1C place for Octupus, left block
 B $AC1D,64,8 #HTML[<img src="images/blocks/block1D.png" />] $1D place for Octupus, right block
-b $AC5D Relief mini-map 32x32 = 256 bytes
+b $AC5D Relief mini-map 32x32 = 1024 bytes
+@ $AC5D label=MiniMap
 N $AC5D Each byte is relief block number (see #R$A4DD), each relief block is 8x8 tiles, and tiles are 8x8 pixels.
 . So this mini-map defines the world of 256x256 tiles, or 2048 x 2048 pixels.
 B $AC5D,,32
@@ -719,11 +732,13 @@ C $B2C5,3 get value 10 / 8 / 6 / 4, depending on Game level 1..4
 C $B2C9,3 Process Octopus, draw if needed
 B $B2CD,1,1
 c $B2CE Draw tile 8x8 with XOR
+@ $B2CE label=DrawTileXor8x8
 R $B2CE I:HL Char coords H = 0..23, L = 0..31
 R $B2CE I:DE Tile address
 C $B2CE,3 Convert char coords HL to ZX screen address
 C $B2D1,2 tile height 8 pixels
 c $B2DB Draw tile 16x8 with XOR
+@ $B2DB label=DrawTileXor16x8
 R $B2DB I:HL Char coords H = 0..23, L = 0..31
 R $B2DB I:DE Tile address
 C $B2DB,3 Convert char coords HL to ZX screen address
@@ -749,6 +764,7 @@ R $B470 I:IX ???
 C $B4F6,3 Convert char coords HL to ZX screen address
 C $B55F,3 Copy records forward
 c $B572 Copy records forward
+@ $B572 label=CopyRecordsFwd
 R $B572 I:HL source address
 R $B572 I:DE destination address
 R $B572 I:IY ??? (IY+$0A) is record size
@@ -758,6 +774,7 @@ R $B57E I:IY ???
 C $B57E,3 get record size
 C $B590,3 Copy records backward
 c $B598 Copy records backward
+@ $B598 label=CopyRecordsBck
 R $B598 I:HL source address
 R $B598 I:DE destination address
 R $B598 I:IY ??? (IY+$0A) is record size
@@ -844,10 +861,179 @@ W $C007,2,2 ???
 c $C009
 C $C03C,3 Random
 b $C092
-W $C092,,8
-B $C20A,,21
-B $C2EB
-B $C331
+W $C092,,32
+W $C0A2,,32
+W $C0B2,,32
+W $C0CE,,32
+W $C0EA,,32
+W $C102,,32
+W $C11A,,32
+W $C132,,32
+W $C14A,,32
+W $C166,,32
+W $C182,,32
+W $C1BA,,32
+W $C1D6,,32
+W $C19E,,32
+W $C1F2,,32
+b $C20A Record templates
+N $C20A Record template for 21-byte record - Boat
+B $C20A,5,5
+W $C20F,2,2
+W $C211,2,2
+W $C213,4,4 Boat sprite
+B $C217,6,6
+W $C21D,2,2
+N $C21F Record template for 21-byte record - Meduza
+B $C21F,5,5
+W $C224,2,2 -> RET
+W $C226,2,2
+W $C228,4,4
+B $C22C,6,6
+W $C232,2,2
+N $C234 Record template for 21-byte record - Round fish
+B $C234,5,5
+W $C239,2,2 -> RET
+W $C23B,2,2
+W $C23D,4,4
+B $C241,6,6
+W $C247,2,2
+N $C249 Record template for 26-byte record - Fish
+B $C249,5,5
+W $C24E,2,2
+W $C250,2,2
+W $C252,4,4
+B $C256,6,6
+W $C25C,2,2
+B $C25E,6,6
+N $C264 Record template for 26-byte record - Shark
+B $C264,5,5
+W $C269,2,2
+W $C26B,2,2
+W $C26D,4,4
+B $C271,6,6
+W $C277,2,2
+B $C279,6,6
+N $C27F Record template for 26-byte record - Small squid horizontal
+B $C27F,5,5
+W $C284,2,2
+W $C286,2,2
+W $C288,4,4
+B $C28C,6,6
+W $C292,2,2
+B $C294,6,6
+N $C29A Record template for 26-byte record - Long fish
+B $C29A,5,5
+W $C29F,2,2
+W $C2A1,2,2
+W $C2A3,4,4
+B $C2A7,6,6
+W $C2AD,2,2
+B $C2AF,6,6
+N $C2B5 Record template for 26-byte record - Small fish cloud ??
+B $C2B5,5,5
+W $C2BA,2,2
+W $C2BC,2,2
+W $C2BE,4,4
+B $C2C2,6,6
+W $C2C8,2,2
+B $C2CA,6,6
+N $C2D0 Record template for 26-byte record - Small fish cloud ??
+B $C2D0,5,5
+W $C2D5,2,2
+W $C2D7,2,2
+W $C2D9,4,4
+B $C2DD,6,6
+W $C2E3,2,2
+B $C2E5,6,6
+N $C2EB Table of 8 record templates
+W $C2EB,16,2
+N $C2FB Record template for 26-byte record - Snake fish horizontal 
+B $C2FB,5,5
+W $C300,2,2
+W $C302,2,2
+W $C304,4,4
+B $C308,6,6
+W $C30E,2,2
+B $C310,6,6
+N $C316 Record template for 26-byte record - Squid
+B $C316,5,5
+W $C31B,2,2
+W $C31D,2,2
+W $C31F,4,4
+B $C323,6,6
+W $C329,2,2
+B $C32B,6,6
+N $C331 Table of 8 record templates
+W $C331,16,2
+N $C341 Record template for 26-byte record - Round fish vertical
+B $C341,5,5
+W $C346,2,2
+W $C348,2,2
+W $C34A,4,4
+B $C34E,6,6
+W $C354,2,2
+B $C356,6,6
+N $C35C Record template for 26-byte record - Small squid vertical
+B $C35C,5,5
+W $C361,2,2
+W $C363,2,2
+W $C365,4,4
+B $C369,6,6
+W $C36F,2,2
+B $C371,6,6
+N $C377 Record template for 26-byte record - Snake fish vertical
+B $C377,5,5
+W $C37C,2,2
+W $C37E,2,2
+W $C380,4,4
+B $C384,6,6
+W $C38A,2,2
+B $C38C,6,6
+N $C392 Record template for 26-byte record - Small fish cloud ??
+B $C392,5,5
+W $C397,2,2
+W $C399,2,2
+W $C39B,4,4
+B $C39F,6,6
+W $C3A5,2,2
+B $C3A7,6,6
+N $C3AD Table of 4 record templates
+W $C3AD,8,2
+N $C3B5 Record template for 28-byte record - Round fish
+B $C3B5,5,5
+W $C3BA,2,2
+W $C3BC,2,2
+W $C3BE,4,4
+B $C3C2,6,6
+W $C3C8,2,2
+B $C3CA,8,8
+N $C3D2 Record template for 28-byte record - Small squid horizontal
+B $C3D2,5,5
+W $C3D7,2,2
+W $C3D9,2,2
+W $C3DB,4,4
+B $C3DF,6,6
+W $C3E5,2,2
+B $C3E7,8,8
+N $C3EF Record template for 28-byte record
+B $C3EF,5,5
+W $C3F4,2,2
+W $C3F6,2,2
+W $C3F8,4,4
+B $C3FC,6,6
+W $C402,2,2
+B $C404,8,8
+N $C40C Record template for 28-byte record - Snake fish horizontal
+B $C40C,5,5
+W $C411,2,2
+W $C413,2,2
+W $C415,4,4
+B $C419,6,6
+W $C41F,2,2
+B $C421,8,8
+N $C429 Table of 4 record templates
+W $C429,8,2
 c $C431
 c $C45C
 c $C481
@@ -986,6 +1172,7 @@ W $DE55,2,2 ???
 W $DE57,2,2 ???
 W $DE59,2,2 ???
 W $DE5B,2,2 ???
+@ $DE5B label=OXYGEN
 c $DE5D Update Oxygen indicator
 @ $DE5D label=UpdateOxygen
 R $DE5D I:HL New value for Oxygen

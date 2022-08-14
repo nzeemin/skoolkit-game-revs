@@ -691,6 +691,7 @@ b $B05D
 b $B07D Table of objects on the screen
 B $B07D,,4
 c $B0A9 Draw static objects on the screen; prepare LB07D table
+@ $B0A9 label=DrawStatics
 C $B0A9,4 get Screen position on mini-map
 C $B0FD,2 screen attribute for chest
 C $B0FF,3 Sprite 16x8 Chest
@@ -1110,6 +1111,7 @@ R $DA98 I:BC Row and column
 R $DA98 I:DE Print char procedure address
 C $DAA2,3 Print char and shift !!! mutable argument #R$DA59 / #R$DA63
 c $DAAD Prepare game screen and some variables
+@ $DAAD label=PrepareGame
 C $DAAF,3 Clear screen with attribute A
 C $DAB6,3 Indicator top border
 C $DABC,3 Procedure Print char and shift right
@@ -1418,7 +1420,11 @@ B $E634
 B $E638
 c $E645 Play melody $E629
 C $E64B,3 Play melody
-b $E652
+b $E652 Sprites divers on the boat
+N $E652 Sprites for 1/2/3 divers on the boat; width 2 chars, 16 bytes each sprite
+B $E652,16,8 #HTML[#UDGARRAY2,,,2,,;$E652-$E661-1-16(lives1)]
+B $E662,16,8 #HTML[#UDGARRAY2,,,2,,;$E662-$E671-1-16(lives2)]
+B $E672,16,8 #HTML[#UDGARRAY2,,,2,,;$E672-$E681-1-16(lives3)]
 c $E682
 c $E6AB
 C $E6AB,4 Diver object record address

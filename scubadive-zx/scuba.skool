@@ -2895,6 +2895,7 @@ b$B07D DEFB $01,$01,$01,$01
 ; Draw static objects on the screen; prepare LB07D table
 ;
 ; Used by the routine at #R$9C56.
+@label=DrawStatics
 c$B0A9 LD DE,($5B03)   ; get Screen position on mini-map
  $B0AD LD A,D          ;
  $B0AE RLCA            ;
@@ -5459,6 +5460,7 @@ c$DA98 LD ($DAA3),DE ;
 ; Prepare game screen and some variables
 ;
 ; Used by the routine at #R$D990.
+@label=PrepareGame
 c$DAAD LD A,$30      ;
  $DAAF CALL $DA39    ; Clear screen with attribute A
  $DAB2 LD A,$01      ;
@@ -6682,13 +6684,19 @@ c$E645 PUSH HL       ;
  $E650 POP HL        ;
  $E651 RET           ;
 
-; Data block at E652
-b$E652 DEFB $00,$0C,$00,$1E,$00,$0C,$00,$1E
- $E65A DEFB $00,$1E,$00,$1E,$FF,$FF,$FF,$FF
- $E662 DEFB $01,$8C,$03,$DE,$01,$8C,$03,$DE
- $E66A DEFB $03,$DE,$03,$DE,$FF,$FF,$FF,$FF
- $E672 DEFB $31,$8C,$7B,$DE,$31,$8C,$7B,$DE
- $E67A DEFB $7B,$DE,$7B,$DE,$FF,$FF,$FF,$FF
+; Sprites divers on the boat
+;
+; .
+;
+; .
+;
+; Sprites for 1/2/3 divers on the boat; width 2 chars, 16 bytes each sprite
+b$E652 DEFB $00,$0C,$00,$1E,$00,$0C,$00,$1E ; {#HTML[#UDGARRAY2,,,2,,;$E652-$E661-1-16(lives1)]
+ $E65A DEFB $00,$1E,$00,$1E,$FF,$FF,$FF,$FF ; }
+ $E662 DEFB $01,$8C,$03,$DE,$01,$8C,$03,$DE ; {#HTML[#UDGARRAY2,,,2,,;$E662-$E671-1-16(lives2)]
+ $E66A DEFB $03,$DE,$03,$DE,$FF,$FF,$FF,$FF ; }
+ $E672 DEFB $31,$8C,$7B,$DE,$31,$8C,$7B,$DE ; {#HTML[#UDGARRAY2,,,2,,;$E672-$E681-1-16(lives3)]
+ $E67A DEFB $7B,$DE,$7B,$DE,$FF,$FF,$FF,$FF ; }
 
 ; Routine at E682
 ;

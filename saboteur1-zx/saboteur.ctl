@@ -77,51 +77,53 @@ W $7A17,12,2
 B $7A23 #HTML[<img src="images/rooms/7A17.png" />]
 b $7A75 Room 7A75
 W $7A75,12,2
-B $7A81 Room sequence
+B $7A81 #HTML[<img src="images/rooms/7A75.png" />]
 b $7A9E Room 7A9E
 W $7A9E,12,2
-B $7AAA Room sequence
+B $7AAA #HTML[<img src="images/rooms/7A9E.png" />]
 b $7ACD Room 7ACD
 W $7ACD,12,2
-B $7AD9 Room sequence
+B $7AD9 #HTML[<img src="images/rooms/7ACD.png" />]
 b $7AF8 Room 7AF8
 W $7AF8,12,2
-B $7B04 Room sequence
+B $7B04 #HTML[<img src="images/rooms/7AF8.png" />]
 b $7B56 Room 7B56
 W $7B56,12,2
 B $7B62 Room sequence
 b $7B90 Room 7B90
 W $7B90,12,2
-B $7B9C Room sequence
+B $7B9C #HTML[<img src="images/rooms/7B90.png" />]
 b $7BD2 Room 7BD2
 W $7BD2,12,2
-B $7BDE Room sequence
+B $7BDE #HTML[<img src="images/rooms/7BD2.png" />]
 b $7C2E Room 7C2E
 W $7C2E,12,2
-B $7C3A Room sequence
+B $7C3A #HTML[<img src="images/rooms/7C2E.png" />]
 b $7C6D Room 7C6D
 W $7C6D,12,2
-B $7C79 Room sequence
+B $7C79 #HTML[<img src="images/rooms/7C6D.png" />]
 b $7C9C Room 7C9C
 W $7C9C,12,2
-B $7CA8 Room sequence
+B $7CA8 #HTML[<img src="images/rooms/7C9C.png" />]
 b $7D5A Room 7D5A
 W $7D5A,12,2
-B $7D66 Room sequence
+B $7D66 #HTML[<img src="images/rooms/7D5A.png" />]
 b $7DA9 Room 7DA9
 W $7DA9,12,2
-B $7DB5 Room sequence
+B $7DB5 #HTML[<img src="images/rooms/7DA9.png" />]
 b $7E05 Room 7E05
 W $7E05,12,2
-B $7E11 Room sequence
+B $7E11 #HTML[<img src="images/rooms/7E05.png" />]
 b $7E8C Room 7E8C
 W $7E8C,12,2
 b $7EF2 Room 7EF2
 W $7EF2,12,2
 b $7F48 Room 7F48
 W $7F48,12,2
+B $7F54 #HTML[<img src="images/rooms/7F48.png" />]
 b $7F9C Room 7F9C
 W $7F9C,12,2
+B $7FA8 #HTML[<img src="images/rooms/7F9C.png" />]
 b $7FC4 Room 7FC4
 W $7FC4,12,2
 B $7FD0 #HTML[<img src="images/rooms/7FC4.png" />]
@@ -153,10 +155,10 @@ W $8321,12,2
 B $832D #HTML[<img src="images/rooms/8321.png" />]
 b $8384 Room 8384
 W $8384,12,2
-B $8390 Room sequence
+B $8390 #HTML[<img src="images/rooms/8384.png" />]
 b $83ED Room 83ED
 W $83ED,12,2
-B $83F9 Room sequence
+B $83F9 #HTML[<img src="images/rooms/83ED.png" />]
 b $844E Room 844E
 W $844E,12,2
 B $845A #HTML[<img src="images/rooms/844E.png" />]
@@ -168,39 +170,51 @@ W $84EE,12,2
 B $84FA #HTML[<img src="images/rooms/84EE.png" />]
 b $8526 Room 8526
 W $8526,12,2
-B $8532 Room sequence
+B $8532 #HTML[<img src="images/rooms/8526.png" />]
 b $858F Room 858F
 W $858F,12,2
+B $859B #HTML[<img src="images/rooms/858F.png" />]
 b $85BD Room 85BD
 W $85BD,12,2
 b $8606 Room 8606
 W $8606,12,2
+B $8612 #HTML[<img src="images/rooms/8606.png" />]
 b $8689 Room 8689
 W $8689,12,2
+B $8695 #HTML[<img src="images/rooms/8689.png" />]
 b $86FD Room 86FD
 W $86FD,12,2
 b $8739 Room 8739
 W $8739,12,2
+B $8745 #HTML[<img src="images/rooms/8739.png" />]
 b $8799 Room 8799
 W $8799,12,2
+B $87A5 #HTML[<img src="images/rooms/8799.png" />]
 b $8802 Room 8802
 W $8802,12,2
+B $880E #HTML[<img src="images/rooms/8802.png" />]
 b $8834 Room 8834
 W $8834,12,2
+B $8840 #HTML[<img src="images/rooms/8834.png" />]
 b $889F Room 889F
 W $889F,12,2
+B $88AB #HTML[<img src="images/rooms/889F.png" />]
 b $890E Room 890E
 W $890E,12,2
+B $891A #HTML[<img src="images/rooms/890E.png" />]
 b $8953 Room 8953
 W $8953,12,2
 b $89B9 Room 89B9
 W $89B9,12,2
+B $89C5 #HTML[<img src="images/rooms/89B9.png" />]
 b $8A2D Room 8A2D
 W $8A2D,12,2
 b $8A81 Room 8A81
 W $8A81,12,2
+B $8A8D #HTML[<img src="images/rooms/8A81.png" />]
 b $8AF4 Room 8AF4
 W $8AF4,12,2
+B $8B00 #HTML[<img src="images/rooms/8AF4.png" />]
 b $8B25 Room 8B25
 W $8B25,12,2
 b $8B71 Room 8B71
@@ -209,6 +223,7 @@ b $8BAB Room 8BAB
 W $8BAB,12,2
 b $8BF0 Room 8BF0
 W $8BF0,12,2
+B $8BFC #HTML[<img src="images/rooms/8BF0.png" />]
 b $8C5A Room 8C5A
 W $8C5A,12,2
 b $8CC8 Room 8CC8
@@ -230,12 +245,16 @@ b $8EE1 Room 8EE1
 W $8EE1,12,2
 b $8F20 Room 8F20
 W $8F20,12,2
+B $8F2C #HTML[<img src="images/rooms/8F20.png" />]
 b $8F84 Room 8F84
 W $8F84,12,2
+B $8F90 #HTML[<img src="images/rooms/8F84.png" />]
 b $8FBD Room 8FBD
 W $8FBD,12,2
+B $8FC9 #HTML[<img src="images/rooms/8FBD.png" />]
 b $9005 Room 9005
 W $9005,12,2
+B $9011 #HTML[<img src="images/rooms/9005.png" />]
 b $9053 Room 9053
 W $9053,12,2
 b $909F Room 909F
@@ -248,14 +267,17 @@ b $91BA Room 91BA
 W $91BA,12,2
 b $920A Room 920A
 W $920A,12,2
+B $9216 #HTML[<img src="images/rooms/920A.png" />]
 b $924E Room 924E
 W $924E,12,2
+B $925A #HTML[<img src="images/rooms/924E.png" />]
 b $92A7 Room 92A7
 W $92A7,12,2
 b $92EF Room 92EF
 W $92EF,12,2
 b $9376 Room 9376
 W $9376,12,2
+B $9382 #HTML[<img src="images/rooms/9376.png" />]
 b $93DF Room 93DF
 W $93DF,12,2
 b $9431 Room 9431
@@ -264,58 +286,83 @@ b $9451 Room 9451
 W $9451,12,2
 b $947C Room 947C
 W $947C,12,2
+B $9488 #HTML[<img src="images/rooms/947C.png" />]
 b $94AB Room 94AB
 W $94AB,12,2
 b $9552 Room 9552
 W $9552,12,2
+B $955E #HTML[<img src="images/rooms/9552.png" />]
 b $95D6 Room 95D6
 W $95D6,12,2
+B $95E2 #HTML[<img src="images/rooms/95D6.png" />]
 b $95F8 Room 95F8
 W $95F8,12,2
+B $9604 #HTML[<img src="images/rooms/95F8.png" />]
 b $9634 Room 9634
 W $9634,12,2
+B $9640 #HTML[<img src="images/rooms/9634.png" />]
 b $968A Room 968A
 W $968A,12,2
+B $9696 #HTML[<img src="images/rooms/968A.png" />]
 b $96CC Room 96CC
 W $96CC,12,2
+B $96D8 #HTML[<img src="images/rooms/96CC.png" />]
 b $96F3 Room 96F3
 W $96F3,12,2
+B $96FF #HTML[<img src="images/rooms/96F3.png" />]
 b $9715 Room 9715
 W $9715,12,2
+B $9721 #HTML[<img src="images/rooms/9715.png" />]
 b $9739 Room 9739
 W $9739,12,2
+B $9745 #HTML[<img src="images/rooms/9739.png" />]
 b $976E Room 976E
 W $976E,12,2
 b $97A6 Room 97A6
 W $97A6,12,2
+B $97B2 #HTML[<img src="images/rooms/97A6.png" />]
 b $97F8 Room 97F8
 W $97F8,12,2
+B $9804 #HTML[<img src="images/rooms/97F8.png" />]
 b $982B Room 982B
 W $982B,12,2
+B $9837 #HTML[<img src="images/rooms/982B.png" />]
 b $9876 Room 9876
 W $9876,12,2
+B $9882 #HTML[<img src="images/rooms/9876.png" />]
 b $98C0 Room 98C0 (think door)
 W $98C0,12,2
+B $98CC #HTML[<img src="images/rooms/98C0.png" />]
 b $990D Room 990D
 W $990D,12,2
+B $9919 #HTML[<img src="images/rooms/990D.png" />]
 b $99A6 Room 99A6
 W $99A6,12,2
+B $99B2 #HTML[<img src="images/rooms/99A6.png" />]
 b $9A1E Room 9A1E
 W $9A1E,12,2
+B $9A2A #HTML[<img src="images/rooms/9A1E.png" />]
 b $9A5A Room 9A5A
 W $9A5A,12,2
+B $9A66 #HTML[<img src="images/rooms/9A5A.png" />]
 b $9A9A Room 9A9A
 W $9A9A,12,2
+B $9AA6 #HTML[<img src="images/rooms/9A9A.png" />]
 b $9ADC Room 9ADC
 W $9ADC,12,2
+B $9AE8 #HTML[<img src="images/rooms/9ADC.png" />]
 b $9B19 Room 9B19
 W $9B19,12,2
+B $9B25 #HTML[<img src="images/rooms/9B19.png" />]
 b $9B51 Room 9B51
 W $9B51,12,2
+B $9B5D #HTML[<img src="images/rooms/9B51.png" />]
 b $9B9D Room 9B9D
 W $9B9D,12,2
+B $9BA9 #HTML[<img src="images/rooms/9B9D.png" />]
 b $9BE7 Room 9BE7
 W $9BE7,12,2
+B $9BF3 #HTML[<img src="images/rooms/9BE7.png" />]
 c $9C44
 b $9C9C
 c $9CA8
@@ -329,22 +376,31 @@ b $9DEF
 c $9DF1
 b $9DF5 Room 9DF5
 W $9DF5,12,2
+B $9E01 #HTML[<img src="images/rooms/9DF5.png" />]
 b $9E22 Room 9E22
 W $9E22,12,2
+B $9E2E #HTML[<img src="images/rooms/9E22.png" />]
 b $9E73 Room 9E73
 W $9E73,12,2
+B $9E7F #HTML[<img src="images/rooms/9E73.png" />]
 b $9EB8 Room 9EB8
 W $9EB8,12,2
+B $9EC4 #HTML[<img src="images/rooms/9EB8.png" />]
 b $9ED9 Room 9ED9
 W $9ED9,12,2
+B $9EE5 #HTML[<img src="images/rooms/9ED9.png" />]
 b $9EFA Room 9EFA
 W $9EFA,12,2
+B $9F06 #HTML[<img src="images/rooms/9EFA.png" />]
 b $9F3A Room 9F3A
 W $9F3A,12,2
+B $9F46 #HTML[<img src="images/rooms/9F3A.png" />]
 b $9F7E Room 9F7E
 W $9F7E,12,2
+B $9F8A #HTML[<img src="images/rooms/9F7E.png" />]
 b $A022 Room A022
 W $A022,12,2
+B $A02E #HTML[<img src="images/rooms/A022.png" />]
 c $A0DF
 c $A0E8
 c $A0ED

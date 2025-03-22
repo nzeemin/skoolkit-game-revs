@@ -1,6 +1,8 @@
 @ $6270 org
 b $6270
 c $6289
+C $628C,3 Tile screen 0 start address
+C $62AC,3 Tile screen 0 start address
 b $62DB
 t $6464
 b $6467
@@ -23,12 +25,18 @@ B $6D88,510,30
 b $6F86 Tile screen 5 30x17 tiles, 510 bytes
 B $6F86,510,30
 b $7184
+W $7184,2,2 Current Room address
+W $7186,2,2 ??
 t $71BC
 b $71BF
 t $71C0
 b $71C3
 b $7222
 B $7222,10,10 Ports and bits for the current input method
+W $7233,2,2 Screen attributes address stored during tile map drawing
+W $7235,2,2 Tile screen 5 address stored during tile map drawing
+W $7237,2,2 Tile screen 4 address stored during tile map drawing
+B $7239,1 Byte mirror flag
 b $723A
 @ $723A label=mirtab
 B $723A,128,16 Mirror table 1st part
@@ -36,20 +44,26 @@ B $723A,128,16 Mirror table 1st part
 B $72BA,128,16 Mirror table 2nd part
 b $733A
 c $734A
-c $734D
-c $7359
-c $7381
-c $7395
-c $739A
-c $739F
-c $73A4
-c $73C5
-c $73EB
-c $73EF
-c $73F3
-c $7406
-c $742B
-c $7452
+c $734D Room token #14:
+c $7359 Room token #13:
+C $7365,3 Tile screen 0 start address
+c $7381 Room token #1: Fill to down; params: 4 bytes (count, filler, address)
+c $7395 Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
+c $739A Room token #11: Fill to down-left; params: 4 bytes (count, filler, address)
+c $739F Room token #2: Fill to right; params: 4 bytes (count, filler, address)
+c $73A4 Room token #6:
+C $73BB,1 !!MUT-CMD!!
+c $73C5 Room token #7:
+C $73DE,1 !!MUT-CMD!!
+c $73EB Room token #8:
+c $73EF Room token #9:
+c $73F3 Room token #4: Fill whole Tile screen 0 with one tile; params: 1 byte (filler)
+C $73F7,3 Tile screen 0 start address
+C $73FA,3 Tile screen 0 start address + 1
+C $73FE,3 510 - 1
+c $7406 Room token #5:
+c $742B Room token #12:
+c $7452 Room token #3: ??; params: 5 bytes
 c $7472
 b $749C
 B $749D
@@ -366,7 +380,9 @@ B $9BF3 #HTML[<img src="images/rooms/9BE7.png" />]
 c $9C44
 b $9C9C
 c $9CA8
+C $9D37,3 Tile screen 3 start address
 c $9D5C
+C $9D61,3 Tile screen 1 start address
 c $9D75
 c $9D8B
 c $9DCD
@@ -505,11 +521,16 @@ c $A3B5
 c $A3D1
 c $A3EE
 c $A418
+C $A728,3 Tile screen 4 start address
 c $A434
+C $A4A3,3 Tile screen 0 start address
+C $A4B4,3 Tile screen 1 start address
+C $A4C0,3 Tile screen 2 start address
 b $A747
 t $A752
 b $A759
 c $A75B
+C $A75F,3 Tile screen 1 start address
 c $A775
 b $A787
 B $A787,38,8
@@ -541,19 +562,26 @@ W $AC72,48,8
 w $ACA2
 W $ACA2,40,8
 c $ACCA Draw game screen frames and indicator text
+C $ACCF,3 Screen start address
+C $ACD2,3 Game screen frames/indicators RLE encoded sequence
+C $ACEE,3 * 8
+C $ACF1,1 * 9
+C $ACF2,3 Indicator tales address
 C $AD21,3 Indicator messages address
-C $AD26,3 Print string
-C $AD2E,3 Print string
-C $AD36,3 Print string
-C $AD3E,3 Print string
-C $AD46,3 Print string
+C $AD26,3 Print string "PAY : $ XXXXX"
+C $AD2E,3 Print string "99"
+C $AD36,3 Print string "HELD"
+C $AD3E,3 Print string "TIME"
+C $AD46,3 Print string "NEAR"
 t $AD4A Indicator messages
+T $AD52,5 Pay value text
 T $AD57,2 Indicator time value
 b $AD65 Game screen frames/indicators RLE encoded sequence
 B $AD65,,16
-b $AE02 Tites for game screen frames/indicators, 9 bytes each
+b $AE02 Tiles for game screen frames/indicators, 9 bytes each
 B $AE02,,9
 c $AED1 Print string with standard font
+C $AED6,3 * 8
 c $AEF0
 C $AF41,3 Print string
 C $AF49,3 Print string
@@ -581,8 +609,50 @@ T $B12C
 b $B13E
 B $B13E,9,9
 b $B147
-c $B148 Screen draw procedure ??
-c $B2E8
+c $B148 Draw tile map on the screen
+C $B148,3 Screen attributes address
+C $B14B,2 17 tile lines
+C $B150,3 Tile screen 5 start address
+C $B156,3 Tile screen 4 start address
+C $B15C,3 Tile screen 1 start address
+C $B15F,3 Game screen start address
+C $B163,3 Tile screen 0 start address
+C $B166,3 Tile screen 2 start address
+C $B169,3 Tile screen 3 start address
+C $B16D,2 30 column
+C $B170,1 Check byte in Title screen 5
+C $B171,3 zero => Skip this tile rendering
+C $B178,1 get byte from Tile screen 0
+C $B17F,2 byte <> $FF =>
+C $B18F,1 * 9
+C $B190,3 Tiles start address
+C $B193,1 now HL = tile address
+C $B194,3 Tile buffer address
+C $B1DA,1 * 8
+C $B1E8,3 Mirror byte if needed
+C $B1EF,3 Mirror byte if needed
+C $B20E,1 * 8
+C $B21C,3 Mirror byte if needed
+C $B223,3 Mirror byte if needed
+C $B230,3 Get address in Tile screen 4
+C $B23E,1 * 8
+C $B24F,3 Mirror byte if needed
+C $B256,3 Mirror byte if needed
+C $B263,3 Get address in Tile screen 5
+C $B278,1 * 8
+C $B2A2,3 Get address in screen attributes
+C $B2B4,1 Increase address in screen attributes
+C $B2B8,7 Increase address in Tile screen 5
+C $B2BF,4 Increase address in Tile screen 4
+C $B2C7,1 Decrease column counter
+C $B2C8,3 Continue loop by columns
+C $B2DA,8 Increase address in screen attributes by 2 - next line
+C $B2E3,1 Decrease line counter
+C $B2E4,3 Continue loop by lines
+c $B2E8 Mirror byte if needed
+C $B2EA,3 Get mirror flag
+C $B2F1,1 No need to mirror => return
+C $B2F2,4 Mirror table half address
 b $B2FD
 c $B2FE
 c $B30F
@@ -593,7 +663,7 @@ c $B33E
 c $B348
 c $B368
 c $B371
-c $B38F
+c $B38F Room token #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
 s $B3AF
 c $B3B0
 s $B401
@@ -608,11 +678,15 @@ c $B44C
 c $B452
 c $B458
 c $B461
+C $B465,3 Tile screen 1 start address
 c $B47A
 c $B483
 c $B489
 b $B4DD
 c $B4DE
+R $B4DE B ??
+C $B4EF,3 Pay value text address
+C $B4F4,3 Screen address
 C $B4F7,3 => Print string
 c $B4FA
 b $B513 Room B513: Initial Room
@@ -629,31 +703,60 @@ w $B5B0 Table of addresses for NEAR/HELD items
 b $B5C4
 c $B5C7
 C $B5F9,3 Draw game screen frames and indicator text
+C $B643,3 Initial room address
+C $B6BF,3 Tile screen 0 start address
+C $B6C7,3 510 - 1
+C $B6CA,3 Tile screen 0 start address + 1
+C $B6CF,3 Tile screen 4 start address
 C $B6EF,2 End of sequence?
+C $B6F1,3 !!MUT-ARG!! yes =>
+C $B6F9,3 Table of Room tokens
+C $B700,1 now HL = room token procedure address
+C $B701,1 => run token procedure
 c $B702
-w $B706
+w $B706 Table of Room tokens
 W $B706,2,2 #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
-W $B708,2,2 #1: Fill to down; params: 4 bytes
-W $B70A,2,2 #2: Fill to right; params: 4 bytes
+W $B708,2,2 #1: Fill to down; params: 4 bytes (count, filler, address)
+W $B70A,2,2 #2: Fill to right; params: 4 bytes (count, filler, address)
 W $B70C,2,2 #3: ??; params: 5 bytes
-W $B70E,2,2 #4: Fill whole screen with one tile; params: 1 byte
+W $B70E,2,2 #4: Fill whole Tile screen 0 with one tile; params: 1 byte (filler)
 W $B710,2,2 #5
 W $B712,2,2 #6
 W $B714,2,2 #7
 W $B716,2,2 #8
 W $B718,2,2 #9
-W $B71A,2,2 #10: Fill to down-right; params: 4 bytes
-W $B71C,2,2 #11: Fill to down-left; params: 4 bytes
+W $B71A,2,2 #10: Fill to down-right; params: 4 bytes (count, filler, address)
+W $B71C,2,2 #11: Fill to down-left; params: 4 bytes (count, filler, address)
 W $B71E,2,2 #12
 W $B720,2,2 #13
 W $B722,2,2 #14
 c $B724
+C $B724,3 Tile screen 1 start address
+C $B727,2 Filler
+C $B729,3 510 - 1
+C $B72C,3 Tile screen 1 start address + 1
+C $B731,3 Tile screen 2 start address
+C $B734,2 Filler
+C $B736,3 510 - 1
+C $B739,3 Tile screen 2 start address + 1
+C $B73E,3 Tile screen 3 start address
+C $B741,2 Filler
+C $B743,3 510 - 1
+C $B746,3 Tile screen 3 start address + 1
+C $B74B,3 Draw tile map on the screen
 C $B796,1 Decrease Time lower digit
 C $B79F,1 Decrease Time higher digit
 C $B7A1,3 time is out =>
 C $B7A7,3 Indicator Time value address
 C $B7AC,3 Print string
 C $B7C7,3 Print string
+C $B7ED,3 Tile screen 1 start address
+C $B7F2,3 510 - 1
+C $B7F5,3 Tile screen 1 start address + 1
+C $B7FD,3 Tile screen 2 start address
+C $B802,3 510 - 1
+C $B805,3 Tile screen 2 start address + 1
+C $B808,2 Fill the Tile screen 2
 c $B83C
 b $B84A
 c $B851
@@ -661,14 +764,28 @@ c $B86C
 c $B889
 C $B8A4,3 Draw NEAR/HELD item
 C $B8C5,3 Draw NEAR/HELD item
+C $B8CD,3 !!MUT-ARG!!
 c $B8D0
+C $B8D3,3 Tile screen 4 start address
+C $B8D8,3 510 - 1
+C $B907,3 Tile screen 2 start address
+C $B922,3 Tile screen 3 start address
+C $B927,3 Tile screen 3 start address + 1
+C $B92A,3 510 - 1
 c $B937
+C $B9B5,3 Tile screen 0 start address
+C $B9C1,3 Tile screen 3 start address
+C $B9DB,3 Tile screen 4 start address
+C $BA03,3 Tile screen 2 start address
+C $BA41,3 Draw tile map on the screen
 b $BAB2
 t $BAC4
 b $BAC7
 c $BAD5
 c $BBAE
+C $BBB4,3 Tile screen 1 start address
 c $BBBB
+C $BBBE,3 Tile screen 1 start address
 c $BBD4
 c $BBDF
 c $BC0D
@@ -690,14 +807,25 @@ t $BEEF
 c $BF7B
 c $BFBA
 c $BFD5
-C $C002,3 Print string
-C $C00A,3 Print string
-C $C012,3 Print string
-C $C01A,3 Print string
-C $C025,3 Print string
+C $BFE6,3 Screen start address
+C $BFF1,2 Clear whole screen
+C $BFF8,2 Clear all attributes
+C $BFFA,3 Messages address
+C $BFFD,3 Screen address
+C $C002,3 Print string "DISK RETRIEVED"
+C $C00A,3 Print string "DISK BONUS: $05000"
+C $C012,3 Print string "LEVEL"
+C $C01A,3 Print string "TOTAL PAY : $"
+C $C020,3 Messages address
+C $C025,3 Print string "BONUS: $05000"
 C $C030,3 Print string
 C $C042,3 Print string
 t $C062
+T $C062,14
+T $C070,5
+T $C075,13
+T $C082,5
+T $C087,13
 c $C094
 b $C0E6
 c $C12E
@@ -720,8 +848,10 @@ c $C4E8
 c $C4F6
 c $C50D
 c $C57B
+C $C58A,3 Tile screen 0 start address
 c $C5A0
 c $C5A3
+C $C5AA,3 Tile screen 0 start address
 c $C5C6
 c $C623
 c $C643
@@ -1137,44 +1267,78 @@ t $D336
 b $D339
 t $D33D
 b $D340
-t $D355
-b $D358
-t $D359
-b $D35C
-t $D363
-b $D366
-t $D378
-b $D37B
-t $D381
-b $D385
-t $D387
-b $D38A
-t $D38B
-b $D38F
-t $D396
-b $D399
-t $D39A
-b $D39E
-t $D39F
-b $D3A2
-t $D3A3
-b $D3A7
-t $D3A8
-b $D3AC
-t $D3AD
-b $D3B1
-t $D3B9
-b $D3BC
-t $D3BD
-b $D3C0
-t $D3EC
-b $D3EF
-t $D3F2
-b $D3F5
-t $D3F8
-b $D3FB
-t $D416
-b $D419
+b $D34D Objects ??, 35 records, 5 bytes each
+W $D34D,4,4
+B $D351,1,1
+W $D352,4,4
+B $D356,1,1
+W $D357,4,4
+B $D35B,1,1
+W $D35C,4,4
+B $D360,1,1
+W $D361,4,4
+B $D365,1,1
+W $D366,4,4
+B $D36A,1,1
+W $D36B,4,4
+B $D36F,1,1
+W $D370,4,4
+B $D374,1,1
+W $D375,4,4
+B $D379,1,1
+W $D37A,4,4 #10
+B $D37E,1,1
+W $D37F,4,4
+B $D383,1,1
+W $D384,4,4
+B $D388,1,1
+W $D389,4,4
+B $D38D,1,1
+W $D38E,4,4
+B $D392,1,1
+W $D393,4,4
+B $D397,1,1
+W $D398,4,4
+B $D39C,1,1
+W $D39D,4,4
+B $D3A1,1,1
+W $D3A2,4,4
+B $D3A6,1,1
+W $D3A7,4,4
+B $D3AB,1,1
+W $D3AC,4,4 #20
+B $D3B0,1,1
+W $D3B1,4,4
+B $D3B5,1,1
+W $D3B6,4,4
+B $D3BA,1,1
+W $D3BB,4,4
+B $D3BF,1,1
+W $D3C0,4,4
+B $D3C4,1,1
+W $D3C5,4,4
+B $D3C9,1,1
+W $D3CA,4,4
+B $D3CE,1,1
+W $D3CF,4,4
+B $D3D3,1,1
+W $D3D4,4,4
+B $D3D8,1,1
+W $D3D9,4,4
+B $D3DD,1,1
+W $D3DE,4,4 #30
+B $D3E2,1,1
+W $D3E3,4,4
+B $D3E7,1,1
+W $D3E8,4,4
+B $D3EC,1,1
+W $D3ED,4,4
+B $D3F1,1,1
+W $D3F2,4,4
+B $D3F6,1,1
+W $D3F7,4,4 #35
+B $D3FB,1,1
+b $D3FC
 t $D41C
 b $D41F
 t $D440
@@ -1266,80 +1430,102 @@ T $E08E
 T $E092
 c $E097 Redefine Keys
 C $E097,3 Unhighlight Menu item
-C $E0A5,3 Print string
-C $E0AD,3 Print string
-C $E0B5,3 Print string
-C $E0BD,3 Print string
-C $E0C5,3 Print string
-C $E0CD,3 Print string
-C $E0D5,3 Print string
-C $E0DD,3 Print string
+C $E09D,3 Redefine keys messages
+C $E0A5,3 Print string "REDEFINE KEYS"
+C $E0AD,3 Print string "PRESS THE KEYS"
+C $E0B5,3 Print string "OF YOUR CHOICE"
+C $E0BD,3 Print string "FIRE"
+C $E0C5,3 Print string "UP"
+C $E0CD,3 Print string "DOWN"
+C $E0D5,3 Print string "LEFT"
+C $E0DD,3 Print string "RIGHT"
 C $E145,3 Print string
 b $E17C
 t $E1EC
-b $E225
-t $E227
-b $E235
-t $E237
-b $E245
-t $E247
-b $E255
-t $E257
-b $E265
-t $E267
-b $E275
-t $E277
-b $E285
-t $E287
-b $E295
-t $E297
-b $E2A6
+T $E1EC,1
+T $E1ED,17
+T $E1FE,6
+T $E204,12
+T $E210,7
+b $E217 Level descriptions and data addresses
+T $E217,14
+W $E225,2,2
+T $E227,14
+W $E235,2,2
+T $E237,14
+W $E245,2,2
+T $E247,14
+W $E255,2,2
+T $E257,14
+W $E265,2,2
+T $E267,14
+W $E275,2,2
+T $E277,14
+W $E285,2,2
+T $E287,14
+W $E295,2,2
+T $E297,14
+W $E2A5,2,2
 c $E2A7 Start Mission
 C $E2A7,3 Unhighlight Menu item
-C $E2B5,3 Print string
-C $E2BD,3 Print string
+C $E2B5,3 Print string "ENTER SKILL LEVEL"
+C $E2BD,3 Print string "1 TO 9"
 C $E2E7,3 Print string
-C $E302,3 Print string
-C $E30A,3 Print string
-C $E322,3 Print string
-t $E388
-b $E38B
-t $E38E
-b $E393
-t $E398
-b $E39B
-t $E3A2
-b $E3A7
-t $E3AC
-b $E3AF
-t $E3B6
-b $E3BB
-t $E3C0
-b $E3C3
-t $E3CB
-b $E3CF
-t $E3D4
-b $E3D8
-t $E3DF
-b $E3E3
-t $E3E8
-b $E3EC
-t $E3F3
-b $E3F7
-t $E3FC
-b $E400
-t $E407
-b $E40B
-t $E410
-b $E413
-t $E41B
-b $E41F
-t $E424
-b $E427
-t $E42F
-b $E433
-t $E438
-b $E43B
+C $E302,3 Print string "YOUR MISSION"
+C $E30A,3 Print string "WILL BE"
+C $E315,4 * 16
+C $E319,3 Levels data base address
+C $E322,3 Print string - level description
+b $E388
+T $E388,4
+b $E38C Level 1 "EXTREMELY EASY"
+B $E38C
+T $E38F
+B $E393
+T $E398,3
+B $E39B
+b $E3A0 Level 2 "VERY EASY"
+B $E3A0
+T $E3A3
+B $E3A7
+T $E3AC,3
+B $E3AF
+b $E3B4 Level 3 "EASY"
+B $E3B4
+T $E3B7
+B $E3BB
+T $E3C0,3
+B $E3C3
+b $E3C8 Level 4 "SLIGHTLY EASY"
+T $E3CB
+B $E3CF
+T $E3D4,3
+B $E3D7
+b $E3DC Level 5 "MODERATE"
+T $E3DF
+B $E3E3
+T $E3E8,3
+B $E3EB
+b $E3F0 Level 6 "SLIGHTLY  HARD"
+T $E3F3
+B $E3F7
+T $E3FC,3
+B $E3FF
+b $E404 Level 7 "HARD"
+T $E407
+B $E40B
+T $E410,3
+B $E413
+b $E418 Level 8 "VERY HARD"
+T $E41B
+B $E41F
+T $E424,3
+B $E427
+b $E42C Level 9 "EXTREMELY HARD"
+T $E42F
+B $E433
+T $E438,3
+B $E43B
 c $E440
 b $E494
 b $E700 Tiles with mask, 16 bytes each

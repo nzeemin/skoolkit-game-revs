@@ -9,7 +9,7 @@ b$6270 DEFB $3E,$00,$00,$00,$00,$00,$00,$00
 ;
 ; Used by the routine at #R$BC0D.
 c$6289 LD HL,$62DB   ;
- $628C LD DE,$6590   ;
+ $628C LD DE,$6590   ; Tile screen 0 start address
 *$628F LD A,(HL)     ;
  $6290 CP $02        ;
  $6292 JR Z,$62A9    ;
@@ -28,7 +28,7 @@ c$6289 LD HL,$62DB   ;
  $62A6 INC HL        ;
  $62A7 JR $628F      ;
 *$62A9 LD HL,$4000   ;
- $62AC LD DE,$6590   ;
+ $62AC LD DE,$6590   ; Tile screen 0 start address
  $62AF LD C,$0C      ;
 *$62B1 PUSH HL       ;
  $62B2 LD B,$18      ;
@@ -261,13 +261,15 @@ b$6F86 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,
  $7166 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 ; Data block at 7184
-b$7184 DEFB $A8,$84,$B5,$A0,$FF,$2F,$30,$31
- $718C DEFB $32,$FF,$33,$34,$35,$36,$37,$38
- $7194 DEFB $0E,$0F,$10,$11,$12,$0D,$0D,$0D
- $719C DEFB $12,$0D,$0D,$0D,$00,$01,$02,$03
- $71A4 DEFB $04,$05,$06,$07,$08,$0D,$0D,$0D
- $71AC DEFB $0E,$0F,$10,$10,$11,$0D,$13,$0D
- $71B4 DEFB $0D,$12,$12,$12,$12,$07,$0A,$1F
+b$7184 DEFW $84A8                           ; Current Room address
+ $7186 DEFW $A0B5                           ; ??
+ $7188 DEFB $FF,$2F,$30,$31,$32,$FF,$33,$34
+ $7190 DEFB $35,$36,$37,$38,$0E,$0F,$10,$11
+ $7198 DEFB $12,$0D,$0D,$0D,$12,$0D,$0D,$0D
+ $71A0 DEFB $00,$01,$02,$03,$04,$05,$06,$07
+ $71A8 DEFB $08,$0D,$0D,$0D,$0E,$0F,$10,$10
+ $71B0 DEFB $11,$0D,$13,$0D,$0D,$12,$12,$12
+ $71B8 DEFB $12,$07,$0A,$1F
 
 ; Message at 71BC
 t$71BC DEFM " !\""
@@ -295,8 +297,17 @@ b$71C3 DEFB $01,$01,$11,$08,$0E,$00,$0E,$00
 ; Data block at 7222
 b$7222 DEFB $00,$EF,$01,$04,$EF,$08,$03,$EF,$10,$02 ; Ports and bits for the
                                                     ; current input method
- $722C DEFB $F7,$10,$01,$EF,$04,$00,$00,$41
- $7234 DEFB $5A,$84,$71,$86,$6F,$00
+ $722C DEFB $F7,$10,$01,$EF,$04,$00,$00
+ $7233 DEFW $5A41                                   ; Screen attributes address
+                                                    ; stored during tile map
+                                                    ; drawing
+ $7235 DEFW $7184                                   ; Tile screen 5 address
+                                                    ; stored during tile map
+                                                    ; drawing
+ $7237 DEFW $6F86                                   ; Tile screen 4 address
+                                                    ; stored during tile map
+                                                    ; drawing
+ $7239 DEFB $00                                     ; Byte mirror flag
 
 ; Data block at 723A
 @label=mirtab
@@ -328,7 +339,7 @@ b$733A DEFB $00,$DE,$D3,$08,$D4,$32,$D4,$5C
 ; #R$7406, #R$742B, #R$7452 and #R$B38F.
 c$734A JP $B702      ;
 
-; Routine at 734D
+; Room token #14:
 c$734D POP HL        ;
  $734E INC HL        ;
  $734F LD C,(HL)     ;
@@ -341,7 +352,7 @@ c$734D POP HL        ;
  $7356 LD (HL),C     ;
  $7357 JR $734A      ;
 
-; Routine at 7359
+; Room token #13:
 c$7359 POP HL        ;
  $735A INC HL        ;
  $735B LD A,(HL)     ;
@@ -352,7 +363,7 @@ c$7359 POP HL        ;
  $7362 INC HL        ;
  $7363 LD A,(HL)     ;
  $7364 PUSH HL       ;
- $7365 LD HL,$6590   ;
+ $7365 LD HL,$6590   ; Tile screen 0 start address
  $7368 LD B,$1E      ;
 *$736A LD (HL),A     ;
  $736B INC HL        ;
@@ -370,7 +381,7 @@ c$7359 POP HL        ;
  $737D DJNZ $737B    ;
  $737F JR $734A      ;
 
-; Routine at 7381
+; Room token #1: Fill to down; params: 4 bytes (count, filler, address)
 c$7381 LD DE,$001E   ;
 ; This entry point is used by the routines at #R$7395, #R$739A and #R$739F.
 *$7384 POP HL        ;
@@ -389,19 +400,19 @@ c$7381 LD DE,$001E   ;
  $7391 DJNZ $738F    ;
  $7393 JR $734A      ;
 
-; Routine at 7395
+; Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
 c$7395 LD DE,$001F   ;
  $7398 JR $7384      ;
 
-; Routine at 739A
+; Room token #11: Fill to down-left; params: 4 bytes (count, filler, address)
 c$739A LD DE,$001D   ;
  $739D JR $7384      ;
 
-; Routine at 739F
+; Room token #2: Fill to right; params: 4 bytes (count, filler, address)
 c$739F LD DE,$0001   ;
  $73A2 JR $7384      ;
 
-; Routine at 73A4
+; Room token #6:
 c$73A4 LD A,$23      ;
 ; This entry point is used by the routine at #R$73EF.
 *$73A6 LD ($73BB),A  ;
@@ -421,7 +432,7 @@ c$73A4 LD A,$23      ;
 *$73B8 PUSH HL       ;
  $73B9 LD C,B        ;
 *$73BA LD (HL),A     ;
- $73BB INC HL        ;
+ $73BB INC HL        ; !!MUT-CMD!!
  $73BC DEC C         ;
  $73BD JR NZ,$73BA   ;
  $73BF POP HL        ;
@@ -429,7 +440,7 @@ c$73A4 LD A,$23      ;
  $73C1 DJNZ $73B8    ;
  $73C3 JR $734A      ;
 
-; Routine at 73C5
+; Room token #7:
 c$73C5 LD A,$23      ;
 ; This entry point is used by the routine at #R$73EB.
 *$73C7 LD ($73DE),A  ;
@@ -450,7 +461,7 @@ c$73C5 LD A,$23      ;
 *$73DB PUSH HL       ;
  $73DC PUSH BC       ;
 *$73DD LD (HL),A     ;
- $73DE INC HL        ;
+ $73DE INC HL        ; !!MUT-CMD!!
  $73DF DEC C         ;
  $73E0 JR NZ,$73DD   ;
  $73E2 POP BC        ;
@@ -460,27 +471,28 @@ c$73C5 LD A,$23      ;
  $73E6 DJNZ $73DB    ;
  $73E8 JP $734A      ;
 
-; Routine at 73EB
+; Room token #8:
 c$73EB LD A,$2B      ;
  $73ED JR $73C7      ;
 
-; Routine at 73EF
+; Room token #9:
 c$73EF LD A,$2B      ;
  $73F1 JR $73A6      ;
 
-; Routine at 73F3
+; Room token #4: Fill whole Tile screen 0 with one tile; params: 1 byte
+; (filler)
 c$73F3 POP HL        ;
  $73F4 INC HL        ;
  $73F5 LD A,(HL)     ;
  $73F6 PUSH HL       ;
- $73F7 LD HL,$6590   ;
- $73FA LD DE,$6591   ;
+ $73F7 LD HL,$6590   ; Tile screen 0 start address
+ $73FA LD DE,$6591   ; Tile screen 0 start address + 1
  $73FD LD (HL),A     ;
- $73FE LD BC,$01FD   ;
+ $73FE LD BC,$01FD   ; 510 - 1
  $7401 LDIR          ;
  $7403 JP $734A      ;
 
-; Routine at 7406
+; Room token #5:
 c$7406 POP HL        ;
  $7407 INC HL        ;
  $7408 LD B,(HL)     ;
@@ -513,7 +525,7 @@ c$7406 POP HL        ;
  $7426 JR NZ,$7415   ;
  $7428 JP $734A      ;
 
-; Routine at 742B
+; Room token #12:
 c$742B POP HL        ;
  $742C INC HL        ;
  $742D LD E,(HL)     ;
@@ -548,7 +560,7 @@ c$742B POP HL        ;
  $744D DJNZ $743A    ;
  $744F JP $734A      ;
 
-; Routine at 7452
+; Room token #3: ??; params: 5 bytes
 c$7452 POP HL        ;
  $7453 INC HL        ;
  $7454 LD D,(HL)     ;
@@ -2827,7 +2839,7 @@ c$9CA8 CP $00        ;
 *$9D31 LD ($9D3C),HL ;
 ; This entry point is used by the routine at #R$9D8B.
 *$9D34 LD HL,($71CB) ;
- $9D37 LD DE,$6B8A   ;
+ $9D37 LD DE,$6B8A   ; Tile screen 3 start address
  $9D3A ADD HL,DE     ;
  $9D3B LD DE,$71FE   ;
  $9D3E LD B,$03      ;
@@ -2855,7 +2867,7 @@ c$9CA8 CP $00        ;
 ; Used by the routines at #R$9C44 and #R$9CA8.
 c$9D5C LD C,$03      ;
  $9D5E LD HL,($71CB) ;
- $9D61 LD DE,$678E   ;
+ $9D61 LD DE,$678E   ; Tile screen 1 start address
  $9D64 ADD HL,DE     ;
  $9D65 LD A,$01      ;
  $9D67 LD DE,$001A   ;
@@ -3541,7 +3553,7 @@ c$A434 CALL $A75B      ;
  $A49D LD A,$13        ;
  $A49F LD ($A4D1),A    ;
 *$A4A2 PUSH HL         ;
- $A4A3 LD HL,$6590     ;
+ $A4A3 LD HL,$6590     ; Tile screen 0 start address
  $A4A6 ADD HL,DE       ;
  $A4A7 LD A,$64        ;
  $A4A9 CP (HL)         ;
@@ -3551,7 +3563,7 @@ c$A434 CALL $A75B      ;
  $A4B0 LD A,(HL)       ;
  $A4B1 INC A           ;
  $A4B2 JR NZ,$A4C0     ;
- $A4B4 LD HL,$678E     ;
+ $A4B4 LD HL,$678E     ; Tile screen 1 start address
  $A4B7 ADD HL,DE       ;
  $A4B8 LD (HL),$01     ;
  $A4BA POP HL          ;
@@ -3559,7 +3571,7 @@ c$A434 CALL $A75B      ;
  $A4BC LD A,$CC        ;
  $A4BE XOR (HL)        ;
  $A4BF LD (HL),A       ;
-*$A4C0 LD HL,$698C     ;
+*$A4C0 LD HL,$698C     ; Tile screen 2 start address
  $A4C3 ADD HL,DE       ;
  $A4C4 LD A,(HL)       ;
  $A4C5 INC A           ;
@@ -3838,7 +3850,7 @@ c$A434 CALL $A75B      ;
  $A724 POP DE          ;
  $A725 DJNZ $A713      ;
  $A727 RET             ;
-*$A728 LD HL,$6D88     ;
+*$A728 LD HL,$6D88     ; Tile screen 4 start address
  $A72B ADD HL,DE       ;
  $A72C LD DE,($A70F)   ;
  $A730 LD B,$07        ;
@@ -3871,7 +3883,7 @@ b$A759 DEFB $81,$4D
 ;
 ; Used by the routine at #R$A434.
 c$A75B LD DE,($71C3) ;
- $A75F LD HL,$678E   ;
+ $A75F LD HL,$678E   ; Tile screen 1 start address
  $A762 ADD HL,DE     ;
  $A763 LD DE,$0018   ;
  $A766 LD A,$01      ;
@@ -4120,8 +4132,8 @@ w$ACA2 DEFW $A31B,$A311,$A307,$A2FD
 c$ACCA EXX           ;
  $ACCB LD DE,$5800   ;
  $ACCE EXX           ;
- $ACCF LD HL,$4000   ;
- $ACD2 LD DE,$AD65   ;
+ $ACCF LD HL,$4000   ; Screen start address
+ $ACD2 LD DE,$AD65   ; Game screen frames/indicators RLE encoded sequence
 *$ACD5 LD A,(DE)     ;
  $ACD6 PUSH DE       ;
  $ACD7 LD C,$01      ;
@@ -4140,11 +4152,11 @@ c$ACCA EXX           ;
  $ACEB LD L,A        ;
  $ACEC PUSH HL       ;
  $ACED POP DE        ;
- $ACEE ADD HL,HL     ;
+ $ACEE ADD HL,HL     ; {* 8
  $ACEF ADD HL,HL     ;
- $ACF0 ADD HL,HL     ;
- $ACF1 ADD HL,DE     ;
- $ACF2 LD DE,$AE02   ;
+ $ACF0 ADD HL,HL     ; }
+ $ACF1 ADD HL,DE     ; * 9
+ $ACF2 LD DE,$AE02   ; Indicator tales address
  $ACF5 ADD HL,DE     ;
  $ACF6 POP DE        ;
 *$ACF7 LD B,$08      ;
@@ -4179,24 +4191,25 @@ c$ACCA EXX           ;
  $AD1E LD DE,$5067   ;
  $AD21 LD HL,$AD4A   ; Indicator messages address
  $AD24 LD C,$0D      ;
- $AD26 CALL $AED1    ; Print string
+ $AD26 CALL $AED1    ; Print string "PAY : $ XXXXX"
  $AD29 LD DE,$5097   ;
  $AD2C LD C,$02      ;
- $AD2E CALL $AED1    ; Print string
+ $AD2E CALL $AED1    ; Print string "99"
  $AD31 LD DE,$50C1   ;
  $AD34 LD C,$04      ;
- $AD36 CALL $AED1    ; Print string
+ $AD36 CALL $AED1    ; Print string "HELD"
  $AD39 LD DE,$50D6   ;
  $AD3C LD C,$04      ;
- $AD3E CALL $AED1    ; Print string
+ $AD3E CALL $AED1    ; Print string "TIME"
  $AD41 LD DE,$50DB   ;
  $AD44 LD C,$04      ;
- $AD46 CALL $AED1    ; Print string
+ $AD46 CALL $AED1    ; Print string "NEAR"
  $AD49 RET           ;
 
 ; Indicator messages
-t$AD4A DEFM "PAY : $ 00000"
- $AD57 DEFM "99"            ; Indicator time value
+t$AD4A DEFM "PAY : $ "
+ $AD52 DEFM "00000"        ; Pay value text
+ $AD57 DEFM "99"           ; Indicator time value
  $AD59 DEFM "HELDTIMENEAR"
 
 ; Game screen frames/indicators RLE encoded sequence
@@ -4211,7 +4224,7 @@ b$AD65 DEFB $00,$32,$01,$02,$03,$32,$0B,$04,$03,$32,$0B,$04,$03,$32,$0B,$04
  $ADE5 DEFB $0B,$04,$03,$18,$09,$03,$23,$16,$03,$18,$09,$03,$18,$09,$04,$0A
  $ADF5 DEFB $18,$06,$0C,$23,$06,$0C,$18,$06,$0C,$18,$06,$0D,$FF
 
-; Tites for game screen frames/indicators, 9 bytes each
+; Tiles for game screen frames/indicators, 9 bytes each
 b$AE02 DEFB $30,$08,$04,$05,$02,$8D,$70,$1C,$02
  $AE0B DEFB $22,$22,$14,$E7,$3C,$24,$44,$00,$02
  $AE14 DEFB $00,$10,$21,$22,$A4,$64,$A8,$30,$02
@@ -4244,9 +4257,9 @@ c$AED1 LD A,(HL)     ;
  $AED2 PUSH HL       ;
  $AED3 LD H,$00      ;
  $AED5 LD L,A        ;
- $AED6 ADD HL,HL     ;
+ $AED6 ADD HL,HL     ; {* 8
  $AED7 ADD HL,HL     ;
- $AED8 ADD HL,HL     ;
+ $AED8 ADD HL,HL     ; }
  $AED9 PUSH DE       ;
  $AEDA LD DE,$3C00   ;
  $AEDD ADD HL,DE     ;
@@ -4512,36 +4525,36 @@ b$B13E DEFB $FE,$82,$A2,$00,$FE,$FF,$FF,$7E,$32
 ; Data block at B147
 b$B147 DEFB $30
 
-; Screen draw procedure ??
+; Draw tile map on the screen
 ;
 ; Used by the routines at #R$B724 and #R$B937.
-c$B148 LD HL,$5821   ;
- $B14B LD B,$11      ;
+c$B148 LD HL,$5821   ; Screen attributes address
+ $B14B LD B,$11      ; 17 tile lines
  $B14D LD ($7233),HL ;
- $B150 LD HL,$6F86   ;
+ $B150 LD HL,$6F86   ; Tile screen 5 start address
  $B153 LD ($7235),HL ;
- $B156 LD HL,$6D88   ;
+ $B156 LD HL,$6D88   ; Tile screen 4 start address
  $B159 LD ($7237),HL ;
- $B15C LD HL,$678E   ;
- $B15F LD DE,$4021   ;
+ $B15C LD HL,$678E   ; Tile screen 1 start address
+ $B15F LD DE,$4021   ; Game screen start address
  $B162 EXX           ;
- $B163 LD HL,$6590   ;
- $B166 LD DE,$698C   ;
- $B169 LD BC,$6B8A   ;
+ $B163 LD HL,$6590   ; Tile screen 0 start address
+ $B166 LD DE,$698C   ; Tile screen 2 start address
+ $B169 LD BC,$6B8A   ; Tile screen 3 start address
  $B16C EXX           ;
-*$B16D LD C,$1E      ;
+*$B16D LD C,$1E      ; 30 column
 *$B16F XOR A         ;
- $B170 CP (HL)       ;
- $B171 JP Z,$B2A9    ;
+ $B170 CP (HL)       ; Check byte in Title screen 5
+ $B171 JP Z,$B2A9    ; zero => Skip this tile rendering
  $B174 PUSH HL       ;
  $B175 PUSH BC       ;
  $B176 PUSH DE       ;
  $B177 EXX           ;
- $B178 LD A,(HL)     ;
+ $B178 LD A,(HL)     ; get byte from Tile screen 0
  $B179 EXX           ;
  $B17A LD HL,$B1A3   ;
  $B17D CP $FF        ;
- $B17F JR NZ,$B184   ;
+ $B17F JR NZ,$B184   ; byte <> $FF =>
  $B181 LD HL,$B1F9   ;
 *$B184 LD ($B1A1),HL ;
  $B187 LD H,$00      ;
@@ -4551,10 +4564,10 @@ c$B148 LD HL,$5821   ;
  $B18C ADD HL,HL     ;
  $B18D ADD HL,HL     ;
  $B18E POP DE        ;
- $B18F ADD HL,DE     ;
- $B190 LD DE,$F700   ;
- $B193 ADD HL,DE     ;
- $B194 LD DE,$B13E   ;
+ $B18F ADD HL,DE     ; * 9
+ $B190 LD DE,$F700   ; Tiles start address
+ $B193 ADD HL,DE     ; now HL = tile address
+ $B194 LD DE,$B13E   ; Tile buffer address
  $B197 LD B,$09      ;
 *$B199 LD A,(HL)     ;
  $B19A LD (DE),A     ;
@@ -4593,7 +4606,7 @@ c$B148 LD HL,$5821   ;
  $B1D7 ADD HL,HL     ;
  $B1D8 ADD HL,HL     ;
  $B1D9 ADD HL,HL     ;
- $B1DA ADD HL,HL     ;
+ $B1DA ADD HL,HL     ; * 8
  $B1DB LD DE,$E700   ;
  $B1DE ADD HL,DE     ;
  $B1DF LD B,$08      ;
@@ -4602,12 +4615,12 @@ c$B148 LD HL,$5821   ;
  $B1E5 LD A,(DE)     ;
  $B1E6 LD C,A        ;
  $B1E7 LD A,(HL)     ;
- $B1E8 CALL $B2E8    ;
+ $B1E8 CALL $B2E8    ; Mirror byte if needed
  $B1EB AND C         ;
  $B1EC LD C,A        ;
  $B1ED DEC HL        ;
  $B1EE LD A,(HL)     ;
- $B1EF CALL $B2E8    ;
+ $B1EF CALL $B2E8    ; Mirror byte if needed
  $B1F2 OR C          ;
  $B1F3 INC HL        ;
  $B1F4 INC HL        ;
@@ -4628,7 +4641,7 @@ c$B148 LD HL,$5821   ;
  $B20B ADD HL,HL     ;
  $B20C ADD HL,HL     ;
  $B20D ADD HL,HL     ;
- $B20E ADD HL,HL     ;
+ $B20E ADD HL,HL     ; * 8
  $B20F LD DE,$F0F0   ;
  $B212 ADD HL,DE     ;
  $B213 LD B,$08      ;
@@ -4637,12 +4650,12 @@ c$B148 LD HL,$5821   ;
  $B219 LD A,(DE)     ;
  $B21A LD C,A        ;
  $B21B LD A,(HL)     ;
- $B21C CALL $B2E8    ;
+ $B21C CALL $B2E8    ; Mirror byte if needed
  $B21F AND C         ;
  $B220 LD C,A        ;
  $B221 DEC HL        ;
  $B222 LD A,(HL)     ;
- $B223 CALL $B2E8    ;
+ $B223 CALL $B2E8    ; Mirror byte if needed
  $B226 OR C          ;
  $B227 INC HL        ;
  $B228 INC HL        ;
@@ -4650,7 +4663,7 @@ c$B148 LD HL,$5821   ;
  $B22A INC DE        ;
  $B22B DJNZ $B218    ;
  $B22D CALL $B2FE    ;
-*$B230 LD HL,($7237) ;
+*$B230 LD HL,($7237) ; Get address in Tile screen 4
  $B233 LD A,(HL)     ;
  $B234 CP $FF        ;
  $B236 JR Z,$B263    ;
@@ -4659,7 +4672,7 @@ c$B148 LD HL,$5821   ;
  $B23B ADD HL,HL     ;
  $B23C ADD HL,HL     ;
  $B23D ADD HL,HL     ;
- $B23E ADD HL,HL     ;
+ $B23E ADD HL,HL     ; * 8
  $B23F LD DE,$E700   ;
  $B242 ADD HL,DE     ;
  $B243 LD B,$08      ;
@@ -4669,12 +4682,12 @@ c$B148 LD HL,$5821   ;
  $B24C LD A,(DE)     ;
  $B24D LD C,A        ;
  $B24E LD A,(HL)     ;
- $B24F CALL $B2E8    ;
+ $B24F CALL $B2E8    ; Mirror byte if needed
  $B252 AND C         ;
  $B253 LD C,A        ;
  $B254 DEC HL        ;
  $B255 LD A,(HL)     ;
- $B256 CALL $B2E8    ;
+ $B256 CALL $B2E8    ; Mirror byte if needed
  $B259 OR C          ;
  $B25A INC HL        ;
  $B25B INC HL        ;
@@ -4682,7 +4695,7 @@ c$B148 LD HL,$5821   ;
  $B25D INC DE        ;
  $B25E DJNZ $B24B    ;
  $B260 CALL $B30F    ;
-*$B263 LD HL,($7235) ;
+*$B263 LD HL,($7235) ; Get address in Tile screen 5
  $B266 LD A,(HL)     ;
  $B267 CP $FF        ;
  $B269 JR Z,$B293    ;
@@ -4694,7 +4707,7 @@ c$B148 LD HL,$5821   ;
  $B275 ADD HL,HL     ;
  $B276 ADD HL,HL     ;
  $B277 ADD HL,HL     ;
- $B278 ADD HL,HL     ;
+ $B278 ADD HL,HL     ; * 8
  $B279 POP DE        ;
  $B27A ADD HL,DE     ;
  $B27B LD DE,$D600   ;
@@ -4724,7 +4737,7 @@ c$B148 LD HL,$5821   ;
  $B29E INC D         ;
  $B29F DJNZ $B29B    ;
  $B2A1 LD A,(HL)     ;
- $B2A2 LD HL,($7233) ;
+ $B2A2 LD HL,($7233) ; Get address in screen attributes
  $B2A5 LD (HL),A     ;
  $B2A6 POP DE        ;
  $B2A7 POP BC        ;
@@ -4738,17 +4751,17 @@ c$B148 LD HL,$5821   ;
  $B2AF EXX           ;
  $B2B0 PUSH HL       ;
  $B2B1 LD HL,($7233) ;
- $B2B4 INC HL        ;
+ $B2B4 INC HL        ; Increase address in screen attributes
  $B2B5 LD ($7233),HL ;
- $B2B8 LD HL,($7235) ;
+ $B2B8 LD HL,($7235) ; {Increase address in Tile screen 5
  $B2BB INC HL        ;
- $B2BC LD ($7235),HL ;
- $B2BF LD HL,($7237) ;
- $B2C2 INC HL        ;
+ $B2BC LD ($7235),HL ; }
+ $B2BF LD HL,($7237) ; {Increase address in Tile screen 4
+ $B2C2 INC HL        ; }
  $B2C3 LD ($7237),HL ;
  $B2C6 POP HL        ;
- $B2C7 DEC C         ;
- $B2C8 JP NZ,$B16F   ;
+ $B2C7 DEC C         ; Decrease column counter
+ $B2C8 JP NZ,$B16F   ; Continue loop by columns
  $B2CB RR D          ;
  $B2CD RR D          ;
  $B2CF RR D          ;
@@ -4758,26 +4771,26 @@ c$B148 LD HL,$5821   ;
  $B2D5 RL D          ;
  $B2D7 RL D          ;
  $B2D9 PUSH HL       ;
- $B2DA LD HL,($7233) ;
+ $B2DA LD HL,($7233) ; {Increase address in screen attributes by 2 - next line
  $B2DD INC HL        ;
  $B2DE INC HL        ;
- $B2DF LD ($7233),HL ;
+ $B2DF LD ($7233),HL ; }
  $B2E2 POP HL        ;
- $B2E3 DEC B         ;
- $B2E4 JP NZ,$B16D   ;
+ $B2E3 DEC B         ; Decrease line counter
+ $B2E4 JP NZ,$B16D   ; Continue loop by lines
  $B2E7 RET           ;
 
-; Routine at B2E8
+; Mirror byte if needed
 ;
 ; Used by the routine at #R$B148.
 c$B2E8 PUSH BC       ;
  $B2E9 LD B,A        ;
- $B2EA LD A,($7239)  ;
+ $B2EA LD A,($7239)  ; Get mirror flag
  $B2ED CP $00        ;
  $B2EF LD A,B        ;
  $B2F0 POP BC        ;
- $B2F1 RET NZ        ;
- $B2F2 LD IX,$72BA   ;
+ $B2F1 RET NZ        ; No need to mirror => return
+ $B2F2 LD IX,$72BA   ; Mirror table half address
  $B2F6 LD ($B2FB),A  ;
  $B2F9 LD A,(IX+$7E) ;
  $B2FC RET           ;
@@ -4885,7 +4898,7 @@ c$B371 DI            ;
  $B38C JR NZ,$B374   ;
  $B38E RET           ;
 
-; Routine at B38F
+; Room token #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
 c$B38F POP HL        ;
  $B390 INC HL        ;
  $B391 LD A,(HL)     ;
@@ -5016,7 +5029,7 @@ c$B461 LD E,(HL)     ;
  $B462 INC HL        ;
  $B463 LD D,(HL)     ;
  $B464 PUSH HL       ;
- $B465 LD HL,$678E   ;
+ $B465 LD HL,$678E   ; Tile screen 1 start address
  $B468 ADD HL,DE     ;
  $B469 LD ($B4CC),HL ;
  $B46C LD DE,$07F8   ;
@@ -5091,6 +5104,8 @@ b$B4DD DEFB $32
 ;
 ; Used by the routines at #R$B724, #R$B937, #R$BC55, #R$BDB2, #R$BFD5 and
 ; #R$C4A7.
+;
+; B ??
 c$B4DE LD HL,$AD54   ;
  $B4E1 LD A,$3A      ;
 *$B4E3 INC (HL)      ;
@@ -5100,9 +5115,9 @@ c$B4DE LD HL,$AD54   ;
  $B4EA DEC HL        ;
  $B4EB JR $B4E3      ;
 *$B4ED DJNZ $B4DE    ;
- $B4EF LD HL,$AD52   ;
+ $B4EF LD HL,$AD52   ; Pay value text address
  $B4F2 LD C,$05      ;
- $B4F4 LD DE,$506F   ;
+ $B4F4 LD DE,$506F   ; Screen address
  $B4F7 JP $AED1      ; => Print string
 
 ; Routine at B4FA
@@ -5273,7 +5288,7 @@ c$B5C7 CALL $AC44    ;
  $B63C LD ($BD7A),A  ;
  $B63F CALL $7472    ;
  $B642 DI            ;
- $B643 LD HL,$B513   ;
+ $B643 LD HL,$B513   ; Initial room address
  $B646 LD ($7184),HL ;
  $B649 LD HL,$B532   ;
  $B64C LD ($B8CE),HL ;
@@ -5324,14 +5339,14 @@ c$B5C7 CALL $AC44    ;
 *$B6BB LD (HL),A     ;
  $B6BC ADD HL,DE     ;
  $B6BD DJNZ $B6BB    ;
- $B6BF LD HL,$6590   ;
+ $B6BF LD HL,$6590   ; Tile screen 0 start address
  $B6C2 LD (HL),A     ;
  $B6C3 INC A         ;
  $B6C4 LD ($A3B4),A  ;
- $B6C7 LD BC,$01FD   ;
- $B6CA LD DE,$6591   ;
+ $B6C7 LD BC,$01FD   ; 510 - 1
+ $B6CA LD DE,$6591   ; Tile screen 0 start address + 1
  $B6CD LDIR          ;
- $B6CF LD HL,$6D88   ;
+ $B6CF LD HL,$6D88   ; Tile screen 4 start address
  $B6D2 LD (HL),$FF   ;
  $B6D4 LD BC,$03FB   ;
  $B6D7 LD DE,$6D89   ;
@@ -5351,18 +5366,18 @@ c$B5C7 CALL $AC44    ;
 ; This entry point is used by the routine at #R$B702.
 *$B6EE LD A,(HL)     ;
  $B6EF CP $FF        ; End of sequence?
- $B6F1 JP Z,$F973    ;
+ $B6F1 JP Z,$F973    ; !!MUT-ARG!! yes =>
  $B6F4 PUSH HL       ;
  $B6F5 LD L,A        ;
  $B6F6 LD H,$00      ;
  $B6F8 ADD HL,HL     ;
- $B6F9 LD DE,$B706   ;
+ $B6F9 LD DE,$B706   ; Table of Room tokens
  $B6FC ADD HL,DE     ;
  $B6FD LD A,(HL)     ;
  $B6FE INC HL        ;
  $B6FF LD H,(HL)     ;
- $B700 LD L,A        ;
- $B701 JP (HL)       ;
+ $B700 LD L,A        ; now HL = room token procedure address
+ $B701 JP (HL)       ; => run token procedure
 
 ; Routine at B702
 ;
@@ -5371,19 +5386,24 @@ c$B702 POP HL        ;
  $B703 INC HL        ;
  $B704 JR $B6EE      ;
 
-; Data block at B706
+; Table of Room tokens
 w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
- $B708 DEFW $7381    ; #1: Fill to down; params: 4 bytes
- $B70A DEFW $739F    ; #2: Fill to right; params: 4 bytes
+ $B708 DEFW $7381    ; #1: Fill to down; params: 4 bytes (count, filler,
+                     ; address)
+ $B70A DEFW $739F    ; #2: Fill to right; params: 4 bytes (count, filler,
+                     ; address)
  $B70C DEFW $7452    ; #3: ??; params: 5 bytes
- $B70E DEFW $73F3    ; #4: Fill whole screen with one tile; params: 1 byte
+ $B70E DEFW $73F3    ; #4: Fill whole Tile screen 0 with one tile; params: 1
+                     ; byte (filler)
  $B710 DEFW $7406    ; #5
  $B712 DEFW $73A4    ; #6
  $B714 DEFW $73C5    ; #7
  $B716 DEFW $73EB    ; #8
  $B718 DEFW $73EF    ; #9
- $B71A DEFW $7395    ; #10: Fill to down-right; params: 4 bytes
- $B71C DEFW $739A    ; #11: Fill to down-left; params: 4 bytes
+ $B71A DEFW $7395    ; #10: Fill to down-right; params: 4 bytes (count, filler,
+                     ; address)
+ $B71C DEFW $739A    ; #11: Fill to down-left; params: 4 bytes (count, filler,
+                     ; address)
  $B71E DEFW $742B    ; #12
  $B720 DEFW $7359    ; #13
  $B722 DEFW $734D    ; #14
@@ -5391,22 +5411,22 @@ w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
 ; Routine at B724
 ;
 ; Used by the routines at #R$B422, #R$B425, #R$B42E, #R$C64C and #R$C681.
-c$B724 LD HL,$678E   ;
- $B727 LD (HL),$01   ;
- $B729 LD BC,$01FD   ;
- $B72C LD DE,$678F   ;
+c$B724 LD HL,$678E   ; Tile screen 1 start address
+ $B727 LD (HL),$01   ; Filler
+ $B729 LD BC,$01FD   ; 510 - 1
+ $B72C LD DE,$678F   ; Tile screen 1 start address + 1
  $B72F LDIR          ;
- $B731 LD HL,$698C   ;
- $B734 LD (HL),$FF   ;
- $B736 LD BC,$01FD   ;
- $B739 LD DE,$698D   ;
+ $B731 LD HL,$698C   ; Tile screen 2 start address
+ $B734 LD (HL),$FF   ; Filler
+ $B736 LD BC,$01FD   ; 510 - 1
+ $B739 LD DE,$698D   ; Tile screen 2 start address + 1
  $B73C LDIR          ;
- $B73E LD HL,$6B8A   ;
- $B741 LD (HL),$FF   ;
- $B743 LD BC,$01FD   ;
- $B746 LD DE,$6B8B   ;
+ $B73E LD HL,$6B8A   ; Tile screen 3 start address
+ $B741 LD (HL),$FF   ; Filler
+ $B743 LD BC,$01FD   ; 510 - 1
+ $B746 LD DE,$6B8B   ; Tile screen 3 start address + 1
  $B749 LDIR          ;
- $B74B CALL $B148    ;
+ $B74B CALL $B148    ; Draw tile map on the screen
  $B74E LD HL,$D34D   ;
  $B751 LD B,$23      ;
 *$B753 PUSH HL       ;
@@ -5488,17 +5508,17 @@ c$B724 LD HL,$678E   ;
  $B7E6 JR NZ,$B7DD   ;
  $B7E8 LD B,$32      ;
  $B7EA CALL $B4DE    ;
-*$B7ED LD HL,$678E   ;
+*$B7ED LD HL,$678E   ; Tile screen 1 start address
  $B7F0 LD (HL),$00   ;
- $B7F2 LD BC,$01FD   ;
- $B7F5 LD DE,$678F   ;
+ $B7F2 LD BC,$01FD   ; 510 - 1
+ $B7F5 LD DE,$678F   ; Tile screen 1 start address + 1
  $B7F8 LDIR          ;
  $B7FA CALL $BBBB    ;
- $B7FD LD HL,$698C   ;
+ $B7FD LD HL,$698C   ; Tile screen 2 start address
  $B800 LD (HL),$FF   ;
- $B802 LD BC,$01FD   ;
- $B805 LD DE,$698D   ;
- $B808 LDIR          ;
+ $B802 LD BC,$01FD   ; 510 - 1
+ $B805 LD DE,$698D   ; Tile screen 2 start address + 1
+ $B808 LDIR          ; Fill the Tile screen 2
  $B80A XOR A         ;
  $B80B LD ($B84C),A  ;
  $B80E LD C,A        ;
@@ -5617,7 +5637,7 @@ c$B889 INC DE        ;
  $B8C8 DI            ;
 *$B8C9 XOR A         ;
  $B8CA LD ($A39E),A  ;
- $B8CD JP $BEB3      ;
+ $B8CD JP $BEB3      ; !!MUT-ARG!!
 
 ; Routine at B8D0
 ;
@@ -5625,9 +5645,9 @@ c$B889 INC DE        ;
 ; #R$C094, #R$C13D, #R$C1B6, #R$C24B, #R$C339, #R$C3D9, #R$C4A7, #R$C4DE,
 ; #R$C5C6 and #R$C6E2.
 c$B8D0 CALL $BBBB    ;
- $B8D3 LD HL,$6D88   ;
+ $B8D3 LD HL,$6D88   ; Tile screen 4 start address
  $B8D6 LD (HL),$FF   ;
- $B8D8 LD BC,$01FD   ;
+ $B8D8 LD BC,$01FD   ; 510 - 1
  $B8DB LD DE,$6D89   ;
  $B8DE LDIR          ;
  $B8E0 LD HL,($9C42) ;
@@ -5651,7 +5671,7 @@ c$B8D0 CALL $BBBB    ;
  $B902 POP DE        ;
  $B903 DJNZ $B8F4    ;
  $B905 JR $B922      ;
-*$B907 LD DE,$698C   ;
+*$B907 LD DE,$698C   ; Tile screen 2 start address
  $B90A ADD HL,DE     ;
  $B90B LD DE,($7186) ;
  $B90F LD B,$07      ;
@@ -5667,10 +5687,10 @@ c$B8D0 CALL $BBBB    ;
  $B91E ADD HL,DE     ;
  $B91F POP DE        ;
  $B920 DJNZ $B911    ;
-*$B922 LD HL,$6B8A   ;
+*$B922 LD HL,$6B8A   ; Tile screen 3 start address
  $B925 LD (HL),$FF   ;
- $B927 LD DE,$6B8B   ;
- $B92A LD BC,$01FD   ;
+ $B927 LD DE,$6B8B   ; Tile screen 3 start address + 1
+ $B92A LD BC,$01FD   ; 510 - 1
  $B92D LDIR          ;
  $B92F LD HL,($7184) ;
  $B932 LD A,(HL)     ;
@@ -5737,14 +5757,14 @@ c$B937 LD IX,$A39F   ;
  $B9AF CP $FF        ;
  $B9B1 JP Z,$BBA7    ;
  $B9B4 PUSH HL       ;
- $B9B5 LD DE,$6590   ;
+ $B9B5 LD DE,$6590   ; Tile screen 0 start address
  $B9B8 ADD HL,DE     ;
  $B9B9 LD A,$64      ;
  $B9BB CP (HL)       ;
  $B9BC POP HL        ;
  $B9BD JP C,$BAD5    ;
  $B9C0 PUSH HL       ;
- $B9C1 LD DE,$6B8A   ;
+ $B9C1 LD DE,$6B8A   ; Tile screen 3 start address
  $B9C4 ADD HL,DE     ;
  $B9C5 LD A,(HL)     ;
  $B9C6 POP HL        ;
@@ -5757,7 +5777,7 @@ c$B937 LD IX,$A39F   ;
  $B9D4 LD ($71CF),A  ;
  $B9D7 JP $BAD5      ;
 *$B9DA PUSH HL       ;
- $B9DB LD DE,$6D88   ;
+ $B9DB LD DE,$6D88   ; Tile screen 4 start address
  $B9DE ADD HL,DE     ;
  $B9DF LD A,(HL)     ;
  $B9E0 POP HL        ;
@@ -5777,7 +5797,7 @@ c$B937 LD IX,$A39F   ;
  $B9FE POP HL        ;
  $B9FF DEC B         ;
  $BA00 JP NZ,$B94F   ;
- $BA03 LD DE,$698C   ;
+ $BA03 LD DE,$698C   ; Tile screen 2 start address
  $BA06 ADD HL,DE     ;
  $BA07 LD A,(HL)     ;
  $BA08 CP $C8        ;
@@ -5810,7 +5830,7 @@ c$B937 LD IX,$A39F   ;
  $BA3D ADD HL,DE     ;
  $BA3E POP DE        ;
  $BA3F DJNZ $BA2F    ;
- $BA41 CALL $B148    ;
+ $BA41 CALL $B148    ; Draw tile map on the screen
  $BA44 LD HL,$B1FC   ;
  $BA47 LD ($B1FA),HL ;
  $BA4A LD HL,$BAB2   ;
@@ -6000,7 +6020,7 @@ c$BAD5 CALL $FA28    ;
 ; Used by the routine at #R$B937.
 c$BBAE LD L,(IX+$01) ;
  $BBB1 LD H,(IX+$02) ;
- $BBB4 LD DE,$678E   ;
+ $BBB4 LD DE,$678E   ; Tile screen 1 start address
  $BBB7 ADD HL,DE     ;
  $BBB8 LD (HL),$01   ;
  $BBBA RET           ;
@@ -6009,7 +6029,7 @@ c$BBAE LD L,(IX+$01) ;
 ;
 ; Used by the routines at #R$B724 and #R$B8D0.
 c$BBBB LD HL,($9C42) ;
- $BBBE LD DE,$678E   ;
+ $BBBE LD DE,$678E   ; Tile screen 1 start address
  $BBC1 ADD HL,DE     ;
  $BBC2 LD DE,$0018   ;
  $BBC5 LD A,$01      ;
@@ -6518,31 +6538,31 @@ c$BFD5 LD B,$0A      ;
  $BFDF JR NZ,$C04A   ;
  $BFE1 LD B,$32      ;
  $BFE3 CALL $B4DE    ;
- $BFE6 LD HL,$4000   ;
+ $BFE6 LD HL,$4000   ; Screen start address
  $BFE9 LD DE,$4001   ;
  $BFEC LD BC,$1800   ;
  $BFEF LD (HL),$00   ;
- $BFF1 LDIR          ;
+ $BFF1 LDIR          ; Clear whole screen
  $BFF3 LD BC,$02FF   ;
  $BFF6 LD (HL),$0F   ;
- $BFF8 LDIR          ;
- $BFFA LD HL,$C062   ;
- $BFFD LD DE,$4089   ;
+ $BFF8 LDIR          ; Clear all attributes
+ $BFFA LD HL,$C062   ; Messages address
+ $BFFD LD DE,$4089   ; Screen address
  $C000 LD C,$0E      ;
- $C002 CALL $AED1    ; Print string
+ $C002 CALL $AED1    ; Print string "DISK RETRIEVED"
  $C005 LD DE,$4828   ;
  $C008 LD C,$12      ;
- $C00A CALL $AED1    ; Print string
+ $C00A CALL $AED1    ; Print string "DISK BONUS: $05000"
  $C00D LD DE,$4865   ;
  $C010 LD C,$05      ;
- $C012 CALL $AED1    ; Print string
+ $C012 CALL $AED1    ; Print string "LEVEL"
  $C015 LD DE,$5062   ;
  $C018 LD C,$0D      ;
- $C01A CALL $AED1    ; Print string
+ $C01A CALL $AED1    ; Print string "TOTAL PAY : $"
  $C01D LD DE,$486D   ;
- $C020 LD HL,$C075   ;
+ $C020 LD HL,$C075   ; Messages address
  $C023 LD C,$0D      ;
- $C025 CALL $AED1    ; Print string
+ $C025 CALL $AED1    ; Print string "BONUS: $05000"
  $C028 LD DE,$4875   ;
  $C02B LD HL,$E388   ;
  $C02E LD C,$03      ;
@@ -6569,7 +6589,11 @@ c$BFD5 LD B,$0A      ;
  $C05F JP $BEB3      ;
 
 ; Message at C062
-t$C062 DEFM "DISK RETRIEVEDDISK BONUS: $05000LEVELTOTAL PAY : $"
+t$C062 DEFM "DISK RETRIEVED"
+ $C070 DEFM "DISK "
+ $C075 DEFM "BONUS: $05000"
+ $C082 DEFM "LEVEL"
+ $C087 DEFM "TOTAL PAY : $"
 
 ; Routine at C094
 c$C094 LD HL,$7343   ;
@@ -7191,7 +7215,7 @@ c$C57B LD A,($7239)  ;
  $C583 LD H,$00      ;
  $C585 LD DE,($9C42) ;
  $C589 ADD HL,DE     ;
- $C58A LD DE,$6590   ;
+ $C58A LD DE,$6590   ; Tile screen 0 start address
  $C58D ADD HL,DE     ;
  $C58E LD BC,$0400   ;
  $C591 LD DE,$001E   ;
@@ -7214,7 +7238,7 @@ c$C5A0 JP $C226      ;
 c$C5A3 LD HL,($9C42) ;
  $C5A6 LD DE,$00D3   ;
  $C5A9 ADD HL,DE     ;
- $C5AA LD DE,$6590   ;
+ $C5AA LD DE,$6590   ; Tile screen 0 start address
  $C5AD ADD HL,DE     ;
  $C5AE LD A,($7239)  ;
  $C5B1 LD D,$00      ;
@@ -7861,132 +7885,85 @@ t$D33D DEFM "dfz"
 
 ; Data block at D340
 b$D340 DEFB $04,$CE,$00,$00,$64,$66,$7B,$04
- $D348 DEFB $CE,$00,$00,$64,$66,$D9,$9E,$DF
- $D350 DEFB $66,$81,$22,$9E,$1C
+ $D348 DEFB $CE,$00,$00,$64,$66
 
-; Message at D355
-t$D355 DEFM "ge\""
+; Objects ??, 35 records, 5 bytes each
+b$D34D DEFW $9ED9,$66DF
+ $D351 DEFB $81
+ $D352 DEFW $9E22,$671C
+ $D356 DEFB $65
+ $D357 DEFW $9E22,$672E
+ $D35B DEFB $66
+ $D35C DEFW $990D,$6787
+ $D360 DEFB $67
+ $D361 DEFW $8D5C,$6767
+ $D365 DEFB $68
+ $D366 DEFW $8EE1,$675E
+ $D36A DEFB $69
+ $D36B DEFW $889F,$66DC
+ $D36F DEFB $6A
+ $D370 DEFW $890E,$6699
+ $D374 DEFB $6B
+ $D375 DEFW $8CC8,$6782
+ $D379 DEFB $6C
+ $D37A DEFW $8739,$66AA ; #10
+ $D37E DEFB $6D
+ $D37F DEFW $8799,$6757
+ $D383 DEFB $6E
+ $D384 DEFW $913F,$6782
+ $D388 DEFB $6F
+ $D389 DEFW $8321,$6777
+ $D38D DEFB $70
+ $D38E DEFW $8162,$6782
+ $D392 DEFB $71
+ $D393 DEFW $7EF2,$6788
+ $D397 DEFB $72
+ $D398 DEFW $7F48,$6744
+ $D39C DEFB $73
+ $D39D DEFW $7C6D,$6747
+ $D3A1 DEFB $74
+ $D3A2 DEFW $7A9E,$675D
+ $D3A6 DEFB $75
+ $D3A7 DEFW $7A9E,$6767
+ $D3AB DEFB $76
+ $D3AC DEFW $7A9E,$6769 ; #20
+ $D3B0 DEFB $77
+ $D3B1 DEFW $7AF8,$6785
+ $D3B5 DEFB $78
+ $D3B6 DEFW $7AF8,$6786
+ $D3BA DEFB $79
+ $D3BB DEFW $9376,$673B
+ $D3BF DEFB $7A
+ $D3C0 DEFW $79C6,$6785
+ $D3C4 DEFB $7B
+ $D3C5 DEFW $80F6,$6773
+ $D3C9 DEFB $7C
+ $D3CA DEFW $99A6,$6783
+ $D3CE DEFB $7D
+ $D3CF DEFW $92A7,$675D
+ $D3D3 DEFB $7E
+ $D3D4 DEFW $92EF,$6668
+ $D3D8 DEFB $7F
+ $D3D9 DEFW $9005,$66B5
+ $D3DD DEFB $80
+ $D3DE DEFW $FFFF,$FFFF ; #30
+ $D3E2 DEFB $FF
+ $D3E3 DEFW $FFFF,$FFFF
+ $D3E7 DEFB $FF
+ $D3E8 DEFW $FFFF,$FFFF
+ $D3EC DEFB $4F
+ $D3ED DEFW $5150,$FFFF
+ $D3F1 DEFB $FF
+ $D3F2 DEFW $5352,$FF54
+ $D3F6 DEFB $FF
+ $D3F7 DEFW $55FF,$5756 ; #35
+ $D3FB DEFB $FF
 
-; Data block at D358
-b$D358 DEFB $9E
-
-; Message at D359
-t$D359 DEFM ".gf"
-
-; Data block at D35C
-b$D35C DEFB $0D,$99,$87,$67,$67,$5C,$8D
-
-; Message at D363
-t$D363 DEFM "ggh"
-
-; Data block at D366
-b$D366 DEFB $E1,$8E,$5E,$67,$69,$9F,$88,$DC
- $D36E DEFB $66,$6A,$0E,$89,$99,$66,$6B,$C8
- $D376 DEFB $8C,$82
-
-; Message at D378
-t$D378 DEFM "gl9"
-
-; Data block at D37B
-b$D37B DEFB $87,$AA,$66,$6D,$99,$87
-
-; Message at D381
-t$D381 DEFM "Wgn?"
-
-; Data block at D385
-b$D385 DEFB $91,$82
-
-; Message at D387
-t$D387 DEFM "go!"
-
-; Data block at D38A
-b$D38A DEFB $83
-
-; Message at D38B
-t$D38B DEFM "wgpb"
-
-; Data block at D38F
-b$D38F DEFB $81,$82,$67,$71,$F2,$7E,$88
-
-; Message at D396
-t$D396 DEFM "grH"
-
-; Data block at D399
-b$D399 DEFB $7F
-
-; Message at D39A
-t$D39A DEFM "Dgsm"
-
-; Data block at D39E
-b$D39E DEFB $7C
-
-; Message at D39F
-t$D39F DEFM "Ggt"
-
-; Data block at D3A2
-b$D3A2 DEFB $9E
-
-; Message at D3A3
-t$D3A3 DEFM "z]gu"
-
-; Data block at D3A7
-b$D3A7 DEFB $9E
-
-; Message at D3A8
-t$D3A8 DEFM "zggv"
-
-; Data block at D3AC
-b$D3AC DEFB $9E
-
-; Message at D3AD
-t$D3AD DEFM "zigw"
-
-; Data block at D3B1
-b$D3B1 DEFB $F8,$7A,$85,$67,$78,$F8,$7A,$86
-
-; Message at D3B9
-t$D3B9 DEFM "gyv"
-
-; Data block at D3BC
-b$D3BC DEFB $93
-
-; Message at D3BD
-t$D3BD DEFM ";gz"
-
-; Data block at D3C0
-b$D3C0 DEFB $C6,$79,$85,$67,$7B,$F6,$80,$73
- $D3C8 DEFB $67,$7C,$A6,$99,$83,$67,$7D,$A7
- $D3D0 DEFB $92,$5D,$67,$7E,$EF,$92,$68,$66
- $D3D8 DEFB $7F,$05,$90,$B5,$66,$80,$FF,$FF
- $D3E0 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D3E8 DEFB $FF,$FF,$FF,$FF
-
-; Message at D3EC
-t$D3EC DEFM "OPQ"
-
-; Data block at D3EF
-b$D3EF DEFB $FF,$FF,$FF
-
-; Message at D3F2
-t$D3F2 DEFM "RST"
-
-; Data block at D3F5
-b$D3F5 DEFB $FF,$FF,$FF
-
-; Message at D3F8
-t$D3F8 DEFM "UVW"
-
-; Data block at D3FB
-b$D3FB DEFB $FF,$FF,$FF,$58,$59,$FF,$FF,$FF
- $D403 DEFB $5A,$5B,$5C,$FF,$FF,$FF,$FF,$FF
- $D40B DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D413 DEFB $FF,$FF,$FF
-
-; Message at D416
-t$D416 DEFM "OPQ"
-
-; Data block at D419
-b$D419 DEFB $FF,$FF,$FF
+; Data block at D3FC
+b$D3FC DEFB $FF,$FF,$58,$59,$FF,$FF,$FF,$5A
+ $D404 DEFB $5B,$5C,$FF,$FF,$FF,$FF,$FF,$FF
+ $D40C DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ $D414 DEFB $FF,$FF,$4F,$50,$51,$FF,$FF,$FF
 
 ; Message at D41C
 t$D41C DEFM "RST"
@@ -8652,31 +8629,31 @@ t$E05B DEFM "REDEFINE KEYS"
 ; Used by the routine at #R$DF60.
 c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E09A CALL $DEC1    ;
- $E09D LD HL,$E05B   ;
+ $E09D LD HL,$E05B   ; Redefine keys messages
  $E0A0 LD DE,$402D   ;
  $E0A3 LD C,$0D      ;
- $E0A5 CALL $AED1    ; Print string
+ $E0A5 CALL $AED1    ; Print string "REDEFINE KEYS"
  $E0A8 LD DE,$406D   ;
  $E0AB LD C,$0E      ;
- $E0AD CALL $AED1    ; Print string
+ $E0AD CALL $AED1    ; Print string "PRESS THE KEYS"
  $E0B0 LD DE,$408D   ;
  $E0B3 LD C,$0E      ;
- $E0B5 CALL $AED1    ; Print string
+ $E0B5 CALL $AED1    ; Print string "OF YOUR CHOICE"
  $E0B8 LD DE,$40CF   ;
  $E0BB LD C,$04      ;
- $E0BD CALL $AED1    ; Print string
+ $E0BD CALL $AED1    ; Print string "FIRE"
  $E0C0 LD DE,$40EF   ;
  $E0C3 LD C,$02      ;
- $E0C5 CALL $AED1    ; Print string
+ $E0C5 CALL $AED1    ; Print string "UP"
  $E0C8 LD DE,$480F   ;
  $E0CB LD C,$04      ;
- $E0CD CALL $AED1    ; Print string
+ $E0CD CALL $AED1    ; Print string "DOWN"
  $E0D0 LD DE,$482F   ;
  $E0D3 LD C,$04      ;
- $E0D5 CALL $AED1    ; Print string
+ $E0D5 CALL $AED1    ; Print string "LEFT"
  $E0D8 LD DE,$484F   ;
  $E0DB LD C,$05      ;
- $E0DD CALL $AED1    ; Print string
+ $E0DD CALL $AED1    ; Print string "RIGHT"
  $E0E0 CALL $E04D    ;
  $E0E3 EXX           ;
  $E0E4 LD DE,$58CD   ;
@@ -8782,58 +8759,31 @@ b$E17C DEFB $4D,$30,$EF,$01,$31,$F7,$01,$32
  $E1E4 DEFB $DF,$10,$5A,$FE,$02,$20,$7F,$01
 
 ; Message at E1EC
-t$E1EC DEFM "1ENTER SKILL LEVEL1 TO 9YOUR MISSIONWILL BEEXTREMELY EASY"
+t$E1EC DEFM "1"
+ $E1ED DEFM "ENTER SKILL LEVEL"
+ $E1FE DEFM "1 TO 9"
+ $E204 DEFM "YOUR MISSION"
+ $E210 DEFM "WILL BE"
 
-; Data block at E225
-b$E225 DEFB $8C,$E3
-
-; Message at E227
-t$E227 DEFM "  VERY  EASY  "
-
-; Data block at E235
-b$E235 DEFB $A0,$E3
-
-; Message at E237
-t$E237 DEFM "     EASY     "
-
-; Data block at E245
-b$E245 DEFB $B4,$E3
-
-; Message at E247
-t$E247 DEFM "SLIGHTLY  EASY"
-
-; Data block at E255
-b$E255 DEFB $C8,$E3
-
-; Message at E257
-t$E257 DEFM "   MODERATE   "
-
-; Data block at E265
-b$E265 DEFB $DC,$E3
-
-; Message at E267
-t$E267 DEFM "SLIGHTLY  HARD"
-
-; Data block at E275
-b$E275 DEFB $F0,$E3
-
-; Message at E277
-t$E277 DEFM "     HARD     "
-
-; Data block at E285
-b$E285 DEFB $04,$E4
-
-; Message at E287
-t$E287 DEFM "  VERY HARD   "
-
-; Data block at E295
-b$E295 DEFB $18,$E4
-
-; Message at E297
-t$E297 DEFM "EXTREMELY HARD,"
-
-; Data block at E2A6
-b$E2A6 DEFB $E4
+; Level descriptions and data addresses
+b$E217 DEFM "EXTREMELY EASY"
+ $E225 DEFW $E38C
+ $E227 DEFM "  VERY  EASY  "
+ $E235 DEFW $E3A0
+ $E237 DEFM "     EASY     "
+ $E245 DEFW $E3B4
+ $E247 DEFM "SLIGHTLY  EASY"
+ $E255 DEFW $E3C8
+ $E257 DEFM "   MODERATE   "
+ $E265 DEFW $E3DC
+ $E267 DEFM "SLIGHTLY  HARD"
+ $E275 DEFW $E3F0
+ $E277 DEFM "     HARD     "
+ $E285 DEFW $E404
+ $E287 DEFM "  VERY HARD   "
+ $E295 DEFW $E418
+ $E297 DEFM "EXTREMELY HARD"
+ $E2A5 DEFW $E42C
 
 ; Start Mission
 ;
@@ -8843,10 +8793,10 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2AD LD HL,$E1ED   ;
  $E2B0 LD DE,$406D   ;
  $E2B3 LD C,$11      ;
- $E2B5 CALL $AED1    ; Print string
+ $E2B5 CALL $AED1    ; Print string "ENTER SKILL LEVEL"
  $E2B8 LD DE,$4092   ;
  $E2BB LD C,$06      ;
- $E2BD CALL $AED1    ; Print string
+ $E2BD CALL $AED1    ; Print string "1 TO 9"
  $E2C0 CALL $E04D    ;
  $E2C3 LD HL,$58F3   ;
  $E2C6 LD A,$B1      ;
@@ -8879,23 +8829,23 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2FA LD HL,$E204   ;
  $E2FD LD DE,$406F   ;
  $E300 LD C,$0C      ;
- $E302 CALL $AED1    ; Print string
+ $E302 CALL $AED1    ; Print string "YOUR MISSION"
  $E305 LD DE,$4091   ;
  $E308 LD C,$07      ;
- $E30A CALL $AED1    ; Print string
+ $E30A CALL $AED1    ; Print string "WILL BE"
  $E30D LD A,($E1EC)  ;
  $E310 SUB $31       ;
  $E312 LD L,A        ;
  $E313 LD H,$00      ;
- $E315 ADD HL,HL     ;
+ $E315 ADD HL,HL     ; {* 16
  $E316 ADD HL,HL     ;
  $E317 ADD HL,HL     ;
- $E318 ADD HL,HL     ;
- $E319 LD DE,$E217   ;
+ $E318 ADD HL,HL     ; }
+ $E319 LD DE,$E217   ; Levels data base address
  $E31C ADD HL,DE     ;
  $E31D LD DE,$40EE   ;
  $E320 LD C,$0E      ;
- $E322 CALL $AED1    ; Print string
+ $E322 CALL $AED1    ; Print string - level description
  $E325 LD A,(HL)     ;
  $E326 INC HL        ;
  $E327 LD H,(HL)     ;
@@ -8954,119 +8904,71 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E385 JR NZ,$E374   ;
  $E387 RET           ;
 
-; Message at E388
-t$E388 DEFM " 10"
+; Data block at E388
+b$E388 DEFM " 10",$0A
 
-; Data block at E38B
-b$E38B DEFB $0A,$14,$19
+; Level 1 "EXTREMELY EASY"
+b$E38C DEFB $14,$19,$32
+ $E38F DEFM "9999"
+ $E393 DEFB $00,$01,$01,$01,$01
+ $E398 DEFM " 10"
+ $E39B DEFB $0A,$22,$9E,$2E,$67
 
-; Message at E38E
-t$E38E DEFM "29999"
+; Level 2 "VERY EASY"
+b$E3A0 DEFB $12,$0F,$2D
+ $E3A3 DEFM "9995"
+ $E3A7 DEFB $00,$01,$01,$01,$01
+ $E3AC DEFM " 20"
+ $E3AF DEFB $14,$22,$9E,$2E,$67
 
-; Data block at E393
-b$E393 DEFB $00,$01,$01,$01,$01
+; Level 3 "EASY"
+b$E3B4 DEFB $10,$0C,$28
+ $E3B7 DEFM "9590"
+ $E3BB DEFB $00,$07,$01,$01,$01
+ $E3C0 DEFM " 30"
+ $E3C3 DEFB $1E,$4E,$92,$88,$67
 
-; Message at E398
-t$E398 DEFM " 10"
+; Level 4 "SLIGHTLY EASY"
+b$E3C8 DEFB $0E,$0A,$23
+ $E3CB DEFM "9080"
+ $E3CF DEFB $FF,$01,$01,$01,$09
+ $E3D4 DEFM " 50"
+ $E3D7 DEFB $32,$08,$86,$87,$67
 
-; Data block at E39B
-b$E39B DEFB $0A,$22,$9E,$2E,$67,$12,$0F
+; Level 5 "MODERATE"
+b$E3DC DEFB $0C,$09,$1E
+ $E3DF DEFM "9070"
+ $E3E3 DEFB $FF,$01,$01,$07,$01
+ $E3E8 DEFM " 70"
+ $E3EB DEFB $46,$89,$86,$D2,$66
 
-; Message at E3A2
-t$E3A2 DEFM "-9995"
+; Level 6 "SLIGHTLY  HARD"
+b$E3F0 DEFB $0A,$07,$19
+ $E3F3 DEFM "8560"
+ $E3F7 DEFB $FF,$07,$01,$07,$01
+ $E3FC DEFM "100"
+ $E3FF DEFB $64,$AB,$8B,$80,$67
 
-; Data block at E3A7
-b$E3A7 DEFB $00,$01,$01,$01,$01
+; Level 7 "HARD"
+b$E404 DEFB $08,$06,$14
+ $E407 DEFM "8550"
+ $E40B DEFB $FF,$07,$08,$07,$01
+ $E410 DEFM "130"
+ $E413 DEFB $82,$5C,$8D,$57,$67
 
-; Message at E3AC
-t$E3AC DEFM " 20"
+; Level 8 "VERY HARD"
+b$E418 DEFB $05,$05,$0F
+ $E41B DEFM "8050"
+ $E41F DEFB $FF,$07,$08,$07,$09
+ $E424 DEFM "170"
+ $E427 DEFB $AA,$79,$82,$63,$67
 
-; Data block at E3AF
-b$E3AF DEFB $14,$22,$9E,$2E,$67,$10,$0C
-
-; Message at E3B6
-t$E3B6 DEFM "(9590"
-
-; Data block at E3BB
-b$E3BB DEFB $00,$07,$01,$01,$01
-
-; Message at E3C0
-t$E3C0 DEFM " 30"
-
-; Data block at E3C3
-b$E3C3 DEFB $1E,$4E,$92,$88,$67,$0E,$0A,$23
-
-; Message at E3CB
-t$E3CB DEFM "9080"
-
-; Data block at E3CF
-b$E3CF DEFB $FF,$01,$01,$01,$09
-
-; Message at E3D4
-t$E3D4 DEFM " 502"
-
-; Data block at E3D8
-b$E3D8 DEFB $08,$86,$87,$67,$0C,$09,$1E
-
-; Message at E3DF
-t$E3DF DEFM "9070"
-
-; Data block at E3E3
-b$E3E3 DEFB $FF,$01,$01,$07,$01
-
-; Message at E3E8
-t$E3E8 DEFM " 70F"
-
-; Data block at E3EC
-b$E3EC DEFB $89,$86,$D2,$66,$0A,$07,$19
-
-; Message at E3F3
-t$E3F3 DEFM "8560"
-
-; Data block at E3F7
-b$E3F7 DEFB $FF,$07,$01,$07,$01
-
-; Message at E3FC
-t$E3FC DEFM "100d"
-
-; Data block at E400
-b$E400 DEFB $AB,$8B,$80,$67,$08,$06,$14
-
-; Message at E407
-t$E407 DEFM "8550"
-
-; Data block at E40B
-b$E40B DEFB $FF,$07,$08,$07,$01
-
-; Message at E410
-t$E410 DEFM "130"
-
-; Data block at E413
-b$E413 DEFB $82,$5C,$8D,$57,$67,$05,$05,$0F
-
-; Message at E41B
-t$E41B DEFM "8050"
-
-; Data block at E41F
-b$E41F DEFB $FF,$07,$08,$07,$09
-
-; Message at E424
-t$E424 DEFM "170"
-
-; Data block at E427
-b$E427 DEFB $AA,$79,$82,$63,$67,$02,$03,$0A
-
-; Message at E42F
-t$E42F DEFM "7040"
-
-; Data block at E433
-b$E433 DEFB $FF,$07,$08,$07,$09
-
-; Message at E438
-t$E438 DEFM "250"
-
-; Data block at E43B
-b$E43B DEFB $FA,$08,$86,$87,$67
+; Level 9 "EXTREMELY HARD"
+b$E42C DEFB $02,$03,$0A
+ $E42F DEFM "7040"
+ $E433 DEFB $FF,$07,$08,$07,$09
+ $E438 DEFM "250"
+ $E43B DEFB $FA,$08,$86,$87,$67
 
 ; Routine at E440
 ;

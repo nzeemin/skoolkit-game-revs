@@ -350,7 +350,7 @@ c$734D POP HL        ;
  $7354 LD H,(HL)     ;
  $7355 LD L,A        ;
  $7356 LD (HL),C     ;
- $7357 JR $734A      ;
+ $7357 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #13:
 c$7359 POP HL        ;
@@ -358,11 +358,11 @@ c$7359 POP HL        ;
  $735B LD A,(HL)     ;
  $735C PUSH HL       ;
  $735D OUT ($FE),A   ;
- $735F JR $734A      ;
+ $735F JR $734A      ; {=> #R$B702 Proceed to the next room token
  $7361 POP HL        ;
  $7362 INC HL        ;
  $7363 LD A,(HL)     ;
- $7364 PUSH HL       ;
+ $7364 PUSH HL       ; }
  $7365 LD HL,$6590   ; Tile screen 0 start address
  $7368 LD B,$1E      ;
 *$736A LD (HL),A     ;
@@ -379,7 +379,7 @@ c$7359 POP HL        ;
 *$737B LD (HL),A     ;
  $737C INC HL        ;
  $737D DJNZ $737B    ;
- $737F JR $734A      ;
+ $737F JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #1: Fill to down; params: 4 bytes (count, filler, address)
 c$7381 LD DE,$001E   ;
@@ -398,7 +398,7 @@ c$7381 LD DE,$001E   ;
 *$738F LD (HL),C     ;
  $7390 ADD HL,DE     ;
  $7391 DJNZ $738F    ;
- $7393 JR $734A      ;
+ $7393 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
 c$7395 LD DE,$001F   ;
@@ -438,7 +438,7 @@ c$73A4 LD A,$23      ;
  $73BF POP HL        ;
  $73C0 ADD HL,DE     ;
  $73C1 DJNZ $73B8    ;
- $73C3 JR $734A      ;
+ $73C3 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #7:
 c$73C5 LD A,$23      ;
@@ -834,7 +834,7 @@ c$791B JP $B425      ;
 b$791E DEFW $B446
  $7920 DEFW $C64C
  $7922 DEFW $0000
- $7924 DEFW $79C6
+ $7924 DEFW $79C6                           ; Room to Right
  $7926 DEFW $0000
  $7928 DEFW $0000
  $792A DEFB $04,$0D,$03,$FF,$07,$0A,$79,$66 ; {#HTML[<img
@@ -873,8 +873,8 @@ b$79BE DEFB $FF,$FF,$3E,$3D,$FF,$FF,$FF,$3E
 ; Room 79C6 (next to room with pier)
 b$79C6 DEFW $B452
  $79C8 DEFW $B42E
- $79CA DEFW $791E
- $79CC DEFW $7A17
+ $79CA DEFW $791E                           ; Room to Left
+ $79CC DEFW $7A17                           ; Room to Right
  $79CE DEFW $0000
  $79D0 DEFW $0000
  $79D2 DEFB $04,$0D,$03,$FF,$1E,$0A,$62,$66 ; {#HTML[<img
@@ -890,9 +890,9 @@ b$79C6 DEFW $B452
 ; Room 7A17
 b$7A17 DEFW $B483
  $7A19 DEFW $A142
- $7A1B DEFW $79C6
- $7A1D DEFW $7B90
- $7A1F DEFW $8238
+ $7A1B DEFW $79C6                           ; Room to Left
+ $7A1D DEFW $7B90                           ; Room to Right
+ $7A1F DEFW $8238                           ; Room Up
  $7A21 DEFW $0000
  $7A23 DEFB $04,$02,$08,$FF,$06,$CD,$66,$02 ; {#HTML[<img
  $7A2B DEFB $12,$FF,$70,$67,$03,$FF,$0C,$08 ; src="images/rooms/7A17.png" />]
@@ -911,8 +911,8 @@ b$7A75 DEFW $B41F
  $7A77 DEFW $B422
  $7A79 DEFW $0000
  $7A7B DEFW $0000
- $7A7D DEFW $7BD2
- $7A7F DEFW $7A9E
+ $7A7D DEFW $7BD2                           ; Room Up
+ $7A7F DEFW $7A9E                           ; Room Down
  $7A81 DEFB $04,$FF,$02,$12,$03,$0F,$66,$03 ; {#HTML[<img
  $7A89 DEFB $02,$12,$05,$2D,$66,$0C,$B9,$71 ; src="images/rooms/7A75.png" />]
  $7A91 DEFB $02,$11,$98,$65,$0E,$F1,$C4,$66 ;
@@ -922,8 +922,8 @@ b$7A75 DEFW $B41F
 b$7A9E DEFW $B41F
  $7AA0 DEFW $B422
  $7AA2 DEFW $0000
- $7AA4 DEFW $7ACD
- $7AA6 DEFW $7A75
+ $7AA4 DEFW $7ACD                           ; Room to Right
+ $7AA6 DEFW $7A75                           ; Room Up
  $7AA8 DEFW $0000
  $7AAA DEFB $04,$FF,$02,$1C,$03,$82,$66,$03 ; {#HTML[<img
  $7AB2 DEFB $02,$1C,$06,$A0,$66,$0C,$B9,$71 ; src="images/rooms/7A9E.png" />]
@@ -934,9 +934,9 @@ b$7A9E DEFW $B41F
 ; Room 7ACD
 b$7ACD DEFW $B41F
  $7ACF DEFW $B422
- $7AD1 DEFW $7A9E
- $7AD3 DEFW $7AF8
- $7AD5 DEFW $7B56
+ $7AD1 DEFW $7A9E                           ; Room to Left
+ $7AD3 DEFW $7AF8                           ; Room to Right
+ $7AD5 DEFW $7B56                           ; Room Up
  $7AD7 DEFW $0000
  $7AD9 DEFB $04,$FF,$03,$02,$1E,$06,$80,$66 ; {#HTML[<img
  $7AE1 DEFB $02,$1A,$03,$66,$66,$02,$04,$03 ; src="images/rooms/7ACD.png" />]
@@ -946,9 +946,9 @@ b$7ACD DEFW $B41F
 ; Room 7AF8
 b$7AF8 DEFW $B41F
  $7AFA DEFW $B422
- $7AFC DEFW $7ACD
- $7AFE DEFW $0001
- $7B00 DEFW $7C6D
+ $7AFC DEFW $7ACD                           ; Room to Left
+ $7AFE DEFB $01,$00
+ $7B00 DEFW $7C6D                           ; Room Up
  $7B02 DEFW $0000
  $7B04 DEFB $04,$FF,$03,$02,$1C,$08,$80,$66 ; {#HTML[<img
  $7B0C DEFB $02,$0D,$03,$86,$66,$0C,$B9,$71 ; src="images/rooms/7AF8.png" />]
@@ -967,8 +967,8 @@ b$7B56 DEFW $B41F
  $7B58 DEFW $B422
  $7B5A DEFW $0000
  $7B5C DEFW $0000
- $7B5E DEFW $7D5A
- $7B60 DEFW $7ACD
+ $7B5E DEFW $7D5A                           ; Room Up
+ $7B60 DEFW $7ACD                           ; Room Down
  $7B62 DEFB $04,$FF,$03,$02,$08,$06,$28,$66 ; {Room sequence
  $7B6A DEFB $03,$02,$0A,$05,$33,$66,$02,$08 ;
  $7B72 DEFB $03,$0A,$66,$02,$0A,$03,$15,$66 ;
@@ -979,8 +979,8 @@ b$7B56 DEFW $B41F
 ; Room 7B90
 b$7B90 DEFW $B41F
  $7B92 DEFW $B422
- $7B94 DEFW $7A17
- $7B96 DEFW $7BD2
+ $7B94 DEFW $7A17                           ; Room to Left
+ $7B96 DEFW $7BD2                           ; Room to Right
  $7B98 DEFW $0000
  $7B9A DEFW $0000
  $7B9C DEFB $04,$01,$03,$02,$05,$09,$90,$65 ; {#HTML[<img
@@ -994,10 +994,10 @@ b$7B90 DEFW $B41F
 ; Room 7BD2
 b$7BD2 DEFW $B41F
  $7BD4 DEFW $B422
- $7BD6 DEFW $7B90
- $7BD8 DEFW $7D5A
- $7BDA DEFW $8162
- $7BDC DEFW $7A75
+ $7BD6 DEFW $7B90                           ; Room to Left
+ $7BD8 DEFW $7D5A                           ; Room to Right
+ $7BDA DEFW $8162                           ; Room Up
+ $7BDC DEFW $7A75                           ; Room Down
  $7BDE DEFB $04,$01,$03,$FF,$14,$03,$34,$67 ; {#HTML[<img
  $7BE6 DEFB $02,$0A,$FF,$84,$67,$0E,$FF,$66 ; src="images/rooms/7BD2.png" />]
  $7BEE DEFB $67,$05,$03,$04,$0C,$7C,$B5,$70 ;
@@ -1006,16 +1006,19 @@ b$7BD2 DEFW $B41F
  $7C06 DEFB $03,$84,$79,$3C,$67,$FF,$3F,$40 ;
  $7C0E DEFB $41,$42,$43,$44,$45,$46,$47,$48 ;
  $7C16 DEFB $49,$4A,$4B,$4C,$4D,$45,$46,$47 ;
- $7C1E DEFB $48,$49,$4A,$14,$15,$16,$17,$18 ;
- $7C26 DEFB $19,$1A,$1B,$1C,$06,$09,$ED,$EC ; }
+ $7C1E DEFB $48,$49,$4A                     ; }
+
+; Data block at 7C21
+b$7C21 DEFB $14,$15,$16,$17,$18,$19,$1A,$1B
+ $7C29 DEFB $1C,$06,$09,$ED,$EC
 
 ; Room 7C2E
 b$7C2E DEFW $B458
  $7C30 DEFW $A1A6
- $7C32 DEFW $7D5A
+ $7C32 DEFW $7D5A                           ; Room to Left
  $7C34 DEFW $0000
- $7C36 DEFW $7DA9
- $7C38 DEFW $7C6D
+ $7C36 DEFW $7DA9                           ; Room Up
+ $7C38 DEFW $7C6D                           ; Room Down
  $7C3A DEFB $04,$01,$03,$FF,$1E,$04,$16,$67 ; {#HTML[<img
  $7C42 DEFB $03,$FF,$05,$06,$90,$65,$03,$FF ; src="images/rooms/7C2E.png" />]
  $7C4A DEFB $03,$0D,$AB,$65,$0E,$2A,$3B,$70 ;
@@ -1028,9 +1031,9 @@ b$7C2E DEFW $B458
 b$7C6D DEFW $B41F
  $7C6F DEFW $B422
  $7C71 DEFW $0000
- $7C73 DEFW $7FC4
- $7C75 DEFW $7C2E
- $7C77 DEFW $7AF8
+ $7C73 DEFW $7FC4                           ; Room to Right
+ $7C75 DEFW $7C2E                           ; Room Up
+ $7C77 DEFW $7AF8                           ; Room Down
  $7C79 DEFB $04,$FF,$0C,$B9,$71,$02,$11,$98 ; {#HTML[<img
  $7C81 DEFB $65,$03,$02,$0E,$06,$90,$66,$02 ; src="images/rooms/7C6D.png" />]
  $7C89 DEFB $09,$03,$72,$66,$02,$05,$03,$99 ;
@@ -1040,8 +1043,8 @@ b$7C6D DEFW $B41F
 ; Room 7C9C
 b$7C9C DEFW $C6A5
  $7C9E DEFW $791B
- $7CA0 DEFW $947C
- $7CA2 DEFW $93DF
+ $7CA0 DEFW $947C                           ; Room to Left
+ $7CA2 DEFW $93DF                           ; Room to Right
  $7CA4 DEFW $0000
  $7CA6 DEFW $0000
  $7CA8 DEFB $04,$FF,$02,$1E,$03,$62,$66,$03 ; {#HTML[<img
@@ -1071,10 +1074,10 @@ b$7C9C DEFW $C6A5
 ; Room 7D5A
 b$7D5A DEFW $B483
  $7D5C DEFW $A14A
- $7D5E DEFW $7BD2
- $7D60 DEFW $7C2E
+ $7D5E DEFW $7BD2                           ; Room to Left
+ $7D60 DEFW $7C2E                           ; Room to Right
  $7D62 DEFW $0000
- $7D64 DEFW $7B56
+ $7D64 DEFW $7B56                           ; Room Down
  $7D66 DEFB $04,$01,$03,$FF,$1E,$06,$90,$65 ; {#HTML[<img
  $7D6E DEFB $0C,$2A,$7C,$02,$10,$9B,$65,$02 ; src="images/rooms/7D5A.png" />]
  $7D76 DEFB $02,$EA,$31,$66,$02,$1E,$FF,$70 ;
@@ -1089,9 +1092,9 @@ b$7D5A DEFW $B483
 b$7DA9 DEFW $7918
  $7DAB DEFW $A0E8
  $7DAD DEFW $0000
- $7DAF DEFW $7E8C
- $7DB1 DEFW $7E05
- $7DB3 DEFW $7C2E
+ $7DAF DEFW $7E8C                           ; Room to Right
+ $7DB1 DEFW $7E05                           ; Room Up
+ $7DB3 DEFW $7C2E                           ; Room Down
  $7DB5 DEFB $04,$01,$02,$1E,$FF,$70,$67,$02 ; {#HTML[<img
  $7DBD DEFB $1E,$FF,$90,$65,$03,$FF,$03,$03 ; src="images/rooms/7DA9.png" />]
  $7DC5 DEFB $AE,$65,$01,$0C,$EB,$09,$66,$05 ;
@@ -1107,9 +1110,9 @@ b$7DA9 DEFW $7918
 b$7E05 DEFW $B452
  $7E07 DEFW $A35C
  $7E09 DEFW $0000
- $7E0B DEFW $80A7
- $7E0D DEFW $83ED
- $7E0F DEFW $7DA9
+ $7E0B DEFW $80A7                           ; Room to Right
+ $7E0D DEFW $83ED                           ; Room Up
+ $7E0F DEFW $7DA9                           ; Room Down
  $7E11 DEFB $02,$1E,$FF,$70,$67,$0C,$2C,$7C ; {#HTML[<img
  $7E19 DEFB $02,$01,$79,$67,$0C,$2C,$7C,$02 ; src="images/rooms/7E05.png" />]
  $7E21 DEFB $01,$7C,$67,$0C,$2C,$7C,$02,$01 ;
@@ -1130,48 +1133,48 @@ b$7E05 DEFW $B452
 ; Room 7E8C
 b$7E8C DEFW $7918
  $7E8E DEFW $A0ED
- $7E90 DEFW $7DA9
- $7E92 DEFW $7EF2
+ $7E90 DEFW $7DA9                           ; Room to Left
+ $7E92 DEFW $7EF2                           ; Room to Right
  $7E94 DEFW $0000
- $7E96 DEFW $7F48
- $7E98 DEFB $04,$01,$02,$1E,$FF,$90,$65,$02
- $7EA0 DEFB $1E,$FF,$70,$67,$0C,$2C,$7C,$02
- $7EA8 DEFB $01,$72,$67,$0C,$2C,$7C,$02,$01
- $7EB0 DEFB $84,$67,$05,$03,$03,$18,$7C,$0C
- $7EB8 DEFB $71,$05,$03,$04,$0C,$7C,$F2,$70
- $7EC0 DEFB $05,$04,$03,$7B,$7E,$11,$71,$05
- $7EC8 DEFB $04,$03,$7B,$7E,$15,$71,$05,$04
- $7ED0 DEFB $03,$7B,$7E,$BE,$70,$05,$03,$03
- $7ED8 DEFB $A0,$71,$BA,$70,$05,$03,$03,$A0
- $7EE0 DEFB $71,$1B,$71,$05,$03,$03,$18,$7C
- $7EE8 DEFB $22,$71,$05,$03,$04,$0C,$7C,$06
- $7EF0 DEFB $71,$FF
+ $7E96 DEFW $7F48                           ; Room Down
+ $7E98 DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {Room sequence
+ $7EA0 DEFB $1E,$FF,$70,$67,$0C,$2C,$7C,$02 ;
+ $7EA8 DEFB $01,$72,$67,$0C,$2C,$7C,$02,$01 ;
+ $7EB0 DEFB $84,$67,$05,$03,$03,$18,$7C,$0C ;
+ $7EB8 DEFB $71,$05,$03,$04,$0C,$7C,$F2,$70 ;
+ $7EC0 DEFB $05,$04,$03,$7B,$7E,$11,$71,$05 ;
+ $7EC8 DEFB $04,$03,$7B,$7E,$15,$71,$05,$04 ;
+ $7ED0 DEFB $03,$7B,$7E,$BE,$70,$05,$03,$03 ;
+ $7ED8 DEFB $A0,$71,$BA,$70,$05,$03,$03,$A0 ;
+ $7EE0 DEFB $71,$1B,$71,$05,$03,$03,$18,$7C ;
+ $7EE8 DEFB $22,$71,$05,$03,$04,$0C,$7C,$06 ;
+ $7EF0 DEFB $71,$FF                         ; }
 
 ; Room 7EF2
 b$7EF2 DEFW $B47A
  $7EF4 DEFW $A154
- $7EF6 DEFW $7E8C
+ $7EF6 DEFW $7E8C                           ; Room to Left
  $7EF8 DEFW $0000
  $7EFA DEFW $0000
  $7EFC DEFW $0000
- $7EFE DEFB $04,$01,$02,$1E,$FF,$90,$65,$02
- $7F06 DEFB $1E,$FF,$70,$67,$01,$0F,$EB,$CA
- $7F0E DEFB $65,$05,$04,$03,$7B,$7E,$63,$70
- $7F16 DEFB $05,$04,$03,$7B,$7E,$BA,$70,$05
- $7F1E DEFB $04,$03,$7B,$7E,$17,$71,$05,$03
- $7F26 DEFB $03,$A0,$71,$C0,$70,$05,$03,$03
- $7F2E DEFB $A0,$71,$0E,$71,$05,$03,$03,$A0
- $7F36 DEFB $71,$12,$71,$05,$03,$03,$A0,$71
- $7F3E DEFB $1C,$71,$05,$03,$03,$A0,$71,$23
- $7F46 DEFB $71,$FF
+ $7EFE DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {Room sequence
+ $7F06 DEFB $1E,$FF,$70,$67,$01,$0F,$EB,$CA ;
+ $7F0E DEFB $65,$05,$04,$03,$7B,$7E,$63,$70 ;
+ $7F16 DEFB $05,$04,$03,$7B,$7E,$BA,$70,$05 ;
+ $7F1E DEFB $04,$03,$7B,$7E,$17,$71,$05,$03 ;
+ $7F26 DEFB $03,$A0,$71,$C0,$70,$05,$03,$03 ;
+ $7F2E DEFB $A0,$71,$0E,$71,$05,$03,$03,$A0 ;
+ $7F36 DEFB $71,$12,$71,$05,$03,$03,$A0,$71 ;
+ $7F3E DEFB $1C,$71,$05,$03,$03,$A0,$71,$23 ;
+ $7F46 DEFB $71,$FF                         ; }
 
 ; Room 7F48
 b$7F48 DEFW $B483
  $7F4A DEFW $A14F
  $7F4C DEFW $0000
- $7F4E DEFW $7F9C
- $7F50 DEFW $7E8C
- $7F52 DEFW $7FC4
+ $7F4E DEFW $7F9C                           ; Room to Right
+ $7F50 DEFW $7E8C                           ; Room Up
+ $7F52 DEFW $7FC4                           ; Room Down
  $7F54 DEFB $04,$FF,$03,$01,$08,$0C,$B2,$65 ; {#HTML[<img
  $7F5C DEFB $03,$01,$12,$07,$6E,$66,$02,$04 ; src="images/rooms/7F48.png" />]
  $7F64 DEFB $01,$1E,$67,$07,$01,$05,$D8,$65 ;
@@ -1185,10 +1188,10 @@ b$7F48 DEFW $B483
 ; Room 7F9C
 b$7F9C DEFW $B458
  $7F9E DEFW $A1B5
- $7FA0 DEFW $7F48
+ $7FA0 DEFW $7F48                           ; Room to Left
  $7FA2 DEFW $0000
  $7FA4 DEFW $0000
- $7FA6 DEFW $8008
+ $7FA6 DEFW $8008                           ; Room Down
  $7FA8 DEFB $04,$FF,$03,$01,$1B,$07,$62,$66 ; {#HTML[<img
  $7FB0 DEFB $01,$01,$E4,$46,$66,$05,$02,$03 ; src="images/rooms/7F9C.png" />]
  $7FB8 DEFB $84,$79,$38,$67,$05,$02,$03,$84 ;
@@ -1197,9 +1200,9 @@ b$7F9C DEFW $B458
 ; Room 7FC4
 b$7FC4 DEFW $B41F
  $7FC6 DEFW $B422
- $7FC8 DEFW $7C6D
- $7FCA DEFW $8008
- $7FCC DEFW $7F48
+ $7FC8 DEFW $7C6D                           ; Room to Left
+ $7FCA DEFW $8008                           ; Room to Right
+ $7FCC DEFW $7F48                           ; Room Up
  $7FCE DEFW $0000
  $7FD0 DEFB $04,$FF,$03,$02,$0D,$06,$80,$66 ; {#HTML[<img
  $7FD8 DEFB $02,$04,$03,$80,$66,$02,$09,$03 ; src="images/rooms/7FC4.png" />]
@@ -1212,10 +1215,10 @@ b$7FC4 DEFW $B41F
 ; Room 8008
 b$8008 DEFW $B41F
  $800A DEFW $B422
- $800C DEFW $7FC4
+ $800C DEFW $7FC4                           ; Room to Left
  $800E DEFW $0000
- $8010 DEFW $7F9C
- $8012 DEFW $8076
+ $8010 DEFW $7F9C                           ; Room Up
+ $8012 DEFW $8076                           ; Room Down
  $8014 DEFB $04,$FF,$02,$0D,$03,$26,$66,$02 ; {#HTML[<img
  $801C DEFB $0B,$03,$36,$66,$03,$02,$0D,$05 ; src="images/rooms/8008.png" />]
  $8024 DEFB $44,$66,$03,$02,$0B,$06,$54,$66 ;
@@ -1235,8 +1238,8 @@ b$8076 DEFW $B41F
  $8078 DEFW $B422
  $807A DEFW $0000
  $807C DEFW $0000
- $807E DEFW $8008
- $8080 DEFW $8384
+ $807E DEFW $8008                           ; Room Up
+ $8080 DEFW $8384                           ; Room Down
  $8082 DEFB $04,$FF,$01,$11,$FD,$9A,$65,$01 ; {#HTML[<img
  $808A DEFB $11,$FD,$9E,$65,$01,$11,$FD,$A2 ; src="images/rooms/8076.png" />]
  $8092 DEFB $65,$01,$11,$FD,$A9,$65,$0C,$B9 ;
@@ -1246,87 +1249,87 @@ b$8076 DEFW $B41F
 ; Room 80A7
 b$80A7 DEFW $B458
  $80A9 DEFW $A1CB
- $80AB DEFW $7E05
- $80AD DEFW $80F6
+ $80AB DEFW $7E05                           ; Room to Left
+ $80AD DEFW $80F6                           ; Room to Right
  $80AF DEFW $0000
  $80B1 DEFW $0000
- $80B3 DEFB $02,$1E,$FF,$90,$65,$02,$1E,$FF
- $80BB DEFB $70,$67,$05,$03,$04,$0C,$7C,$F0
- $80C3 DEFB $70,$05,$03,$03,$21,$7C,$13,$71
- $80CB DEFB $05,$03,$03,$A0,$71,$17,$71,$05
- $80D3 DEFB $04,$03,$7B,$7E,$1C,$71,$05,$03
- $80DB DEFB $03,$21,$7C,$C3,$70,$05,$03,$03
- $80E3 DEFB $21,$7C,$C9,$70,$05,$03,$03,$21
- $80EB DEFB $7C,$22,$71,$05,$03,$03,$21,$7C
- $80F3 DEFB $25,$71,$FF
+ $80B3 DEFB $02,$1E,$FF,$90,$65,$02,$1E,$FF ; {Room sequence
+ $80BB DEFB $70,$67,$05,$03,$04,$0C,$7C,$F0 ;
+ $80C3 DEFB $70,$05,$03,$03,$21,$7C,$13,$71 ;
+ $80CB DEFB $05,$03,$03,$A0,$71,$17,$71,$05 ;
+ $80D3 DEFB $04,$03,$7B,$7E,$1C,$71,$05,$03 ;
+ $80DB DEFB $03,$21,$7C,$C3,$70,$05,$03,$03 ;
+ $80E3 DEFB $21,$7C,$C9,$70,$05,$03,$03,$21 ;
+ $80EB DEFB $7C,$22,$71,$05,$03,$03,$21,$7C ;
+ $80F3 DEFB $25,$71,$FF                     ; }
 
 ; Room 80F6
 b$80F6 DEFW $B452
  $80F8 DEFW $A38E
- $80FA DEFW $80A7
+ $80FA DEFW $80A7                           ; Room to Left
  $80FC DEFW $0000
  $80FE DEFW $0000
  $8100 DEFW $0000
- $8102 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$02
- $810A DEFB $10,$AC,$65,$05,$02,$04,$BB,$71
- $8112 DEFB $F1,$70,$05,$03,$03,$21,$7C,$BA
- $811A DEFB $70,$05,$03,$03,$21,$7C,$12,$71
- $8122 DEFB $05,$03,$03,$21,$7C,$15,$71,$05
- $812A DEFB $03,$03,$21,$7C,$6F,$70,$05,$03
- $8132 DEFB $03,$21,$7C,$C7,$70,$05,$03,$03
- $813A DEFB $21,$7C,$CB,$70,$05,$03,$03,$21
- $8142 DEFB $7C,$1F,$71,$05,$03,$03,$21,$7C
- $814A DEFB $22,$71,$05,$03,$03,$21,$7C,$25
- $8152 DEFB $71,$05,$04,$03,$7B,$7E,$1A,$71
- $815A DEFB $05,$02,$01,$8A,$7E,$55,$71,$FF
+ $8102 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$02 ; {Room sequence
+ $810A DEFB $10,$AC,$65,$05,$02,$04,$BB,$71 ;
+ $8112 DEFB $F1,$70,$05,$03,$03,$21,$7C,$BA ;
+ $811A DEFB $70,$05,$03,$03,$21,$7C,$12,$71 ;
+ $8122 DEFB $05,$03,$03,$21,$7C,$15,$71,$05 ;
+ $812A DEFB $03,$03,$21,$7C,$6F,$70,$05,$03 ;
+ $8132 DEFB $03,$21,$7C,$C7,$70,$05,$03,$03 ;
+ $813A DEFB $21,$7C,$CB,$70,$05,$03,$03,$21 ;
+ $8142 DEFB $7C,$1F,$71,$05,$03,$03,$21,$7C ;
+ $814A DEFB $22,$71,$05,$03,$03,$21,$7C,$25 ;
+ $8152 DEFB $71,$05,$04,$03,$7B,$7E,$1A,$71 ;
+ $815A DEFB $05,$02,$01,$8A,$7E,$55,$71,$FF ; }
 
 ; Room 8162
 b$8162 DEFW $B458
  $8164 DEFW $A1C0
- $8166 DEFW $81E5
+ $8166 DEFW $81E5                           ; Room to Left
  $8168 DEFW $0000
- $816A DEFW $8321
- $816C DEFW $7BD2
- $816E DEFB $03,$01,$1C,$08,$80,$66,$02,$1C
- $8176 DEFB $FF,$62,$66,$02,$1E,$FF,$70,$67
- $817E DEFB $02,$0D,$FF,$90,$65,$02,$07,$FF
- $8186 DEFB $A7,$65,$0C,$E3,$81,$02,$0F,$CA
- $818E DEFB $65,$0C,$48,$73,$02,$07,$A0,$65
- $8196 DEFB $05,$02,$04,$BB,$71,$E7,$6F,$05
- $819E DEFB $03,$04,$0C,$7C,$EF,$70,$05,$03
- $81A6 DEFB $03,$18,$7C,$10,$71,$05,$03,$03
- $81AE DEFB $18,$7C,$1D,$71,$05,$03,$04,$0C
- $81B6 DEFB $7C,$04,$71,$05,$03,$03,$18,$7C
- $81BE DEFB $25,$71,$0E,$2A,$A8,$6F,$01,$05
- $81C6 DEFB $2B,$C6,$6F,$0E,$2A,$AF,$6F,$01
- $81CE DEFB $05,$2B,$CD,$6F,$0E,$2A,$BC,$6F
- $81D6 DEFB $01,$05,$2B,$DA,$6F,$0C,$2C,$7C
- $81DE DEFB $02,$01,$7E,$67,$FF,$FF,$FF
+ $816A DEFW $8321                           ; Room Up
+ $816C DEFW $7BD2                           ; Room Down
+ $816E DEFB $03,$01,$1C,$08,$80,$66,$02,$1C ; {Room sequence
+ $8176 DEFB $FF,$62,$66,$02,$1E,$FF,$70,$67 ;
+ $817E DEFB $02,$0D,$FF,$90,$65,$02,$07,$FF ;
+ $8186 DEFB $A7,$65,$0C,$E3,$81,$02,$0F,$CA ;
+ $818E DEFB $65,$0C,$48,$73,$02,$07,$A0,$65 ;
+ $8196 DEFB $05,$02,$04,$BB,$71,$E7,$6F,$05 ;
+ $819E DEFB $03,$04,$0C,$7C,$EF,$70,$05,$03 ;
+ $81A6 DEFB $03,$18,$7C,$10,$71,$05,$03,$03 ;
+ $81AE DEFB $18,$7C,$1D,$71,$05,$03,$04,$0C ;
+ $81B6 DEFB $7C,$04,$71,$05,$03,$03,$18,$7C ;
+ $81BE DEFB $25,$71,$0E,$2A,$A8,$6F,$01,$05 ;
+ $81C6 DEFB $2B,$C6,$6F,$0E,$2A,$AF,$6F,$01 ;
+ $81CE DEFB $05,$2B,$CD,$6F,$0E,$2A,$BC,$6F ;
+ $81D6 DEFB $01,$05,$2B,$DA,$6F,$0C,$2C,$7C ;
+ $81DE DEFB $02,$01,$7E,$67,$FF,$FF,$FF     ; }
 
 ; Room 81E5
 b$81E5 DEFW $B452
  $81E7 DEFW $A353
- $81E9 DEFW $8238
- $81EB DEFW $8162
+ $81E9 DEFW $8238                           ; Room to Left
+ $81EB DEFW $8162                           ; Room to Right
  $81ED DEFW $0000
  $81EF DEFW $0000
- $81F1 DEFB $03,$FF,$1E,$09,$80,$66,$03,$01
- $81F9 DEFB $1C,$07,$A0,$66,$02,$05,$00,$80
- $8201 DEFB $66,$02,$06,$FF,$9E,$66,$02,$0C
- $8209 DEFB $FF,$90,$65,$02,$0B,$FF,$A3,$65
- $8211 DEFB $06,$FF,$02,$AE,$65,$0E,$2A,$AC
- $8219 DEFB $6F,$0E,$2A,$B8,$6F,$01,$06,$2B
- $8221 DEFB $CA,$6F,$01,$05,$2B,$D6,$6F,$02
- $8229 DEFB $0A,$01,$94,$66,$02,$18,$01,$A4
- $8231 DEFB $66,$02,$0B,$FF,$75,$66,$FF
+ $81F1 DEFB $03,$FF,$1E,$09,$80,$66,$03,$01 ; {Room sequence
+ $81F9 DEFB $1C,$07,$A0,$66,$02,$05,$00,$80 ;
+ $8201 DEFB $66,$02,$06,$FF,$9E,$66,$02,$0C ;
+ $8209 DEFB $FF,$90,$65,$02,$0B,$FF,$A3,$65 ;
+ $8211 DEFB $06,$FF,$02,$AE,$65,$0E,$2A,$AC ;
+ $8219 DEFB $6F,$0E,$2A,$B8,$6F,$01,$06,$2B ;
+ $8221 DEFB $CA,$6F,$01,$05,$2B,$D6,$6F,$02 ;
+ $8229 DEFB $0A,$01,$94,$66,$02,$18,$01,$A4 ;
+ $8231 DEFB $66,$02,$0B,$FF,$75,$66,$FF     ; }
 
 ; Room 8238
 b$8238 DEFW $B41F
  $823A DEFW $B422
  $823C DEFW $0000
- $823E DEFW $81E5
- $8240 DEFW $8279
- $8242 DEFW $7A17
+ $823E DEFW $81E5                           ; Room to Right
+ $8240 DEFW $8279                           ; Room Up
+ $8242 DEFW $7A17                           ; Room Down
  $8244 DEFB $04,$FF,$03,$00,$1C,$06,$EC,$65 ; {#HTML[<img
  $824C DEFB $02,$0E,$00,$A0,$66,$0C,$B9,$71 ; src="images/rooms/8238.png" />]
  $8254 DEFB $02,$11,$98,$65,$0C,$48,$73,$02 ;
@@ -1339,9 +1342,9 @@ b$8238 DEFW $B41F
 b$8279 DEFW $B41F
  $827B DEFW $B422
  $827D DEFW $0000
- $827F DEFW $82DD
+ $827F DEFW $82DD                           ; Room to Right
  $8281 DEFW $0000
- $8283 DEFW $8238
+ $8283 DEFW $8238                           ; Room Down
  $8285 DEFB $0C,$E3,$81,$02,$11,$90,$65,$07 ; {#HTML[<img
  $828D DEFB $FF,$04,$BE,$66,$02,$0F,$FF,$34 ; src="images/rooms/8279.png" />]
  $8295 DEFB $67,$02,$15,$FF,$52,$67,$02,$1E ;
@@ -1357,10 +1360,10 @@ b$8279 DEFW $B41F
 ; Room 82DD
 b$82DD DEFW $B41F
  $82DF DEFW $B422
- $82E1 DEFW $8279
- $82E3 DEFW $8321
+ $82E1 DEFW $8279                           ; Room to Left
+ $82E3 DEFW $8321                           ; Room to Right
  $82E5 DEFW $0000
- $82E7 DEFW $81E5
+ $82E7 DEFW $81E5                           ; Room Down
  $82E9 DEFB $02,$0D,$FF,$70,$67,$02,$07,$FF ; {#HTML[<img
  $82F1 DEFB $58,$67,$02,$06,$FF,$64,$67,$02 ; src="images/rooms/82DD.png" />]
  $82F9 DEFB $0C,$FF,$82,$67,$05,$03,$03,$21 ;
@@ -1372,10 +1375,10 @@ b$82DD DEFW $B41F
 ; Room 8321
 b$8321 DEFW $B41F
  $8323 DEFW $B422
- $8325 DEFW $82DD
+ $8325 DEFW $82DD                           ; Room to Left
  $8327 DEFW $0000
- $8329 DEFW $844E
- $832B DEFW $8162
+ $8329 DEFW $844E                           ; Room Up
+ $832B DEFW $8162                           ; Room Down
  $832D DEFB $02,$1E,$FF,$70,$67,$05,$02,$01 ; {#HTML[<img
  $8335 DEFB $84,$79,$80,$67,$03,$FF,$03,$04 ; src="images/rooms/8321.png" />]
  $833D DEFB $AB,$65,$01,$0C,$EB,$24,$66,$05 ;
@@ -1393,8 +1396,8 @@ b$8384 DEFW $B41F
  $8386 DEFW $B422
  $8388 DEFW $0000
  $838A DEFW $0000
- $838C DEFW $8076
- $838E DEFW $9376
+ $838C DEFW $8076                           ; Room Up
+ $838E DEFW $9376                           ; Room Down
  $8390 DEFB $04,$FF,$03,$02,$0F,$07,$28,$66 ; {#HTML[<img
  $8398 DEFB $02,$0F,$03,$0A,$66,$03,$02,$06 ; src="images/rooms/8384.png" />]
  $83A0 DEFB $07,$3C,$66,$02,$06,$03,$1E,$66 ;
@@ -1412,9 +1415,9 @@ b$8384 DEFW $B41F
 b$83ED DEFW $B452
  $83EF DEFW $A361
  $83F1 DEFW $0000
- $83F3 DEFW $920A
- $83F5 DEFW $913F
- $83F7 DEFW $7E05
+ $83F3 DEFW $920A                           ; Room to Right
+ $83F5 DEFW $913F                           ; Room Up
+ $83F7 DEFW $7E05                           ; Room Down
  $83F9 DEFB $02,$1E,$FF,$70,$67,$0C,$48,$73 ; {#HTML[<img
  $8401 DEFB $02,$10,$99,$65,$05,$02,$01,$84 ; src="images/rooms/83ED.png" />]
  $8409 DEFB $79,$79,$67,$03,$FF,$03,$04,$90 ;
@@ -1430,10 +1433,10 @@ b$83ED DEFW $B452
 ; Room 844E
 b$844E DEFW $B452
  $8450 DEFW $A37F
- $8452 DEFW $84A8
+ $8452 DEFW $84A8                           ; Room to Left
  $8454 DEFW $0000
  $8456 DEFW $0000
- $8458 DEFW $8321
+ $8458 DEFW $8321                           ; Room Down
  $845A DEFB $02,$1E,$FF,$70,$67,$02,$06,$FF ; {#HTML[<img
  $8462 DEFB $52,$67,$03,$FF,$03,$04,$AB,$65 ; src="images/rooms/844E.png" />]
  $846A DEFB $01,$0C,$EB,$24,$66,$05,$02,$01 ;
@@ -1448,10 +1451,10 @@ b$844E DEFW $B452
 ; Room 84A8
 b$84A8 DEFW $B41F
  $84AA DEFW $F973
- $84AC DEFW $84EE
- $84AE DEFW $844E
+ $84AC DEFW $84EE                           ; Room to Left
+ $84AE DEFW $844E                           ; Room to Right
  $84B0 DEFW $0000
- $84B2 DEFW $82DD
+ $84B2 DEFW $82DD                           ; Room Down
  $84B4 DEFB $03,$FF,$0D,$02,$52,$67,$03,$FF ; {#HTML[<img
  $84BC DEFB $0C,$02,$64,$67,$02,$03,$FF,$BC ; src="images/rooms/84A8.png" />]
  $84C4 DEFB $65,$02,$0D,$FF,$9A,$65,$00,$F0 ;
@@ -1465,8 +1468,8 @@ b$84A8 DEFW $B41F
 b$84EE DEFW $7918
  $84F0 DEFW $A10B
  $84F2 DEFW $0000
- $84F4 DEFW $84A8
- $84F6 DEFW $8526
+ $84F4 DEFW $84A8                           ; Room to Right
+ $84F6 DEFW $8526                           ; Room Up
  $84F8 DEFW $0000
  $84FA DEFB $03,$FF,$02,$0F,$90,$65,$03,$FF ; {#HTML[<img
  $8502 DEFB $1E,$02,$52,$67,$0C,$48,$73,$02 ; src="images/rooms/84EE.png" />]
@@ -1479,9 +1482,9 @@ b$84EE DEFW $7918
 b$8526 DEFW $B483
  $8528 DEFW $A179
  $852A DEFW $0000
- $852C DEFW $858F
- $852E DEFW $8608
- $8530 DEFW $84EE
+ $852C DEFW $858F                           ; Room to Right
+ $852E DEFW $8608                           ; Room Up
+ $8530 DEFW $84EE                           ; Room Down
  $8532 DEFB $0C,$E3,$81,$02,$10,$90,$65,$0C ; {#HTML[<img
  $853A DEFB $48,$73,$02,$10,$98,$65,$02,$1E ; src="images/rooms/8526.png" />]
  $8542 DEFB $FF,$70,$67,$05,$02,$01,$84,$79 ;
@@ -1498,8 +1501,8 @@ b$8526 DEFW $B483
 ; Room 858F
 b$858F DEFW $7918
  $8591 DEFW $A106
- $8593 DEFW $8526
- $8595 DEFW $85BD
+ $8593 DEFW $8526                           ; Room to Left
+ $8595 DEFW $85BD                           ; Room to Right
  $8597 DEFW $0000
  $8599 DEFW $0000
  $859B DEFB $02,$1E,$FF,$70,$67,$05,$05,$04 ; {#HTML[<img
@@ -1511,25 +1514,25 @@ b$858F DEFW $7918
 ; Room 85BD
 b$85BD DEFW $B41F
  $85BF DEFW $B422
- $85C1 DEFW $858F
+ $85C1 DEFW $858F                           ; Room to Left
  $85C3 DEFW $0000
- $85C5 DEFW $8689
+ $85C5 DEFW $8689                           ; Room Up
  $85C7 DEFW $0000
- $85C9 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$03
- $85D1 DEFB $04,$AB,$65,$01,$0C,$EB,$24,$66
- $85D9 DEFB $0C,$48,$73,$02,$10,$9D,$65,$00
- $85E1 DEFB $04,$70,$00,$5D,$70,$00,$60,$70
- $85E9 DEFB $00,$B5,$70,$00,$B8,$70,$00,$BB
- $85F1 DEFB $70,$00,$0E,$71,$00,$11,$71,$00
- $85F9 DEFB $14,$71,$00,$1D,$71,$00,$21,$71
- $8601 DEFB $00,$24,$71,$00,$17
+ $85C9 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$03 ; {#HTML[<img
+ $85D1 DEFB $04,$AB,$65,$01,$0C,$EB,$24,$66 ; src="images/rooms/85BD.png" />]
+ $85D9 DEFB $0C,$48,$73,$02,$10,$9D,$65,$00 ;
+ $85E1 DEFB $04,$70,$00,$5D,$70,$00,$60,$70 ;
+ $85E9 DEFB $00,$B5,$70,$00,$B8,$70,$00,$BB ;
+ $85F1 DEFB $70,$00,$0E,$71,$00,$11,$71,$00 ;
+ $85F9 DEFB $14,$71,$00,$1D,$71,$00,$21,$71 ;
+ $8601 DEFB $00,$24,$71,$00,$17             ; }
 
 ; Room 8606
 b$8606 DEFW $FF71
  $8608 DEFW $B452
- $860A DEFW $A37A
+ $860A DEFW $A37A                           ; Room to Left
  $860C DEFW $0000
- $860E DEFW $86FD
+ $860E DEFW $86FD                           ; Room Up
  $8610 DEFW $0000
  $8612 DEFB $26,$85,$02,$1E,$FF,$70,$67,$02 ; {#HTML[<img
  $861A DEFB $1C,$FF,$82,$66,$02,$0C,$FF,$74 ; src="images/rooms/8606.png" />]
@@ -1550,10 +1553,10 @@ b$8606 DEFW $FF71
 ; Room 8689
 b$8689 DEFW $B41F
  $868B DEFW $B422
- $868D DEFW $86FD
+ $868D DEFW $86FD                           ; Room to Left
  $868F DEFW $0000
  $8691 DEFW $0000
- $8693 DEFW $85BD
+ $8693 DEFW $85BD                           ; Room Down
  $8695 DEFB $02,$39,$FF,$BC,$66,$03,$FF,$03 ; {#HTML[<img
  $869D DEFB $11,$AB,$65,$05,$02,$02,$84,$79 ; src="images/rooms/8689.png" />]
  $86A5 DEFB $C9,$66,$0C,$48,$73,$02,$05,$05 ;
@@ -1571,24 +1574,24 @@ b$8689 DEFW $B41F
 ; Room 86FD
 b$86FD DEFW $B41F
  $86FF DEFW $B422
- $8701 DEFW $8608
- $8703 DEFW $8689
- $8705 DEFW $8739
+ $8701 DEFW $8608                           ; Room to Left
+ $8703 DEFW $8689                           ; Room to Right
+ $8705 DEFW $8739                           ; Room Up
  $8707 DEFW $0000
- $8709 DEFB $06,$FF,$04,$16,$67,$02,$41,$FF
- $8711 DEFB $BC,$66,$07,$FF,$02,$87,$66,$03
- $8719 DEFB $FF,$07,$03,$62,$66,$0C,$48,$73
- $8721 DEFB $02,$07,$93,$65,$05,$04,$07,$AA
- $8729 DEFB $79,$E6,$6F,$00,$0E,$70,$00,$66
- $8731 DEFB $70,$00,$69,$70,$00,$6F,$70,$FF
+ $8709 DEFB $06,$FF,$04,$16,$67,$02,$41,$FF ; {#HTML[<img
+ $8711 DEFB $BC,$66,$07,$FF,$02,$87,$66,$03 ; src="images/rooms/86FD.png" />]
+ $8719 DEFB $FF,$07,$03,$62,$66,$0C,$48,$73 ;
+ $8721 DEFB $02,$07,$93,$65,$05,$04,$07,$AA ;
+ $8729 DEFB $79,$E6,$6F,$00,$0E,$70,$00,$66 ;
+ $8731 DEFB $70,$00,$69,$70,$00,$6F,$70,$FF ; }
 
 ; Room 8739
 b$8739 DEFW $7918
  $873B DEFW $A101
- $873D DEFW $8799
- $873F DEFW $8802
+ $873D DEFW $8799                           ; Room to Left
+ $873F DEFW $8802                           ; Room to Right
  $8741 DEFW $0000
- $8743 DEFW $86FD
+ $8743 DEFW $86FD                           ; Room Down
  $8745 DEFB $01,$09,$3A,$94,$65,$01,$09,$3A ; {#HTML[<img
  $874D DEFB $9E,$65,$01,$09,$3A,$A1,$65,$01 ; src="images/rooms/8739.png" />]
  $8755 DEFB $05,$3A,$A8,$65,$02,$78,$FF,$9E ;
@@ -1605,7 +1608,7 @@ b$8739 DEFW $7918
 b$8799 DEFW $B41F
  $879B DEFW $B422
  $879D DEFW $0000
- $879F DEFW $8739
+ $879F DEFW $8739                           ; Room to Right
  $87A1 DEFW $0000
  $87A3 DEFW $0000
  $87A5 DEFB $01,$0F,$3A,$98,$65,$01,$0B,$3A ; {#HTML[<img
@@ -1624,9 +1627,9 @@ b$8799 DEFW $B41F
 ; Room 8802
 b$8802 DEFW $B452
  $8804 DEFW $A375
- $8806 DEFW $8739
+ $8806 DEFW $8739                           ; Room to Left
  $8808 DEFW $0000
- $880A DEFW $8834
+ $880A DEFW $8834                           ; Room Up
  $880C DEFW $0000
  $880E DEFB $01,$09,$3A,$9D,$65,$01,$08,$3A ; {#HTML[<img
  $8816 DEFB $A2,$65,$03,$FF,$03,$11,$AB,$65 ; src="images/rooms/8802.png" />]
@@ -1637,10 +1640,10 @@ b$8802 DEFW $B452
 ; Room 8834
 b$8834 DEFW $B41F
  $8836 DEFW $B422
- $8838 DEFW $889F
- $883A DEFW $890E
- $883C DEFW $8A81
- $883E DEFW $8802
+ $8838 DEFW $889F                           ; Room to Left
+ $883A DEFW $890E                           ; Room to Right
+ $883C DEFW $8A81                           ; Room Up
+ $883E DEFW $8802                           ; Room Down
  $8840 DEFB $01,$0B,$3A,$EC,$65,$01,$0E,$3A ; {#HTML[<img
  $8848 DEFB $97,$65,$01,$10,$3A,$9D,$65,$01 ; src="images/rooms/8834.png" />]
  $8850 DEFB $11,$3A,$A2,$65,$02,$0A,$FF,$84 ;
@@ -1657,10 +1660,10 @@ b$8834 DEFW $B41F
 ; Room 889F
 b$889F DEFW $B41F
  $88A1 DEFW $B422
- $88A3 DEFW $8953
- $88A5 DEFW $8834
- $88A7 DEFW $89B9
- $88A9 DEFW $8739
+ $88A3 DEFW $8953                           ; Room to Left
+ $88A5 DEFW $8834                           ; Room to Right
+ $88A7 DEFW $89B9                           ; Room Up
+ $88A9 DEFW $8739                           ; Room Down
  $88AB DEFB $01,$11,$3A,$94,$65,$01,$11,$3A ; {#HTML[<img
  $88B3 DEFB $A8,$65,$01,$0C,$3A,$9C,$65,$01 ; src="images/rooms/889F.png" />]
  $88BB DEFB $06,$3A,$9F,$65,$01,$06,$3A,$A3 ;
@@ -1678,8 +1681,8 @@ b$889F DEFW $B41F
 ; Room 890E
 b$890E DEFW $B41F
  $8910 DEFW $B422
- $8912 DEFW $8834
- $8914 DEFW $8BF0
+ $8912 DEFW $8834                           ; Room to Left
+ $8914 DEFW $8BF0                           ; Room to Right
  $8916 DEFW $0000
  $8918 DEFW $0000
  $891A DEFB $01,$10,$3A,$99,$65,$01,$10,$3A ; {#HTML[<img
@@ -1695,29 +1698,29 @@ b$890E DEFW $B41F
 b$8953 DEFW $B41F
  $8955 DEFW $B422
  $8957 DEFW $0000
- $8959 DEFW $889F
- $895B DEFW $89B9
- $895D DEFW $8799
- $895F DEFB $01,$11,$3A,$98,$65,$01,$10,$3A
- $8967 DEFB $9D,$65,$01,$05,$3A,$A0,$65,$01
- $896F DEFB $09,$3A,$A3,$65,$01,$11,$3A,$AB
- $8977 DEFB $65,$01,$07,$3A,$CD,$66,$01,$07
- $897F DEFB $3A,$D0,$66,$01,$02,$3A,$69,$67
- $8987 DEFB $0C,$E3,$81,$02,$11,$90,$65,$0C
- $898F DEFB $48,$73,$02,$09,$95,$65,$02,$05
- $8997 DEFB $63,$33,$66,$02,$07,$FA,$A0,$66
- $899F DEFB $02,$08,$FA,$54,$67,$02,$03,$FA
- $89A7 DEFB $7C,$67,$02,$05,$FA,$AE,$66,$02
- $89AF DEFB $06,$FA,$47,$67,$02,$17,$FA,$E1
- $89B7 DEFB $66,$FF
+ $8959 DEFW $889F                           ; Room to Right
+ $895B DEFW $89B9                           ; Room Up
+ $895D DEFW $8799                           ; Room Down
+ $895F DEFB $01,$11,$3A,$98,$65,$01,$10,$3A ; {#HTML[<img
+ $8967 DEFB $9D,$65,$01,$05,$3A,$A0,$65,$01 ; src="images/rooms/8953.png" />]
+ $896F DEFB $09,$3A,$A3,$65,$01,$11,$3A,$AB ;
+ $8977 DEFB $65,$01,$07,$3A,$CD,$66,$01,$07 ;
+ $897F DEFB $3A,$D0,$66,$01,$02,$3A,$69,$67 ;
+ $8987 DEFB $0C,$E3,$81,$02,$11,$90,$65,$0C ;
+ $898F DEFB $48,$73,$02,$09,$95,$65,$02,$05 ;
+ $8997 DEFB $63,$33,$66,$02,$07,$FA,$A0,$66 ;
+ $899F DEFB $02,$08,$FA,$54,$67,$02,$03,$FA ;
+ $89A7 DEFB $7C,$67,$02,$05,$FA,$AE,$66,$02 ;
+ $89AF DEFB $06,$FA,$47,$67,$02,$17,$FA,$E1 ;
+ $89B7 DEFB $66,$FF                         ; }
 
 ; Room 89B9
 b$89B9 DEFW $B41F
  $89BB DEFW $B422
  $89BD DEFW $0000
- $89BF DEFW $8A2D
+ $89BF DEFW $8A2D                           ; Room to Right
  $89C1 DEFW $0000
- $89C3 DEFW $8953
+ $89C3 DEFW $8953                           ; Room Down
  $89C5 DEFB $0E,$3A,$B6,$66,$0E,$3A,$2A,$67 ; {#HTML[<img
  $89CD DEFB $01,$08,$3A,$AB,$66,$01,$08,$3A ; src="images/rooms/89B9.png" />]
  $89D5 DEFB $B9,$66,$01,$02,$3A,$62,$67,$01 ;
@@ -1735,27 +1738,27 @@ b$89B9 DEFW $B41F
 ; Room 8A2D
 b$8A2D DEFW $B41F
  $8A2F DEFW $B422
- $8A31 DEFW $89B9
- $8A33 DEFW $8A81
- $8A35 DEFW $8B25
- $8A37 DEFW $889F
- $8A39 DEFB $01,$08,$3A,$A2,$66,$01,$08,$3A
- $8A41 DEFB $AD,$66,$01,$08,$3A,$B1,$66,$01
- $8A49 DEFB $05,$3A,$04,$67,$02,$03,$FF,$90
- $8A51 DEFB $65,$02,$0F,$FA,$80,$66,$02,$05
- $8A59 DEFB $FA,$8F,$66,$0C,$48,$73,$02,$08
- $8A61 DEFB $A1,$65,$02,$08,$FA,$55,$67,$02
- $8A69 DEFB $05,$FA,$E2,$66,$02,$04,$FA,$86
- $8A71 DEFB $67,$05,$01,$03,$99,$88,$E3,$66
- $8A79 DEFB $05,$01,$03,$98,$88,$3D,$67,$FF
+ $8A31 DEFW $89B9                           ; Room to Left
+ $8A33 DEFW $8A81                           ; Room to Right
+ $8A35 DEFW $8B25                           ; Room Up
+ $8A37 DEFW $889F                           ; Room Down
+ $8A39 DEFB $01,$08,$3A,$A2,$66,$01,$08,$3A ; {Room sequence
+ $8A41 DEFB $AD,$66,$01,$08,$3A,$B1,$66,$01 ;
+ $8A49 DEFB $05,$3A,$04,$67,$02,$03,$FF,$90 ;
+ $8A51 DEFB $65,$02,$0F,$FA,$80,$66,$02,$05 ;
+ $8A59 DEFB $FA,$8F,$66,$0C,$48,$73,$02,$08 ;
+ $8A61 DEFB $A1,$65,$02,$08,$FA,$55,$67,$02 ;
+ $8A69 DEFB $05,$FA,$E2,$66,$02,$04,$FA,$86 ;
+ $8A71 DEFB $67,$05,$01,$03,$99,$88,$E3,$66 ;
+ $8A79 DEFB $05,$01,$03,$98,$88,$3D,$67,$FF ; }
 
 ; Room 8A81
 b$8A81 DEFW $B41F
  $8A83 DEFW $B422
- $8A85 DEFW $8A2D
- $8A87 DEFW $8AF4
+ $8A85 DEFW $8A2D                           ; Room to Left
+ $8A87 DEFW $8AF4                           ; Room to Right
  $8A89 DEFW $0000
- $8A8B DEFW $8834
+ $8A8B DEFW $8834                           ; Room Down
  $8A8D DEFB $01,$06,$3A,$E1,$66,$01,$0C,$3A ; {#HTML[<img
  $8A95 DEFB $33,$66,$01,$05,$3A,$0A,$67,$09 ; src="images/rooms/8A81.png" />]
  $8A9D DEFB $FF,$04,$A7,$65,$06,$FF,$04,$A8 ;
@@ -1773,10 +1776,10 @@ b$8A81 DEFW $B41F
 ; Room 8AF4
 b$8AF4 DEFW $B41F
  $8AF6 DEFW $B422
- $8AF8 DEFW $8A81
- $8AFA DEFW $8C5A
- $8AFC DEFW $8BAB
- $8AFE DEFW $890E
+ $8AF8 DEFW $8A81                           ; Room to Left
+ $8AFA DEFW $8C5A                           ; Room to Right
+ $8AFC DEFW $8BAB                           ; Room Up
+ $8AFE DEFW $890E                           ; Room Down
  $8B00 DEFB $01,$08,$3A,$A7,$66,$01,$08,$3A ; {#HTML[<img
  $8B08 DEFB $AF,$66,$02,$0B,$FA,$34,$67,$02 ; src="images/rooms/8AF4.png" />]
  $8B10 DEFB $13,$FA,$88,$66,$0C,$48,$73,$02 ;
@@ -1787,55 +1790,55 @@ b$8AF4 DEFW $B41F
 b$8B25 DEFW $B483
  $8B27 DEFW $A174
  $8B29 DEFW $0000
- $8B2B DEFW $8B71
+ $8B2B DEFW $8B71                           ; Room to Right
  $8B2D DEFW $0000
- $8B2F DEFW $8A2D
- $8B31 DEFB $02,$1E,$FF,$70,$67,$02,$48,$FF
- $8B39 DEFB $90,$65,$0C,$48,$73,$02,$0E,$DD
- $8B41 DEFB $65,$05,$02,$01,$84,$79,$81,$67
- $8B49 DEFB $05,$04,$04,$A9,$71,$F7,$70,$05
- $8B51 DEFB $04,$04,$A9,$71,$F5,$70,$05,$04
- $8B59 DEFB $04,$A9,$71,$F0,$70,$05,$04,$04
- $8B61 DEFB $A9,$71,$07,$71,$06,$FF,$0B,$EA
- $8B69 DEFB $65,$03,$FF,$03,$04,$F8,$66,$FF
+ $8B2F DEFW $8A2D                           ; Room Down
+ $8B31 DEFB $02,$1E,$FF,$70,$67,$02,$48,$FF ; {Room sequence
+ $8B39 DEFB $90,$65,$0C,$48,$73,$02,$0E,$DD ;
+ $8B41 DEFB $65,$05,$02,$01,$84,$79,$81,$67 ;
+ $8B49 DEFB $05,$04,$04,$A9,$71,$F7,$70,$05 ;
+ $8B51 DEFB $04,$04,$A9,$71,$F5,$70,$05,$04 ;
+ $8B59 DEFB $04,$A9,$71,$F0,$70,$05,$04,$04 ;
+ $8B61 DEFB $A9,$71,$07,$71,$06,$FF,$0B,$EA ;
+ $8B69 DEFB $65,$03,$FF,$03,$04,$F8,$66,$FF ; }
 
 ; Room 8B71
 b$8B71 DEFW $7918
  $8B73 DEFW $A0FC
- $8B75 DEFW $8B25
- $8B77 DEFW $8BAB
+ $8B75 DEFW $8B25                           ; Room to Left
+ $8B77 DEFW $8BAB                           ; Room to Right
  $8B79 DEFW $0000
  $8B7B DEFW $0000
- $8B7D DEFB $02,$1E,$FF,$70,$67,$02,$3C,$FF
- $8B85 DEFB $90,$65,$05,$04,$04,$A9,$71,$EF
- $8B8D DEFB $70,$05,$04,$04,$A9,$71,$F5,$70
- $8B95 DEFB $05,$04,$04,$A9,$71,$FB,$70,$05
- $8B9D DEFB $04,$04,$A9,$71,$00,$71,$05,$04
- $8BA5 DEFB $04,$A9,$71,$07,$71,$FF
+ $8B7D DEFB $02,$1E,$FF,$70,$67,$02,$3C,$FF ; {Room sequence
+ $8B85 DEFB $90,$65,$05,$04,$04,$A9,$71,$EF ;
+ $8B8D DEFB $70,$05,$04,$04,$A9,$71,$F5,$70 ;
+ $8B95 DEFB $05,$04,$04,$A9,$71,$FB,$70,$05 ;
+ $8B9D DEFB $04,$04,$A9,$71,$00,$71,$05,$04 ;
+ $8BA5 DEFB $04,$A9,$71,$07,$71,$FF         ; }
 
 ; Room 8BAB
 b$8BAB DEFW $B41F
  $8BAD DEFW $B422
- $8BAF DEFW $8B71
+ $8BAF DEFW $8B71                           ; Room to Left
  $8BB1 DEFW $0000
  $8BB3 DEFW $0000
- $8BB5 DEFW $8AF4
- $8BB7 DEFB $02,$3C,$FF,$90,$65,$03,$FF,$02
- $8BBF DEFB $0E,$E8,$65,$02,$09,$FF,$70,$67
- $8BC7 DEFB $02,$10,$FF,$7E,$67,$0C,$48,$73
- $8BCF DEFB $02,$0E,$E0,$65,$05,$02,$01,$9D
- $8BD7 DEFB $88,$84,$67,$05,$03,$03,$A0,$71
- $8BDF DEFB $1B,$71,$05,$04,$04,$A9,$71,$F2
- $8BE7 DEFB $70,$05,$04,$04,$A9,$71,$06,$71
- $8BEF DEFB $FF
+ $8BB5 DEFW $8AF4                           ; Room Down
+ $8BB7 DEFB $02,$3C,$FF,$90,$65,$03,$FF,$02 ; {Room sequence
+ $8BBF DEFB $0E,$E8,$65,$02,$09,$FF,$70,$67 ;
+ $8BC7 DEFB $02,$10,$FF,$7E,$67,$0C,$48,$73 ;
+ $8BCF DEFB $02,$0E,$E0,$65,$05,$02,$01,$9D ;
+ $8BD7 DEFB $88,$84,$67,$05,$03,$03,$A0,$71 ;
+ $8BDF DEFB $1B,$71,$05,$04,$04,$A9,$71,$F2 ;
+ $8BE7 DEFB $70,$05,$04,$04,$A9,$71,$06,$71 ;
+ $8BEF DEFB $FF                             ; }
 
 ; Room 8BF0
 b$8BF0 DEFW $B41F
  $8BF2 DEFW $B422
- $8BF4 DEFW $890E
- $8BF6 DEFW $8CC8
+ $8BF4 DEFW $890E                           ; Room to Left
+ $8BF6 DEFW $8CC8                           ; Room to Right
  $8BF8 DEFW $0000
- $8BFA DEFW $9005
+ $8BFA DEFW $9005                           ; Room Down
  $8BFC DEFB $01,$10,$3A,$93,$65,$01,$08,$3A ; {#HTML[<img
  $8C04 DEFB $98,$65,$01,$08,$3A,$9C,$65,$01 ; src="images/rooms/8BF0.png" />]
  $8C0C DEFB $08,$3A,$A0,$65,$01,$08,$3A,$A3 ;
@@ -1852,99 +1855,99 @@ b$8BF0 DEFW $B41F
 ; Room 8C5A
 b$8C5A DEFW $B41F
  $8C5C DEFW $B422
- $8C5E DEFW $8AF4
- $8C60 DEFW $8D18
+ $8C5E DEFW $8AF4                           ; Room to Left
+ $8C60 DEFW $8D18                           ; Room to Right
  $8C62 DEFW $0000
- $8C64 DEFW $8BF0
- $8C66 DEFB $01,$05,$3A,$DD,$66,$01,$0D,$3A
- $8C6E DEFB $F2,$65,$01,$0F,$3A,$D8,$65,$01
- $8C76 DEFB $07,$3A,$CC,$66,$01,$07,$3A,$CF
- $8C7E DEFB $66,$01,$0D,$3A,$1F,$66,$01,$0D
- $8C86 DEFB $3A,$23,$66,$09,$FF,$03,$A6,$65
- $8C8E DEFB $03,$FF,$07,$04,$A7,$65,$02,$0A
- $8C96 DEFB $FA,$B3,$65,$05,$01,$03,$98,$88
- $8C9E DEFB $98,$65,$01,$03,$F9,$1B,$67,$02
- $8CA6 DEFB $07,$FA,$73,$67,$0E,$F8,$75,$67
- $8CAE DEFB $02,$0A,$FA,$BD,$66,$02,$04,$FA
- $8CB6 DEFB $E5,$66,$02,$04,$FA,$AE,$66,$02
- $8CBE DEFB $03,$FA,$EF,$66,$02,$05,$FA,$2F
- $8CC6 DEFB $67,$FF
+ $8C64 DEFW $8BF0                           ; Room Down
+ $8C66 DEFB $01,$05,$3A,$DD,$66,$01,$0D,$3A ; {Room sequence
+ $8C6E DEFB $F2,$65,$01,$0F,$3A,$D8,$65,$01 ;
+ $8C76 DEFB $07,$3A,$CC,$66,$01,$07,$3A,$CF ;
+ $8C7E DEFB $66,$01,$0D,$3A,$1F,$66,$01,$0D ;
+ $8C86 DEFB $3A,$23,$66,$09,$FF,$03,$A6,$65 ;
+ $8C8E DEFB $03,$FF,$07,$04,$A7,$65,$02,$0A ;
+ $8C96 DEFB $FA,$B3,$65,$05,$01,$03,$98,$88 ;
+ $8C9E DEFB $98,$65,$01,$03,$F9,$1B,$67,$02 ;
+ $8CA6 DEFB $07,$FA,$73,$67,$0E,$F8,$75,$67 ;
+ $8CAE DEFB $02,$0A,$FA,$BD,$66,$02,$04,$FA ;
+ $8CB6 DEFB $E5,$66,$02,$04,$FA,$AE,$66,$02 ;
+ $8CBE DEFB $03,$FA,$EF,$66,$02,$05,$FA,$2F ;
+ $8CC6 DEFB $67,$FF                         ; }
 
 ; Room 8CC8
 b$8CC8 DEFW $B41F
  $8CCA DEFW $B422
- $8CCC DEFW $8BF0
- $8CCE DEFW $8E9C
+ $8CCC DEFW $8BF0                           ; Room to Left
+ $8CCE DEFW $8E9C                           ; Room to Right
  $8CD0 DEFW $0000
  $8CD2 DEFW $0000
- $8CD4 DEFB $01,$0C,$3A,$96,$65,$01,$10,$3A
- $8CDC DEFB $9E,$65,$01,$10,$3A,$A3,$65,$01
- $8CE4 DEFB $10,$3A,$AA,$65,$07,$FF,$07,$A1
- $8CEC DEFB $66,$02,$1E,$FF,$70,$67,$03,$FF
- $8CF4 DEFB $03,$08,$80,$66,$02,$06,$63,$F5
- $8CFC DEFB $65,$02,$0A,$FA,$92,$66,$05,$04
- $8D04 DEFB $07,$AA,$79,$9B,$70,$05,$04,$07
- $8D0C DEFB $AA,$79,$3E,$70,$05,$04,$07,$AA
- $8D14 DEFB $79,$00,$70,$FF
+ $8CD4 DEFB $01,$0C,$3A,$96,$65,$01,$10,$3A ; {Room sequence
+ $8CDC DEFB $9E,$65,$01,$10,$3A,$A3,$65,$01 ;
+ $8CE4 DEFB $10,$3A,$AA,$65,$07,$FF,$07,$A1 ;
+ $8CEC DEFB $66,$02,$1E,$FF,$70,$67,$03,$FF ;
+ $8CF4 DEFB $03,$08,$80,$66,$02,$06,$63,$F5 ;
+ $8CFC DEFB $65,$02,$0A,$FA,$92,$66,$05,$04 ;
+ $8D04 DEFB $07,$AA,$79,$9B,$70,$05,$04,$07 ;
+ $8D0C DEFB $AA,$79,$3E,$70,$05,$04,$07,$AA ;
+ $8D14 DEFB $79,$00,$70,$FF                 ; }
 
 ; Room 8D18
 b$8D18 DEFW $B41F
  $8D1A DEFW $B422
- $8D1C DEFW $8C5A
- $8D1E DEFW $8EE1
- $8D20 DEFW $8D5C
- $8D22 DEFW $8CC8
- $8D24 DEFB $01,$03,$3A,$3A,$67,$01,$03,$3A
- $8D2C DEFB $42,$67,$01,$03,$3A,$4E,$67,$01
- $8D34 DEFB $11,$3A,$A3,$65,$03,$FF,$0A,$04
- $8D3C DEFB $90,$65,$0C,$48,$73,$02,$0D,$9A
- $8D44 DEFB $65,$02,$12,$FA,$16,$67,$02,$06
- $8D4C DEFB $FA,$2E,$67,$02,$05,$63,$74,$66
- $8D54 DEFB $05,$02,$04,$BB,$71,$A1,$70,$FF
+ $8D1C DEFW $8C5A                           ; Room to Left
+ $8D1E DEFW $8EE1                           ; Room to Right
+ $8D20 DEFW $8D5C                           ; Room Up
+ $8D22 DEFW $8CC8                           ; Room Down
+ $8D24 DEFB $01,$03,$3A,$3A,$67,$01,$03,$3A ; {Room sequence
+ $8D2C DEFB $42,$67,$01,$03,$3A,$4E,$67,$01 ;
+ $8D34 DEFB $11,$3A,$A3,$65,$03,$FF,$0A,$04 ;
+ $8D3C DEFB $90,$65,$0C,$48,$73,$02,$0D,$9A ;
+ $8D44 DEFB $65,$02,$12,$FA,$16,$67,$02,$06 ;
+ $8D4C DEFB $FA,$2E,$67,$02,$05,$63,$74,$66 ;
+ $8D54 DEFB $05,$02,$04,$BB,$71,$A1,$70,$FF ; }
 
 ; Room 8D5C
 b$8D5C DEFW $B483
  $8D5E DEFW $A1A1
- $8D60 DEFW $8DCA
+ $8D60 DEFW $8DCA                           ; Room to Left
  $8D62 DEFW $0000
  $8D64 DEFW $0000
- $8D66 DEFW $8D18
- $8D68 DEFB $04,$01,$02,$3E,$FF,$90,$65,$03
- $8D70 DEFB $FF,$02,$04,$EA,$65,$02,$04,$FF
- $8D78 DEFB $62,$66,$09,$FF,$07,$E4,$65,$03
- $8D80 DEFB $FF,$05,$0C,$E5,$65,$02,$41,$FF
- $8D88 DEFB $4D,$67,$05,$02,$02,$84,$79,$5C
- $8D90 DEFB $67,$05,$03,$03,$A0,$71,$F2,$70
- $8D98 DEFB $05,$03,$03,$A0,$71,$A3,$70,$05
- $8DA0 DEFB $03,$03,$A0,$71,$A7,$70,$05,$03
- $8DA8 DEFB $03,$A0,$71,$FC,$70,$05,$03,$03
- $8DB0 DEFB $A0,$71,$FF,$70,$05,$03,$03,$A0
- $8DB8 DEFB $71,$03,$71,$01,$01,$FF,$64,$66
- $8DC0 DEFB $0E,$2A,$78,$70,$01,$06,$2B,$96
- $8DC8 DEFB $70,$FF
+ $8D66 DEFW $8D18                           ; Room Down
+ $8D68 DEFB $04,$01,$02,$3E,$FF,$90,$65,$03 ; {Room sequence
+ $8D70 DEFB $FF,$02,$04,$EA,$65,$02,$04,$FF ;
+ $8D78 DEFB $62,$66,$09,$FF,$07,$E4,$65,$03 ;
+ $8D80 DEFB $FF,$05,$0C,$E5,$65,$02,$41,$FF ;
+ $8D88 DEFB $4D,$67,$05,$02,$02,$84,$79,$5C ;
+ $8D90 DEFB $67,$05,$03,$03,$A0,$71,$F2,$70 ;
+ $8D98 DEFB $05,$03,$03,$A0,$71,$A3,$70,$05 ;
+ $8DA0 DEFB $03,$03,$A0,$71,$A7,$70,$05,$03 ;
+ $8DA8 DEFB $03,$A0,$71,$FC,$70,$05,$03,$03 ;
+ $8DB0 DEFB $A0,$71,$FF,$70,$05,$03,$03,$A0 ;
+ $8DB8 DEFB $71,$03,$71,$01,$01,$FF,$64,$66 ;
+ $8DC0 DEFB $0E,$2A,$78,$70,$01,$06,$2B,$96 ;
+ $8DC8 DEFB $70,$FF                         ; }
 
 ; Room 8DCA
 b$8DCA DEFW $B41F
  $8DCC DEFW $B422
  $8DCE DEFW $0000
- $8DD0 DEFW $8D5C
+ $8DD0 DEFW $8D5C                           ; Room to Right
  $8DD2 DEFW $0000
  $8DD4 DEFW $0000
- $8DD6 DEFB $04,$01,$02,$3F,$FF,$90,$65,$03
- $8DDE DEFB $FF,$02,$0D,$EA,$65,$02,$25,$FF
- $8DE6 DEFB $69,$67,$02,$0A,$91,$5A,$67,$02
- $8DEE DEFB $17,$01,$93,$65,$02,$1B,$E2,$AF
- $8DF6 DEFB $65,$0E,$FF,$E6,$65,$03,$FF,$03
- $8DFE DEFB $06,$E7,$65,$0E,$2A,$91,$70,$01
- $8E06 DEFB $06,$2B,$AF,$70,$05,$04,$07,$47
- $8E0E DEFB $8E,$63,$70,$05,$02,$06,$6C,$8E
- $8E16 DEFB $89,$66,$05,$05,$01,$67,$8E,$3E
- $8E1E DEFB $67,$05,$01,$02,$63,$8E,$06,$67
- $8E26 DEFB $05,$03,$08,$78,$8E,$71,$66,$02
- $8E2E DEFB $11,$D4,$2C,$66,$05,$01,$02,$65
- $8E36 DEFB $8E,$34,$66,$05,$03,$04,$90,$8E
- $8E3E DEFB $56,$66,$03,$1B,$04,$04,$8B,$66
- $8E46 DEFB $FF,$64,$65,$5A,$5A,$5B
+ $8DD6 DEFB $04,$01,$02,$3F,$FF,$90,$65,$03 ; {Room sequence
+ $8DDE DEFB $FF,$02,$0D,$EA,$65,$02,$25,$FF ;
+ $8DE6 DEFB $69,$67,$02,$0A,$91,$5A,$67,$02 ;
+ $8DEE DEFB $17,$01,$93,$65,$02,$1B,$E2,$AF ;
+ $8DF6 DEFB $65,$0E,$FF,$E6,$65,$03,$FF,$03 ;
+ $8DFE DEFB $06,$E7,$65,$0E,$2A,$91,$70,$01 ;
+ $8E06 DEFB $06,$2B,$AF,$70,$05,$04,$07,$47 ;
+ $8E0E DEFB $8E,$63,$70,$05,$02,$06,$6C,$8E ;
+ $8E16 DEFB $89,$66,$05,$05,$01,$67,$8E,$3E ;
+ $8E1E DEFB $67,$05,$01,$02,$63,$8E,$06,$67 ;
+ $8E26 DEFB $05,$03,$08,$78,$8E,$71,$66,$02 ;
+ $8E2E DEFB $11,$D4,$2C,$66,$05,$01,$02,$65 ;
+ $8E36 DEFB $8E,$34,$66,$05,$03,$04,$90,$8E ;
+ $8E3E DEFB $56,$66,$03,$1B,$04,$04,$8B,$66 ;
+ $8E46 DEFB $FF,$64,$65,$5A,$5A,$5B         ; }
 
 ; Data block at 8E4C
 b$8E4C DEFB $FF,$5C,$63,$FF,$FF,$FF,$62,$5A
@@ -1971,41 +1974,41 @@ b$8E89 DEFB $01,$27,$01,$01,$25,$26,$01,$36
 ; Room 8E9C
 b$8E9C DEFW $B41F
  $8E9E DEFW $B422
- $8EA0 DEFW $8CC8
+ $8EA0 DEFW $8CC8                           ; Room to Left
  $8EA2 DEFW $0000
- $8EA4 DEFW $8EE1
- $8EA6 DEFW $8F20
- $8EA8 DEFB $01,$10,$3A,$91,$65,$01,$10,$3A
- $8EB0 DEFB $99,$65,$01,$10,$3A,$9C,$65,$01
- $8EB8 DEFB $06,$3A,$C1,$66,$01,$07,$3A,$CF
- $8EC0 DEFB $66,$01,$07,$3A,$D3,$66,$02,$0E
- $8EC8 DEFB $FF,$70,$67,$02,$08,$FA,$A1,$66
- $8ED0 DEFB $02,$06,$FA,$B1,$66,$02,$04,$FA
- $8ED8 DEFB $45,$67,$03,$FF,$02,$11,$AC,$65
- $8EE0 DEFB $FF
+ $8EA4 DEFW $8EE1                           ; Room Up
+ $8EA6 DEFW $8F20                           ; Room Down
+ $8EA8 DEFB $01,$10,$3A,$91,$65,$01,$10,$3A ; {Room sequence
+ $8EB0 DEFB $99,$65,$01,$10,$3A,$9C,$65,$01 ;
+ $8EB8 DEFB $06,$3A,$C1,$66,$01,$07,$3A,$CF ;
+ $8EC0 DEFB $66,$01,$07,$3A,$D3,$66,$02,$0E ;
+ $8EC8 DEFB $FF,$70,$67,$02,$08,$FA,$A1,$66 ;
+ $8ED0 DEFB $02,$06,$FA,$B1,$66,$02,$04,$FA ;
+ $8ED8 DEFB $45,$67,$03,$FF,$02,$11,$AC,$65 ;
+ $8EE0 DEFB $FF                             ; }
 
 ; Room 8EE1
 b$8EE1 DEFW $B41F
  $8EE3 DEFW $B422
- $8EE5 DEFW $8D18
+ $8EE5 DEFW $8D18                           ; Room to Left
  $8EE7 DEFW $0000
  $8EE9 DEFW $0000
- $8EEB DEFW $8E9C
- $8EED DEFB $01,$03,$3A,$35,$67,$01,$0F,$3A
- $8EF5 DEFB $D5,$65,$0E,$3A,$7C,$67,$0E,$FF
- $8EFD DEFB $93,$65,$03,$FF,$1A,$02,$94,$65
- $8F05 DEFB $03,$FF,$02,$0F,$E8,$65,$09,$FF
- $8F0D DEFB $07,$E7,$65,$02,$04,$FA,$16,$67
- $8F15 DEFB $02,$07,$FA,$5B,$67,$02,$04,$63
- $8F1D DEFB $E0,$66,$FF
+ $8EEB DEFW $8E9C                           ; Room Down
+ $8EED DEFB $01,$03,$3A,$35,$67,$01,$0F,$3A ; {Room sequence
+ $8EF5 DEFB $D5,$65,$0E,$3A,$7C,$67,$0E,$FF ;
+ $8EFD DEFB $93,$65,$03,$FF,$1A,$02,$94,$65 ;
+ $8F05 DEFB $03,$FF,$02,$0F,$E8,$65,$09,$FF ;
+ $8F0D DEFB $07,$E7,$65,$02,$04,$FA,$16,$67 ;
+ $8F15 DEFB $02,$07,$FA,$5B,$67,$02,$04,$63 ;
+ $8F1D DEFB $E0,$66,$FF                     ; }
 
 ; Room 8F20
 b$8F20 DEFW $B41F
  $8F22 DEFW $B422
- $8F24 DEFW $8FBD
+ $8F24 DEFW $8FBD                           ; Room to Left
  $8F26 DEFW $0000
- $8F28 DEFW $8E9C
- $8F2A DEFW $8F84
+ $8F28 DEFW $8E9C                           ; Room Up
+ $8F2A DEFW $8F84                           ; Room Down
  $8F2C DEFB $02,$0E,$FF,$90,$65,$01,$01,$FF ; {#HTML[<img
  $8F34 DEFB $96,$65,$0E,$2A,$AA,$6F,$0E,$2A ; src="images/rooms/8F20.png" />]
  $8F3C DEFB $AF,$6F,$01,$07,$2B,$C8,$6F,$01 ;
@@ -2021,10 +2024,10 @@ b$8F20 DEFW $B41F
 ; Room 8F84
 b$8F84 DEFW $7918
  $8F86 DEFW $A0F7
- $8F88 DEFW $9053
+ $8F88 DEFW $9053                           ; Room to Left
  $8F8A DEFW $0000
- $8F8C DEFW $8F20
- $8F8E DEFW $91BA
+ $8F8C DEFW $8F20                           ; Room Up
+ $8F8E DEFW $91BA                           ; Room Down
  $8F90 DEFB $04,$FF,$03,$00,$1C,$08,$26,$66 ; {#HTML[<img
  $8F98 DEFB $08,$00,$04,$C5,$65,$03,$00,$02 ; src="images/rooms/8F84.png" />]
  $8FA0 DEFB $03,$E6,$65,$0E,$00,$C8,$65,$05 ;
@@ -2035,10 +2038,10 @@ b$8F84 DEFW $7918
 ; Room 8FBD
 b$8FBD DEFW $B483
  $8FBF DEFW $A16A
- $8FC1 DEFW $9005
- $8FC3 DEFW $8F20
+ $8FC1 DEFW $9005                           ; Room to Left
+ $8FC3 DEFW $8F20                           ; Room to Right
  $8FC5 DEFW $0000
- $8FC7 DEFW $9053
+ $8FC7 DEFW $9053                           ; Room Down
  $8FC9 DEFB $03,$FF,$1E,$08,$9E,$66,$03,$39 ; {#HTML[<img
  $8FD1 DEFB $07,$07,$C5,$66,$02,$05,$38,$A8 ; src="images/rooms/8FBD.png" />]
  $8FD9 DEFB $66,$02,$06,$FF,$90,$65,$02,$04 ;
@@ -2051,9 +2054,9 @@ b$8FBD DEFW $B483
 ; Room 9005
 b$9005 DEFW $B41F
  $9007 DEFW $B422
- $9009 DEFW $92A7
- $900B DEFW $8FBD
- $900D DEFW $8BF0
+ $9009 DEFW $92A7                           ; Room to Left
+ $900B DEFW $8FBD                           ; Room to Right
+ $900D DEFW $8BF0                           ; Room Up
  $900F DEFW $0000
  $9011 DEFB $02,$1E,$FF,$90,$65,$05,$02,$04 ; {#HTML[<img
  $9019 DEFB $BB,$71,$33,$70,$0C,$48,$73,$02 ; src="images/rooms/9005.png" />]
@@ -2068,96 +2071,96 @@ b$9005 DEFW $B41F
 ; Room 9053
 b$9053 DEFW $B41F
  $9055 DEFW $B422
- $9057 DEFW $909F
- $9059 DEFW $8F84
- $905B DEFW $8FBD
- $905D DEFW $90DB
- $905F DEFB $03,$FF,$1E,$09,$90,$65,$03,$00
- $9067 DEFB $0A,$04,$3A,$66,$02,$27,$FF,$67
- $906F DEFB $67,$02,$04,$FF,$30,$67,$02,$06
- $9077 DEFB $FF,$4C,$67,$05,$02,$04,$BB,$71
- $907F DEFB $F1,$70,$05,$02,$04,$BB,$71,$E5
- $9087 DEFB $70,$03,$39,$07,$08,$99,$65,$03
- $908F DEFB $39,$04,$07,$A7,$66,$02,$04,$38
- $9097 DEFB $79,$67,$02,$04,$38,$89,$66,$FF
+ $9057 DEFW $909F                           ; Room to Left
+ $9059 DEFW $8F84                           ; Room to Right
+ $905B DEFW $8FBD                           ; Room Up
+ $905D DEFW $90DB                           ; Room Down
+ $905F DEFB $03,$FF,$1E,$09,$90,$65,$03,$00 ; {Room sequence
+ $9067 DEFB $0A,$04,$3A,$66,$02,$27,$FF,$67 ;
+ $906F DEFB $67,$02,$04,$FF,$30,$67,$02,$06 ;
+ $9077 DEFB $FF,$4C,$67,$05,$02,$04,$BB,$71 ;
+ $907F DEFB $F1,$70,$05,$02,$04,$BB,$71,$E5 ;
+ $9087 DEFB $70,$03,$39,$07,$08,$99,$65,$03 ;
+ $908F DEFB $39,$04,$07,$A7,$66,$02,$04,$38 ;
+ $9097 DEFB $79,$67,$02,$04,$38,$89,$66,$FF ; }
 
 ; Room 909F
 b$909F DEFW $B47A
  $90A1 DEFW $A15F
- $90A3 DEFW $92EF
- $90A5 DEFW $9053
+ $90A3 DEFW $92EF                           ; Room to Left
+ $90A5 DEFW $9053                           ; Room to Right
  $90A7 DEFW $0000
  $90A9 DEFW $0000
- $90AB DEFB $02,$1E,$FF,$90,$65,$09,$FF,$08
- $90B3 DEFB $CB,$65,$03,$FF,$05,$09,$62,$66
- $90BB DEFB $02,$1E,$FF,$70,$67,$07,$FF,$08
- $90C3 DEFB $85,$66,$05,$04,$07,$AA,$79,$9E
- $90CB DEFB $70,$05,$04,$07,$AA,$79,$41,$70
- $90D3 DEFB $05,$04,$07,$AA,$79,$E4,$6F,$FF
+ $90AB DEFB $02,$1E,$FF,$90,$65,$09,$FF,$08 ; {Room sequence
+ $90B3 DEFB $CB,$65,$03,$FF,$05,$09,$62,$66 ;
+ $90BB DEFB $02,$1E,$FF,$70,$67,$07,$FF,$08 ;
+ $90C3 DEFB $85,$66,$05,$04,$07,$AA,$79,$9E ;
+ $90CB DEFB $70,$05,$04,$07,$AA,$79,$41,$70 ;
+ $90D3 DEFB $05,$04,$07,$AA,$79,$E4,$6F,$FF ; }
 
 ; Room 90DB
 b$90DB DEFW $B452
  $90DD DEFW $A370
- $90DF DEFW $913F
- $90E1 DEFW $91BA
- $90E3 DEFW $9053
+ $90DF DEFW $913F                           ; Room to Left
+ $90E1 DEFW $91BA                           ; Room to Right
+ $90E3 DEFW $9053                           ; Room Up
  $90E5 DEFW $0000
- $90E7 DEFB $04,$FF,$03,$00,$16,$06,$D4,$65
- $90EF DEFB $02,$0C,$00,$C0,$65,$06,$00,$07
- $90F7 DEFB $92,$66,$03,$00,$12,$06,$9E,$66
- $90FF DEFB $02,$04,$39,$99,$65,$02,$04,$38
- $9107 DEFB $B7,$65,$05,$03,$03,$18,$7C,$F5
- $910F DEFB $70,$05,$03,$03,$18,$7C,$F9,$70
- $9117 DEFB $0E,$2A,$95,$70,$01,$05,$2B,$B3
- $911F DEFB $70,$0E,$2A,$A4,$70,$01,$05,$2B
- $9127 DEFB $C2,$70,$05,$04,$07,$8E,$79,$88
- $912F DEFB $70,$05,$04,$07,$8E,$79,$31,$70
- $9137 DEFB $05,$04,$07,$8E,$79,$14,$70,$FF
+ $90E7 DEFB $04,$FF,$03,$00,$16,$06,$D4,$65 ; {Room sequence
+ $90EF DEFB $02,$0C,$00,$C0,$65,$06,$00,$07 ;
+ $90F7 DEFB $92,$66,$03,$00,$12,$06,$9E,$66 ;
+ $90FF DEFB $02,$04,$39,$99,$65,$02,$04,$38 ;
+ $9107 DEFB $B7,$65,$05,$03,$03,$18,$7C,$F5 ;
+ $910F DEFB $70,$05,$03,$03,$18,$7C,$F9,$70 ;
+ $9117 DEFB $0E,$2A,$95,$70,$01,$05,$2B,$B3 ;
+ $911F DEFB $70,$0E,$2A,$A4,$70,$01,$05,$2B ;
+ $9127 DEFB $C2,$70,$05,$04,$07,$8E,$79,$88 ;
+ $912F DEFB $70,$05,$04,$07,$8E,$79,$31,$70 ;
+ $9137 DEFB $05,$04,$07,$8E,$79,$14,$70,$FF ; }
 
 ; Room 913F
 b$913F DEFW $B41F
  $9141 DEFW $B422
  $9143 DEFW $0000
- $9145 DEFW $90DB
+ $9145 DEFW $90DB                           ; Room to Right
  $9147 DEFW $0000
- $9149 DEFW $83ED
- $914B DEFB $09,$FF,$09,$AD,$65,$02,$27,$FF
- $9153 DEFB $67,$67,$02,$05,$FF,$90,$65,$03
- $915B DEFB $FF,$03,$03,$AE,$65,$01,$0C,$EB
- $9163 DEFB $09,$66,$05,$02,$01,$84,$79,$79
- $916B DEFB $67,$05,$03,$03,$A0,$71,$0E,$71
- $9173 DEFB $05,$03,$03,$18,$7C,$11,$71,$05
- $917B DEFB $02,$01,$8A,$7E,$4E,$71,$05,$03
- $9183 DEFB $04,$0C,$7C,$FE,$70,$05,$03,$01
- $918B DEFB $87,$7E,$3A,$71,$05,$03,$01,$87
- $9193 DEFB $7E,$56,$71,$05,$02,$01,$8A,$7E
- $919B DEFB $37,$71,$05,$02,$01,$8A,$7E,$54
- $91A3 DEFB $71,$05,$02,$01,$8A,$7E,$5A,$71
- $91AB DEFB $05,$02,$01,$8A,$7E,$40,$71,$05
- $91B3 DEFB $02,$01,$8A,$7E,$43,$71,$FF
+ $9149 DEFW $83ED                           ; Room Down
+ $914B DEFB $09,$FF,$09,$AD,$65,$02,$27,$FF ; {Room sequence
+ $9153 DEFB $67,$67,$02,$05,$FF,$90,$65,$03 ;
+ $915B DEFB $FF,$03,$03,$AE,$65,$01,$0C,$EB ;
+ $9163 DEFB $09,$66,$05,$02,$01,$84,$79,$79 ;
+ $916B DEFB $67,$05,$03,$03,$A0,$71,$0E,$71 ;
+ $9173 DEFB $05,$03,$03,$18,$7C,$11,$71,$05 ;
+ $917B DEFB $02,$01,$8A,$7E,$4E,$71,$05,$03 ;
+ $9183 DEFB $04,$0C,$7C,$FE,$70,$05,$03,$01 ;
+ $918B DEFB $87,$7E,$3A,$71,$05,$03,$01,$87 ;
+ $9193 DEFB $7E,$56,$71,$05,$02,$01,$8A,$7E ;
+ $919B DEFB $37,$71,$05,$02,$01,$8A,$7E,$54 ;
+ $91A3 DEFB $71,$05,$02,$01,$8A,$7E,$5A,$71 ;
+ $91AB DEFB $05,$02,$01,$8A,$7E,$40,$71,$05 ;
+ $91B3 DEFB $02,$01,$8A,$7E,$43,$71,$FF     ; }
 
 ; Room 91BA
 b$91BA DEFW $B452
  $91BC DEFW $A36B
- $91BE DEFW $90DB
+ $91BE DEFW $90DB                           ; Room to Left
  $91C0 DEFW $0000
- $91C2 DEFW $8F84
- $91C4 DEFW $924E
- $91C6 DEFB $02,$04,$FF,$90,$65,$0E,$2A,$A5
- $91CE DEFB $6F,$01,$07,$2B,$C3,$6F,$03,$FF
- $91D6 DEFB $04,$03,$9E,$66,$02,$98,$FF,$F6
- $91DE DEFB $66,$0C,$E3,$81,$02,$0B,$AC,$65
- $91E6 DEFB $07,$FF,$02,$C0,$66,$0C,$48,$73
- $91EE DEFB $02,$0C,$A4,$65,$05,$02,$05,$84
- $91F6 DEFB $79,$0C,$67,$05,$03,$03,$18,$7C
- $91FE DEFB $9B,$70,$00,$9F,$70,$00,$A2,$70
- $9206 DEFB $00,$AD,$70,$FF
+ $91C2 DEFW $8F84                           ; Room Up
+ $91C4 DEFW $924E                           ; Room Down
+ $91C6 DEFB $02,$04,$FF,$90,$65,$0E,$2A,$A5 ; {#HTML[<img
+ $91CE DEFB $6F,$01,$07,$2B,$C3,$6F,$03,$FF ; src="images/rooms/91BA.png" />]
+ $91D6 DEFB $04,$03,$9E,$66,$02,$98,$FF,$F6 ;
+ $91DE DEFB $66,$0C,$E3,$81,$02,$0B,$AC,$65 ;
+ $91E6 DEFB $07,$FF,$02,$C0,$66,$0C,$48,$73 ;
+ $91EE DEFB $02,$0C,$A4,$65,$05,$02,$05,$84 ;
+ $91F6 DEFB $79,$0C,$67,$05,$03,$03,$18,$7C ;
+ $91FE DEFB $9B,$70,$00,$9F,$70,$00,$A2,$70 ;
+ $9206 DEFB $00,$AD,$70,$FF                 ; }
 
 ; Room 920A
 b$920A DEFW $7918
  $920C DEFW $A0F2
- $920E DEFW $83ED
- $9210 DEFW $924E
+ $920E DEFW $83ED                           ; Room to Left
+ $9210 DEFW $924E                           ; Room to Right
  $9212 DEFW $0000
  $9214 DEFW $0000
  $9216 DEFB $02,$1E,$FF,$70,$67,$05,$03,$04 ; {#HTML[<img
@@ -2171,9 +2174,9 @@ b$920A DEFW $7918
 ; Room 924E
 b$924E DEFW $B452
  $9250 DEFW $A366
- $9252 DEFW $920A
+ $9252 DEFW $920A                           ; Room to Left
  $9254 DEFW $0000
- $9256 DEFW $91BA
+ $9256 DEFW $91BA                           ; Room Up
  $9258 DEFW $0000
  $925A DEFB $02,$10,$FF,$9E,$65,$0C,$E3,$81 ; {#HTML[<img
  $9262 DEFB $02,$0E,$CA,$65,$02,$20,$FF,$6E ; src="images/rooms/924E.png" />]
@@ -2190,49 +2193,49 @@ b$924E DEFW $B452
 b$92A7 DEFW $B483
  $92A9 DEFW $A16F
  $92AB DEFW $0000
- $92AD DEFW $9005
+ $92AD DEFW $9005                           ; Room to Right
  $92AF DEFW $0000
  $92B1 DEFW $0000
- $92B3 DEFB $02,$20,$FF,$90,$65,$0C,$E3,$81
- $92BB DEFB $02,$0D,$CC,$65,$02,$3C,$FF,$52
- $92C3 DEFB $67,$05,$04,$04,$A9,$71,$D1,$70
- $92CB DEFB $05,$04,$04,$A9,$71,$E1,$70,$05
- $92D3 DEFB $02,$04,$BB,$71,$D6,$70,$05,$02
- $92DB DEFB $04,$BB,$71,$D8,$70,$05,$02,$04
- $92E3 DEFB $BB,$71,$DB,$70,$05,$02,$04,$BB
- $92EB DEFB $71,$DE,$70,$FF
+ $92B3 DEFB $02,$20,$FF,$90,$65,$0C,$E3,$81 ; {#HTML[<img
+ $92BB DEFB $02,$0D,$CC,$65,$02,$3C,$FF,$52 ; src="images/rooms/92A7.png" />]
+ $92C3 DEFB $67,$05,$04,$04,$A9,$71,$D1,$70 ;
+ $92CB DEFB $05,$04,$04,$A9,$71,$E1,$70,$05 ;
+ $92D3 DEFB $02,$04,$BB,$71,$D6,$70,$05,$02 ;
+ $92DB DEFB $04,$BB,$71,$D8,$70,$05,$02,$04 ;
+ $92E3 DEFB $BB,$71,$DB,$70,$05,$02,$04,$BB ;
+ $92EB DEFB $71,$DE,$70,$FF                 ; }
 
 ; Room 92EF
 b$92EF DEFW $7918
  $92F1 DEFW $791B
  $92F3 DEFW $0000
- $92F5 DEFW $909F
+ $92F5 DEFW $909F                           ; Room to Right
  $92F7 DEFW $0000
  $92F9 DEFW $0000
- $92FB DEFB $04,$FF,$03,$00,$1A,$06,$B2,$65
- $9303 DEFB $03,$02,$16,$06,$DE,$66,$03,$CC
- $930B DEFB $06,$04,$1C,$67,$02,$07,$D1,$38
- $9313 DEFB $67,$0E,$D0,$3D,$67,$02,$0C,$CD
- $931B DEFB $22,$67,$05,$01,$04,$72,$93,$24
- $9323 DEFB $67,$05,$01,$04,$72,$93,$26,$67
- $932B DEFB $05,$01,$04,$72,$93,$28,$67,$05
- $9333 DEFB $01,$04,$72,$93,$2A,$67,$05,$01
- $933B DEFB $04,$72,$93,$2C,$67,$05,$01,$04
- $9343 DEFB $72,$93,$2E,$67,$05,$04,$04,$A9
- $934B DEFB $71,$E1,$6F,$05,$02,$04,$BB,$71
- $9353 DEFB $E6,$6F,$05,$02,$04,$BB,$71,$E9
- $935B DEFB $6F,$05,$02,$04,$BB,$71,$EC,$6F
- $9363 DEFB $05,$02,$04,$BB,$71,$EF,$6F,$05
- $936B DEFB $02,$04,$BB,$71,$F2,$6F,$FF,$CE
- $9373 DEFB $CF,$CF,$CF
+ $92FB DEFB $04,$FF,$03,$00,$1A,$06,$B2,$65 ; {Room sequence
+ $9303 DEFB $03,$02,$16,$06,$DE,$66,$03,$CC ;
+ $930B DEFB $06,$04,$1C,$67,$02,$07,$D1,$38 ;
+ $9313 DEFB $67,$0E,$D0,$3D,$67,$02,$0C,$CD ;
+ $931B DEFB $22,$67,$05,$01,$04,$72,$93,$24 ;
+ $9323 DEFB $67,$05,$01,$04,$72,$93,$26,$67 ;
+ $932B DEFB $05,$01,$04,$72,$93,$28,$67,$05 ;
+ $9333 DEFB $01,$04,$72,$93,$2A,$67,$05,$01 ;
+ $933B DEFB $04,$72,$93,$2C,$67,$05,$01,$04 ;
+ $9343 DEFB $72,$93,$2E,$67,$05,$04,$04,$A9 ;
+ $934B DEFB $71,$E1,$6F,$05,$02,$04,$BB,$71 ;
+ $9353 DEFB $E6,$6F,$05,$02,$04,$BB,$71,$E9 ;
+ $935B DEFB $6F,$05,$02,$04,$BB,$71,$EC,$6F ;
+ $9363 DEFB $05,$02,$04,$BB,$71,$EF,$6F,$05 ;
+ $936B DEFB $02,$04,$BB,$71,$F2,$6F,$FF,$CE ;
+ $9373 DEFB $CF,$CF,$CF                     ; }
 
 ; Room 9376
 b$9376 DEFW $B41F
  $9378 DEFW $B422
- $937A DEFW $93DF
+ $937A DEFW $93DF                           ; Room to Left
  $937C DEFW $0000
- $937E DEFW $8384
- $9380 DEFW $0000
+ $937E DEFW $8384                           ; Room Up
+ $9380 DEFB $00,$00
  $9382 DEFB $04,$FF,$03,$02,$0C,$06,$80,$66 ; {#HTML[<img
  $938A DEFB $03,$02,$0B,$06,$90,$66,$02,$0C ; src="images/rooms/9376.png" />]
  $9392 DEFB $03,$62,$66,$02,$0B,$03,$72,$66 ;
@@ -2249,30 +2252,30 @@ b$9376 DEFW $B41F
 ; Room 93DF
 b$93DF DEFW $B41F
  $93E1 DEFW $C671
- $93E3 DEFW $7C9C
- $93E5 DEFW $9376
- $93E7 DEFW $9431
+ $93E3 DEFW $7C9C                           ; Room to Left
+ $93E5 DEFW $9376                           ; Room to Right
+ $93E7 DEFW $9431                           ; Room Up
  $93E9 DEFW $0000
- $93EB DEFB $04,$02,$03,$21,$05,$02,$16,$67
- $93F3 DEFB $02,$04,$03,$7C,$66,$02,$99,$FF
- $93FB DEFB $90,$65,$02,$10,$FF,$36,$66,$02
- $9403 DEFB $04,$FF,$5E,$66,$02,$11,$FF,$1B
- $940B DEFB $67,$02,$56,$FF,$38,$67,$0C,$B9
- $9413 DEFB $71,$02,$0D,$96,$65,$01,$05,$FD
- $941B DEFB $9E,$65,$01,$06,$FD,$A7,$65,$05
- $9423 DEFB $01,$04,$4F,$7B,$24,$67,$05,$01
- $942B DEFB $03,$4F,$7B,$4B,$67,$FF
+ $93EB DEFB $04,$02,$03,$21,$05,$02,$16,$67 ; {#HTML[<img
+ $93F3 DEFB $02,$04,$03,$7C,$66,$02,$99,$FF ; src="images/rooms/93DF.png" />]
+ $93FB DEFB $90,$65,$02,$10,$FF,$36,$66,$02 ;
+ $9403 DEFB $04,$FF,$5E,$66,$02,$11,$FF,$1B ;
+ $940B DEFB $67,$02,$56,$FF,$38,$67,$0C,$B9 ;
+ $9413 DEFB $71,$02,$0D,$96,$65,$01,$05,$FD ;
+ $941B DEFB $9E,$65,$01,$06,$FD,$A7,$65,$05 ;
+ $9423 DEFB $01,$04,$4F,$7B,$24,$67,$05,$01 ;
+ $942B DEFB $03,$4F,$7B,$4B,$67,$FF         ; }
 
 ; Room 9431
 b$9431 DEFW $B41F
  $9433 DEFW $B422
  $9435 DEFW $0000
  $9437 DEFW $0000
- $9439 DEFW $9451
- $943B DEFW $93DF
- $943D DEFB $04,$FF,$0C,$B9,$71,$02,$11,$96
- $9445 DEFB $65,$01,$11,$FD,$9E,$65,$01,$11
- $944D DEFB $FD,$A7,$65,$FF
+ $9439 DEFW $9451                           ; Room Up
+ $943B DEFW $93DF                           ; Room Down
+ $943D DEFB $04,$FF,$0C,$B9,$71,$02,$11,$96 ; {Room sequence
+ $9445 DEFB $65,$01,$11,$FD,$9E,$65,$01,$11 ;
+ $944D DEFB $FD,$A7,$65,$FF                 ; }
 
 ; Room 9451
 b$9451 DEFW $B41F
@@ -2280,17 +2283,17 @@ b$9451 DEFW $B41F
  $9455 DEFW $0000
  $9457 DEFW $0000
  $9459 DEFW $0000
- $945B DEFW $9431
- $945D DEFB $04,$FF,$05,$02,$04,$84,$79,$1C
- $9465 DEFB $67,$01,$11,$FD,$9E,$65,$01,$11
- $946D DEFB $FD,$A7,$65,$03,$02,$18,$06,$65
- $9475 DEFB $66,$02,$18,$03,$47,$66,$FF
+ $945B DEFW $9431                           ; Room Down
+ $945D DEFB $04,$FF,$05,$02,$04,$84,$79,$1C ; {Room sequence
+ $9465 DEFB $67,$01,$11,$FD,$9E,$65,$01,$11 ;
+ $946D DEFB $FD,$A7,$65,$03,$02,$18,$06,$65 ;
+ $9475 DEFB $66,$02,$18,$03,$47,$66,$FF     ; }
 
 ; Room 947C
 b$947C DEFW $B41F
  $947E DEFW $C671
- $9480 DEFW $94AB
- $9482 DEFW $7C9C
+ $9480 DEFW $94AB                           ; Room to Left
+ $9482 DEFW $7C9C                           ; Room to Right
  $9484 DEFW $0000
  $9486 DEFW $0000
  $9488 DEFB $04,$FF,$03,$02,$15,$07,$26,$66 ; {#HTML[<img
@@ -2302,36 +2305,36 @@ b$947C DEFW $B41F
 ; Room 94AB
 b$94AB DEFW $7918
  $94AD DEFW $A0DF
- $94AF DEFW $95D6
- $94B1 DEFW $947C
+ $94AF DEFW $95D6                           ; Room to Left
+ $94B1 DEFW $947C                           ; Room to Right
  $94B3 DEFW $0000
  $94B5 DEFW $0000
- $94B7 DEFB $04,$FF,$03,$00,$1E,$07,$26,$66
- $94BF DEFB $03,$02,$02,$07,$42,$66,$0E,$2A
- $94C7 DEFB $37,$70,$01,$06,$2B,$55,$70,$FF
- $94CF DEFB $18,$79,$1A,$A1,$52,$95,$9A,$9A
- $94D7 DEFB $00,$00,$00,$00,$02,$3C,$FF,$52
- $94DF DEFB $67,$03,$0D,$12,$07,$80,$66,$03
- $94E7 DEFB $A3,$1B,$02,$90,$65,$0E,$9C,$AB
- $94EF DEFB $65,$0E,$9B,$C9,$65,$03,$BF,$12
- $94F7 DEFB $06,$CC,$65,$05,$02,$04,$BB,$71
- $94FF DEFB $E8,$70,$02,$12,$BA,$CC,$65,$02
- $9507 DEFB $12,$B3,$62,$66,$05,$01,$06,$28
- $950F DEFB $95,$CD,$65,$05,$01,$06,$2E,$95
- $9517 DEFB $D4,$65,$05,$02,$06,$34,$95,$DA
- $951F DEFB $65,$05,$03,$06,$40,$95,$DE,$65
- $9527 DEFB $FF,$A9,$A8,$A8,$A8,$A8,$A7,$A6
- $952F DEFB $A5,$A4,$A8,$A2,$A1,$BA,$CB,$BF
- $9537 DEFB $CA,$C9,$C8,$C7,$C6,$CA,$BF,$C4
- $953F DEFB $B3,$BA,$BA,$C3,$BF,$C2,$C1,$BF
- $9547 DEFB $C0,$00,$C2,$C1,$00,$C0,$00,$00
- $954F DEFB $C1,$00,$00
+ $94B7 DEFB $04,$FF,$03,$00,$1E,$07,$26,$66 ; {#HTML[<img
+ $94BF DEFB $03,$02,$02,$07,$42,$66,$0E,$2A ; src="images/rooms/94AB.png" />]
+ $94C7 DEFB $37,$70,$01,$06,$2B,$55,$70,$FF ;
+ $94CF DEFB $18,$79,$1A,$A1,$52,$95,$9A,$9A ;
+ $94D7 DEFB $00,$00,$00,$00,$02,$3C,$FF,$52 ;
+ $94DF DEFB $67,$03,$0D,$12,$07,$80,$66,$03 ;
+ $94E7 DEFB $A3,$1B,$02,$90,$65,$0E,$9C,$AB ;
+ $94EF DEFB $65,$0E,$9B,$C9,$65,$03,$BF,$12 ;
+ $94F7 DEFB $06,$CC,$65,$05,$02,$04,$BB,$71 ;
+ $94FF DEFB $E8,$70,$02,$12,$BA,$CC,$65,$02 ;
+ $9507 DEFB $12,$B3,$62,$66,$05,$01,$06,$28 ;
+ $950F DEFB $95,$CD,$65,$05,$01,$06,$2E,$95 ;
+ $9517 DEFB $D4,$65,$05,$02,$06,$34,$95,$DA ;
+ $951F DEFB $65,$05,$03,$06,$40,$95,$DE,$65 ;
+ $9527 DEFB $FF,$A9,$A8,$A8,$A8,$A8,$A7,$A6 ;
+ $952F DEFB $A5,$A4,$A8,$A2,$A1,$BA,$CB,$BF ;
+ $9537 DEFB $CA,$C9,$C8,$C7,$C6,$CA,$BF,$C4 ;
+ $953F DEFB $B3,$BA,$BA,$C3,$BF,$C2,$C1,$BF ;
+ $9547 DEFB $C0,$00,$C2,$C1,$00,$C0,$00,$00 ;
+ $954F DEFB $C1,$00,$00                     ; }
 
 ; Room 9552
 b$9552 DEFW $B483
  $9554 DEFW $A197
- $9556 DEFW $9A5A
- $9558 DEFW $94CF
+ $9556 DEFW $9A5A                           ; Room to Left
+ $9558 DEFW $94CF                           ; Room to Right
  $955A DEFW $0000
  $955C DEFW $0000
  $955E DEFB $02,$3C,$FF,$52,$67,$03,$0D,$12 ; {#HTML[<img
@@ -2353,8 +2356,8 @@ b$9552 DEFW $B483
 ; Room 95D6
 b$95D6 DEFW $B483
  $95D8 DEFW $A183
- $95DA DEFW $95F8
- $95DC DEFW $94AB
+ $95DA DEFW $95F8                           ; Room to Left
+ $95DC DEFW $94AB                           ; Room to Right
  $95DE DEFW $0000
  $95E0 DEFW $0000
  $95E2 DEFB $02,$96,$FF,$90,$65,$03,$FF,$10 ; {#HTML[<img
@@ -2365,9 +2368,9 @@ b$95D6 DEFW $B483
 b$95F8 DEFW $B41F
  $95FA DEFW $B422
  $95FC DEFW $0000
- $95FE DEFW $95D6
+ $95FE DEFW $95D6                           ; Room to Right
  $9600 DEFW $0000
- $9602 DEFW $9634
+ $9602 DEFW $9634                           ; Room Down
  $9604 DEFB $04,$FF,$03,$00,$17,$08,$2D,$66 ; {#HTML[<img
  $960C DEFB $06,$FF,$03,$2D,$66,$02,$0C,$FA ; src="images/rooms/95F8.png" />]
  $9614 DEFB $28,$67,$02,$0A,$00,$48,$67,$02 ;
@@ -2379,9 +2382,9 @@ b$95F8 DEFW $B41F
 b$9634 DEFW $B41F
  $9636 DEFW $B422
  $9638 DEFW $0000
- $963A DEFW $968A
- $963C DEFW $95F8
- $963E DEFW $990D
+ $963A DEFW $968A                           ; Room to Right
+ $963C DEFW $95F8                           ; Room Up
+ $963E DEFW $990D                           ; Room Down
  $9640 DEFB $03,$FF,$04,$0D,$90,$65,$03,$FF ; {#HTML[<img
  $9648 DEFB $18,$04,$1C,$67,$07,$FF,$05,$84 ; src="images/rooms/9634.png" />]
  $9650 DEFB $66,$0E,$00,$84,$66,$09,$FF,$03 ;
@@ -2396,10 +2399,10 @@ b$9634 DEFW $B41F
 ; Room 968A
 b$968A DEFW $B483
  $968C DEFW $A188
- $968E DEFW $9634
- $9690 DEFW $96CC
+ $968E DEFW $9634                           ; Room to Left
+ $9690 DEFW $96CC                           ; Room to Right
  $9692 DEFW $0000
- $9694 DEFW $9715
+ $9694 DEFW $9715                           ; Room Down
  $9696 DEFB $03,$FF,$10,$05,$9E,$65,$01,$0C ; {#HTML[<img
  $969E DEFB $3A,$40,$66,$03,$FF,$0B,$02,$52 ; src="images/rooms/968A.png" />]
  $96A6 DEFB $67,$02,$10,$FF,$34,$67,$02,$09 ;
@@ -2411,10 +2414,10 @@ b$968A DEFW $B483
 ; Room 96CC
 b$96CC DEFW $B41F
  $96CE DEFW $B422
- $96D0 DEFW $968A
+ $96D0 DEFW $968A                           ; Room to Left
  $96D2 DEFW $0000
  $96D4 DEFW $0000
- $96D6 DEFW $96F3
+ $96D6 DEFW $96F3                           ; Room Down
  $96D8 DEFB $02,$96,$FF,$90,$65,$03,$FF,$0F ; {#HTML[<img
  $96E0 DEFB $0C,$35,$66,$09,$FF,$09,$34,$66 ; src="images/rooms/96CC.png" />]
  $96E8 DEFB $01,$0C,$3A,$27,$66,$02,$04,$FA ;
@@ -2423,10 +2426,10 @@ b$96CC DEFW $B41F
 ; Room 96F3
 b$96F3 DEFW $B41F
  $96F5 DEFW $B422
- $96F7 DEFW $9715
+ $96F7 DEFW $9715                           ; Room to Left
  $96F9 DEFW $0000
  $96FB DEFW $0000
- $96FD DEFW $976E
+ $96FD DEFW $976E                           ; Room Down
  $96FF DEFB $03,$FF,$0F,$11,$9F,$65,$01,$11 ; {#HTML[<img
  $9707 DEFB $3A,$91,$65,$01,$0A,$3A,$68,$66 ; src="images/rooms/96F3.png" />]
  $970F DEFB $02,$09,$FA,$80,$66,$FF         ; }
@@ -2435,9 +2438,9 @@ b$96F3 DEFW $B41F
 b$9715 DEFW $B41F
  $9717 DEFW $B422
  $9719 DEFW $0000
- $971B DEFW $96F3
- $971D DEFW $968A
- $971F DEFW $9739
+ $971B DEFW $96F3                           ; Room to Right
+ $971D DEFW $968A                           ; Room Up
+ $971F DEFW $9739                           ; Room Down
  $9721 DEFB $03,$FF,$0B,$11,$90,$65,$0C,$48 ; {#HTML[<img
  $9729 DEFB $73,$02,$11,$9C,$65,$01,$11,$3A ; src="images/rooms/9715.png" />]
  $9731 DEFB $AA,$65,$02,$08,$FA,$96,$66,$FF ; }
@@ -2445,10 +2448,10 @@ b$9715 DEFW $B41F
 ; Room 9739
 b$9739 DEFW $B452
  $973B DEFW $A384
- $973D DEFW $99A6
- $973F DEFW $976E
- $9741 DEFW $9715
- $9743 DEFW $97A6
+ $973D DEFW $99A6                           ; Room to Left
+ $973F DEFW $976E                           ; Room to Right
+ $9741 DEFW $9715                           ; Room Up
+ $9743 DEFW $97A6                           ; Room Down
  $9745 DEFB $03,$FF,$0B,$0A,$90,$65,$08,$00 ; {#HTML[<img
  $974D DEFB $06,$12,$66,$02,$22,$FF,$6C,$67 ; src="images/rooms/9739.png" />]
  $9755 DEFB $01,$01,$E4,$A0,$66,$01,$0F,$3A ;
@@ -2459,23 +2462,23 @@ b$9739 DEFW $B452
 ; Room 976E
 b$976E DEFW $B41F
  $9770 DEFW $B422
- $9772 DEFW $9739
+ $9772 DEFW $9739                           ; Room to Left
  $9774 DEFW $0000
  $9776 DEFW $0000
  $9778 DEFW $0000
- $977A DEFB $04,$FF,$03,$00,$0F,$08,$90,$65
- $9782 DEFB $03,$00,$07,$07,$80,$66,$02,$06
- $978A DEFB $00,$87,$66,$02,$04,$00,$A5,$66
- $9792 DEFB $02,$02,$00,$C3,$66,$01,$0F,$3A
- $979A DEFB $91,$65,$01,$0F,$3A,$96,$65,$0E
- $97A2 DEFB $FA,$E0,$66,$FF
+ $977A DEFB $04,$FF,$03,$00,$0F,$08,$90,$65 ; {Room sequence
+ $9782 DEFB $03,$00,$07,$07,$80,$66,$02,$06 ;
+ $978A DEFB $00,$87,$66,$02,$04,$00,$A5,$66 ;
+ $9792 DEFB $02,$02,$00,$C3,$66,$01,$0F,$3A ;
+ $979A DEFB $91,$65,$01,$0F,$3A,$96,$65,$0E ;
+ $97A2 DEFB $FA,$E0,$66,$FF                 ; }
 
 ; Room 97A6
 b$97A6 DEFW $B483
  $97A8 DEFW $B368
- $97AA DEFW $9876
- $97AC DEFW $97F8
- $97AE DEFW $9739
+ $97AA DEFW $9876                           ; Room to Left
+ $97AC DEFW $97F8                           ; Room to Right
+ $97AE DEFW $9739                           ; Room Up
  $97B0 DEFW $0000
  $97B2 DEFB $03,$FF,$09,$07,$80,$66,$02,$3C ; {#HTML[<img
  $97BA DEFB $FF,$52,$67,$07,$FF,$06,$A7,$66 ; src="images/rooms/97A6.png" />]
@@ -2490,10 +2493,10 @@ b$97A6 DEFW $B483
 ; Room 97F8
 b$97F8 DEFW $7918
  $97FA DEFW $A115
- $97FC DEFW $97A6
+ $97FC DEFW $97A6                           ; Room to Left
  $97FE DEFW $0000
  $9800 DEFW $0000
- $9802 DEFW $982B
+ $9802 DEFW $982B                           ; Room Down
  $9804 DEFB $04,$FF,$03,$02,$1C,$07,$80,$66 ; {#HTML[<img
  $980C DEFB $03,$02,$10,$04,$0E,$66,$08,$02 ; src="images/rooms/97F8.png" />]
  $9814 DEFB $03,$2B,$66,$07,$02,$03,$3C,$66 ;
@@ -2503,9 +2506,9 @@ b$97F8 DEFW $7918
 ; Room 982B
 b$982B DEFW $B41F
  $982D DEFW $C681
- $982F DEFW $7C9C
+ $982F DEFW $7C9C                           ; Room to Left
  $9831 DEFW $0000
- $9833 DEFW $97F8
+ $9833 DEFW $97F8                           ; Room Up
  $9835 DEFW $0000
  $9837 DEFB $04,$FF,$03,$02,$13,$06,$B7,$65 ; {#HTML[<img
  $983F DEFB $03,$02,$13,$06,$62,$66,$08,$02 ; src="images/rooms/982B.png" />]
@@ -2519,8 +2522,8 @@ b$982B DEFW $B41F
 ; Room 9876
 b$9876 DEFW $B41F
  $9878 DEFW $B422
- $987A DEFW $98C0
- $987C DEFW $97A6
+ $987A DEFW $98C0                           ; Room to Left
+ $987C DEFW $97A6                           ; Room to Right
  $987E DEFW $0000
  $9880 DEFW $0000
  $9882 DEFB $04,$FF,$03,$00,$0A,$07,$80,$66 ; {#HTML[<img
@@ -2535,8 +2538,8 @@ b$9876 DEFW $B41F
 ; Room 98C0 (think door)
 b$98C0 DEFW $B41F
  $98C2 DEFW $B422
- $98C4 DEFW $9A9A
- $98C6 DEFW $9876
+ $98C4 DEFW $9A9A                           ; Room to Left
+ $98C6 DEFW $9876                           ; Room to Right
  $98C8 DEFW $0000
  $98CA DEFW $0000
  $98CC DEFB $02,$F0,$FF,$90,$65,$02,$3C,$FF ; {#HTML[<img
@@ -2554,7 +2557,7 @@ b$990D DEFW $B41F
  $990F DEFW $B422
  $9911 DEFW $0000
  $9913 DEFW $0000
- $9915 DEFW $9634
+ $9915 DEFW $9634                           ; Room Up
  $9917 DEFW $0000
  $9919 DEFB $03,$FF,$14,$11,$9A,$65,$03,$00 ; {#HTML[<img
  $9921 DEFB $11,$0C,$9B,$65,$03,$00,$08,$04 ; src="images/rooms/990D.png" />]
@@ -2579,7 +2582,7 @@ b$990D DEFW $B41F
 b$99A6 DEFW $7918
  $99A8 DEFW $A110
  $99AA DEFW $0000
- $99AC DEFW $9739
+ $99AC DEFW $9739                           ; Room to Right
  $99AE DEFW $0000
  $99B0 DEFW $0000
  $99B2 DEFB $02,$1E,$FF,$70,$67,$01,$0E,$FF ; {#HTML[<img
@@ -2601,8 +2604,8 @@ b$99A6 DEFW $7918
 b$9A1E DEFW $B41F
  $9A20 DEFW $B422
  $9A22 DEFW $0000
- $9A24 DEFW $7C9C
- $9A26 DEFW $9A5A
+ $9A24 DEFW $7C9C                           ; Room to Right
+ $9A26 DEFW $9A5A                           ; Room Up
  $9A28 DEFW $0000
  $9A2A DEFB $04,$FF,$03,$02,$06,$08,$92,$65 ; {#HTML[<img
  $9A32 DEFB $03,$02,$08,$06,$D4,$65,$09,$02 ; src="images/rooms/9A1E.png" />]
@@ -2615,9 +2618,9 @@ b$9A1E DEFW $B41F
 b$9A5A DEFW $B452
  $9A5C DEFW $A389
  $9A5E DEFW $0000
- $9A60 DEFW $9552
- $9A62 DEFW $9B51
- $9A64 DEFW $9A1E
+ $9A60 DEFW $9552                           ; Room to Right
+ $9A62 DEFW $9B51                           ; Room Up
+ $9A64 DEFW $9A1E                           ; Room Down
  $9A66 DEFB $04,$FF,$03,$00,$1C,$0B,$92,$65 ; {#HTML[<img
  $9A6E DEFB $03,$00,$07,$04,$F1,$66,$09,$00 ; src="images/rooms/9A5A.png" />]
  $9A76 DEFB $03,$F0,$66,$03,$02,$06,$02,$54 ;
@@ -2629,9 +2632,9 @@ b$9A5A DEFW $B452
 ; Room 9A9A
 b$9A9A DEFW $B483
  $9A9C DEFW $A192
- $9A9E DEFW $94CF
- $9AA0 DEFW $98C0
- $9AA2 DEFW $9ADC
+ $9A9E DEFW $94CF                           ; Room to Left
+ $9AA0 DEFW $98C0                           ; Room to Right
+ $9AA2 DEFW $9ADC                           ; Room Up
  $9AA4 DEFW $0000
  $9AA6 DEFB $02,$0A,$FF,$91,$65,$02,$3C,$FF ; {#HTML[<img
  $9AAE DEFB $52,$67,$03,$FF,$04,$08,$AA,$65 ; src="images/rooms/9A9A.png" />]
@@ -2646,8 +2649,8 @@ b$9ADC DEFW $B41F
  $9ADE DEFW $B422
  $9AE0 DEFW $0000
  $9AE2 DEFW $0000
- $9AE4 DEFW $9B19
- $9AE6 DEFW $9A9A
+ $9AE4 DEFW $9B19                           ; Room Up
+ $9AE6 DEFW $9A9A                           ; Room Down
  $9AE8 DEFB $04,$FF,$03,$00,$18,$08,$92,$65 ; {#HTML[<img
  $9AF0 DEFB $03,$00,$0F,$07,$8B,$66,$09,$00 ; src="images/rooms/9ADC.png" />]
  $9AF8 DEFB $06,$8A,$66,$0C,$48,$73,$02,$11 ;
@@ -2661,8 +2664,8 @@ b$9B19 DEFW $7918
  $9B1B DEFW $A133
  $9B1D DEFW $0000
  $9B1F DEFW $0000
- $9B21 DEFW $9BE7
- $9B23 DEFW $9ADC
+ $9B21 DEFW $9BE7                           ; Room Up
+ $9B23 DEFW $9ADC                           ; Room Down
  $9B25 DEFB $03,$FF,$02,$11,$90,$65,$03,$FF ; {#HTML[<img
  $9B2D DEFB $04,$11,$AA,$65,$0C,$48,$73,$02 ; src="images/rooms/9B19.png" />]
  $9B35 DEFB $11,$A5,$65,$01,$11,$3A,$A0,$65 ;
@@ -2675,8 +2678,8 @@ b$9B51 DEFW $7918
  $9B53 DEFW $A11F
  $9B55 DEFW $0000
  $9B57 DEFW $0000
- $9B59 DEFW $9B9D
- $9B5B DEFW $9A5A
+ $9B59 DEFW $9B9D                           ; Room Up
+ $9B5B DEFW $9A5A                           ; Room Down
  $9B5D DEFB $04,$FF,$03,$00,$1A,$0E,$92,$65 ; {#HTML[<img
  $9B65 DEFB $01,$07,$00,$7F,$66,$01,$07,$2B ; src="images/rooms/9B51.png" />]
  $9B6D DEFB $74,$70,$0C,$48,$73,$02,$02,$5B ;
@@ -2691,8 +2694,8 @@ b$9B9D DEFW $B458
  $9B9F DEFW $A1D6
  $9BA1 DEFW $0000
  $9BA3 DEFW $0000
- $9BA5 DEFW $9F3A
- $9BA7 DEFW $9B51
+ $9BA5 DEFW $9F3A                           ; Room Up
+ $9BA7 DEFW $9B51                           ; Room Down
  $9BA9 DEFB $04,$FF,$03,$00,$1A,$07,$A0,$66 ; {#HTML[<img
  $9BB1 DEFB $03,$00,$18,$08,$94,$65,$05,$02 ; src="images/rooms/9B9D.png" />]
  $9BB9 DEFB $01,$9D,$88,$85,$67,$05,$02,$01 ;
@@ -2706,9 +2709,9 @@ b$9B9D DEFW $B458
 b$9BE7 DEFW $B483
  $9BE9 DEFW $A19C
  $9BEB DEFW $0000
- $9BED DEFW $9DF5
- $9BEF DEFW $9E73
- $9BF1 DEFW $9B19
+ $9BED DEFW $9DF5                           ; Room to Right
+ $9BEF DEFW $9E73                           ; Room Up
+ $9BF1 DEFW $9B19                           ; Room Down
  $9BF3 DEFB $03,$FF,$02,$0C,$26,$66,$03,$FF ; {#HTML[<img
  $9BFB DEFB $09,$05,$96,$65,$08,$FF,$05,$95 ; src="images/rooms/9BE7.png" />]
  $9C03 DEFB $65,$06,$FF,$09,$28,$66,$02,$04 ;
@@ -2970,9 +2973,9 @@ c$9DF1 DJNZ $9DD9    ;
 ; Room 9DF5
 b$9DF5 DEFW $7918
  $9DF7 DEFW $A138
- $9DF9 DEFW $9BE7
+ $9DF9 DEFW $9BE7                           ; Room to Left
  $9DFB DEFW $0000
- $9DFD DEFW $9E22
+ $9DFD DEFW $9E22                           ; Room Up
  $9DFF DEFW $0000
  $9E01 DEFB $02,$07,$FF,$90,$65,$03,$FF,$02 ; {#HTML[<img
  $9E09 DEFB $0C,$AC,$65,$02,$7A,$FF,$14,$67 ; src="images/rooms/9DF5.png" />]
@@ -2986,7 +2989,7 @@ b$9E22 DEFW $B41F
  $9E26 DEFW $0000
  $9E28 DEFW $0000
  $9E2A DEFW $0000
- $9E2C DEFW $9DF5
+ $9E2C DEFW $9DF5                           ; Room Down
  $9E2E DEFB $04,$FF,$03,$00,$14,$02,$5A,$67 ; {#HTML[<img
  $9E36 DEFB $03,$02,$1A,$0C,$B0,$65,$09,$FF ; src="images/rooms/9E22.png" />]
  $9E3E DEFB $05,$C9,$65,$0C,$48,$73,$02,$03 ;
@@ -3000,10 +3003,10 @@ b$9E22 DEFW $B41F
 ; Room 9E73
 b$9E73 DEFW $B41F
  $9E75 DEFW $B422
- $9E77 DEFW $9EB8
+ $9E77 DEFW $9EB8                           ; Room to Left
  $9E79 DEFW $0000
  $9E7B DEFW $0000
- $9E7D DEFW $9BE7
+ $9E7D DEFW $9BE7                           ; Room Down
  $9E7F DEFB $02,$78,$FF,$90,$65,$03,$FF,$06 ; {#HTML[<img
  $9E87 DEFB $0D,$20,$66,$03,$FF,$06,$06,$E4 ; src="images/rooms/9E73.png" />]
  $9E8F DEFB $66,$08,$FF,$04,$1F,$67,$02,$0C ;
@@ -3016,8 +3019,8 @@ b$9E73 DEFW $B41F
 ; Room 9EB8
 b$9EB8 DEFW $7918
  $9EBA DEFW $A12E
- $9EBC DEFW $9ED9
- $9EBE DEFW $9E73
+ $9EBC DEFW $9ED9                           ; Room to Left
+ $9EBE DEFW $9E73                           ; Room to Right
  $9EC0 DEFW $0000
  $9EC2 DEFW $0000
  $9EC4 DEFB $02,$78,$FF,$90,$65,$02,$1E,$FA ; {#HTML[<img
@@ -3027,8 +3030,8 @@ b$9EB8 DEFW $7918
 ; Room 9ED9
 b$9ED9 DEFW $B41F
  $9EDB DEFW $B422
- $9EDD DEFW $9EFA
- $9EDF DEFW $9EB8
+ $9EDD DEFW $9EFA                           ; Room to Left
+ $9EDF DEFW $9EB8                           ; Room to Right
  $9EE1 DEFW $0000
  $9EE3 DEFW $0000
  $9EE5 DEFB $02,$78,$FF,$90,$65,$02,$1E,$FA ; {#HTML[<img
@@ -3039,9 +3042,9 @@ b$9ED9 DEFW $B41F
 b$9EFA DEFW $B41F
  $9EFC DEFW $B422
  $9EFE DEFW $0000
- $9F00 DEFW $9ED9
- $9F02 DEFW $0000
- $9F04 DEFW $9F3A
+ $9F00 DEFW $9ED9                           ; Room to Right
+ $9F02 DEFB $00,$00
+ $9F04 DEFW $9F3A                           ; Room Down
  $9F06 DEFB $02,$7D,$FF,$90,$65,$03,$FF,$05 ; {#HTML[<img
  $9F0E DEFB $0C,$26,$66,$03,$FF,$14,$05,$01 ; src="images/rooms/9EFA.png" />]
  $9F16 DEFB $67,$02,$13,$FF,$DF,$66,$02,$06 ;
@@ -3054,9 +3057,9 @@ b$9EFA DEFW $B41F
 b$9F3A DEFW $7918
  $9F3C DEFW $A124
  $9F3E DEFW $0000
- $9F40 DEFW $9F7E
- $9F42 DEFW $9EFA
- $9F44 DEFW $9B9D
+ $9F40 DEFW $9F7E                           ; Room to Right
+ $9F42 DEFW $9EFA                           ; Room Up
+ $9F44 DEFW $9B9D                           ; Room Down
  $9F46 DEFB $03,$FF,$05,$0F,$90,$65,$02,$3C ; {#HTML[<img
  $9F4E DEFB $FF,$52,$67,$03,$FF,$14,$02,$99 ; src="images/rooms/9F3A.png" />]
  $9F56 DEFB $65,$0C,$48,$73,$02,$0F,$96,$65 ;
@@ -3068,8 +3071,8 @@ b$9F3A DEFW $7918
 ; Room 9F7E
 b$9F7E DEFW $7918
  $9F80 DEFW $A129
- $9F82 DEFW $9F3A
- $9F84 DEFW $A022
+ $9F82 DEFW $9F3A                           ; Room to Left
+ $9F84 DEFW $A022                           ; Room to Right
  $9F86 DEFW $0000
  $9F88 DEFW $0000
  $9F8A DEFB $03,$FF,$02,$02,$52,$67,$03,$A3 ; {#HTML[<img
@@ -3095,7 +3098,7 @@ b$9F7E DEFW $7918
 ; Room A022
 b$A022 DEFW $B41F
  $A024 DEFW $B422
- $A026 DEFW $9F7E
+ $A026 DEFW $9F7E                           ; Room to Left
  $A028 DEFW $0000
  $A02A DEFW $0000
  $A02C DEFW $0000
@@ -3558,7 +3561,7 @@ c$A434 CALL $A75B      ;
  $A4A7 LD A,$64        ;
  $A4A9 CP (HL)         ;
  $A4AA JR C,$A4CD      ;
- $A4AC LD HL,$6F86     ;
+ $A4AC LD HL,$6F86     ; Tile screen 5 start address
  $A4AF ADD HL,DE       ;
  $A4B0 LD A,(HL)       ;
  $A4B1 INC A           ;
@@ -4898,7 +4901,7 @@ c$B371 DI            ;
  $B38C JR NZ,$B374   ;
  $B38E RET           ;
 
-; Room token #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
+; Room token #0: ?? 3x3 tiles #R$7C21; params: 2 bytes (address)
 c$B38F POP HL        ;
  $B390 INC HL        ;
  $B391 LD A,(HL)     ;
@@ -5142,7 +5145,7 @@ c$B4FA LD B,$06      ;
 b$B513 DEFW $B446
  $B515 DEFW $B422
  $B517 DEFW $0000
- $B519 DEFW $791E
+ $B519 DEFW $791E                           ; Room to Right
  $B51B DEFW $0000
  $B51D DEFW $0000
  $B51F DEFB $04,$0D,$02,$1E,$F5,$70,$67,$02 ; {#HTML[<img
@@ -5289,7 +5292,7 @@ c$B5C7 CALL $AC44    ;
  $B63F CALL $7472    ;
  $B642 DI            ;
  $B643 LD HL,$B513   ; Initial room address
- $B646 LD ($7184),HL ;
+ $B646 LD ($7184),HL ; set Current Room address
  $B649 LD HL,$B532   ;
  $B64C LD ($B8CE),HL ;
  $B64F LD HL,$D558   ;
@@ -5302,9 +5305,11 @@ c$B5C7 CALL $AC44    ;
  $B662 LD ($9C42),HL ;
  $B665 LD A,$13      ;
  $B667 LD ($7343),A  ;
-; This entry point is used by the routines at #R$C2FA, #R$C319, #R$C5C6 and
-; #R$C623.
-*$B66A LD A,($71D4)  ;
+
+; Current Room changed, entering the new Room
+;
+; Used by the routines at #R$C2FA, #R$C319, #R$C604 and #R$C623.
+c$B66A LD A,($71D4)  ;
  $B66D LD ($0000),A  ;
  $B670 LD HL,$71CB   ;
  $B673 LD DE,$0000   ;
@@ -5351,7 +5356,7 @@ c$B5C7 CALL $AC44    ;
  $B6D4 LD BC,$03FB   ;
  $B6D7 LD DE,$6D89   ;
  $B6DA LDIR          ;
- $B6DC LD HL,($7184) ;
+ $B6DC LD HL,($7184) ; get Current Room address
  $B6DF INC HL        ;
  $B6E0 INC HL        ;
  $B6E1 LD A,(HL)     ;
@@ -5362,15 +5367,15 @@ c$B5C7 CALL $AC44    ;
  $B6E6 LD ($B6F2),HL ;
  $B6E9 POP HL        ;
  $B6EA LD DE,$0009   ;
- $B6ED ADD HL,DE     ;
+ $B6ED ADD HL,DE     ; now HL = room sequence start address
 ; This entry point is used by the routine at #R$B702.
-*$B6EE LD A,(HL)     ;
+*$B6EE LD A,(HL)     ; get next token
  $B6EF CP $FF        ; End of sequence?
  $B6F1 JP Z,$F973    ; !!MUT-ARG!! yes =>
- $B6F4 PUSH HL       ;
+ $B6F4 PUSH HL       ; Save address in the room sequence
  $B6F5 LD L,A        ;
  $B6F6 LD H,$00      ;
- $B6F8 ADD HL,HL     ;
+ $B6F8 ADD HL,HL     ; * 2
  $B6F9 LD DE,$B706   ; Table of Room tokens
  $B6FC ADD HL,DE     ;
  $B6FD LD A,(HL)     ;
@@ -5379,12 +5384,12 @@ c$B5C7 CALL $AC44    ;
  $B700 LD L,A        ; now HL = room token procedure address
  $B701 JP (HL)       ; => run token procedure
 
-; Routine at B702
+; Proceed to the next room token
 ;
 ; Used by the routine at #R$734A.
-c$B702 POP HL        ;
+c$B702 POP HL        ; Restore address in the room sequence
  $B703 INC HL        ;
- $B704 JR $B6EE      ;
+ $B704 JR $B6EE      ; => continue room sequence processing
 
 ; Table of Room tokens
 w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
@@ -5430,11 +5435,11 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B74E LD HL,$D34D   ;
  $B751 LD B,$23      ;
 *$B753 PUSH HL       ;
- $B754 LD A,($7184)  ;
+ $B754 LD A,($7184)  ; get Current Room address, low byte
  $B757 CP (HL)       ;
  $B758 JR NZ,$B768   ;
  $B75A INC HL        ;
- $B75B LD A,($7185)  ;
+ $B75B LD A,($7185)  ; get Current Room address, high byte
  $B75E CP (HL)       ;
  $B75F JR NZ,$B768   ;
  $B761 INC HL        ;
@@ -5692,7 +5697,7 @@ c$B8D0 CALL $BBBB    ;
  $B927 LD DE,$6B8B   ; Tile screen 3 start address + 1
  $B92A LD BC,$01FD   ; 510 - 1
  $B92D LDIR          ;
- $B92F LD HL,($7184) ;
+ $B92F LD HL,($7184) ; get Current Room address
  $B932 LD A,(HL)     ;
  $B933 INC HL        ;
  $B934 LD H,(HL)     ;
@@ -6711,7 +6716,7 @@ b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
 ; Routine at C1B6
 c$C1B6 LD A,($9C41)  ;
  $C1B9 CP $18        ;
- $C1BB JP Z,$C2FA    ;
+ $C1BB JP Z,$C2FA    ; => Going to room at Right
  $C1BE LD HL,($9C42) ;
  $C1C1 LD DE,$6648   ;
  $C1C4 ADD HL,DE     ;
@@ -6867,7 +6872,7 @@ c$C24B LD A,($9C41)  ;
  $C2F6 LD (DE),A     ;
  $C2F7 JP $C16E      ;
 
-; Routine at C2FA
+; Going to room at Right
 ;
 ; Used by the routines at #R$C1B6 and #R$C50D.
 c$C2FA XOR A         ;
@@ -6876,17 +6881,17 @@ c$C2FA XOR A         ;
  $C301 LD HL,($9C42) ;
  $C304 ADD HL,DE     ;
  $C305 LD ($9C42),HL ;
- $C308 LD HL,($7184) ;
+ $C308 LD HL,($7184) ; get Current Room address
  $C30B LD DE,$0006   ;
  $C30E ADD HL,DE     ;
  $C30F LD A,(HL)     ;
  $C310 INC HL        ;
  $C311 LD H,(HL)     ;
  $C312 LD L,A        ;
- $C313 LD ($7184),HL ;
- $C316 JP $B66A      ;
+ $C313 LD ($7184),HL ; set Current Room address
+ $C316 JP $B66A      ; => Current Room changed
 
-; Routine at C319
+; Going to room at Left
 ;
 ; Used by the routines at #R$C24B and #R$C50D.
 c$C319 LD A,$18      ;
@@ -6895,15 +6900,15 @@ c$C319 LD A,$18      ;
  $C321 LD HL,($9C42) ;
  $C324 ADD HL,DE     ;
  $C325 LD ($9C42),HL ;
- $C328 LD HL,($7184) ;
+ $C328 LD HL,($7184) ; get Current Room address
  $C32B LD DE,$0004   ;
  $C32E ADD HL,DE     ;
  $C32F LD A,(HL)     ;
  $C330 INC HL        ;
  $C331 LD H,(HL)     ;
  $C332 LD L,A        ;
- $C333 LD ($7184),HL ;
- $C336 JP $B66A      ;
+ $C333 LD ($7184),HL ; set Current Room address
+ $C336 JP $B66A      ; => Current Room changed
 
 ; Routine at C339
 c$C339 LD HL,$7343   ;
@@ -7156,7 +7161,7 @@ c$C50D LD A,($7239)  ;
  $C515 LD A,(HL)     ;
  $C516 JR NZ,$C56C   ;
  $C518 CP $00        ;
- $C51A JP Z,$C319    ;
+ $C51A JP Z,$C319    ; => Going to room at Left
  $C51D DEC (HL)      ;
  $C51E LD HL,($9C42) ;
  $C521 DEC HL        ;
@@ -7286,24 +7291,27 @@ c$C5C6 LD HL,($9C42) ;
  $C5FC LD B,$32      ;
  $C5FE CALL $B59E    ;
  $C601 JP $BFCC      ;
-; This entry point is used by the routines at #R$C1B6, #R$C24B and #R$C3D9.
-*$C604 XOR A         ;
+
+; Going to room Down from current
+;
+; Used by the routines at #R$C1B6, #R$C24B, #R$C3D9 and #R$C5C6.
+c$C604 XOR A         ;
  $C605 LD ($9C40),A  ;
  $C608 LD HL,($9C42) ;
  $C60B LD DE,$FED4   ;
  $C60E ADD HL,DE     ;
  $C60F LD ($9C42),HL ;
- $C612 LD HL,($7184) ;
+ $C612 LD HL,($7184) ; get Current Room address
  $C615 LD DE,$000A   ;
  $C618 ADD HL,DE     ;
  $C619 LD A,(HL)     ;
  $C61A INC HL        ;
  $C61B LD H,(HL)     ;
  $C61C LD L,A        ;
- $C61D LD ($7184),HL ;
- $C620 JP $B66A      ;
+ $C61D LD ($7184),HL ; set Current Room address
+ $C620 JP $B66A      ; => Current Room changed
 
-; Routine at C623
+; Going to room Up from current
 ;
 ; Used by the routine at #R$C3D9.
 c$C623 LD A,$0A      ;
@@ -7312,15 +7320,15 @@ c$C623 LD A,$0A      ;
  $C62B LD DE,$012C   ;
  $C62E ADD HL,DE     ;
  $C62F LD ($9C42),HL ;
- $C632 LD HL,($7184) ;
+ $C632 LD HL,($7184) ; get Current Room address
  $C635 LD DE,$0008   ;
  $C638 ADD HL,DE     ;
  $C639 LD A,(HL)     ;
  $C63A INC HL        ;
  $C63B LD H,(HL)     ;
  $C63C LD L,A        ;
- $C63D LD ($7184),HL ;
- $C640 JP $B66A      ;
+ $C63D LD ($7184),HL ; get Current Room address
+ $C640 JP $B66A      ; => Current Room changed
 
 ; Routine at C643
 ;
@@ -8384,10 +8392,10 @@ b$D581 DEFB $FF,$FF,$FF,$6E,$7C,$FF,$FF,$FF
 
 ; Routine at DE68
 ;
-; Used by the routine at #R$B5C7.
+; Used by the routine at #R$B66A.
 c$DE68 LD B,$14      ;
  $DE6A LD HL,$DE84   ;
-*$DE6D LD A,($7184)  ;
+*$DE6D LD A,($7184)  ; get Current Room address
  $DE70 CP (HL)       ;
  $DE71 INC HL        ;
  $DE72 JR NZ,$DE7E   ;

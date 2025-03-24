@@ -309,8 +309,7 @@ b$7222 DEFB $00,$EF,$01,$04,$EF,$08,$03,$EF,$10,$02 ; Ports and bits for the
                                                     ; drawing
  $7239 DEFB $00                                     ; Byte mirror flag
 
-; Data block at 723A
-@label=mirtab
+; Mirror table
 b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {Mirror
  $724A DEFB $09,$89,$49,$C9,$29,$A9,$69,$E9,$19,$99,$59,$D9,$39,$B9,$79,$F9 ; table 1st
  $725A DEFB $05,$85,$45,$C5,$25,$A5,$65,$E5,$15,$95,$55,$D5,$35,$B5,$75,$F5 ; part
@@ -319,7 +318,6 @@ b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {M
  $728A DEFB $0B,$8B,$4B,$CB,$2B,$AB,$6B,$EB,$1B,$9B,$5B,$DB,$3B,$BB,$7B,$FB ;
  $729A DEFB $07,$87,$47,$C7,$27,$A7,$67,$E7,$17,$97,$57,$D7,$37,$B7,$77,$F7 ;
  $72AA DEFB $0F,$8F,$4F,$CF,$2F,$AF,$6F,$EF,$1F,$9F,$5F,$DF,$3F,$BF,$7F,$FF ; }
-@label=mirtabhalf
  $72BA DEFB $00,$80,$40,$C0,$20,$A0,$60,$E0,$10,$90,$50,$D0,$30,$B0,$70,$F0 ; {Mirror
  $72CA DEFB $08,$88,$48,$C8,$28,$A8,$68,$E8,$18,$98,$58,$D8,$38,$B8,$78,$F8 ; table 2nd
  $72DA DEFB $04,$84,$44,$C4,$24,$A4,$64,$E4,$14,$94,$54,$D4,$34,$B4,$74,$F4 ; part
@@ -358,11 +356,11 @@ c$7359 POP HL        ;
  $735B LD A,(HL)     ;
  $735C PUSH HL       ;
  $735D OUT ($FE),A   ;
- $735F JR $734A      ; {=> #R$B702 Proceed to the next room token
+ $735F JR $734A      ; => #R$B702 Proceed to the next room token
  $7361 POP HL        ;
  $7362 INC HL        ;
  $7363 LD A,(HL)     ;
- $7364 PUSH HL       ; }
+ $7364 PUSH HL       ;
  $7365 LD HL,$6590   ; Tile screen 0 start address
  $7368 LD B,$1E      ;
 *$736A LD (HL),A     ;
@@ -469,7 +467,7 @@ c$73C5 LD A,$23      ;
  $73E4 POP HL        ;
  $73E5 ADD HL,DE     ;
  $73E6 DJNZ $73DB    ;
- $73E8 JP $734A      ;
+ $73E8 JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #8:
 c$73EB LD A,$2B      ;
@@ -490,7 +488,7 @@ c$73F3 POP HL        ;
  $73FD LD (HL),A     ;
  $73FE LD BC,$01FD   ; 510 - 1
  $7401 LDIR          ;
- $7403 JP $734A      ;
+ $7403 JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #5:
 c$7406 POP HL        ;
@@ -523,7 +521,7 @@ c$7406 POP HL        ;
  $7424 POP BC        ;
  $7425 DEC C         ;
  $7426 JR NZ,$7415   ;
- $7428 JP $734A      ;
+ $7428 JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #12:
 c$742B POP HL        ;
@@ -558,7 +556,7 @@ c$742B POP HL        ;
  $744B ADD HL,DE     ;
  $744C POP DE        ;
  $744D DJNZ $743A    ;
- $744F JP $734A      ;
+ $744F JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #3: ??; params: 5 bytes
 c$7452 POP HL        ;
@@ -586,7 +584,7 @@ c$7452 POP HL        ;
  $746B POP HL        ;
  $746C ADD HL,DE     ;
  $746D DJNZ $7463    ;
- $746F JP $734A      ;
+ $746F JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Routine at 7472
 ;
@@ -1137,8 +1135,8 @@ b$7E8C DEFW $7918
  $7E92 DEFW $7EF2                           ; Room to Right
  $7E94 DEFW $0000
  $7E96 DEFW $7F48                           ; Room Down
- $7E98 DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {Room sequence
- $7EA0 DEFB $1E,$FF,$70,$67,$0C,$2C,$7C,$02 ;
+ $7E98 DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {#HTML[<img
+ $7EA0 DEFB $1E,$FF,$70,$67,$0C,$2C,$7C,$02 ; src="images/rooms/7E8C.png" />]
  $7EA8 DEFB $01,$72,$67,$0C,$2C,$7C,$02,$01 ;
  $7EB0 DEFB $84,$67,$05,$03,$03,$18,$7C,$0C ;
  $7EB8 DEFB $71,$05,$03,$04,$0C,$7C,$F2,$70 ;
@@ -1157,8 +1155,8 @@ b$7EF2 DEFW $B47A
  $7EF8 DEFW $0000
  $7EFA DEFW $0000
  $7EFC DEFW $0000
- $7EFE DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {Room sequence
- $7F06 DEFB $1E,$FF,$70,$67,$01,$0F,$EB,$CA ;
+ $7EFE DEFB $04,$01,$02,$1E,$FF,$90,$65,$02 ; {#HTML[<img
+ $7F06 DEFB $1E,$FF,$70,$67,$01,$0F,$EB,$CA ; src="images/rooms/7EF2.png" />]
  $7F0E DEFB $65,$05,$04,$03,$7B,$7E,$63,$70 ;
  $7F16 DEFB $05,$04,$03,$7B,$7E,$BA,$70,$05 ;
  $7F1E DEFB $04,$03,$7B,$7E,$17,$71,$05,$03 ;
@@ -1253,8 +1251,8 @@ b$80A7 DEFW $B458
  $80AD DEFW $80F6                           ; Room to Right
  $80AF DEFW $0000
  $80B1 DEFW $0000
- $80B3 DEFB $02,$1E,$FF,$90,$65,$02,$1E,$FF ; {Room sequence
- $80BB DEFB $70,$67,$05,$03,$04,$0C,$7C,$F0 ;
+ $80B3 DEFB $02,$1E,$FF,$90,$65,$02,$1E,$FF ; {#HTML[<img
+ $80BB DEFB $70,$67,$05,$03,$04,$0C,$7C,$F0 ; src="images/rooms/80A7.png" />]
  $80C3 DEFB $70,$05,$03,$03,$21,$7C,$13,$71 ;
  $80CB DEFB $05,$03,$03,$A0,$71,$17,$71,$05 ;
  $80D3 DEFB $04,$03,$7B,$7E,$1C,$71,$05,$03 ;
@@ -1270,8 +1268,8 @@ b$80F6 DEFW $B452
  $80FC DEFW $0000
  $80FE DEFW $0000
  $8100 DEFW $0000
- $8102 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$02 ; {Room sequence
- $810A DEFB $10,$AC,$65,$05,$02,$04,$BB,$71 ;
+ $8102 DEFB $02,$1E,$FF,$70,$67,$03,$FF,$02 ; {#HTML[<img
+ $810A DEFB $10,$AC,$65,$05,$02,$04,$BB,$71 ; src="images/rooms/80F6.png" />]
  $8112 DEFB $F1,$70,$05,$03,$03,$21,$7C,$BA ;
  $811A DEFB $70,$05,$03,$03,$21,$7C,$12,$71 ;
  $8122 DEFB $05,$03,$03,$21,$7C,$15,$71,$05 ;
@@ -1290,8 +1288,8 @@ b$8162 DEFW $B458
  $8168 DEFW $0000
  $816A DEFW $8321                           ; Room Up
  $816C DEFW $7BD2                           ; Room Down
- $816E DEFB $03,$01,$1C,$08,$80,$66,$02,$1C ; {Room sequence
- $8176 DEFB $FF,$62,$66,$02,$1E,$FF,$70,$67 ;
+ $816E DEFB $03,$01,$1C,$08,$80,$66,$02,$1C ; {#HTML[<img
+ $8176 DEFB $FF,$62,$66,$02,$1E,$FF,$70,$67 ; src="images/rooms/8162.png" />]
  $817E DEFB $02,$0D,$FF,$90,$65,$02,$07,$FF ;
  $8186 DEFB $A7,$65,$0C,$E3,$81,$02,$0F,$CA ;
  $818E DEFB $65,$0C,$48,$73,$02,$07,$A0,$65 ;
@@ -1313,8 +1311,8 @@ b$81E5 DEFW $B452
  $81EB DEFW $8162                           ; Room to Right
  $81ED DEFW $0000
  $81EF DEFW $0000
- $81F1 DEFB $03,$FF,$1E,$09,$80,$66,$03,$01 ; {Room sequence
- $81F9 DEFB $1C,$07,$A0,$66,$02,$05,$00,$80 ;
+ $81F1 DEFB $03,$FF,$1E,$09,$80,$66,$03,$01 ; {#HTML[<img
+ $81F9 DEFB $1C,$07,$A0,$66,$02,$05,$00,$80 ; src="images/rooms/81E5.png" />]
  $8201 DEFB $66,$02,$06,$FF,$9E,$66,$02,$0C ;
  $8209 DEFB $FF,$90,$65,$02,$0B,$FF,$A3,$65 ;
  $8211 DEFB $06,$FF,$02,$AE,$65,$0E,$2A,$AC ;
@@ -1742,8 +1740,8 @@ b$8A2D DEFW $B41F
  $8A33 DEFW $8A81                           ; Room to Right
  $8A35 DEFW $8B25                           ; Room Up
  $8A37 DEFW $889F                           ; Room Down
- $8A39 DEFB $01,$08,$3A,$A2,$66,$01,$08,$3A ; {Room sequence
- $8A41 DEFB $AD,$66,$01,$08,$3A,$B1,$66,$01 ;
+ $8A39 DEFB $01,$08,$3A,$A2,$66,$01,$08,$3A ; {#HTML[<img
+ $8A41 DEFB $AD,$66,$01,$08,$3A,$B1,$66,$01 ; src="images/rooms/8A2D.png" />]
  $8A49 DEFB $05,$3A,$04,$67,$02,$03,$FF,$90 ;
  $8A51 DEFB $65,$02,$0F,$FA,$80,$66,$02,$05 ;
  $8A59 DEFB $FA,$8F,$66,$0C,$48,$73,$02,$08 ;
@@ -1793,8 +1791,8 @@ b$8B25 DEFW $B483
  $8B2B DEFW $8B71                           ; Room to Right
  $8B2D DEFW $0000
  $8B2F DEFW $8A2D                           ; Room Down
- $8B31 DEFB $02,$1E,$FF,$70,$67,$02,$48,$FF ; {Room sequence
- $8B39 DEFB $90,$65,$0C,$48,$73,$02,$0E,$DD ;
+ $8B31 DEFB $02,$1E,$FF,$70,$67,$02,$48,$FF ; {#HTML[<img
+ $8B39 DEFB $90,$65,$0C,$48,$73,$02,$0E,$DD ; src="images/rooms/8B25.png" />]
  $8B41 DEFB $65,$05,$02,$01,$84,$79,$81,$67 ;
  $8B49 DEFB $05,$04,$04,$A9,$71,$F7,$70,$05 ;
  $8B51 DEFB $04,$04,$A9,$71,$F5,$70,$05,$04 ;
@@ -1809,8 +1807,8 @@ b$8B71 DEFW $7918
  $8B77 DEFW $8BAB                           ; Room to Right
  $8B79 DEFW $0000
  $8B7B DEFW $0000
- $8B7D DEFB $02,$1E,$FF,$70,$67,$02,$3C,$FF ; {Room sequence
- $8B85 DEFB $90,$65,$05,$04,$04,$A9,$71,$EF ;
+ $8B7D DEFB $02,$1E,$FF,$70,$67,$02,$3C,$FF ; {#HTML[<img
+ $8B85 DEFB $90,$65,$05,$04,$04,$A9,$71,$EF ; src="images/rooms/8B71.png" />]
  $8B8D DEFB $70,$05,$04,$04,$A9,$71,$F5,$70 ;
  $8B95 DEFB $05,$04,$04,$A9,$71,$FB,$70,$05 ;
  $8B9D DEFB $04,$04,$A9,$71,$00,$71,$05,$04 ;
@@ -1823,8 +1821,8 @@ b$8BAB DEFW $B41F
  $8BB1 DEFW $0000
  $8BB3 DEFW $0000
  $8BB5 DEFW $8AF4                           ; Room Down
- $8BB7 DEFB $02,$3C,$FF,$90,$65,$03,$FF,$02 ; {Room sequence
- $8BBF DEFB $0E,$E8,$65,$02,$09,$FF,$70,$67 ;
+ $8BB7 DEFB $02,$3C,$FF,$90,$65,$03,$FF,$02 ; {#HTML[<img
+ $8BBF DEFB $0E,$E8,$65,$02,$09,$FF,$70,$67 ; src="images/rooms/8BAB.png" />]
  $8BC7 DEFB $02,$10,$FF,$7E,$67,$0C,$48,$73 ;
  $8BCF DEFB $02,$0E,$E0,$65,$05,$02,$01,$9D ;
  $8BD7 DEFB $88,$84,$67,$05,$03,$03,$A0,$71 ;
@@ -1859,8 +1857,8 @@ b$8C5A DEFW $B41F
  $8C60 DEFW $8D18                           ; Room to Right
  $8C62 DEFW $0000
  $8C64 DEFW $8BF0                           ; Room Down
- $8C66 DEFB $01,$05,$3A,$DD,$66,$01,$0D,$3A ; {Room sequence
- $8C6E DEFB $F2,$65,$01,$0F,$3A,$D8,$65,$01 ;
+ $8C66 DEFB $01,$05,$3A,$DD,$66,$01,$0D,$3A ; {#HTML[<img
+ $8C6E DEFB $F2,$65,$01,$0F,$3A,$D8,$65,$01 ; src="images/rooms/8C5A.png" />]
  $8C76 DEFB $07,$3A,$CC,$66,$01,$07,$3A,$CF ;
  $8C7E DEFB $66,$01,$0D,$3A,$1F,$66,$01,$0D ;
  $8C86 DEFB $3A,$23,$66,$09,$FF,$03,$A6,$65 ;
@@ -1880,8 +1878,8 @@ b$8CC8 DEFW $B41F
  $8CCE DEFW $8E9C                           ; Room to Right
  $8CD0 DEFW $0000
  $8CD2 DEFW $0000
- $8CD4 DEFB $01,$0C,$3A,$96,$65,$01,$10,$3A ; {Room sequence
- $8CDC DEFB $9E,$65,$01,$10,$3A,$A3,$65,$01 ;
+ $8CD4 DEFB $01,$0C,$3A,$96,$65,$01,$10,$3A ; {#HTML[<img
+ $8CDC DEFB $9E,$65,$01,$10,$3A,$A3,$65,$01 ; src="images/rooms/8CC8.png" />]
  $8CE4 DEFB $10,$3A,$AA,$65,$07,$FF,$07,$A1 ;
  $8CEC DEFB $66,$02,$1E,$FF,$70,$67,$03,$FF ;
  $8CF4 DEFB $03,$08,$80,$66,$02,$06,$63,$F5 ;
@@ -1897,8 +1895,8 @@ b$8D18 DEFW $B41F
  $8D1E DEFW $8EE1                           ; Room to Right
  $8D20 DEFW $8D5C                           ; Room Up
  $8D22 DEFW $8CC8                           ; Room Down
- $8D24 DEFB $01,$03,$3A,$3A,$67,$01,$03,$3A ; {Room sequence
- $8D2C DEFB $42,$67,$01,$03,$3A,$4E,$67,$01 ;
+ $8D24 DEFB $01,$03,$3A,$3A,$67,$01,$03,$3A ; {#HTML[<img
+ $8D2C DEFB $42,$67,$01,$03,$3A,$4E,$67,$01 ; src="images/rooms/8D18.png" />]
  $8D34 DEFB $11,$3A,$A3,$65,$03,$FF,$0A,$04 ;
  $8D3C DEFB $90,$65,$0C,$48,$73,$02,$0D,$9A ;
  $8D44 DEFB $65,$02,$12,$FA,$16,$67,$02,$06 ;
@@ -1978,8 +1976,8 @@ b$8E9C DEFW $B41F
  $8EA2 DEFW $0000
  $8EA4 DEFW $8EE1                           ; Room Up
  $8EA6 DEFW $8F20                           ; Room Down
- $8EA8 DEFB $01,$10,$3A,$91,$65,$01,$10,$3A ; {Room sequence
- $8EB0 DEFB $99,$65,$01,$10,$3A,$9C,$65,$01 ;
+ $8EA8 DEFB $01,$10,$3A,$91,$65,$01,$10,$3A ; {#HTML[<img
+ $8EB0 DEFB $99,$65,$01,$10,$3A,$9C,$65,$01 ; src="images/rooms/8E9C.png" />]
  $8EB8 DEFB $06,$3A,$C1,$66,$01,$07,$3A,$CF ;
  $8EC0 DEFB $66,$01,$07,$3A,$D3,$66,$02,$0E ;
  $8EC8 DEFB $FF,$70,$67,$02,$08,$FA,$A1,$66 ;
@@ -2075,8 +2073,8 @@ b$9053 DEFW $B41F
  $9059 DEFW $8F84                           ; Room to Right
  $905B DEFW $8FBD                           ; Room Up
  $905D DEFW $90DB                           ; Room Down
- $905F DEFB $03,$FF,$1E,$09,$90,$65,$03,$00 ; {Room sequence
- $9067 DEFB $0A,$04,$3A,$66,$02,$27,$FF,$67 ;
+ $905F DEFB $03,$FF,$1E,$09,$90,$65,$03,$00 ; {#HTML[<img
+ $9067 DEFB $0A,$04,$3A,$66,$02,$27,$FF,$67 ; src="images/rooms/9053.png" />]
  $906F DEFB $67,$02,$04,$FF,$30,$67,$02,$06 ;
  $9077 DEFB $FF,$4C,$67,$05,$02,$04,$BB,$71 ;
  $907F DEFB $F1,$70,$05,$02,$04,$BB,$71,$E5 ;
@@ -2091,8 +2089,8 @@ b$909F DEFW $B47A
  $90A5 DEFW $9053                           ; Room to Right
  $90A7 DEFW $0000
  $90A9 DEFW $0000
- $90AB DEFB $02,$1E,$FF,$90,$65,$09,$FF,$08 ; {Room sequence
- $90B3 DEFB $CB,$65,$03,$FF,$05,$09,$62,$66 ;
+ $90AB DEFB $02,$1E,$FF,$90,$65,$09,$FF,$08 ; {#HTML[<img
+ $90B3 DEFB $CB,$65,$03,$FF,$05,$09,$62,$66 ; src="images/rooms/909F.png" />]
  $90BB DEFB $02,$1E,$FF,$70,$67,$07,$FF,$08 ;
  $90C3 DEFB $85,$66,$05,$04,$07,$AA,$79,$9E ;
  $90CB DEFB $70,$05,$04,$07,$AA,$79,$41,$70 ;
@@ -4923,7 +4921,7 @@ c$B38F POP HL        ;
  $B3A8 POP DE        ;
  $B3A9 DEC C         ;
  $B3AA JR NZ,$B39B   ;
- $B3AC JP $734A      ;
+ $B3AC JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Unused
 s$B3AF DEFS $01

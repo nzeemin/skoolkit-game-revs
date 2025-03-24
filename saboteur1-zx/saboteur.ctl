@@ -37,38 +37,41 @@ W $7233,2,2 Screen attributes address stored during tile map drawing
 W $7235,2,2 Tile screen 5 address stored during tile map drawing
 W $7237,2,2 Tile screen 4 address stored during tile map drawing
 B $7239,1 Byte mirror flag
-b $723A
-@ $723A label=mirtab
+b $723A Mirror table
 B $723A,128,16 Mirror table 1st part
-@ $72BA label=mirtabhalf
 B $72BA,128,16 Mirror table 2nd part
 b $733A
 c $734A
 c $734D Room token #14:
-C $7357 => #R$B702 Proceed to the next room token
+C $7357,2 => #R$B702 Proceed to the next room token
 c $7359 Room token #13:
-C $735F => #R$B702 Proceed to the next room token
+C $735F,2 => #R$B702 Proceed to the next room token
 C $7365,3 Tile screen 0 start address
-C $737F => #R$B702 Proceed to the next room token
+C $737F,2 => #R$B702 Proceed to the next room token
 c $7381 Room token #1: Fill to down; params: 4 bytes (count, filler, address)
-C $7393 => #R$B702 Proceed to the next room token
+C $7393,2 => #R$B702 Proceed to the next room token
 c $7395 Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
 c $739A Room token #11: Fill to down-left; params: 4 bytes (count, filler, address)
 c $739F Room token #2: Fill to right; params: 4 bytes (count, filler, address)
 c $73A4 Room token #6:
 C $73BB,1 !!MUT-CMD!!
-C $73C3 => #R$B702 Proceed to the next room token
+C $73C3,2 => #R$B702 Proceed to the next room token
 c $73C5 Room token #7:
 C $73DE,1 !!MUT-CMD!!
+C $73E8,3 => #R$B702 Proceed to the next room token
 c $73EB Room token #8:
 c $73EF Room token #9:
 c $73F3 Room token #4: Fill whole Tile screen 0 with one tile; params: 1 byte (filler)
 C $73F7,3 Tile screen 0 start address
 C $73FA,3 Tile screen 0 start address + 1
 C $73FE,3 510 - 1
+C $7403,3 => #R$B702 Proceed to the next room token
 c $7406 Room token #5:
+C $7428,3 => #R$B702 Proceed to the next room token
 c $742B Room token #12:
+C $744F,3 => #R$B702 Proceed to the next room token
 c $7452 Room token #3: ??; params: 5 bytes
+C $746F,3 => #R$B702 Proceed to the next room token
 c $7472
 b $749C
 B $749D
@@ -190,12 +193,12 @@ W $7E90,2,2 Room to Left
 W $7E92,2,2 Room to Right
 W $7E94,2,2
 W $7E96,2,2 Room Down
-B $7E98 Room sequence
+B $7E98 #HTML[<img src="images/rooms/7E8C.png" />]
 b $7EF2 Room 7EF2
 W $7EF2,12,2
 W $7EF6,2,2 Room to Left
 W $7EF8,6,2
-B $7EFE Room sequence
+B $7EFE #HTML[<img src="images/rooms/7EF2.png" />]
 b $7F48 Room 7F48
 W $7F48,12,2
 W $7F4E,2,2 Room to Right
@@ -232,25 +235,25 @@ W $80A7,12,2
 W $80AB,2,2 Room to Left
 W $80AD,2,2 Room to Right
 W $80AF,4,2
-B $80B3 Room sequence
+B $80B3 #HTML[<img src="images/rooms/80A7.png" />]
 b $80F6 Room 80F6
 W $80F6,12,2
 W $80FA,2,2 Room to Left
 W $80FC,6,2
-B $8102 Room sequence
+B $8102 #HTML[<img src="images/rooms/80F6.png" />]
 b $8162 Room 8162
 W $8162,12,2
 W $8166,2,2 Room to Left
 W $8168,2,2
 W $816A,2,2 Room Up
 W $816C,2,2 Room Down
-B $816E Room sequence
+B $816E #HTML[<img src="images/rooms/8162.png" />]
 b $81E5 Room 81E5
 W $81E5,12,2
 W $81E9,2,2 Room to Left
 W $81EB,2,2 Room to Right
 W $81ED,4,2
-B $81F1 Room sequence
+B $81F1 #HTML[<img src="images/rooms/81E5.png" />]
 b $8238 Room 8238
 W $8238,12,2
 W $823E,2,2 Room to Right
@@ -403,7 +406,7 @@ W $8A31,2,2 Room to Left
 W $8A33,2,2 Room to Right
 W $8A35,2,2 Room Up
 W $8A37,2,2 Room Down
-B $8A39 Room sequence
+B $8A39 #HTML[<img src="images/rooms/8A2D.png" />]
 b $8A81 Room 8A81
 W $8A81,12,2
 W $8A85,2,2 Room to Left
@@ -423,19 +426,19 @@ W $8B25,12,2
 W $8B2B,2,2 Room to Right
 W $8B2D,2,2
 W $8B2F,2,2 Room Down
-B $8B31 Room sequence
+B $8B31 #HTML[<img src="images/rooms/8B25.png" />]
 b $8B71 Room 8B71
 W $8B71,12,2
 W $8B75,2,2 Room to Left
 W $8B77,2,2 Room to Right
 W $8B79,4,2
-B $8B7D Room sequence
+B $8B7D #HTML[<img src="images/rooms/8B71.png" />]
 b $8BAB Room 8BAB
 W $8BAB,12,2
 W $8BAF,2,2 Room to Left
 W $8BB1,4,2
 W $8BB5,2,2 Room Down
-B $8BB7 Room sequence
+B $8BB7 #HTML[<img src="images/rooms/8BAB.png" />]
 b $8BF0 Room 8BF0
 W $8BF0,12,2
 W $8BF4,2,2 Room to Left
@@ -449,20 +452,20 @@ W $8C5E,2,2 Room to Left
 W $8C60,2,2 Room to Right
 W $8C62,2,2
 W $8C64,2,2 Room Down
-B $8C66 Room sequence
+B $8C66 #HTML[<img src="images/rooms/8C5A.png" />]
 b $8CC8 Room 8CC8
 W $8CC8,12,2
 W $8CCC,2,2 Room to Left
 W $8CCE,2,2 Room to Right
 W $8CD0,4,2
-B $8CD4 Room sequence
+B $8CD4 #HTML[<img src="images/rooms/8CC8.png" />]
 b $8D18 Room 8D18
 W $8D18,12,2
 W $8D1C,2,2 Room to Left
 W $8D1E,2,2 Room to Right
 W $8D20,2,2 Room Up
 W $8D22,2,2 Room Down
-B $8D24 Room sequence
+B $8D24 #HTML[<img src="images/rooms/8D18.png" />]
 b $8D5C Room 8D5C
 W $8D5C,12,2
 W $8D60,2,2 Room to Left
@@ -485,7 +488,7 @@ W $8EA0,2,2 Room to Left
 W $8EA2,2,2
 W $8EA4,2,2 Room Up
 W $8EA6,2,2 Room Down
-B $8EA8 Room sequence
+B $8EA8 #HTML[<img src="images/rooms/8E9C.png" />]
 b $8EE1 Room 8EE1
 W $8EE1,12,2
 W $8EE5,2,2 Room to Left
@@ -526,13 +529,13 @@ W $9057,2,2 Room to Left
 W $9059,2,2 Room to Right
 W $905B,2,2 Room Up
 W $905D,2,2 Room Down
-B $905F Room sequence
+B $905F #HTML[<img src="images/rooms/9053.png" />]
 b $909F Room 909F
 W $909F,12,2
 W $90A3,2,2 Room to Left
 W $90A5,2,2 Room to Right
 W $90A7,4,2
-B $90AB Room sequence
+B $90AB #HTML[<img src="images/rooms/909F.png" />]
 b $90DB Room 90DB
 W $90DB,12,2
 W $90DF,2,2 Room to Left
@@ -1070,6 +1073,7 @@ c $B348
 c $B368
 c $B371
 c $B38F Room token #0: ?? 3x3 tiles #R$7C21; params: 2 bytes (address)
+C $B3AC,3 => #R$B702 Proceed to the next room token
 s $B3AF
 c $B3B0
 s $B401

@@ -333,11 +333,11 @@ b$733A DEFB $00,$DE,$D3,$08,$D4,$32,$D4,$5C
 
 ; Routine at 734A
 ;
-; Used by the routines at #R$734D, #R$7359, #R$7381, #R$73A4, #R$73C5, #R$73F3,
-; #R$7406, #R$742B, #R$7452 and #R$B38F.
+; Used by the routines at #R$734D, #R$7359, #R$7361, #R$7381, #R$73A4, #R$73C5,
+; #R$73F3, #R$7406, #R$742B, #R$7452 and #R$B38F.
 c$734A JP $B702      ;
 
-; Room token #14:
+; Room token #14: Put one tile at the given address
 c$734D POP HL        ;
  $734E INC HL        ;
  $734F LD C,(HL)     ;
@@ -350,14 +350,16 @@ c$734D POP HL        ;
  $7356 LD (HL),C     ;
  $7357 JR $734A      ; => #R$B702 Proceed to the next room token
 
-; Room token #13:
+; Room token #13: Set border color; params: 1 byte
 c$7359 POP HL        ;
  $735A INC HL        ;
  $735B LD A,(HL)     ;
  $735C PUSH HL       ;
  $735D OUT ($FE),A   ;
  $735F JR $734A      ; => #R$B702 Proceed to the next room token
- $7361 POP HL        ;
+
+; Routine at 7361
+c$7361 POP HL        ;
  $7362 INC HL        ;
  $7363 LD A,(HL)     ;
  $7364 PUSH HL       ;
@@ -490,7 +492,8 @@ c$73F3 POP HL        ;
  $7401 LDIR          ;
  $7403 JP $734A      ; => #R$B702 Proceed to the next room token
 
-; Room token #5:
+; Room token #5: Draw block of tiles; params: 6 bytes (width, height, srcaddr,
+; address)
 c$7406 POP HL        ;
  $7407 INC HL        ;
  $7408 LD B,(HL)     ;
@@ -523,7 +526,8 @@ c$7406 POP HL        ;
  $7426 JR NZ,$7415   ;
  $7428 JP $734A      ; => #R$B702 Proceed to the next room token
 
-; Room token #12:
+; Room token #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height,
+; address)
 c$742B POP HL        ;
  $742C INC HL        ;
  $742D LD E,(HL)     ;
@@ -558,7 +562,8 @@ c$742B POP HL        ;
  $744D DJNZ $743A    ;
  $744F JP $734A      ; => #R$B702 Proceed to the next room token
 
-; Room token #3: ??; params: 5 bytes
+; Room token #3: Fill rectangle; params: 5 bytes (filler, width, height,
+; address)
 c$7452 POP HL        ;
  $7453 INC HL        ;
  $7454 LD D,(HL)     ;
@@ -967,8 +972,8 @@ b$7B56 DEFW $B41F
  $7B5C DEFW $0000
  $7B5E DEFW $7D5A                           ; Room Up
  $7B60 DEFW $7ACD                           ; Room Down
- $7B62 DEFB $04,$FF,$03,$02,$08,$06,$28,$66 ; {Room sequence
- $7B6A DEFB $03,$02,$0A,$05,$33,$66,$02,$08 ;
+ $7B62 DEFB $04,$FF,$03,$02,$08,$06,$28,$66 ; {#HTML[<img
+ $7B6A DEFB $03,$02,$0A,$05,$33,$66,$02,$08 ; src="images/rooms/7B56.png" />]
  $7B72 DEFB $03,$0A,$66,$02,$0A,$03,$15,$66 ;
  $7B7A DEFB $0C,$B9,$71,$02,$0B,$94,$65,$0C ;
  $7B82 DEFB $B9,$71,$02,$11,$A2,$65,$0C,$84 ;
@@ -1910,8 +1915,8 @@ b$8D5C DEFW $B483
  $8D62 DEFW $0000
  $8D64 DEFW $0000
  $8D66 DEFW $8D18                           ; Room Down
- $8D68 DEFB $04,$01,$02,$3E,$FF,$90,$65,$03 ; {Room sequence
- $8D70 DEFB $FF,$02,$04,$EA,$65,$02,$04,$FF ;
+ $8D68 DEFB $04,$01,$02,$3E,$FF,$90,$65,$03 ; {#HTML[<img
+ $8D70 DEFB $FF,$02,$04,$EA,$65,$02,$04,$FF ; src="images/rooms/8D5C.png" />]
  $8D78 DEFB $62,$66,$09,$FF,$07,$E4,$65,$03 ;
  $8D80 DEFB $FF,$05,$0C,$E5,$65,$02,$41,$FF ;
  $8D88 DEFB $4D,$67,$05,$02,$02,$84,$79,$5C ;
@@ -1924,15 +1929,15 @@ b$8D5C DEFW $B483
  $8DC0 DEFB $0E,$2A,$78,$70,$01,$06,$2B,$96 ;
  $8DC8 DEFB $70,$FF                         ; }
 
-; Room 8DCA
+; Room 8DCA (helicopter)
 b$8DCA DEFW $B41F
  $8DCC DEFW $B422
  $8DCE DEFW $0000
  $8DD0 DEFW $8D5C                           ; Room to Right
  $8DD2 DEFW $0000
  $8DD4 DEFW $0000
- $8DD6 DEFB $04,$01,$02,$3F,$FF,$90,$65,$03 ; {Room sequence
- $8DDE DEFB $FF,$02,$0D,$EA,$65,$02,$25,$FF ;
+ $8DD6 DEFB $04,$01,$02,$3F,$FF,$90,$65,$03 ; {#HTML[<img
+ $8DDE DEFB $FF,$02,$0D,$EA,$65,$02,$25,$FF ; src="images/rooms/8DCA.png" />]
  $8DE6 DEFB $69,$67,$02,$0A,$91,$5A,$67,$02 ;
  $8DEE DEFB $17,$01,$93,$65,$02,$1B,$E2,$AF ;
  $8DF6 DEFB $65,$0E,$FF,$E6,$65,$03,$FF,$03 ;
@@ -1992,8 +1997,8 @@ b$8EE1 DEFW $B41F
  $8EE7 DEFW $0000
  $8EE9 DEFW $0000
  $8EEB DEFW $8E9C                           ; Room Down
- $8EED DEFB $01,$03,$3A,$35,$67,$01,$0F,$3A ; {Room sequence
- $8EF5 DEFB $D5,$65,$0E,$3A,$7C,$67,$0E,$FF ;
+ $8EED DEFB $01,$03,$3A,$35,$67,$01,$0F,$3A ; {#HTML[<img
+ $8EF5 DEFB $D5,$65,$0E,$3A,$7C,$67,$0E,$FF ; src="images/rooms/8EE1.png" />]
  $8EFD DEFB $93,$65,$03,$FF,$1A,$02,$94,$65 ;
  $8F05 DEFB $03,$FF,$02,$0F,$E8,$65,$09,$FF ;
  $8F0D DEFB $07,$E7,$65,$02,$04,$FA,$16,$67 ;
@@ -2103,8 +2108,8 @@ b$90DB DEFW $B452
  $90E1 DEFW $91BA                           ; Room to Right
  $90E3 DEFW $9053                           ; Room Up
  $90E5 DEFW $0000
- $90E7 DEFB $04,$FF,$03,$00,$16,$06,$D4,$65 ; {Room sequence
- $90EF DEFB $02,$0C,$00,$C0,$65,$06,$00,$07 ;
+ $90E7 DEFB $04,$FF,$03,$00,$16,$06,$D4,$65 ; {#HTML[<img
+ $90EF DEFB $02,$0C,$00,$C0,$65,$06,$00,$07 ; src="images/rooms/90DB.png" />]
  $90F7 DEFB $92,$66,$03,$00,$12,$06,$9E,$66 ;
  $90FF DEFB $02,$04,$39,$99,$65,$02,$04,$38 ;
  $9107 DEFB $B7,$65,$05,$03,$03,$18,$7C,$F5 ;
@@ -2122,8 +2127,8 @@ b$913F DEFW $B41F
  $9145 DEFW $90DB                           ; Room to Right
  $9147 DEFW $0000
  $9149 DEFW $83ED                           ; Room Down
- $914B DEFB $09,$FF,$09,$AD,$65,$02,$27,$FF ; {Room sequence
- $9153 DEFB $67,$67,$02,$05,$FF,$90,$65,$03 ;
+ $914B DEFB $09,$FF,$09,$AD,$65,$02,$27,$FF ; {#HTML[<img
+ $9153 DEFB $67,$67,$02,$05,$FF,$90,$65,$03 ; src="images/rooms/913F.png" />]
  $915B DEFB $FF,$03,$03,$AE,$65,$01,$0C,$EB ;
  $9163 DEFB $09,$66,$05,$02,$01,$84,$79,$79 ;
  $916B DEFB $67,$05,$03,$03,$A0,$71,$0E,$71 ;
@@ -2210,8 +2215,8 @@ b$92EF DEFW $7918
  $92F5 DEFW $909F                           ; Room to Right
  $92F7 DEFW $0000
  $92F9 DEFW $0000
- $92FB DEFB $04,$FF,$03,$00,$1A,$06,$B2,$65 ; {Room sequence
- $9303 DEFB $03,$02,$16,$06,$DE,$66,$03,$CC ;
+ $92FB DEFB $04,$FF,$03,$00,$1A,$06,$B2,$65 ; {#HTML[<img
+ $9303 DEFB $03,$02,$16,$06,$DE,$66,$03,$CC ; src="images/rooms/92EF.png" />]
  $930B DEFB $06,$04,$1C,$67,$02,$07,$D1,$38 ;
  $9313 DEFB $67,$0E,$D0,$3D,$67,$02,$0C,$CD ;
  $931B DEFB $22,$67,$05,$01,$04,$72,$93,$24 ;
@@ -2271,8 +2276,8 @@ b$9431 DEFW $B41F
  $9437 DEFW $0000
  $9439 DEFW $9451                           ; Room Up
  $943B DEFW $93DF                           ; Room Down
- $943D DEFB $04,$FF,$0C,$B9,$71,$02,$11,$96 ; {Room sequence
- $9445 DEFB $65,$01,$11,$FD,$9E,$65,$01,$11 ;
+ $943D DEFB $04,$FF,$0C,$B9,$71,$02,$11,$96 ; {#HTML[<img
+ $9445 DEFB $65,$01,$11,$FD,$9E,$65,$01,$11 ; src="images/rooms/9431.png" />]
  $944D DEFB $FD,$A7,$65,$FF                 ; }
 
 ; Room 9451
@@ -2282,8 +2287,8 @@ b$9451 DEFW $B41F
  $9457 DEFW $0000
  $9459 DEFW $0000
  $945B DEFW $9431                           ; Room Down
- $945D DEFB $04,$FF,$05,$02,$04,$84,$79,$1C ; {Room sequence
- $9465 DEFB $67,$01,$11,$FD,$9E,$65,$01,$11 ;
+ $945D DEFB $04,$FF,$05,$02,$04,$84,$79,$1C ; {#HTML[<img
+ $9465 DEFB $67,$01,$11,$FD,$9E,$65,$01,$11 ; src="images/rooms/9451.png" />]
  $946D DEFB $FD,$A7,$65,$03,$02,$18,$06,$65 ;
  $9475 DEFB $66,$02,$18,$03,$47,$66,$FF     ; }
 
@@ -2309,24 +2314,30 @@ b$94AB DEFW $7918
  $94B5 DEFW $0000
  $94B7 DEFB $04,$FF,$03,$00,$1E,$07,$26,$66 ; {#HTML[<img
  $94BF DEFB $03,$02,$02,$07,$42,$66,$0E,$2A ; src="images/rooms/94AB.png" />]
- $94C7 DEFB $37,$70,$01,$06,$2B,$55,$70,$FF ;
- $94CF DEFB $18,$79,$1A,$A1,$52,$95,$9A,$9A ;
- $94D7 DEFB $00,$00,$00,$00,$02,$3C,$FF,$52 ;
- $94DF DEFB $67,$03,$0D,$12,$07,$80,$66,$03 ;
- $94E7 DEFB $A3,$1B,$02,$90,$65,$0E,$9C,$AB ;
- $94EF DEFB $65,$0E,$9B,$C9,$65,$03,$BF,$12 ;
- $94F7 DEFB $06,$CC,$65,$05,$02,$04,$BB,$71 ;
- $94FF DEFB $E8,$70,$02,$12,$BA,$CC,$65,$02 ;
- $9507 DEFB $12,$B3,$62,$66,$05,$01,$06,$28 ;
- $950F DEFB $95,$CD,$65,$05,$01,$06,$2E,$95 ;
- $9517 DEFB $D4,$65,$05,$02,$06,$34,$95,$DA ;
- $951F DEFB $65,$05,$03,$06,$40,$95,$DE,$65 ;
- $9527 DEFB $FF,$A9,$A8,$A8,$A8,$A8,$A7,$A6 ;
- $952F DEFB $A5,$A4,$A8,$A2,$A1,$BA,$CB,$BF ;
- $9537 DEFB $CA,$C9,$C8,$C7,$C6,$CA,$BF,$C4 ;
- $953F DEFB $B3,$BA,$BA,$C3,$BF,$C2,$C1,$BF ;
- $9547 DEFB $C0,$00,$C2,$C1,$00,$C0,$00,$00 ;
- $954F DEFB $C1,$00,$00                     ; }
+ $94C7 DEFB $37,$70,$01,$06,$2B,$55,$70,$FF ; }
+
+; Room 94CF
+b$94CF DEFW $7918
+ $94D1 DEFW $A11A
+ $94D3 DEFW $9552                           ; Room to Left
+ $94D5 DEFW $9A9A                           ; Room to Right
+ $94D7 DEFW $0000
+ $94D9 DEFW $0000
+ $94DB DEFB $02,$3C,$FF,$52,$67,$03,$0D,$12 ; {#HTML[<img
+ $94E3 DEFB $07,$80,$66,$03,$A3,$1B,$02,$90 ; src="images/rooms/94CF.png" />]
+ $94EB DEFB $65,$0E,$9C,$AB,$65,$0E,$9B,$C9 ;
+ $94F3 DEFB $65,$03,$BF,$12,$06,$CC,$65,$05 ;
+ $94FB DEFB $02,$04,$BB,$71,$E8,$70,$02,$12 ;
+ $9503 DEFB $BA,$CC,$65,$02,$12,$B3,$62,$66 ;
+ $950B DEFB $05,$01,$06,$28,$95,$CD,$65,$05 ;
+ $9513 DEFB $01,$06,$2E,$95,$D4,$65,$05,$02 ;
+ $951B DEFB $06,$34,$95,$DA,$65,$05,$03,$06 ;
+ $9523 DEFB $40,$95,$DE,$65,$FF,$A9,$A8,$A8 ;
+ $952B DEFB $A8,$A8,$A7,$A6,$A5,$A4,$A8,$A2 ;
+ $9533 DEFB $A1,$BA,$CB,$BF,$CA,$C9,$C8,$C7 ;
+ $953B DEFB $C6,$CA,$BF,$C4,$B3,$BA,$BA,$C3 ;
+ $9543 DEFB $BF,$C2,$C1,$BF,$C0,$00,$C2,$C1 ;
+ $954B DEFB $00,$C0,$00,$00,$C1,$00,$00     ; }
 
 ; Room 9552
 b$9552 DEFW $B483
@@ -2464,8 +2475,8 @@ b$976E DEFW $B41F
  $9774 DEFW $0000
  $9776 DEFW $0000
  $9778 DEFW $0000
- $977A DEFB $04,$FF,$03,$00,$0F,$08,$90,$65 ; {Room sequence
- $9782 DEFB $03,$00,$07,$07,$80,$66,$02,$06 ;
+ $977A DEFB $04,$FF,$03,$00,$0F,$08,$90,$65 ; {#HTML[<img
+ $9782 DEFB $03,$00,$07,$07,$80,$66,$02,$06 ; src="images/rooms/976E.png" />]
  $978A DEFB $00,$87,$66,$02,$04,$00,$A5,$66 ;
  $9792 DEFB $02,$02,$00,$C3,$66,$01,$0F,$3A ;
  $979A DEFB $91,$65,$01,$0F,$3A,$96,$65,$0E ;
@@ -2719,14 +2730,18 @@ b$9BE7 DEFW $B483
  $9C23 DEFB $02,$03,$49,$67,$02,$1A,$FA,$17 ;
  $9C2B DEFB $67,$05,$02,$01,$9D,$88,$2B,$67 ;
  $9C33 DEFB $01,$04,$F9,$A5,$66,$FF,$00,$00 ;
- $9C3B DEFB $00,$00,$00,$00,$00,$08,$06,$F6 ;
- $9C43 DEFB $00                             ; }
+ $9C3B DEFB $00,$00,$00,$00,$00             ; }
+
+; Data block at 9C40
+b$9C40 DEFB $08      ; Ninja Y within the room, 0 at the top
+ $9C41 DEFB $06      ; Ninja X within the room
+ $9C42 DEFW $00F6    ; ??
 
 ; Routine at 9C44
 ;
 ; Used by the routines at #R$B452, #R$B458 and #R$B47A.
 c$9C44 LD HL,$71D3   ;
- $9C47 LD A,($9C40)  ;
+ $9C47 LD A,($9C40)  ; get Ninja Y
  $9C4A SUB (HL)      ;
  $9C4B CP $07        ;
  $9C4D JR NC,$9C80   ;
@@ -2742,13 +2757,13 @@ c$9C44 LD HL,$71D3   ;
  $9C5E LD A,($71CD)  ;
  $9C61 CP $00        ;
  $9C63 JR NZ,$9C71   ;
- $9C65 LD A,($9C41)  ;
+ $9C65 LD A,($9C41)  ; get Ninja X
  $9C68 INC A         ;
  $9C69 LD HL,$71CE   ;
  $9C6C CP (HL)       ;
  $9C6D JR C,$9C80    ;
  $9C6F JR $9C7B      ;
-*$9C71 LD A,($9C41)  ;
+*$9C71 LD A,($9C41)  ; get Ninja X
  $9C74 INC A         ;
  $9C75 LD HL,$71CE   ;
  $9C78 CP (HL)       ;
@@ -3422,7 +3437,7 @@ b$A393 DEFB $90,$01,$01,$0A,$42,$01,$17,$01
 ; Routine at A3B5
 ;
 ; Used by the routine at #R$A434.
-c$A3B5 LD A,($9C40)  ;
+c$A3B5 LD A,($9C40)  ; get Ninja Y
  $A3B8 LD HL,$71C6   ;
  $A3BB CP (HL)       ;
  $A3BC RET NZ        ;
@@ -3438,7 +3453,7 @@ c$A3B5 LD A,($9C40)  ;
 ; Routine at A3D1
 ;
 ; Used by the routine at #R$A434.
-c$A3D1 LD A,($9C40)  ;
+c$A3D1 LD A,($9C40)  ; get Ninja Y
  $A3D4 LD HL,$71C6   ;
  $A3D7 CP (HL)       ;
  $A3D8 RET NZ        ;
@@ -3455,7 +3470,7 @@ c$A3D1 LD A,($9C40)  ;
 ; Routine at A3EE
 ;
 ; Used by the routine at #R$A434.
-c$A3EE LD A,($9C40)  ;
+c$A3EE LD A,($9C40)  ; get Ninja Y
  $A3F1 LD HL,$71C6   ;
  $A3F4 CP (HL)       ;
  $A3F5 RET NZ        ;
@@ -3480,7 +3495,7 @@ c$A3EE LD A,($9C40)  ;
 ; Routine at A418
 ;
 ; Used by the routine at #R$A434.
-c$A418 LD A,($9C40)  ;
+c$A418 LD A,($9C40)  ; get Ninja Y
  $A41B LD HL,$71C6   ;
  $A41E CP (HL)       ;
  $A41F RET NZ        ;
@@ -3624,7 +3639,7 @@ c$A434 CALL $A75B      ;
  $A531 JR NZ,$A56D     ;
  $A533 LD HL,$D486     ;
  $A536 LD ($A70F),HL   ;
- $A539 LD HL,$9C40     ;
+ $A539 LD HL,$9C40     ; Ninja Y address
  $A53C LD A,($71C6)    ;
  $A53F ADD A,$03       ;
  $A541 CP (HL)         ;
@@ -3635,7 +3650,7 @@ c$A434 CALL $A75B      ;
  $A54B LD A,($7347)    ;
  $A54E DEC A           ;
  $A54F LD A,($71C5)    ;
- $A552 LD HL,$9C41     ;
+ $A552 LD HL,$9C41     ; Ninja X address
  $A555 JR Z,$A55F      ;
  $A557 ADD A,$02       ;
  $A559 CP (HL)         ;
@@ -3722,7 +3737,7 @@ c$A434 CALL $A75B      ;
  $A60B LD HL,$D486     ;
  $A60E LD ($A70F),HL   ;
  $A611 JP $A6FF        ;
-*$A614 LD HL,$9C41     ;
+*$A614 LD HL,$9C41     ; Ninja X address
  $A617 LD A,($71C5)    ;
  $A61A SUB (HL)        ;
  $A61B JR NZ,$A635     ;
@@ -5087,7 +5102,7 @@ c$B489 LD A,($B4DD)    ;
  $B4C9 LD A,$01        ;
  $B4CB LD ($67BD),A    ;
  $B4CE LD (HL),$2D     ;
- $B4D0 LD A,($9C41)    ;
+ $B4D0 LD A,($9C41)    ; get Ninja X
  $B4D3 LD B,$0F        ;
  $B4D5 CP B            ;
  $B4D6 RET Z           ;
@@ -5154,7 +5169,7 @@ b$B513 DEFW $B446
 c$B532 LD HL,($9C42) ;
  $B535 INC HL        ;
  $B536 LD ($9C42),HL ;
- $B539 LD HL,$9C41   ;
+ $B539 LD HL,$9C41   ; Ninja X address
  $B53C INC (HL)      ;
  $B53D LD DE,$70E3   ;
  $B540 LD HL,$B5A7   ;
@@ -5182,7 +5197,7 @@ c$B532 LD HL,($9C42) ;
  $B570 LD HL,$7343   ;
  $B573 DEC (HL)      ;
  $B574 JP NZ,$B8D0   ;
- $B577 LD HL,$9C41   ;
+ $B577 LD HL,$9C41   ; Ninja X address
  $B57A INC (HL)      ;
  $B57B LD HL,($9C42) ;
  $B57E INC HL        ;
@@ -5296,9 +5311,9 @@ c$B5C7 CALL $AC44    ;
  $B64F LD HL,$D558   ;
  $B652 LD ($7186),HL ;
  $B655 LD A,$01      ;
- $B657 LD ($9C41),A  ;
+ $B657 LD ($9C41),A  ; set Ninja X
  $B65A LD A,$05      ;
- $B65C LD ($9C40),A  ;
+ $B65C LD ($9C40),A  ; set Ninja Y
  $B65F LD HL,$0097   ;
  $B662 LD ($9C42),HL ;
  $B665 LD A,$13      ;
@@ -5395,10 +5410,12 @@ w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
                      ; address)
  $B70A DEFW $739F    ; #2: Fill to right; params: 4 bytes (count, filler,
                      ; address)
- $B70C DEFW $7452    ; #3: ??; params: 5 bytes
+ $B70C DEFW $7452    ; #3: Fill rectangle; params: 5 bytes (filler, width,
+                     ; height, address)
  $B70E DEFW $73F3    ; #4: Fill whole Tile screen 0 with one tile; params: 1
                      ; byte (filler)
- $B710 DEFW $7406    ; #5
+ $B710 DEFW $7406    ; #5: Draw block of tiles; params: 6 bytes (width, height,
+                     ; srcaddr, address)
  $B712 DEFW $73A4    ; #6
  $B714 DEFW $73C5    ; #7
  $B716 DEFW $73EB    ; #8
@@ -5407,9 +5424,11 @@ w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
                      ; address)
  $B71C DEFW $739A    ; #11: Fill to down-left; params: 4 bytes (count, filler,
                      ; address)
- $B71E DEFW $742B    ; #12
- $B720 DEFW $7359    ; #13
- $B722 DEFW $734D    ; #14
+ $B71E DEFW $742B    ; #12: Draw block of tiles; params: 6 bytes (srcaddr,
+                     ; width, height, address)
+ $B720 DEFW $7359    ; #13: Set border color; params: 1 byte
+ $B722 DEFW $734D    ; #14: Put one tile at the given address; params: 3 bytes
+                     ; (tile, address)
 
 ; Routine at B724
 ;
@@ -5495,7 +5514,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B7C2 LD DE,$50D6   ;
  $B7C5 LD C,$04      ;
  $B7C7 CALL $AED1    ; Print string
- $B7CA LD HL,$3939   ;
+ $B7CA LD HL,$3939   ; "99"
  $B7CD LD ($AD57),HL ;
  $B7D0 LD A,$01      ;
  $B7D2 LD ($B5C4),A  ;
@@ -6168,7 +6187,7 @@ c$BC55 LD HL,$B5C5   ;
  $BCA7 IN A,($FE)    ;
  $BCA9 BIT 0,A       ;
  $BCAB JR NZ,$BCB6   ;
- $BCAD LD HL,$BEEF   ;
+ $BCAD LD HL,$BEEF   ; "SEPUKU" / "MISSION ABORTED"
  $BCB0 LD ($BEB4),HL ;
  $BCB3 JP $BE5A      ;
 *$BCB6 CALL $C5A3    ;
@@ -6256,7 +6275,7 @@ c$BD37 LD HL,$A39F   ;
  $BD52 LD HL,($9C42) ;
  $BD55 LD DE,$003D   ;
  $BD58 ADD HL,DE     ;
- $BD59 LD A,($9C41)  ;
+ $BD59 LD A,($9C41)  ; get Ninja X
  $BD5C INC A         ;
  $BD5D LD B,A        ;
  $BD5E LD A,($7239)  ;
@@ -6271,7 +6290,7 @@ c$BD37 LD HL,$A39F   ;
 *$BD6A LD A,B        ;
  $BD6B LD ($A3A5),A  ;
  $BD6E LD ($A3A0),HL ;
- $BD71 LD A,($9C40)  ;
+ $BD71 LD A,($9C40)  ; get Ninja Y
  $BD74 ADD A,$02     ;
  $BD76 LD ($A3A4),A  ;
  $BD79 LD A,$C8      ;
@@ -6410,7 +6429,7 @@ c$BE63 LD A,$C9      ;
 c$BE71 LD A,($B5C6)  ;
  $BE74 CP $02        ;
  $BE76 JR Z,$BE80    ;
- $BE78 LD HL,$BF35   ;
+ $BE78 LD HL,$BF35   ; "TIME OUT" / "MISSION TERMINATED"
  $BE7B LD ($BEB4),HL ;
  $BE7E JR $BE63      ;
 *$BE80 LD B,$06      ;
@@ -6439,14 +6458,14 @@ c$BE71 LD A,($B5C6)  ;
  $BEA9 PUSH HL       ;
 ; This entry point is used by the routine at #R$9DDA.
 *$BEAA POP HL        ;
- $BEAB LD HL,$BF58   ;
+ $BEAB LD HL,$BF58   ; "SABOTEUR DEAD" / "MISSION FAILURE"
  $BEAE LD ($BEB4),HL ;
  $BEB1 JR $BE63      ;
 
 ; Routine at BEB3
 ;
 ; Used by the routines at #R$B889 and #R$BFD5.
-c$BEB3 LD HL,$BEEF   ;
+c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
  $BEB6 LD DE,$4068   ;
  $BEB9 LD C,$0F      ;
  $BEBB CALL $AED1    ; Print string
@@ -6479,9 +6498,14 @@ c$BEB3 LD HL,$BEEF   ;
  $BEEC JP $BC0D      ;
 
 ; Message at BEEF
-t$BEEF DEFM "     SEPUKU      MISSION ABORTED        ESCAPE     MISSION SUCCES"
- $BF30 DEFM "SFUL     TIME OUT    MISSION TERMINATED  SABOTEUR DEAD   MISSION "
- $BF71 DEFM "FAILURE   "
+t$BEEF DEFM "     SEPUKU    "
+ $BEFE DEFM "  MISSION ABORTED   "
+ $BF12 DEFM "     ESCAPE    "
+ $BF21 DEFM " MISSION SUCCESSFUL "
+ $BF35 DEFM "    TIME OUT   "
+ $BF44 DEFM " MISSION TERMINATED "
+ $BF58 DEFM " SABOTEUR DEAD "
+ $BF67 DEFM "  MISSION FAILURE   "
 
 ; Routine at BF7B
 ;
@@ -6584,7 +6608,7 @@ c$BFD5 LD B,$0A      ;
  $C04F JR NZ,$C056   ;
  $C051 LD B,$64      ;
  $C053 CALL $B4DE    ;
-*$C056 LD HL,$BF12   ;
+*$C056 LD HL,$BF12   ; "ESCAPE" / "MISSION SUCCESSFUL"
  $C059 LD ($BEB4),HL ;
  $C05C NOP           ;
  $C05D NOP           ;
@@ -6712,7 +6736,7 @@ b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
  $C1B1 DEFB $57,$20,$BA,$18,$70
 
 ; Routine at C1B6
-c$C1B6 LD A,($9C41)  ;
+c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1B9 CP $18        ;
  $C1BB JP Z,$C2FA    ; => Going to room at Right
  $C1BE LD HL,($9C42) ;
@@ -6721,7 +6745,7 @@ c$C1B6 LD A,($9C41)  ;
  $C1C5 LD A,$64      ;
  $C1C7 CP (HL)       ;
  $C1C8 JR NC,$C1DA   ;
- $C1CA LD HL,$9C40   ;
+ $C1CA LD HL,$9C40   ; Ninja Y address
  $C1CD DEC (HL)      ;
  $C1CE LD HL,($9C42) ;
  $C1D1 LD DE,$FFE2   ;
@@ -6748,12 +6772,12 @@ c$C1B6 LD A,($9C41)  ;
  $C1FC LD DE,$001E   ;
  $C1FF ADD HL,DE     ;
  $C200 LD ($9C42),HL ;
- $C203 LD HL,$9C40   ;
+ $C203 LD HL,$9C40   ; Ninja Y address
  $C206 INC (HL)      ;
  $C207 LD A,(HL)     ;
  $C208 CP $0A        ;
- $C20A JP Z,$C604    ;
-*$C20D LD HL,$9C41   ;
+ $C20A JP Z,$C604    ; => Going to room Down from current
+*$C20D LD HL,$9C41   ; Ninja X address
  $C210 INC (HL)      ;
  $C211 LD HL,($9C42) ;
  $C214 INC HL        ;
@@ -6784,7 +6808,7 @@ c$C22F CALL $BBDF    ;
  $C248 JP $C16E      ;
 
 ; Routine at C24B
-c$C24B LD A,($9C41)  ;
+c$C24B LD A,($9C41)  ; get Ninja X
  $C24E CP $00        ;
  $C250 JP Z,$C319    ;
  $C253 LD HL,($9C42) ;
@@ -6793,7 +6817,7 @@ c$C24B LD A,($9C41)  ;
  $C25A LD A,$64      ;
  $C25C CP (HL)       ;
  $C25D JR NC,$C26F   ;
- $C25F LD HL,$9C40   ;
+ $C25F LD HL,$9C40   ; Ninja Y address
  $C262 DEC (HL)      ;
  $C263 LD HL,($9C42) ;
  $C266 LD DE,$FFE2   ;
@@ -6820,12 +6844,12 @@ c$C24B LD A,($9C41)  ;
  $C291 LD DE,$001E   ;
  $C294 ADD HL,DE     ;
  $C295 LD ($9C42),HL ;
- $C298 LD HL,$9C40   ;
+ $C298 LD HL,$9C40   ; Ninja Y address
  $C29B INC (HL)      ;
  $C29C LD A,(HL)     ;
  $C29D CP $0A        ;
- $C29F JP Z,$C604    ;
-*$C2A2 LD HL,$9C41   ;
+ $C29F JP Z,$C604    ; => Going to room Down from current
+*$C2A2 LD HL,$9C41   ; Ninja X address
  $C2A5 DEC (HL)      ;
  $C2A6 LD HL,($9C42) ;
  $C2A9 DEC HL        ;
@@ -6874,7 +6898,7 @@ c$C24B LD A,($9C41)  ;
 ;
 ; Used by the routines at #R$C1B6 and #R$C50D.
 c$C2FA XOR A         ;
- $C2FB LD ($9C41),A  ;
+ $C2FB LD ($9C41),A  ; set Ninja X = 0
  $C2FE LD DE,$FFE8   ;
  $C301 LD HL,($9C42) ;
  $C304 ADD HL,DE     ;
@@ -6893,7 +6917,7 @@ c$C2FA XOR A         ;
 ;
 ; Used by the routines at #R$C24B and #R$C50D.
 c$C319 LD A,$18      ;
- $C31B LD ($9C41),A  ;
+ $C31B LD ($9C41),A  ; set Ninja X = 24
  $C31E LD DE,$0018   ;
  $C321 LD HL,($9C42) ;
  $C324 ADD HL,DE     ;
@@ -6979,7 +7003,7 @@ c$C392 LD A,(HL)     ;
 ; Routine at C3BB
 ;
 ; Used by the routine at #R$C339.
-c$C3BB LD HL,$9C41   ;
+c$C3BB LD HL,$9C41   ; Ninja X address
  $C3BE DEC (HL)      ;
  $C3BF LD HL,($9C42) ;
  $C3C2 DEC HL        ;
@@ -6993,7 +7017,7 @@ c$C3BB LD HL,$9C41   ;
 ; Routine at C3CF
 ;
 ; Used by the routine at #R$C339.
-c$C3CF LD HL,$9C41   ;
+c$C3CF LD HL,$9C41   ; Ninja X address
  $C3D2 INC (HL)      ;
  $C3D3 LD HL,($9C42) ;
  $C3D6 INC HL        ;
@@ -7053,7 +7077,7 @@ c$C3D9 LD HL,($9C42) ;
  $C440 CALL $C392    ;
  $C443 JR Z,$C447    ;
  $C445 JR $C495      ;
-*$C447 LD A,($9C40)  ;
+*$C447 LD A,($9C40)  ; get Ninja Y
  $C44A CP $00        ;
  $C44C JP Z,$C623    ;
  $C44F LD DE,$FF2E   ;
@@ -7064,7 +7088,7 @@ c$C3D9 LD HL,($9C42) ;
  $C458 LD A,$FF      ;
  $C45A CP (HL)       ;
  $C45B JR Z,$C495    ;
- $C45D LD HL,$9C40   ;
+ $C45D LD HL,$9C40   ; Ninja Y address
  $C460 DEC (HL)      ;
  $C461 LD HL,($9C42) ;
  $C464 LD DE,$FFE2   ;
@@ -7077,9 +7101,9 @@ c$C3D9 LD HL,($9C42) ;
  $C474 JP $B8D0      ;
 *$C477 BIT 2,A       ;
  $C479 JR Z,$C495    ;
- $C47B LD A,($9C40)  ;
+ $C47B LD A,($9C40)  ; get Ninja Y
  $C47E CP $0A        ;
- $C480 JP Z,$C604    ;
+ $C480 JP Z,$C604    ; => Going to room Down from current
  $C483 LD HL,($9C42) ;
  $C486 LD DE,$6665   ;
  $C489 ADD HL,DE     ;
@@ -7091,7 +7115,7 @@ c$C3D9 LD HL,($9C42) ;
  $C493 JR Z,$C498    ;
 *$C495 JP $B8D0      ;
 ; This entry point is used by the routine at #R$C12E.
-*$C498 LD HL,$9C40   ;
+*$C498 LD HL,$9C40   ; Ninja Y address
  $C49B INC (HL)      ;
  $C49C LD HL,($9C42) ;
  $C49F LD DE,$001E   ;
@@ -7155,7 +7179,7 @@ c$C4F6 CALL $C57B    ;
 ; Routine at C50D
 c$C50D LD A,($7239)  ;
  $C510 CP $00        ;
- $C512 LD HL,$9C41   ;
+ $C512 LD HL,$9C41   ; Ninja X address
  $C515 LD A,(HL)     ;
  $C516 JR NZ,$C56C   ;
  $C518 CP $00        ;
@@ -7179,7 +7203,7 @@ c$C50D LD A,($7239)  ;
  $C541 LD A,$64      ;
  $C543 CP (HL)       ;
  $C544 JR NC,$C558   ;
-*$C546 LD HL,$9C40   ;
+*$C546 LD HL,$9C40   ; Ninja Y address
  $C549 DEC (HL)      ;
  $C54A LD HL,($9C42) ;
  $C54D PUSH DE       ;
@@ -7266,11 +7290,11 @@ c$C5C6 LD HL,($9C42) ;
  $C5CD LD ($9C42),HL ;
  $C5D0 LD HL,$755B   ;
  $C5D3 INC (HL)      ;
- $C5D4 LD HL,$9C40   ;
+ $C5D4 LD HL,$9C40   ; Ninja Y address
  $C5D7 INC (HL)      ;
  $C5D8 LD A,(HL)     ;
  $C5D9 CP $0A        ;
- $C5DB JR Z,$C604    ;
+ $C5DB JR Z,$C604    ; => Going to room Down from current
  $C5DD LD HL,($9C42) ;
  $C5E0 LD DE,$6664   ;
  $C5E3 ADD HL,DE     ;
@@ -7294,14 +7318,14 @@ c$C5C6 LD HL,($9C42) ;
 ;
 ; Used by the routines at #R$C1B6, #R$C24B, #R$C3D9 and #R$C5C6.
 c$C604 XOR A         ;
- $C605 LD ($9C40),A  ;
+ $C605 LD ($9C40),A  ; set Ninja Y = 0
  $C608 LD HL,($9C42) ;
- $C60B LD DE,$FED4   ;
+ $C60B LD DE,$FED4   ; -300
  $C60E ADD HL,DE     ;
  $C60F LD ($9C42),HL ;
  $C612 LD HL,($7184) ; get Current Room address
  $C615 LD DE,$000A   ;
- $C618 ADD HL,DE     ;
+ $C618 ADD HL,DE     ; now HL = room address + 10
  $C619 LD A,(HL)     ;
  $C61A INC HL        ;
  $C61B LD H,(HL)     ;
@@ -7313,14 +7337,14 @@ c$C604 XOR A         ;
 ;
 ; Used by the routine at #R$C3D9.
 c$C623 LD A,$0A      ;
- $C625 LD ($9C40),A  ;
+ $C625 LD ($9C40),A  ; set Ninja Y = 10
  $C628 LD HL,($9C42) ;
- $C62B LD DE,$012C   ;
+ $C62B LD DE,$012C   ; +300
  $C62E ADD HL,DE     ;
  $C62F LD ($9C42),HL ;
  $C632 LD HL,($7184) ; get Current Room address
  $C635 LD DE,$0008   ;
- $C638 ADD HL,DE     ;
+ $C638 ADD HL,DE     ; now HL = room address + 8
  $C639 LD A,(HL)     ;
  $C63A INC HL        ;
  $C63B LD H,(HL)     ;
@@ -7379,13 +7403,13 @@ c$C681 LD HL,$9A1E   ;
  $C6A2 JP $B724      ;
 
 ; Routine at C6A5
-c$C6A5 LD A,($9C41)  ;
+c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6A8 CP $0C        ;
  $C6AA JP NZ,$B937   ;
  $C6AD LD A,$4B      ;
  $C6AF LD ($7343),A  ;
  $C6B2 LD DE,($9C42) ;
- $C6B6 LD A,($9C41)  ;
+ $C6B6 LD A,($9C41)  ; get Ninja X
  $C6B9 INC A         ;
  $C6BA LD B,A        ;
  $C6BB INC DE        ;
@@ -7399,7 +7423,7 @@ c$C6A5 LD A,($9C41)  ;
  $C6CB DEC DE        ;
  $C6CC DEC DE        ;
 *$C6CD LD A,B        ;
- $C6CE LD ($9C41),A  ;
+ $C6CE LD ($9C41),A  ; set Ninja X
  $C6D1 LD ($9C42),DE ;
  $C6D5 LD DE,$D486   ;
  $C6D8 LD ($7186),DE ;
@@ -8873,7 +8897,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E340 LD E,(HL)     ;
  $E341 INC HL        ;
  $E342 LD D,(HL)     ;
- $E343 LD ($B7CB),DE ;
+ $E343 LD ($B7CB),DE ; set initial Time value
  $E347 INC HL        ;
  $E348 LD A,(HL)     ;
  $E349 LD ($97D0),A  ;

@@ -42,10 +42,11 @@ B $723A,128,16 Mirror table 1st part
 B $72BA,128,16 Mirror table 2nd part
 b $733A
 c $734A
-c $734D Room token #14:
+c $734D Room token #14: Put one tile at the given address
 C $7357,2 => #R$B702 Proceed to the next room token
-c $7359 Room token #13:
+c $7359 Room token #13: Set border color; params: 1 byte
 C $735F,2 => #R$B702 Proceed to the next room token
+c $7361
 C $7365,3 Tile screen 0 start address
 C $737F,2 => #R$B702 Proceed to the next room token
 c $7381 Room token #1: Fill to down; params: 4 bytes (count, filler, address)
@@ -66,11 +67,11 @@ C $73F7,3 Tile screen 0 start address
 C $73FA,3 Tile screen 0 start address + 1
 C $73FE,3 510 - 1
 C $7403,3 => #R$B702 Proceed to the next room token
-c $7406 Room token #5:
+c $7406 Room token #5: Draw block of tiles; params: 6 bytes (width, height, srcaddr, address)
 C $7428,3 => #R$B702 Proceed to the next room token
-c $742B Room token #12:
+c $742B Room token #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height, address)
 C $744F,3 => #R$B702 Proceed to the next room token
-c $7452 Room token #3: ??; params: 5 bytes
+c $7452 Room token #3: Fill rectangle; params: 5 bytes (filler, width, height, address)
 C $746F,3 => #R$B702 Proceed to the next room token
 c $7472
 b $749C
@@ -134,7 +135,7 @@ b $7B56 Room 7B56
 W $7B56,12,2
 W $7B5E,2,2 Room Up
 W $7B60,2,2 Room Down
-B $7B62 Room sequence
+B $7B62 #HTML[<img src="images/rooms/7B56.png" />]
 b $7B90 Room 7B90
 W $7B90,12,2
 W $7B94,2,2 Room to Left
@@ -471,12 +472,12 @@ W $8D5C,12,2
 W $8D60,2,2 Room to Left
 W $8D62,4,2
 W $8D66,2,2 Room Down
-B $8D68 Room sequence
-b $8DCA Room 8DCA
+B $8D68 #HTML[<img src="images/rooms/8D5C.png" />]
+b $8DCA Room 8DCA (helicopter)
 W $8DCA,12,2
 W $8DD0,2,2 Room to Right
 W $8DD2,4,2
-B $8DD6 Room sequence
+B $8DD6 #HTML[<img src="images/rooms/8DCA.png" />]
 b $8E4C
 b $8E5A
 b $8E5E
@@ -494,7 +495,7 @@ W $8EE1,12,2
 W $8EE5,2,2 Room to Left
 W $8EE7,4,2
 W $8EEB,2,2 Room Down
-B $8EED Room sequence
+B $8EED #HTML[<img src="images/rooms/8EE1.png" />]
 b $8F20 Room 8F20
 W $8F20,12,2
 W $8F24,2,2 Room to Left
@@ -542,13 +543,13 @@ W $90DF,2,2 Room to Left
 W $90E1,2,2 Room to Right
 W $90E3,2,2 Room Up
 W $90E5,2,2
-B $90E7 Room sequence
+B $90E7 #HTML[<img src="images/rooms/90DB.png" />]
 b $913F Room 913F
 W $913F,12,2
 W $9145,2,2 Room to Right
 W $9147,2,2
 W $9149,2,2 Room Down
-B $914B Room sequence
+B $914B #HTML[<img src="images/rooms/913F.png" />]
 b $91BA Room 91BA
 W $91BA,12,2
 W $91BE,2,2 Room to Left
@@ -578,7 +579,7 @@ b $92EF Room 92EF
 W $92EF,12,2
 W $92F5,2,2 Room to Right
 W $92F7,4,2
-B $92FB Room sequence
+B $92FB #HTML[<img src="images/rooms/92EF.png" />]
 b $9376 Room 9376
 W $9376,12,2
 W $937A,2,2 Room to Left
@@ -596,11 +597,11 @@ b $9431 Room 9431
 W $9431,12,2
 W $9439,2,2 Room Up
 W $943B,2,2 Room Down
-B $943D Room sequence
+B $943D #HTML[<img src="images/rooms/9431.png" />]
 b $9451 Room 9451
 W $9451,12,2
 W $945B,2,2 Room Down
-B $945D Room sequence
+B $945D #HTML[<img src="images/rooms/9451.png" />]
 b $947C Room 947C
 W $947C,12,2
 W $9480,2,2 Room to Left
@@ -613,6 +614,12 @@ W $94AF,2,2 Room to Left
 W $94B1,2,2 Room to Right
 W $94B3,4,2
 B $94B7 #HTML[<img src="images/rooms/94AB.png" />]
+b $94CF Room 94CF
+W $94CF,12,2
+W $94D3,2,2 Room to Left
+W $94D5,2,2 Room to Right
+W $94D7,4,2
+B $94DB #HTML[<img src="images/rooms/94CF.png" />]
 b $9552 Room 9552
 W $9552,12,2
 W $9556,2,2 Room to Left
@@ -673,7 +680,7 @@ b $976E Room 976E
 W $976E,12,2
 W $9772,2,2 Room to Left
 W $9774,6,2
-B $977A Room sequence
+B $977A #HTML[<img src="images/rooms/976E.png" />]
 b $97A6 Room 97A6
 W $97A6,12,2
 W $97AA,2,2 Room to Left
@@ -761,7 +768,14 @@ W $9BED,2,2 Room to Right
 W $9BEF,2,2 Room Up
 W $9BF1,2,2 Room Down
 B $9BF3 #HTML[<img src="images/rooms/9BE7.png" />]
+b $9C40
+B $9C40 Ninja Y within the room, 0 at the top
+B $9C41 Ninja X within the room
+W $9C42 ??
 c $9C44
+C $9C47,3 get Ninja Y
+C $9C65,3 get Ninja X
+C $9C71,3 get Ninja X
 b $9C9C
 c $9CA8
 C $9D37,3 Tile screen 3 start address
@@ -926,9 +940,16 @@ c $A389
 c $A38E
 b $A393
 c $A3B5
+C $A3B5,3 get Ninja Y
 c $A3D1
+C $A3D1,3 get Ninja Y
 c $A3EE
+C $A3EE,3 get Ninja Y
 c $A418
+C $A418,3 get Ninja Y
+C $A539,3 Ninja Y address
+C $A552,3 Ninja X address
+C $A614,3 Ninja X address
 C $A728,3 Tile screen 4 start address
 c $A434
 C $A4A3,3 Tile screen 0 start address
@@ -1092,6 +1113,7 @@ C $B465,3 Tile screen 1 start address
 c $B47A
 c $B483
 c $B489
+C $B4D0,3 get Ninja X
 b $B4DD
 c $B4DE
 R $B4DE B ??
@@ -1105,6 +1127,8 @@ W $B519,2,2 Room to Right
 W $B51B,4,2
 B $B51F #HTML[<img src="images/rooms/B513.png" />]
 c $B532
+C $B539,3 Ninja X address
+C $B577,3 Ninja X address
 s $B595
 c $B596
 b $B59B
@@ -1117,6 +1141,8 @@ c $B5C7
 C $B5F9,3 Draw game screen frames and indicator text
 C $B643,3 Initial room address
 C $B646,3 set Current Room address
+C $B657,3 set Ninja X
+C $B65C,3 set Ninja Y
 c $B66A Current Room changed, entering the new Room
 C $B6BF,3 Tile screen 0 start address
 C $B6C7,3 510 - 1
@@ -1139,18 +1165,18 @@ w $B706 Table of Room tokens
 W $B706,2,2 #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
 W $B708,2,2 #1: Fill to down; params: 4 bytes (count, filler, address)
 W $B70A,2,2 #2: Fill to right; params: 4 bytes (count, filler, address)
-W $B70C,2,2 #3: ??; params: 5 bytes
+W $B70C,2,2 #3: Fill rectangle; params: 5 bytes (filler, width, height, address)
 W $B70E,2,2 #4: Fill whole Tile screen 0 with one tile; params: 1 byte (filler)
-W $B710,2,2 #5
+W $B710,2,2 #5: Draw block of tiles; params: 6 bytes (width, height, srcaddr, address)
 W $B712,2,2 #6
 W $B714,2,2 #7
 W $B716,2,2 #8
 W $B718,2,2 #9
 W $B71A,2,2 #10: Fill to down-right; params: 4 bytes (count, filler, address)
 W $B71C,2,2 #11: Fill to down-left; params: 4 bytes (count, filler, address)
-W $B71E,2,2 #12
-W $B720,2,2 #13
-W $B722,2,2 #14
+W $B71E,2,2 #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height, address)
+W $B720,2,2 #13: Set border color; params: 1 byte
+W $B722,2,2 #14: Put one tile at the given address; params: 3 bytes (tile, address)
 c $B724
 C $B724,3 Tile screen 1 start address
 C $B727,2 Filler
@@ -1173,6 +1199,7 @@ C $B7A1,3 time is out =>
 C $B7A7,3 Indicator Time value address
 C $B7AC,3 Print string
 C $B7C7,3 Print string
+C $B7CA,3 "99"
 C $B7ED,3 Tile screen 1 start address
 C $B7F2,3 510 - 1
 C $B7F5,3 Tile screen 1 start address + 1
@@ -1205,6 +1232,7 @@ C $BA41,3 Draw tile map on the screen
 b $BAB2
 t $BAC4
 b $BAC7
+C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
 c $BAD5
 c $BBAE
 C $BBB4,3 Tile screen 1 start address
@@ -1217,6 +1245,8 @@ c $BC55
 t $BD2F
 c $BD33
 c $BD37
+C $BD59,3 get Ninja X
+C $BD71,3 get Ninja Y
 c $BDAF
 c $BDB2
 c $BDDD
@@ -1224,10 +1254,21 @@ c $BE0D
 c $BE5A
 c $BE63
 c $BE71 Time is out
+C $BE78,3 "TIME OUT" / "MISSION TERMINATED"
+C $BEAB,3 "SABOTEUR DEAD" / "MISSION FAILURE"
 c $BEB3
+C $BEB3,3 !!MUT-ARG!! two-line message address
 C $BEBB,3 Print string
 C $BEC3,3 Print string
 t $BEEF
+T $BEEF,15
+T $BEFE,20
+T $BF12,15
+T $BF21,20
+T $BF35,15
+T $BF44,20
+T $BF58,15
+T $BF67,20
 c $BF7B
 c $BFBA
 c $BFD5
@@ -1244,6 +1285,7 @@ C $C020,3 Messages address
 C $C025,3 Print string "BONUS: $05000"
 C $C030,3 Print string
 C $C042,3 Print string
+C $C056,3 "ESCAPE" / "MISSION SUCCESSFUL"
 t $C062
 T $C062,14
 T $C070,5
@@ -1256,41 +1298,70 @@ c $C12E
 c $C13D
 b $C171
 c $C1B6
+C $C1B6,3 get Ninja X
 C $C1BB,3 => Going to room at Right
+C $C1CA,3 Ninja Y address
+C $C203,3 Ninja Y address
+C $C20A,3 => Going to room Down from current
+C $C20D,3 Ninja X address
 c $C22F
 c $C24B
+C $C24B,3 get Ninja X
+C $C25F,3 Ninja Y address
+C $C298,3 Ninja Y address
+C $C29F,3 => Going to room Down from current
+C $C2A2,3 Ninja X address
 c $C2FA Going to room at Right
+C $C2FB,3 set Ninja X = 0
 C $C308,3 get Current Room address
 C $C313,3 set Current Room address
 C $C316,3 => Current Room changed
 c $C319 Going to room at Left
+C $C31B,3 set Ninja X = 24
 C $C328,3 get Current Room address
 C $C333,3 set Current Room address
 C $C336,3 => Current Room changed
 c $C339
 c $C392
 c $C3BB
+C $C3BB,3 Ninja X address
 c $C3CF
+C $C3CF,3 Ninja X address
 c $C3D9
+C $C447,3 get Ninja Y
+C $C45D,3 Ninja Y address
+C $C47B,3 get Ninja Y
+C $C480,3 => Going to room Down from current
+C $C498,3 Ninja Y address
 t $C4A4
 c $C4A7
 c $C4DE
 c $C4E8
 c $C4F6
 c $C50D
+C $C512,3 Ninja X address
 C $C51A,3 => Going to room at Left
+C $C546,3 Ninja Y address
 c $C57B
 C $C58A,3 Tile screen 0 start address
 c $C5A0
 c $C5A3
 C $C5AA,3 Tile screen 0 start address
 c $C5C6
+C $C5D4,3 Ninja Y address
+C $C5DB,2 => Going to room Down from current
 c $C604 Going to room Down from current
+C $C605,3 set Ninja Y = 0
+C $C60B,3 -300
 C $C612,3 get Current Room address
+C $C618,1 now HL = room address + 10
 C $C61D,3 set Current Room address
 C $C620,3 => Current Room changed
 c $C623 Going to room Up from current
+C $C625,3 set Ninja Y = 10
+C $C62B,3 +300
 C $C632,3 get Current Room address
+C $C638,1 now HL = room address + 8
 C $C63D,3 get Current Room address
 C $C640,3 => Current Room changed
 c $C643
@@ -1300,6 +1371,9 @@ b $C66B
 c $C671
 c $C681
 c $C6A5
+C $C6A5,3 get Ninja X
+C $C6B6,3 get Ninja X
+C $C6CE,3 set Ninja X
 c $C6E2
 c $C70C
 b $C721 Font
@@ -1916,6 +1990,7 @@ C $E30A,3 Print string "WILL BE"
 C $E315,4 * 16
 C $E319,3 Levels data base address
 C $E322,3 Print string - level description
+C $E343,4 set initial Time value
 b $E388
 T $E388,4
 b $E38C Level 1 "EXTREMELY EASY"

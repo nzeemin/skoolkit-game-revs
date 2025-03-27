@@ -32,7 +32,9 @@ b $71BF
 t $71C0
 b $71C3
 b $7222
-B $7222,10,10 Ports and bits for the current input method
+B $7222,1,1 Input method: 1 = Joystick, 0 = Keyboard or Protek
+B $7223,15,3 Ports and bits for the current input method
+B $7232,1,1 Input bits: 000FUDLR
 W $7233,2,2 Screen attributes address stored during tile map drawing
 W $7235,2,2 Tile screen 5 address stored during tile map drawing
 W $7237,2,2 Tile screen 4 address stored during tile map drawing
@@ -768,10 +770,10 @@ W $9BED,2,2 Room to Right
 W $9BEF,2,2 Room Up
 W $9BF1,2,2 Room Down
 B $9BF3 #HTML[<img src="images/rooms/9BE7.png" />]
-b $9C40
+b $9C39
 B $9C40 Ninja Y within the room, 0 at the top
 B $9C41 Ninja X within the room
-W $9C42 ??
+W $9C42 Ninja position in tilemap: Y * 30 + X
 c $9C44
 C $9C47,3 get Ninja Y
 C $9C65,3 get Ninja X
@@ -1126,9 +1128,11 @@ W $B513,12,2
 W $B519,2,2 Room to Right
 W $B51B,4,2
 B $B51F #HTML[<img src="images/rooms/B513.png" />]
-c $B532
+c $B532 Movement handler for initial room (B8CE handler)
+C $B535,1 increase Ninja position in tilemap
 C $B539,3 Ninja X address
 C $B577,3 Ninja X address
+C $B57E,1 increase Ninja position in tilemap
 s $B595
 c $B596
 b $B59B
@@ -1141,8 +1145,10 @@ c $B5C7
 C $B5F9,3 Draw game screen frames and indicator text
 C $B643,3 Initial room address
 C $B646,3 set Current Room address
+C $B64C,3 set movement handler address
 C $B657,3 set Ninja X
 C $B65C,3 set Ninja Y
+C $B662,3 set Ninja position in tilemap: Y * 30 + X
 c $B66A Current Room changed, entering the new Room
 C $B6BF,3 Tile screen 0 start address
 C $B6C7,3 510 - 1
@@ -1207,17 +1213,26 @@ C $B7FD,3 Tile screen 2 start address
 C $B802,3 510 - 1
 C $B805,3 Tile screen 2 start address + 1
 C $B808,2 Fill the Tile screen 2
+C $B80F,2 35 = number of records
+C $B811,3 Table address
+C $B81F,1 add Ninja position in tilemap
 c $B83C
 b $B84A
+W $B84A,2,2 ??
+B $B84C,1,1 ??
+W $B84D,2,2 ??
+B $B84F,1,1 ??
+B $B850,1,1 ??
 c $B851
 c $B86C
 c $B889
 C $B8A4,3 Draw NEAR/HELD item
 C $B8C5,3 Draw NEAR/HELD item
-C $B8CD,3 !!MUT-ARG!!
+C $B8CD,3 !!MUT-ARG!! => run handler
 c $B8D0
 C $B8D3,3 Tile screen 4 start address
 C $B8D8,3 510 - 1
+C $B8E0,3 get Ninja position in tilemap
 C $B907,3 Tile screen 2 start address
 C $B922,3 Tile screen 3 start address
 C $B927,3 Tile screen 3 start address + 1
@@ -1239,18 +1254,30 @@ C $BBB4,3 Tile screen 1 start address
 c $BBBB
 C $BBBE,3 Tile screen 1 start address
 c $BBD4
-c $BBDF
+C $BBD4,3 Read Input
+C $BBD7,2 check FIRE bit
+c $BBDF Read Input
+C $BBE4,1 Input method = Keyboard/Protek?
+C $BBE7,2 read joystick port
+C $BBE9,3 store input bits
 c $BC0D
 c $BC55
+C $BCC4,3 Read Input
+C $BCC7,2 check FIRE bit
+N $BCCC FIRE pressed
 t $BD2F
 c $BD33
 c $BD37
 C $BD59,3 get Ninja X
 C $BD71,3 get Ninja Y
+C $BD91,3 get Input bits
+C $BD94,2 check UP bit
+C $BD9B,2 check DOWN bit
 c $BDAF
 c $BDB2
 c $BDDD
 c $BE0D
+C $BE43,3 set Ninja position in tilemap
 c $BE5A
 c $BE63
 c $BE71 Time is out
@@ -1270,6 +1297,9 @@ T $BF44,20
 T $BF58,15
 T $BF67,20
 c $BF7B
+C $BF94,3 get Input bits
+C $BF99,2 check RIGHT bit
+C $BFA0,2 check LEFT bit
 c $BFBA
 c $BFD5
 C $BFE6,3 Screen start address
@@ -1295,44 +1325,82 @@ T $C087,13
 c $C094
 b $C0E6
 c $C12E
+C $C13A => Move down one tile
 c $C13D
 b $C171
-c $C1B6
+c $C1B6 ?? (B8CE handler)
 C $C1B6,3 get Ninja X
 C $C1BB,3 => Going to room at Right
 C $C1CA,3 Ninja Y address
+C $C1E3,3 Read Input
+C $C1E6,2 check RIGHT bit
 C $C203,3 Ninja Y address
 C $C20A,3 => Going to room Down from current
 C $C20D,3 Ninja X address
 c $C22F
+C $C22F,3 Read Input
+C $C232,2 check DOWN bit
 c $C24B
 C $C24B,3 get Ninja X
+C $C250,3 => Going to room at Left
 C $C25F,3 Ninja Y address
+C $C278,3 Read Input
+C $C27B,2 check LEFT bit
 C $C298,3 Ninja Y address
 C $C29F,3 => Going to room Down from current
 C $C2A2,3 Ninja X address
+C $C2B3,3 Read Input
+C $C2B6,2 check LEFT bit
 c $C2FA Going to room at Right
 C $C2FB,3 set Ninja X = 0
+C $C2FE,3 -24
+C $C304,1 update Ninja position in tilemap
 C $C308,3 get Current Room address
+C $C30B,3 offset in Room description
+C $C30F,1 get Room Right address low byte
+C $C311,1 get Room Right address high byte
 C $C313,3 set Current Room address
 C $C316,3 => Current Room changed
 c $C319 Going to room at Left
 C $C31B,3 set Ninja X = 24
+C $C31E,3 +24
+C $C324,1 update Ninja position in tilemap
 C $C328,3 get Current Room address
+C $C32B,3 offset in Room description
+C $C32F,1 get Room Left address low byte
+C $C331,1 get Room Left address high byte
 C $C333,3 set Current Room address
 C $C336,3 => Current Room changed
-c $C339
+c $C339 ?? (B8CE handler)
 c $C392
-c $C3BB
+c $C3BB Move LEFT one tile
 C $C3BB,3 Ninja X address
-c $C3CF
+C $C3BE,1 one tile to left
+c $C3CF Move RIGHT one tile
 C $C3CF,3 Ninja X address
-c $C3D9
+C $C3D2,1 one tile to right
+c $C3D9 Process movement ?? (B8CE handler)
+N $C3EC Read and process Input
+C $C3EC,3 Read Input
+C $C3EF,2 check RIGHT bit
+N $C3F3 Pressed RIGHT
+C $C40E,2 check LEFT bit
+N $C412 Pressed LEFT
+N $C42C Check if UP pressed
+C $C42C,3 get Input bits
+C $C42F,2 check UP bit
+N $C433 Pressed UP
 C $C447,3 get Ninja Y
 C $C45D,3 Ninja Y address
+N $C477 Check if DOWN pressed
+N $C47B Pressed DOWN
 C $C47B,3 get Ninja Y
 C $C480,3 => Going to room Down from current
+C $C48D,2 => Move down one tile
+C $C493,2 => Move down one tile
+c $C498 Move DOWN one tile
 C $C498,3 Ninja Y address
+C $C49B,1 one tile down
 t $C4A4
 c $C4A7
 c $C4DE
@@ -1342,6 +1410,7 @@ c $C50D
 C $C512,3 Ninja X address
 C $C51A,3 => Going to room at Left
 C $C546,3 Ninja Y address
+C $C56E,3 => Going to room at Right
 c $C57B
 C $C58A,3 Tile screen 0 start address
 c $C5A0
@@ -1352,17 +1421,29 @@ C $C5D4,3 Ninja Y address
 C $C5DB,2 => Going to room Down from current
 c $C604 Going to room Down from current
 C $C605,3 set Ninja Y = 0
+C $C608,3 get Ninja position in tilemap
 C $C60B,3 -300
+C $C60E,1 10 tile lines higher
+C $C60F,3 set Ninja position in tilemap
 C $C612,3 get Current Room address
+C $C615,3 offset in room description
 C $C618,1 now HL = room address + 10
+C $C619,1 get Room Down address low byte
+C $C61B,1 get Room Down address high byte
 C $C61D,3 set Current Room address
 C $C620,3 => Current Room changed
 c $C623 Going to room Up from current
 C $C625,3 set Ninja Y = 10
+C $C628,3 get Ninja position in tilemap
 C $C62B,3 +300
+C $C62E,1 10 tile lines lower
+C $C62F,3 set Ninja position in tilemap
 C $C632,3 get Current Room address
+C $C635,3 offset in room description
 C $C638,1 now HL = room address + 8
-C $C63D,3 get Current Room address
+C $C639,1 get Room Up address low byte
+C $C63B,1 get Room Up address high byte
+C $C63D,3 set Current Room address
 C $C640,3 => Current Room changed
 c $C643
 c $C64C
@@ -1371,10 +1452,12 @@ b $C66B
 c $C671
 c $C681
 c $C6A5
+C $C6B2,4 get Ninja position in tilemap
+C $C6D1,4 set Ninja position in tilemap
 C $C6A5,3 get Ninja X
 C $C6B6,3 get Ninja X
 C $C6CE,3 set Ninja X
-c $C6E2
+c $C6E2 ?? (B8CE handler)
 c $C70C
 b $C721 Font
 B $C721,8,8 ' '
@@ -1729,58 +1812,79 @@ B $D1FE
 T $D201
 B $D20E
 b $D210
-b $D256
-t $D295
-B $D298
-T $D29C
-B $D29F
-T $D2A3
-B $D2A6
-T $D2AA
-B $D2AD
-T $D2B1
-B $D2B4
-T $D2B8
-B $D2BB
-T $D2BF
-B $D2C2
-T $D2C6
-B $D2C9
-T $D2CD
-B $D2D0
-T $D2D4
-B $D2D7
-T $D2DB
-B $D2DE
-T $D2E2
-B $D2E5
-T $D2E9
-B $D2EC
-T $D2F0
-B $D2F3
-T $D2F7
-B $D2FA
-T $D2FE
-B $D301
-T $D305
-B $D308
-T $D30C
-B $D30F
-T $D313
-B $D316
-t $D31A
-b $D31D
-t $D321
-b $D324
-t $D328
-b $D32B
-t $D32F
-b $D332
-t $D336
-b $D339
-t $D33D
-b $D340
-b $D34D Objects ??, 35 records, 5 bytes each
+b $D256 Table ?? objects, 35 records, 7-byte records
+W $D256,2,2
+B $D258,5,5
+W $D25D,2,2
+B $D25F,5,5
+W $D264,2,2
+B $D266,5,5
+W $D26B,2,2
+B $D26D,5,5
+W $D272,2,2
+B $D274,5,5
+W $D279,2,2
+B $D27B,5,5
+W $D280,2,2
+B $D282,5,5
+W $D287,2,2
+B $D289,5,5
+W $D28E,2,2
+B $D290,5,5
+W $D295,2,2
+B $D297,5,5
+W $D29C,2,2
+B $D29E,5,5
+W $D2A3,2,2
+B $D2A5,5,5
+W $D2AA,2,2
+B $D2AC,5,5
+W $D2B1,2,2
+B $D2B3,5,5
+W $D2B8,2,2
+B $D2BA,5,5
+W $D2BF,2,2
+B $D2C1,5,5
+W $D2C6,2,2
+B $D2C8,5,5
+W $D2CD,2,2
+B $D2CF,5,5
+W $D2D4,2,2
+B $D2D6,5,5
+W $D2DB,2,2
+B $D2DD,5,5
+W $D2E2,2,2
+B $D2E4,5,5
+W $D2E9,2,2
+B $D2EB,5,5
+W $D2F0,2,2
+B $D2F2,5,5
+W $D2F7,2,2
+B $D2F9,5,5
+W $D2FE,2,2
+B $D300,5,5
+W $D305,2,2
+B $D307,5,5
+W $D30C,2,2
+B $D30E,5,5
+W $D313,2,2
+B $D315,5,5
+W $D31A,2,2
+B $D31C,5,5
+W $D321,2,2
+B $D323,5,5
+W $D328,2,2
+B $D32A,5,5
+W $D32F,2,2
+B $D331,5,5
+W $D336,2,2
+B $D338,5,5
+W $D33D,2,2
+B $D33F,5,5
+W $D344,2,2
+B $D346,5,5
+b $D34B
+b $D34D Table ?? objects, 35 records, 5 bytes each
 W $D34D,4,4
 B $D351,1,1
 W $D352,4,4
@@ -1917,6 +2021,9 @@ C $DFB5,2 'P' ?
 C $DFB7,2 => Protek selected
 C $DFB9,2 'R' ?
 C $DFBB,3 => Redefine Keys
+C $DFBE,3 get Input method
+C $DFC1,2 Joystick?
+C $DFC5,2 read joystick port
 C $DFC9,3 => Start Mission
 c $DFD4
 c $DFDB Highlight Menu item

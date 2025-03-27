@@ -295,19 +295,18 @@ b$71C3 DEFB $01,$01,$11,$08,$0E,$00,$0E,$00
  $721B DEFB $22,$23,$24,$25,$26,$27,$FF
 
 ; Data block at 7222
-b$7222 DEFB $00,$EF,$01,$04,$EF,$08,$03,$EF,$10,$02 ; Ports and bits for the
-                                                    ; current input method
- $722C DEFB $F7,$10,$01,$EF,$04,$00,$00
- $7233 DEFW $5A41                                   ; Screen attributes address
-                                                    ; stored during tile map
-                                                    ; drawing
- $7235 DEFW $7184                                   ; Tile screen 5 address
-                                                    ; stored during tile map
-                                                    ; drawing
- $7237 DEFW $6F86                                   ; Tile screen 4 address
-                                                    ; stored during tile map
-                                                    ; drawing
- $7239 DEFB $00                                     ; Byte mirror flag
+b$7222 DEFB $00         ; Input method: 1 = Joystick, 0 = Keyboard or Protek
+ $7223 DEFB $EF,$01,$04 ; {Ports and bits for the current input method
+ $7226 DEFB $EF,$08,$03 ;
+ $7229 DEFB $EF,$10,$02 ;
+ $722C DEFB $F7,$10,$01 ;
+ $722F DEFB $EF,$04,$00 ; }
+ $7232 DEFB $00         ; Input bits: 000FUDLR
+ $7233 DEFW $5A41       ; Screen attributes address stored during tile map
+                        ; drawing
+ $7235 DEFW $7184       ; Tile screen 5 address stored during tile map drawing
+ $7237 DEFW $6F86       ; Tile screen 4 address stored during tile map drawing
+ $7239 DEFB $00         ; Byte mirror flag
 
 ; Mirror table
 b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {Mirror
@@ -2729,13 +2728,13 @@ b$9BE7 DEFW $B483
  $9C1B DEFB $73,$02,$0D,$A2,$65,$0C,$48,$73 ;
  $9C23 DEFB $02,$03,$49,$67,$02,$1A,$FA,$17 ;
  $9C2B DEFB $67,$05,$02,$01,$9D,$88,$2B,$67 ;
- $9C33 DEFB $01,$04,$F9,$A5,$66,$FF,$00,$00 ;
- $9C3B DEFB $00,$00,$00,$00,$00             ; }
+ $9C33 DEFB $01,$04,$F9,$A5,$66,$FF         ; }
 
-; Data block at 9C40
-b$9C40 DEFB $08      ; Ninja Y within the room, 0 at the top
- $9C41 DEFB $06      ; Ninja X within the room
- $9C42 DEFW $00F6    ; ??
+; Data block at 9C39
+b$9C39 DEFB $00,$00,$00,$00,$00,$00,$00
+ $9C40 DEFB $08                         ; Ninja Y within the room, 0 at the top
+ $9C41 DEFB $06                         ; Ninja X within the room
+ $9C42 DEFW $00F6                       ; Ninja position in tilemap: Y * 30 + X
 
 ; Routine at 9C44
 ;
@@ -5165,9 +5164,9 @@ b$B513 DEFW $B446
  $B527 DEFB $1E,$0B,$EE,$70,$03,$0C,$1E,$03 ; src="images/rooms/B513.png" />]
  $B52F DEFB $0C,$71,$FF                     ; }
 
-; Routine at B532
+; Movement handler for initial room (B8CE handler)
 c$B532 LD HL,($9C42) ;
- $B535 INC HL        ;
+ $B535 INC HL        ; increase Ninja position in tilemap
  $B536 LD ($9C42),HL ;
  $B539 LD HL,$9C41   ; Ninja X address
  $B53C INC (HL)      ;
@@ -5200,7 +5199,7 @@ c$B532 LD HL,($9C42) ;
  $B577 LD HL,$9C41   ; Ninja X address
  $B57A INC (HL)      ;
  $B57B LD HL,($9C42) ;
- $B57E INC HL        ;
+ $B57E INC HL        ; increase Ninja position in tilemap
  $B57F LD ($9C42),HL ;
  $B582 LD HL,$70E3   ;
  $B585 LD (HL),$FF   ;
@@ -5307,7 +5306,7 @@ c$B5C7 CALL $AC44    ;
  $B643 LD HL,$B513   ; Initial room address
  $B646 LD ($7184),HL ; set Current Room address
  $B649 LD HL,$B532   ;
- $B64C LD ($B8CE),HL ;
+ $B64C LD ($B8CE),HL ; set movement handler address
  $B64F LD HL,$D558   ;
  $B652 LD ($7186),HL ;
  $B655 LD A,$01      ;
@@ -5315,7 +5314,7 @@ c$B5C7 CALL $AC44    ;
  $B65A LD A,$05      ;
  $B65C LD ($9C40),A  ; set Ninja Y
  $B65F LD HL,$0097   ;
- $B662 LD ($9C42),HL ;
+ $B662 LD ($9C42),HL ; set Ninja position in tilemap: Y * 30 + X
  $B665 LD A,$13      ;
  $B667 LD ($7343),A  ;
 
@@ -5544,8 +5543,8 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B80A XOR A         ;
  $B80B LD ($B84C),A  ;
  $B80E LD C,A        ;
- $B80F LD B,$23      ;
- $B811 LD DE,$D256   ;
+ $B80F LD B,$23      ; 35 = number of records
+ $B811 LD DE,$D256   ; Table address
 ; This entry point is used by the routine at #R$B889.
 *$B814 LD A,(DE)     ;
  $B815 LD L,A        ;
@@ -5555,7 +5554,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B819 INC DE        ;
  $B81A PUSH DE       ;
  $B81B LD DE,($9C42) ;
- $B81F ADD HL,DE     ;
+ $B81F ADD HL,DE     ; add Ninja position in tilemap
  $B820 POP DE        ;
  $B821 LD A,(DE)     ;
  $B822 INC DE        ;
@@ -5586,7 +5585,11 @@ c$B83C LD A,($749D)  ;
  $B849 RET           ;
 
 ; Data block at B84A
-b$B84A DEFB $FB,$D2,$00,$00,$00,$00,$C8
+b$B84A DEFW $D2FB    ; ??
+ $B84C DEFB $00      ; ??
+ $B84D DEFW $0000    ; ??
+ $B84F DEFB $00      ; ??
+ $B850 DEFB $C8      ; ??
 
 ; Routine at B851
 ;
@@ -5659,7 +5662,7 @@ c$B889 INC DE        ;
  $B8C8 DI            ;
 *$B8C9 XOR A         ;
  $B8CA LD ($A39E),A  ;
- $B8CD JP $BEB3      ; !!MUT-ARG!!
+ $B8CD JP $BEB3      ; !!MUT-ARG!! => run handler
 
 ; Routine at B8D0
 ;
@@ -5672,7 +5675,7 @@ c$B8D0 CALL $BBBB    ;
  $B8D8 LD BC,$01FD   ; 510 - 1
  $B8DB LD DE,$6D89   ;
  $B8DE LDIR          ;
- $B8E0 LD HL,($9C42) ;
+ $B8E0 LD HL,($9C42) ; get Ninja position in tilemap
  $B8E3 LD A,($7239)  ;
  $B8E6 CP $00        ;
  $B8E8 JR NZ,$B907   ;
@@ -6066,22 +6069,22 @@ c$BBBB LD HL,($9C42) ;
  $BBD3 RET           ;
 
 ; Routine at BBD4
-c$BBD4 CALL $BBDF    ;
- $BBD7 BIT 4,A       ;
+c$BBD4 CALL $BBDF    ; Read Input
+ $BBD7 BIT 4,A       ; check FIRE bit
  $BBD9 JP NZ,$B8D0   ;
  $BBDC JP $C226      ;
 
-; Routine at BBDF
+; Read Input
 ;
 ; Used by the routines at #R$BBD4, #R$BC55, #R$C1B6, #R$C22F, #R$C24B and
 ; #R$C3D9.
 c$BBDF PUSH HL       ;
  $BBE0 LD HL,$7222   ;
  $BBE3 XOR A         ;
- $BBE4 CP (HL)       ;
+ $BBE4 CP (HL)       ; Input method = Keyboard/Protek?
  $BBE5 JR Z,$BBEE    ;
- $BBE7 IN A,($1F)    ;
-*$BBE9 LD ($7232),A  ;
+ $BBE7 IN A,($1F)    ; read joystick port
+*$BBE9 LD ($7232),A  ; store input bits
  $BBEC POP HL        ;
  $BBED RET           ;
 *$BBEE PUSH BC       ;
@@ -6197,9 +6200,10 @@ c$BC55 LD HL,$B5C5   ;
  $BCC0 CP (HL)       ;
  $BCC1 JR Z,$BCC4    ;
  $BCC3 DEC (HL)      ;
-*$BCC4 CALL $BBDF    ;
- $BCC7 BIT 4,A       ;
+*$BCC4 CALL $BBDF    ; Read Input
+ $BCC7 BIT 4,A       ; check FIRE bit
  $BCC9 JP Z,$BDDD    ;
+; FIRE pressed
  $BCCC LD HL,$B595   ;
  $BCCF XOR A         ;
  $BCD0 CP (HL)       ;
@@ -6305,13 +6309,13 @@ c$BD37 LD HL,$A39F   ;
  $BD8C INC B         ;
 *$BD8D LD A,B        ;
  $BD8E LD ($A3A3),A  ;
- $BD91 LD A,($7232)  ;
- $BD94 BIT 3,A       ;
+ $BD91 LD A,($7232)  ; get Input bits
+ $BD94 BIT 3,A       ; check UP bit
  $BD96 JR Z,$BD9B    ;
  $BD98 DEC B         ;
  $BD99 DEC B         ;
  $BD9A DEC B         ;
-*$BD9B BIT 2,A       ;
+*$BD9B BIT 2,A       ; check DOWN bit
  $BD9D JR Z,$BDA2    ;
  $BD9F INC B         ;
  $BDA0 INC B         ;
@@ -6398,7 +6402,7 @@ c$BE0D LD HL,$65B1   ;
  $BE3D INC HL        ;
  $BE3E DJNZ $BE3A    ;
  $BE40 LD HL,$0110   ;
- $BE43 LD ($9C42),HL ;
+ $BE43 LD ($9C42),HL ; set Ninja position in tilemap
  $BE46 LD HL,$6860   ;
  $BE49 LD DE,$6861   ;
  $BE4C LD BC,$00D1   ;
@@ -6522,12 +6526,12 @@ c$BF7B LD HL,$6592   ;
  $BF8C LD ($7343),A  ;
  $BF8F LD A,($7239)  ;
  $BF92 CP $00        ;
- $BF94 LD A,($7232)  ;
+ $BF94 LD A,($7232)  ; get Input bits
  $BF97 JR Z,$BFA0    ;
- $BF99 BIT 0,A       ;
+ $BF99 BIT 0,A       ; check RIGHT bit
  $BF9B CALL NZ,$C4E8 ;
  $BF9E JR $BFA5      ;
-*$BFA0 BIT 1,A       ;
+*$BFA0 BIT 1,A       ; check LEFT bit
  $BFA2 CALL NZ,$C4E8 ;
 *$BFA5 LD HL,$C339   ;
  $BFA8 LD A,$02      ;
@@ -6690,7 +6694,7 @@ c$C12E LD HL,$C3D9   ;
  $C131 LD ($B8CE),HL ;
  $C134 LD HL,$D52E   ;
  $C137 LD ($7186),HL ;
- $C13A JP $C498      ;
+ $C13A JP $C498      ; => Move down one tile
 
 ; Routine at C13D
 ;
@@ -6735,7 +6739,7 @@ b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
  $C1A9 DEFB $19,$22,$42,$9C,$CD,$DF,$BB,$CB
  $C1B1 DEFB $57,$20,$BA,$18,$70
 
-; Routine at C1B6
+; ?? (B8CE handler)
 c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1B9 CP $18        ;
  $C1BB JP Z,$C2FA    ; => Going to room at Right
@@ -6757,8 +6761,8 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1DE LD A,$64      ;
  $C1E0 CP (HL)       ;
  $C1E1 JR NC,$C1EE   ;
- $C1E3 CALL $BBDF    ;
- $C1E6 BIT 0,A       ;
+ $C1E3 CALL $BBDF    ; Read Input
+ $C1E6 BIT 0,A       ; check RIGHT bit
  $C1E8 JP Z,$C226    ;
  $C1EB JP $B8D0      ;
 *$C1EE LD DE,$003B   ;
@@ -6794,8 +6798,8 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C22C JP $BFB0      ;
 
 ; Routine at C22F
-c$C22F CALL $BBDF    ;
- $C232 BIT 2,A       ;
+c$C22F CALL $BBDF    ; Read Input
+ $C232 BIT 2,A       ; check DOWN bit
  $C234 JR NZ,$C239   ;
  $C236 JP $C226      ;
 *$C239 LD HL,($9C42) ;
@@ -6810,7 +6814,7 @@ c$C22F CALL $BBDF    ;
 ; Routine at C24B
 c$C24B LD A,($9C41)  ; get Ninja X
  $C24E CP $00        ;
- $C250 JP Z,$C319    ;
+ $C250 JP Z,$C319    ; => Going to room at Left
  $C253 LD HL,($9C42) ;
  $C256 LD DE,$6645   ;
  $C259 ADD HL,DE     ;
@@ -6829,8 +6833,8 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C273 LD A,$64      ;
  $C275 CP (HL)       ;
  $C276 JR NC,$C283   ;
- $C278 CALL $BBDF    ;
- $C27B BIT 1,A       ;
+ $C278 CALL $BBDF    ; Read Input
+ $C27B BIT 1,A       ; check LEFT bit
  $C27D JP Z,$C226    ;
  $C280 JP $B8D0      ;
 *$C283 LD DE,$003D   ;
@@ -6856,8 +6860,8 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C2AA LD ($9C42),HL ;
  $C2AD CALL $C5A3    ;
  $C2B0 JP Z,$C643    ;
- $C2B3 CALL $BBDF    ;
- $C2B6 BIT 1,A       ;
+ $C2B3 CALL $BBDF    ; Read Input
+ $C2B6 BIT 1,A       ; check LEFT bit
  $C2B8 JP Z,$C226    ;
 ; This entry point is used by the routine at #R$C1B6.
 *$C2BB BIT 3,A       ;
@@ -6899,16 +6903,16 @@ c$C24B LD A,($9C41)  ; get Ninja X
 ; Used by the routines at #R$C1B6 and #R$C50D.
 c$C2FA XOR A         ;
  $C2FB LD ($9C41),A  ; set Ninja X = 0
- $C2FE LD DE,$FFE8   ;
+ $C2FE LD DE,$FFE8   ; -24
  $C301 LD HL,($9C42) ;
- $C304 ADD HL,DE     ;
+ $C304 ADD HL,DE     ; update Ninja position in tilemap
  $C305 LD ($9C42),HL ;
  $C308 LD HL,($7184) ; get Current Room address
- $C30B LD DE,$0006   ;
+ $C30B LD DE,$0006   ; offset in Room description
  $C30E ADD HL,DE     ;
- $C30F LD A,(HL)     ;
+ $C30F LD A,(HL)     ; get Room Right address low byte
  $C310 INC HL        ;
- $C311 LD H,(HL)     ;
+ $C311 LD H,(HL)     ; get Room Right address high byte
  $C312 LD L,A        ;
  $C313 LD ($7184),HL ; set Current Room address
  $C316 JP $B66A      ; => Current Room changed
@@ -6918,21 +6922,21 @@ c$C2FA XOR A         ;
 ; Used by the routines at #R$C24B and #R$C50D.
 c$C319 LD A,$18      ;
  $C31B LD ($9C41),A  ; set Ninja X = 24
- $C31E LD DE,$0018   ;
+ $C31E LD DE,$0018   ; +24
  $C321 LD HL,($9C42) ;
- $C324 ADD HL,DE     ;
+ $C324 ADD HL,DE     ; update Ninja position in tilemap
  $C325 LD ($9C42),HL ;
  $C328 LD HL,($7184) ; get Current Room address
- $C32B LD DE,$0004   ;
+ $C32B LD DE,$0004   ; offset in Room description
  $C32E ADD HL,DE     ;
- $C32F LD A,(HL)     ;
+ $C32F LD A,(HL)     ; get Room Left address low byte
  $C330 INC HL        ;
- $C331 LD H,(HL)     ;
+ $C331 LD H,(HL)     ; get Room Left address high byte
  $C332 LD L,A        ;
  $C333 LD ($7184),HL ; set Current Room address
  $C336 JP $B66A      ; => Current Room changed
 
-; Routine at C339
+; ?? (B8CE handler)
 c$C339 LD HL,$7343   ;
  $C33C DEC (HL)      ;
  $C33D JP NZ,$B8D0   ;
@@ -7000,11 +7004,11 @@ c$C392 LD A,(HL)     ;
  $C3B9 CP B          ;
  $C3BA RET           ;
 
-; Routine at C3BB
+; Move LEFT one tile
 ;
 ; Used by the routine at #R$C339.
 c$C3BB LD HL,$9C41   ; Ninja X address
- $C3BE DEC (HL)      ;
+ $C3BE DEC (HL)      ; one tile to left
  $C3BF LD HL,($9C42) ;
  $C3C2 DEC HL        ;
 ; This entry point is used by the routine at #R$C3CF.
@@ -7014,16 +7018,16 @@ c$C3BB LD HL,$9C41   ; Ninja X address
  $C3C9 LD DE,$D52E   ;
  $C3CC JP $BFB0      ;
 
-; Routine at C3CF
+; Move RIGHT one tile
 ;
 ; Used by the routine at #R$C339.
 c$C3CF LD HL,$9C41   ; Ninja X address
- $C3D2 INC (HL)      ;
+ $C3D2 INC (HL)      ; one tile to right
  $C3D3 LD HL,($9C42) ;
  $C3D6 INC HL        ;
  $C3D7 JR $C3C3      ;
 
-; Routine at C3D9
+; Process movement ?? (B8CE handler)
 c$C3D9 LD HL,($9C42) ;
  $C3DC LD DE,$6647   ;
  $C3DF ADD HL,DE     ;
@@ -7033,9 +7037,11 @@ c$C3D9 LD HL,($9C42) ;
  $C3E5 DEC HL        ;
  $C3E6 CALL $C392    ;
  $C3E9 JP NZ,$C226   ;
-*$C3EC CALL $BBDF    ;
- $C3EF BIT 0,A       ;
+; Read and process Input
+*$C3EC CALL $BBDF    ; Read Input
+ $C3EF BIT 0,A       ; check RIGHT bit
  $C3F1 JR Z,$C40E    ;
+; Pressed RIGHT
  $C3F3 LD HL,($9C42) ;
  $C3F6 LD DE,$6648   ;
  $C3F9 ADD HL,DE     ;
@@ -7049,8 +7055,9 @@ c$C3D9 LD HL,($9C42) ;
  $C406 LD A,$01      ;
  $C408 LD ($7239),A  ;
  $C40B JP $C162      ;
-*$C40E BIT 1,A       ;
+*$C40E BIT 1,A       ; check LEFT bit
  $C410 JR Z,$C42C    ;
+; Pressed LEFT
  $C412 LD HL,($9C42) ;
  $C415 LD DE,$6645   ;
  $C418 ADD HL,DE     ;
@@ -7064,9 +7071,11 @@ c$C3D9 LD HL,($9C42) ;
  $C425 XOR A         ;
  $C426 LD ($7239),A  ;
  $C429 JP $C14B      ;
-*$C42C LD A,($7232)  ;
- $C42F BIT 3,A       ;
+; Check if UP pressed
+*$C42C LD A,($7232)  ; get Input bits
+ $C42F BIT 3,A       ; check UP bit
  $C431 JR Z,$C477    ;
+; Pressed UP
  $C433 LD HL,($9C42) ;
  $C436 LD DE,$6647   ;
  $C439 ADD HL,DE     ;
@@ -7092,6 +7101,7 @@ c$C3D9 LD HL,($9C42) ;
  $C460 DEC (HL)      ;
  $C461 LD HL,($9C42) ;
  $C464 LD DE,$FFE2   ;
+; This entry point is used by the routine at #R$C498.
 *$C467 ADD HL,DE     ;
  $C468 LD ($9C42),HL ;
  $C46B LD A,($7239)  ;
@@ -7099,8 +7109,10 @@ c$C3D9 LD HL,($9C42) ;
  $C46F AND $01       ;
  $C471 LD ($7239),A  ;
  $C474 JP $B8D0      ;
+; Check if DOWN pressed
 *$C477 BIT 2,A       ;
  $C479 JR Z,$C495    ;
+; Pressed DOWN
  $C47B LD A,($9C40)  ; get Ninja Y
  $C47E CP $0A        ;
  $C480 JP Z,$C604    ; => Going to room Down from current
@@ -7109,14 +7121,17 @@ c$C3D9 LD HL,($9C42) ;
  $C489 ADD HL,DE     ;
  $C48A LD A,$0C      ;
  $C48C CP (HL)       ;
- $C48D JR Z,$C498    ;
+ $C48D JR Z,$C498    ; => Move down one tile
  $C48F DEC HL        ;
  $C490 CALL $C392    ;
- $C493 JR Z,$C498    ;
+ $C493 JR Z,$C498    ; => Move down one tile
 *$C495 JP $B8D0      ;
-; This entry point is used by the routine at #R$C12E.
-*$C498 LD HL,$9C40   ; Ninja Y address
- $C49B INC (HL)      ;
+
+; Move DOWN one tile
+;
+; Used by the routines at #R$C12E and #R$C3D9.
+c$C498 LD HL,$9C40   ; Ninja Y address
+ $C49B INC (HL)      ; one tile down
  $C49C LD HL,($9C42) ;
  $C49F LD DE,$001E   ;
  $C4A2 JR $C467      ;
@@ -7223,7 +7238,7 @@ c$C50D LD A,($7239)  ;
  $C566 LD DE,$D5AC   ;
  $C569 JP $BFB0      ;
 *$C56C CP $18        ;
- $C56E JP Z,$C2FA    ;
+ $C56E JP Z,$C2FA    ; => Going to room at Right
  $C571 INC (HL)      ;
  $C572 LD HL,($9C42) ;
  $C575 INC HL        ;
@@ -7319,16 +7334,16 @@ c$C5C6 LD HL,($9C42) ;
 ; Used by the routines at #R$C1B6, #R$C24B, #R$C3D9 and #R$C5C6.
 c$C604 XOR A         ;
  $C605 LD ($9C40),A  ; set Ninja Y = 0
- $C608 LD HL,($9C42) ;
+ $C608 LD HL,($9C42) ; get Ninja position in tilemap
  $C60B LD DE,$FED4   ; -300
- $C60E ADD HL,DE     ;
- $C60F LD ($9C42),HL ;
+ $C60E ADD HL,DE     ; 10 tile lines higher
+ $C60F LD ($9C42),HL ; set Ninja position in tilemap
  $C612 LD HL,($7184) ; get Current Room address
- $C615 LD DE,$000A   ;
+ $C615 LD DE,$000A   ; offset in room description
  $C618 ADD HL,DE     ; now HL = room address + 10
- $C619 LD A,(HL)     ;
+ $C619 LD A,(HL)     ; get Room Down address low byte
  $C61A INC HL        ;
- $C61B LD H,(HL)     ;
+ $C61B LD H,(HL)     ; get Room Down address high byte
  $C61C LD L,A        ;
  $C61D LD ($7184),HL ; set Current Room address
  $C620 JP $B66A      ; => Current Room changed
@@ -7338,18 +7353,18 @@ c$C604 XOR A         ;
 ; Used by the routine at #R$C3D9.
 c$C623 LD A,$0A      ;
  $C625 LD ($9C40),A  ; set Ninja Y = 10
- $C628 LD HL,($9C42) ;
+ $C628 LD HL,($9C42) ; get Ninja position in tilemap
  $C62B LD DE,$012C   ; +300
- $C62E ADD HL,DE     ;
- $C62F LD ($9C42),HL ;
+ $C62E ADD HL,DE     ; 10 tile lines lower
+ $C62F LD ($9C42),HL ; set Ninja position in tilemap
  $C632 LD HL,($7184) ; get Current Room address
- $C635 LD DE,$0008   ;
+ $C635 LD DE,$0008   ; offset in room description
  $C638 ADD HL,DE     ; now HL = room address + 8
- $C639 LD A,(HL)     ;
+ $C639 LD A,(HL)     ; get Room Up address low byte
  $C63A INC HL        ;
- $C63B LD H,(HL)     ;
+ $C63B LD H,(HL)     ; get Room Up address high byte
  $C63C LD L,A        ;
- $C63D LD ($7184),HL ; get Current Room address
+ $C63D LD ($7184),HL ; set Current Room address
  $C640 JP $B66A      ; => Current Room changed
 
 ; Routine at C643
@@ -7408,7 +7423,7 @@ c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6AA JP NZ,$B937   ;
  $C6AD LD A,$4B      ;
  $C6AF LD ($7343),A  ;
- $C6B2 LD DE,($9C42) ;
+ $C6B2 LD DE,($9C42) ; get Ninja position in tilemap
  $C6B6 LD A,($9C41)  ; get Ninja X
  $C6B9 INC A         ;
  $C6BA LD B,A        ;
@@ -7424,13 +7439,13 @@ c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6CC DEC DE        ;
 *$C6CD LD A,B        ;
  $C6CE LD ($9C41),A  ; set Ninja X
- $C6D1 LD ($9C42),DE ;
+ $C6D1 LD ($9C42),DE ; set Ninja position in tilemap
  $C6D5 LD DE,$D486   ;
  $C6D8 LD ($7186),DE ;
  $C6DC LD ($B8CE),HL ;
  $C6DF JP $B937      ;
 
-; Routine at C6E2
+; ?? (B8CE handler)
 c$C6E2 LD B,$02      ;
 *$C6E4 LD DE,$676F   ;
  $C6E7 LD HL,$676E   ;
@@ -7830,94 +7845,82 @@ b$D210 DEFB $04,$CE,$09,$63,$09,$63,$09,$63
  $D248 DEFB $03,$CC,$03,$CC,$04,$CE,$04,$CE
  $D250 DEFB $04,$CE,$04,$CE,$04,$CE
 
-; Data block at D256
-b$D256 DEFB $02,$6F,$58,$04,$CE,$00,$00,$64
- $D25E DEFB $66,$7C,$09,$63,$20,$B3,$64,$66
- $D266 DEFB $7D,$09,$63,$2A,$B3,$64,$66,$7E
- $D26E DEFB $09,$63,$48,$B3,$64,$66,$7F,$09
- $D276 DEFB $63,$34,$B3,$64,$66,$80,$09,$63
- $D27E DEFB $3E,$B3,$E2,$6F,$1F,$09,$63,$D0
- $D286 DEFB $B8,$69,$66,$9C,$09,$D4,$00,$00
- $D28E DEFB $9B,$65,$9A,$05,$D0,$00,$00
+; Table ?? objects, 35 records, 7-byte records
+b$D256 DEFW $6F02
+ $D258 DEFB $58,$04,$CE,$00,$00
+ $D25D DEFW $6664
+ $D25F DEFB $7C,$09,$63,$20,$B3
+ $D264 DEFW $6664
+ $D266 DEFB $7D,$09,$63,$2A,$B3
+ $D26B DEFW $6664
+ $D26D DEFB $7E,$09,$63,$48,$B3
+ $D272 DEFW $6664
+ $D274 DEFB $7F,$09,$63,$34,$B3
+ $D279 DEFW $6664
+ $D27B DEFB $80,$09,$63,$3E,$B3
+ $D280 DEFW $6FE2
+ $D282 DEFB $1F,$09,$63,$D0,$B8
+ $D287 DEFW $6669
+ $D289 DEFB $9C,$09,$D4,$00,$00
+ $D28E DEFW $659B
+ $D290 DEFB $9A,$05,$D0,$00,$00
+ $D295 DEFW $6750
+ $D297 DEFB $38,$05,$D0,$00,$00
+ $D29C DEFW $6664
+ $D29E DEFB $81,$05,$D0,$00,$00
+ $D2A3 DEFW $6664
+ $D2A5 DEFB $65,$06,$D2,$00,$00
+ $D2AA DEFW $6664
+ $D2AC DEFB $66,$08,$D6,$00,$00
+ $D2B1 DEFW $6664
+ $D2B3 DEFB $67,$02,$CA,$00,$00
+ $D2B8 DEFW $6664
+ $D2BA DEFB $68,$03,$CC,$00,$00
+ $D2BF DEFW $6664
+ $D2C1 DEFB $69,$05,$D0,$00,$00
+ $D2C6 DEFW $6664
+ $D2C8 DEFB $6A,$05,$D0,$00,$00
+ $D2CD DEFW $6664
+ $D2CF DEFB $6B,$05,$D0,$00,$00
+ $D2D4 DEFW $6664
+ $D2D6 DEFB $6C,$03,$CC,$00,$00
+ $D2DB DEFW $6664
+ $D2DD DEFB $6D,$02,$CA,$00,$00
+ $D2E2 DEFW $6664
+ $D2E4 DEFB $6D,$02,$CA,$00,$00
+ $D2E9 DEFW $6664
+ $D2EB DEFB $6E,$03,$CC,$00,$00
+ $D2F0 DEFW $6664
+ $D2F2 DEFB $6F,$02,$CA,$00,$00
+ $D2F7 DEFW $6664
+ $D2F9 DEFB $70,$06,$D2,$00,$00
+ $D2FE DEFW $6664
+ $D300 DEFB $71,$02,$CA,$00,$00
+ $D305 DEFW $6664
+ $D307 DEFB $72,$06,$D2,$00,$00
+ $D30C DEFW $6664
+ $D30E DEFB $73,$02,$CA,$00,$00
+ $D313 DEFW $6664
+ $D315 DEFB $74,$03,$CC,$00,$00
+ $D31A DEFW $6664
+ $D31C DEFB $75,$03,$CC,$00,$00
+ $D321 DEFW $6664
+ $D323 DEFB $76,$03,$CC,$00,$00
+ $D328 DEFW $6664
+ $D32A DEFB $77,$04,$CE,$00,$00
+ $D32F DEFW $6664
+ $D331 DEFB $78,$04,$CE,$00,$00
+ $D336 DEFW $6664
+ $D338 DEFB $79,$04,$CE,$00,$00
+ $D33D DEFW $6664
+ $D33F DEFB $7A,$04,$CE,$00,$00
+ $D344 DEFW $6664
+ $D346 DEFB $7B,$04,$CE,$00,$00
 
-; Message at D295
-t$D295 DEFM "Pg8"
- $D298 DEFB $05,$D0,$00,$00
- $D29C DEFM "df",$81
- $D29F DEFB $05,$D0,$00,$00
- $D2A3 DEFM "dfe"
- $D2A6 DEFB $06,$D2,$00,$00
- $D2AA DEFM "dff"
- $D2AD DEFB $08,$D6,$00,$00
- $D2B1 DEFM "dfg"
- $D2B4 DEFB $02,$CA,$00,$00
- $D2B8 DEFM "dfh"
- $D2BB DEFB $03,$CC,$00,$00
- $D2BF DEFM "dfi"
- $D2C2 DEFB $05,$D0,$00,$00
- $D2C6 DEFM "dfj"
- $D2C9 DEFB $05,$D0,$00,$00
- $D2CD DEFM "dfk"
- $D2D0 DEFB $05,$D0,$00,$00
- $D2D4 DEFM "dfl"
- $D2D7 DEFB $03,$CC,$00,$00
- $D2DB DEFM "dfm"
- $D2DE DEFB $02,$CA,$00,$00
- $D2E2 DEFM "dfm"
- $D2E5 DEFB $02,$CA,$00,$00
- $D2E9 DEFM "dfn"
- $D2EC DEFB $03,$CC,$00,$00
- $D2F0 DEFM "dfo"
- $D2F3 DEFB $02,$CA,$00,$00
- $D2F7 DEFM "dfp"
- $D2FA DEFB $06,$D2,$00,$00
- $D2FE DEFM "dfq"
- $D301 DEFB $02,$CA,$00,$00
- $D305 DEFM "dfr"
- $D308 DEFB $06,$D2,$00,$00
- $D30C DEFM "dfs"
- $D30F DEFB $02,$CA,$00,$00
- $D313 DEFM "dft"
- $D316 DEFB $03,$CC,$00,$00
+; Data block at D34B
+b$D34B DEFB $64,$66
 
-; Message at D31A
-t$D31A DEFM "dfu"
-
-; Data block at D31D
-b$D31D DEFB $03,$CC,$00,$00
-
-; Message at D321
-t$D321 DEFM "dfv"
-
-; Data block at D324
-b$D324 DEFB $03,$CC,$00,$00
-
-; Message at D328
-t$D328 DEFM "dfw"
-
-; Data block at D32B
-b$D32B DEFB $04,$CE,$00,$00
-
-; Message at D32F
-t$D32F DEFM "dfx"
-
-; Data block at D332
-b$D332 DEFB $04,$CE,$00,$00
-
-; Message at D336
-t$D336 DEFM "dfy"
-
-; Data block at D339
-b$D339 DEFB $04,$CE,$00,$00
-
-; Message at D33D
-t$D33D DEFM "dfz"
-
-; Data block at D340
-b$D340 DEFB $04,$CE,$00,$00,$64,$66,$7B,$04
- $D348 DEFB $CE,$00,$00,$64,$66
-
-; Objects ??, 35 records, 5 bytes each
+; Table ?? objects, 35 records, 5 bytes each
 b$D34D DEFW $9ED9,$66DF
  $D351 DEFB $81
  $D352 DEFW $9E22,$671C
@@ -8541,10 +8544,10 @@ c$DF60 CALL $DEC1    ;
  $DFB7 JR Z,$E015    ; => Protek selected
  $DFB9 CP $52        ; 'R' ?
  $DFBB JP Z,$E097    ; => Redefine Keys
- $DFBE LD A,($7222)  ;
- $DFC1 CP $01        ;
+ $DFBE LD A,($7222)  ; get Input method
+ $DFC1 CP $01        ; Joystick?
  $DFC3 JR NZ,$DFCC   ;
- $DFC5 IN A,($1F)    ;
+ $DFC5 IN A,($1F)    ; read joystick port
  $DFC7 BIT 4,A       ;
  $DFC9 JP NZ,$E2A7   ; => Start Mission
 ; This entry point is used by the routines at #R$DFF1 and #R$E015.

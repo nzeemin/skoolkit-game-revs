@@ -912,7 +912,7 @@ B $A02E #HTML[<img src="images/rooms/A022.png" />]
 c $A0DF Room 94AB initialization
 c $A0E8 Room 7DA9 initialization
 c $A0ED Room 7E8C initialization
-b $A0F2 Room 920A initialization
+c $A0F2 Room 920A initialization
 c $A0F7 Room 8F84 initialization
 c $A0FC Room 8B71 initialization
 c $A101 Room 8739 initialization
@@ -951,26 +951,26 @@ c $A1B5 Room 7F9C initialization
 c $A1C0 Room 8162 initialization
 c $A1CB Room 80A7 initialization
 c $A1D6 Room 9B9D initialization
-b $A1E1
-B $A1E1,6,6
-B $A1E7,6,6
-B $A1ED,6,6
-B $A1F3,6,6
-B $A1F9,6,6
-B $A1FF,6,6
-B $A205,6,6
-B $A20B,6,6
-B $A211,6,6
-B $A217,6,6
-B $A21D,6,6
-B $A223,6,6
-B $A229,6,6
-B $A22F,6,6
-B $A235,6,6
-B $A23B,6,6
-B $A241,6,6
-B $A247,6,6
-B $A24D,6,6
+b $A1E1 Guards data, ?? records, 6 bytes each
+B $A1E1,6,6 Room 94AB guard
+B $A1E7,6,6 Room 7DA9 guard
+B $A1ED,6,6 Room 7E8C guard
+B $A1F3,6,6 Room 920A guard
+B $A1F9,6,6 Room 8F84 guard
+B $A1FF,6,6 Room 8B71 guard
+B $A205,6,6 Room 8739 guard
+B $A20B,6,6 Room 858F guard
+B $A211,6,6 Room 84EE guard
+B $A217,6,6 UNUSED, see #R$A13D
+B $A21D,6,6 Room 99A6 guard
+B $A223,6,6 Room 97F8 guard
+B $A229,6,6 Room 94CF guard
+B $A22F,6,6 Room 9B51 guard
+B $A235,6,6 Room 9F3A guard
+B $A23B,6,6 Room 9F7E guard
+B $A241,6,6 Room 9EB8 guard
+B $A247,6,6 Room 9B19 guard
+B $A24D,6,6 Room 9DF5 guard
 B $A253,6,6
 B $A259,6,6
 B $A25F,6,6
@@ -1198,7 +1198,7 @@ C $B3AC,3 => #R$B702 Proceed to the next room token
 s $B3AF
 c $B3B0
 s $B401
-c $B40A
+c $B40A Initialize a guard; HL = guard data
 c $B41F Room procedure (for 63 rooms)
 c $B422 Room initialization (for 60 rooms)
 c $B425 Rooms 7C9C/92EF initialization (redirect from #R$791B)
@@ -1227,9 +1227,11 @@ R $B4DE B ??
 C $B4EF,3 Pay value text address
 C $B4F4,3 Screen address
 C $B4F7,3 => Print string
-c $B4FA
+c $B4FA Processing in initial room - the boat moving
 b $B513 Room B513: Initial Room
-W $B513,12,2
+W $B513,2,2 Room procedure
+W $B515,2,2 Initialization
+W $B517,4,2
 W $B519,2,2 Room to Right
 W $B51B,4,2
 B $B51F #HTML[<img src="images/rooms/B513.png" />]

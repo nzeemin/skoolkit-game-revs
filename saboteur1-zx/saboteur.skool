@@ -3147,9 +3147,9 @@ b$A022 DEFW $B41F
 
 ; Room 94AB initialization
 c$A0DF LD HL,$A1E1   ;
-; This entry point is used by the routines at #R$A0E8, #R$A0ED, #R$A0F7,
-; #R$A0FC, #R$A101, #R$A106, #R$A10B, #R$A110, #R$A115, #R$A11A, #R$A11F,
-; #R$A124, #R$A129, #R$A12E, #R$A133, #R$A138 and #R$A13D.
+; This entry point is used by the routines at #R$A0E8, #R$A0ED, #R$A0F2,
+; #R$A0F7, #R$A0FC, #R$A101, #R$A106, #R$A10B, #R$A110, #R$A115, #R$A11A,
+; #R$A11F, #R$A124, #R$A129, #R$A12E, #R$A133, #R$A138 and #R$A13D.
 *$A0E2 CALL $B40A    ;
 ; This entry point is used by the routine at #R$A142.
 *$A0E5 JP $B422      ;
@@ -3163,7 +3163,8 @@ c$A0ED LD HL,$A1ED   ;
  $A0F0 JR $A0E2      ;
 
 ; Room 920A initialization
-b$A0F2 DEFB $21,$F3,$A1,$18,$EB
+c$A0F2 LD HL,$A1F3   ;
+ $A0F5 JR $A0E2      ;
 
 ; Room 8F84 initialization
 c$A0F7 LD HL,$A1F9   ;
@@ -3338,26 +3339,26 @@ c$A1D6 LD HL,$A325   ;
  $A1DC LD HL,$A26B   ;
  $A1DF JR $A1AF      ;
 
-; Data block at A1E1
-b$A1E1 DEFB $9D,$00,$07,$05,$0A,$01
- $A1E7 DEFB $18,$01,$0A,$09,$0A,$00
- $A1ED DEFB $14,$01,$06,$09,$0A,$00
- $A1F3 DEFB $13,$01,$05,$09,$0A,$00
- $A1F9 DEFB $C8,$00,$14,$06,$0A,$00
- $A1FF DEFB $20,$01,$12,$09,$0A,$01
- $A205 DEFB $50,$00,$14,$02,$0A,$01
- $A20B DEFB $1E,$01,$10,$09,$0A,$00
- $A211 DEFB $01,$01,$11,$08,$0A,$01
- $A217 DEFB $18,$01,$0A,$09,$0A,$00
- $A21D DEFB $22,$01,$14,$09,$0A,$01
- $A223 DEFB $F9,$00,$09,$08,$0A,$00
- $A229 DEFB $02,$01,$12,$08,$0A,$01
- $A22F DEFB $DF,$00,$0D,$07,$0A,$01
- $A235 DEFB $F7,$00,$07,$08,$0A,$01
- $A23B DEFB $F8,$00,$08,$08,$0A,$00
- $A241 DEFB $86,$00,$0E,$04,$0A,$01
- $A247 DEFB $A2,$00,$0C,$05,$0A,$00
- $A24D DEFB $BB,$00,$07,$06,$0A,$00
+; Guards data, ?? records, 6 bytes each
+b$A1E1 DEFB $9D,$00,$07,$05,$0A,$01 ; Room 94AB guard
+ $A1E7 DEFB $18,$01,$0A,$09,$0A,$00 ; Room 7DA9 guard
+ $A1ED DEFB $14,$01,$06,$09,$0A,$00 ; Room 7E8C guard
+ $A1F3 DEFB $13,$01,$05,$09,$0A,$00 ; Room 920A guard
+ $A1F9 DEFB $C8,$00,$14,$06,$0A,$00 ; Room 8F84 guard
+ $A1FF DEFB $20,$01,$12,$09,$0A,$01 ; Room 8B71 guard
+ $A205 DEFB $50,$00,$14,$02,$0A,$01 ; Room 8739 guard
+ $A20B DEFB $1E,$01,$10,$09,$0A,$00 ; Room 858F guard
+ $A211 DEFB $01,$01,$11,$08,$0A,$01 ; Room 84EE guard
+ $A217 DEFB $18,$01,$0A,$09,$0A,$00 ; UNUSED, see #R$A13D
+ $A21D DEFB $22,$01,$14,$09,$0A,$01 ; Room 99A6 guard
+ $A223 DEFB $F9,$00,$09,$08,$0A,$00 ; Room 97F8 guard
+ $A229 DEFB $02,$01,$12,$08,$0A,$01 ; Room 94CF guard
+ $A22F DEFB $DF,$00,$0D,$07,$0A,$01 ; Room 9B51 guard
+ $A235 DEFB $F7,$00,$07,$08,$0A,$01 ; Room 9F3A guard
+ $A23B DEFB $F8,$00,$08,$08,$0A,$00 ; Room 9F7E guard
+ $A241 DEFB $86,$00,$0E,$04,$0A,$01 ; Room 9EB8 guard
+ $A247 DEFB $A2,$00,$0C,$05,$0A,$00 ; Room 9B19 guard
+ $A24D DEFB $BB,$00,$07,$06,$0A,$00 ; Room 9DF5 guard
  $A253 DEFB $C2,$00,$0E,$06,$0A,$00
  $A259 DEFB $D4,$00,$02,$07,$0A,$00
  $A25F DEFB $0B,$00,$0B,$00,$0A,$01
@@ -5013,7 +5014,7 @@ c$B3B0 LD HL,$C681   ;
 ; Unused
 s$B401 DEFS $09
 
-; Routine at B40A
+; Initialize a guard; HL = guard data
 ;
 ; Used by the routines at #R$A0DF, #R$A1AF and #R$B425.
 c$B40A LD DE,$71C3   ;
@@ -5168,7 +5169,7 @@ c$B4DE LD HL,$AD54   ;
  $B4F4 LD DE,$506F   ; Screen address
  $B4F7 JP $AED1      ; => Print string
 
-; Routine at B4FA
+; Processing in initial room - the boat moving
 ;
 ; Used by the routine at #R$B446.
 c$B4FA LD B,$06      ;
@@ -5187,8 +5188,8 @@ c$B4FA LD B,$06      ;
  $B512 RET           ;
 
 ; Room B513: Initial Room
-b$B513 DEFW $B446
- $B515 DEFW $B422
+b$B513 DEFW $B446                           ; Room procedure
+ $B515 DEFW $B422                           ; Initialization
  $B517 DEFW $0000
  $B519 DEFW $791E                           ; Room to Right
  $B51B DEFW $0000

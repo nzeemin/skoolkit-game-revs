@@ -27,10 +27,7 @@ B $6F86,510,30
 b $7184
 W $7184,2,2 Current Room address
 W $7186,2,2 ??
-t $71BC
-b $71BF
-t $71C0
-b $71C3
+B $71D6,9,9 Room 79C6 dog data
 b $7222
 B $7222,1,1 Input method: 1 = Joystick, 0 = Keyboard or Protek
 B $7223,15,3 Ports and bits for the current input method
@@ -43,37 +40,102 @@ b $723A Mirror table
 B $723A,128,16 Mirror table 1st part
 B $72BA,128,16 Mirror table 2nd part
 b $733A
-c $734A
-c $734D Room token #14: Put one tile at the given address
+B $733A,1,1
+b $733B
+W $733B,8,2
+b $7343
+B $7343,1,1
+B $7344,1,1
+B $7345,1,1
+B $7346,1,1
+c $734A Proceed to the next room token (redirect to #R$B702)
+c $734D Room token #14: Put one tile at the given address; params: 3 bytes (tile, address)
+C $734D,1 Restore token sequence address
+C $734E Skip token byte
+C $734F,1 get tile byte
+C $7351,1 get address low byte
+C $7354,1 get address high byte
+C $7356,1 put tile into tilemap
 C $7357,2 => #R$B702 Proceed to the next room token
 c $7359 Room token #13: Set border color; params: 1 byte
+C $7359,1 Restore token sequence address
+C $735A,1 Skip token byte
+C $735B,1 get byte
 C $735F,2 => #R$B702 Proceed to the next room token
-c $7361
+c $7361 Room token #?? - Draw frame with one tile; params: 1 byte - UNUSED
+C $7361,1 Restore token sequence address
+C $7362,1 Skip token byte
+C $7363,1 get tile byte
 C $7365,3 Tile screen 0 start address
+C $7368,2 30
 C $737F,2 => #R$B702 Proceed to the next room token
 c $7381 Room token #1: Fill to down; params: 4 bytes (count, filler, address)
+C $7381,3 30
+C $7384,1 Restore token sequence address
+C $7385,1 Skip token byte
+C $7386,1 get count byte
+C $7388,1 get tile byte
+C $738A,1 get address low byte
+C $738D,1 get address high byte
 C $7393,2 => #R$B702 Proceed to the next room token
 c $7395 Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
+C $7395,3 30 + 1
 c $739A Room token #11: Fill to down-left; params: 4 bytes (count, filler, address)
+C $739A,3 30 - 1
 c $739F Room token #2: Fill to right; params: 4 bytes (count, filler, address)
 c $73A4 Room token #6:
+C $73A9,1 Restore token sequence address
+C $73A4,2 A = "INC HL" command
+C $73A6,3 set the command
+C $73AA,1 Skip token byte
 C $73BB,1 !!MUT-CMD!!
 C $73C3,2 => #R$B702 Proceed to the next room token
 c $73C5 Room token #7:
+C $73C5,2 A = "INC HL" command
+C $73C7,3 set the command
+C $73CA,1 Restore token sequence address
+C $73CB,1 Skip token byte
 C $73DE,1 !!MUT-CMD!!
 C $73E8,3 => #R$B702 Proceed to the next room token
 c $73EB Room token #8:
 c $73EF Room token #9:
 c $73F3 Room token #4: Fill whole Tile screen 0 with one tile; params: 1 byte (filler)
+C $73F3,1 Restore token sequence address
+C $73F4,1 Skip token byte
+C $73F5,1 get tile byte
 C $73F7,3 Tile screen 0 start address
 C $73FA,3 Tile screen 0 start address + 1
 C $73FE,3 510 - 1
 C $7403,3 => #R$B702 Proceed to the next room token
 c $7406 Room token #5: Draw block of tiles; params: 6 bytes (width, height, srcaddr, address)
+C $7406,1 Restore token sequence address
+C $7407,1 Skip token byte
+C $7408,1 get width byte
+C $740A,1 get height byte
+C $740C,1 get source address low byte
+C $740E,1 get source address high byte
+C $7410,1 get address low byte
+C $7413,1 get address high byte
+C $741B,2 continue loop by columns
+C $741F,3 30
+C $7426,2 continue loop by rows
 C $7428,3 => #R$B702 Proceed to the next room token
 c $742B Room token #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height, address)
+C $742B,1 Restore token sequence address
+C $742C,1 Skip token byte
+C $742D,1 get source address low byte
+C $742F,1 get source address high byte
+C $7431,1 get width byte
+C $7433,1 get height byte
+C $7435,1 get address low byte
+C $7438,1 get address high byte
+C $7442,2 continue loop by columns
+C $7448,3 30
+C $744D,2 continue loop by rows
 C $744F,3 => #R$B702 Proceed to the next room token
 c $7452 Room token #3: Fill rectangle; params: 5 bytes (filler, width, height, address)
+C $7452,1 Restore token sequence address
+C $7453,1 Skip token byte
 C $746F,3 => #R$B702 Proceed to the next room token
 c $7472
 b $749C
@@ -84,10 +146,12 @@ c $74CD Draw NEAR/HELD item
 b $750B
 b $751B
 b $752B
-c $7918
-c $791B
+c $7918 Room procedure (for 19 rooms with a guard)
+c $791B Rooms 7C9C/92EF initialization
 b $791E Room 791E (room with pier)
-W $791E,12,2
+W $791E,2,2
+W $7920,2,2 Initialization
+W $7922,2,2
 W $7924,2,2 Room to Right
 W $7926,4,2
 B $792A #HTML[<img src="images/rooms/791E.png" />]
@@ -97,7 +161,8 @@ b $79B1
 b $79BA
 b $79BE
 b $79C6 Room 79C6 (next to room with pier)
-W $79C6,12,2
+W $79C6,2,2
+W $79C8,2,2 Initialization
 W $79CA,2,2 Room to Left
 W $79CC,2,2 Room to Right
 W $79CE,4,2
@@ -144,7 +209,9 @@ W $7B94,2,2 Room to Left
 W $7B96,2,2 Room to Right
 W $7B98,4,2
 B $7B9C #HTML[<img src="images/rooms/7B90.png" />]
-b $7C21
+b $7C21 Data 3x3 tiles for Room token #0
+B $7C21,9,3
+b $7C2A
 b $7BD2 Room 7BD2
 W $7BD2,12,2
 W $7BD6,2,2 Room to Left
@@ -332,13 +399,14 @@ W $85C3,2,2
 W $85C5,2,2 Room Up
 W $85C7,2,2
 B $85C9 #HTML[<img src="images/rooms/85BD.png" />]
-b $8606 Room 8606
-W $8606,12,2
-W $860A,2,2 Room to Left
+b $8608 Room 8608
+W $8608,2,2
+W $860A,2,2
 W $860C,2,2
-W $860E,2,2 Room Up
+W $860E,2,2 Room to Right
 W $8610,2,2
-B $8612 #HTML[<img src="images/rooms/8606.png" />]
+W $8612,2,2 Room Down
+B $8614 #HTML[<img src="images/rooms/8606.png" />]
 b $8689 Room 8689
 W $8689,12,2
 W $868D,2,2 Room to Left
@@ -774,7 +842,7 @@ b $9C39
 B $9C40 Ninja Y within the room, 0 at the top
 B $9C41 Ninja X within the room
 W $9C42 Ninja position in tilemap: Y * 30 + X
-c $9C44
+c $9C44 Process a dog
 C $9C47,3 get Ninja Y
 C $9C65,3 get Ninja X
 C $9C71,3 get Ninja X
@@ -785,7 +853,7 @@ c $9D5C
 C $9D61,3 Tile screen 1 start address
 c $9D75
 c $9D8B
-c $9DCD
+c $9DCD Initialize a dog; HL = ??
 c $9DD9
 c $9DDA
 b $9DEF
@@ -841,48 +909,48 @@ W $A022,12,2
 W $A026,2,2 Room to Left
 W $A028,6,2
 B $A02E #HTML[<img src="images/rooms/A022.png" />]
-c $A0DF
-c $A0E8
-c $A0ED
-b $A0F2
-c $A0F7
-c $A0FC
-c $A101
-c $A106
-c $A10B
-c $A110
-c $A115
-c $A11A
-c $A11F
-c $A124
-c $A129
-c $A12E
-c $A133
-c $A138
-b $A13D
-c $A142
-b $A14A
-c $A14F
-b $A154
-c $A15F
-c $A16A
-c $A16F
-c $A174
-c $A179
-b $A17E
-c $A183
-c $A188
+c $A0DF Room 94AB initialization
+c $A0E8 Room 7DA9 initialization
+c $A0ED Room 7E8C initialization
+b $A0F2 Room 920A initialization
+c $A0F7 Room 8F84 initialization
+c $A0FC Room 8B71 initialization
+c $A101 Room 8739 initialization
+c $A106 Room 858F initialization
+c $A10B Room 84EE initialization
+c $A110 Room 99A6 initialization
+c $A115 Room 97F8 initialization
+c $A11A Room 94CF initialization
+c $A11F Room 9B51 initialization
+c $A124 Room 9F3A initialization
+c $A129 Room 9F7E initialization
+c $A12E Room 9EB8 initialization
+c $A133 Room 9B19 initialization
+c $A138 Room 9DF5 initialization
+c $A13D ?? UNUSED??
+c $A142 Room 7A17 initialization
+c $A14A Room 7D5A initialization
+c $A14F Room 7F48 initialization
+c $A154 Room 7EF2 initialization
+c $A15F Room 909F initialization
+c $A16A Room 8FBD initialization
+c $A16F Room 92A7 initialization
+c $A174 Room 8B25 initialization
+c $A179 Room 8526 initialization
+c $A17E ?? UNUSED??
+c $A183 Room 95D6 initialization
+c $A188 Room 968A initialization
 c $A18D
-c $A192
-c $A197
-c $A19C
-c $A1A1
-b $A1A6
+c $A192 Room 9A9A initialization
+c $A197 Room 9552 initialization
+c $A19C Room 9BE7 initialization
+c $A1A1 Room 8D5C initialization
+c $A1A6 Room 7C2E initialization
 c $A1AF
-c $A1B5
-c $A1C0
-c $A1CB
-c $A1D6
+c $A1B5 Room 7F9C initialization
+c $A1C0 Room 8162 initialization
+c $A1CB Room 80A7 initialization
+c $A1D6 Room 9B9D initialization
 b $A1E1
 B $A1E1,6,6
 B $A1E7,6,6
@@ -908,38 +976,51 @@ B $A259,6,6
 B $A25F,6,6
 B $A265,6,6
 B $A26B,6,6
-b $A271
-B $A271,10,10
-B $A27B,10,10
-B $A285,10,10
-B $A28F,10,10
-B $A299,10,10
-B $A2A3,10,10
-B $A2AD,10,10
-B $A2B7,10,10
-B $A2C1,10,10
-B $A2CB,10,10
-B $A2D5,10,10
-B $A2DF,10,10
-B $A2E9,10,10
-B $A2F3,10,10
-B $A2FD,10,10
-B $A307,10,10
-B $A311,10,10
-B $A31B,10,10
-B $A325,10,10
-c $A353
-c $A35C
-c $A361
-b $A366
-c $A36B
-c $A370
-c $A375
-b $A37A
-c $A37F
-c $A384
-c $A389
-c $A38E
+b $A271 Dogs data, 19 records, 10 bytes each
+B $A271,10,10 Room 7C2E dog
+B $A27B,10,10 Room 7F9C dog
+B $A285,10,10 Room 81E5 dog
+B $A28F,10,10 Room 8162 dog
+B $A299,10,10 Room 7EF2 dog
+B $A2A3,10,10 Room 7E05 dog
+B $A2AD,10,10 Room 80A7 dog
+B $A2B7,10,10 Room 83ED dog
+B $A2C1,10,10 Room 80F6 dog
+B $A2CB,10,10 Room 924E dog
+B $A2D5,10,10 Room 91BA dog
+B $A2DF,10,10 Room 90DB dog
+B $A2E9,10,10 Room 909F dog
+B $A2F3,10,10 Room 8802 dog
+B $A2FD,10,10 Room 8608 dog
+B $A307,10,10 Room 844E dog
+B $A311,10,10 Room 9739 dog
+B $A31B,10,10 Room 9A5A dog
+B $A325,10,10 Room 9B9D dog
+b $A32F Turrets data, 12 records, 3 bytes each
+B $A32F,3,3 Room 7A17 turret
+B $A332,3,3 Room 7F48/9A9A turret
+B $A335,3,3 Room 8FBD turret
+B $A338,3,3 Room 7EF2/909F/92A7 turret
+B $A33B,3,3 Room 8B25/8D5C turret
+B $A33E,3,3 Room 7A17/8526 turret
+B $A341,3,3 UNUSED, see #R$A17E
+B $A344,3,3 Room 95D6 turret
+B $A347,3,3 Room 968A turret
+B $A34A,3,3 Room 97A6 turret
+B $A34D,3,3 Room 9552 turret
+B $A350,3,3 Room 9BE7 turret
+c $A353 Room 81E5 initialization
+c $A35C Room 7E05 initialization
+c $A361 Room 83ED initialization
+c $A366 Room 924E initialization
+c $A36B Room 91BA initialization
+c $A370 Room 90DB initialization
+c $A375 Room 8802 initialization
+c $A37A Room 8608 initialization
+c $A37F Room 844E initialization
+c $A384 Room 9739 initialization
+c $A389 Room 9A5A initialization
+c $A38E Room 80F6 initialization
 b $A393
 c $A3B5
 C $A3B5,3 get Ninja Y
@@ -952,6 +1033,7 @@ C $A418,3 get Ninja Y
 C $A539,3 Ninja Y address
 C $A552,3 Ninja X address
 C $A614,3 Ninja X address
+C $A70E,3 !!MUT-ARG!!
 C $A728,3 Tile screen 4 start address
 c $A434
 C $A4A3,3 Tile screen 0 start address
@@ -1051,34 +1133,49 @@ C $B15F,3 Game screen start address
 C $B163,3 Tile screen 0 start address
 C $B166,3 Tile screen 2 start address
 C $B169,3 Tile screen 3 start address
+N $B16D Loop start
 C $B16D,2 30 column
-C $B170,1 Check byte in Title screen 5
+C $B170,1 Check "need update" flag in Tile screen 1
 C $B171,3 zero => Skip this tile rendering
-C $B178,1 get byte from Tile screen 0
+N $B177 Process Tile screen 0 - background tile
+C $B178,1 get byte from Tile screen 0 tile
 C $B17F,2 byte <> $FF =>
 C $B18F,1 * 9
 C $B190,3 Tiles start address
 C $B193,1 now HL = tile address
 C $B194,3 Tile buffer address
-C $B1DA,1 * 8
+C $B1A0,3 !!MUT-ARG!! $B1A3 or $B1F9
+N $B1A3 Process Tile screen 2 tile
+C $B1A4,1 get tile from Tile Screen 2 tile
+C $B1DA,1 * 16
 C $B1E8,3 Mirror byte if needed
 C $B1EF,3 Mirror byte if needed
-C $B20E,1 * 8
+N $B1FC Process Tile screen 3 tile
+C $B200,1 get tile from Tile screen 3
+C $B20E,1 * 16
 C $B21C,3 Mirror byte if needed
 C $B223,3 Mirror byte if needed
+N $B230 Process Tile screen 4 tile
 C $B230,3 Get address in Tile screen 4
-C $B23E,1 * 8
+C $B23E,1 * 16
 C $B24F,3 Mirror byte if needed
 C $B256,3 Mirror byte if needed
+N $B263 Process Tile screen 5 tile - front
 C $B263,3 Get address in Tile screen 5
-C $B278,1 * 8
+C $B278,1 * 16
+N $B293 Draw prepared tile on the screen
 C $B2A2,3 Get address in screen attributes
-C $B2B4,1 Increase address in screen attributes
-C $B2B8,7 Increase address in Tile screen 5
-C $B2BF,4 Increase address in Tile screen 4
+N $B2A9 Next column
+C $B2A9,1 Next address in screen
+C $B2AA,1 Next address in Tile screen 1
+C $B2AD,1 Next address in Tile screen 0
+C $B2B4,1 Next address in screen attributes
+C $B2BB,1 Next address in Tile screen 5
+C $B2C2,1 Next address in Tile screen 4
 C $B2C7,1 Decrease column counter
 C $B2C8,3 Continue loop by columns
-C $B2DA,8 Increase address in screen attributes by 2 - next line
+N $B2CB Next tile row
+C $B2DA,8 Increase address in screen attributes by 2 - next row
 C $B2E3,1 Decrease line counter
 C $B2E4,3 Continue loop by lines
 c $B2E8 Mirror byte if needed
@@ -1093,28 +1190,36 @@ c $B32A
 c $B334
 c $B33E
 c $B348
-c $B368
+c $B368 Room 97A6 initialization
 c $B371
 c $B38F Room token #0: ?? 3x3 tiles #R$7C21; params: 2 bytes (address)
+C $B396,3 Tile block address
 C $B3AC,3 => #R$B702 Proceed to the next room token
 s $B3AF
 c $B3B0
 s $B401
 c $B40A
-c $B41F
-c $B422
-c $B425
-c $B42E
+c $B41F Room procedure (for 63 rooms)
+c $B422 Room initialization (for 60 rooms)
+c $B425 Rooms 7C9C/92EF initialization (redirect from #R$791B)
+c $B42E Room 79C6 initialization
 b $B437
-c $B446
-c $B44C
-c $B452
-c $B458
-c $B461
+c $B446 Room B513 procedure (initial Room)
+c $B44C Room procedure (for 19 rooms with a guard) (redirect from #R$7918)
+C $B44C,3 Process a guard
+c $B452 Room procedure (for 18 rooms with a dog)
+C $B452,3 Process a dog
+c $B458 Room procedure (for 5 rooms with a guard and a dog)
+C $B458,3 Process a dog
+C $B45B,3 Process a guard
+c $B461 Turret initialization; HL = turret data
 C $B465,3 Tile screen 1 start address
-c $B47A
-c $B483
-c $B489
+c $B47A Room procedure (for 2 rooms with a turret and a dog)
+C $B47A,3 Process a dog
+C $B47D,3 Process turret
+c $B483 Room procedure (for 14 rooms with a turret)
+C $B483,3 Process turret
+c $B489 Process turret
 C $B4D0,3 get Ninja X
 b $B4DD
 c $B4DE
@@ -1151,14 +1256,23 @@ C $B65C,3 set Ninja Y
 C $B662,3 set Ninja position in tilemap: Y * 30 + X
 c $B66A Current Room changed, entering the new Room
 C $B6BF,3 Tile screen 0 start address
+C $B6C2,1 fill with $00
 C $B6C7,3 510 - 1
 C $B6CA,3 Tile screen 0 start address + 1
+C $B6CD,2 Fill Tile screen 0
 C $B6CF,3 Tile screen 4 start address
+C $B6D2,2 fill with transparent tile
+C $B6D4,3 510 + 510 - 1
+C $B6D7,3 Tile screen 4 start address
+C $B6DA,2 Fill Tile screen 4 and Tile screen 5
 C $B6DC,3 get Current Room address
+C $B6E1,1 get Room init address low byte
+C $B6E4,1 get Room init address high byte
+C $B6E6,3 set Room init address
 C $B6ED,1 now HL = room sequence start address
 C $B6EE,1 get next token
 C $B6EF,2 End of sequence?
-C $B6F1,3 !!MUT-ARG!! yes =>
+C $B6F1,3 !!MUT-ARG!! yes => run Room initialization code
 C $B6F4,1 Save address in the room sequence
 C $B6F8,1 * 2
 C $B6F9,3 Table of Room tokens
@@ -1446,12 +1560,12 @@ C $C63B,1 get Room Up address high byte
 C $C63D,3 set Current Room address
 C $C640,3 => Current Room changed
 c $C643
-c $C64C
+c $C64C Room 791E initialization
 b $C65A
 b $C66B
-c $C671
-c $C681
-c $C6A5
+c $C671 Room 93DF/947C initialization
+c $C681 Room 982B initialization
+c $C6A5 Room 7C9C procedure (tunnel vagon)
 C $C6B2,4 get Ninja position in tilemap
 C $C6D1,4 set Ninja position in tilemap
 C $C6A5,3 get Ninja X
@@ -2153,3 +2267,5 @@ b $E494
 b $E700 Tiles with mask, 16 bytes each
 b $F700 Tiles, 9 bytes each
 B $F700,,9
+c $F973 Room 84A8 initialization
+b $F98F

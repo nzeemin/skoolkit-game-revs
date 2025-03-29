@@ -261,38 +261,28 @@ b$6F86 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,
  $7166 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 ; Data block at 7184
-b$7184 DEFW $84A8                           ; Current Room address
- $7186 DEFW $A0B5                           ; ??
+b$7184 DEFW $84A8                               ; Current Room address
+ $7186 DEFW $A0B5                               ; ??
  $7188 DEFB $FF,$2F,$30,$31,$32,$FF,$33,$34
  $7190 DEFB $35,$36,$37,$38,$0E,$0F,$10,$11
  $7198 DEFB $12,$0D,$0D,$0D,$12,$0D,$0D,$0D
  $71A0 DEFB $00,$01,$02,$03,$04,$05,$06,$07
  $71A8 DEFB $08,$0D,$0D,$0D,$0E,$0F,$10,$10
  $71B0 DEFB $11,$0D,$13,$0D,$0D,$12,$12,$12
- $71B8 DEFB $12,$07,$0A,$1F
-
-; Message at 71BC
-t$71BC DEFM " !\""
-
-; Data block at 71BF
-b$71BF DEFB $23
-
-; Message at 71C0
-t$71C0 DEFM "$%&"
-
-; Data block at 71C3
-b$71C3 DEFB $01,$01,$11,$08,$0E,$00,$0E,$00
- $71CB DEFB $8E,$01,$00,$08,$00,$07,$17,$00
- $71D3 DEFB $06,$F3,$01,$7A,$00,$00,$02,$00
- $71DB DEFB $01,$16,$00,$FD,$9E,$00,$01,$08
- $71E3 DEFB $00,$01,$16,$01,$FE,$B8,$67,$B0
- $71EB DEFB $6F,$0A,$D9,$67,$D1,$6F,$0D,$FF
- $71F3 DEFB $00,$FF,$01,$02,$03,$04,$05,$06
- $71FB DEFB $07,$08,$09,$FF,$FF,$0A,$0B,$0C
- $7203 DEFB $0D,$0E,$0F,$10,$11,$12,$13,$FF
- $720B DEFB $14,$15,$16,$17,$18,$19,$1A,$1B
- $7213 DEFB $1C,$1D,$1E,$FF,$1F,$20,$FF,$21
- $721B DEFB $22,$23,$24,$25,$26,$27,$FF
+ $71B8 DEFB $12,$07,$0A,$1F,$20,$21,$22,$23
+ $71C0 DEFB $24,$25,$26,$01,$01,$11,$08,$0E
+ $71C8 DEFB $00,$0E,$00,$8E,$01,$00,$08,$00
+ $71D0 DEFB $07,$17,$00,$06,$F3,$01
+ $71D6 DEFB $7A,$00,$00,$02,$00,$01,$16,$00,$FD ; Room 79C6 dog data
+ $71DF DEFB $9E,$00,$01,$08,$00,$01,$16,$01
+ $71E7 DEFB $FE,$B8,$67,$B0,$6F,$0A,$D9,$67
+ $71EF DEFB $D1,$6F,$0D,$FF,$00,$FF,$01,$02
+ $71F7 DEFB $03,$04,$05,$06,$07,$08,$09,$FF
+ $71FF DEFB $FF,$0A,$0B,$0C,$0D,$0E,$0F,$10
+ $7207 DEFB $11,$12,$13,$FF,$14,$15,$16,$17
+ $720F DEFB $18,$19,$1A,$1B,$1C,$1D,$1E,$FF
+ $7217 DEFB $1F,$20,$FF,$21,$22,$23,$24,$25
+ $721F DEFB $26,$27,$FF
 
 ; Data block at 7222
 b$7222 DEFB $00         ; Input method: 1 = Joystick, 0 = Keyboard or Protek
@@ -327,43 +317,56 @@ b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {M
  $732A DEFB $0E,$8E,$4E,$CE,$2E,$AE,$6E,$EE,$1E,$9E,$5E,$DE,$3E,$BE,$7E,$FE ; }
 
 ; Data block at 733A
-b$733A DEFB $00,$DE,$D3,$08,$D4,$32,$D4,$5C
- $7342 DEFB $D4,$07,$00,$14,$0A,$01,$05,$08
+b$733A DEFB $00
 
-; Routine at 734A
+; Data block at 733B
+b$733B DEFW $D3DE
+ $733D DEFW $D408
+ $733F DEFW $D432
+ $7341 DEFW $D45C
+
+; Data block at 7343
+b$7343 DEFB $07
+ $7344 DEFB $00
+ $7345 DEFB $14
+ $7346 DEFB $0A
+ $7347 DEFB $01,$05,$08
+
+; Proceed to the next room token (redirect to #R$B702)
 ;
 ; Used by the routines at #R$734D, #R$7359, #R$7361, #R$7381, #R$73A4, #R$73C5,
 ; #R$73F3, #R$7406, #R$742B, #R$7452 and #R$B38F.
 c$734A JP $B702      ;
 
-; Room token #14: Put one tile at the given address
-c$734D POP HL        ;
- $734E INC HL        ;
- $734F LD C,(HL)     ;
+; Room token #14: Put one tile at the given address; params: 3 bytes (tile,
+; address)
+c$734D POP HL        ; Restore token sequence address
+ $734E INC HL        ; Skip token byte
+ $734F LD C,(HL)     ; get tile byte
  $7350 INC HL        ;
- $7351 LD A,(HL)     ;
+ $7351 LD A,(HL)     ; get address low byte
  $7352 INC HL        ;
  $7353 PUSH HL       ;
- $7354 LD H,(HL)     ;
+ $7354 LD H,(HL)     ; get address high byte
  $7355 LD L,A        ;
- $7356 LD (HL),C     ;
+ $7356 LD (HL),C     ; put tile into tilemap
  $7357 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #13: Set border color; params: 1 byte
-c$7359 POP HL        ;
- $735A INC HL        ;
- $735B LD A,(HL)     ;
+c$7359 POP HL        ; Restore token sequence address
+ $735A INC HL        ; Skip token byte
+ $735B LD A,(HL)     ; get byte
  $735C PUSH HL       ;
  $735D OUT ($FE),A   ;
  $735F JR $734A      ; => #R$B702 Proceed to the next room token
 
-; Routine at 7361
-c$7361 POP HL        ;
- $7362 INC HL        ;
- $7363 LD A,(HL)     ;
+; Room token #?? - Draw frame with one tile; params: 1 byte - UNUSED
+c$7361 POP HL        ; Restore token sequence address
+ $7362 INC HL        ; Skip token byte
+ $7363 LD A,(HL)     ; get tile byte
  $7364 PUSH HL       ;
  $7365 LD HL,$6590   ; Tile screen 0 start address
- $7368 LD B,$1E      ;
+ $7368 LD B,$1E      ; 30
 *$736A LD (HL),A     ;
  $736B INC HL        ;
  $736C DJNZ $736A    ;
@@ -381,18 +384,18 @@ c$7361 POP HL        ;
  $737F JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #1: Fill to down; params: 4 bytes (count, filler, address)
-c$7381 LD DE,$001E   ;
+c$7381 LD DE,$001E   ; 30
 ; This entry point is used by the routines at #R$7395, #R$739A and #R$739F.
-*$7384 POP HL        ;
- $7385 INC HL        ;
- $7386 LD B,(HL)     ;
+*$7384 POP HL        ; Restore token sequence address
+ $7385 INC HL        ; Skip token byte
+ $7386 LD B,(HL)     ; get count byte
  $7387 INC HL        ;
- $7388 LD C,(HL)     ;
+ $7388 LD C,(HL)     ; get tile byte
  $7389 INC HL        ;
- $738A LD A,(HL)     ;
+ $738A LD A,(HL)     ; get address low byte
  $738B INC HL        ;
  $738C PUSH HL       ;
- $738D LD H,(HL)     ;
+ $738D LD H,(HL)     ; get address high byte
  $738E LD L,A        ;
 *$738F LD (HL),C     ;
  $7390 ADD HL,DE     ;
@@ -400,11 +403,11 @@ c$7381 LD DE,$001E   ;
  $7393 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #10: Fill to down-right; params: 4 bytes (count, filler, address)
-c$7395 LD DE,$001F   ;
+c$7395 LD DE,$001F   ; 30 + 1
  $7398 JR $7384      ;
 
 ; Room token #11: Fill to down-left; params: 4 bytes (count, filler, address)
-c$739A LD DE,$001D   ;
+c$739A LD DE,$001D   ; 30 - 1
  $739D JR $7384      ;
 
 ; Room token #2: Fill to right; params: 4 bytes (count, filler, address)
@@ -412,11 +415,11 @@ c$739F LD DE,$0001   ;
  $73A2 JR $7384      ;
 
 ; Room token #6:
-c$73A4 LD A,$23      ;
+c$73A4 LD A,$23      ; A = "INC HL" command
 ; This entry point is used by the routine at #R$73EF.
-*$73A6 LD ($73BB),A  ;
- $73A9 POP HL        ;
- $73AA INC HL        ;
+*$73A6 LD ($73BB),A  ; set the command
+ $73A9 POP HL        ; Restore token sequence address
+ $73AA INC HL        ; Skip token byte
  $73AB LD D,(HL)     ;
  $73AC INC HL        ;
  $73AD LD B,(HL)     ;
@@ -440,11 +443,11 @@ c$73A4 LD A,$23      ;
  $73C3 JR $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #7:
-c$73C5 LD A,$23      ;
+c$73C5 LD A,$23      ; A = "INC HL" command
 ; This entry point is used by the routine at #R$73EB.
-*$73C7 LD ($73DE),A  ;
- $73CA POP HL        ;
- $73CB INC HL        ;
+*$73C7 LD ($73DE),A  ; set the command
+ $73CA POP HL        ; Restore token sequence address
+ $73CB INC HL        ; Skip token byte
  $73CC LD D,(HL)     ;
  $73CD INC HL        ;
  $73CE LD B,(HL)     ;
@@ -480,9 +483,9 @@ c$73EF LD A,$2B      ;
 
 ; Room token #4: Fill whole Tile screen 0 with one tile; params: 1 byte
 ; (filler)
-c$73F3 POP HL        ;
- $73F4 INC HL        ;
- $73F5 LD A,(HL)     ;
+c$73F3 POP HL        ; Restore token sequence address
+ $73F4 INC HL        ; Skip token byte
+ $73F5 LD A,(HL)     ; get tile byte
  $73F6 PUSH HL       ;
  $73F7 LD HL,$6590   ; Tile screen 0 start address
  $73FA LD DE,$6591   ; Tile screen 0 start address + 1
@@ -493,20 +496,20 @@ c$73F3 POP HL        ;
 
 ; Room token #5: Draw block of tiles; params: 6 bytes (width, height, srcaddr,
 ; address)
-c$7406 POP HL        ;
- $7407 INC HL        ;
- $7408 LD B,(HL)     ;
+c$7406 POP HL        ; Restore token sequence address
+ $7407 INC HL        ; Skip token byte
+ $7408 LD B,(HL)     ; get width byte
  $7409 INC HL        ;
- $740A LD C,(HL)     ;
+ $740A LD C,(HL)     ; get height byte
  $740B INC HL        ;
- $740C LD E,(HL)     ;
+ $740C LD E,(HL)     ; get source address low byte
  $740D INC HL        ;
- $740E LD D,(HL)     ;
+ $740E LD D,(HL)     ; get source address high byte
  $740F INC HL        ;
- $7410 LD A,(HL)     ;
+ $7410 LD A,(HL)     ; get address low byte
  $7411 INC HL        ;
  $7412 PUSH HL       ;
- $7413 LD H,(HL)     ;
+ $7413 LD H,(HL)     ; get address high byte
  $7414 LD L,A        ;
 *$7415 PUSH BC       ;
  $7416 PUSH HL       ;
@@ -514,33 +517,33 @@ c$7406 POP HL        ;
  $7418 LD (HL),A     ;
  $7419 INC HL        ;
  $741A INC DE        ;
- $741B DJNZ $7417    ;
+ $741B DJNZ $7417    ; continue loop by columns
  $741D POP HL        ;
  $741E PUSH DE       ;
- $741F LD DE,$001E   ;
+ $741F LD DE,$001E   ; 30
  $7422 ADD HL,DE     ;
  $7423 POP DE        ;
  $7424 POP BC        ;
  $7425 DEC C         ;
- $7426 JR NZ,$7415   ;
+ $7426 JR NZ,$7415   ; continue loop by rows
  $7428 JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height,
 ; address)
-c$742B POP HL        ;
- $742C INC HL        ;
- $742D LD E,(HL)     ;
+c$742B POP HL        ; Restore token sequence address
+ $742C INC HL        ; Skip token byte
+ $742D LD E,(HL)     ; get source address low byte
  $742E INC HL        ;
- $742F LD D,(HL)     ;
+ $742F LD D,(HL)     ; get source address high byte
  $7430 INC HL        ;
- $7431 LD C,(HL)     ;
+ $7431 LD C,(HL)     ; get width byte
  $7432 INC HL        ;
- $7433 LD B,(HL)     ;
+ $7433 LD B,(HL)     ; get height byte
  $7434 INC HL        ;
- $7435 LD A,(HL)     ;
+ $7435 LD A,(HL)     ; get address low byte
  $7436 INC HL        ;
  $7437 PUSH HL       ;
- $7438 LD H,(HL)     ;
+ $7438 LD H,(HL)     ; get address high byte
  $7439 LD L,A        ;
 *$743A PUSH HL       ;
  $743B PUSH BC       ;
@@ -550,21 +553,21 @@ c$742B POP HL        ;
  $743F INC HL        ;
  $7440 INC DE        ;
  $7441 DEC C         ;
- $7442 JR NZ,$743D   ;
+ $7442 JR NZ,$743D   ; continue loop by columns
  $7444 POP DE        ;
  $7445 POP BC        ;
  $7446 POP HL        ;
  $7447 PUSH DE       ;
- $7448 LD DE,$001E   ;
+ $7448 LD DE,$001E   ; 30
  $744B ADD HL,DE     ;
  $744C POP DE        ;
- $744D DJNZ $743A    ;
+ $744D DJNZ $743A    ; continue loop by rows
  $744F JP $734A      ; => #R$B702 Proceed to the next room token
 
 ; Room token #3: Fill rectangle; params: 5 bytes (filler, width, height,
 ; address)
-c$7452 POP HL        ;
- $7453 INC HL        ;
+c$7452 POP HL        ; Restore token sequence address
+ $7453 INC HL        ; Skip token byte
  $7454 LD D,(HL)     ;
  $7455 INC HL        ;
  $7456 LD C,(HL)     ;
@@ -826,15 +829,15 @@ b$752B DEFB $81,$50,$81,$51,$81,$52,$81,$53
  $790B DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $7913 DEFB $00,$00,$00,$00,$00
 
-; Routine at 7918
+; Room procedure (for 19 rooms with a guard)
 c$7918 JP $B44C      ;
 
-; Routine at 791B
+; Rooms 7C9C/92EF initialization
 c$791B JP $B425      ;
 
 ; Room 791E (room with pier)
 b$791E DEFW $B446
- $7920 DEFW $C64C
+ $7920 DEFW $C64C                           ; Initialization
  $7922 DEFW $0000
  $7924 DEFW $79C6                           ; Room to Right
  $7926 DEFW $0000
@@ -874,7 +877,7 @@ b$79BE DEFB $FF,$FF,$3E,$3D,$FF,$FF,$FF,$3E
 
 ; Room 79C6 (next to room with pier)
 b$79C6 DEFW $B452
- $79C8 DEFW $B42E
+ $79C8 DEFW $B42E                           ; Initialization
  $79CA DEFW $791E                           ; Room to Left
  $79CC DEFW $7A17                           ; Room to Right
  $79CE DEFW $0000
@@ -1010,9 +1013,13 @@ b$7BD2 DEFW $B41F
  $7C16 DEFB $49,$4A,$4B,$4C,$4D,$45,$46,$47 ;
  $7C1E DEFB $48,$49,$4A                     ; }
 
-; Data block at 7C21
-b$7C21 DEFB $14,$15,$16,$17,$18,$19,$1A,$1B
- $7C29 DEFB $1C,$06,$09,$ED,$EC
+; Data 3x3 tiles for Room token #0
+b$7C21 DEFB $14,$15,$16
+ $7C24 DEFB $17,$18,$19
+ $7C27 DEFB $1A,$1B,$1C
+
+; Data block at 7C2A
+b$7C2A DEFB $06,$09,$ED,$EC
 
 ; Room 7C2E
 b$7C2E DEFW $B458
@@ -1527,30 +1534,30 @@ b$85BD DEFW $B41F
  $85E9 DEFB $00,$B5,$70,$00,$B8,$70,$00,$BB ;
  $85F1 DEFB $70,$00,$0E,$71,$00,$11,$71,$00 ;
  $85F9 DEFB $14,$71,$00,$1D,$71,$00,$21,$71 ;
- $8601 DEFB $00,$24,$71,$00,$17             ; }
+ $8601 DEFB $00,$24,$71,$00,$17,$71,$FF     ; }
 
-; Room 8606
-b$8606 DEFW $FF71
- $8608 DEFW $B452
- $860A DEFW $A37A                           ; Room to Left
+; Room 8608
+b$8608 DEFW $B452
+ $860A DEFW $A37A
  $860C DEFW $0000
- $860E DEFW $86FD                           ; Room Up
+ $860E DEFW $86FD                           ; Room to Right
  $8610 DEFW $0000
- $8612 DEFB $26,$85,$02,$1E,$FF,$70,$67,$02 ; {#HTML[<img
- $861A DEFB $1C,$FF,$82,$66,$02,$0C,$FF,$74 ; src="images/rooms/8606.png" />]
- $8622 DEFB $66,$0C,$E3,$81,$02,$10,$90,$65 ;
- $862A DEFB $02,$0E,$FF,$92,$65,$0C,$E3,$81 ;
- $8632 DEFB $02,$07,$BA,$66,$05,$02,$01,$84 ;
- $863A DEFB $79,$78,$67,$05,$03,$03,$A0,$71 ;
- $8642 DEFB $C4,$6F,$05,$04,$03,$7B,$7E,$1E ;
- $864A DEFB $70,$05,$03,$03,$A0,$71,$24,$70 ;
- $8652 DEFB $00,$28,$70,$05,$03,$03,$18,$7C ;
- $865A DEFB $11,$70,$05,$03,$04,$0C,$7C,$F7 ;
- $8662 DEFB $6F,$05,$03,$03,$18,$7C,$18,$71 ;
- $866A DEFB $00,$B5,$70,$00,$0E,$71,$00,$11 ;
- $8672 DEFB $71,$00,$C4,$70,$00,$C8,$70,$00 ;
- $867A DEFB $CB,$70,$00,$1C,$71,$00,$1F,$71 ;
- $8682 DEFB $00,$22,$71,$00,$25,$71,$FF     ; }
+ $8612 DEFW $8526                           ; Room Down
+ $8614 DEFB $02,$1E,$FF,$70,$67,$02,$1C,$FF ; {#HTML[<img
+ $861C DEFB $82,$66,$02,$0C,$FF,$74,$66,$0C ; src="images/rooms/8606.png" />]
+ $8624 DEFB $E3,$81,$02,$10,$90,$65,$02,$0E ;
+ $862C DEFB $FF,$92,$65,$0C,$E3,$81,$02,$07 ;
+ $8634 DEFB $BA,$66,$05,$02,$01,$84,$79,$78 ;
+ $863C DEFB $67,$05,$03,$03,$A0,$71,$C4,$6F ;
+ $8644 DEFB $05,$04,$03,$7B,$7E,$1E,$70,$05 ;
+ $864C DEFB $03,$03,$A0,$71,$24,$70,$00,$28 ;
+ $8654 DEFB $70,$05,$03,$03,$18,$7C,$11,$70 ;
+ $865C DEFB $05,$03,$04,$0C,$7C,$F7,$6F,$05 ;
+ $8664 DEFB $03,$03,$18,$7C,$18,$71,$00,$B5 ;
+ $866C DEFB $70,$00,$0E,$71,$00,$11,$71,$00 ;
+ $8674 DEFB $C4,$70,$00,$C8,$70,$00,$CB,$70 ;
+ $867C DEFB $00,$1C,$71,$00,$1F,$71,$00,$22 ;
+ $8684 DEFB $71,$00,$25,$71,$FF             ; }
 
 ; Room 8689
 b$8689 DEFW $B41F
@@ -2736,7 +2743,7 @@ b$9C39 DEFB $00,$00,$00,$00,$00,$00,$00
  $9C41 DEFB $06                         ; Ninja X within the room
  $9C42 DEFW $00F6                       ; Ninja position in tilemap: Y * 30 + X
 
-; Routine at 9C44
+; Process a dog
 ;
 ; Used by the routines at #R$B452, #R$B458 and #R$B47A.
 c$9C44 LD HL,$71D3   ;
@@ -2945,10 +2952,10 @@ c$9D8B LD HL,$7216   ;
 *$9DC7 LD ($71CF),A  ;
  $9DCA JP $9D34      ;
 
-; Routine at 9DCD
+; Initialize a dog; HL = ??
 ;
-; Used by the routines at #R$A15F, #R$A1B5, #R$A1C0, #R$A1CB, #R$A1D6, #R$A353
-; and #R$B42E.
+; Used by the routines at #R$A154, #R$A15F, #R$A1A6, #R$A1B5, #R$A1C0, #R$A1CB,
+; #R$A1D6, #R$A353 and #R$B42E.
 c$9DCD LD DE,$71CB   ;
  $9DD0 LD ($B674),HL ;
  $9DD3 LD BC,$0009   ;
@@ -3138,134 +3145,139 @@ b$A022 DEFW $B41F
  $A0D6 DEFB $EC,$EB,$FF,$F3,$F2,$F1,$F0,$EF ;
  $A0DE DEFB $EE                             ; }
 
-; Routine at A0DF
+; Room 94AB initialization
 c$A0DF LD HL,$A1E1   ;
 ; This entry point is used by the routines at #R$A0E8, #R$A0ED, #R$A0F7,
 ; #R$A0FC, #R$A101, #R$A106, #R$A10B, #R$A110, #R$A115, #R$A11A, #R$A11F,
-; #R$A124, #R$A129, #R$A12E, #R$A133 and #R$A138.
+; #R$A124, #R$A129, #R$A12E, #R$A133, #R$A138 and #R$A13D.
 *$A0E2 CALL $B40A    ;
 ; This entry point is used by the routine at #R$A142.
 *$A0E5 JP $B422      ;
 
-; Routine at A0E8
+; Room 7DA9 initialization
 c$A0E8 LD HL,$A1E7   ;
  $A0EB JR $A0E2      ;
 
-; Routine at A0ED
+; Room 7E8C initialization
 c$A0ED LD HL,$A1ED   ;
  $A0F0 JR $A0E2      ;
 
-; Data block at A0F2
+; Room 920A initialization
 b$A0F2 DEFB $21,$F3,$A1,$18,$EB
 
-; Routine at A0F7
+; Room 8F84 initialization
 c$A0F7 LD HL,$A1F9   ;
  $A0FA JR $A0E2      ;
 
-; Routine at A0FC
+; Room 8B71 initialization
 c$A0FC LD HL,$A1FF   ;
  $A0FF JR $A0E2      ;
 
-; Routine at A101
+; Room 8739 initialization
 c$A101 LD HL,$A205   ;
  $A104 JR $A0E2      ;
 
-; Routine at A106
+; Room 858F initialization
 c$A106 LD HL,$A20B   ;
  $A109 JR $A0E2      ;
 
-; Routine at A10B
+; Room 84EE initialization
 c$A10B LD HL,$A211   ;
  $A10E JR $A0E2      ;
 
-; Routine at A110
+; Room 99A6 initialization
 c$A110 LD HL,$A21D   ;
  $A113 JR $A0E2      ;
 
-; Routine at A115
+; Room 97F8 initialization
 c$A115 LD HL,$A223   ;
  $A118 JR $A0E2      ;
 
-; Routine at A11A
+; Room 94CF initialization
 c$A11A LD HL,$A229   ;
  $A11D JR $A0E2      ;
 
-; Routine at A11F
+; Room 9B51 initialization
 c$A11F LD HL,$A22F   ;
  $A122 JR $A0E2      ;
 
-; Routine at A124
+; Room 9F3A initialization
 c$A124 LD HL,$A235   ;
  $A127 JR $A0E2      ;
 
-; Routine at A129
+; Room 9F7E initialization
 c$A129 LD HL,$A23B   ;
  $A12C JR $A0E2      ;
 
-; Routine at A12E
+; Room 9EB8 initialization
 c$A12E LD HL,$A241   ;
  $A131 JR $A0E2      ;
 
-; Routine at A133
+; Room 9B19 initialization
 c$A133 LD HL,$A247   ;
  $A136 JR $A0E2      ;
 
-; Routine at A138
+; Room 9DF5 initialization
 c$A138 LD HL,$A24D   ;
  $A13B JR $A0E2      ;
 
-; Data block at A13D
-b$A13D DEFB $21,$17,$A2,$18,$A0
+; ?? UNUSED??
+c$A13D LD HL,$A217   ;
+ $A140 JR $A0E2      ;
 
-; Routine at A142
+; Room 7A17 initialization
 c$A142 LD HL,$A33E   ;
-; This entry point is used by the routines at #R$A14F, #R$A15F, #R$A16A,
-; #R$A16F, #R$A174, #R$A179, #R$A183, #R$A188, #R$A18D, #R$A192, #R$A197,
-; #R$A19C and #R$A1A1.
+; This entry point is used by the routines at #R$A14A, #R$A14F, #R$A154,
+; #R$A15F, #R$A16A, #R$A16F, #R$A174, #R$A179, #R$A17E, #R$A183, #R$A188,
+; #R$A18D, #R$A192, #R$A197, #R$A19C and #R$A1A1.
 *$A145 CALL $B461    ;
  $A148 JR $A0E5      ;
 
-; Data block at A14A
-b$A14A DEFB $21,$2F,$A3,$18,$F6
+; Room 7D5A initialization
+c$A14A LD HL,$A32F   ;
+ $A14D JR $A145      ;
 
-; Routine at A14F
+; Room 7F48 initialization
 c$A14F LD HL,$A332   ;
  $A152 JR $A145      ;
 
-; Data block at A154
-b$A154 DEFB $21,$99,$A2,$CD,$CD,$9D,$21,$38
- $A15C DEFB $A3,$18,$E6
+; Room 7EF2 initialization
+c$A154 LD HL,$A299   ;
+ $A157 CALL $9DCD    ;
+ $A15A LD HL,$A338   ;
+ $A15D JR $A145      ;
 
-; Routine at A15F
+; Room 909F initialization
 c$A15F LD HL,$A2E9   ;
  $A162 CALL $9DCD    ;
  $A165 LD HL,$A338   ;
  $A168 JR $A145      ;
 
-; Routine at A16A
+; Room 8FBD initialization
 c$A16A LD HL,$A335   ;
  $A16D JR $A145      ;
 
-; Routine at A16F
+; Room 92A7 initialization
 c$A16F LD HL,$A338   ;
  $A172 JR $A145      ;
 
-; Routine at A174
+; Room 8B25 initialization
 c$A174 LD HL,$A33B   ;
  $A177 JR $A145      ;
 
-; Routine at A179
+; Room 8526 initialization
 c$A179 LD HL,$A33E   ;
  $A17C JR $A145      ;
 
-; Data block at A17E
-b$A17E DEFB $21,$41,$A3,$18,$C2
+; ?? UNUSED??
+c$A17E LD HL,$A341   ;
+ $A181 JR $A145      ;
 
-; Routine at A183
+; Room 95D6 initialization
 c$A183 LD HL,$A344   ;
  $A186 JR $A145      ;
 
-; Routine at A188
+; Room 968A initialization
 c$A188 LD HL,$A347   ;
  $A18B JR $A145      ;
 
@@ -3275,25 +3287,26 @@ c$A188 LD HL,$A347   ;
 c$A18D LD HL,$A34A   ;
  $A190 JR $A145      ;
 
-; Routine at A192
+; Room 9A9A initialization
 c$A192 LD HL,$A332   ;
  $A195 JR $A145      ;
 
-; Routine at A197
+; Room 9552 initialization
 c$A197 LD HL,$A34D   ;
  $A19A JR $A145      ;
 
-; Routine at A19C
+; Room 9BE7 initialization
 c$A19C LD HL,$A350   ;
  $A19F JR $A145      ;
 
-; Routine at A1A1
+; Room 8D5C initialization
 c$A1A1 LD HL,$A33B   ;
  $A1A4 JR $A145      ;
 
-; Data block at A1A6
-b$A1A6 DEFB $21,$71,$A2,$CD,$CD,$9D,$21,$53
- $A1AE DEFB $A2
+; Room 7C2E initialization
+c$A1A6 LD HL,$A271   ;
+ $A1A9 CALL $9DCD    ;
+ $A1AC LD HL,$A253   ;
 
 ; Routine at A1AF
 ;
@@ -3301,25 +3314,25 @@ b$A1A6 DEFB $21,$71,$A2,$CD,$CD,$9D,$21,$53
 c$A1AF CALL $B40A    ;
  $A1B2 JP $B422      ;
 
-; Routine at A1B5
+; Room 7F9C initialization
 c$A1B5 LD HL,$A27B   ;
  $A1B8 CALL $9DCD    ;
  $A1BB LD HL,$A259   ;
  $A1BE JR $A1AF      ;
 
-; Routine at A1C0
+; Room 8162 initialization
 c$A1C0 LD HL,$A28F   ;
  $A1C3 CALL $9DCD    ;
  $A1C6 LD HL,$A25F   ;
  $A1C9 JR $A1AF      ;
 
-; Routine at A1CB
+; Room 80A7 initialization
 c$A1CB LD HL,$A2AD   ;
  $A1CE CALL $9DCD    ;
  $A1D1 LD HL,$A265   ;
  $A1D4 JR $A1AF      ;
 
-; Routine at A1D6
+; Room 9B9D initialization
 c$A1D6 LD HL,$A325   ;
  $A1D9 CALL $9DCD    ;
  $A1DC LD HL,$A26B   ;
@@ -3351,78 +3364,89 @@ b$A1E1 DEFB $9D,$00,$07,$05,$0A,$01
  $A265 DEFB $20,$01,$12,$09,$0A,$01
  $A26B DEFB $30,$00,$12,$01,$0A,$01
 
-; Data block at A271
-b$A271 DEFB $3C,$01,$00,$10,$00,$03,$16,$00,$03,$01
- $A27B DEFB $5E,$01,$01,$14,$00,$03,$16,$01,$04,$01
- $A285 DEFB $A5,$00,$00,$0F,$00,$05,$0F,$00,$FE,$01
- $A28F DEFB $7A,$00,$01,$02,$00,$00,$18,$01,$FD,$01
- $A299 DEFB $8F,$01,$01,$09,$00,$03,$18,$01,$06,$01
- $A2A3 DEFB $8A,$01,$01,$04,$00,$02,$1A,$01,$06,$01
- $A2AD DEFB $9A,$01,$00,$14,$01,$03,$15,$01,$06,$01
- $A2B7 DEFB $92,$01,$00,$0C,$00,$05,$19,$00,$06,$01
- $A2C1 DEFB $8C,$01,$01,$06,$01,$01,$17,$00,$06,$01
- $A2CB DEFB $90,$01,$00,$0A,$00,$04,$17,$00,$06,$01
- $A2D5 DEFB $1B,$01,$01,$0D,$00,$06,$18,$01,$02,$01
- $A2DF DEFB $76,$01,$01,$0E,$00,$00,$0F,$01,$05,$01
- $A2E9 DEFB $97,$01,$01,$11,$00,$0D,$1A,$01,$06,$01
- $A2F3 DEFB $BC,$00,$00,$08,$00,$01,$0E,$00,$FF,$01
- $A2FD DEFB $A4,$00,$00,$0E,$00,$02,$0E,$00,$FE,$01
- $A307 DEFB $8E,$01,$00,$08,$00,$07,$17,$00,$06,$01
- $A311 DEFB $8D,$01,$01,$07,$00,$03,$15,$01,$06,$01
- $A31B DEFB $F6,$00,$00,$06,$00,$02,$0F,$00,$01,$01
- $A325 DEFB $8C,$01,$01,$06,$00,$04,$18,$01,$06,$01
- $A32F DEFB $C4,$00,$0E,$27,$00,$07,$11,$00
- $A337 DEFB $0F,$2B,$00,$0A,$4B,$00,$0D,$2F
- $A33F DEFB $00,$0F,$32,$00,$12,$9D,$00,$05
- $A347 DEFB $A6,$00,$0E,$0A,$01,$18,$3F,$00
- $A34F DEFB $01,$A3,$00,$0B
+; Dogs data, 19 records, 10 bytes each
+b$A271 DEFB $3C,$01,$00,$10,$00,$03,$16,$00,$03,$01 ; Room 7C2E dog
+ $A27B DEFB $5E,$01,$01,$14,$00,$03,$16,$01,$04,$01 ; Room 7F9C dog
+ $A285 DEFB $A5,$00,$00,$0F,$00,$05,$0F,$00,$FE,$01 ; Room 81E5 dog
+ $A28F DEFB $7A,$00,$01,$02,$00,$00,$18,$01,$FD,$01 ; Room 8162 dog
+ $A299 DEFB $8F,$01,$01,$09,$00,$03,$18,$01,$06,$01 ; Room 7EF2 dog
+ $A2A3 DEFB $8A,$01,$01,$04,$00,$02,$1A,$01,$06,$01 ; Room 7E05 dog
+ $A2AD DEFB $9A,$01,$00,$14,$01,$03,$15,$01,$06,$01 ; Room 80A7 dog
+ $A2B7 DEFB $92,$01,$00,$0C,$00,$05,$19,$00,$06,$01 ; Room 83ED dog
+ $A2C1 DEFB $8C,$01,$01,$06,$01,$01,$17,$00,$06,$01 ; Room 80F6 dog
+ $A2CB DEFB $90,$01,$00,$0A,$00,$04,$17,$00,$06,$01 ; Room 924E dog
+ $A2D5 DEFB $1B,$01,$01,$0D,$00,$06,$18,$01,$02,$01 ; Room 91BA dog
+ $A2DF DEFB $76,$01,$01,$0E,$00,$00,$0F,$01,$05,$01 ; Room 90DB dog
+ $A2E9 DEFB $97,$01,$01,$11,$00,$0D,$1A,$01,$06,$01 ; Room 909F dog
+ $A2F3 DEFB $BC,$00,$00,$08,$00,$01,$0E,$00,$FF,$01 ; Room 8802 dog
+ $A2FD DEFB $A4,$00,$00,$0E,$00,$02,$0E,$00,$FE,$01 ; Room 8608 dog
+ $A307 DEFB $8E,$01,$00,$08,$00,$07,$17,$00,$06,$01 ; Room 844E dog
+ $A311 DEFB $8D,$01,$01,$07,$00,$03,$15,$01,$06,$01 ; Room 9739 dog
+ $A31B DEFB $F6,$00,$00,$06,$00,$02,$0F,$00,$01,$01 ; Room 9A5A dog
+ $A325 DEFB $8C,$01,$01,$06,$00,$04,$18,$01,$06,$01 ; Room 9B9D dog
 
-; Routine at A353
+; Turrets data, 12 records, 3 bytes each
+b$A32F DEFB $C4,$00,$0E ; Room 7A17 turret
+ $A332 DEFB $27,$00,$07 ; Room 7F48/9A9A turret
+ $A335 DEFB $11,$00,$0F ; Room 8FBD turret
+ $A338 DEFB $2B,$00,$0A ; Room 7EF2/909F/92A7 turret
+ $A33B DEFB $4B,$00,$0D ; Room 8B25/8D5C turret
+ $A33E DEFB $2F,$00,$0F ; Room 7A17/8526 turret
+ $A341 DEFB $32,$00,$12 ; UNUSED, see #R$A17E
+ $A344 DEFB $9D,$00,$05 ; Room 95D6 turret
+ $A347 DEFB $A6,$00,$0E ; Room 968A turret
+ $A34A DEFB $0A,$01,$18 ; Room 97A6 turret
+ $A34D DEFB $3F,$00,$01 ; Room 9552 turret
+ $A350 DEFB $A3,$00,$0B ; Room 9BE7 turret
+
+; Room 81E5 initialization
 c$A353 LD HL,$A285   ;
-; This entry point is used by the routines at #R$A35C, #R$A361, #R$A36B,
-; #R$A370, #R$A375, #R$A37F, #R$A384, #R$A389 and #R$A38E.
+; This entry point is used by the routines at #R$A35C, #R$A361, #R$A366,
+; #R$A36B, #R$A370, #R$A375, #R$A37A, #R$A37F, #R$A384, #R$A389 and #R$A38E.
 *$A356 CALL $9DCD    ;
  $A359 JP $B422      ;
 
-; Routine at A35C
+; Room 7E05 initialization
 c$A35C LD HL,$A2A3   ;
  $A35F JR $A356      ;
 
-; Routine at A361
+; Room 83ED initialization
 c$A361 LD HL,$A2B7   ;
  $A364 JR $A356      ;
 
-; Data block at A366
-b$A366 DEFB $21,$CB,$A2,$18,$EB
+; Room 924E initialization
+c$A366 LD HL,$A2CB   ;
+ $A369 JR $A356      ;
 
-; Routine at A36B
+; Room 91BA initialization
 c$A36B LD HL,$A2D5   ;
  $A36E JR $A356      ;
 
-; Routine at A370
+; Room 90DB initialization
 c$A370 LD HL,$A2DF   ;
  $A373 JR $A356      ;
 
-; Routine at A375
+; Room 8802 initialization
 c$A375 LD HL,$A2F3   ;
  $A378 JR $A356      ;
 
-; Data block at A37A
-b$A37A DEFB $21,$FD,$A2,$18,$D7
+; Room 8608 initialization
+c$A37A LD HL,$A2FD   ;
+ $A37D JR $A356      ;
 
-; Routine at A37F
+; Room 844E initialization
 c$A37F LD HL,$A307   ;
  $A382 JR $A356      ;
 
-; Routine at A384
+; Room 9739 initialization
 c$A384 LD HL,$A311   ;
  $A387 JR $A356      ;
 
-; Routine at A389
+; Room 9A5A initialization
 c$A389 LD HL,$A31B   ;
  $A38C JR $A356      ;
 
-; Routine at A38E
+; Room 80F6 initialization
 c$A38E LD HL,$A2C1   ;
  $A391 JR $A356      ;
 
@@ -3849,7 +3873,7 @@ c$A434 CALL $A75B      ;
  $A708 JR NZ,$A728     ;
  $A70A LD HL,$6D8D     ;
  $A70D ADD HL,DE       ;
- $A70E LD DE,$D432     ;
+ $A70E LD DE,$D432     ; !!MUT-ARG!!
  $A711 LD B,$07        ;
 *$A713 LD C,$06        ;
 *$A715 LD A,(DE)       ;
@@ -4557,15 +4581,17 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B166 LD DE,$698C   ; Tile screen 2 start address
  $B169 LD BC,$6B8A   ; Tile screen 3 start address
  $B16C EXX           ;
+; Loop start
 *$B16D LD C,$1E      ; 30 column
 *$B16F XOR A         ;
- $B170 CP (HL)       ; Check byte in Title screen 5
+ $B170 CP (HL)       ; Check "need update" flag in Tile screen 1
  $B171 JP Z,$B2A9    ; zero => Skip this tile rendering
  $B174 PUSH HL       ;
  $B175 PUSH BC       ;
  $B176 PUSH DE       ;
+; Process Tile screen 0 - background tile
  $B177 EXX           ;
- $B178 LD A,(HL)     ; get byte from Tile screen 0
+ $B178 LD A,(HL)     ; get byte from Tile screen 0 tile
  $B179 EXX           ;
  $B17A LD HL,$B1A3   ;
  $B17D CP $FF        ;
@@ -4590,9 +4616,10 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B19C INC DE        ;
  $B19D DJNZ $B199    ;
  $B19F LD (DE),A     ;
- $B1A0 JP $B1A3      ;
+ $B1A0 JP $B1A3      ; !!MUT-ARG!! $B1A3 or $B1F9
+; Process Tile screen 2 tile
 *$B1A3 EXX           ;
- $B1A4 LD A,(DE)     ;
+ $B1A4 LD A,(DE)     ; get tile from Tile Screen 2 tile
  $B1A5 EXX           ;
  $B1A6 CP $FF        ;
  $B1A8 JR Z,$B1F9    ;
@@ -4621,7 +4648,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B1D7 ADD HL,HL     ;
  $B1D8 ADD HL,HL     ;
  $B1D9 ADD HL,HL     ;
- $B1DA ADD HL,HL     ; * 8
+ $B1DA ADD HL,HL     ; * 16
  $B1DB LD DE,$E700   ;
  $B1DE ADD HL,DE     ;
  $B1DF LD B,$08      ;
@@ -4643,11 +4670,12 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B1F6 INC DE        ;
  $B1F7 DJNZ $B1E4    ;
 *$B1F9 JP $B1FC      ;
+; Process Tile screen 3 tile
 *$B1FC EXX           ;
  $B1FD PUSH BC       ;
  $B1FE EXX           ;
  $B1FF POP BC        ;
- $B200 LD A,(BC)     ;
+ $B200 LD A,(BC)     ; get tile from Tile screen 3
  $B201 CP $FF        ;
  $B203 JR Z,$B230    ;
  $B205 CALL $B2FE    ;
@@ -4656,7 +4684,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B20B ADD HL,HL     ;
  $B20C ADD HL,HL     ;
  $B20D ADD HL,HL     ;
- $B20E ADD HL,HL     ; * 8
+ $B20E ADD HL,HL     ; * 16
  $B20F LD DE,$F0F0   ;
  $B212 ADD HL,DE     ;
  $B213 LD B,$08      ;
@@ -4678,6 +4706,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B22A INC DE        ;
  $B22B DJNZ $B218    ;
  $B22D CALL $B2FE    ;
+; Process Tile screen 4 tile
 *$B230 LD HL,($7237) ; Get address in Tile screen 4
  $B233 LD A,(HL)     ;
  $B234 CP $FF        ;
@@ -4687,7 +4716,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B23B ADD HL,HL     ;
  $B23C ADD HL,HL     ;
  $B23D ADD HL,HL     ;
- $B23E ADD HL,HL     ; * 8
+ $B23E ADD HL,HL     ; * 16
  $B23F LD DE,$E700   ;
  $B242 ADD HL,DE     ;
  $B243 LD B,$08      ;
@@ -4710,6 +4739,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B25D INC DE        ;
  $B25E DJNZ $B24B    ;
  $B260 CALL $B30F    ;
+; Process Tile screen 5 tile - front
 *$B263 LD HL,($7235) ; Get address in Tile screen 5
  $B266 LD A,(HL)     ;
  $B267 CP $FF        ;
@@ -4722,7 +4752,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B275 ADD HL,HL     ;
  $B276 ADD HL,HL     ;
  $B277 ADD HL,HL     ;
- $B278 ADD HL,HL     ; * 8
+ $B278 ADD HL,HL     ; * 16
  $B279 POP DE        ;
  $B27A ADD HL,DE     ;
  $B27B LD DE,$D600   ;
@@ -4741,6 +4771,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B28E CP $FF        ;
  $B290 JR Z,$B293    ;
  $B292 LD (DE),A     ;
+; Draw prepared tile on the screen
 *$B293 NOP           ;
  $B294 POP DE        ;
  $B295 PUSH DE       ;
@@ -4757,26 +4788,28 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B2A6 POP DE        ;
  $B2A7 POP BC        ;
  $B2A8 POP HL        ;
-*$B2A9 INC DE        ;
- $B2AA INC HL        ;
+; Next column
+*$B2A9 INC DE        ; Next address in screen
+ $B2AA INC HL        ; Next address in Tile screen 1
  $B2AB EXX           ;
  $B2AC INC DE        ;
- $B2AD INC HL        ;
+ $B2AD INC HL        ; Next address in Tile screen 0
  $B2AE INC BC        ;
  $B2AF EXX           ;
  $B2B0 PUSH HL       ;
  $B2B1 LD HL,($7233) ;
- $B2B4 INC HL        ; Increase address in screen attributes
+ $B2B4 INC HL        ; Next address in screen attributes
  $B2B5 LD ($7233),HL ;
- $B2B8 LD HL,($7235) ; {Increase address in Tile screen 5
- $B2BB INC HL        ;
- $B2BC LD ($7235),HL ; }
- $B2BF LD HL,($7237) ; {Increase address in Tile screen 4
- $B2C2 INC HL        ; }
+ $B2B8 LD HL,($7235) ;
+ $B2BB INC HL        ; Next address in Tile screen 5
+ $B2BC LD ($7235),HL ;
+ $B2BF LD HL,($7237) ;
+ $B2C2 INC HL        ; Next address in Tile screen 4
  $B2C3 LD ($7237),HL ;
  $B2C6 POP HL        ;
  $B2C7 DEC C         ; Decrease column counter
  $B2C8 JP NZ,$B16F   ; Continue loop by columns
+; Next tile row
  $B2CB RR D          ;
  $B2CD RR D          ;
  $B2CF RR D          ;
@@ -4786,7 +4819,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B2D5 RL D          ;
  $B2D7 RL D          ;
  $B2D9 PUSH HL       ;
- $B2DA LD HL,($7233) ; {Increase address in screen attributes by 2 - next line
+ $B2DA LD HL,($7233) ; {Increase address in screen attributes by 2 - next row
  $B2DD INC HL        ;
  $B2DE INC HL        ;
  $B2DF LD ($7233),HL ; }
@@ -4883,7 +4916,7 @@ c$B348 LD A,($7F7B)  ;
  $B363 JR NZ,$B358   ;
  $B365 JP $B8D0      ;
 
-; Routine at B368
+; Room 97A6 initialization
 c$B368 LD A,($97D0)  ;
  $B36B LD ($66F5),A  ;
  $B36E JP $A18D      ;
@@ -4921,7 +4954,7 @@ c$B38F POP HL        ;
  $B393 PUSH HL       ;
  $B394 LD H,(HL)     ;
  $B395 LD L,A        ;
- $B396 LD DE,$7C21   ;
+ $B396 LD DE,$7C21   ; Tile block address
  $B399 LD C,$03      ;
 *$B39B LD B,$03      ;
 *$B39D LD A,(DE)     ;
@@ -4994,22 +5027,22 @@ c$B40A LD DE,$71C3   ;
  $B41B LD ($7347),A  ;
  $B41E RET           ;
 
-; Routine at B41F
+; Room procedure (for 63 rooms)
 c$B41F JP $B937      ;
 
-; Routine at B422
+; Room initialization (for 60 rooms)
 ;
-; Used by the routines at #R$A0DF, #R$A1AF and #R$A353.
+; Used by the routines at #R$A0DF, #R$A1AF, #R$A353 and #R$F973.
 c$B422 JP $B724      ;
 
-; Routine at B425
+; Rooms 7C9C/92EF initialization (redirect from #R$791B)
 ;
 ; Used by the routine at #R$791B.
 c$B425 LD HL,$C66B   ;
  $B428 CALL $B40A    ;
  $B42B JP $B724      ;
 
-; Routine at B42E
+; Room 79C6 initialization
 c$B42E LD HL,$71D6   ;
  $B431 CALL $9DCD    ;
  $B434 JP $B724      ;
@@ -5018,26 +5051,26 @@ c$B42E LD HL,$71D6   ;
 b$B437 DEFB $21,$D6,$71,$CD,$CD,$9D,$21,$6B
  $B43F DEFB $C6,$CD,$0A,$B4,$C3,$24,$B7
 
-; Routine at B446
+; Room B513 procedure (initial Room)
 c$B446 CALL $B4FA    ;
  $B449 JP $B937      ;
 
-; Routine at B44C
+; Room procedure (for 19 rooms with a guard) (redirect from #R$7918)
 ;
 ; Used by the routine at #R$7918.
-c$B44C CALL $A434    ;
+c$B44C CALL $A434    ; Process a guard
  $B44F JP $B937      ;
 
-; Routine at B452
-c$B452 CALL $9C44    ;
+; Room procedure (for 18 rooms with a dog)
+c$B452 CALL $9C44    ; Process a dog
  $B455 JP $B937      ;
 
-; Routine at B458
-c$B458 CALL $9C44    ;
- $B45B CALL $A434    ;
+; Room procedure (for 5 rooms with a guard and a dog)
+c$B458 CALL $9C44    ; Process a dog
+ $B45B CALL $A434    ; Process a guard
  $B45E JP $B937      ;
 
-; Routine at B461
+; Turret initialization; HL = turret data
 ;
 ; Used by the routine at #R$A142.
 c$B461 LD E,(HL)     ;
@@ -5056,16 +5089,16 @@ c$B461 LD E,(HL)     ;
  $B476 LD ($B4D4),A  ;
  $B479 RET           ;
 
-; Routine at B47A
-c$B47A CALL $9C44    ;
- $B47D CALL $B489    ;
+; Room procedure (for 2 rooms with a turret and a dog)
+c$B47A CALL $9C44    ; Process a dog
+ $B47D CALL $B489    ; Process turret
  $B480 JP $B937      ;
 
-; Routine at B483
-c$B483 CALL $B489    ;
+; Room procedure (for 14 rooms with a turret)
+c$B483 CALL $B489    ; Process turret
  $B486 JP $B937      ;
 
-; Routine at B489
+; Process turret
 ;
 ; Used by the routines at #R$B47A and #R$B483.
 c$B489 LD A,($B4DD)    ;
@@ -5357,33 +5390,33 @@ c$B66A LD A,($71D4)  ;
  $B6BC ADD HL,DE     ;
  $B6BD DJNZ $B6BB    ;
  $B6BF LD HL,$6590   ; Tile screen 0 start address
- $B6C2 LD (HL),A     ;
+ $B6C2 LD (HL),A     ; fill with $00
  $B6C3 INC A         ;
  $B6C4 LD ($A3B4),A  ;
  $B6C7 LD BC,$01FD   ; 510 - 1
  $B6CA LD DE,$6591   ; Tile screen 0 start address + 1
- $B6CD LDIR          ;
+ $B6CD LDIR          ; Fill Tile screen 0
  $B6CF LD HL,$6D88   ; Tile screen 4 start address
- $B6D2 LD (HL),$FF   ;
- $B6D4 LD BC,$03FB   ;
- $B6D7 LD DE,$6D89   ;
- $B6DA LDIR          ;
+ $B6D2 LD (HL),$FF   ; fill with transparent tile
+ $B6D4 LD BC,$03FB   ; 510 + 510 - 1
+ $B6D7 LD DE,$6D89   ; Tile screen 4 start address
+ $B6DA LDIR          ; Fill Tile screen 4 and Tile screen 5
  $B6DC LD HL,($7184) ; get Current Room address
  $B6DF INC HL        ;
  $B6E0 INC HL        ;
- $B6E1 LD A,(HL)     ;
+ $B6E1 LD A,(HL)     ; get Room init address low byte
  $B6E2 INC HL        ;
  $B6E3 PUSH HL       ;
- $B6E4 LD H,(HL)     ;
+ $B6E4 LD H,(HL)     ; get Room init address high byte
  $B6E5 LD L,A        ;
- $B6E6 LD ($B6F2),HL ;
+ $B6E6 LD ($B6F2),HL ; set Room init address
  $B6E9 POP HL        ;
  $B6EA LD DE,$0009   ;
  $B6ED ADD HL,DE     ; now HL = room sequence start address
 ; This entry point is used by the routine at #R$B702.
 *$B6EE LD A,(HL)     ; get next token
  $B6EF CP $FF        ; End of sequence?
- $B6F1 JP Z,$F973    ; !!MUT-ARG!! yes =>
+ $B6F1 JP Z,$F973    ; !!MUT-ARG!! yes => run Room initialization code
  $B6F4 PUSH HL       ; Save address in the room sequence
  $B6F5 LD L,A        ;
  $B6F6 LD H,$00      ;
@@ -7374,7 +7407,7 @@ c$C643 LD HL,$C5C6   ;
  $C646 LD DE,$D582   ;
  $C649 JP $BFB0      ;
 
-; Routine at C64C
+; Room 791E initialization
 c$C64C LD HL,$C65A   ;
  $C64F LD DE,$666C   ;
  $C652 LD BC,$0011   ;
@@ -7389,7 +7422,7 @@ b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
 ; Data block at C66B
 b$C66B DEFB $0E,$00,$0E,$00,$04,$00
 
-; Routine at C671
+; Room 93DF/947C initialization
 c$C671 LD HL,$947C   ;
  $C674 LD ($7CA0),HL ;
  $C677 LD HL,$93DF   ;
@@ -7397,7 +7430,7 @@ c$C671 LD HL,$947C   ;
  $C67D LD A,$6C      ;
  $C67F JR $C68F      ;
 
-; Routine at C681
+; Room 982B initialization
 c$C681 LD HL,$9A1E   ;
  $C684 LD ($7CA0),HL ;
  $C687 LD HL,$982B   ;
@@ -7417,7 +7450,7 @@ c$C681 LD HL,$9A1E   ;
  $C6A0 JR NZ,$C697   ;
  $C6A2 JP $B724      ;
 
-; Routine at C6A5
+; Room 7C9C procedure (tunnel vagon)
 c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6A8 CP $0C        ;
  $C6AA JP NZ,$B937   ;
@@ -9709,190 +9742,233 @@ b$F700 DEFB $FE,$82,$A2,$A2,$BA,$82,$FE,$00,$30
  $F952 DEFB $32,$AF,$8C,$79,$32,$53,$8A,$7A,$32
  $F95B DEFB $01,$8A,$7B,$32,$EC,$88,$7D,$32,$48
  $F964 DEFB $8D,$C3,$B0,$B3,$CA,$40,$B0,$FE,$30
- $F96D DEFB $CA,$40,$B0,$C3,$9C,$AF,$21,$DA,$65
- $F976 DEFB $11,$8F,$F9,$0E,$06,$06,$03,$1A,$77
- $F97F DEFB $23,$13,$10,$FA,$D5,$11,$1B,$00,$19
- $F988 DEFB $D1,$0D,$20,$EF,$C3,$22,$B4,$82,$83
- $F991 DEFB $84,$85,$86,$87,$85,$88,$89,$8A,$8B
- $F99A DEFB $89,$82,$83,$84,$00,$8C,$00,$CB,$10
- $F9A3 DEFB $CB,$10,$CB,$10,$CB,$10,$21,$00,$00
- $F9AC DEFB $7E,$E6,$F8,$D3,$FE,$4E,$23,$0D,$20
- $F9B5 DEFB $FD,$10,$F4,$C9,$11,$00,$00,$1B,$06
- $F9BE DEFB $05,$10,$FE,$7A,$B3,$20,$F7,$CD,$DF
- $F9C7 DEFB $BB,$3A,$22,$72,$FE,$00,$3A,$32,$72
- $F9D0 DEFB $28,$05,$CB,$67,$C0,$18,$EE,$AF,$32
- $F9D9 DEFB $08,$5C,$FF,$3A,$08,$5C,$FE,$00,$C0
- $F9E2 DEFB $18,$E1,$CD,$90,$65,$3E,$21,$32,$DB
- $F9EB DEFB $AE,$3E,$C6,$32,$DC,$AE,$CD,$13,$BC
- $F9F4 DEFB $CD,$13,$F9,$18,$FB,$21,$B4,$00,$06
- $F9FD DEFB $01,$CD,$11,$FA,$21,$AF,$BD,$C9,$21
- $FA06 DEFB $8F,$01,$06,$10,$CD,$11,$FA,$3A,$CF
- $FA0F DEFB $71,$C9,$3E,$10,$D3,$FE,$78,$3D,$20
- $FA18 DEFB $FD,$04,$AF,$D3,$FE,$7D,$E6,$F8,$D3
- $FA21 DEFB $FE,$2B,$7C,$B5,$20,$EA,$C9,$06,$01
- $FA2A DEFB $CD,$A1,$F9,$3A,$84,$71,$C9,$CD,$D9
- $FA33 DEFB $9D,$06,$01,$CD,$A1,$F9,$C9,$00,$00
- $FA3C DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA45 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA4E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA57 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA60 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA69 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA72 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA7B DEFB $FF,$60,$04,$FF,$FF,$10,$86,$FF,$28
- $FA84 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FA8D DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FA96 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FA9F DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAA8 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAB1 DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF,$10
- $FABA DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF,$10
- $FAC3 DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF,$10
- $FACC DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAD5 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FADE DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAE7 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAF0 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FAF9 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB02 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB0B DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB14 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB1D DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB26 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB2F DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB38 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB41 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB4A DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB53 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB5C DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB65 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB6E DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB77 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB80 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB89 DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF,$10
- $FB92 DEFB $1F,$FA,$FF,$A0,$A0,$FF,$F5,$1F,$28
- $FB9B DEFB $FF,$AA,$FF,$00,$00,$FF,$55,$FF,$28
- $FBA4 DEFB $F8,$AF,$FF,$05,$05,$FF,$5F,$F8,$28
- $FBAD DEFB $6E,$62,$62,$62,$62,$62,$6E,$60,$30
- $FBB6 DEFB $96,$97,$DB,$19,$DA,$9A,$9A,$9A,$30
- $FBBF DEFB $B4,$74,$EC,$CC,$2C,$8C,$EC,$0C,$30
- $FBC8 DEFB $DA,$9A,$B2,$B2,$B2,$B2,$B6,$30,$30
- $FBD1 DEFB $EC,$8C,$AC,$AC,$AC,$8C,$EC,$0C,$30
- $FBDA DEFB $62,$62,$6E,$60,$67,$6F,$5D,$5A,$30
- $FBE3 DEFB $B6,$B2,$B2,$B2,$32,$B2,$D6,$D0,$30
- $FBEC DEFB $FB,$18,$9C,$2E,$86,$C6,$FE,$7C,$30
- $FBF5 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FBFE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FC07 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FC10 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00
- $FC19 DEFB $FE,$FE,$C6,$38,$28,$28,$28,$7C,$21
- $FC22 DEFB $FE,$82,$A2,$22,$CA,$F2,$FC,$FF,$31
- $FC2B DEFB $CE,$F2,$FC,$FF,$FF,$FF,$FF,$FF,$31
- $FC34 DEFB $BE,$C2,$E2,$F2,$FA,$FC,$FE,$FF,$31
- $FC3D DEFB $00,$00,$00,$00,$00,$00,$00,$00,$08
- $FC46 DEFB $F3,$8F,$3F,$FF,$FF,$FF,$FF,$FF,$31
- $FC4F DEFB $FE,$82,$A2,$A0,$B3,$8F,$3F,$FF,$31
- $FC58 DEFB $FD,$83,$A7,$AF,$9F,$BF,$7F,$FF,$31
- $FC61 DEFB $07,$1B,$63,$87,$63,$1B,$07,$03,$28
- $FC6A DEFB $F0,$CC,$C3,$E1,$C6,$D8,$E0,$C0,$28
- $FC73 DEFB $FF,$FF,$FF,$FF,$FE,$FC,$F8,$F0,$32
- $FC7C DEFB $F0,$F8,$FC,$FE,$FF,$FF,$FF,$FF,$32
- $FC85 DEFB $FF,$FF,$FF,$FF,$7F,$3F,$1F,$0F,$32
- $FC8E DEFB $0F,$1F,$3F,$7F,$FF,$FF,$FF,$FF,$32
- $FC97 DEFB $07,$07,$07,$07,$FF,$FF,$FF,$FF,$20
- $FCA0 DEFB $FF,$FF,$FF,$FF,$E0,$E0,$E0,$E0,$20
- $FCA9 DEFB $E0,$E0,$E0,$E0,$FF,$FF,$FF,$FF,$20
- $FCB2 DEFB $70,$70,$70,$70,$70,$70,$70,$70,$20
- $FCBB DEFB $00,$00,$00,$00,$00,$00,$00,$00,$10
- $FCC4 DEFB $1C,$1C,$1C,$1C,$1C,$1C,$1C,$1C,$20
- $FCCD DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0E,$0E,$20
- $FCD6 DEFB $FF,$FF,$FF,$FF,$07,$07,$07,$07,$20
- $FCDF DEFB $38,$38,$38,$38,$FF,$FF,$FF,$FF,$20
- $FCE8 DEFB $38,$38,$38,$38,$38,$38,$38,$38,$20
- $FCF1 DEFB $FF,$FF,$FF,$FF,$38,$38,$38,$38,$20
- $FCFA DEFB $00,$FE,$02,$02,$02,$0A,$02,$02,$28
- $FD03 DEFB $02,$02,$02,$02,$02,$CA,$02,$FE,$28
- $FD0C DEFB $A0,$A0,$A0,$A0,$A0,$A0,$A0,$A0,$28
- $FD15 DEFB $A0,$A0,$A0,$A0,$A0,$BF,$80,$FF,$28
- $FD1E DEFB $E0,$E0,$70,$70,$B8,$B8,$DC,$1C,$20
- $FD27 DEFB $00,$00,$00,$00,$80,$80,$C0,$C0,$20
- $FD30 DEFB $EE,$8E,$A7,$A7,$BB,$83,$FD,$01,$30
- $FD39 DEFB $FF,$FF,$7F,$7F,$B8,$B8,$DC,$1C,$20
- $FD42 DEFB $0E,$0E,$07,$07,$FF,$FF,$FF,$FF,$20
- $FD4B DEFB $00,$00,$00,$00,$FF,$FF,$FF,$FF,$20
- $FD54 DEFB $00,$FF,$80,$A0,$A0,$A0,$A0,$A0,$28
- $FD5D DEFB $C0,$C0,$C0,$E0,$E0,$E0,$70,$70,$20
- $FD66 DEFB $01,$01,$01,$00,$00,$00,$00,$00,$20
- $FD6F DEFB $00,$00,$00,$00,$00,$80,$80,$80,$20
- $FD78 DEFB $0E,$0E,$07,$07,$07,$03,$03,$03,$20
- $FD81 DEFB $70,$38,$38,$38,$1C,$1C,$1C,$0E,$20
- $FD8A DEFB $FF,$FF,$FF,$FF,$00,$00,$00,$00,$20
- $FD93 DEFB $FF,$FF,$FF,$FF,$E0,$E0,$70,$70,$20
- $FD9C DEFB $D8,$9C,$9D,$9F,$9F,$9D,$DC,$18,$30
- $FDA5 DEFB $1A,$3A,$BA,$FA,$FA,$BA,$3A,$18,$30
- $FDAE DEFB $02,$02,$02,$02,$02,$0A,$02,$02,$28
- $FDB7 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$20
- $FDC0 DEFB $07,$07,$0E,$0E,$1C,$1C,$3A,$38,$20
- $FDC9 DEFB $76,$72,$E2,$E2,$DA,$C2,$BE,$80,$30
- $FDD2 DEFB $00,$00,$00,$00,$01,$01,$03,$03,$20
- $FDDB DEFB $FF,$FF,$FE,$FE,$1C,$1C,$3A,$38,$20
- $FDE4 DEFB $70,$70,$E0,$E0,$FF,$FF,$FF,$FF,$20
- $FDED DEFB $BC,$BC,$9A,$9A,$9A,$9A,$BC,$3C,$30
- $FDF6 DEFB $80,$80,$80,$00,$00,$00,$00,$00,$20
- $FDFF DEFB $03,$03,$03,$07,$07,$07,$0E,$0E,$20
- $FE08 DEFB $70,$70,$E0,$E0,$E0,$C0,$C0,$C0,$20
- $FE11 DEFB $00,$00,$00,$00,$00,$01,$01,$01,$20
- $FE1A DEFB $0E,$1C,$1C,$1C,$38,$38,$38,$70,$20
- $FE23 DEFB $FF,$FF,$FF,$FF,$07,$07,$0E,$0E,$20
- $FE2C DEFB $7F,$41,$55,$41,$55,$41,$7F,$80,$28
- $FE35 DEFB $B6,$7D,$00,$00,$00,$00,$00,$00,$0E
- $FE3E DEFB $D8,$BE,$46,$DB,$A3,$B6,$CD,$7A,$0E
- $FE47 DEFB $03,$01,$02,$03,$01,$02,$01,$02,$0E
- $FE50 DEFB $C3,$3D,$66,$4E,$5E,$5E,$3C,$C3,$28
- $FE59 DEFB $FF,$73,$00,$8C,$FF,$FF,$00,$FF,$28
- $FE62 DEFB $3C,$7E,$BD,$BD,$BD,$A5,$7E,$C3,$20
- $FE6B DEFB $7F,$41,$3C,$DB,$5A,$DB,$3C,$3C,$20
- $FE74 DEFB $7F,$41,$00,$FF,$FF,$FF,$00,$00,$20
- $FE7D DEFB $00,$41,$7F,$00,$7F,$41,$7F,$00,$20
- $FE86 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$20
- $FE8F DEFB $0F,$3F,$7F,$FF,$FF,$FF,$FF,$FF,$20
- $FE98 DEFB $00,$41,$7F,$00,$7F,$41,$00,$FF,$20
- $FEA1 DEFB $5D,$5D,$5D,$3C,$3D,$3D,$24,$FF,$20
- $FEAA DEFB $7B,$47,$6F,$1E,$3C,$78,$F0,$E0,$20
- $FEB3 DEFB $E0,$C0,$C0,$80,$80,$00,$00,$00,$20
- $FEBC DEFB $7D,$41,$7B,$03,$77,$47,$6F,$0F,$20
- $FEC5 DEFB $6E,$4E,$5C,$1D,$5D,$5D,$5D,$1F,$20
- $FECE DEFB $5F,$4F,$6F,$0F,$6F,$4F,$77,$07,$20
- $FED7 DEFB $77,$47,$7B,$03,$7B,$41,$7D,$00,$20
- $FEE0 DEFB $7F,$41,$7F,$00,$03,$7C,$7F,$1F,$20
- $FEE9 DEFB $FF,$7F,$3F,$1F,$63,$40,$7F,$00,$20
- $FEF2 DEFB $66,$FF,$FF,$99,$66,$FF,$FF,$AA,$0D
- $FEFB DEFB $FF,$80,$3E,$C1,$1C,$E3,$08,$FF,$10
- $FF04 DEFB $42,$7E,$42,$52,$42,$52,$42,$7E,$27
- $FF0D DEFB $FF,$00,$80,$60,$1B,$04,$02,$01,$08
- $FF16 DEFB $01,$FE,$01,$00,$00,$00,$00,$00,$08
- $FF1F DEFB $FF,$00,$00,$00,$FF,$FF,$FF,$FF,$29
- $FF28 DEFB $80,$7F,$80,$00,$00,$00,$00,$00,$08
- $FF31 DEFB $FF,$80,$81,$86,$D8,$20,$40,$80,$08
- $FF3A DEFB $00,$22,$FF,$00,$FF,$22,$00,$00,$07
- $FF43 DEFB $32,$2E,$7B,$26,$32,$2E,$7B,$26,$07
- $FF4C DEFB $F0,$31,$3F,$F1,$F0,$31,$3F,$F1,$20
- $FF55 DEFB $0F,$8C,$FC,$8F,$0F,$8C,$FC,$8F,$20
- $FF5E DEFB $F1,$31,$3F,$F1,$F0,$31,$3F,$F1,$30
- $FF67 DEFB $0F,$8C,$FC,$8F,$4F,$8C,$FC,$8F,$30
- $FF70 DEFB $F6,$31,$3F,$F1,$F6,$31,$3F,$F1,$08
- $FF79 DEFB $6F,$8C,$FC,$8F,$6F,$8C,$FC,$8F,$08
- $FF82 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$08
- $FF8B DEFB $FF,$80,$80,$80,$EF,$0F,$0F,$0F,$08
- $FF94 DEFB $FF,$80,$80,$00,$F7,$F0,$F0,$F0,$08
- $FF9D DEFB $84,$5B,$88,$F7,$22,$D5,$FF,$FF,$30
- $FFA6 DEFB $FF,$80,$3E,$C1,$1C,$E3,$08,$FF,$10
- $FFAF DEFB $44,$10,$FF,$00,$FF,$FF,$FF,$FF,$30
- $FFB8 DEFB $66,$00,$00,$00,$FF,$FF,$99,$99,$10
- $FFC1 DEFB $B9,$B3,$B1,$BB,$B9,$B3,$B3,$B3,$20
- $FFCA DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF,$10
- $FFD3 DEFB $3C,$66,$42,$C3,$81,$81,$00,$00,$07
- $FFDC DEFB $D3,$D3,$D3,$D3,$D3,$D3,$FF,$81,$08
- $FFE5 DEFB $D3,$D3,$D3,$D3,$D3,$D3,$D3,$D3,$08
- $FFEE DEFB $81,$FF,$D3,$D3,$D3,$D3,$D3,$D3,$08
- $FFF7 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $F96D DEFB $CA,$40,$B0,$C3,$9C,$AF
+
+; Room 84A8 initialization
+;
+; Used by the routine at #R$B66A.
+c$F973 LD HL,$65DA   ;
+ $F976 LD DE,$F98F   ;
+ $F979 LD C,$06      ;
+*$F97B LD B,$03      ;
+*$F97D LD A,(DE)     ;
+ $F97E LD (HL),A     ;
+ $F97F INC HL        ;
+ $F980 INC DE        ;
+ $F981 DJNZ $F97D    ;
+ $F983 PUSH DE       ;
+ $F984 LD DE,$001B   ;
+ $F987 ADD HL,DE     ;
+ $F988 POP DE        ;
+ $F989 DEC C         ;
+ $F98A JR NZ,$F97B   ;
+ $F98C JP $B422      ;
+
+; Data block at F98F
+b$F98F DEFB $82,$83,$84,$85,$86,$87,$85,$88
+ $F997 DEFB $89,$8A,$8B,$89,$82,$83,$84,$00
+ $F99F DEFB $8C,$00,$CB,$10,$CB,$10,$CB,$10
+ $F9A7 DEFB $CB,$10,$21,$00,$00,$7E,$E6,$F8
+ $F9AF DEFB $D3,$FE,$4E,$23,$0D,$20,$FD,$10
+ $F9B7 DEFB $F4,$C9,$11,$00,$00,$1B,$06,$05
+ $F9BF DEFB $10,$FE,$7A,$B3,$20,$F7,$CD,$DF
+ $F9C7 DEFB $BB,$3A,$22,$72,$FE,$00,$3A,$32
+ $F9CF DEFB $72,$28,$05,$CB,$67,$C0,$18,$EE
+ $F9D7 DEFB $AF,$32,$08,$5C,$FF,$3A,$08,$5C
+ $F9DF DEFB $FE,$00,$C0,$18,$E1,$CD,$90,$65
+ $F9E7 DEFB $3E,$21,$32,$DB,$AE,$3E,$C6,$32
+ $F9EF DEFB $DC,$AE,$CD,$13,$BC,$CD,$13,$F9
+ $F9F7 DEFB $18,$FB,$21,$B4,$00,$06,$01,$CD
+ $F9FF DEFB $11,$FA,$21,$AF,$BD,$C9,$21,$8F
+ $FA07 DEFB $01,$06,$10,$CD,$11,$FA,$3A,$CF
+ $FA0F DEFB $71,$C9,$3E,$10,$D3,$FE,$78,$3D
+ $FA17 DEFB $20,$FD,$04,$AF,$D3,$FE,$7D,$E6
+ $FA1F DEFB $F8,$D3,$FE,$2B,$7C,$B5,$20,$EA
+ $FA27 DEFB $C9,$06,$01,$CD,$A1,$F9,$3A,$84
+ $FA2F DEFB $71,$C9,$CD,$D9,$9D,$06,$01,$CD
+ $FA37 DEFB $A1,$F9,$C9,$00,$00,$00,$00,$00
+ $FA3F DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA47 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA4F DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA57 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA5F DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA67 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA6F DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA77 DEFB $00,$00,$00,$00,$FF,$60,$04,$FF
+ $FA7F DEFB $FF,$10,$86,$FF,$28,$00,$00,$00
+ $FA87 DEFB $00,$00,$00,$00,$00,$00,$DF,$FB
+ $FA8F DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FA97 DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FA9F DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FAA7 DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FAAF DEFB $FF,$08,$00,$00,$00,$00,$FF,$FF
+ $FAB7 DEFB $00,$FF,$10,$00,$00,$00,$00,$FF
+ $FABF DEFB $FF,$00,$FF,$10,$00,$00,$00,$00
+ $FAC7 DEFB $FF,$FF,$00,$FF,$10,$DF,$FB,$DF
+ $FACF DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FAD7 DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FADF DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FAE7 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FAEF DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FAF7 DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
+ $FAFF DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
+ $FB07 DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FB0F DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FB17 DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FB1F DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FB27 DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FB2F DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FB37 DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FB3F DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
+ $FB47 DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
+ $FB4F DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FB57 DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FB5F DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FB67 DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FB6F DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FB77 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FB7F DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FB87 DEFB $FF,$08,$00,$00,$00,$00,$FF,$FF
+ $FB8F DEFB $00,$FF,$10,$1F,$FA,$FF,$A0,$A0
+ $FB97 DEFB $FF,$F5,$1F,$28,$FF,$AA,$FF,$00
+ $FB9F DEFB $00,$FF,$55,$FF,$28,$F8,$AF,$FF
+ $FBA7 DEFB $05,$05,$FF,$5F,$F8,$28,$6E,$62
+ $FBAF DEFB $62,$62,$62,$62,$6E,$60,$30,$96
+ $FBB7 DEFB $97,$DB,$19,$DA,$9A,$9A,$9A,$30
+ $FBBF DEFB $B4,$74,$EC,$CC,$2C,$8C,$EC,$0C
+ $FBC7 DEFB $30,$DA,$9A,$B2,$B2,$B2,$B2,$B6
+ $FBCF DEFB $30,$30,$EC,$8C,$AC,$AC,$AC,$8C
+ $FBD7 DEFB $EC,$0C,$30,$62,$62,$6E,$60,$67
+ $FBDF DEFB $6F,$5D,$5A,$30,$B6,$B2,$B2,$B2
+ $FBE7 DEFB $32,$B2,$D6,$D0,$30,$FB,$18,$9C
+ $FBEF DEFB $2E,$86,$C6,$FE,$7C,$30,$00,$00
+ $FBF7 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FBFF DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC07 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC0F DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC17 DEFB $00,$00,$FE,$FE,$C6,$38,$28,$28
+ $FC1F DEFB $28,$7C,$21,$FE,$82,$A2,$22,$CA
+ $FC27 DEFB $F2,$FC,$FF,$31,$CE,$F2,$FC,$FF
+ $FC2F DEFB $FF,$FF,$FF,$FF,$31,$BE,$C2,$E2
+ $FC37 DEFB $F2,$FA,$FC,$FE,$FF,$31,$00,$00
+ $FC3F DEFB $00,$00,$00,$00,$00,$00,$08,$F3
+ $FC47 DEFB $8F,$3F,$FF,$FF,$FF,$FF,$FF,$31
+ $FC4F DEFB $FE,$82,$A2,$A0,$B3,$8F,$3F,$FF
+ $FC57 DEFB $31,$FD,$83,$A7,$AF,$9F,$BF,$7F
+ $FC5F DEFB $FF,$31,$07,$1B,$63,$87,$63,$1B
+ $FC67 DEFB $07,$03,$28,$F0,$CC,$C3,$E1,$C6
+ $FC6F DEFB $D8,$E0,$C0,$28,$FF,$FF,$FF,$FF
+ $FC77 DEFB $FE,$FC,$F8,$F0,$32,$F0,$F8,$FC
+ $FC7F DEFB $FE,$FF,$FF,$FF,$FF,$32,$FF,$FF
+ $FC87 DEFB $FF,$FF,$7F,$3F,$1F,$0F,$32,$0F
+ $FC8F DEFB $1F,$3F,$7F,$FF,$FF,$FF,$FF,$32
+ $FC97 DEFB $07,$07,$07,$07,$FF,$FF,$FF,$FF
+ $FC9F DEFB $20,$FF,$FF,$FF,$FF,$E0,$E0,$E0
+ $FCA7 DEFB $E0,$20,$E0,$E0,$E0,$E0,$FF,$FF
+ $FCAF DEFB $FF,$FF,$20,$70,$70,$70,$70,$70
+ $FCB7 DEFB $70,$70,$70,$20,$00,$00,$00,$00
+ $FCBF DEFB $00,$00,$00,$00,$10,$1C,$1C,$1C
+ $FCC7 DEFB $1C,$1C,$1C,$1C,$1C,$20,$0E,$0E
+ $FCCF DEFB $0E,$0E,$0E,$0E,$0E,$0E,$20,$FF
+ $FCD7 DEFB $FF,$FF,$FF,$07,$07,$07,$07,$20
+ $FCDF DEFB $38,$38,$38,$38,$FF,$FF,$FF,$FF
+ $FCE7 DEFB $20,$38,$38,$38,$38,$38,$38,$38
+ $FCEF DEFB $38,$20,$FF,$FF,$FF,$FF,$38,$38
+ $FCF7 DEFB $38,$38,$20,$00,$FE,$02,$02,$02
+ $FCFF DEFB $0A,$02,$02,$28,$02,$02,$02,$02
+ $FD07 DEFB $02,$CA,$02,$FE,$28,$A0,$A0,$A0
+ $FD0F DEFB $A0,$A0,$A0,$A0,$A0,$28,$A0,$A0
+ $FD17 DEFB $A0,$A0,$A0,$BF,$80,$FF,$28,$E0
+ $FD1F DEFB $E0,$70,$70,$B8,$B8,$DC,$1C,$20
+ $FD27 DEFB $00,$00,$00,$00,$80,$80,$C0,$C0
+ $FD2F DEFB $20,$EE,$8E,$A7,$A7,$BB,$83,$FD
+ $FD37 DEFB $01,$30,$FF,$FF,$7F,$7F,$B8,$B8
+ $FD3F DEFB $DC,$1C,$20,$0E,$0E,$07,$07,$FF
+ $FD47 DEFB $FF,$FF,$FF,$20,$00,$00,$00,$00
+ $FD4F DEFB $FF,$FF,$FF,$FF,$20,$00,$FF,$80
+ $FD57 DEFB $A0,$A0,$A0,$A0,$A0,$28,$C0,$C0
+ $FD5F DEFB $C0,$E0,$E0,$E0,$70,$70,$20,$01
+ $FD67 DEFB $01,$01,$00,$00,$00,$00,$00,$20
+ $FD6F DEFB $00,$00,$00,$00,$00,$80,$80,$80
+ $FD77 DEFB $20,$0E,$0E,$07,$07,$07,$03,$03
+ $FD7F DEFB $03,$20,$70,$38,$38,$38,$1C,$1C
+ $FD87 DEFB $1C,$0E,$20,$FF,$FF,$FF,$FF,$00
+ $FD8F DEFB $00,$00,$00,$20,$FF,$FF,$FF,$FF
+ $FD97 DEFB $E0,$E0,$70,$70,$20,$D8,$9C,$9D
+ $FD9F DEFB $9F,$9F,$9D,$DC,$18,$30,$1A,$3A
+ $FDA7 DEFB $BA,$FA,$FA,$BA,$3A,$18,$30,$02
+ $FDAF DEFB $02,$02,$02,$02,$0A,$02,$02,$28
+ $FDB7 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FDBF DEFB $20,$07,$07,$0E,$0E,$1C,$1C,$3A
+ $FDC7 DEFB $38,$20,$76,$72,$E2,$E2,$DA,$C2
+ $FDCF DEFB $BE,$80,$30,$00,$00,$00,$00,$01
+ $FDD7 DEFB $01,$03,$03,$20,$FF,$FF,$FE,$FE
+ $FDDF DEFB $1C,$1C,$3A,$38,$20,$70,$70,$E0
+ $FDE7 DEFB $E0,$FF,$FF,$FF,$FF,$20,$BC,$BC
+ $FDEF DEFB $9A,$9A,$9A,$9A,$BC,$3C,$30,$80
+ $FDF7 DEFB $80,$80,$00,$00,$00,$00,$00,$20
+ $FDFF DEFB $03,$03,$03,$07,$07,$07,$0E,$0E
+ $FE07 DEFB $20,$70,$70,$E0,$E0,$E0,$C0,$C0
+ $FE0F DEFB $C0,$20,$00,$00,$00,$00,$00,$01
+ $FE17 DEFB $01,$01,$20,$0E,$1C,$1C,$1C,$38
+ $FE1F DEFB $38,$38,$70,$20,$FF,$FF,$FF,$FF
+ $FE27 DEFB $07,$07,$0E,$0E,$20,$7F,$41,$55
+ $FE2F DEFB $41,$55,$41,$7F,$80,$28,$B6,$7D
+ $FE37 DEFB $00,$00,$00,$00,$00,$00,$0E,$D8
+ $FE3F DEFB $BE,$46,$DB,$A3,$B6,$CD,$7A,$0E
+ $FE47 DEFB $03,$01,$02,$03,$01,$02,$01,$02
+ $FE4F DEFB $0E,$C3,$3D,$66,$4E,$5E,$5E,$3C
+ $FE57 DEFB $C3,$28,$FF,$73,$00,$8C,$FF,$FF
+ $FE5F DEFB $00,$FF,$28,$3C,$7E,$BD,$BD,$BD
+ $FE67 DEFB $A5,$7E,$C3,$20,$7F,$41,$3C,$DB
+ $FE6F DEFB $5A,$DB,$3C,$3C,$20,$7F,$41,$00
+ $FE77 DEFB $FF,$FF,$FF,$00,$00,$20,$00,$41
+ $FE7F DEFB $7F,$00,$7F,$41,$7F,$00,$20,$FF
+ $FE87 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$20
+ $FE8F DEFB $0F,$3F,$7F,$FF,$FF,$FF,$FF,$FF
+ $FE97 DEFB $20,$00,$41,$7F,$00,$7F,$41,$00
+ $FE9F DEFB $FF,$20,$5D,$5D,$5D,$3C,$3D,$3D
+ $FEA7 DEFB $24,$FF,$20,$7B,$47,$6F,$1E,$3C
+ $FEAF DEFB $78,$F0,$E0,$20,$E0,$C0,$C0,$80
+ $FEB7 DEFB $80,$00,$00,$00,$20,$7D,$41,$7B
+ $FEBF DEFB $03,$77,$47,$6F,$0F,$20,$6E,$4E
+ $FEC7 DEFB $5C,$1D,$5D,$5D,$5D,$1F,$20,$5F
+ $FECF DEFB $4F,$6F,$0F,$6F,$4F,$77,$07,$20
+ $FED7 DEFB $77,$47,$7B,$03,$7B,$41,$7D,$00
+ $FEDF DEFB $20,$7F,$41,$7F,$00,$03,$7C,$7F
+ $FEE7 DEFB $1F,$20,$FF,$7F,$3F,$1F,$63,$40
+ $FEEF DEFB $7F,$00,$20,$66,$FF,$FF,$99,$66
+ $FEF7 DEFB $FF,$FF,$AA,$0D,$FF,$80,$3E,$C1
+ $FEFF DEFB $1C,$E3,$08,$FF,$10,$42,$7E,$42
+ $FF07 DEFB $52,$42,$52,$42,$7E,$27,$FF,$00
+ $FF0F DEFB $80,$60,$1B,$04,$02,$01,$08,$01
+ $FF17 DEFB $FE,$01,$00,$00,$00,$00,$00,$08
+ $FF1F DEFB $FF,$00,$00,$00,$FF,$FF,$FF,$FF
+ $FF27 DEFB $29,$80,$7F,$80,$00,$00,$00,$00
+ $FF2F DEFB $00,$08,$FF,$80,$81,$86,$D8,$20
+ $FF37 DEFB $40,$80,$08,$00,$22,$FF,$00,$FF
+ $FF3F DEFB $22,$00,$00,$07,$32,$2E,$7B,$26
+ $FF47 DEFB $32,$2E,$7B,$26,$07,$F0,$31,$3F
+ $FF4F DEFB $F1,$F0,$31,$3F,$F1,$20,$0F,$8C
+ $FF57 DEFB $FC,$8F,$0F,$8C,$FC,$8F,$20,$F1
+ $FF5F DEFB $31,$3F,$F1,$F0,$31,$3F,$F1,$30
+ $FF67 DEFB $0F,$8C,$FC,$8F,$4F,$8C,$FC,$8F
+ $FF6F DEFB $30,$F6,$31,$3F,$F1,$F6,$31,$3F
+ $FF77 DEFB $F1,$08,$6F,$8C,$FC,$8F,$6F,$8C
+ $FF7F DEFB $FC,$8F,$08,$00,$00,$00,$00,$00
+ $FF87 DEFB $00,$00,$00,$08,$FF,$80,$80,$80
+ $FF8F DEFB $EF,$0F,$0F,$0F,$08,$FF,$80,$80
+ $FF97 DEFB $00,$F7,$F0,$F0,$F0,$08,$84,$5B
+ $FF9F DEFB $88,$F7,$22,$D5,$FF,$FF,$30,$FF
+ $FFA7 DEFB $80,$3E,$C1,$1C,$E3,$08,$FF,$10
+ $FFAF DEFB $44,$10,$FF,$00,$FF,$FF,$FF,$FF
+ $FFB7 DEFB $30,$66,$00,$00,$00,$FF,$FF,$99
+ $FFBF DEFB $99,$10,$B9,$B3,$B1,$BB,$B9,$B3
+ $FFC7 DEFB $B3,$B3,$20,$00,$00,$00,$00,$FF
+ $FFCF DEFB $FF,$00,$FF,$10,$3C,$66,$42,$C3
+ $FFD7 DEFB $81,$81,$00,$00,$07,$D3,$D3,$D3
+ $FFDF DEFB $D3,$D3,$D3,$FF,$81,$08,$D3,$D3
+ $FFE7 DEFB $D3,$D3,$D3,$D3,$D3,$D3,$08,$81
+ $FFEF DEFB $FF,$D3,$D3,$D3,$D3,$D3,$D3,$08
+ $FFF7 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FFFF DEFB $08

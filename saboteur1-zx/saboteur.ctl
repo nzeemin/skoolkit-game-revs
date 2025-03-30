@@ -1311,17 +1311,17 @@ t $AD4A Indicator messages
 T $AD52,5 Pay value text
 T $AD57,2 Indicator time value
 b $AD65 Game screen frames/indicators RLE encoded sequence
-B $AD65,,16
+B $AD65,,8 #HTML[<img src="images/indicators.png" />]
 b $AE02 Tiles for game screen frames/indicators, 9 bytes each
-B $AE02,,9
+B $AE02,,9 #HTML[<img src="images/indtiles.png" />]
 c $AED1 Print string with standard font
 C $AED6,3 * 8
 c $AEF0
-C $AF41,3 Print string
-C $AF49,3 Print string
-C $AF51,3 Print string
-C $AF59,3 Print string
-C $AF61,3 Print string
+C $AF41,3 Print string "EXCELLENT WORK."
+C $AF49,3 Print string "YOU ARE ONE OF"
+C $AF51,3 Print string " OUR TEN BEST"
+C $AF59,3 Print string "NINJA SABOTEURS."
+C $AF61,3 Print string "ENTER YOUR NAME..."
 C $AF6E,3 Print string
 c $AF9C
 C $AFAD,3 Print string
@@ -1553,7 +1553,7 @@ C $B7A1,3 time is out =>
 C $B7A7,3 Indicator Time value address
 C $B7AC,3 Print string
 C $B7AA,2 Two digits
-C $B7C7,3 Print string
+C $B7C7,3 Print string "BOMB"
 C $B7CA,3 "99"
 C $B7ED,3 Tile screen 1 start address
 C $B7F2,3 510 - 1

@@ -4,29 +4,39 @@ c $6289 Show title picture (two ninjas)
 C $628C,3 Tile screen 0 start address
 C $62AC,3 Tile screen 0 start address
 b $62DB Title picture (two ninjas), RLE encoded
-B $62DB,,16
+B $62DB,,8 #HTML[<img src="images/title.png" />]
 B $658F,1,1
-b $6590 Tile screen 0 30x17 tiles, 510 bytes
+b $6590 Tile screen 0 30x17 tiles, 510 bytes - background
 B $6590,,30
 T $65E7
 T $65F2
-b $678E Tile screen 1 30x17 tiles, 510 bytes
+b $678E Tile screen 1 30x17 tiles, 510 bytes - update flags
 T $678E
 T $6867
 T $6868
 B $68E7
 B $68F6,,30
-b $698C Tile screen 2 30x17 tiles, 510 bytes
+b $698C Tile screen 2 30x17 tiles, 510 bytes - Ninja screen
 B $698C,510,30
-b $6B8A Tile screen 3 30x17 tiles, 510 bytes
+b $6B8A Tile screen 3 30x17 tiles, 510 bytes - Dog screen
 B $6B8A,510,30
-b $6D88 Tile screen 4 30x17 tiles, 510 bytes
+b $6D88 Tile screen 4 30x17 tiles, 510 bytes - Guard screen
 B $6D88,510,30
-b $6F86 Tile screen 5 30x17 tiles, 510 bytes
+b $6F86 Tile screen 5 30x17 tiles, 510 bytes - front
 B $6F86,510,30
 b $7184
 W $7184,2,2 Current Room address
 W $7186,2,2 ??
+b $71C3 Current Guard data
+W $71C3,2,2 Current Guard position in tilemap
+B $71C5,1,1 Current Guard X position
+B $71C6,1,1 Current Guard X position
+b $71C7
+b $71CB Current Dog data, 9 bytes
+B $71CD,1,1 Dog direction
+B $71CE,1,1 Dog X position
+B $71D3,1,1 Dog Y position
+b $71D4
 B $71D6,9,9 Room 79C6 dog data
 b $7222
 B $7222,1,1 Input method: 1 = Joystick, 0 = Keyboard or Protek
@@ -48,6 +58,7 @@ B $7343,1,1
 B $7344,1,1
 B $7345,1,1
 B $7346,1,1
+B $7347,1,1 Guard direction
 c $734A Proceed to the next room token (redirect to #R$B702)
 c $734D Room token #14: Put one tile at the given address; params: 3 bytes (tile, address)
 C $734D,1 Restore token sequence address
@@ -986,16 +997,29 @@ B $9C41 Ninja X within the room
 W $9C42 Ninja position in tilemap: Y * 30 + X
 c $9C44 Process a dog
 C $9C47,3 get Ninja Y
+C $9C5E,3 get Dog direction
 C $9C65,3 get Ninja X
+C $9C69,3 Dog X position address
 C $9C71,3 get Ninja X
+C $9C75,3 Dog X position address
+C $9C80,3 get Dog direction
 b $9C9C
 c $9CA8
+C $9CB3,3 get Dog direction
+C $9CC5,3 get Dog direction
+C $9CD3,3 Dog X position address
+C $9CF8,3 Dog X position address
 C $9D37,3 Tile screen 3 start address
+C $9D40,3 get Dog direction
 c $9D5C
 C $9D61,3 Tile screen 1 start address
 c $9D75
 c $9D8B
-c $9DCD Initialize a dog; HL = ??
+C $9D98,3 get Dog direction
+C $9DB3,3 get Dog direction
+c $9DCD Initialize a dog; HL = dog data address
+C $9DCD,3 current dog data address
+C $9DD0,3 save current Dog data address
 c $9DD9
 C $9DD9 !!MUT-CMD!!
 c $9DDA
@@ -1249,9 +1273,21 @@ c $A3EE
 C $A3EE,3 get Ninja Y
 c $A418
 C $A418,3 get Ninja Y
+C $A483,3 get Guard direction
+C $A4FD,3 get Guard direction
 C $A539,3 Ninja Y address
+C $A54B,3 get Guard direction
 C $A552,3 Ninja X address
+C $A58F,3 get Guard direction
+C $A5E7,3 get Guard direction
 C $A614,3 Ninja X address
+C $A638,3 get Guard direction
+C $A655,3 set Guard direction
+C $A684,3 set Guard direction
+C $A68D,3 get Guard direction
+C $A6AA,3 set Guard direction
+C $A6D8,3 set Guard direction
+C $A703,3 get Guard direction
 C $A70E,3 !!MUT-ARG!!
 C $A728,3 Tile screen 4 start address
 c $A434
@@ -1365,17 +1401,17 @@ C $B190,3 Tiles start address
 C $B193,1 now HL = tile address
 C $B194,3 Tile buffer address
 C $B1A0,3 !!MUT-ARG!! $B1A3 or $B1F9
-N $B1A3 Process Tile screen 2 tile
+N $B1A3 Process Tile screen 2 tile - Ninja
 C $B1A4,1 get tile from Tile Screen 2 tile
 C $B1DA,1 * 16
 C $B1E8,3 Mirror byte if needed
 C $B1EF,3 Mirror byte if needed
-N $B1FC Process Tile screen 3 tile
+N $B1FC Process Tile screen 3 tile - Dog
 C $B200,1 get tile from Tile screen 3
 C $B20E,1 * 16
 C $B21C,3 Mirror byte if needed
 C $B223,3 Mirror byte if needed
-N $B230 Process Tile screen 4 tile
+N $B230 Process Tile screen 4 tile - Guard
 C $B230,3 Get address in Tile screen 4
 C $B23E,1 * 16
 C $B24F,3 Mirror byte if needed
@@ -1403,8 +1439,8 @@ C $B2EA,3 Get mirror flag
 C $B2F1,1 No need to mirror => return
 C $B2F2,4 Mirror table half address
 b $B2FD
-c $B2FE
-c $B30F
+c $B2FE Exchange $7239 (Ninja direction) and $71CD (dog direction)
+c $B30F Exchange $7239 (Ninja direction) and $7347 (Guard direction)
 c $B320
 c $B32A
 c $B334
@@ -1418,7 +1454,9 @@ C $B3AC,3 => #R$B702 Proceed to the next room token
 s $B3AF
 c $B3B0
 s $B401
-c $B40A Initialize a guard; HL = guard data
+c $B40A Initialize a guard; HL = guard data address
+C $B40D,3 Save Guard data address
+C $B41B,3 set Guard direction
 c $B41F Standard room procedure (for 63 rooms)
 c $B422 Standard room initialization (for 60 rooms)
 c $B425 Rooms 7C9C/92EF initialization (redirect from #R$791B)
@@ -1437,7 +1475,7 @@ C $B452,3 Process a dog
 c $B458 Room procedure (for 5 rooms with a guard and a dog)
 C $B458,3 Process a dog
 C $B45B,3 Process a guard
-c $B461 Turret initialization; HL = turret data
+c $B461 Turret initialization; HL = turret data address
 C $B465,3 Tile screen 1 start address
 c $B47A Room procedure (for 2 rooms with a turret and a dog)
 C $B47A,3 Process a dog
@@ -1476,6 +1514,7 @@ w $B5B0 Table of addresses for NEAR/HELD items
 b $B5C4
 c $B5C7
 C $B5F9,3 Draw game screen frames and indicator text
+C $B627,3 set current Dog data address
 C $B643,3 Initial room address
 C $B646,3 set Current Room address
 C $B649,3 movement handler for initial room
@@ -1485,6 +1524,9 @@ C $B65C,3 set Ninja Y
 C $B662,3 set Ninja position in tilemap: Y * 30 + X
 C $B667,3 set counter = 19
 c $B66A Current Room changed, entering the new Room
+C $B673,3,3 !!MUT-ARG!! current Dog data address
+C $B6A2,3 get Guard direction
+C $B6A9,3 set current Dog data address
 C $B6BF,3 Tile screen 0 start address
 C $B6C2,1 fill with $00
 C $B6C7,3 510 - 1

@@ -56,22 +56,22 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-2"><span id="25225"></span>6289</td>
 <td class="instruction">LD HL,$62DB</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Encoded picture data address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25228"></span>628C</td>
 <td class="instruction">LD DE,$6590</td>
-<td class="comment-1" rowspan="1">Tile screen 0 start address</td>
+<td class="comment-1" rowspan="1">Tile screens address, used as a buffer</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25231"></span>628F</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Load next byte of picture data</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25232"></span>6290</td>
 <td class="instruction">CP $02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">check for control byte $02 - end of sequence</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25234"></span>6292</td>
@@ -81,87 +81,97 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25236"></span>6294</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">move to next source byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25237"></span>6295</td>
 <td class="instruction">CP $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">check for repeater marker</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25239"></span>6297</td>
 <td class="instruction">JR Z,$62A1</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; repeat byte N times</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25241"></span>6299</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">check for block marker</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25243"></span>629B</td>
 <td class="instruction">JR Z,$62A1</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; repeat byte N times</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25245"></span>629D</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store regular byte into tile screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25246"></span>629E</td>
 <td class="instruction">INC DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">next buffer address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25247"></span>629F</td>
 <td class="instruction">JR $628F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop back to process next byte</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25249"></span>62A1</td>
 <td class="instruction">LD B,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get repeat count</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25250"></span>62A2</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">store repeated byte in buffer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25251"></span>62A3</td>
 <td class="instruction">INC DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">next buffer address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25252"></span>62A4</td>
 <td class="instruction">DJNZ $62A2</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">repeat B times</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25254"></span>62A6</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">move to next source byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25255"></span>62A7</td>
 <td class="instruction">JR $628F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">continue processing</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="25257"></span>
+<div class="comments">
+<div class="paragraph">
+Buffer is ready, copy to screen
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25257"></span>62A9</td>
 <td class="instruction">LD HL,$4000</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Start of screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25260"></span>62AC</td>
 <td class="instruction">LD DE,$6590</td>
-<td class="comment-1" rowspan="1">Tile screen 0 start address</td>
+<td class="comment-1" rowspan="1">Tile screens address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25263"></span>62AF</td>
 <td class="instruction">LD C,$0C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Number of columns = 12</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25265"></span>62B1</td>
@@ -171,7 +181,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25266"></span>62B2</td>
 <td class="instruction">LD B,$18</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Number of rows = 24</td>
 </tr>
 <tr>
 <td class="address-2"><span id="25268"></span>62B4</td>
@@ -216,7 +226,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25277"></span>62BD</td>
 <td class="instruction">DJNZ $62B8</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Repeat 8 times</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25279"></span>62BF</td>
@@ -256,7 +266,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25291"></span>62CB</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Move HL to next tile row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25292"></span>62CC</td>
@@ -281,7 +291,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25299"></span>62D3</td>
 <td class="instruction">DJNZ $62B4</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue loop for rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25301"></span>62D5</td>
@@ -301,7 +311,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="25304"></span>62D8</td>
 <td class="instruction">JR NZ,$62B1</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue loop for columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25306"></span>62DA</td>
@@ -3152,197 +3162,197 @@ Used by the routine at <a href="asm.html#47241">B889</a>.
 <tr>
 <td class="address-2"><span id="29901"></span>74CD</td>
 <td class="instruction">LD A,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">!!MUT-ARG!! item number</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29903"></span>74CF</td>
 <td class="instruction">LD H,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29905"></span>74D1</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29906"></span>74D2</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29907"></span>74D3</td>
 <td class="instruction">LD DE,$B5B0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29910"></span>74D6</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29911"></span>74D7</td>
 <td class="instruction">LD E,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29912"></span>74D8</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29913"></span>74D9</td>
 <td class="instruction">LD D,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29914"></span>74DA</td>
 <td class="instruction">DI</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29915"></span>74DB</td>
 <td class="instruction">LD ($74F1),SP</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29919"></span>74DF</td>
 <td class="instruction">LD SP,$751B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29922"></span>74E2</td>
 <td class="instruction">LD C,$18</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="29924"></span>74E4</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29925"></span>74E5</td>
 <td class="instruction">LD B,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="29927"></span>74E7</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29928"></span>74E8</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29929"></span>74E9</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29930"></span>74EA</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29931"></span>74EB</td>
 <td class="instruction">DJNZ $74E7</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29933"></span>74ED</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29934"></span>74EE</td>
 <td class="instruction">JR NZ,$74E4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29936"></span>74F0</td>
 <td class="instruction">LD SP,$6255</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29939"></span>74F3</td>
 <td class="instruction">LD HL,$5A61</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29942"></span>74F6</td>
 <td class="instruction">LD C,$03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="29944"></span>74F8</td>
 <td class="instruction">LD B,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="29946"></span>74FA</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29947"></span>74FB</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29948"></span>74FC</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29949"></span>74FD</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29950"></span>74FE</td>
 <td class="instruction">DJNZ $74FA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29952"></span>7500</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29953"></span>7501</td>
 <td class="instruction">LD DE,$001C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29956"></span>7504</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29957"></span>7505</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29958"></span>7506</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29959"></span>7507</td>
 <td class="instruction">JR NZ,$74F8</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29961"></span>7509</td>
 <td class="instruction">EI</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29962"></span>750A</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="29963" class="description">750B: Data block at 750B</div>
@@ -3374,52 +3384,52 @@ Used by the routine at <a href="asm.html#47241">B889</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="29979"></span>751B</td>
-<td class="instruction">DEFB $61,$50,$61,$51,$61,$52,$61,$53</td>
+<td class="instruction">DEFW $5061,$5161,$5261,$5361</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29987"></span>7523</td>
-<td class="instruction">DEFB $61,$54,$61,$55,$61,$56,$61,$57</td>
+<td class="instruction">DEFW $5461,$5561,$5661,$5761</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="29995"></span>752B</td>
+<td class="instruction">DEFW $5081,$5181,$5281,$5381</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30003"></span>7533</td>
+<td class="instruction">DEFW $5481,$5581,$5681,$5781</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30011"></span>753B</td>
+<td class="instruction">DEFW $50A1,$51A1,$52A1,$53A1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30019"></span>7543</td>
+<td class="instruction">DEFW $54A1,$55A1,$56A1,$57A1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30027"></span>754B</td>
+<td class="instruction">DEFW $50C1,$51C1,$52C1,$53C1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30035"></span>7553</td>
+<td class="instruction">DEFW $54C1,$55C1,$56C1,$57C1</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="29995" class="description">752B: Data block at 752B</div>
+<div id="30043" class="description">755B: Data block at 755B</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
 </td>
-</tr>
-<tr>
-<td class="address-1"><span id="29995"></span>752B</td>
-<td class="instruction">DEFB $81,$50,$81,$51,$81,$52,$81,$53</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="30003"></span>7533</td>
-<td class="instruction">DEFB $81,$54,$81,$55,$81,$56,$81,$57</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="30011"></span>753B</td>
-<td class="instruction">DEFB $A1,$50,$A1,$51,$A1,$52,$A1,$53</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="30019"></span>7543</td>
-<td class="instruction">DEFB $A1,$54,$A1,$55,$A1,$56,$A1,$57</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="30027"></span>754B</td>
-<td class="instruction">DEFB $C1,$50,$C1,$51,$C1,$52,$C1,$53</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="30035"></span>7553</td>
-<td class="instruction">DEFB $C1,$54,$C1,$55,$C1,$56,$C1,$57</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="30043"></span>755B</td>
@@ -12611,7 +12621,7 @@ Used by the routines at <a href="asm.html#46162">B452</a>, <a href="asm.html#461
 <tr>
 <td class="address-2"><span id="40004"></span>9C44</td>
 <td class="instruction">LD HL,$71D3</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">dog Y position address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40007"></span>9C47</td>
@@ -12781,7 +12791,7 @@ Used by the routines at <a href="asm.html#46162">B452</a>, <a href="asm.html#461
 <tr>
 <td class="address-1"><span id="40076"></span>9C8C</td>
 <td class="instruction">CALL <a href="#40284">$9D5C</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set update flags for Dog</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40079"></span>9C8F</td>
@@ -12828,7 +12838,7 @@ Used by the routines at <a href="asm.html#46162">B452</a>, <a href="asm.html#461
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="40104" class="description">9CA8: Routine at 9CA8</div>
+<div id="40104" class="description">9CA8: ?? Part of Dog processing</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13292,7 +13302,7 @@ This entry point is used by the routine at <a href="asm.html#40309">9D75</a>.
 <tr>
 <td class="address-2"><span id="40280"></span>9D58</td>
 <td class="instruction">CALL <a href="#40284">$9D5C</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set update flags for Dog, 4x3 tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40283"></span>9D5B</td>
@@ -13300,7 +13310,7 @@ This entry point is used by the routine at <a href="asm.html#40309">9D75</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="40284" class="description">9D5C: Routine at 9D5C</div>
+<div id="40284" class="description">9D5C: Set update flags for Dog</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13382,7 +13392,7 @@ Used by the routines at <a href="asm.html#40004">9C44</a> and <a href="asm.html#
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="40309" class="description">9D75: Routine at 9D75</div>
+<div id="40309" class="description">9D75: ?? something about Dog</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13396,85 +13406,85 @@ Used by the routine at <a href="asm.html#40104">9CA8</a>.
 <tr>
 <td class="address-2"><span id="40309"></span>9D75</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40310"></span>9D76</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40311"></span>9D77</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="40312"></span>9D78</td>
 <td class="instruction">LD C,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="40314"></span>9D7A</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40315"></span>9D7B</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40316"></span>9D7C</td>
 <td class="instruction">DEC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40317"></span>9D7D</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40318"></span>9D7E</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40319"></span>9D7F</td>
 <td class="instruction">JR NZ,$9D7A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40321"></span>9D81</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40322"></span>9D82</td>
 <td class="instruction">LD DE,$0022</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40325"></span>9D85</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40326"></span>9D86</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40327"></span>9D87</td>
 <td class="instruction">DJNZ $9D78</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40329"></span>9D89</td>
 <td class="instruction">JR <a href="#40280">$9D58</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Set update flags for Dog, and RET</td>
 </tr>
 </table>
-<div id="40331" class="description">9D8B: Routine at 9D8B</div>
+<div id="40331" class="description">9D8B: ?? something about Dog</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -16132,7 +16142,7 @@ Used by the routine at <a href="asm.html#42036">A434</a>.
 <tr>
 <td class="address-1"><span id="41974"></span>A3F6</td>
 <td class="instruction">LD HL,($71C3)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Current Guard position in tilemap</td>
 </tr>
 <tr>
 <td class="address-1"><span id="41977"></span>A3F9</td>
@@ -16301,7 +16311,7 @@ Used by the routines at <a href="asm.html#46156">B44C</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="42036"></span>A434</td>
 <td class="instruction">CALL <a href="#42843">$A75B</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set update flags for Guard, 6x7 tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="42039"></span>A437</td>
@@ -16441,7 +16451,7 @@ Used by the routines at <a href="asm.html#46156">B44C</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="42098"></span>A472</td>
 <td class="instruction">LD HL,($71C3)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Current Guard position in tilemap</td>
 </tr>
 <tr>
 <td class="address-1"><span id="42101"></span>A475</td>
@@ -18211,7 +18221,7 @@ This entry point is used by the routines at <a href="asm.html#41909">A3B5</a>, <
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="42843" class="description">A75B: Routine at A75B</div>
+<div id="42843" class="description">A75B: Set update flags for Guard, 6x7 tiles</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18225,7 +18235,7 @@ Used by the routine at <a href="asm.html#42036">A434</a>.
 <tr>
 <td class="address-2"><span id="42843"></span>A75B</td>
 <td class="instruction">LD DE,($71C3)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Current Guard position in tilemap</td>
 </tr>
 <tr>
 <td class="address-1"><span id="42847"></span>A75F</td>
@@ -18293,7 +18303,7 @@ Used by the routine at <a href="asm.html#42036">A434</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="42869" class="description">A775: Routine at A775</div>
+<div id="42869" class="description">A775: ?? Translate byte A using $A787 table</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20152,7 +20162,7 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-1"><span id="44819"></span>AF13</td>
 <td class="instruction">LD DE,$AD52</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Pay value text address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44822"></span>AF16</td>
@@ -20452,7 +20462,7 @@ This entry point is used by the routine at <a href="asm.html#44956">AF9C</a>.
 <tr>
 <td class="address-1"><span id="44933"></span>AF85</td>
 <td class="instruction">LD ($5C08),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">clear LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44936"></span>AF88</td>
@@ -20462,7 +20472,7 @@ This entry point is used by the routine at <a href="asm.html#44956">AF9C</a>.
 <tr>
 <td class="address-1"><span id="44937"></span>AF89</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44940"></span>AF8C</td>
@@ -20796,7 +20806,7 @@ This entry point is used by the routine at <a href="asm.html#45120">B040</a>.
 <tr>
 <td class="address-1"><span id="45037"></span>AFED</td>
 <td class="instruction">LD DE,$AD52</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Pay value text address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45040"></span>AFF0</td>
@@ -23318,177 +23328,177 @@ Used by the routine at <a href="asm.html#48213">BC55</a>.
 <tr>
 <td class="address-2"><span id="46000"></span>B3B0</td>
 <td class="instruction">LD HL,$C681</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46003"></span>B3B3</td>
 <td class="instruction">LD ($982D),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46006"></span>B3B6</td>
 <td class="instruction">LD HL,$B674</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">current dog data address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46009"></span>B3B9</td>
 <td class="instruction">LD ($9DD1),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46012"></span>B3BC</td>
 <td class="instruction">LD HL,$C6A5</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46015"></span>B3BF</td>
 <td class="instruction">LD ($7C9C),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46018"></span>B3C2</td>
 <td class="instruction">LD HL,$C671</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46021"></span>B3C5</td>
 <td class="instruction">LD ($947E),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46024"></span>B3C8</td>
 <td class="instruction">LD ($93E1),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46027"></span>B3CB</td>
 <td class="instruction">LD HL,$B422</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46030"></span>B3CE</td>
 <td class="instruction">LD ($7BD4),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46033"></span>B3D1</td>
 <td class="instruction">LD HL,$C64C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46036"></span>B3D4</td>
 <td class="instruction">LD ($7920),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46039"></span>B3D7</td>
 <td class="instruction">LD HL,$B702</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46042"></span>B3DA</td>
 <td class="instruction">LD ($734B),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46045"></span>B3DD</td>
 <td class="instruction">LD B,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46047"></span>B3DF</td>
 <td class="instruction">LD D,$80</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46049"></span>B3E1</td>
 <td class="instruction">LD HL,$723A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="46052"></span>B3E4</td>
 <td class="instruction">LD C,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46054"></span>B3E6</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="46055"></span>B3E7</td>
 <td class="instruction">RR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46057"></span>B3E9</td>
 <td class="instruction">RL E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46059"></span>B3EB</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46060"></span>B3EC</td>
 <td class="instruction">JR NZ,$B3E7</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46062"></span>B3EE</td>
 <td class="instruction">LD (HL),E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46063"></span>B3EF</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46064"></span>B3F0</td>
 <td class="instruction">INC D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46065"></span>B3F1</td>
 <td class="instruction">DJNZ $B3E4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46067"></span>B3F3</td>
 <td class="instruction">EXX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46068"></span>B3F4</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46069"></span>B3F5</td>
 <td class="instruction">EXX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46070"></span>B3F6</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="46072"></span>B3F8</td>
 <td class="instruction">LD ($5C09),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set REPDEL = 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46075"></span>B3FB</td>
 <td class="instruction">LD ($5C0A),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set REPPER = 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46078"></span>B3FE</td>
 <td class="instruction">JP <a href="#46535">$B5C7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="46081" class="description">B401: Unused</div>
@@ -23519,7 +23529,7 @@ Used by the routines at <a href="asm.html#41183">A0DF</a>, <a href="asm.html#413
 <tr>
 <td class="address-2"><span id="46090"></span>B40A</td>
 <td class="instruction">LD DE,$71C3</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">address to store guard data</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46093"></span>B40D</td>
@@ -24854,7 +24864,7 @@ Used by the routine at <a href="asm.html#46000">B3B0</a>.
 <tr>
 <td class="address-1"><span id="46576"></span>B5F0</td>
 <td class="instruction">LD HL,$AD52</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Pay value text address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46579"></span>B5F3</td>
@@ -24889,7 +24899,7 @@ Used by the routine at <a href="asm.html#46000">B3B0</a>.
 <tr>
 <td class="address-1"><span id="46589"></span>B5FD</td>
 <td class="instruction">LD ($5C48),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set BORDCR = 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46592"></span>B600</td>
@@ -24929,7 +24939,7 @@ Used by the routine at <a href="asm.html#46000">B3B0</a>.
 <tr>
 <td class="address-1"><span id="46610"></span>B612</td>
 <td class="instruction">LD ($B84F),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set NEAR item</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46613"></span>B615</td>
@@ -24964,12 +24974,12 @@ Used by the routine at <a href="asm.html#46000">B3B0</a>.
 <tr>
 <td class="address-1"><span id="46631"></span>B627</td>
 <td class="instruction">LD ($B674),HL</td>
-<td class="comment-1" rowspan="1">set current Dog data address</td>
+<td class="comment-1" rowspan="1">set current Dog data address = no dog</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46634"></span>B62A</td>
 <td class="instruction">LD ($B696),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set current Guarg data address = no guard</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46637"></span>B62D</td>
@@ -25226,12 +25236,12 @@ Used by the routines at <a href="asm.html#49914">C2FA</a>, <a href="asm.html#499
 <tr>
 <td class="address-1"><span id="46761"></span>B6A9</td>
 <td class="instruction">LD ($B674),HL</td>
-<td class="comment-1" rowspan="1">set current Dog data address</td>
+<td class="comment-1" rowspan="1">set current Dog data address = no dog</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46764"></span>B6AC</td>
 <td class="instruction">LD ($B696),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set current Guarg data address = no guard</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46767"></span>B6AF</td>
@@ -25824,7 +25834,7 @@ This entry point is used by the routine at <a href="asm.html#47415">B937</a>.
 <tr>
 <td class="address-1"><span id="46972"></span>B77C</td>
 <td class="instruction">LD ($5C08),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">clear LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46975"></span>B77F</td>
@@ -25839,7 +25849,7 @@ This entry point is used by the routine at <a href="asm.html#47415">B937</a>.
 <tr>
 <td class="address-1"><span id="46977"></span>B781</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46980"></span>B784</td>
@@ -26114,7 +26124,7 @@ This entry point is used by the routine at <a href="asm.html#47415">B937</a>.
 <tr>
 <td class="address-1"><span id="47098"></span>B7FA</td>
 <td class="instruction">CALL <a href="#48059">$BBBB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set update flags for Ninja, 6x7 tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="47101"></span>B7FD</td>
@@ -26380,12 +26390,12 @@ Used by the routine at <a href="asm.html#48213">BC55</a>.
 <tr>
 <td class="address-1"><span id="47183"></span>B84F</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1">??</td>
+<td class="comment-1" rowspan="1">NEAR item</td>
 </tr>
 <tr>
 <td class="address-1"><span id="47184"></span>B850</td>
 <td class="instruction">DEFB $C8</td>
-<td class="comment-1" rowspan="1">??</td>
+<td class="comment-1" rowspan="1">?? HELD item tile ??</td>
 </tr>
 </table>
 <div id="47185" class="description">B851: Routine at B851</div>
@@ -26591,7 +26601,7 @@ This entry point is used by the routine at <a href="asm.html#46884">B724</a>.
 <tr>
 <td class="address-2"><span id="47249"></span>B891</td>
 <td class="instruction">LD HL,$B84F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">NEAR item address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="47252"></span>B894</td>
@@ -26748,7 +26758,7 @@ Used by the routines at <a href="asm.html#45896">B348</a>, <a href="asm.html#463
 <tr>
 <td class="address-2"><span id="47312"></span>B8D0</td>
 <td class="instruction">CALL <a href="#48059">$BBBB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set update flags for Ninja, 6x7 tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="47315"></span>B8D3</td>
@@ -28624,7 +28634,7 @@ Used by the routine at <a href="asm.html#47415">B937</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="48059" class="description">BBBB: Routine at BBBB</div>
+<div id="48059" class="description">BBBB: Set update flags for Ninja, 6x7 tiles</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -28909,6 +28919,16 @@ Used by the routine at <a href="asm.html#48819">BEB3</a>.
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="48141"></span>
+<div class="comments">
+<div class="paragraph">
+Prepare screen background for title picture
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="48141"></span>BC0D</td>
 <td class="instruction">LD SP,$6257</td>
 <td class="comment-1" rowspan="1"></td>
@@ -29022,6 +29042,16 @@ Used by the routine at <a href="asm.html#48819">BEB3</a>.
 <td class="address-1"><span id="48182"></span>BC36</td>
 <td class="instruction">JR NZ,$BC28</td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="48184"></span>
+<div class="comments">
+<div class="paragraph">
+Show title picture
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48184"></span>BC38</td>
@@ -30658,7 +30688,7 @@ Used by the routines at <a href="asm.html#47241">B889</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="48827"></span>BEBB</td>
 <td class="instruction">CALL <a href="#44753">$AED1</a></td>
-<td class="comment-1" rowspan="1">Print string</td>
+<td class="comment-1" rowspan="1">Print string 1st line</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48830"></span>BEBE</td>
@@ -30673,7 +30703,7 @@ Used by the routines at <a href="asm.html#47241">B889</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="48835"></span>BEC3</td>
 <td class="instruction">CALL <a href="#44753">$AED1</a></td>
-<td class="comment-1" rowspan="1">Print string</td>
+<td class="comment-1" rowspan="1">Print string 2nd line</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48838"></span>BEC6</td>
@@ -30728,7 +30758,7 @@ Used by the routines at <a href="asm.html#47241">B889</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="48858"></span>BEDA</td>
 <td class="instruction">CALL <a href="#63929">$F9B9</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Pause, then wait for any key pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48861"></span>BEDD</td>
@@ -30743,7 +30773,7 @@ Used by the routines at <a href="asm.html#47241">B889</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="48863"></span>BEDF</td>
 <td class="instruction">NOP</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">!!MUT-CMD!!</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48864"></span>BEE0</td>
@@ -30793,7 +30823,7 @@ Used by the routines at <a href="asm.html#47241">B889</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="48876"></span>BEEC</td>
 <td class="instruction">JP <a href="#48141">$BC0D</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Title picture and music, then go to Main menu</td>
 </tr>
 </table>
 <div id="48879" class="description">BEEF: Message at BEEF</div>
@@ -31285,7 +31315,7 @@ Used by the routine at <a href="asm.html#49300">C094</a>.
 <tr>
 <td class="address-1"><span id="49213"></span>C03D</td>
 <td class="instruction">LD HL,$E1EC</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skill level address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49216"></span>C040</td>
@@ -31295,7 +31325,7 @@ Used by the routine at <a href="asm.html#49300">C094</a>.
 <tr>
 <td class="address-1"><span id="49218"></span>C042</td>
 <td class="instruction">CALL <a href="#44753">$AED1</a></td>
-<td class="comment-1" rowspan="1">Print string</td>
+<td class="comment-1" rowspan="1">Print skill level digit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49221"></span>C045</td>
@@ -40599,97 +40629,97 @@ Used by the routine at <a href="asm.html#48141">BC0D</a>.
 <tr>
 <td class="address-2"><span id="57143"></span>DF37</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57145"></span>DF39</td>
 <td class="instruction">OUT ($FE),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57147"></span>DF3B</td>
 <td class="instruction">LD ($5C09),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set REPDEL = 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57150"></span>DF3E</td>
 <td class="instruction">LD ($5C0A),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set REPPER = 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57153"></span>DF41</td>
 <td class="instruction">LD A,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57155"></span>DF43</td>
 <td class="instruction">LD ($5C48),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set BORDCR = $08</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57158"></span>DF46</td>
 <td class="instruction">CALL <a href="#57421">$E04D</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57161"></span>DF49</td>
 <td class="instruction">LD DE,$00D4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="57164"></span>DF4C</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57165"></span>DF4D</td>
 <td class="instruction">CALL <a href="#58432">$E440</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57168"></span>DF50</td>
 <td class="instruction">CALL <a href="#57300">$DFD4</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57171"></span>DF53</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57172"></span>DF54</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57175"></span>DF57</td>
 <td class="instruction">CP $00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57177"></span>DF59</td>
 <td class="instruction">JR NZ,<a href="#57184">$DF60</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">key pressed =&gt; Main menu</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57179"></span>DF5B</td>
 <td class="instruction">DEC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57180"></span>DF5C</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57181"></span>DF5D</td>
 <td class="instruction">OR E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57182"></span>DF5E</td>
 <td class="instruction">JR NZ,$DF4C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="57184" class="description">DF60: Main menu</div>
@@ -40826,7 +40856,7 @@ Used by the routines at <a href="asm.html#57143">DF37</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="57247"></span>DF9F</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57250"></span>DFA2</td>
@@ -40973,27 +41003,27 @@ Used by the routines at <a href="asm.html#57143">DF37</a>, <a href="asm.html#571
 <tr>
 <td class="address-2"><span id="57300"></span>DFD4</td>
 <td class="instruction">XOR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57301"></span>DFD5</td>
 <td class="instruction">LD ($5C08),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">clear LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57304"></span>DFD8</td>
 <td class="instruction">RST $38</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57305"></span>DFD9</td>
 <td class="instruction">NOP</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57306"></span>DFDA</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="57307" class="description">DFDB: Highlight Menu item</div>
@@ -41329,32 +41359,32 @@ Used by the routines at <a href="asm.html#57143">DF37</a>, <a href="asm.html#571
 <tr>
 <td class="address-2"><span id="57421"></span>E04D</td>
 <td class="instruction">CALL <a href="#58432">$E440</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57424"></span>E050</td>
 <td class="instruction">CALL <a href="#57300">$DFD4</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57427"></span>E053</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57430"></span>E056</td>
 <td class="instruction">CP $00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57432"></span>E058</td>
 <td class="instruction">RET Z</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57433"></span>E059</td>
 <td class="instruction">JR $E04D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="57435" class="description">E05B: Redefine keys messages</div>
@@ -41660,7 +41690,7 @@ Used by the routine at <a href="asm.html#57184">DF60</a>.
 <tr>
 <td class="address-1"><span id="57610"></span>E10A</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57613"></span>E10D</td>
@@ -42309,7 +42339,7 @@ Used by the routine at <a href="asm.html#57184">DF60</a>.
 <tr>
 <td class="address-1"><span id="58067"></span>E2D3</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58070"></span>E2D6</td>
@@ -42459,19 +42489,22 @@ Used by the routine at <a href="asm.html#57184">DF60</a>.
 <tr>
 <td class="address-1"><span id="58133"></span>E315</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-1" rowspan="4">* 16</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="58134"></span>E316</td>
 <td class="instruction">ADD HL,HL</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="58135"></span>E317</td>
 <td class="instruction">ADD HL,HL</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="58136"></span>E318</td>
 <td class="instruction">ADD HL,HL</td>
+<td class="comment-1" rowspan="1">* 16</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58137"></span>E319</td>
@@ -42746,7 +42779,7 @@ Used by the routine at <a href="asm.html#57184">DF60</a>.
 <tr>
 <td class="address-1"><span id="58236"></span>E37C</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58239"></span>E37F</td>
@@ -46872,7 +46905,7 @@ Used by the routine at <a href="asm.html#46698">B66A</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="63929" class="description">F9B9: Routine at F9B9</div>
+<div id="63929" class="description">F9B9: Pause, then wait for any key pressed</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -46966,7 +46999,7 @@ Used by the routine at <a href="asm.html#48819">BEB3</a>.
 <tr>
 <td class="address-1"><span id="63960"></span>F9D8</td>
 <td class="instruction">LD ($5C08),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">clear LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="63963"></span>F9DB</td>
@@ -46976,7 +47009,7 @@ Used by the routine at <a href="asm.html#48819">BEB3</a>.
 <tr>
 <td class="address-1"><span id="63964"></span>F9DC</td>
 <td class="instruction">LD A,($5C08)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get LASTK</td>
 </tr>
 <tr>
 <td class="address-1"><span id="63967"></span>F9DF</td>

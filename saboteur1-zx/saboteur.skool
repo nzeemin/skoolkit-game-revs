@@ -8,30 +8,31 @@ b$6270 DEFB $3E,$00,$00,$00,$00,$00,$00,$00
 ; Show title picture (two ninjas)
 ;
 ; Used by the routine at #R$BC0D.
-c$6289 LD HL,$62DB   ;
- $628C LD DE,$6590   ; Tile screen 0 start address
-*$628F LD A,(HL)     ;
- $6290 CP $02        ;
+c$6289 LD HL,$62DB   ; Encoded picture data address
+ $628C LD DE,$6590   ; Tile screens address, used as a buffer
+*$628F LD A,(HL)     ; Load next byte of picture data
+ $6290 CP $02        ; check for control byte $02 - end of sequence
  $6292 JR Z,$62A9    ;
- $6294 INC HL        ;
- $6295 CP $00        ;
- $6297 JR Z,$62A1    ;
- $6299 CP $FF        ;
- $629B JR Z,$62A1    ;
- $629D LD (DE),A     ;
- $629E INC DE        ;
- $629F JR $628F      ;
-*$62A1 LD B,(HL)     ;
-*$62A2 LD (DE),A     ;
- $62A3 INC DE        ;
- $62A4 DJNZ $62A2    ;
- $62A6 INC HL        ;
- $62A7 JR $628F      ;
-*$62A9 LD HL,$4000   ;
- $62AC LD DE,$6590   ; Tile screen 0 start address
- $62AF LD C,$0C      ;
+ $6294 INC HL        ; move to next source byte
+ $6295 CP $00        ; check for repeater marker
+ $6297 JR Z,$62A1    ; => repeat byte N times
+ $6299 CP $FF        ; check for block marker
+ $629B JR Z,$62A1    ; => repeat byte N times
+ $629D LD (DE),A     ; Store regular byte into tile screen
+ $629E INC DE        ; next buffer address
+ $629F JR $628F      ; Loop back to process next byte
+*$62A1 LD B,(HL)     ; get repeat count
+*$62A2 LD (DE),A     ; store repeated byte in buffer
+ $62A3 INC DE        ; next buffer address
+ $62A4 DJNZ $62A2    ; repeat B times
+ $62A6 INC HL        ; move to next source byte
+ $62A7 JR $628F      ; continue processing
+; Buffer is ready, copy to screen
+*$62A9 LD HL,$4000   ; Start of screen
+ $62AC LD DE,$6590   ; Tile screens address
+ $62AF LD C,$0C      ; Number of columns = 12
 *$62B1 PUSH HL       ;
- $62B2 LD B,$18      ;
+ $62B2 LD B,$18      ; Number of rows = 24
 *$62B4 PUSH HL       ;
  $62B5 PUSH BC       ;
  $62B6 LD B,$08      ;
@@ -40,7 +41,7 @@ c$6289 LD HL,$62DB   ;
  $62BA LD (HL),A     ;
  $62BB INC DE        ;
  $62BC INC H         ;
- $62BD DJNZ $62B8    ;
+ $62BD DJNZ $62B8    ; Repeat 8 times
  $62BF POP BC        ;
  $62C0 POP HL        ;
  $62C1 RR H          ;
@@ -48,16 +49,16 @@ c$6289 LD HL,$62DB   ;
  $62C5 RR H          ;
  $62C7 PUSH DE       ;
  $62C8 LD DE,$0020   ;
- $62CB ADD HL,DE     ;
+ $62CB ADD HL,DE     ; Move HL to next tile row
  $62CC POP DE        ;
  $62CD RL H          ;
  $62CF RL H          ;
  $62D1 RL H          ;
- $62D3 DJNZ $62B4    ;
+ $62D3 DJNZ $62B4    ; Continue loop for rows
  $62D5 POP HL        ;
  $62D6 INC HL        ;
  $62D7 DEC C         ;
- $62D8 JR NZ,$62B1   ;
+ $62D8 JR NZ,$62B1   ; Continue loop for columns
  $62DA RET           ;
 
 ; Title picture (two ninjas), RLE encoded
@@ -665,7 +666,7 @@ c$749E DI            ;
 ; Draw NEAR/HELD item
 ;
 ; Used by the routine at #R$B889.
-c$74CD LD A,$00      ;
+c$74CD LD A,$00      ; !!MUT-ARG!! item number
  $74CF LD H,$00      ;
  $74D1 LD L,A        ;
  $74D2 ADD HL,HL     ;
@@ -710,17 +711,17 @@ b$750B DEFB $00,$00,$6C,$00,$D8,$00,$44,$01
  $7513 DEFB $B0,$01,$1C,$02,$88,$02,$F4,$02
 
 ; Data block at 751B
-b$751B DEFB $61,$50,$61,$51,$61,$52,$61,$53
- $7523 DEFB $61,$54,$61,$55,$61,$56,$61,$57
+w$751B DEFW $5061,$5161,$5261,$5361
+ $7523 DEFW $5461,$5561,$5661,$5761
+ $752B DEFW $5081,$5181,$5281,$5381
+ $7533 DEFW $5481,$5581,$5681,$5781
+ $753B DEFW $50A1,$51A1,$52A1,$53A1
+ $7543 DEFW $54A1,$55A1,$56A1,$57A1
+ $754B DEFW $50C1,$51C1,$52C1,$53C1
+ $7553 DEFW $54C1,$55C1,$56C1,$57C1
 
-; Data block at 752B
-b$752B DEFB $81,$50,$81,$51,$81,$52,$81,$53
- $7533 DEFB $81,$54,$81,$55,$81,$56,$81,$57
- $753B DEFB $A1,$50,$A1,$51,$A1,$52,$A1,$53
- $7543 DEFB $A1,$54,$A1,$55,$A1,$56,$A1,$57
- $754B DEFB $C1,$50,$C1,$51,$C1,$52,$C1,$53
- $7553 DEFB $C1,$54,$C1,$55,$C1,$56,$C1,$57
- $755B DEFB $00,$00,$00,$00,$00,$00,$00,$00
+; Data block at 755B
+b$755B DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $7563 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $756B DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $7573 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -2758,7 +2759,7 @@ b$9C39 DEFB $00,$00,$00,$00,$00,$00,$00
 ; Process a dog
 ;
 ; Used by the routines at #R$B452, #R$B458 and #R$B47A.
-c$9C44 LD HL,$71D3   ;
+c$9C44 LD HL,$71D3   ; dog Y position address
  $9C47 LD A,($9C40)  ; get Ninja Y
  $9C4A SUB (HL)      ;
  $9C4B CP $07        ;
@@ -2792,7 +2793,7 @@ c$9C44 LD HL,$71D3   ;
  $9C83 LD ($71CD),A  ;
  $9C86 LD HL,$71CD   ;
  $9C89 LD ($9C81),HL ;
- $9C8C CALL $9D5C    ;
+ $9C8C CALL $9D5C    ; Set update flags for Dog
  $9C8F LD A,($71CF)  ;
  $9C92 CP $42        ;
  $9C94 JR C,$9CA8    ;
@@ -2803,7 +2804,7 @@ c$9C44 LD HL,$71D3   ;
 b$9C9C DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
  $9CA4 DEFB $5D,$5E,$5F,$60
 
-; Routine at 9CA8
+; ?? Part of Dog processing
 ;
 ; Used by the routine at #R$9C44.
 c$9CA8 CP $00        ;
@@ -2893,10 +2894,10 @@ c$9CA8 CP $00        ;
  $9D55 POP DE        ;
  $9D56 DJNZ $9D47    ;
 ; This entry point is used by the routine at #R$9D75.
-*$9D58 CALL $9D5C    ;
+*$9D58 CALL $9D5C    ; Set update flags for Dog, 4x3 tiles
  $9D5B RET           ;
 
-; Routine at 9D5C
+; Set update flags for Dog
 ;
 ; Used by the routines at #R$9C44 and #R$9CA8.
 c$9D5C LD C,$03      ;
@@ -2914,7 +2915,7 @@ c$9D5C LD C,$03      ;
  $9D72 JR NZ,$9D6A   ;
  $9D74 RET           ;
 
-; Routine at 9D75
+; ?? something about Dog
 ;
 ; Used by the routine at #R$9CA8.
 c$9D75 INC HL        ;
@@ -2932,9 +2933,9 @@ c$9D75 INC HL        ;
  $9D85 ADD HL,DE     ;
  $9D86 POP DE        ;
  $9D87 DJNZ $9D78    ;
- $9D89 JR $9D58      ;
+ $9D89 JR $9D58      ; => Set update flags for Dog, and RET
 
-; Routine at 9D8B
+; ?? something about Dog
 ;
 ; Used by the routine at #R$9CA8.
 c$9D8B LD HL,$7216   ;
@@ -3510,7 +3511,7 @@ c$A3EE LD A,($9C40)  ; get Ninja Y
  $A3F1 LD HL,$71C6   ;
  $A3F4 CP (HL)       ;
  $A3F5 RET NZ        ;
- $A3F6 LD HL,($71C3) ;
+ $A3F6 LD HL,($71C3) ; get Current Guard position in tilemap
  $A3F9 LD DE,$6592   ;
  $A3FC ADD HL,DE     ;
  $A3FD LD A,$64      ;
@@ -3547,7 +3548,7 @@ c$A418 LD A,($9C40)  ; get Ninja Y
 ; Routine at A434
 ;
 ; Used by the routines at #R$B44C and #R$B458.
-c$A434 CALL $A75B      ;
+c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A437 LD HL,$7346     ;
  $A43A LD A,(HL)       ;
  $A43B CP $0B          ;
@@ -3575,7 +3576,7 @@ c$A434 CALL $A75B      ;
  $A46D LD A,($71C5)    ;
  $A470 INC A           ;
  $A471 PUSH HL         ;
- $A472 LD HL,($71C3)   ;
+ $A472 LD HL,($71C3)   ; get Current Guard position in tilemap
  $A475 ADD HL,DE       ;
  $A476 EX DE,HL        ;
  $A477 POP HL          ;
@@ -3931,10 +3932,10 @@ t$A752 DEFM "M!MAMaM"
 ; Data block at A759
 b$A759 DEFB $81,$4D
 
-; Routine at A75B
+; Set update flags for Guard, 6x7 tiles
 ;
 ; Used by the routine at #R$A434.
-c$A75B LD DE,($71C3) ;
+c$A75B LD DE,($71C3) ; get Current Guard position in tilemap
  $A75F LD HL,$678E   ; Tile screen 1 start address
  $A762 ADD HL,DE     ;
  $A763 LD DE,$0018   ;
@@ -3949,7 +3950,7 @@ c$A75B LD DE,($71C3) ;
  $A772 DJNZ $A76A    ;
  $A774 RET           ;
 
-; Routine at A775
+; ?? Translate byte A using $A787 table
 ;
 ; Used by the routine at #R$A434.
 c$A775 EXX           ;
@@ -4363,7 +4364,7 @@ c$AEF0 LD HL,$5800   ;
  $AF0D LD HL,$B066   ;
  $AF10 LD B,$01      ;
 *$AF12 PUSH HL       ;
- $AF13 LD DE,$AD52   ;
+ $AF13 LD DE,$AD52   ; Pay value text address
  $AF16 LD C,$01      ;
 *$AF18 LD A,(DE)     ;
  $AF19 SUB (HL)      ;
@@ -4421,9 +4422,9 @@ c$AEF0 LD HL,$5800   ;
  $AF83 EXX           ;
 ; This entry point is used by the routine at #R$AF9C.
 *$AF84 XOR A         ;
- $AF85 LD ($5C08),A  ;
+ $AF85 LD ($5C08),A  ; clear LASTK
  $AF88 RST $38       ;
- $AF89 LD A,($5C08)  ;
+ $AF89 LD A,($5C08)  ; get LASTK
  $AF8C CP $5B        ;
  $AF8E JP M,$AF93    ;
  $AF91 SUB $20       ;
@@ -4488,7 +4489,7 @@ c$AF9C CP $0D        ;
  $AFE9 DEC B         ;
  $AFEA JR NZ,$AFE0   ;
 *$AFEC POP HL        ;
- $AFED LD DE,$AD52   ;
+ $AFED LD DE,$AD52   ; Pay value text address
  $AFF0 LD C,$03      ;
 *$AFF2 LD A,(DE)     ;
  $AFF3 LD (HL),A     ;
@@ -4999,7 +5000,7 @@ s$B3AF DEFS $01
 ; Routine at B3B0
 c$B3B0 LD HL,$C681   ;
  $B3B3 LD ($982D),HL ;
- $B3B6 LD HL,$B674   ;
+ $B3B6 LD HL,$B674   ; current dog data address
  $B3B9 LD ($9DD1),HL ;
  $B3BC LD HL,$C6A5   ;
  $B3BF LD ($7C9C),HL ;
@@ -5029,8 +5030,8 @@ c$B3B0 LD HL,$C681   ;
  $B3F4 PUSH HL       ;
  $B3F5 EXX           ;
  $B3F6 LD A,$01      ;
- $B3F8 LD ($5C09),A  ;
- $B3FB LD ($5C0A),A  ;
+ $B3F8 LD ($5C09),A  ; set REPDEL = 1
+ $B3FB LD ($5C0A),A  ; set REPPER = 1
  $B3FE JP $B5C7      ;
 
 ; Unused
@@ -5039,7 +5040,7 @@ s$B401 DEFS $09
 ; Initialize a guard; HL = guard data address
 ;
 ; Used by the routines at #R$A0DF, #R$A1AF and #R$B425.
-c$B40A LD DE,$71C3   ;
+c$B40A LD DE,$71C3   ; address to store guard data
  $B40D LD ($B696),HL ; Save Guard data address
  $B410 LD BC,$0004   ;
  $B413 LDIR          ;
@@ -5326,14 +5327,14 @@ c$B5C7 CALL $AC44    ;
  $B5E8 LD ($D285),HL ;
  $B5EB LD ($B366),HL ;
  $B5EE LD A,$30      ;
- $B5F0 LD HL,$AD52   ;
+ $B5F0 LD HL,$AD52   ; Pay value text address
  $B5F3 LD B,$03      ;
 *$B5F5 LD (HL),A     ;
  $B5F6 INC HL        ;
  $B5F7 DJNZ $B5F5    ;
  $B5F9 CALL $ACCA    ; Draw game screen frames and indicator text
  $B5FC XOR A         ;
- $B5FD LD ($5C48),A  ;
+ $B5FD LD ($5C48),A  ; set BORDCR = 0
  $B600 LD ($B5C6),A  ;
  $B603 LD ($B850),A  ;
  $B606 LD ($D48E),A  ;
@@ -5341,15 +5342,15 @@ c$B5C7 CALL $AC44    ;
  $B60B INC A         ;
  $B60C LD ($D48F),A  ;
  $B60F LD ($7239),A  ;
- $B612 LD ($B84F),A  ;
+ $B612 LD ($B84F),A  ; set NEAR item
  $B615 LD HL,$70D0   ;
  $B618 LD ($B53E),HL ;
  $B61B LD HL,$B5B0   ;
  $B61E LD ($74D4),HL ;
  $B621 CALL $B851    ;
  $B624 LD HL,$0000   ;
- $B627 LD ($B674),HL ; set current Dog data address
- $B62A LD ($B696),HL ;
+ $B627 LD ($B674),HL ; set current Dog data address = no dog
+ $B62A LD ($B696),HL ; set current Guarg data address = no guard
  $B62D LD A,$04      ;
  $B62F LD ($C66F),A  ;
  $B632 LD ($D495),A  ;
@@ -5402,8 +5403,8 @@ c$B66A LD A,($71D4)  ;
  $B6A2 LD A,($7347)  ; get Guard direction
  $B6A5 LD (DE),A     ;
  $B6A6 LD HL,$0000   ;
- $B6A9 LD ($B674),HL ; set current Dog data address
- $B6AC LD ($B696),HL ;
+ $B6A9 LD ($B674),HL ; set current Dog data address = no dog
+ $B6AC LD ($B696),HL ; set current Guarg data address = no guard
  $B6AF XOR A         ;
  $B6B0 LD ($BAB2),A  ;
  $B6B3 LD HL,$A39F   ;
@@ -5532,10 +5533,10 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B778 LD ($7346),A  ;
 ; This entry point is used by the routine at #R$B937.
 *$B77B XOR A         ;
- $B77C LD ($5C08),A  ;
+ $B77C LD ($5C08),A  ; clear LASTK
  $B77F RST $38       ;
  $B780 DI            ;
- $B781 LD A,($5C08)  ;
+ $B781 LD A,($5C08)  ; get LASTK
  $B784 LD A,($B5C6)  ;
  $B787 CP $01        ;
  $B789 JR Z,$B7AF    ;
@@ -5590,7 +5591,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B7F2 LD BC,$01FD   ; 510 - 1
  $B7F5 LD DE,$678F   ; Tile screen 1 start address + 1
  $B7F8 LDIR          ;
- $B7FA CALL $BBBB    ;
+ $B7FA CALL $BBBB    ; Set update flags for Ninja, 6x7 tiles
  $B7FD LD HL,$698C   ; Tile screen 2 start address
  $B800 LD (HL),$FF   ;
  $B802 LD BC,$01FD   ; 510 - 1
@@ -5644,8 +5645,8 @@ c$B83C LD A,($749D)  ;
 b$B84A DEFW $D2FB    ; ??
  $B84C DEFB $00      ; ??
  $B84D DEFW $0000    ; ??
- $B84F DEFB $00      ; ??
- $B850 DEFB $C8      ; ??
+ $B84F DEFB $00      ; NEAR item
+ $B850 DEFB $C8      ; ?? HELD item tile ??
 
 ; Routine at B851
 ;
@@ -5690,7 +5691,7 @@ c$B889 INC DE        ;
  $B88D DEC B         ;
  $B88E JP NZ,$B814   ;
 ; This entry point is used by the routine at #R$B724.
-*$B891 LD HL,$B84F   ;
+*$B891 LD HL,$B84F   ; NEAR item address
  $B894 LD A,C        ;
  $B895 CP (HL)       ;
  $B896 JR Z,$B8B0    ;
@@ -5725,7 +5726,7 @@ c$B889 INC DE        ;
 ; Used by the routines at #R$B348, #R$B532, #R$BBD4, #R$BC55, #R$BE0D, #R$BFB0,
 ; #R$C094, #R$C13D, #R$C1B6, #R$C24B, #R$C339, #R$C3D9, #R$C4A7, #R$C4DE,
 ; #R$C5C6 and #R$C6E2.
-c$B8D0 CALL $BBBB    ;
+c$B8D0 CALL $BBBB    ; Set update flags for Ninja, 6x7 tiles
  $B8D3 LD HL,$6D88   ; Tile screen 4 start address
  $B8D6 LD (HL),$FF   ;
  $B8D8 LD BC,$01FD   ; 510 - 1
@@ -6106,7 +6107,7 @@ c$BBAE LD L,(IX+$01) ;
  $BBB8 LD (HL),$01   ;
  $BBBA RET           ;
 
-; Routine at BBBB
+; Set update flags for Ninja, 6x7 tiles
 ;
 ; Used by the routines at #R$B724 and #R$B8D0.
 c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
@@ -6168,6 +6169,10 @@ c$BBDF PUSH HL       ;
 ; Routine at BC0D
 ;
 ; Used by the routine at #R$BEB3.
+;
+; .
+;
+; Prepare screen background for title picture
 c$BC0D LD SP,$6257   ;
  $BC10 EXX           ;
  $BC11 POP HL        ;
@@ -6191,6 +6196,7 @@ c$BC0D LD SP,$6257   ;
  $BC34 INC HL        ;
  $BC35 DEC C         ;
  $BC36 JR NZ,$BC28   ;
+; Show title picture
  $BC38 CALL $6289    ; Show title picture (two ninjas)
 ; This entry point is used by the routine at #R$DF60.
 *$BC3B CALL $AEF0    ;
@@ -6528,10 +6534,10 @@ c$BE71 LD A,($B5C6)  ;
 c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
  $BEB6 LD DE,$4068   ;
  $BEB9 LD C,$0F      ;
- $BEBB CALL $AED1    ; Print string
+ $BEBB CALL $AED1    ; Print string 1st line
  $BEBE LD DE,$40A6   ;
  $BEC1 LD C,$14      ;
- $BEC3 CALL $AED1    ; Print string
+ $BEC3 CALL $AED1    ; Print string 2nd line
  $BEC6 LD HL,$5868   ;
  $BEC9 LD B,$0F      ;
 *$BECB LD (HL),$0F   ;
@@ -6542,10 +6548,10 @@ c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
 *$BED5 LD (HL),$0F   ;
  $BED7 INC HL        ;
  $BED8 DJNZ $BED5    ;
- $BEDA CALL $F9B9    ;
+ $BEDA CALL $F9B9    ; Pause, then wait for any key pressed
  $BEDD NOP           ;
  $BEDE NOP           ;
- $BEDF NOP           ;
+ $BEDF NOP           ; !!MUT-CMD!!
  $BEE0 NOP           ;
  $BEE1 NOP           ;
  $BEE2 NOP           ;
@@ -6555,7 +6561,7 @@ c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
  $BEE6 NOP           ;
  $BEE7 LD A,$0A      ;
  $BEE9 LD ($BEDF),A  ;
- $BEEC JP $BC0D      ;
+ $BEEC JP $BC0D      ; => Title picture and music, then go to Main menu
 
 ; Message at BEEF
 t$BEEF DEFM "     SEPUKU    "
@@ -6661,9 +6667,9 @@ c$BFD5 LD B,$0A      ;
  $C036 LD B,A        ;
  $C037 CALL $B4DE    ;
  $C03A LD DE,$486B   ;
- $C03D LD HL,$E1EC   ;
+ $C03D LD HL,$E1EC   ; Skill level address
  $C040 LD C,$01      ;
- $C042 CALL $AED1    ; Print string
+ $C042 CALL $AED1    ; Print skill level digit
  $C045 LD A,$14      ;
  $C047 LD ($BEDF),A  ;
 *$C04A LD A,($B5C6)  ;
@@ -8555,19 +8561,19 @@ t$DEF8 DEFM "J  KEMPSTON"
 ; Used by the routine at #R$BC0D.
 c$DF37 LD A,$01      ;
  $DF39 OUT ($FE),A   ;
- $DF3B LD ($5C09),A  ;
- $DF3E LD ($5C0A),A  ;
+ $DF3B LD ($5C09),A  ; set REPDEL = 1
+ $DF3E LD ($5C0A),A  ; set REPPER = 1
  $DF41 LD A,$08      ;
- $DF43 LD ($5C48),A  ;
+ $DF43 LD ($5C48),A  ; set BORDCR = $08
  $DF46 CALL $E04D    ;
  $DF49 LD DE,$00D4   ;
 *$DF4C PUSH DE       ;
  $DF4D CALL $E440    ;
  $DF50 CALL $DFD4    ;
  $DF53 POP DE        ;
- $DF54 LD A,($5C08)  ;
+ $DF54 LD A,($5C08)  ; get LASTK
  $DF57 CP $00        ;
- $DF59 JR NZ,$DF60   ;
+ $DF59 JR NZ,$DF60   ; key pressed => Main menu
  $DF5B DEC DE        ;
  $DF5C LD A,D        ;
  $DF5D OR E          ;
@@ -8600,7 +8606,7 @@ c$DF60 CALL $DEC1    ;
  $DF98 CALL $E440    ;
  $DF9B CALL $DFD4    ;
  $DF9E POP DE        ;
- $DF9F LD A,($5C08)  ;
+ $DF9F LD A,($5C08)  ; get LASTK
  $DFA2 CP $61        ;
  $DFA4 JR C,$DFA8    ;
  $DFA6 SUB $20       ;
@@ -8631,7 +8637,7 @@ c$DF60 CALL $DEC1    ;
 ;
 ; Used by the routines at #R$DF37, #R$DF60, #R$E04D, #R$E097 and #R$E2A7.
 c$DFD4 XOR A         ;
- $DFD5 LD ($5C08),A  ;
+ $DFD5 LD ($5C08),A  ; clear LASTK
  $DFD8 RST $38       ;
  $DFD9 NOP           ;
  $DFDA RET           ;
@@ -8712,7 +8718,7 @@ b$E039 DEFB $EF,$01,$EF,$08,$EF,$10,$F7,$10,$EF,$04 ; Protek ports/bits
 ; Used by the routines at #R$DF37, #R$DF60, #R$E097 and #R$E2A7.
 c$E04D CALL $E440    ;
  $E050 CALL $DFD4    ;
- $E053 LD A,($5C08)  ;
+ $E053 LD A,($5C08)  ; get LASTK
  $E056 CP $00        ;
  $E058 RET Z         ;
  $E059 JR $E04D      ;
@@ -8778,7 +8784,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E102 CALL $DFD4    ;
  $E105 CALL $E440    ;
  $E108 POP IX        ;
- $E10A LD A,($5C08)  ;
+ $E10A LD A,($5C08)  ; get LASTK
  $E10D CP $5B        ;
  $E10F JR C,$E113    ;
  $E111 SUB $20       ;
@@ -8910,7 +8916,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2CC LD (HL),A     ;
 *$E2CD CALL $E440    ;
  $E2D0 CALL $DFD4    ;
- $E2D3 LD A,($5C08)  ;
+ $E2D3 LD A,($5C08)  ; get LASTK
  $E2D6 CP $31        ;
  $E2D8 JR C,$E2CD    ;
  $E2DA CP $3A        ;
@@ -8940,10 +8946,10 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E310 SUB $31       ;
  $E312 LD L,A        ;
  $E313 LD H,$00      ;
- $E315 ADD HL,HL     ; {* 16
+ $E315 ADD HL,HL     ;
  $E316 ADD HL,HL     ;
  $E317 ADD HL,HL     ;
- $E318 ADD HL,HL     ; }
+ $E318 ADD HL,HL     ; * 16
  $E319 LD DE,$E217   ; Levels data base address
  $E31C ADD HL,DE     ;
  $E31D LD DE,$40EE   ;
@@ -8998,7 +9004,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E375 CALL $DFD4    ;
  $E378 CALL $E440    ;
  $E37B POP DE        ;
- $E37C LD A,($5C08)  ;
+ $E37C LD A,($5C08)  ; get LASTK
  $E37F CP $00        ;
  $E381 RET NZ        ;
  $E382 DEC DE        ;
@@ -9825,7 +9831,7 @@ b$F98F DEFB $82,$83,$84,$85,$86,$87,$85,$88
  $F9AF DEFB $D3,$FE,$4E,$23,$0D,$20,$FD,$10
  $F9B7 DEFB $F4,$C9
 
-; Routine at F9B9
+; Pause, then wait for any key pressed
 ;
 ; Used by the routine at #R$BEB3.
 c$F9B9 LD DE,$0000   ;
@@ -9844,9 +9850,9 @@ c$F9B9 LD DE,$0000   ;
  $F9D4 RET NZ        ;
  $F9D5 JR $F9C5      ;
 *$F9D7 XOR A         ;
- $F9D8 LD ($5C08),A  ;
+ $F9D8 LD ($5C08),A  ; clear LASTK
  $F9DB RST $38       ;
- $F9DC LD A,($5C08)  ;
+ $F9DC LD A,($5C08)  ; get LASTK
  $F9DF CP $00        ;
  $F9E1 RET NZ        ;
  $F9E2 JR $F9C5      ;

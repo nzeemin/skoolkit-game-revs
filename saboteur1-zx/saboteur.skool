@@ -288,13 +288,27 @@ b$71D4 DEFB $F3,$01
  $71D6 DEFB $7A,$00,$00,$02,$00,$01,$16,$00,$FD ; Room 79C6 dog data
  $71DF DEFB $9E,$00,$01,$08,$00,$01,$16,$01
  $71E7 DEFB $FE,$B8,$67,$B0,$6F,$0A,$D9,$67
- $71EF DEFB $D1,$6F,$0D,$FF,$00,$FF,$01,$02
- $71F7 DEFB $03,$04,$05,$06,$07,$08,$09,$FF
- $71FF DEFB $FF,$0A,$0B,$0C,$0D,$0E,$0F,$10
- $7207 DEFB $11,$12,$13,$FF,$14,$15,$16,$17
- $720F DEFB $18,$19,$1A,$1B,$1C,$1D,$1E,$FF
- $7217 DEFB $1F,$20,$FF,$21,$22,$23,$24,$25
- $721F DEFB $26,$27,$FF
+ $71EF DEFB $D1,$6F,$0D
+
+; Sprite Dog 1
+b$71F2 DEFB $FF,$00,$FF,$01 ; {#HTML[<img src="images/sprite-71f2.png" />]
+ $71F6 DEFB $02,$03,$04,$05 ;
+ $71FA DEFB $06,$07,$08,$09 ; }
+
+; Sprite Dog 2
+b$71FE DEFB $FF,$FF,$0A,$0B ; {#HTML[<img src="images/sprite-71fe.png" />]
+ $7202 DEFB $0C,$0D,$0E,$0F ;
+ $7206 DEFB $10,$11,$12,$13 ; }
+
+; Sprite Dog 3
+b$720A DEFB $FF,$14,$15,$16 ; {#HTML[<img src="images/sprite-720a.png" />]
+ $720E DEFB $17,$18,$19,$1A ;
+ $7212 DEFB $1B,$1C,$1D,$1E ; }
+
+; Sprite Dog 4
+b$7216 DEFB $FF,$1F,$20,$FF ; {#HTML[<img src="images/sprite-7216.png" />]
+ $721A DEFB $21,$22,$23,$24 ;
+ $721E DEFB $25,$26,$27,$FF ; }
 
 ; Data block at 7222
 b$7222 DEFB $00         ; Input method: 1 = Joystick, 0 = Keyboard or Protek
@@ -338,7 +352,7 @@ b$733B DEFW $D3DE
  $7341 DEFW $D45C
 
 ; Data block at 7343
-b$7343 DEFB $07
+b$7343 DEFB $07      ; ?? counter
  $7344 DEFB $00
  $7345 DEFB $14
  $7346 DEFB $0A
@@ -635,9 +649,9 @@ c$7472 DI            ;
 b$749C DEFB $13
  $749D DEFB $01
 
-; Routine at 749E
+; Decreasing Energy
 ;
-; Used by the routine at #R$9DDA.
+; Used by the routine at #R$9DD9.
 c$749E DI            ;
  $749F LD ($74F1),SP ;
  $74A3 LD SP,$753B   ;
@@ -872,21 +886,12 @@ b$791E DEFW $B446                           ; Room procedure
 b$7984 DEFB $F1,$F0,$07,$0A,$07,$0A,$07,$0A
  $798C DEFB $07,$0A,$FF,$FF,$39,$58,$FF,$39
  $7994 DEFB $3A,$58,$39,$3A,$3A,$58,$3A,$3A
- $799C DEFB $3A,$58,$3A,$3A,$3B
-
-; Data block at 79A1
-b$79A1 DEFB $FF,$3A,$3B,$FF,$FF,$3B,$FF,$FF
- $79A9 DEFB $FF,$59,$3C,$FF,$FF,$59,$3D,$3C
-
-; Data block at 79B1
-b$79B1 DEFB $FF,$59,$3D,$3D,$3C,$59,$3D,$3D
- $79B9 DEFB $3D
-
-; Data block at 79BA
-b$79BA DEFB $FF,$3E,$3D,$3D
-
-; Data block at 79BE
-b$79BE DEFB $FF,$FF,$3E,$3D,$FF,$FF,$FF,$3E
+ $799C DEFB $3A,$58,$3A,$3A,$3B,$FF,$3A,$3B
+ $79A4 DEFB $FF,$FF,$3B,$FF,$FF,$FF,$59,$3C
+ $79AC DEFB $FF,$FF,$59,$3D,$3C,$FF,$59,$3D
+ $79B4 DEFB $3D,$3C,$59,$3D,$3D,$3D,$FF,$3E
+ $79BC DEFB $3D,$3D,$FF,$FF,$3E,$3D,$FF,$FF
+ $79C4 DEFB $FF,$3E
 
 ; Room 79C6 (next to room with pier)
 b$79C6 DEFW $B452                           ; Room procedure
@@ -2797,12 +2802,13 @@ c$9C44 LD HL,$71D3   ; dog Y position address
  $9C8F LD A,($71CF)  ;
  $9C92 CP $42        ;
  $9C94 JR C,$9CA8    ;
- $9C96 LD HL,$9C9C   ;
+ $9C96 LD HL,$9C9C   ; Sprite Dog dead
  $9C99 JP $9D31      ;
 
-; Data block at 9C9C
-b$9C9C DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $9CA4 DEFB $5D,$5E,$5F,$60
+; Sprite Dog dead
+b$9C9C DEFB $FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-9c9c.png" />]
+ $9CA0 DEFB $FF,$FF,$FF,$FF ;
+ $9CA4 DEFB $5D,$5E,$5F,$60 ; }
 
 ; ?? Part of Dog processing
 ;
@@ -2819,7 +2825,7 @@ c$9CA8 CP $00        ;
  $9CBE LD A,(HL)     ;
  $9CBF INC A         ;
  $9CC0 LD B,$05      ;
- $9CC2 CALL NZ,$9DD9 ;
+ $9CC2 CALL NZ,$9DD9 ; => Decrease Energy by B
  $9CC5 LD A,($71CD)  ; get Dog direction
  $9CC8 CP $00        ;
  $9CCA JR Z,$9CF1    ;
@@ -2863,20 +2869,20 @@ c$9CA8 CP $00        ;
  $9D1B JR NZ,$9D1F   ;
  $9D1D LD (HL),$00   ;
 *$9D1F LD A,(HL)     ;
- $9D20 LD HL,$71F2   ;
+ $9D20 LD HL,$71F2   ; Sprite Dog 1
  $9D23 CP $00        ;
  $9D25 JR Z,$9D31    ;
- $9D27 LD HL,$71FE   ;
+ $9D27 LD HL,$71FE   ; Sprite Dog 2
  $9D2A CP $01        ;
  $9D2C JR Z,$9D31    ;
- $9D2E LD HL,$720A   ;
+ $9D2E LD HL,$720A   ; Sprite Dog 3
 ; This entry point is used by the routine at #R$9C44.
 *$9D31 LD ($9D3C),HL ;
 ; This entry point is used by the routine at #R$9D8B.
 *$9D34 LD HL,($71CB) ;
  $9D37 LD DE,$6B8A   ; Tile screen 3 start address
  $9D3A ADD HL,DE     ;
- $9D3B LD DE,$71FE   ;
+ $9D3B LD DE,$71FE   ; !!MUT-ARG!! current Dog sprite address
  $9D3E LD B,$03      ;
  $9D40 LD A,($71CD)  ; get Dog direction
  $9D43 CP $00        ;
@@ -2938,7 +2944,7 @@ c$9D75 INC HL        ;
 ; ?? something about Dog
 ;
 ; Used by the routine at #R$9CA8.
-c$9D8B LD HL,$7216   ;
+c$9D8B LD HL,$7216   ; Sprite Dog 4
  $9D8E LD ($9D3C),HL ;
  $9D91 LD A,($71D2)  ;
  $9D94 CP $00        ;
@@ -2975,14 +2981,12 @@ c$9DCD LD DE,$71CB   ; current dog data address
  $9DD6 LDIR          ;
  $9DD8 RET           ;
 
-; Routine at 9DD9
+; Decrease Energy by B
 ;
-; Used by the routines at #R$9CA8, #R$9DF1, #R$A434, #R$B937, #R$BC55, #R$C22F,
-; #R$C4F6, #R$C50D and #R$C5C6.
-c$9DD9 RET           ; !!MUT-CMD!!
-
-; Routine at 9DDA
-c$9DDA CALL $749E    ;
+; Used by the routines at #R$9CA8, #R$A434, #R$B937, #R$BC55, #R$C22F, #R$C4F6,
+; #R$C50D, #R$C5C6 and #R$FA31.
+c$9DD9 RET           ; !!MUT-CMD!! $C5 PUSH BC or $C9 RET
+ $9DDA CALL $749E    ; Decrease Energy
  $9DDD POP BC        ;
  $9DDE LD A,($749C)  ;
  $9DE1 CP $04        ;
@@ -2990,15 +2994,10 @@ c$9DDA CALL $749E    ;
  $9DE5 LD A,($749D)  ;
  $9DE8 CP $01        ;
  $9DEA JR NZ,$9DF1   ;
- $9DEC JP $BEAA      ;
-
-; Data block at 9DEF
-b$9DEF DEFB $F3,$C9
-
-; Routine at 9DF1
-;
-; Used by the routine at #R$9DDA.
-c$9DF1 DJNZ $9DD9    ;
+ $9DEC JP $BEAA      ; Energy is out => Saboteur dead
+ $9DEF DI            ; {!!UNUSED!!
+ $9DF0 RET           ; }
+*$9DF1 DJNZ $9DD9    ;
  $9DF3 DI            ;
  $9DF4 RET           ;
 
@@ -3150,15 +3149,18 @@ b$A022 DEFW $B41F                           ; Room procedure
  $A096 DEFB $04,$02,$90,$65,$01,$08,$FF,$7B ;
  $A09E DEFB $66,$05,$01,$02,$AB,$A0,$6D,$67 ;
  $A0A6 DEFB $FF,$94,$00,$0D,$94,$9C,$9B,$93 ;
- $A0AE DEFB $92,$00,$00,$0D,$0D,$93,$92,$FF ;
- $A0B6 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
- $A0BE DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
- $A0C6 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
- $A0CE DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$ED ;
- $A0D6 DEFB $EC,$EB,$FF,$F3,$F2,$F1,$F0,$EF ;
- $A0DE DEFB $EE                             ; }
+ $A0AE DEFB $92,$00,$00,$0D,$0D,$93,$92     ; }
 
-; Room 94AB initialization
+; Sprite Ninja dead, 6x7 tiles
+b$A0B5 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-a0b5.png"
+ $A0BB DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $A0C1 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $A0C7 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $A0CD DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $A0D3 DEFB $FF,$FF,$ED,$EC,$EB,$FF ;
+ $A0D9 DEFB $F3,$F2,$F1,$F0,$EF,$EE ; }
+
+; Room #R$94AB initialization
 c$A0DF LD HL,$A1E1   ; Guard data address
 ; This entry point is used by the routines at #R$A0E8, #R$A0ED, #R$A0F2,
 ; #R$A0F7, #R$A0FC, #R$A101, #R$A106, #R$A10B, #R$A110, #R$A115, #R$A11A,
@@ -3167,71 +3169,71 @@ c$A0DF LD HL,$A1E1   ; Guard data address
 ; This entry point is used by the routine at #R$A142.
 *$A0E5 JP $B422      ;
 
-; Room 7DA9 initialization
+; Room #R$7DA9 initialization
 c$A0E8 LD HL,$A1E7   ; Guard data address
  $A0EB JR $A0E2      ;
 
-; Room 7E8C initialization
+; Room #R$7E8C initialization
 c$A0ED LD HL,$A1ED   ; Guard data address
  $A0F0 JR $A0E2      ;
 
-; Room 920A initialization
+; Room #R$920A initialization
 c$A0F2 LD HL,$A1F3   ; Guard data address
  $A0F5 JR $A0E2      ;
 
-; Room 8F84 initialization
+; Room #R$8F84 initialization
 c$A0F7 LD HL,$A1F9   ; Guard data address
  $A0FA JR $A0E2      ;
 
-; Room 8B71 initialization
+; Room #R$8B71 initialization
 c$A0FC LD HL,$A1FF   ; Guard data address
  $A0FF JR $A0E2      ;
 
-; Room 8739 initialization
+; Room #R$8739 initialization
 c$A101 LD HL,$A205   ; Guard data address
  $A104 JR $A0E2      ;
 
-; Room 858F initialization
+; Room #R$858F initialization
 c$A106 LD HL,$A20B   ; Guard data address
  $A109 JR $A0E2      ;
 
-; Room 84EE initialization
+; Room #R$84EE initialization
 c$A10B LD HL,$A211   ; Guard data address
  $A10E JR $A0E2      ;
 
-; Room 99A6 initialization
+; Room #R$99A6 initialization
 c$A110 LD HL,$A21D   ; Guard data address
  $A113 JR $A0E2      ;
 
-; Room 97F8 initialization
+; Room #R$97F8 initialization
 c$A115 LD HL,$A223   ; Guard data address
  $A118 JR $A0E2      ;
 
-; Room 94CF initialization
+; Room #R$94CF initialization
 c$A11A LD HL,$A229   ; Guard data address
  $A11D JR $A0E2      ;
 
-; Room 9B51 initialization
+; Room #R$9B51 initialization
 c$A11F LD HL,$A22F   ; Guard data address
  $A122 JR $A0E2      ;
 
-; Room 9F3A initialization
+; Room #R$9F3A initialization
 c$A124 LD HL,$A235   ; Guard data address
  $A127 JR $A0E2      ;
 
-; Room 9F7E initialization
+; Room #R$9F7E initialization
 c$A129 LD HL,$A23B   ; Guard data address
  $A12C JR $A0E2      ;
 
-; Room 9EB8 initialization
+; Room #R$9EB8 initialization
 c$A12E LD HL,$A241   ; Guard data address
  $A131 JR $A0E2      ;
 
-; Room 9B19 initialization
+; Room #R$9B19 initialization
 c$A133 LD HL,$A247   ; Guard data address
  $A136 JR $A0E2      ;
 
-; Room 9DF5 initialization
+; Room #R$9DF5 initialization
 c$A138 LD HL,$A24D   ; Guard data address
  $A13B JR $A0E2      ;
 
@@ -3239,7 +3241,7 @@ c$A138 LD HL,$A24D   ; Guard data address
 c$A13D LD HL,$A217   ; Guard data address
  $A140 JR $A0E2      ;
 
-; Room 7A17 initialization
+; Room #R$7A17 initialization
 c$A142 LD HL,$A33E   ; Turret data address
 ; This entry point is used by the routines at #R$A14A, #R$A14F, #R$A154,
 ; #R$A15F, #R$A16A, #R$A16F, #R$A174, #R$A179, #R$A17E, #R$A183, #R$A188,
@@ -3247,39 +3249,39 @@ c$A142 LD HL,$A33E   ; Turret data address
 *$A145 CALL $B461    ; Initialize a turret
  $A148 JR $A0E5      ;
 
-; Room 7D5A initialization
+; Room #R$7D5A initialization
 c$A14A LD HL,$A32F   ; Turret data address
  $A14D JR $A145      ;
 
-; Room 7F48 initialization
+; Room #R$7F48 initialization
 c$A14F LD HL,$A332   ; Turret data address
  $A152 JR $A145      ;
 
-; Room 7EF2 initialization
+; Room #R$7EF2 initialization
 c$A154 LD HL,$A299   ; Dog data address
  $A157 CALL $9DCD    ;
  $A15A LD HL,$A338   ; Turret data address
  $A15D JR $A145      ;
 
-; Room 909F initialization
+; Room #R$909F initialization
 c$A15F LD HL,$A2E9   ; Dog data address
  $A162 CALL $9DCD    ;
  $A165 LD HL,$A338   ; Turret data address
  $A168 JR $A145      ;
 
-; Room 8FBD initialization
+; Room #R$8FBD initialization
 c$A16A LD HL,$A335   ; Turret data address
  $A16D JR $A145      ;
 
-; Room 92A7 initialization
+; Room #R$92A7 initialization
 c$A16F LD HL,$A338   ; Turret data address
  $A172 JR $A145      ;
 
-; Room 8B25 initialization
+; Room #R$8B25 initialization
 c$A174 LD HL,$A33B   ; Turret data address
  $A177 JR $A145      ;
 
-; Room 8526 initialization
+; Room #R$8526 initialization
 c$A179 LD HL,$A33E   ; Turret data address
  $A17C JR $A145      ;
 
@@ -3287,11 +3289,11 @@ c$A179 LD HL,$A33E   ; Turret data address
 c$A17E LD HL,$A341   ; Turret data address
  $A181 JR $A145      ;
 
-; Room 95D6 initialization
+; Room #R$95D6 initialization
 c$A183 LD HL,$A344   ; Turret data address
  $A186 JR $A145      ;
 
-; Room 968A initialization
+; Room #R$968A initialization
 c$A188 LD HL,$A347   ; Turret data address
  $A18B JR $A145      ;
 
@@ -3301,23 +3303,23 @@ c$A188 LD HL,$A347   ; Turret data address
 c$A18D LD HL,$A34A   ; Turret data address
  $A190 JR $A145      ;
 
-; Room 9A9A initialization
+; Room #R$9A9A initialization
 c$A192 LD HL,$A332   ; Turret data address
  $A195 JR $A145      ;
 
-; Room 9552 initialization
+; Room #R$9552 initialization
 c$A197 LD HL,$A34D   ; Turret data address
  $A19A JR $A145      ;
 
-; Room 9BE7 initialization
+; Room #R$9BE7 initialization
 c$A19C LD HL,$A350   ; Turret data address
  $A19F JR $A145      ;
 
-; Room 8D5C initialization
+; Room #R$8D5C initialization
 c$A1A1 LD HL,$A33B   ; Turret data address
  $A1A4 JR $A145      ;
 
-; Room 7C2E initialization
+; Room #R$7C2E initialization
 c$A1A6 LD HL,$A271   ; Dog data address
  $A1A9 CALL $9DCD    ;
  $A1AC LD HL,$A253   ; Guard data address
@@ -3328,25 +3330,25 @@ c$A1A6 LD HL,$A271   ; Dog data address
 c$A1AF CALL $B40A    ; Initialize a guard
  $A1B2 JP $B422      ;
 
-; Room 7F9C initialization
+; Room #R$7F9C initialization
 c$A1B5 LD HL,$A27B   ; Dog data address
  $A1B8 CALL $9DCD    ;
  $A1BB LD HL,$A259   ; Guard data address
  $A1BE JR $A1AF      ;
 
-; Room 8162 initialization
+; Room #R$8162 initialization
 c$A1C0 LD HL,$A28F   ; Dog data address
  $A1C3 CALL $9DCD    ;
  $A1C6 LD HL,$A25F   ; Guard data address
  $A1C9 JR $A1AF      ;
 
-; Room 80A7 initialization
+; Room #R$80A7 initialization
 c$A1CB LD HL,$A2AD   ; Dog data address
  $A1CE CALL $9DCD    ;
  $A1D1 LD HL,$A265   ; Guard data address
  $A1D4 JR $A1AF      ;
 
-; Room 9B9D initialization
+; Room #R$9B9D initialization
 c$A1D6 LD HL,$A325   ; Dog data address
  $A1D9 CALL $9DCD    ;
  $A1DC LD HL,$A26B   ; Guard data address
@@ -3413,54 +3415,54 @@ b$A32F DEFB $C4,$00,$0E ; Room 7A17 turret
  $A34D DEFB $3F,$00,$01 ; Room 9552 turret
  $A350 DEFB $A3,$00,$0B ; Room 9BE7 turret
 
-; Room 81E5 initialization
+; Room #R$81E5 initialization
 c$A353 LD HL,$A285   ; Dog data address
 ; This entry point is used by the routines at #R$A35C, #R$A361, #R$A366,
 ; #R$A36B, #R$A370, #R$A375, #R$A37A, #R$A37F, #R$A384, #R$A389 and #R$A38E.
 *$A356 CALL $9DCD    ; Initialize a dog
  $A359 JP $B422      ;
 
-; Room 7E05 initialization
+; Room #R$7E05 initialization
 c$A35C LD HL,$A2A3   ; Dog data address
  $A35F JR $A356      ;
 
-; Room 83ED initialization
+; Room #R$83ED initialization
 c$A361 LD HL,$A2B7   ; Dog data address
  $A364 JR $A356      ;
 
-; Room 924E initialization
+; Room #R$924E initialization
 c$A366 LD HL,$A2CB   ; Dog data address
  $A369 JR $A356      ;
 
-; Room 91BA initialization
+; Room #R$91BA initialization
 c$A36B LD HL,$A2D5   ; Dog data address
  $A36E JR $A356      ;
 
-; Room 90DB initialization
+; Room #R$90DB initialization
 c$A370 LD HL,$A2DF   ; Dog data address
  $A373 JR $A356      ;
 
-; Room 8802 initialization
+; Room #R$8802 initialization
 c$A375 LD HL,$A2F3   ; Dog data address
  $A378 JR $A356      ;
 
-; Room 8608 initialization
+; Room #R$8608 initialization
 c$A37A LD HL,$A2FD   ; Dog data address
  $A37D JR $A356      ;
 
-; Room 844E initialization
+; Room #R$844E initialization
 c$A37F LD HL,$A307   ; Dog data address
  $A382 JR $A356      ;
 
-; Room 9739 initialization
+; Room #R$9739 initialization
 c$A384 LD HL,$A311   ; Dog data address
  $A387 JR $A356      ;
 
-; Room 9A5A initialization
+; Room #R$9A5A initialization
 c$A389 LD HL,$A31B   ; Dog data address
  $A38C JR $A356      ;
 
-; Room 80F6 initialization
+; Room #R$80F6 initialization
 c$A38E LD HL,$A2C1   ; Dog data address
  $A391 JR $A356      ;
 
@@ -3630,7 +3632,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A4C5 INC A           ;
  $A4C6 JR Z,$A4CF      ;
  $A4C8 LD B,$04        ;
- $A4CA CALL $9DD9      ;
+ $A4CA CALL $9DD9      ; Decrease Energy by B
 *$A4CD LD B,$01        ;
 *$A4CF POP HL          ;
  $A4D0 DEC HL          ;
@@ -3701,7 +3703,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A56A JP $A6FF        ;
 *$A56D CP $09          ;
  $A56F JR NZ,$A57A     ;
- $A571 LD HL,$A0B5     ;
+ $A571 LD HL,$A0B5     ; Sprite Ninja dead
  $A574 LD ($A70F),HL   ;
  $A577 JP $A6FF        ;
 *$A57A CP $08          ;
@@ -3887,7 +3889,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A708 JR NZ,$A728     ;
  $A70A LD HL,$6D8D     ;
  $A70D ADD HL,DE       ;
- $A70E LD DE,$D432     ; !!MUT-ARG!!
+ $A70E LD DE,$D432     ; !!MUT-ARG!! current Ninja sprite address
  $A711 LD B,$07        ;
 *$A713 LD C,$06        ;
 *$A715 LD A,(DE)       ;
@@ -4896,31 +4898,31 @@ c$B30F PUSH AF       ;
  $B31E POP AF        ;
  $B31F RET           ;
 
-; Routine at B320
+; ?? Object procedure
 c$B320 LD A,($9756)  ;
  $B323 XOR $06       ;
  $B325 LD ($9756),A  ;
  $B328 JR $B350      ;
 
-; Routine at B32A
+; ?? Object procedure
 c$B32A LD A,($97D0)  ;
  $B32D XOR $FF       ;
  $B32F LD ($97D0),A  ;
  $B332 JR $B350      ;
 
-; Routine at B334
+; ?? Object procedure
 c$B334 LD A,($8DBC)  ;
  $B337 XOR $06       ;
  $B339 LD ($8DBC),A  ;
  $B33C JR $B350      ;
 
-; Routine at B33E
+; ?? Object procedure
 c$B33E LD A,($8F32)  ;
  $B341 XOR $08       ;
  $B343 LD ($8F32),A  ;
  $B346 JR $B350      ;
 
-; Routine at B348
+; ?? Object procedure
 c$B348 LD A,($7F7B)  ;
  $B34B XOR $09       ;
  $B34D LD ($7F7B),A  ;
@@ -4940,7 +4942,7 @@ c$B348 LD A,($7F7B)  ;
  $B363 JR NZ,$B358   ;
  $B365 JP $B8D0      ;
 
-; Room 97A6 initialization
+; Room #R$97A6 initialization
 c$B368 LD A,($97D0)  ;
  $B36B LD ($66F5),A  ;
  $B36E JP $A18D      ;
@@ -5057,19 +5059,19 @@ c$B41F JP $B937      ;
 ; Standard room initialization (for 60 rooms)
 ;
 ; Used by the routines at #R$A0DF, #R$A1AF, #R$A353 and #R$F973.
-c$B422 JP $B724      ;
+c$B422 JP $B724      ; => Finish room initialization
 
 ; Rooms 7C9C/92EF initialization (redirect from #R$791B)
 ;
 ; Used by the routine at #R$791B.
 c$B425 LD HL,$C66B   ; Guard data address
  $B428 CALL $B40A    ; Initialize a guard
- $B42B JP $B724      ;
+ $B42B JP $B724      ; => Finish room initialization
 
-; Room 79C6 initialization
+; Room #R$79C6 initialization
 c$B42E LD HL,$71D6   ; Dog data address
  $B431 CALL $9DCD    ; Initialize a dog
- $B434 JP $B724      ;
+ $B434 JP $B724      ; => Finish room initialization
 
 ; Data block at B437
 b$B437 DEFB $21,$D6,$71,$CD,$CD,$9D,$21,$6B
@@ -5261,7 +5263,7 @@ c$B532 LD HL,($9C42) ;
  $B582 LD HL,$70E3   ;
  $B585 LD (HL),$FF   ;
  $B587 LD DE,$D5AC   ;
- $B58A LD HL,$C4F6   ;
+ $B58A LD HL,$C4F6   ; Movement handler address
  $B58D LD A,$04      ;
  $B58F LD ($7343),A  ;
  $B592 JP $BFB0      ;
@@ -5319,8 +5321,8 @@ c$B5C7 CALL $AC44    ;
  $B5D1 LD ($E345),HL ;
  $B5D4 LD HL,$BC3B   ;
  $B5D7 LD ($DFD2),HL ;
- $B5DA LD A,$C5      ;
- $B5DC LD ($9DD9),A  ;
+ $B5DA LD A,$C5      ; command = $C5 PUSH BC
+ $B5DC LD ($9DD9),A  ; set command = PUSH BC = enable Energy decrease
  $B5DF LD HL,$BEAA   ;
  $B5E2 LD ($9DED),HL ;
  $B5E5 LD HL,$B8D0   ;
@@ -5486,9 +5488,13 @@ w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
  $B722 DEFW $734D    ; #14: Put one tile at the given address; params: 3 bytes
                      ; (tile, address)
 
-; Routine at B724
+; Room initialization
 ;
 ; Used by the routines at #R$B422, #R$B425, #R$B42E, #R$C64C and #R$C681.
+;
+; .
+;
+; Called to finish room initialization from room initialization procedure
 c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B727 LD (HL),$01   ; Filler = $01 = "need update" mark
  $B729 LD BC,$01FD   ; 510 - 1
@@ -5570,8 +5576,8 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B7C2 LD DE,$50D6   ;
  $B7C5 LD C,$04      ;
  $B7C7 CALL $AED1    ; Print string "BOMB"
- $B7CA LD HL,$3939   ; "99"
- $B7CD LD ($AD57),HL ;
+ $B7CA LD HL,$3939   ; !!MUT-ARG!! "99"
+ $B7CD LD ($AD57),HL ; set Indicator Time value
  $B7D0 LD A,$01      ;
  $B7D2 LD ($B5C4),A  ;
  $B7D5 LD HL,$5A76   ;
@@ -5638,7 +5644,7 @@ c$B83C LD A,($749D)  ;
  $B841 LD ($749D),A  ;
  $B844 RET NC        ;
  $B845 LD HL,$749C   ;
- $B848 INC (HL)      ;
+ $B848 INC (HL)      ; increase Energy
  $B849 RET           ;
 
 ; Data block at B84A
@@ -5721,7 +5727,7 @@ c$B889 INC DE        ;
  $B8CA LD ($A39E),A  ;
  $B8CD JP $BEB3      ; !!MUT-ARG!! => run handler
 
-; Routine at B8D0
+; ?? Object procedure
 ;
 ; Used by the routines at #R$B348, #R$B532, #R$BBD4, #R$BC55, #R$BE0D, #R$BFB0,
 ; #R$C094, #R$C13D, #R$C1B6, #R$C24B, #R$C339, #R$C3D9, #R$C4A7, #R$C4DE,
@@ -5885,7 +5891,7 @@ c$B937 LD IX,$A39F   ;
  $BA08 CP $C8        ;
  $BA0A JR NC,$BA14   ;
  $BA0C LD B,$14      ;
- $BA0E CALL $9DD9    ;
+ $BA0E CALL $9DD9    ; Decrease Energy by B
  $BA11 JP $BAD5      ;
 *$BA14 LD A,(IX+$00) ;
  $BA17 LD (HL),A     ;
@@ -6125,7 +6131,7 @@ c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
  $BBD1 DJNZ $BBC9    ;
  $BBD3 RET           ;
 
-; Routine at BBD4
+; ?? Movement handler
 c$BBD4 CALL $BBDF    ; Read Input
  $BBD7 BIT 4,A       ; check FIRE bit
  $BBD9 JP NZ,$B8D0   ;
@@ -6173,7 +6179,7 @@ c$BBDF PUSH HL       ;
 ; .
 ;
 ; Prepare screen background for title picture
-c$BC0D LD SP,$6257   ;
+c$BC0D LD SP,$6257   ; !!MUT-ARG!!
  $BC10 EXX           ;
  $BC11 POP HL        ;
  $BC12 EXX           ;
@@ -6212,7 +6218,7 @@ c$BC0D LD SP,$6257   ;
  $BC50 DJNZ $BC4D    ;
  $BC52 JP $DF37      ;
 
-; Routine at BC55
+; ?? Movement handler
 c$BC55 LD HL,$B5C5   ;
  $BC58 DEC (HL)      ;
  $BC59 JR NZ,$BC76   ;
@@ -6225,7 +6231,7 @@ c$BC55 LD HL,$B5C5   ;
  $BC69 JR Z,$BC76    ;
 *$BC6B CALL $B83C    ;
  $BC6E LD B,$01      ;
- $BC70 CALL $9DD9    ;
+ $BC70 CALL $9DD9    ; Decrease Energy by B
  $BC73 CALL $B83C    ;
 *$BC76 LD HL,$B2FD   ;
  $BC79 INC (HL)      ;
@@ -6409,7 +6415,7 @@ c$BDB2 LD HL,($9C42) ; get Ninja position in tilemap
  $BDCC CALL $B596    ;
  $BDCF LD B,$05      ;
  $BDD1 CALL $B4DE    ;
-*$BDD4 LD HL,$BBD4   ;
+*$BDD4 LD HL,$BBD4   ; Movement handler address
  $BDD7 LD DE,$D504   ;
  $BDDA JP $BFB0      ;
 
@@ -6435,7 +6441,7 @@ c$BDDD BIT 3,A       ;
  $BE07 LD DE,$D486   ;
  $BE0A JP $BFB0      ;
 
-; Routine at BE0D
+; ?? Movement handler
 c$BE0D LD HL,$65B1   ;
  $BE10 LD A,$01      ;
  $BE12 LD (HL),A     ;
@@ -6480,13 +6486,13 @@ c$BE5A LD HL,$BE63   ;
  $BE5D LD DE,$D558   ;
  $BE60 JP $BFB0      ;
 
-; ?? (B8CE handler)
+; ?? Movement handler (B8CE handler)
 ;
 ; Used by the routine at #R$BE71.
-c$BE63 LD A,$C9      ;
- $BE65 LD ($9DD9),A  ;
+c$BE63 LD A,$C9      ; command = $C9 RET
+ $BE65 LD ($9DD9),A  ; set command = RET = disable Energy decrease
  $BE68 LD HL,$BEB3   ;
- $BE6B LD DE,$A0B5   ;
+ $BE6B LD DE,$A0B5   ; Sprite Ninja dead
  $BE6E JP $BFB0      ;
 
 ; Time is out
@@ -6522,7 +6528,7 @@ c$BE71 LD A,($B5C6)  ;
  $BEA6 XOR A         ;
  $BEA7 OUT ($FE),A   ;
  $BEA9 PUSH HL       ;
-; This entry point is used by the routine at #R$9DDA.
+; Saboteur is dead
 *$BEAA POP HL        ;
  $BEAB LD HL,$BF58   ; "SABOTEUR DEAD" / "MISSION FAILURE"
  $BEAE LD ($BEB4),HL ;
@@ -6563,7 +6569,7 @@ c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
  $BEE9 LD ($BEDF),A  ;
  $BEEC JP $BC0D      ; => Title picture and music, then go to Main menu
 
-; Message at BEEF
+; Game over two-line messages
 t$BEEF DEFM "     SEPUKU    "
  $BEFE DEFM "  MISSION ABORTED   "
  $BF12 DEFM "     ESCAPE    "
@@ -6604,7 +6610,7 @@ c$BF7B LD HL,$6592   ;
 ;
 ; Used by the routines at #R$B532, #R$BD37, #R$BDB2, #R$BDDD, #R$BE0D, #R$BE5A,
 ; #R$BE63, #R$BFBA, #R$C13D, #R$C1B6, #R$C339, #R$C3BB, #R$C4A7, #R$C4E8,
-; #R$C4F6, #R$C50D and #R$C643.
+; #R$C4F6, #R$C50D and #R$C649.
 c$BFB0 LD ($B8CE),HL ;
  $BFB3 LD ($7186),DE ;
  $BFB7 JP $B8D0      ;
@@ -6862,7 +6868,7 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C229 LD DE,$D486   ;
  $C22C JP $BFB0      ;
 
-; ?? (B8CE handler)
+; ?? Movement handler (B8CE handler)
 c$C22F CALL $BBDF    ; Read Input
  $C232 BIT 2,A       ; check DOWN bit
  $C234 JR NZ,$C239   ;
@@ -6873,10 +6879,10 @@ c$C22F CALL $BBDF    ; Read Input
  $C240 LD A,$0C      ;
  $C242 CP (HL)       ;
  $C243 LD B,$02      ;
- $C245 CALL Z,$9DD9  ;
+ $C245 CALL Z,$9DD9  ; => Decrease Energy by B
  $C248 JP $C16E      ;
 
-; ?? (B8CE handler)
+; ?? Movement handler (B8CE handler)
 c$C24B LD A,($9C41)  ; get Ninja X
  $C24E CP $00        ;
  $C250 JP Z,$C319    ; => Going to room at Left
@@ -7092,7 +7098,7 @@ c$C3CF LD HL,$9C41   ; Ninja X address
  $C3D6 INC HL        ; move one tile right
  $C3D7 JR $C3C3      ;
 
-; Process movement ?? (B8CE handler)
+; ?? Movement handler (B8CE handler)
 c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C3DC LD DE,$6647   ;
  $C3DF ADD HL,DE     ;
@@ -7204,11 +7210,11 @@ c$C498 LD HL,$9C40   ; Ninja Y address
 ; Routine at C4A4
 c$C4A4 LD A,($7239)  ;
 
-; Routine at C4A7
+; ?? Movement handler
 c$C4A7 LD HL,$7343   ;
  $C4AA DEC (HL)      ;
  $C4AB JP NZ,$B8D0   ;
- $C4AE LD HL,($9C42) ; get Ninja position in tilemap
+ $C4AE LD HL,($9C42) ; get Ninja position in tilema
  $C4B1 LD DE,$6DC9   ;
  $C4B4 LD A,($7239)  ;
  $C4B7 CP $01        ;
@@ -7224,13 +7230,13 @@ c$C4A7 LD HL,$7343   ;
  $C4CB LD B,$05      ;
  $C4CD CALL $B4DE    ;
 ; This entry point is used by the routine at #R$C339.
-*$C4D0 LD HL,$C4DE   ;
+*$C4D0 LD HL,$C4DE   ; Movement handler address
  $C4D3 LD DE,$D4B0   ;
  $C4D6 LD A,$01      ;
  $C4D8 LD ($7343),A  ;
  $C4DB JP $BFB0      ;
 
-; Routine at C4DE
+; ?? Movement handler
 c$C4DE LD HL,$7343   ;
  $C4E1 DEC (HL)      ;
  $C4E2 JP NZ,$B8D0   ;
@@ -7242,17 +7248,17 @@ c$C4DE LD HL,$7343   ;
 c$C4E8 CALL $C57B    ;
  $C4EB RET NZ        ;
  $C4EC POP HL        ;
- $C4ED LD HL,$C4F6   ;
+ $C4ED LD HL,$C4F6   ; Movement handler address
  $C4F0 LD DE,$D5AC   ;
  $C4F3 JP $BFB0      ;
 
-; Routine at C4F6
+; Movement handler (used in initial room)
 c$C4F6 CALL $C57B    ;
  $C4F9 JP Z,$C504    ;
  $C4FC LD B,$03      ;
- $C4FE CALL $9DD9    ;
+ $C4FE CALL $9DD9    ; Decrease Energy by B
  $C501 JP $C226      ;
-*$C504 LD HL,$C50D   ;
+*$C504 LD HL,$C50D   ; Movement handler address
  $C507 LD DE,$D5D6   ;
  $C50A JP $BFB0      ;
 
@@ -7275,7 +7281,7 @@ c$C50D LD A,($7239)  ;
  $C52E JP NZ,$C16E   ;
  $C531 JR $C538      ;
 *$C533 LD B,$04      ;
- $C535 CALL $9DD9    ;
+ $C535 CALL $9DD9    ; Decrease Energy by B
 *$C538 LD DE,$660A   ;
  $C53B LD B,$03      ;
 *$C53D LD HL,($9C42) ; get Ninja position in tilemap
@@ -7299,7 +7305,7 @@ c$C50D LD A,($7239)  ;
  $C55F ADD HL,DE     ;
  $C560 EX DE,HL      ;
  $C561 DJNZ $C53D    ;
- $C563 LD HL,$C5A0   ;
+ $C563 LD HL,$C5A0   ; Movement handler address
  $C566 LD DE,$D5AC   ;
  $C569 JP $BFB0      ;
 *$C56C CP $18        ;
@@ -7363,7 +7369,7 @@ c$C5A3 LD HL,($9C42) ; get Ninja position in tilemap
  $C5C4 CP C          ;
  $C5C5 RET           ;
 
-; Routine at C5C6
+; ?? Movement handler
 c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5C9 LD DE,$001E   ;
  $C5CC ADD HL,DE     ;
@@ -7389,7 +7395,7 @@ c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5F3 LD HL,$755B   ;
  $C5F6 LD B,(HL)     ;
  $C5F7 LD (HL),$00   ;
- $C5F9 CALL $9DD9    ;
+ $C5F9 CALL $9DD9    ; Decrease Energy by B
  $C5FC LD B,$32      ;
  $C5FE CALL $B59E    ;
  $C601 JP $BFCC      ;
@@ -7437,14 +7443,16 @@ c$C623 LD A,$0A      ;
 ; Used by the routines at #R$BC55, #R$C1B6 and #R$C24B.
 c$C643 LD HL,$C5C6   ;
  $C646 LD DE,$D582   ;
- $C649 JP $BFB0      ;
 
-; Room 791E initialization
+; Routine at C649
+c$C649 JP $BFB0      ;
+
+; Room #R$791E (room with pier) initialization
 c$C64C LD HL,$C65A   ;
  $C64F LD DE,$666C   ;
  $C652 LD BC,$0011   ;
  $C655 LDIR          ;
- $C657 JP $B724      ;
+ $C657 JP $B724      ; => Finish room initialization
 
 ; Data block at C65A
 b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
@@ -7454,7 +7462,7 @@ b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
 ; Data block at C66B
 b$C66B DEFB $0E,$00,$0E,$00,$04,$00
 
-; Room 93DF/947C initialization
+; Room #R$93DF/#R$947C (room right from vagon) initialization
 c$C671 LD HL,$947C   ;
  $C674 LD ($7CA0),HL ;
  $C677 LD HL,$93DF   ;
@@ -7462,7 +7470,7 @@ c$C671 LD HL,$947C   ;
  $C67D LD A,$6C      ;
  $C67F JR $C68F      ;
 
-; Room 982B initialization
+; Room #R$982B initialization
 c$C681 LD HL,$9A1E   ;
  $C684 LD ($7CA0),HL ;
  $C687 LD HL,$982B   ;
@@ -7919,79 +7927,114 @@ b$D210 DEFB $04,$CE,$09,$63,$09,$63,$09,$63
  $D250 DEFB $04,$CE,$04,$CE,$04,$CE
 
 ; Table ?? objects, 35 records, 7-byte records
-b$D256 DEFW $6F02
- $D258 DEFB $58,$04,$CE,$00,$00
- $D25D DEFW $6664
- $D25F DEFB $7C,$09,$63,$20,$B3
- $D264 DEFW $6664
- $D266 DEFB $7D,$09,$63,$2A,$B3
- $D26B DEFW $6664
- $D26D DEFB $7E,$09,$63,$48,$B3
- $D272 DEFW $6664
- $D274 DEFB $7F,$09,$63,$34,$B3
- $D279 DEFW $6664
- $D27B DEFB $80,$09,$63,$3E,$B3
- $D280 DEFW $6FE2
- $D282 DEFB $1F,$09,$63,$D0,$B8
- $D287 DEFW $6669
- $D289 DEFB $9C,$09,$D4,$00,$00
- $D28E DEFW $659B
- $D290 DEFB $9A,$05,$D0,$00,$00
- $D295 DEFW $6750
- $D297 DEFB $38,$05,$D0,$00,$00
- $D29C DEFW $6664
- $D29E DEFB $81,$05,$D0,$00,$00
- $D2A3 DEFW $6664
- $D2A5 DEFB $65,$06,$D2,$00,$00
- $D2AA DEFW $6664
- $D2AC DEFB $66,$08,$D6,$00,$00
- $D2B1 DEFW $6664
- $D2B3 DEFB $67,$02,$CA,$00,$00
- $D2B8 DEFW $6664
- $D2BA DEFB $68,$03,$CC,$00,$00
- $D2BF DEFW $6664
- $D2C1 DEFB $69,$05,$D0,$00,$00
- $D2C6 DEFW $6664
- $D2C8 DEFB $6A,$05,$D0,$00,$00
- $D2CD DEFW $6664
- $D2CF DEFB $6B,$05,$D0,$00,$00
- $D2D4 DEFW $6664
- $D2D6 DEFB $6C,$03,$CC,$00,$00
- $D2DB DEFW $6664
- $D2DD DEFB $6D,$02,$CA,$00,$00
- $D2E2 DEFW $6664
- $D2E4 DEFB $6D,$02,$CA,$00,$00
- $D2E9 DEFW $6664
- $D2EB DEFB $6E,$03,$CC,$00,$00
- $D2F0 DEFW $6664
- $D2F2 DEFB $6F,$02,$CA,$00,$00
- $D2F7 DEFW $6664
- $D2F9 DEFB $70,$06,$D2,$00,$00
- $D2FE DEFW $6664
- $D300 DEFB $71,$02,$CA,$00,$00
- $D305 DEFW $6664
- $D307 DEFB $72,$06,$D2,$00,$00
- $D30C DEFW $6664
- $D30E DEFB $73,$02,$CA,$00,$00
- $D313 DEFW $6664
- $D315 DEFB $74,$03,$CC,$00,$00
- $D31A DEFW $6664
- $D31C DEFB $75,$03,$CC,$00,$00
- $D321 DEFW $6664
- $D323 DEFB $76,$03,$CC,$00,$00
- $D328 DEFW $6664
- $D32A DEFB $77,$04,$CE,$00,$00
- $D32F DEFW $6664
- $D331 DEFB $78,$04,$CE,$00,$00
- $D336 DEFW $6664
- $D338 DEFB $79,$04,$CE,$00,$00
- $D33D DEFW $6664
- $D33F DEFB $7A,$04,$CE,$00,$00
- $D344 DEFW $6664
- $D346 DEFB $7B,$04,$CE,$00,$00
+b$D256 DEFW $6F02       ; Object ?? 00
+ $D258 DEFB $58,$04,$CE
+ $D25B DEFW $0000
+ $D25D DEFW $6664       ; Object ?? 01
+ $D25F DEFB $7C,$09,$63
+ $D262 DEFW $B320
+ $D264 DEFW $6664       ; Object ?? 02
+ $D266 DEFB $7D,$09,$63
+ $D269 DEFW $B32A
+ $D26B DEFW $6664       ; Object ?? 03
+ $D26D DEFB $7E,$09,$63
+ $D270 DEFW $B348
+ $D272 DEFW $6664       ; Object ?? 04
+ $D274 DEFB $7F,$09,$63
+ $D277 DEFW $B334
+ $D279 DEFW $6664       ; Object ?? 05
+ $D27B DEFB $80,$09,$63
+ $D27E DEFW $B33E
+ $D280 DEFW $6FE2       ; Object ?? 06
+ $D282 DEFB $1F,$09,$63
+ $D285 DEFW $B8D0
+ $D287 DEFW $6669       ; Object ?? 07
+ $D289 DEFB $9C,$09,$D4
+ $D28C DEFW $0000
+ $D28E DEFW $659B       ; Object ?? 08
+ $D290 DEFB $9A,$05,$D0
+ $D293 DEFW $0000
+ $D295 DEFW $6750       ; Object ?? 09
+ $D297 DEFB $38,$05,$D0
+ $D29A DEFW $0000
+ $D29C DEFW $6664       ; Object ?? 10
+ $D29E DEFB $81,$05,$D0
+ $D2A1 DEFW $0000
+ $D2A3 DEFW $6664       ; Object ?? 11
+ $D2A5 DEFB $65,$06,$D2
+ $D2A8 DEFW $0000
+ $D2AA DEFW $6664       ; Object ?? 12
+ $D2AC DEFB $66,$08,$D6
+ $D2AF DEFW $0000
+ $D2B1 DEFW $6664       ; Object ?? 13
+ $D2B3 DEFB $67,$02,$CA
+ $D2B6 DEFW $0000
+ $D2B8 DEFW $6664       ; Object ?? 14
+ $D2BA DEFB $68,$03,$CC
+ $D2BD DEFW $0000
+ $D2BF DEFW $6664       ; Object ?? 15
+ $D2C1 DEFB $69,$05,$D0
+ $D2C4 DEFW $0000
+ $D2C6 DEFW $6664       ; Object ?? 16
+ $D2C8 DEFB $6A,$05,$D0
+ $D2CB DEFW $0000
+ $D2CD DEFW $6664       ; Object ?? 17
+ $D2CF DEFB $6B,$05,$D0
+ $D2D2 DEFW $0000
+ $D2D4 DEFW $6664       ; Object ?? 18
+ $D2D6 DEFB $6C,$03,$CC
+ $D2D9 DEFW $0000
+ $D2DB DEFW $6664       ; Object ?? 19
+ $D2DD DEFB $6D,$02,$CA
+ $D2E0 DEFW $0000
+ $D2E2 DEFW $6664       ; Object ?? 20
+ $D2E4 DEFB $6D,$02,$CA
+ $D2E7 DEFW $0000
+ $D2E9 DEFW $6664       ; Object ?? 21
+ $D2EB DEFB $6E,$03,$CC
+ $D2EE DEFW $0000
+ $D2F0 DEFW $6664       ; Object ?? 22
+ $D2F2 DEFB $6F,$02,$CA
+ $D2F5 DEFW $0000
+ $D2F7 DEFW $6664       ; Object ?? 23
+ $D2F9 DEFB $70,$06,$D2
+ $D2FC DEFW $0000
+ $D2FE DEFW $6664       ; Object ?? 24
+ $D300 DEFB $71,$02,$CA
+ $D303 DEFW $0000
+ $D305 DEFW $6664       ; Object ?? 25
+ $D307 DEFB $72,$06,$D2
+ $D30A DEFW $0000
+ $D30C DEFW $6664       ; Object ?? 26
+ $D30E DEFB $73,$02,$CA
+ $D311 DEFW $0000
+ $D313 DEFW $6664       ; Object ?? 27
+ $D315 DEFB $74,$03,$CC
+ $D318 DEFW $0000
+ $D31A DEFW $6664       ; Object ?? 28
+ $D31C DEFB $75,$03,$CC
+ $D31F DEFW $0000
+ $D321 DEFW $6664       ; Object ?? 29
+ $D323 DEFB $76,$03,$CC
+ $D326 DEFW $0000
+ $D328 DEFW $6664       ; Object ?? 30
+ $D32A DEFB $77,$04,$CE
+ $D32D DEFW $0000
+ $D32F DEFW $6664       ; Object ?? 31
+ $D331 DEFB $78,$04,$CE
+ $D334 DEFW $0000
+ $D336 DEFW $6664       ; Object ?? 32
+ $D338 DEFB $79,$04,$CE
+ $D33B DEFW $0000
+ $D33D DEFW $6664       ; Object ?? 33
+ $D33F DEFB $7A,$04,$CE
+ $D342 DEFW $0000
+ $D344 DEFW $6664       ; Object ?? 34
+ $D346 DEFB $7B,$04,$CE
+ $D349 DEFB $00,$00
 
 ; Data block at D34B
-b$D34B DEFB $64,$66
+b$D34B DEFW $6664
 
 ; Table of objects, 35 records, 5 bytes each
 b$D34D DEFW $9ED9,$66DF
@@ -8050,446 +8093,396 @@ b$D34D DEFW $9ED9,$66DF
  $D3D3 DEFB $7E
  $D3D4 DEFW $92EF,$6668
  $D3D8 DEFB $7F
- $D3D9 DEFW $9005,$66B5
+ $D3D9 DEFW $9005,$66B5 ; #29
  $D3DD DEFB $80
- $D3DE DEFW $FFFF,$FFFF ; #30
- $D3E2 DEFB $FF
- $D3E3 DEFW $FFFF,$FFFF
- $D3E7 DEFB $FF
- $D3E8 DEFW $FFFF,$FFFF
- $D3EC DEFB $4F
- $D3ED DEFW $5150,$FFFF
- $D3F1 DEFB $FF
- $D3F2 DEFW $5352,$FF54
- $D3F6 DEFB $FF
- $D3F7 DEFW $55FF,$5756 ; #35
- $D3FB DEFB $FF
 
-; Data block at D3FC
-b$D3FC DEFB $FF,$FF,$58,$59,$FF,$FF,$FF,$5A
- $D404 DEFB $5B,$5C,$FF,$FF,$FF,$FF,$FF,$FF
- $D40C DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D414 DEFB $FF,$FF,$4F,$50,$51,$FF,$FF,$FF
+; Sprite Ninja walking 1
+b$D3DE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d3de.png"
+ $D3E4 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $D3EA DEFB $FF,$FF,$4F,$50,$51,$FF ;
+ $D3F0 DEFB $FF,$FF,$52,$53,$54,$FF ;
+ $D3F6 DEFB $FF,$FF,$55,$56,$57,$FF ;
+ $D3FC DEFB $FF,$FF,$58,$59,$FF,$FF ;
+ $D402 DEFB $FF,$5A,$5B,$5C,$FF,$FF ; }
 
-; Message at D41C
-t$D41C DEFM "RST"
+; Sprite Ninja walking 2
+b$D408 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d408.png"
+ $D40E DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $D414 DEFB $FF,$FF,$4F,$50,$51,$FF ;
+ $D41A DEFB $FF,$FF,$52,$53,$54,$FF ;
+ $D420 DEFB $FF,$FF,$55,$5E,$5F,$FF ;
+ $D426 DEFB $FF,$FF,$60,$61,$62,$FF ;
+ $D42C DEFB $FF,$FF,$63,$64,$FF,$FF ; }
 
-; Data block at D41F
-b$D41F DEFB $FF,$FF,$FF,$55,$5E,$5F,$FF,$FF
- $D427 DEFB $FF,$60,$61,$62,$FF,$FF,$FF,$63
- $D42F DEFB $64,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D437 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D43F DEFB $FF
+; Sprite Ninja walking 3
+b$D432 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d432.png"
+ $D438 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $D43E DEFB $FF,$FF,$4F,$50,$51,$FF ;
+ $D444 DEFB $FF,$FF,$52,$53,$54,$FF ;
+ $D44A DEFB $FF,$FF,$5D,$65,$66,$FF ;
+ $D450 DEFB $FF,$FF,$67,$68,$69,$FF ;
+ $D456 DEFB $FF,$6A,$6B,$6C,$FF,$FF ; }
 
-; Message at D440
-t$D440 DEFM "OPQ"
+; Sprite Ninja walking 4
+b$D45C DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d45c.png"
+ $D462 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $D468 DEFB $FF,$FF,$4F,$50,$51,$FF ;
+ $D46E DEFB $FF,$FF,$52,$53,$54,$FF ;
+ $D474 DEFB $FF,$FF,$5D,$6D,$57,$FF ;
+ $D47A DEFB $FF,$6F,$70,$71,$72,$FF ;
+ $D480 DEFB $FF,$73,$74,$FF,$75,$FF ; }
 
-; Data block at D443
-b$D443 DEFB $FF,$FF,$FF
+; Sprite Ninja standing
+b$D486 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d486.png"
+ $D48C DEFB $FF,$FF,$F4,$F5,$FF,$FF ; />]
+ $D492 DEFB $FF,$02,$03,$F6,$FF,$FF ;
+ $D498 DEFB $FF,$05,$06,$07,$08,$FF ;
+ $D49E DEFB $FF,$0A,$0B,$0C,$0D,$FF ;
+ $D4A4 DEFB $FF,$FF,$0E,$0F,$10,$FF ;
+ $D4AA DEFB $FF,$FF,$11,$FF,$12,$FF ; }
 
-; Message at D446
-t$D446 DEFM "RST"
+; Sprite Ninja jumping 1
+b$D4B0 DEFB $FF,$FF,$13,$14,$FF,$FF ; {#HTML[<img src="images/sprite-d4b0.png"
+ $D4B6 DEFB $FF,$15,$16,$17,$FF,$FF ; />]
+ $D4BC DEFB $FF,$18,$19,$1A,$FF,$FF ;
+ $D4C2 DEFB $FF,$1B,$1C,$1D,$FF,$FF ;
+ $D4C8 DEFB $FF,$FF,$1E,$1F,$FF,$FF ;
+ $D4CE DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $D4D4 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; }
 
-; Data block at D449
-b$D449 DEFB $FF,$FF,$FF
+; Sprite Ninja jumping 2
+b$D4DA DEFB $FF,$FF,$20,$21,$FF,$FF ; {#HTML[<img src="images/sprite-d4da.png"
+ $D4E0 DEFB $4D,$22,$23,$FF,$FF,$FF ; />]
+ $D4E6 DEFB $4E,$24,$25,$26,$27,$2C ;
+ $D4EC DEFB $FF,$28,$29,$2A,$2B,$FF ;
+ $D4F2 DEFB $FF,$FF,$2D,$2E,$FF,$FF ;
+ $D4F8 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $D4FE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; }
 
-; Message at D44C
-t$D44C DEFM "]ef"
+; Sprite Ninja syanding hit
+b$D504 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d504.png"
+ $D50A DEFB $FF,$FF,$00,$01,$FF,$FF ; />]
+ $D510 DEFB $FF,$FF,$2F,$30,$31,$FF ;
+ $D516 DEFB $FF,$FF,$32,$33,$34,$FF ;
+ $D51C DEFB $FF,$FF,$35,$0C,$0D,$FF ;
+ $D522 DEFB $FF,$FF,$0E,$0F,$10,$FF ;
+ $D528 DEFB $FF,$FF,$11,$FF,$12,$FF ; }
 
-; Data block at D44F
-b$D44F DEFB $FF,$FF,$FF
+; Sprite Ninja on ladder
+b$D52E DEFB $FF,$FF,$40,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d52E.png"
+ $D534 DEFB $FF,$FF,$41,$42,$FF,$FF ; />]
+ $D53A DEFB $FF,$FF,$43,$44,$FF,$FF ;
+ $D540 DEFB $FF,$FF,$45,$46,$FF,$FF ;
+ $D546 DEFB $FF,$FF,$47,$48,$FF,$FF ;
+ $D54C DEFB $FF,$FF,$49,$4A,$FF,$FF ;
+ $D552 DEFB $FF,$FF,$4B,$4C,$FF,$FF ; }
 
-; Message at D452
-t$D452 DEFM "ghi"
+; Sprite Ninja sitting
+b$D558 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d558.png"
+ $D55E DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
+ $D564 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $D56A DEFB $FF,$FF,$FF,$36,$FF,$FF ;
+ $D570 DEFB $FF,$FF,$37,$38,$39,$FF ;
+ $D576 DEFB $FF,$FF,$3A,$3B,$3C,$FF ;
+ $D57C DEFB $FF,$FF,$3D,$3E,$3F,$FF ; }
 
-; Data block at D455
-b$D455 DEFB $FF,$FF
+; Sprite Ninja falling
+b$D582 DEFB $FF,$FF,$6E,$7C,$FF,$FF ; {#HTML[<img src="images/sprite-d582.png"
+ $D588 DEFB $FF,$FF,$7D,$7E,$FF,$FF ; />]
+ $D58E DEFB $FF,$FF,$7F,$80,$FF,$FF ;
+ $D594 DEFB $FF,$FF,$81,$82,$FF,$FF ;
+ $D59A DEFB $FF,$FF,$76,$77,$FF,$FF ;
+ $D5A0 DEFB $FF,$FF,$78,$79,$FF,$FF ;
+ $D5A6 DEFB $FF,$FF,$7A,$7B,$FF,$FF ; }
 
-; Message at D457
-t$D457 DEFM "jkl"
+; Sprite Ninja jumping 3
+b$D5AC DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d5ac.png"
+ $D5B2 DEFB $FF,$FF,$8D,$8E,$FF,$FF ; />]
+ $D5B8 DEFB $FF,$8F,$90,$91,$92,$FF ;
+ $D5BE DEFB $FF,$93,$94,$95,$96,$FF ;
+ $D5C4 DEFB $FF,$97,$98,$99,$9A,$FF ;
+ $D5CA DEFB $FF,$9B,$9C,$9D,$FF,$FF ;
+ $D5D0 DEFB $FF,$9E,$FF,$FF,$FF,$FF ; }
 
-; Data block at D45A
-b$D45A DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D462 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+; Sprite Ninja jumping 4
+b$D5D6 DEFB $FF,$FF,$84,$88,$FF,$FF ; {#HTML[<img src="images/sprite-d5d6.png"
+ $D5DC DEFB $FF,$8C,$85,$89,$FF,$FF ; />]
+ $D5E2 DEFB $FF,$83,$86,$8A,$FF,$FF ;
+ $D5E8 DEFB $FF,$FF,$87,$8B,$FF,$FF ;
+ $D5EE DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $D5F4 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
+ $D5FA DEFB $FF,$FF,$FF,$FF,$FF,$FF ; }
 
-; Message at D46A
-t$D46A DEFM "OPQ"
-
-; Data block at D46D
-b$D46D DEFB $FF,$FF,$FF
-
-; Message at D470
-t$D470 DEFM "RST"
-
-; Data block at D473
-b$D473 DEFB $FF,$FF,$FF
-
-; Message at D476
-t$D476 DEFM "]mW"
-
-; Data block at D479
-b$D479 DEFB $FF,$FF
-
-; Message at D47B
-t$D47B DEFM "opqr"
-
-; Data block at D47F
-b$D47F DEFB $FF,$FF,$73,$74,$FF,$75,$FF,$FF
- $D487 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$F4
- $D48F DEFB $F5,$FF,$FF,$FF,$02,$03,$F6,$FF
- $D497 DEFB $FF,$FF,$05,$06,$07,$08,$FF,$FF
- $D49F DEFB $0A,$0B,$0C,$0D,$FF,$FF,$FF,$0E
- $D4A7 DEFB $0F,$10,$FF,$FF,$FF,$11,$FF,$12
- $D4AF DEFB $FF,$FF,$FF,$13,$14,$FF,$FF,$FF
- $D4B7 DEFB $15,$16,$17,$FF,$FF,$FF,$18,$19
- $D4BF DEFB $1A,$FF,$FF,$FF,$1B,$1C,$1D,$FF
- $D4C7 DEFB $FF,$FF,$FF,$1E,$1F,$FF,$FF,$FF
- $D4CF DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D4D7 DEFB $FF,$FF,$FF,$FF,$FF,$20,$21,$FF
- $D4DF DEFB $FF,$4D,$22,$23,$FF,$FF,$FF
-
-; Message at D4E6
-t$D4E6 DEFM "N$%&',"
-
-; Data block at D4EC
-b$D4EC DEFB $FF
-
-; Message at D4ED
-t$D4ED DEFM "()*+"
-
-; Data block at D4F1
-b$D4F1 DEFB $FF,$FF,$FF,$2D,$2E,$FF,$FF,$FF
- $D4F9 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D501 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D509 DEFB $FF,$FF,$FF,$00,$01,$FF,$FF,$FF
- $D511 DEFB $FF
-
-; Message at D512
-t$D512 DEFM "/01"
-
-; Data block at D515
-b$D515 DEFB $FF,$FF,$FF
-
-; Message at D518
-t$D518 DEFM "234"
-
-; Data block at D51B
-b$D51B DEFB $FF,$FF,$FF,$35,$0C,$0D,$FF,$FF
- $D523 DEFB $FF,$0E,$0F,$10,$FF,$FF,$FF,$11
- $D52B DEFB $FF,$12,$FF,$FF,$FF,$40,$FF,$FF
- $D533 DEFB $FF,$FF,$FF,$41,$42,$FF,$FF,$FF
- $D53B DEFB $FF,$43,$44,$FF,$FF,$FF,$FF,$45
- $D543 DEFB $46,$FF,$FF,$FF,$FF,$47,$48,$FF
- $D54B DEFB $FF,$FF,$FF,$49,$4A,$FF,$FF,$FF
- $D553 DEFB $FF,$4B,$4C,$FF,$FF
-
-; Data block at D558
-b$D558 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D560 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D568 DEFB $FF,$FF,$FF,$FF,$FF,$36,$FF,$FF
- $D570 DEFB $FF,$FF
-
-; Message at D572
-t$D572 DEFM "789"
-
-; Data block at D575
-b$D575 DEFB $FF,$FF,$FF
-
-; Message at D578
-t$D578 DEFM ":;<"
-
-; Data block at D57B
-b$D57B DEFB $FF,$FF,$FF
-
-; Message at D57E
-t$D57E DEFM "=>?"
-
-; Data block at D581
-b$D581 DEFB $FF,$FF,$FF,$6E,$7C,$FF,$FF,$FF
- $D589 DEFB $FF,$7D,$7E,$FF,$FF,$FF,$FF,$7F
- $D591 DEFB $80,$FF,$FF,$FF,$FF,$81,$82,$FF
- $D599 DEFB $FF,$FF,$FF,$76,$77,$FF,$FF,$FF
- $D5A1 DEFB $FF,$78,$79,$FF,$FF,$FF,$FF,$7A
- $D5A9 DEFB $7B,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D5B1 DEFB $FF,$FF,$FF,$8D,$8E,$FF,$FF,$FF
- $D5B9 DEFB $8F,$90,$91,$92,$FF,$FF,$93,$94
- $D5C1 DEFB $95,$96,$FF,$FF,$97,$98,$99,$9A
- $D5C9 DEFB $FF,$FF,$9B,$9C,$9D,$FF,$FF,$FF
- $D5D1 DEFB $9E,$FF,$FF,$FF,$FF,$FF,$FF,$84
- $D5D9 DEFB $88,$FF,$FF,$FF,$8C,$85,$89,$FF
- $D5E1 DEFB $FF,$FF,$83,$86,$8A,$FF,$FF,$FF
- $D5E9 DEFB $FF,$87,$8B,$FF,$FF,$FF,$FF,$FF
- $D5F1 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $D5F9 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
- $D601 DEFB $FF,$00,$D8,$00,$A8,$00,$D8,$00
- $D609 DEFB $FF,$00,$8A,$00,$8A,$00,$8A,$30
- $D611 DEFB $00,$FF,$00,$00,$00,$00,$00,$00
- $D619 DEFB $00,$FF,$00,$AA,$00,$AA,$00,$AA
- $D621 DEFB $30,$00,$FF,$00,$15,$00,$1B,$00
- $D629 DEFB $15,$00,$FF,$00,$B1,$00,$B1,$00
- $D631 DEFB $B1,$30,$00,$8A,$00,$8A,$00,$8F
- $D639 DEFB $00,$A8,$00,$A8,$00,$88,$00,$8F
- $D641 DEFB $00,$8A,$30,$00,$AA,$00,$AA,$00
- $D649 DEFB $FF,$00,$00,$00,$00,$00,$00,$00
- $D651 DEFB $FF,$00,$AA,$30,$00,$B1,$00,$B1
- $D659 DEFB $00,$F1,$00,$15,$00,$15,$00,$11
- $D661 DEFB $00,$F1,$00,$B1,$30,$00,$8A,$00
- $D669 DEFB $8A,$00,$8A,$00,$8F,$00,$A8,$00
- $D671 DEFB $A8,$00,$88,$00,$FF,$30,$00,$AA
- $D679 DEFB $00,$AA,$00,$AA,$00,$FF,$00,$00
- $D681 DEFB $00,$00,$00,$00,$00,$FF,$30,$00
- $D689 DEFB $B1,$00,$B1,$00,$B1,$00,$F1,$00
- $D691 DEFB $15,$00,$15,$00,$11,$00,$FF,$30
- $D699 DEFB $00,$FF,$00,$80,$00,$FF,$00,$95
- $D6A1 DEFB $00,$95,$00,$95,$00,$95,$00,$FF
- $D6A9 DEFB $30,$00,$FF,$00,$01,$00,$FF,$00
- $D6B1 DEFB $59,$00,$59,$00,$59,$00,$59,$00
- $D6B9 DEFB $FF,$30,$9B,$64,$13,$AC,$01,$FE
- $D6C1 DEFB $00,$FF,$00,$FF,$00,$BF,$00,$FF
- $D6C9 DEFB $00,$FD,$0D,$00,$5F,$00,$FB,$00
- $D6D1 DEFB $BF,$00,$DF,$00,$FF,$00,$7D,$00
- $D6D9 DEFB $EF,$00,$FF,$25,$00,$FF,$00,$FF
- $D6E1 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $D6E9 DEFB $00,$FF,$00,$FF,$00,$00,$FF,$00
- $D6F1 DEFB $FF,$00,$FB,$00,$DB,$00,$DF,$00
- $D6F9 DEFB $FF,$00,$F7,$00,$F6,$50,$00,$DF
- $D701 DEFB $00,$FF,$00,$FF,$00,$FB,$00,$FF
- $D709 DEFB $00,$FF,$00,$EF,$00,$FF,$70,$00
- $D711 DEFB $F3,$00,$C9,$00,$89,$00,$B6,$00
- $D719 DEFB $C8,$00,$C9,$00,$E7,$00,$FF,$68
- $D721 DEFB $00,$FE,$00,$F7,$00,$F7,$00,$DF
- $D729 DEFB $00,$DF,$00,$FD,$00,$FD,$00,$FF
- $D731 DEFB $70,$00,$FF,$00,$00,$00,$FF,$00
- $D739 DEFB $00,$00,$00,$00,$00,$00,$24,$00
- $D741 DEFB $00,$78,$00,$FF,$00,$AF,$00,$AF
- $D749 DEFB $00,$AF,$00,$AD,$00,$AD,$00,$FF
- $D751 DEFB $00,$FF,$60,$F0,$07,$E0,$08,$E0
- $D759 DEFB $0F,$C0,$1D,$C0,$1B,$80,$3A,$80
- $D761 DEFB $31,$80,$27,$32,$00,$FF,$00,$00
- $D769 DEFB $00,$FF,$00,$BB,$00,$7D,$00,$00
- $D771 DEFB $00,$7D,$00,$7D,$32,$07,$E0,$03
- $D779 DEFB $10,$03,$F0,$01,$B8,$01,$D8,$00
- $D781 DEFB $5C,$00,$8C,$00,$E4,$32,$80,$36
- $D789 DEFB $80,$36,$80,$2E,$80,$2E,$80,$22
- $D791 DEFB $80,$2C,$80,$36,$80,$36,$32,$00
- $D799 DEFB $FE,$00,$FE,$00,$FE,$00,$FE,$00
- $D7A1 DEFB $FE,$00,$00,$00,$FE,$00,$FE,$32
- $D7A9 DEFB $00,$EC,$00,$EC,$00,$F4,$00,$F4
- $D7B1 DEFB $00,$84,$00,$74,$00,$EC,$00,$EC
- $D7B9 DEFB $32,$80,$27,$80,$31,$80,$3A,$C0
- $D7C1 DEFB $1A,$C0,$1D,$E0,$0F,$E0,$08,$F0
- $D7C9 DEFB $07,$32,$00,$7D,$00,$7D,$00,$00
- $D7D1 DEFB $00,$7C,$00,$BB,$00,$FF,$00,$00
- $D7D9 DEFB $00,$FF,$32,$00,$E4,$00,$8C,$00
- $D7E1 DEFB $1C,$01,$18,$01,$B8,$03,$F0,$03
- $D7E9 DEFB $10,$07,$E0,$32,$00,$FF,$00,$00
- $D7F1 DEFB $00,$FF,$00,$55,$00,$55,$00,$55
- $D7F9 DEFB $00,$55,$00,$FF,$30,$B3,$4C,$B2
- $D801 DEFB $4D,$22,$DD,$02,$FD,$00,$FF,$00
- $D809 DEFB $FF,$00,$FF,$00,$FF,$0D,$FF,$00
- $D811 DEFB $FF,$00,$FF,$00,$FF,$00,$F8,$00
- $D819 DEFB $F0,$07,$F0,$07,$F0,$00,$FF,$FF
- $D821 DEFB $00,$FF,$00,$FF,$00,$E7,$00,$C3
- $D829 DEFB $18,$03,$18,$03,$58,$01,$00,$FF
- $D831 DEFB $E0,$0F,$C0,$1F,$80,$3F,$80,$3F
- $D839 DEFB $C0,$00,$FE,$00,$FE,$00,$FE,$00
- $D841 DEFB $FF,$00,$FE,$00,$FE,$00,$FA,$00
- $D849 DEFB $FE,$01,$B0,$07,$B0,$07,$B0,$07
- $D851 DEFB $B0,$FF,$FE,$00,$FE,$00,$FE,$00
- $D859 DEFB $FE,$00,$FE,$00,$FE,$00,$FE,$00
- $D861 DEFB $FE,$00,$FF,$07,$B0,$07,$B0,$07
- $D869 DEFB $B0,$07,$B0,$07,$B0,$07,$B0,$07
- $D871 DEFB $B0,$07,$B0,$FF,$FE,$00,$FE,$00
- $D879 DEFB $FE,$00,$E6,$00,$C2,$18,$C0,$00
- $D881 DEFB $80,$3F,$00,$7F,$FF,$07,$B0,$07
- $D889 DEFB $B0,$07,$B0,$07,$B0,$07,$B0,$03
- $D891 DEFB $B0,$01,$FC,$00,$FE,$FF,$00,$FF
- $D899 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
- $D8A1 DEFB $00,$00,$00,$FF,$00,$00,$10,$00
- $D8A9 DEFB $99,$00,$9D,$00,$99,$00,$9B,$00
- $D8B1 DEFB $DB,$00,$D9,$00,$99,$00,$B9,$28
- $D8B9 DEFB $00,$FF,$00,$66,$00,$00,$00,$00
- $D8C1 DEFB $00,$FF,$00,$00,$00,$FF,$00,$99
- $D8C9 DEFB $10,$00,$FF,$00,$FF,$00,$81,$00
- $D8D1 DEFB $81,$00,$FF,$00,$81,$00,$81,$00
- $D8D9 DEFB $81,$30,$00,$FF,$00,$81,$00,$81
- $D8E1 DEFB $00,$81,$00,$81,$00,$81,$00,$81
- $D8E9 DEFB $00,$81,$30,$81,$3C,$C3,$08,$E1
- $D8F1 DEFB $0C,$C0,$0A,$81,$34,$03,$78,$07
- $D8F9 DEFB $F0,$0F,$60,$FF,$81,$3C,$C1,$08
- $D901 DEFB $81,$3C,$81,$2C,$81,$34,$81,$3C
- $D909 DEFB $81,$24,$81,$3C,$FF,$81,$3C,$C3
- $D911 DEFB $10,$87,$30,$03,$50,$81,$2C,$C0
- $D919 DEFB $1E,$E0,$0F,$F0,$06,$FF,$FF,$00
- $D921 DEFB $FF,$00,$FF,$00,$F8,$00,$F0,$07
- $D929 DEFB $F0,$04,$F0,$07,$C0,$00,$FF,$FF
- $D931 DEFB $00,$FF,$00,$F8,$00,$10,$07,$00
- $D939 DEFB $E5,$00,$25,$00,$E7,$00,$1B,$FF
- $D941 DEFB $FF,$00,$FF,$00,$FF,$00,$7F,$00
- $D949 DEFB $78,$00,$70,$07,$30,$04,$10,$C4
- $D951 DEFB $FF,$FF,$00,$FF,$00,$FF,$00,$FF
- $D959 DEFB $00,$C7,$00,$03,$38,$03,$E8,$01
- $D961 DEFB $34,$FF,$FF,$00,$FF,$00,$FC,$00
- $D969 DEFB $F0,$03,$00,$0C,$00,$F9,$00,$9E
- $D971 DEFB $00,$F1,$FF,$80,$31,$00,$4A,$00
- $D979 DEFB $46,$00,$36,$00,$8A,$00,$FF,$00
- $D981 DEFB $43,$00,$7E,$FF,$00,$A3,$00,$C2
- $D989 DEFB $00,$DC,$00,$61,$00,$42,$00,$7F
- $D991 DEFB $00,$E1,$00,$BF,$FF,$00,$23,$00
- $D999 DEFB $FE,$00,$A2,$00,$7F,$00,$14,$00
- $D9A1 DEFB $08,$00,$D9,$00,$26,$FF,$01,$5C
- $D9A9 DEFB $00,$BE,$00,$E2,$00,$7F,$00,$42
- $D9B1 DEFB $00,$FC,$00,$87,$00,$FC,$FF,$FF
- $D9B9 DEFB $00,$FF,$00,$FF,$00,$7F,$00,$01
- $D9C1 DEFB $80,$00,$7E,$00,$22,$00,$FE,$FF
- $D9C9 DEFB $FC,$01,$F8,$02,$F0,$05,$E0,$0A
- $D9D1 DEFB $40,$14,$02,$A8,$06,$D0,$0E,$E0
- $D9D9 DEFB $FF,$1E,$C0,$1E,$C0,$1E,$C0,$1E
- $D9E1 DEFB $C0,$1E,$C0,$1E,$C0,$1E,$C0,$1C
- $D9E9 DEFB $C0,$FF,$18,$C3,$10,$C6,$01,$CC
- $D9F1 DEFB $03,$D8,$07,$F0,$0F,$E0,$1F,$C0
- $D9F9 DEFB $3F,$80,$FF,$3F,$80,$1F,$40,$0F
- $DA01 DEFB $A0,$07,$50,$02,$28,$40,$15,$60
- $DA09 DEFB $0B,$70,$07,$FF,$78,$03,$78,$03
- $DA11 DEFB $78,$03,$78,$03,$78,$03,$78,$03
- $DA19 DEFB $78,$03,$38,$03,$FF,$18,$C3,$08
- $DA21 DEFB $63,$80,$33,$C0,$1B,$E0,$0F,$F0
- $DA29 DEFB $07,$F8,$03,$FC,$01,$FF,$00,$FF
- $DA31 DEFB $00,$80,$00,$80,$00,$C0,$C0,$20
- $DA39 DEFB $C0,$20,$00,$FF,$00,$80,$FF,$00
- $DA41 DEFB $FF,$00,$00,$00,$00,$00,$00,$00
- $DA49 DEFB $00,$00,$00,$00,$FF,$00,$00,$FF
- $DA51 DEFB $00,$FF,$00,$01,$00,$01,$00,$03
- $DA59 DEFB $03,$04,$03,$04,$00,$FF,$00,$01
- $DA61 DEFB $FF,$00,$80,$00,$C0,$C0,$20,$C0
- $DA69 DEFB $20,$00,$FF,$00,$80,$00,$80,$00
- $DA71 DEFB $C0,$FF,$00,$00,$00,$00,$00,$00
- $DA79 DEFB $00,$00,$00,$FF,$00,$00,$00,$00
- $DA81 DEFB $00,$00,$FF,$00,$01,$00,$03,$03
- $DA89 DEFB $04,$03,$04,$00,$FF,$00,$01,$00
- $DA91 DEFB $01,$00,$03,$FF,$C0,$20,$C0,$20
- $DA99 DEFB $00,$FF,$00,$80,$00,$80,$00,$C0
- $DAA1 DEFB $C0,$20,$C0,$20,$FF,$00,$00,$00
- $DAA9 DEFB $00,$00,$FF,$00,$00,$00,$00,$00
- $DAB1 DEFB $00,$00,$00,$00,$00,$FF,$03,$04
- $DAB9 DEFB $03,$04,$00,$FF,$00,$01,$00,$01
- $DAC1 DEFB $00,$03,$03,$04,$03,$04,$FF,$00
- $DAC9 DEFB $FF,$00,$80,$00,$80,$00,$C0,$C0
- $DAD1 DEFB $20,$C0,$20,$E0,$10,$E0,$10,$FF
- $DAD9 DEFB $00,$FF,$00,$00,$00,$00,$00,$00
- $DAE1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DAE9 DEFB $FF,$00,$FF,$00,$01,$00,$01,$00
- $DAF1 DEFB $03,$03,$04,$03,$04,$07,$08,$07
- $DAF9 DEFB $08,$FF,$FF,$00,$FF,$00,$FF,$00
- $DB01 DEFB $FF,$00,$00,$FF,$00,$80,$00,$80
- $DB09 DEFB $00,$C0,$FF,$FF,$00,$FF,$00,$FF
- $DB11 DEFB $00,$FF,$00,$00,$FF,$00,$00,$00
- $DB19 DEFB $00,$00,$00,$FF,$FF,$00,$FF,$00
- $DB21 DEFB $FF,$00,$FF,$00,$00,$FF,$00,$01
- $DB29 DEFB $00,$01,$00,$03,$FF,$00,$00,$00
- $DB31 DEFB $00,$00,$00,$00,$00,$00,$FF,$00
- $DB39 DEFB $FF,$00,$FF,$00,$FF,$29,$00,$83
- $DB41 DEFB $7C,$01,$7C,$01,$7C,$01,$7C,$01
- $DB49 DEFB $7C,$01,$00,$83,$00,$FF,$FF,$00
- $DB51 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DB59 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$01
- $DB61 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $DB69 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $DB71 DEFB $05,$00,$80,$00,$80,$00,$80,$00
- $DB79 DEFB $80,$00,$80,$00,$80,$00,$80,$00
- $DB81 DEFB $80,$08,$00,$80,$00,$80,$00,$80
- $DB89 DEFB $00,$80,$00,$80,$00,$80,$00,$80
- $DB91 DEFB $00,$80,$28,$00,$01,$00,$01,$00
- $DB99 DEFB $01,$00,$01,$00,$01,$00,$01,$00
- $DBA1 DEFB $01,$00,$01,$08,$00,$01,$00,$01
- $DBA9 DEFB $00,$01,$00,$01,$00,$01,$00,$01
- $DBB1 DEFB $00,$01,$00,$01,$28,$00,$00,$00
- $DBB9 DEFB $00,$00,$00,$00,$00,$00,$7F,$00
- $DBC1 DEFB $7F,$00,$7F,$00,$7F,$29,$00,$00
- $DBC9 DEFB $00,$00,$00,$00,$00,$00,$00,$FE
- $DBD1 DEFB $00,$FE,$00,$FE,$00,$FE,$29,$1F
- $DBD9 DEFB $C0,$1F,$C0,$1F,$C0,$1F,$C0,$1F
- $DBE1 DEFB $C0,$1F,$C0,$1F,$C0,$1F,$C0,$FF
- $DBE9 DEFB $F8,$03,$F8,$03,$F8,$03,$F8,$03
- $DBF1 DEFB $F8,$03,$F8,$03,$F8,$03,$F8,$03
- $DBF9 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DC01 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DC09 DEFB $FF,$FF,$00,$F0,$0F,$C0,$3F,$00
- $DC11 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DC19 DEFB $FF,$00,$FF,$00,$3F,$C0,$0F,$F0
- $DC21 DEFB $03,$FC,$01,$FE,$00,$FF,$00,$FF
- $DC29 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $DC31 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $DC39 DEFB $00,$3F,$C0,$03,$FF,$00,$FB,$00
- $DC41 DEFB $FB,$00,$F7,$00,$F7,$00,$EF,$00
- $DC49 DEFB $EF,$00,$FF,$00,$E0,$FF,$00,$FE
- $DC51 DEFB $00,$FE,$00,$FD,$00,$FD,$00,$FD
- $DC59 DEFB $00,$FD,$00,$FD,$00,$FB,$FF,$00
- $DC61 DEFB $3E,$00,$3E,$00,$3E,$00,$7E,$00
- $DC69 DEFB $7E,$00,$FE,$00,$FE,$00,$FE,$FF
- $DC71 DEFB $3F,$00,$0F,$C0,$07,$F0,$03,$F8
- $DC79 DEFB $01,$FC,$00,$FE,$00,$FE,$00,$FF
- $DC81 DEFB $FF,$C0,$1F,$C0,$1F,$C0,$1F,$C0
- $DC89 DEFB $1F,$C0,$1F,$C0,$1F,$C0,$1F,$C0
- $DC91 DEFB $1F,$FF,$00,$01,$0E,$C0,$07,$F0
- $DC99 DEFB $03,$F8,$01,$FC,$00,$7E,$80,$3E
- $DCA1 DEFB $80,$3F,$FF,$FF,$00,$FC,$00,$F0
- $DCA9 DEFB $03,$C0,$0F,$80,$3F,$00,$7F,$00
- $DCB1 DEFB $FF,$00,$FF,$FF,$80,$0F,$00,$7F
- $DCB9 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $DCC1 DEFB $00,$FF,$00,$FF,$FF,$00,$00,$00
- $DCC9 DEFB $04,$00,$42,$00,$00,$00,$00,$00
- $DCD1 DEFB $24,$00,$12,$00,$02,$0D,$00,$08
- $DCD9 DEFB $00,$00,$00,$01,$00,$11,$00,$80
- $DCE1 DEFB $00,$02,$00,$01,$00,$65,$0C,$00
- $DCE9 DEFB $F1,$00,$E4,$00,$E8,$00,$E8,$00
- $DCF1 DEFB $E0,$00,$F0,$00,$30,$00,$DC,$30
- $DCF9 DEFB $00,$70,$00,$DF,$00,$BF,$00,$BF
- $DD01 DEFB $00,$FF,$00,$7F,$00,$7F,$00,$1F
- $DD09 DEFB $0E,$00,$9F,$00,$FF,$00,$DF,$00
- $DD11 DEFB $BF,$00,$BF,$00,$DF,$00,$FF,$00
- $DD19 DEFB $FD,$06,$00,$6C,$00,$FE,$00,$BF
- $DD21 DEFB $00,$BF,$00,$BF,$00,$FE,$00,$FE
- $DD29 DEFB $00,$F8,$0E,$00,$FF,$00,$80,$00
- $DD31 DEFB $80,$00,$80,$00,$80,$00,$80,$00
- $DD39 DEFB $80,$00,$80,$0F,$00,$FF,$00,$00
- $DD41 DEFB $00,$00,$00,$00,$00,$0C,$00,$0C
- $DD49 DEFB $00,$0C,$00,$0C,$0F,$00,$FF,$00
- $DD51 DEFB $01,$00,$01,$00,$01,$00,$01,$00
- $DD59 DEFB $01,$00,$01,$00,$01,$0F,$00,$80
- $DD61 DEFB $00,$80,$00,$80,$00,$80,$00,$80
- $DD69 DEFB $00,$80,$00,$80,$00,$80,$0F,$00
- $DD71 DEFB $0C,$00,$0C,$00,$0C,$00,$0C,$00
- $DD79 DEFB $0C,$00,$3C,$00,$3C,$00,$3C,$0F
- $DD81 DEFB $00,$01,$00,$01,$00,$01,$00,$01
- $DD89 DEFB $00,$01,$00,$01,$00,$01,$00,$01
- $DD91 DEFB $0F,$00,$80,$00,$80,$00,$80,$00
- $DD99 DEFB $80,$00,$80,$00,$80,$00,$80,$00
- $DDA1 DEFB $FF,$0F,$00,$3C,$00,$3C,$00,$3C
- $DDA9 DEFB $00,$3C,$00,$3C,$00,$00,$00,$00
- $DDB1 DEFB $00,$FF,$0F,$00,$01,$00,$01,$00
- $DDB9 DEFB $01,$00,$01,$00,$01,$00,$01,$00
- $DDC1 DEFB $01,$00,$FF,$0F,$00,$FF,$00,$80
- $DDC9 DEFB $00,$80,$00,$80,$00,$83,$00,$83
- $DDD1 DEFB $00,$83,$00,$80,$0F,$00,$FF,$00
- $DDD9 DEFB $00,$00,$00,$00,$00,$00,$FF,$00
- $DDE1 DEFB $FF,$00,$E1,$00,$01,$0F,$00,$FF
- $DDE9 DEFB $00,$01,$00,$01,$00,$01,$00,$C1
- $DDF1 DEFB $00,$C1,$00,$C1,$00,$C1,$0F,$00
- $DDF9 DEFB $80,$00,$80,$00,$80,$00,$83,$00
- $DE01 DEFB $83,$00,$83,$00,$83,$00,$83,$0F
- $DE09 DEFB $00,$01,$00,$01,$00,$01,$00,$FF
- $DE11 DEFB $00,$FF,$00,$80,$00,$80,$00,$80
- $DE19 DEFB $0F,$00,$C1,$00,$C1,$00,$C1,$00
- $DE21 DEFB $C1,$00,$C1,$00,$01,$00,$01,$00
- $DE29 DEFB $01,$0F,$00,$83,$00,$83,$00,$83
- $DE31 DEFB $00,$83,$00,$83,$00,$80,$00,$80
- $DE39 DEFB $00,$FF,$0F,$00,$80,$00,$80,$00
- $DE41 DEFB $83,$00,$FF,$00,$FF,$00,$00,$00
- $DE49 DEFB $00,$00,$FF,$0F,$00,$01,$00,$01
- $DE51 DEFB $00,$C1,$00,$C1,$00,$C1,$00,$01
- $DE59 DEFB $00,$01,$00,$FF,$0F,$00,$00,$00
- $DE61 DEFB $00,$00,$00,$00,$00,$00,$00
+; Data block at D600
+b$D600 DEFB $00,$FF,$00,$D8,$00,$A8,$00,$D8
+ $D608 DEFB $00,$FF,$00,$8A,$00,$8A,$00,$8A
+ $D610 DEFB $30,$00,$FF,$00,$00,$00,$00,$00
+ $D618 DEFB $00,$00,$FF,$00,$AA,$00,$AA,$00
+ $D620 DEFB $AA,$30,$00,$FF,$00,$15,$00,$1B
+ $D628 DEFB $00,$15,$00,$FF,$00,$B1,$00,$B1
+ $D630 DEFB $00,$B1,$30,$00,$8A,$00,$8A,$00
+ $D638 DEFB $8F,$00,$A8,$00,$A8,$00,$88,$00
+ $D640 DEFB $8F,$00,$8A,$30,$00,$AA,$00,$AA
+ $D648 DEFB $00,$FF,$00,$00,$00,$00,$00,$00
+ $D650 DEFB $00,$FF,$00,$AA,$30,$00,$B1,$00
+ $D658 DEFB $B1,$00,$F1,$00,$15,$00,$15,$00
+ $D660 DEFB $11,$00,$F1,$00,$B1,$30,$00,$8A
+ $D668 DEFB $00,$8A,$00,$8A,$00,$8F,$00,$A8
+ $D670 DEFB $00,$A8,$00,$88,$00,$FF,$30,$00
+ $D678 DEFB $AA,$00,$AA,$00,$AA,$00,$FF,$00
+ $D680 DEFB $00,$00,$00,$00,$00,$00,$FF,$30
+ $D688 DEFB $00,$B1,$00,$B1,$00,$B1,$00,$F1
+ $D690 DEFB $00,$15,$00,$15,$00,$11,$00,$FF
+ $D698 DEFB $30,$00,$FF,$00,$80,$00,$FF,$00
+ $D6A0 DEFB $95,$00,$95,$00,$95,$00,$95,$00
+ $D6A8 DEFB $FF,$30,$00,$FF,$00,$01,$00,$FF
+ $D6B0 DEFB $00,$59,$00,$59,$00,$59,$00,$59
+ $D6B8 DEFB $00,$FF,$30,$9B,$64,$13,$AC,$01
+ $D6C0 DEFB $FE,$00,$FF,$00,$FF,$00,$BF,$00
+ $D6C8 DEFB $FF,$00,$FD,$0D,$00,$5F,$00,$FB
+ $D6D0 DEFB $00,$BF,$00,$DF,$00,$FF,$00,$7D
+ $D6D8 DEFB $00,$EF,$00,$FF,$25,$00,$FF,$00
+ $D6E0 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $D6E8 DEFB $FF,$00,$FF,$00,$FF,$00,$00,$FF
+ $D6F0 DEFB $00,$FF,$00,$FB,$00,$DB,$00,$DF
+ $D6F8 DEFB $00,$FF,$00,$F7,$00,$F6,$50,$00
+ $D700 DEFB $DF,$00,$FF,$00,$FF,$00,$FB,$00
+ $D708 DEFB $FF,$00,$FF,$00,$EF,$00,$FF,$70
+ $D710 DEFB $00,$F3,$00,$C9,$00,$89,$00,$B6
+ $D718 DEFB $00,$C8,$00,$C9,$00,$E7,$00,$FF
+ $D720 DEFB $68,$00,$FE,$00,$F7,$00,$F7,$00
+ $D728 DEFB $DF,$00,$DF,$00,$FD,$00,$FD,$00
+ $D730 DEFB $FF,$70,$00,$FF,$00,$00,$00,$FF
+ $D738 DEFB $00,$00,$00,$00,$00,$00,$00,$24
+ $D740 DEFB $00,$00,$78,$00,$FF,$00,$AF,$00
+ $D748 DEFB $AF,$00,$AF,$00,$AD,$00,$AD,$00
+ $D750 DEFB $FF,$00,$FF,$60,$F0,$07,$E0,$08
+ $D758 DEFB $E0,$0F,$C0,$1D,$C0,$1B,$80,$3A
+ $D760 DEFB $80,$31,$80,$27,$32,$00,$FF,$00
+ $D768 DEFB $00,$00,$FF,$00,$BB,$00,$7D,$00
+ $D770 DEFB $00,$00,$7D,$00,$7D,$32,$07,$E0
+ $D778 DEFB $03,$10,$03,$F0,$01,$B8,$01,$D8
+ $D780 DEFB $00,$5C,$00,$8C,$00,$E4,$32,$80
+ $D788 DEFB $36,$80,$36,$80,$2E,$80,$2E,$80
+ $D790 DEFB $22,$80,$2C,$80,$36,$80,$36,$32
+ $D798 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE
+ $D7A0 DEFB $00,$FE,$00,$00,$00,$FE,$00,$FE
+ $D7A8 DEFB $32,$00,$EC,$00,$EC,$00,$F4,$00
+ $D7B0 DEFB $F4,$00,$84,$00,$74,$00,$EC,$00
+ $D7B8 DEFB $EC,$32,$80,$27,$80,$31,$80,$3A
+ $D7C0 DEFB $C0,$1A,$C0,$1D,$E0,$0F,$E0,$08
+ $D7C8 DEFB $F0,$07,$32,$00,$7D,$00,$7D,$00
+ $D7D0 DEFB $00,$00,$7C,$00,$BB,$00,$FF,$00
+ $D7D8 DEFB $00,$00,$FF,$32,$00,$E4,$00,$8C
+ $D7E0 DEFB $00,$1C,$01,$18,$01,$B8,$03,$F0
+ $D7E8 DEFB $03,$10,$07,$E0,$32,$00,$FF,$00
+ $D7F0 DEFB $00,$00,$FF,$00,$55,$00,$55,$00
+ $D7F8 DEFB $55,$00,$55,$00,$FF,$30,$B3,$4C
+ $D800 DEFB $B2,$4D,$22,$DD,$02,$FD,$00,$FF
+ $D808 DEFB $00,$FF,$00,$FF,$00,$FF,$0D,$FF
+ $D810 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$F8
+ $D818 DEFB $00,$F0,$07,$F0,$07,$F0,$00,$FF
+ $D820 DEFB $FF,$00,$FF,$00,$FF,$00,$E7,$00
+ $D828 DEFB $C3,$18,$03,$18,$03,$58,$01,$00
+ $D830 DEFB $FF,$E0,$0F,$C0,$1F,$80,$3F,$80
+ $D838 DEFB $3F,$C0,$00,$FE,$00,$FE,$00,$FE
+ $D840 DEFB $00,$FF,$00,$FE,$00,$FE,$00,$FA
+ $D848 DEFB $00,$FE,$01,$B0,$07,$B0,$07,$B0
+ $D850 DEFB $07,$B0,$FF,$FE,$00,$FE,$00,$FE
+ $D858 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE
+ $D860 DEFB $00,$FE,$00,$FF,$07,$B0,$07,$B0
+ $D868 DEFB $07,$B0,$07,$B0,$07,$B0,$07,$B0
+ $D870 DEFB $07,$B0,$07,$B0,$FF,$FE,$00,$FE
+ $D878 DEFB $00,$FE,$00,$E6,$00,$C2,$18,$C0
+ $D880 DEFB $00,$80,$3F,$00,$7F,$FF,$07,$B0
+ $D888 DEFB $07,$B0,$07,$B0,$07,$B0,$07,$B0
+ $D890 DEFB $03,$B0,$01,$FC,$00,$FE,$FF,$00
+ $D898 DEFB $FF,$00,$00,$00,$00,$00,$00,$00
+ $D8A0 DEFB $FF,$00,$00,$00,$FF,$00,$00,$10
+ $D8A8 DEFB $00,$99,$00,$9D,$00,$99,$00,$9B
+ $D8B0 DEFB $00,$DB,$00,$D9,$00,$99,$00,$B9
+ $D8B8 DEFB $28,$00,$FF,$00,$66,$00,$00,$00
+ $D8C0 DEFB $00,$00,$FF,$00,$00,$00,$FF,$00
+ $D8C8 DEFB $99,$10,$00,$FF,$00,$FF,$00,$81
+ $D8D0 DEFB $00,$81,$00,$FF,$00,$81,$00,$81
+ $D8D8 DEFB $00,$81,$30,$00,$FF,$00,$81,$00
+ $D8E0 DEFB $81,$00,$81,$00,$81,$00,$81,$00
+ $D8E8 DEFB $81,$00,$81,$30,$81,$3C,$C3,$08
+ $D8F0 DEFB $E1,$0C,$C0,$0A,$81,$34,$03,$78
+ $D8F8 DEFB $07,$F0,$0F,$60,$FF,$81,$3C,$C1
+ $D900 DEFB $08,$81,$3C,$81,$2C,$81,$34,$81
+ $D908 DEFB $3C,$81,$24,$81,$3C,$FF,$81,$3C
+ $D910 DEFB $C3,$10,$87,$30,$03,$50,$81,$2C
+ $D918 DEFB $C0,$1E,$E0,$0F,$F0,$06,$FF,$FF
+ $D920 DEFB $00,$FF,$00,$FF,$00,$F8,$00,$F0
+ $D928 DEFB $07,$F0,$04,$F0,$07,$C0,$00,$FF
+ $D930 DEFB $FF,$00,$FF,$00,$F8,$00,$10,$07
+ $D938 DEFB $00,$E5,$00,$25,$00,$E7,$00,$1B
+ $D940 DEFB $FF,$FF,$00,$FF,$00,$FF,$00,$7F
+ $D948 DEFB $00,$78,$00,$70,$07,$30,$04,$10
+ $D950 DEFB $C4,$FF,$FF,$00,$FF,$00,$FF,$00
+ $D958 DEFB $FF,$00,$C7,$00,$03,$38,$03,$E8
+ $D960 DEFB $01,$34,$FF,$FF,$00,$FF,$00,$FC
+ $D968 DEFB $00,$F0,$03,$00,$0C,$00,$F9,$00
+ $D970 DEFB $9E,$00,$F1,$FF,$80,$31,$00,$4A
+ $D978 DEFB $00,$46,$00,$36,$00,$8A,$00,$FF
+ $D980 DEFB $00,$43,$00,$7E,$FF,$00,$A3,$00
+ $D988 DEFB $C2,$00,$DC,$00,$61,$00,$42,$00
+ $D990 DEFB $7F,$00,$E1,$00,$BF,$FF,$00,$23
+ $D998 DEFB $00,$FE,$00,$A2,$00,$7F,$00,$14
+ $D9A0 DEFB $00,$08,$00,$D9,$00,$26,$FF,$01
+ $D9A8 DEFB $5C,$00,$BE,$00,$E2,$00,$7F,$00
+ $D9B0 DEFB $42,$00,$FC,$00,$87,$00,$FC,$FF
+ $D9B8 DEFB $FF,$00,$FF,$00,$FF,$00,$7F,$00
+ $D9C0 DEFB $01,$80,$00,$7E,$00,$22,$00,$FE
+ $D9C8 DEFB $FF,$FC,$01,$F8,$02,$F0,$05,$E0
+ $D9D0 DEFB $0A,$40,$14,$02,$A8,$06,$D0,$0E
+ $D9D8 DEFB $E0,$FF,$1E,$C0,$1E,$C0,$1E,$C0
+ $D9E0 DEFB $1E,$C0,$1E,$C0,$1E,$C0,$1E,$C0
+ $D9E8 DEFB $1C,$C0,$FF,$18,$C3,$10,$C6,$01
+ $D9F0 DEFB $CC,$03,$D8,$07,$F0,$0F,$E0,$1F
+ $D9F8 DEFB $C0,$3F,$80,$FF,$3F,$80,$1F,$40
+ $DA00 DEFB $0F,$A0,$07,$50,$02,$28,$40,$15
+ $DA08 DEFB $60,$0B,$70,$07,$FF,$78,$03,$78
+ $DA10 DEFB $03,$78,$03,$78,$03,$78,$03,$78
+ $DA18 DEFB $03,$78,$03,$38,$03,$FF,$18,$C3
+ $DA20 DEFB $08,$63,$80,$33,$C0,$1B,$E0,$0F
+ $DA28 DEFB $F0,$07,$F8,$03,$FC,$01,$FF,$00
+ $DA30 DEFB $FF,$00,$80,$00,$80,$00,$C0,$C0
+ $DA38 DEFB $20,$C0,$20,$00,$FF,$00,$80,$FF
+ $DA40 DEFB $00,$FF,$00,$00,$00,$00,$00,$00
+ $DA48 DEFB $00,$00,$00,$00,$00,$FF,$00,$00
+ $DA50 DEFB $FF,$00,$FF,$00,$01,$00,$01,$00
+ $DA58 DEFB $03,$03,$04,$03,$04,$00,$FF,$00
+ $DA60 DEFB $01,$FF,$00,$80,$00,$C0,$C0,$20
+ $DA68 DEFB $C0,$20,$00,$FF,$00,$80,$00,$80
+ $DA70 DEFB $00,$C0,$FF,$00,$00,$00,$00,$00
+ $DA78 DEFB $00,$00,$00,$00,$FF,$00,$00,$00
+ $DA80 DEFB $00,$00,$00,$FF,$00,$01,$00,$03
+ $DA88 DEFB $03,$04,$03,$04,$00,$FF,$00,$01
+ $DA90 DEFB $00,$01,$00,$03,$FF,$C0,$20,$C0
+ $DA98 DEFB $20,$00,$FF,$00,$80,$00,$80,$00
+ $DAA0 DEFB $C0,$C0,$20,$C0,$20,$FF,$00,$00
+ $DAA8 DEFB $00,$00,$00,$FF,$00,$00,$00,$00
+ $DAB0 DEFB $00,$00,$00,$00,$00,$00,$FF,$03
+ $DAB8 DEFB $04,$03,$04,$00,$FF,$00,$01,$00
+ $DAC0 DEFB $01,$00,$03,$03,$04,$03,$04,$FF
+ $DAC8 DEFB $00,$FF,$00,$80,$00,$80,$00,$C0
+ $DAD0 DEFB $C0,$20,$C0,$20,$E0,$10,$E0,$10
+ $DAD8 DEFB $FF,$00,$FF,$00,$00,$00,$00,$00
+ $DAE0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $DAE8 DEFB $00,$FF,$00,$FF,$00,$01,$00,$01
+ $DAF0 DEFB $00,$03,$03,$04,$03,$04,$07,$08
+ $DAF8 DEFB $07,$08,$FF,$FF,$00,$FF,$00,$FF
+ $DB00 DEFB $00,$FF,$00,$00,$FF,$00,$80,$00
+ $DB08 DEFB $80,$00,$C0,$FF,$FF,$00,$FF,$00
+ $DB10 DEFB $FF,$00,$FF,$00,$00,$FF,$00,$00
+ $DB18 DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF
+ $DB20 DEFB $00,$FF,$00,$FF,$00,$00,$FF,$00
+ $DB28 DEFB $01,$00,$01,$00,$03,$FF,$00,$00
+ $DB30 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
+ $DB38 DEFB $00,$FF,$00,$FF,$00,$FF,$29,$00
+ $DB40 DEFB $83,$7C,$01,$7C,$01,$7C,$01,$7C
+ $DB48 DEFB $01,$7C,$01,$00,$83,$00,$FF,$FF
+ $DB50 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $DB58 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $DB60 DEFB $01,$00,$FF,$00,$FF,$00,$FF,$00
+ $DB68 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $DB70 DEFB $FF,$05,$00,$80,$00,$80,$00,$80
+ $DB78 DEFB $00,$80,$00,$80,$00,$80,$00,$80
+ $DB80 DEFB $00,$80,$08,$00,$80,$00,$80,$00
+ $DB88 DEFB $80,$00,$80,$00,$80,$00,$80,$00
+ $DB90 DEFB $80,$00,$80,$28,$00,$01,$00,$01
+ $DB98 DEFB $00,$01,$00,$01,$00,$01,$00,$01
+ $DBA0 DEFB $00,$01,$00,$01,$08,$00,$01,$00
+ $DBA8 DEFB $01,$00,$01,$00,$01,$00,$01,$00
+ $DBB0 DEFB $01,$00,$01,$00,$01,$28,$00,$00
+ $DBB8 DEFB $00,$00,$00,$00,$00,$00,$00,$7F
+ $DBC0 DEFB $00,$7F,$00,$7F,$00,$7F,$29,$00
+ $DBC8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $DBD0 DEFB $FE,$00,$FE,$00,$FE,$00,$FE,$29
+ $DBD8 DEFB $1F,$C0,$1F,$C0,$1F,$C0,$1F,$C0
+ $DBE0 DEFB $1F,$C0,$1F,$C0,$1F,$C0,$1F,$C0
+ $DBE8 DEFB $FF,$F8,$03,$F8,$03,$F8,$03,$F8
+ $DBF0 DEFB $03,$F8,$03,$F8,$03,$F8,$03,$F8
+ $DBF8 DEFB $03,$FF,$00,$FF,$00,$FF,$00,$FF
+ $DC00 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $DC08 DEFB $00,$FF,$FF,$00,$F0,$0F,$C0,$3F
+ $DC10 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $DC18 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$0F
+ $DC20 DEFB $F0,$03,$FC,$01,$FE,$00,$FF,$00
+ $DC28 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $DC30 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $DC38 DEFB $FF,$00,$3F,$C0,$03,$FF,$00,$FB
+ $DC40 DEFB $00,$FB,$00,$F7,$00,$F7,$00,$EF
+ $DC48 DEFB $00,$EF,$00,$FF,$00,$E0,$FF,$00
+ $DC50 DEFB $FE,$00,$FE,$00,$FD,$00,$FD,$00
+ $DC58 DEFB $FD,$00,$FD,$00,$FD,$00,$FB,$FF
+ $DC60 DEFB $00,$3E,$00,$3E,$00,$3E,$00,$7E
+ $DC68 DEFB $00,$7E,$00,$FE,$00,$FE,$00,$FE
+ $DC70 DEFB $FF,$3F,$00,$0F,$C0,$07,$F0,$03
+ $DC78 DEFB $F8,$01,$FC,$00,$FE,$00,$FE,$00
+ $DC80 DEFB $FF,$FF,$C0,$1F,$C0,$1F,$C0,$1F
+ $DC88 DEFB $C0,$1F,$C0,$1F,$C0,$1F,$C0,$1F
+ $DC90 DEFB $C0,$1F,$FF,$00,$01,$0E,$C0,$07
+ $DC98 DEFB $F0,$03,$F8,$01,$FC,$00,$7E,$80
+ $DCA0 DEFB $3E,$80,$3F,$FF,$FF,$00,$FC,$00
+ $DCA8 DEFB $F0,$03,$C0,$0F,$80,$3F,$00,$7F
+ $DCB0 DEFB $00,$FF,$00,$FF,$FF,$80,$0F,$00
+ $DCB8 DEFB $7F,$00,$FF,$00,$FF,$00,$FF,$00
+ $DCC0 DEFB $FF,$00,$FF,$00,$FF,$FF,$00,$00
+ $DCC8 DEFB $00,$04,$00,$42,$00,$00,$00,$00
+ $DCD0 DEFB $00,$24,$00,$12,$00,$02,$0D,$00
+ $DCD8 DEFB $08,$00,$00,$00,$01,$00,$11,$00
+ $DCE0 DEFB $80,$00,$02,$00,$01,$00,$65,$0C
+ $DCE8 DEFB $00,$F1,$00,$E4,$00,$E8,$00,$E8
+ $DCF0 DEFB $00,$E0,$00,$F0,$00,$30,$00,$DC
+ $DCF8 DEFB $30,$00,$70,$00,$DF,$00,$BF,$00
+ $DD00 DEFB $BF,$00,$FF,$00,$7F,$00,$7F,$00
+ $DD08 DEFB $1F,$0E,$00,$9F,$00,$FF,$00,$DF
+ $DD10 DEFB $00,$BF,$00,$BF,$00,$DF,$00,$FF
+ $DD18 DEFB $00,$FD,$06,$00,$6C,$00,$FE,$00
+ $DD20 DEFB $BF,$00,$BF,$00,$BF,$00,$FE,$00
+ $DD28 DEFB $FE,$00,$F8,$0E,$00,$FF,$00,$80
+ $DD30 DEFB $00,$80,$00,$80,$00,$80,$00,$80
+ $DD38 DEFB $00,$80,$00,$80,$0F,$00,$FF,$00
+ $DD40 DEFB $00,$00,$00,$00,$00,$00,$0C,$00
+ $DD48 DEFB $0C,$00,$0C,$00,$0C,$0F,$00,$FF
+ $DD50 DEFB $00,$01,$00,$01,$00,$01,$00,$01
+ $DD58 DEFB $00,$01,$00,$01,$00,$01,$0F,$00
+ $DD60 DEFB $80,$00,$80,$00,$80,$00,$80,$00
+ $DD68 DEFB $80,$00,$80,$00,$80,$00,$80,$0F
+ $DD70 DEFB $00,$0C,$00,$0C,$00,$0C,$00,$0C
+ $DD78 DEFB $00,$0C,$00,$3C,$00,$3C,$00,$3C
+ $DD80 DEFB $0F,$00,$01,$00,$01,$00,$01,$00
+ $DD88 DEFB $01,$00,$01,$00,$01,$00,$01,$00
+ $DD90 DEFB $01,$0F,$00,$80,$00,$80,$00,$80
+ $DD98 DEFB $00,$80,$00,$80,$00,$80,$00,$80
+ $DDA0 DEFB $00,$FF,$0F,$00,$3C,$00,$3C,$00
+ $DDA8 DEFB $3C,$00,$3C,$00,$3C,$00,$00,$00
+ $DDB0 DEFB $00,$00,$FF,$0F,$00,$01,$00,$01
+ $DDB8 DEFB $00,$01,$00,$01,$00,$01,$00,$01
+ $DDC0 DEFB $00,$01,$00,$FF,$0F,$00,$FF,$00
+ $DDC8 DEFB $80,$00,$80,$00,$80,$00,$83,$00
+ $DDD0 DEFB $83,$00,$83,$00,$80,$0F,$00,$FF
+ $DDD8 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
+ $DDE0 DEFB $00,$FF,$00,$E1,$00,$01,$0F,$00
+ $DDE8 DEFB $FF,$00,$01,$00,$01,$00,$01,$00
+ $DDF0 DEFB $C1,$00,$C1,$00,$C1,$00,$C1,$0F
+ $DDF8 DEFB $00,$80,$00,$80,$00,$80,$00,$83
+ $DE00 DEFB $00,$83,$00,$83,$00,$83,$00,$83
+ $DE08 DEFB $0F,$00,$01,$00,$01,$00,$01,$00
+ $DE10 DEFB $FF,$00,$FF,$00,$80,$00,$80,$00
+ $DE18 DEFB $80,$0F,$00,$C1,$00,$C1,$00,$C1
+ $DE20 DEFB $00,$C1,$00,$C1,$00,$01,$00,$01
+ $DE28 DEFB $00,$01,$0F,$00,$83,$00,$83,$00
+ $DE30 DEFB $83,$00,$83,$00,$83,$00,$80,$00
+ $DE38 DEFB $80,$00,$FF,$0F,$00,$80,$00,$80
+ $DE40 DEFB $00,$83,$00,$FF,$00,$FF,$00,$00
+ $DE48 DEFB $00,$00,$00,$FF,$0F,$00,$01,$00
+ $DE50 DEFB $01,$00,$C1,$00,$C1,$00,$C1,$00
+ $DE58 DEFB $01,$00,$01,$00,$FF,$0F,$00,$00
+ $DE60 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
 ; Routine at DE68
 ;
@@ -8522,15 +8515,20 @@ b$DE84 DEFB $C6,$79,$00,$2E,$7C,$00,$9C,$7F
  $DEB4 DEFB $4E,$84,$00,$39,$97,$01,$5A,$9A
  $DEBC DEFB $00,$9D,$9B,$01,$00
 
-; Routine at DEC1
+; Clear strings on the screen
 ;
 ; Used by the routines at #R$DF60, #R$E097 and #R$E2A7.
+;
+; .
+;
+; Clears 10 strings, 18 characters each; used to clear table of scores, menu
+; etc.
 c$DEC1 LD B,$0A      ;
  $DEC3 LD DE,$402C   ;
 *$DEC6 PUSH DE       ;
  $DEC7 PUSH BC       ;
  $DEC8 LD C,$12      ;
- $DECA LD HL,$DEE6   ;
+ $DECA LD HL,$DEE6   ; String 18 spaces
  $DECD CALL $AED1    ; Print string
  $DED0 POP BC        ;
  $DED1 POP DE        ;
@@ -8546,7 +8544,7 @@ c$DEC1 LD B,$0A      ;
  $DEE3 DJNZ $DEC6    ;
  $DEE5 RET           ;
 
-; Message at DEE6
+; String 18 spaces
 t$DEE6 DEFM "                  "
 
 ; Menu messages
@@ -8582,7 +8580,7 @@ c$DF37 LD A,$01      ;
 ; Main menu
 ;
 ; Used by the routines at #R$DF37 and #R$E097.
-c$DF60 CALL $DEC1    ;
+c$DF60 CALL $DEC1    ; Clear strings on the screen
  $DF63 LD HL,$DEF8   ; Menu messages address
  $DF66 LD DE,$402D   ;
  $DF69 LD C,$0B      ;
@@ -8633,7 +8631,7 @@ c$DF60 CALL $DEC1    ;
  $DFCF JR NZ,$DF97   ;
  $DFD1 JP $BC3B      ;
 
-; Routine at DFD4
+; Clear LASTK and do RST $38 once
 ;
 ; Used by the routines at #R$DF37, #R$DF60, #R$E04D, #R$E097 and #R$E2A7.
 c$DFD4 XOR A         ;
@@ -8737,7 +8735,7 @@ t$E05B DEFM "REDEFINE KEYS"
 ;
 ; Used by the routine at #R$DF60.
 c$E097 CALL $DFE6    ; Unhighlight Menu item
- $E09A CALL $DEC1    ;
+ $E09A CALL $DEC1    ; Clear strings on the screen
  $E09D LD HL,$E05B   ; Redefine keys messages
  $E0A0 LD DE,$402D   ;
  $E0A3 LD C,$0D      ;
@@ -8852,20 +8850,21 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E179 JP $DF60      ;
 
 ; Data block at E17C
-b$E17C DEFB $4D,$30,$EF,$01,$31,$F7,$01,$32
- $E184 DEFB $F7,$02,$33,$F7,$04,$34,$F7,$08
- $E18C DEFB $35,$F7,$10,$36,$EF,$10,$37,$EF
- $E194 DEFB $08,$38,$EF,$04,$39,$EF,$02,$41
- $E19C DEFB $FD,$01,$42,$7F,$10,$43,$FE,$08
- $E1A4 DEFB $44,$FD,$04,$45,$FB,$04,$46,$FD
- $E1AC DEFB $08,$47,$FD,$10,$48,$BF,$10,$49
- $E1B4 DEFB $DF,$04,$4A,$BF,$08,$4B,$BF,$04
- $E1BC DEFB $4C,$BF,$02,$4D,$7F,$04,$4E,$7F
- $E1C4 DEFB $08,$4F,$DF,$02,$50,$DF,$01,$51
- $E1CC DEFB $FB,$01,$52,$FB,$08,$53,$FD,$02
- $E1D4 DEFB $54,$FB,$10,$55,$DF,$08,$56,$FE
- $E1DC DEFB $10,$57,$FB,$02,$58,$FE,$04,$59
- $E1E4 DEFB $DF,$10,$5A,$FE,$02,$20,$7F,$01
+b$E17C DEFM "M"
+ $E17D DEFB $30,$EF,$01,$31,$F7,$01,$32,$F7
+ $E185 DEFB $02,$33,$F7,$04,$34,$F7,$08,$35
+ $E18D DEFB $F7,$10,$36,$EF,$10,$37,$EF,$08
+ $E195 DEFB $38,$EF,$04,$39,$EF,$02,$41,$FD
+ $E19D DEFB $01,$42,$7F,$10,$43,$FE,$08,$44
+ $E1A5 DEFB $FD,$04,$45,$FB,$04,$46,$FD,$08
+ $E1AD DEFB $47,$FD,$10,$48,$BF,$10,$49,$DF
+ $E1B5 DEFB $04,$4A,$BF,$08,$4B,$BF,$04,$4C
+ $E1BD DEFB $BF,$02,$4D,$7F,$04,$4E,$7F,$08
+ $E1C5 DEFB $4F,$DF,$02,$50,$DF,$01,$51,$FB
+ $E1CD DEFB $01,$52,$FB,$08,$53,$FD,$02,$54
+ $E1D5 DEFB $FB,$10,$55,$DF,$08,$56,$FE,$10
+ $E1DD DEFB $57,$FB,$02,$58,$FE,$04,$59,$DF
+ $E1E5 DEFB $10,$5A,$FE,$02,$20,$7F,$01
 
 ; Message at E1EC
 t$E1EC DEFM "1"
@@ -8898,7 +8897,7 @@ b$E217 DEFM "EXTREMELY EASY"
 ;
 ; Used by the routine at #R$DF60.
 c$E2A7 CALL $DFE6    ; Unhighlight Menu item
- $E2AA CALL $DEC1    ;
+ $E2AA CALL $DEC1    ; Clear strings on the screen
  $E2AD LD HL,$E1ED   ;
  $E2B0 LD DE,$406D   ;
  $E2B3 LD C,$11      ;
@@ -8921,7 +8920,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2D8 JR C,$E2CD    ;
  $E2DA CP $3A        ;
  $E2DC JR NC,$E2CD   ;
- $E2DE LD HL,$E1EC   ;
+ $E2DE LD HL,$E1EC   ; Skill level address
  $E2E1 LD (HL),A     ;
  $E2E2 LD DE,$40F4   ;
  $E2E5 LD C,$01      ;
@@ -8942,7 +8941,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E305 LD DE,$4091   ;
  $E308 LD C,$07      ;
  $E30A CALL $AED1    ; Print string "WILL BE"
- $E30D LD A,($E1EC)  ;
+ $E30D LD A,($E1EC)  ; get Skill level
  $E310 SUB $31       ;
  $E312 LD L,A        ;
  $E313 LD H,$00      ;
@@ -8971,7 +8970,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E338 LD E,(HL)     ;
  $E339 INC HL        ;
  $E33A LD D,(HL)     ;
- $E33B LD ($AD57),DE ;
+ $E33B LD ($AD57),DE ; set Indicator Time value
  $E33F INC HL        ;
  $E340 LD E,(HL)     ;
  $E341 INC HL        ;
@@ -9217,521 +9216,279 @@ b$E494 DEFB $AE,$E4,$AE,$E4,$08,$E5,$3A,$E5
  $E6F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $E6FC DEFB $00,$00,$00,$00
 
-; Tiles with mask, 16 bytes each
-b$E700 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8
- $E708 DEFB $03,$F8,$07,$F0,$07,$F0,$07,$F0
- $E710 DEFB $00,$FF,$00,$3F,$C0,$1F,$E0,$0F
- $E718 DEFB $F0,$07,$F0,$07,$50,$07,$20,$07
- $E720 DEFB $00,$FF,$00,$FE,$01,$FC,$01,$FC
- $E728 DEFB $00,$FC,$01,$FC,$03,$F8,$07,$F0
- $E730 DEFB $77,$00,$E7,$00,$DF,$00,$3F,$00
- $E738 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E740 DEFB $F0,$07,$F0,$07,$F0,$03,$EC,$01
- $E748 DEFB $9E,$00,$FE,$00,$FF,$00,$FF,$00
- $E750 DEFB $07,$F0,$0F,$E0,$0F,$E0,$0E,$E0
- $E758 DEFB $0E,$E0,$0E,$E0,$0E,$E0,$07,$F0
- $E760 DEFB $DF,$00,$9F,$00,$2F,$00,$6F,$00
- $E768 DEFB $6F,$00,$77,$00,$77,$00,$77,$00
- $E770 DEFB $EF,$00,$FF,$00,$FD,$00,$FD,$00
- $E778 DEFB $FE,$00,$FE,$00,$FE,$00,$FE,$00
- $E780 DEFB $80,$3F,$C0,$04,$FB,$00,$FF,$00
- $E788 DEFB $7F,$00,$0F,$80,$00,$F0,$00,$FF
- $E790 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$1F
- $E798 DEFB $C0,$1F,$C0,$1F,$00,$3F,$00,$FF
- $E7A0 DEFB $07,$F0,$03,$F8,$03,$F8,$01,$FC
- $E7A8 DEFB $00,$FE,$00,$FF,$00,$FF,$00,$FF
- $E7B0 DEFB $B4,$00,$C4,$00,$C7,$10,$07,$30
- $E7B8 DEFB $0F,$E0,$0F,$E0,$1F,$C0,$1F,$C0
- $E7C0 DEFB $02,$00,$FF,$00,$FF,$00,$FF,$00
- $E7C8 DEFB $FF,$00,$FF,$00,$FF,$00,$CF,$00
- $E7D0 DEFB $00,$FF,$00,$7F,$80,$3F,$80,$3F
- $E7D8 DEFB $C0,$1F,$C0,$1F,$E0,$0F,$E0,$0F
- $E7E0 DEFB $1F,$C0,$3F,$80,$3E,$80,$3E,$80
- $E7E8 DEFB $7E,$00,$7C,$01,$7C,$01,$7C,$01
- $E7F0 DEFB $07,$30,$03,$78,$03,$F8,$01,$FC
- $E7F8 DEFB $01,$FC,$01,$FC,$00,$FE,$00,$FE
- $E800 DEFB $F0,$07,$F0,$07,$F0,$07,$F0,$07
- $E808 DEFB $F0,$07,$F0,$07,$F0,$07,$E0,$0F
- $E810 DEFB $7C,$01,$44,$01,$3C,$81,$3C,$81
- $E818 DEFB $38,$83,$38,$83,$7C,$01,$7C,$01
- $E820 DEFB $A0,$0F,$E0,$0F,$E0,$0F,$E0,$0F
- $E828 DEFB $E0,$0F,$F0,$03,$FC,$01,$FE,$00
- $E830 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $E838 DEFB $00,$FF,$00,$87,$78,$03,$FC,$01
- $E840 DEFB $00,$FF,$00,$FF,$00,$C7,$38,$83
- $E848 DEFB $3C,$81,$3C,$81,$1C,$C1,$1C,$C1
- $E850 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE
- $E858 DEFB $00,$FE,$00,$F8,$06,$F0,$0C,$E0
- $E860 DEFB $FE,$00,$EA,$00,$E4,$00,$FE,$00
- $E868 DEFB $FE,$00,$7E,$00,$FD,$00,$FF,$00
- $E870 DEFB $18,$C3,$1C,$C1,$1C,$C1,$1C,$C1
- $E878 DEFB $3C,$81,$7C,$01,$FC,$01,$F8,$03
- $E880 DEFB $0B,$E0,$07,$F0,$07,$F0,$07,$F0
- $E888 DEFB $0F,$E0,$0F,$E0,$0F,$E0,$0F,$E0
- $E890 DEFB $FF,$00,$FB,$00,$FB,$00,$FF,$00
- $E898 DEFB $DF,$00,$BE,$00,$8E,$00,$76,$00
- $E8A0 DEFB $F0,$07,$E0,$0F,$E0,$0F,$80,$0F
- $E8A8 DEFB $70,$07,$F8,$03,$F8,$03,$F8,$03
- $E8B0 DEFB $0F,$E0,$0F,$E0,$07,$F0,$00,$F8
- $E8B8 DEFB $01,$FC,$00,$FE,$00,$FF,$00,$FF
- $E8C0 DEFB $F7,$00,$F1,$00,$EE,$00,$1F,$00
- $E8C8 DEFB $BF,$00,$DF,$00,$1C,$00,$0B,$E0
- $E8D0 DEFB $48,$03,$78,$03,$F8,$03,$78,$03
- $E8D8 DEFB $B4,$01,$AC,$01,$BC,$01,$B8,$03
- $E8E0 DEFB $0F,$E0,$0F,$E0,$07,$F0,$07,$F0
- $E8E8 DEFB $07,$F0,$02,$F8,$03,$F8,$03,$F8
- $E8F0 DEFB $80,$07,$80,$3F,$80,$3F,$80,$3F
- $E8F8 DEFB $40,$1F,$C0,$1F,$C0,$1F,$80,$3F
- $E900 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FE
- $E908 DEFB $01,$FC,$03,$F8,$07,$E0,$1F,$C0
- $E910 DEFB $00,$C7,$38,$83,$7C,$01,$FC,$01
- $E918 DEFB $F8,$03,$C0,$07,$C0,$1F,$80,$3F
- $E920 DEFB $F0,$07,$F8,$03,$A8,$02,$91,$00
- $E928 DEFB $FB,$00,$FF,$00,$FF,$00,$FF,$00
- $E930 DEFB $3F,$80,$7E,$00,$FC,$01,$F8,$03
- $E938 DEFB $F0,$07,$E0,$0F,$D0,$07,$E8,$03
- $E940 DEFB $FE,$00,$FF,$00,$7F,$00,$C7,$00
- $E948 DEFB $BB,$00,$BB,$00,$DD,$00,$5D,$00
- $E950 DEFB $E8,$03,$74,$01,$F4,$01,$F8,$00
- $E958 DEFB $FB,$00,$FF,$00,$FB,$00,$F7,$00
- $E960 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$00
- $E968 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E970 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$60
- $E978 DEFB $9F,$00,$FE,$00,$FE,$00,$FF,$00
- $E980 DEFB $6E,$00,$2F,$80,$37,$80,$1F,$C0
- $E988 DEFB $0E,$E0,$00,$F1,$00,$FF,$00,$FF
- $E990 DEFB $E7,$00,$4F,$00,$5F,$00,$7E,$00
- $E998 DEFB $7F,$00,$3F,$80,$3F,$80,$1F,$C0
- $E9A0 DEFB $FF,$00,$FC,$00,$C0,$00,$07,$30
- $E9A8 DEFB $07,$70,$0F,$60,$9F,$00,$AE,$00
- $E9B0 DEFB $1E,$00,$00,$E1,$00,$0F,$F0,$07
- $E9B8 DEFB $F0,$07,$E0,$0F,$00,$1F,$00,$FF
- $E9C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$78
- $E9C8 DEFB $87,$00,$FB,$00,$FB,$00,$FF,$00
- $E9D0 DEFB $0F,$E0,$07,$F0,$03,$F8,$01,$FC
- $E9D8 DEFB $00,$FE,$00,$FF,$00,$FF,$00,$FF
- $E9E0 DEFB $E8,$01,$E8,$03,$F0,$07,$E0,$0F
- $E9E8 DEFB $C0,$1F,$00,$3F,$00,$FF,$00,$FF
- $E9F0 DEFB $07,$80,$77,$00,$6F,$00,$DF,$00
- $E9F8 DEFB $DE,$00,$DF,$00,$DF,$00,$CF,$00
- $EA00 DEFB $F0,$07,$F0,$07,$F0,$03,$EC,$01
- $EA08 DEFB $3E,$00,$C0,$00,$FF,$00,$FF,$00
- $EA10 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$F8
- $EA18 DEFB $07,$C0,$3F,$00,$FF,$00,$FF,$00
- $EA20 DEFB $D7,$00,$D9,$00,$6E,$00,$6F,$00
- $EA28 DEFB $6F,$00,$37,$80,$37,$80,$0F,$C0
- $EA30 DEFB $FF,$00,$FC,$00,$02,$00,$FE,$00
- $EA38 DEFB $FE,$00,$FE,$00,$FE,$00,$FE,$00
- $EA40 DEFB $F0,$00,$00,$0F,$00,$3F,$C0,$1F
- $EA48 DEFB $E0,$0F,$E0,$0F,$C0,$1F,$00,$3F
- $EA50 DEFB $04,$F0,$04,$F0,$07,$F0,$07,$F0
- $EA58 DEFB $0F,$E0,$0F,$E0,$1F,$C0,$1F,$C0
- $EA60 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EA68 DEFB $00,$FF,$00,$FF,$00,$83,$7C,$01
- $EA70 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$F8
- $EA78 DEFB $06,$F0,$0F,$E0,$1F,$C0,$1D,$C0
- $EA80 DEFB $FE,$00,$FE,$00,$FE,$00,$AB,$00
- $EA88 DEFB $92,$00,$FE,$00,$7F,$00,$9F,$00
- $EA90 DEFB $00,$7F,$00,$7F,$00,$3F,$C0,$1F
- $EA98 DEFB $E0,$0F,$E0,$0F,$E0,$0F,$E0,$0F
- $EAA0 DEFB $3D,$80,$38,$80,$37,$80,$2F,$80
- $EAA8 DEFB $6F,$00,$6F,$00,$6F,$00,$6B,$00
- $EAB0 DEFB $FE,$00,$FE,$00,$FE,$00,$C3,$00
- $EAB8 DEFB $FF,$00,$FF,$00,$FF,$00,$CF,$00
- $EAC0 DEFB $F0,$07,$F0,$07,$F0,$07,$70,$07
- $EAC8 DEFB $70,$07,$B0,$07,$B8,$03,$B8,$03
- $EAD0 DEFB $6D,$00,$37,$80,$37,$80,$37,$80
- $EAD8 DEFB $37,$80,$37,$80,$6F,$00,$6F,$00
- $EAE0 DEFB $07,$30,$07,$70,$07,$70,$07,$70
- $EAE8 DEFB $07,$70,$07,$70,$07,$70,$03,$78
- $EAF0 DEFB $B8,$03,$B8,$03,$D8,$03,$D8,$03
- $EAF8 DEFB $D8,$03,$D8,$03,$D8,$03,$B8,$03
- $EB00 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$E7
- $EB08 DEFB $18,$C3,$3C,$81,$3C,$81,$38,$83
- $EB10 DEFB $70,$04,$73,$00,$E7,$00,$E7,$00
- $EB18 DEFB $E7,$00,$E7,$00,$F7,$00,$F7,$00
- $EB20 DEFB $00,$3F,$C0,$1F,$E0,$0F,$E0,$0F
- $EB28 DEFB $E0,$0F,$E0,$09,$E6,$00,$E7,$00
- $EB30 DEFB $E3,$00,$DC,$00,$BF,$00,$BF,$00
- $EB38 DEFB $BF,$00,$BF,$00,$BF,$00,$BF,$00
- $EB40 DEFB $D7,$00,$33,$00,$FB,$00,$FB,$00
- $EB48 DEFB $FB,$00,$FB,$00,$FB,$00,$FE,$00
- $EB50 DEFB $7F,$00,$3F,$80,$3F,$80,$3F,$80
- $EB58 DEFB $1F,$80,$20,$80,$20,$80,$3F,$80
- $EB60 DEFB $FC,$01,$F8,$03,$F8,$03,$F8,$03
- $EB68 DEFB $F0,$07,$10,$07,$30,$07,$F8,$03
- $EB70 DEFB $7F,$00,$FF,$00,$FF,$00,$DF,$00
- $EB78 DEFB $EF,$00,$F0,$00,$FC,$00,$7C,$01
- $EB80 DEFB $F8,$03,$F8,$03,$F8,$03,$F8,$03
- $EB88 DEFB $FC,$01,$FC,$01,$FC,$01,$7E,$00
- $EB90 DEFB $5C,$01,$64,$01,$3C,$81,$3C,$81
- $EB98 DEFB $3C,$81,$1E,$C0,$1E,$C0,$1E,$C0
- $EBA0 DEFB $7E,$00,$3E,$80,$3E,$80,$1E,$C0
- $EBA8 DEFB $3E,$80,$3C,$81,$7C,$01,$58,$03
- $EBB0 DEFB $0E,$E0,$0E,$E0,$0D,$E0,$0D,$E0
- $EBB8 DEFB $01,$F0,$03,$F8,$03,$F8,$03,$F8
- $EBC0 DEFB $E8,$03,$F0,$07,$E0,$0F,$E0,$0F
- $EBC8 DEFB $C0,$1F,$C0,$1F,$E0,$0F,$F0,$07
- $EBD0 DEFB $01,$FC,$03,$F8,$03,$F8,$03,$F8
- $EBD8 DEFB $03,$F8,$03,$F8,$01,$FC,$01,$FC
- $EBE0 DEFB $02,$F8,$02,$F8,$03,$F8,$02,$F8
- $EBE8 DEFB $02,$F8,$00,$FC,$00,$FE,$00,$FF
- $EBF0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EBF8 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8
- $EC00 DEFB $00,$FE,$01,$FC,$01,$FC,$03,$F8
- $EC08 DEFB $03,$18,$E3,$00,$DF,$00,$B1,$00
- $EC10 DEFB $F0,$07,$F8,$03,$F8,$03,$F8,$03
- $EC18 DEFB $C8,$03,$C8,$03,$F0,$07,$F0,$07
- $EC20 DEFB $03,$F8,$06,$F0,$06,$F0,$0D,$E0
- $EC28 DEFB $0D,$E0,$0D,$E0,$0B,$E0,$0B,$E0
- $EC30 DEFB $6E,$00,$EF,$00,$EF,$00,$F7,$00
- $EC38 DEFB $F7,$00,$FB,$00,$FB,$00,$FD,$00
- $EC40 DEFB $E0,$0C,$83,$10,$4F,$00,$B8,$00
- $EC48 DEFB $D7,$00,$CF,$00,$FF,$00,$FE,$00
- $EC50 DEFB $0A,$E0,$04,$F0,$07,$F0,$07,$F0
- $EC58 DEFB $07,$F0,$07,$F0,$03,$F8,$01,$FC
- $EC60 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07
- $EC68 DEFB $E0,$0F,$F0,$07,$F0,$07,$F0,$07
- $EC70 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF
- $EC78 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EC80 DEFB $01,$FC,$00,$FE,$00,$FE,$00,$FE
- $EC88 DEFB $00,$FE,$01,$F8,$07,$80,$7B,$00
- $EC90 DEFB $F8,$03,$F8,$03,$FC,$01,$FC,$01
- $EC98 DEFB $FE,$00,$FE,$00,$FE,$00,$F8,$01
- $ECA0 DEFB $03,$F8,$03,$F8,$07,$F0,$07,$F0
- $ECA8 DEFB $06,$F0,$04,$F1,$00,$FB,$00,$FF
- $ECB0 DEFB $FD,$00,$F8,$00,$80,$07,$00,$7F
- $ECB8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $ECC0 DEFB $F0,$07,$70,$07,$50,$07,$70,$07
- $ECC8 DEFB $70,$07,$30,$83,$3C,$81,$3E,$80
- $ECD0 DEFB $0A,$E0,$04,$F0,$07,$F0,$07,$F0
- $ECD8 DEFB $07,$F0,$07,$F0,$03,$F8,$03,$F8
- $ECE0 DEFB $79,$00,$10,$06,$D0,$07,$E0,$07
- $ECE8 DEFB $F0,$03,$FC,$00,$FF,$00,$FF,$00
- $ECF0 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF
- $ECF8 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$1F
- $ED00 DEFB $01,$FC,$01,$FC,$01,$FC,$01,$FC
- $ED08 DEFB $01,$FC,$03,$F8,$03,$F8,$07,$F0
- $ED10 DEFB $FF,$00,$FF,$00,$F3,$00,$E3,$08
- $ED18 DEFB $E7,$00,$C8,$00,$DF,$00,$BC,$00
- $ED20 DEFB $E0,$0F,$F0,$07,$F0,$07,$E0,$0F
- $ED28 DEFB $C0,$1F,$80,$3F,$00,$7F,$00,$FF
- $ED30 DEFB $07,$F0,$0A,$E0,$1E,$C0,$3C,$80
- $ED38 DEFB $78,$02,$70,$02,$7C,$01,$3E,$80
- $ED40 DEFB $70,$03,$60,$0F,$E0,$0F,$C0,$1F
- $ED48 DEFB $C0,$1F,$80,$3F,$00,$7F,$00,$FF
- $ED50 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07
- $ED58 DEFB $F8,$01,$FE,$00,$FF,$00,$FF,$00
- $ED60 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF
- $ED68 DEFB $00,$FF,$00,$FF,$00,$7F,$80,$3F
- $ED70 DEFB $01,$FC,$01,$FC,$03,$F8,$03,$F8
- $ED78 DEFB $07,$F0,$07,$F0,$0F,$C0,$3F,$00
- $ED80 DEFB $FF,$00,$FF,$00,$E7,$00,$C3,$18
- $ED88 DEFB $C5,$10,$86,$30,$8F,$20,$0F,$60
- $ED90 DEFB $C0,$1F,$C0,$1F,$C0,$1F,$C0,$1F
- $ED98 DEFB $80,$3F,$80,$3F,$00,$7F,$00,$7F
- $EDA0 DEFB $00,$FC,$03,$F0,$0F,$E0,$1F,$C0
- $EDA8 DEFB $1C,$C0,$1C,$C1,$1C,$C1,$0E,$E0
- $EDB0 DEFB $DF,$00,$DC,$00,$E0,$03,$00,$1F
- $EDB8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EDC0 DEFB $1E,$C0,$1C,$C1,$18,$C3,$1C,$C1
- $EDC8 DEFB $0C,$E1,$0E,$E0,$06,$F0,$00,$F9
- $EDD0 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07
- $EDD8 DEFB $F0,$07,$F8,$03,$F8,$03,$FC,$01
- $EDE0 DEFB $1C,$C1,$1C,$C1,$1C,$C1,$18,$C3
- $EDE8 DEFB $18,$C3,$18,$C2,$39,$80,$3B,$80
- $EDF0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EDF8 DEFB $00,$FF,$00,$FF,$00,$FC,$03,$F8
- $EE00 DEFB $07,$F0,$07,$F0,$0F,$E0,$0F,$E0
- $EE08 DEFB $1F,$C0,$3E,$00,$FE,$00,$FC,$01
- $EE10 DEFB $FE,$00,$FF,$00,$FF,$00,$BF,$00
- $EE18 DEFB $0F,$40,$03,$F0,$01,$FC,$00,$FE
- $EE20 DEFB $00,$FF,$00,$7F,$80,$3F,$C0,$1F
- $EE28 DEFB $C0,$1F,$C0,$1F,$E0,$0F,$E0,$0F
- $EE30 DEFB $0B,$C0,$3B,$80,$3C,$80,$70,$03
- $EE38 DEFB $60,$0F,$E0,$0F,$C0,$1F,$C0,$1F
- $EE40 DEFB $F0,$03,$80,$0F,$00,$7F,$00,$FF
- $EE48 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EE50 DEFB $A0,$0F,$E0,$0F,$70,$07,$70,$07
- $EE58 DEFB $70,$07,$70,$03,$7C,$01,$3E,$80
- $EE60 DEFB $1F,$C0,$11,$C0,$1E,$C0,$1F,$C0
- $EE68 DEFB $1F,$C0,$0F,$E0,$0F,$E0,$0F,$E0
- $EE70 DEFB $FC,$01,$F8,$01,$64,$01,$9C,$01
- $EE78 DEFB $BC,$01,$BC,$01,$DC,$01,$DC,$01
- $EE80 DEFB $0F,$E0,$07,$F0,$07,$F0,$07,$F0
- $EE88 DEFB $07,$F0,$07,$F0,$07,$F0,$03,$F8
- $EE90 DEFB $DC,$01,$DC,$01,$DC,$01,$DC,$01
- $EE98 DEFB $DC,$01,$BC,$01,$DC,$01,$DC,$01
- $EEA0 DEFB $02,$F8,$03,$F8,$03,$F8,$03,$F8
- $EEA8 DEFB $03,$F8,$03,$F8,$03,$F8,$01,$FC
- $EEB0 DEFB $58,$03,$C8,$03,$D8,$03,$D8,$03
- $EEB8 DEFB $D8,$03,$D8,$03,$D8,$03,$B0,$07
- $EEC0 DEFB $1C,$C1,$1C,$C1,$1C,$C1,$0C,$E1
- $EEC8 DEFB $0C,$E1,$0C,$01,$EC,$01,$F4,$01
- $EED0 DEFB $3A,$80,$3A,$80,$3B,$80,$3D,$80
- $EED8 DEFB $3F,$80,$3D,$80,$5F,$00,$5F,$00
- $EEE0 DEFB $B6,$00,$56,$00,$F6,$00,$F6,$00
- $EEE8 DEFB $F6,$00,$EE,$00,$9E,$00,$FE,$00
- $EEF0 DEFB $5F,$00,$5F,$00,$5F,$00,$5F,$00
- $EEF8 DEFB $5F,$00,$6F,$00,$6F,$00,$77,$00
- $EF00 DEFB $FE,$00,$FE,$00,$F6,$00,$F6,$00
- $EF08 DEFB $FE,$00,$FE,$00,$FC,$01,$FC,$01
- $EF10 DEFB $77,$00,$77,$00,$37,$80,$08,$C0
- $EF18 DEFB $08,$E0,$0F,$E0,$0F,$E0,$1F,$C0
- $EF20 DEFB $FC,$01,$FC,$01,$F8,$01,$04,$01
- $EF28 DEFB $04,$01,$FC,$01,$FC,$01,$FC,$01
- $EF30 DEFB $02,$F8,$02,$F8,$00,$FC,$01,$FC
- $EF38 DEFB $01,$FC,$01,$FC,$01,$FC,$00,$FE
- $EF40 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EF48 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8
- $EF50 DEFB $03,$F8,$06,$F0,$0F,$C0,$37,$80
- $EF58 DEFB $7B,$00,$7B,$00,$FB,$00,$F6,$00
- $EF60 DEFB $ED,$00,$EF,$00,$F7,$00,$7B,$00
- $EF68 DEFB $BC,$00,$DF,$00,$C7,$00,$B8,$00
- $EF70 DEFB $7D,$00,$73,$00,$66,$00,$00,$99
- $EF78 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EF80 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EF88 DEFB $00,$FF,$00,$1F,$E0,$0F,$F0,$07
- $EF90 DEFB $70,$07,$30,$07,$10,$07,$A0,$0F
- $EF98 DEFB $C0,$1F,$00,$3F,$C0,$07,$38,$03
- $EFA0 DEFB $9C,$01,$DC,$01,$FA,$00,$C6,$00
- $EFA8 DEFB $36,$00,$F4,$01,$E0,$03,$00,$1F
- $EFB0 DEFB $80,$1F,$00,$7F,$00,$FF,$00,$FF
- $EFB8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $EFC0 DEFB $00,$FF,$00,$FF,$00,$FE,$01,$FC
- $EFC8 DEFB $01,$FC,$03,$F8,$03,$F8,$02,$F8
- $EFD0 DEFB $00,$FF,$00,$FF,$00,$FC,$03,$F8
- $EFD8 DEFB $07,$F0,$07,$F0,$06,$F0,$07,$F0
- $EFE0 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$1F
- $EFE8 DEFB $E0,$0F,$E0,$0F,$00,$0F,$00,$0F
- $EFF0 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8
- $EFF8 DEFB $02,$F8,$01,$FC,$03,$F8,$07,$F0
- $F000 DEFB $07,$30,$CF,$00,$BF,$00,$7F,$00
- $F008 DEFB $FF,$00,$FF,$00,$FF,$00,$EF,$00
- $F010 DEFB $E0,$0F,$C0,$0F,$B0,$07,$F8,$03
- $F018 DEFB $FC,$01,$FE,$00,$DF,$00,$DF,$00
- $F020 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F028 DEFB $00,$FF,$00,$FF,$00,$7F,$80,$3F
- $F030 DEFB $07,$F0,$0F,$E0,$0F,$E0,$0E,$E0
- $F038 DEFB $0F,$E0,$07,$E0,$0B,$E0,$0D,$E0
- $F040 DEFB $9F,$00,$7F,$00,$7F,$00,$FF,$00
- $F048 DEFB $7F,$00,$7F,$00,$9F,$00,$EF,$00
- $F050 DEFB $B7,$00,$E3,$08,$E1,$0C,$E0,$0E
- $F058 DEFB $C0,$00,$DE,$00,$FF,$00,$FF,$00
- $F060 DEFB $C0,$1F,$C0,$1F,$E0,$0F,$F0,$07
- $F068 DEFB $70,$07,$78,$03,$38,$03,$78,$03
- $F070 DEFB $0E,$E0,$0D,$E0,$01,$F0,$01,$FC
- $F078 DEFB $01,$FC,$01,$FC,$03,$F8,$03,$F8
- $F080 DEFB $F7,$00,$77,$00,$8F,$00,$FF,$00
- $F088 DEFB $FB,$00,$F0,$04,$F0,$07,$E0,$0E
- $F090 DEFB $FF,$00,$FF,$00,$FE,$00,$DC,$01
- $F098 DEFB $3C,$01,$78,$03,$70,$07,$E0,$0F
- $F0A0 DEFB $78,$03,$30,$07,$00,$CF,$00,$FF
- $F0A8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F0B0 DEFB $03,$F8,$03,$F8,$07,$F0,$07,$F0
- $F0B8 DEFB $07,$F0,$07,$F0,$0F,$E0,$0E,$E0
- $F0C0 DEFB $C1,$1C,$C1,$1C,$C1,$1C,$81,$3C
- $F0C8 DEFB $81,$3C,$00,$7E,$00,$7F,$00,$FF
- $F0D0 DEFB $C0,$1F,$80,$3F,$80,$3F,$80,$3F
- $F0D8 DEFB $00,$7F,$00,$FF,$00,$FF,$00,$FF
- $F0E0 DEFB $0E,$E0,$1C,$C1,$1C,$C1,$18,$C3
- $F0E8 DEFB $38,$83,$38,$83,$78,$03,$78,$03
- $F0F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F0F8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$F0
- $F100 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F108 DEFB $00,$FF,$00,$FF,$00,$8F,$70,$03
- $F110 DEFB $00,$FF,$00,$FF,$00,$FE,$01,$FC
- $F118 DEFB $03,$F8,$04,$70,$88,$03,$70,$07
- $F120 DEFB $0F,$C0,$3F,$80,$7F,$00,$FF,$00
- $F128 DEFB $7F,$00,$FE,$00,$7F,$00,$0F,$80
- $F130 DEFB $00,$00,$FF,$00,$EF,$00,$EF,$00
- $F138 DEFB $FF,$00,$FF,$00,$7F,$00,$7F,$00
- $F140 DEFB $EC,$01,$7E,$00,$BE,$00,$E8,$01
- $F148 DEFB $86,$10,$80,$39,$80,$3F,$00,$7F
- $F150 DEFB $00,$8F,$00,$FF,$00,$FF,$00,$FF
- $F158 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F160 DEFB $06,$F0,$06,$F0,$0D,$E0,$0C,$E0
- $F168 DEFB $05,$F0,$06,$F0,$03,$F8,$01,$FC
- $F170 DEFB $BC,$00,$86,$00,$73,$00,$C1,$0C
- $F178 DEFB $80,$1E,$61,$0C,$32,$00,$00,$4D
- $F180 DEFB $00,$FF,$00,$FF,$00,$7F,$80,$3F
- $F188 DEFB $80,$3F,$00,$7F,$00,$FF,$00,$FF
- $F190 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F198 DEFB $00,$FE,$01,$FC,$01,$FC,$03,$00
- $F1A0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$7F
- $F1A8 DEFB $80,$07,$F8,$03,$F4,$01,$3E,$00
- $F1B0 DEFB $00,$F0,$0F,$E0,$17,$00,$EF,$00
- $F1B8 DEFB $0F,$00,$1F,$C0,$1F,$C0,$0D,$E0
- $F1C0 DEFB $00,$00,$FF,$00,$FF,$00,$FF,$00
- $F1C8 DEFB $FF,$00,$EF,$00,$F7,$00,$F4,$00
- $F1D0 DEFB $FE,$00,$F7,$00,$EF,$00,$EF,$00
- $F1D8 DEFB $F7,$00,$FF,$00,$FF,$00,$FD,$00
- $F1E0 DEFB $FF,$00,$78,$00,$BE,$00,$C0,$01
- $F1E8 DEFB $80,$3F,$80,$3F,$C0,$1F,$E0,$0F
- $F1F0 DEFB $0E,$E0,$0E,$E0,$1C,$C1,$30,$82
- $F1F8 DEFB $60,$0E,$40,$1E,$60,$0E,$20,$8F
- $F200 DEFB $F0,$03,$E0,$0F,$60,$0F,$C0,$1F
- $F208 DEFB $C0,$1F,$80,$3F,$C0,$0F,$70,$07
- $F210 DEFB $02,$00,$00,$FC,$00,$FF,$00,$FF
- $F218 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F220 DEFB $F0,$07,$30,$07,$58,$03,$2C,$80
- $F228 DEFB $37,$80,$03,$C8,$00,$FC,$00,$FF
- $F230 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F238 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$E0
- $F240 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F248 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$1F
- $F250 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F258 DEFB $00,$FF,$00,$FF,$00,$8F,$70,$03
- $F260 DEFB $00,$FF,$00,$FE,$01,$FC,$02,$F8
- $F268 DEFB $05,$80,$79,$00,$00,$80,$05,$F0
- $F270 DEFB $1F,$C0,$3F,$00,$FF,$00,$FF,$00
- $F278 DEFB $FF,$00,$FC,$00,$E0,$03,$C0,$1F
- $F280 DEFB $E0,$00,$FF,$00,$FF,$00,$FF,$00
- $F288 DEFB $FF,$00,$7F,$00,$1F,$80,$07,$E0
- $F290 DEFB $FC,$01,$F6,$00,$7F,$00,$BF,$00
- $F298 DEFB $DC,$00,$C0,$03,$C0,$1F,$00,$1F
- $F2A0 DEFB $1D,$C0,$23,$80,$0E,$80,$78,$01
- $F2A8 DEFB $C0,$07,$00,$3F,$00,$FF,$00,$FF
- $F2B0 DEFB $C0,$1F,$80,$3F,$00,$7F,$00,$FF
- $F2B8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F2C0 DEFB $0E,$E0,$0C,$E1,$08,$E3,$18,$C3
- $F2C8 DEFB $10,$C7,$30,$87,$30,$87,$18,$C3
- $F2D0 DEFB $E0,$0F,$60,$0F,$30,$87,$10,$C7
- $F2D8 DEFB $18,$C0,$0F,$E0,$07,$F0,$00,$F8
- $F2E0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F2E8 DEFB $00,$FF,$00,$FF,$00,$F1,$0E,$80
- $F2F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F2F8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$91
- $F300 DEFB $00,$FF,$00,$FF,$00,$FE,$00,$FE
- $F308 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE
- $F310 DEFB $7F,$00,$7F,$00,$FF,$00,$FF,$00
- $F318 DEFB $F7,$00,$F7,$00,$EB,$00,$ED,$00
- $F320 DEFB $6E,$00,$5F,$00,$6D,$00,$72,$00
- $F328 DEFB $B6,$00,$BE,$00,$D2,$00,$ED,$00
- $F330 DEFB $00,$7F,$80,$3F,$80,$3F,$80,$3F
- $F338 DEFB $00,$7F,$00,$FF,$00,$FF,$00,$7F
- $F340 DEFB $00,$FE,$01,$FC,$01,$FC,$01,$FC
- $F348 DEFB $00,$FE,$00,$FE,$00,$FF,$00,$FF
- $F350 DEFB $C4,$10,$84,$30,$84,$30,$8C,$21
- $F358 DEFB $CC,$01,$C4,$01,$66,$00,$66,$00
- $F360 DEFB $F2,$00,$C6,$00,$C6,$10,$42,$18
- $F368 DEFB $42,$18,$62,$08,$66,$00,$66,$00
- $F370 DEFB $00,$FC,$03,$F8,$03,$F8,$01,$FC
- $F378 DEFB $01,$1C,$E3,$00,$DF,$00,$B1,$00
- $F380 DEFB $02,$00,$C6,$00,$6C,$00,$38,$00
- $F388 DEFB $1C,$00,$36,$00,$63,$00,$40,$00
- $F390 DEFB $10,$00,$18,$00,$18,$00,$7F,$00
- $F398 DEFB $FE,$00,$18,$00,$18,$00,$08,$00
- $F3A0 DEFB $00,$00,$00,$00,$20,$00,$FC,$00
- $F3A8 DEFB $FF,$00,$20,$00,$00,$00,$00,$00
- $F3B0 DEFB $00,$00,$00,$00,$20,$00,$FC,$00
- $F3B8 DEFB $FF,$00,$20,$00,$00,$00,$00,$00
- $F3C0 DEFB $00,$00,$00,$00,$3C,$00,$32,$00
- $F3C8 DEFB $6E,$00,$6E,$00,$7C,$00,$00,$00
- $F3D0 DEFB $00,$00,$18,$00,$3C,$00,$62,$00
- $F3D8 DEFB $6E,$00,$3E,$00,$1C,$00,$00,$00
- $F3E0 DEFB $1E,$00,$3E,$00,$7A,$00,$86,$00
- $F3E8 DEFB $F4,$00,$F8,$00,$F0,$00,$00,$00
- $F3F0 DEFB $1E,$00,$3E,$00,$7A,$00,$86,$00
- $F3F8 DEFB $F4,$00,$F8,$00,$F0,$00,$00,$00
- $F400 DEFB $00,$00,$00,$00,$00,$00,$FF,$00
- $F408 DEFB $FF,$00,$00,$00,$00,$00,$00,$00
- $F410 DEFB $18,$00,$18,$00,$18,$00,$18,$00
- $F418 DEFB $18,$00,$18,$00,$18,$00,$18,$00
- $F420 DEFB $00,$00,$0E,$00,$30,$00,$78,$00
- $F428 DEFB $48,$00,$78,$00,$70,$00,$00,$00
- $F430 DEFB $00,$00,$1C,$00,$18,$00,$34,$00
- $F438 DEFB $3C,$00,$3C,$00,$38,$00,$00,$00
- $F440 DEFB $1E,$C0,$3E,$80,$7A,$00,$86,$00
- $F448 DEFB $F4,$01,$F8,$03,$F0,$07,$00,$0F
- $F450 DEFB $1E,$C0,$3E,$80,$7A,$00,$86,$00
- $F458 DEFB $F4,$01,$F8,$03,$F0,$07,$00,$0F
- $F460 DEFB $FA,$00,$9E,$00,$BA,$00,$FA,$00
- $F468 DEFB $FA,$00,$FE,$00,$FA,$00,$00,$00
- $F470 DEFB $BE,$00,$FE,$00,$BE,$00,$BE,$00
- $F478 DEFB $BE,$00,$FE,$00,$BE,$00,$00,$00
- $F480 DEFB $08,$00,$18,$00,$38,$00,$7C,$00
- $F488 DEFB $5E,$00,$5A,$00,$7E,$00,$3C,$00
- $F490 DEFB $08,$00,$08,$00,$1C,$00,$36,$00
- $F498 DEFB $3A,$00,$3A,$00,$3E,$00,$1C,$00
- $F4A0 DEFB $3C,$00,$7A,$00,$DF,$00,$FF,$00
- $F4A8 DEFB $FD,$00,$FF,$00,$76,$00,$3C,$00
- $F4B0 DEFB $3C,$00,$76,$00,$DF,$00,$FF,$00
- $F4B8 DEFB $FF,$00,$FF,$00,$6E,$00,$3C,$00
- $F4C0 DEFB $7C,$01,$FC,$01,$FC,$01,$C8,$03
- $F4C8 DEFB $98,$03,$08,$03,$38,$03,$90,$07
- $F4D0 DEFB $F0,$04,$83,$00,$0F,$00,$B8,$00
- $F4D8 DEFB $D7,$00,$CF,$00,$FF,$00,$FE,$00
- $F4E0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F4E8 DEFB $00,$FF,$00,$FE,$01,$FC,$01,$FC
- $F4F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F4F8 DEFB $00,$C1,$3E,$00,$FE,$00,$FE,$00
- $F500 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE
- $F508 DEFB $00,$FE,$00,$FA,$05,$F0,$0B,$E0
- $F510 DEFB $C4,$01,$AC,$01,$84,$01,$9C,$01
- $F518 DEFB $E8,$01,$FE,$00,$FF,$00,$FF,$00
- $F520 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FC
- $F528 DEFB $03,$F8,$03,$F8,$01,$FC,$01,$FC
- $F530 DEFB $00,$FF,$00,$FF,$00,$83,$7C,$01
- $F538 DEFB $FC,$01,$FC,$01,$88,$03,$58,$03
- $F540 DEFB $01,$FC,$03,$00,$DF,$00,$3F,$00
- $F548 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $F550 DEFB $08,$03,$38,$03,$D0,$03,$FC,$01
- $F558 DEFB $FE,$00,$FE,$00,$FF,$00,$FF,$00
- $F560 DEFB $00,$FE,$01,$F8,$07,$F0,$07,$F0
- $F568 DEFB $07,$F0,$01,$F8,$01,$FC,$01,$FC
- $F570 DEFB $78,$03,$F8,$03,$E8,$02,$59,$00
- $F578 DEFB $0B,$00,$BF,$00,$DF,$00,$FF,$00
- $F580 DEFB $01,$FC,$03,$C0,$2F,$80,$5F,$00
- $F588 DEFB $DE,$00,$DF,$00,$DF,$00,$CF,$00
- $F590 DEFB $08,$03,$38,$03,$D0,$03,$FC,$01
- $F598 DEFB $3E,$00,$C0,$00,$FF,$00,$FF,$00
- $F5A0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F5A8 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F5B0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F5B8 DEFB $00,$3F,$C0,$1F,$E0,$07,$38,$00
- $F5C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F5C8 DEFB $00,$C0,$3F,$00,$FF,$00,$FE,$00
- $F5D0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $F5D8 DEFB $00,$FF,$00,$FC,$03,$80,$7F,$00
- $F5E0 DEFB $00,$1F,$E0,$0F,$F0,$07,$F0,$07
- $F5E8 DEFB $F0,$01,$F6,$00,$EF,$00,$07,$10
- $F5F0 DEFB $DF,$00,$FF,$00,$FF,$00,$FF,$00
- $F5F8 DEFB $3F,$00,$D7,$00,$D1,$00,$A0,$06
- $F600 DEFB $71,$00,$8F,$00,$BF,$00,$7F,$00
- $F608 DEFB $73,$00,$7C,$00,$BF,$00,$4F,$00
- $F610 DEFB $F8,$00,$FF,$00,$FF,$00,$07,$00
- $F618 DEFB $FF,$00,$FF,$00,$3F,$00,$CE,$00
- $F620 DEFB $00,$F0,$07,$C0,$3E,$00,$F9,$00
- $F628 DEFB $E7,$00,$DF,$00,$BF,$00,$38,$00
- $F630 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$80
- $F638 DEFB $7F,$00,$FF,$00,$FF,$00,$7E,$00
- $F640 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8
- $F648 DEFB $07,$F0,$07,$F0,$06,$F0,$06,$F0
- $F650 DEFB $00,$FF,$00,$1F,$E0,$0F,$F0,$07
- $F658 DEFB $F0,$07,$F0,$07,$B0,$07,$50,$07
- $F660 DEFB $F0,$07,$F0,$07,$F0,$01,$EC,$00
- $F668 DEFB $1E,$00,$FE,$00,$FF,$00,$FF,$00
- $F670 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F678 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F680 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F688 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F690 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F698 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F6A0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F6A8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F6B0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F6B8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $F6C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FE
- $F6C8 DEFB $00,$FE,$00,$98,$67,$00,$7F,$00
- $F6D0 DEFB $00,$F0,$0D,$C0,$2B,$00,$ED,$00
- $F6D8 DEFB $EE,$00,$B6,$00,$5B,$00,$6B,$00
- $F6E0 DEFB $00,$0F,$B0,$03,$D4,$00,$B7,$00
- $F6E8 DEFB $77,$00,$ED,$00,$DA,$00,$D6,$00
- $F6F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$7F
- $F6F8 DEFB $00,$7F,$00,$19,$E6,$00,$FE,$00
+; Tiles with mask, 256 tiles, 16 bytes each
+;
+; .
+;
+; .
+;
+; Used for Ninja on Tile Screen 2, and for Guard on Tile Screen 4
+; .
+; #HTML[<img src="images/tiles-e700.png" />]
+b$E700 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8,$03,$F8,$07,$F0,$07,$F0,$07,$F0
+ $E710 DEFB $00,$FF,$00,$3F,$C0,$1F,$E0,$0F,$F0,$07,$F0,$07,$50,$07,$20,$07
+ $E720 DEFB $00,$FF,$00,$FE,$01,$FC,$01,$FC,$00,$FC,$01,$FC,$03,$F8,$07,$F0
+ $E730 DEFB $77,$00,$E7,$00,$DF,$00,$3F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $E740 DEFB $F0,$07,$F0,$07,$F0,$03,$EC,$01,$9E,$00,$FE,$00,$FF,$00,$FF,$00
+ $E750 DEFB $07,$F0,$0F,$E0,$0F,$E0,$0E,$E0,$0E,$E0,$0E,$E0,$0E,$E0,$07,$F0
+ $E760 DEFB $DF,$00,$9F,$00,$2F,$00,$6F,$00,$6F,$00,$77,$00,$77,$00,$77,$00
+ $E770 DEFB $EF,$00,$FF,$00,$FD,$00,$FD,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00
+ $E780 DEFB $80,$3F,$C0,$04,$FB,$00,$FF,$00,$7F,$00,$0F,$80,$00,$F0,$00,$FF
+ $E790 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$1F,$C0,$1F,$C0,$1F,$00,$3F,$00,$FF
+ $E7A0 DEFB $07,$F0,$03,$F8,$03,$F8,$01,$FC,$00,$FE,$00,$FF,$00,$FF,$00,$FF
+ $E7B0 DEFB $B4,$00,$C4,$00,$C7,$10,$07,$30,$0F,$E0,$0F,$E0,$1F,$C0,$1F,$C0
+ $E7C0 DEFB $02,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$CF,$00
+ $E7D0 DEFB $00,$FF,$00,$7F,$80,$3F,$80,$3F,$C0,$1F,$C0,$1F,$E0,$0F,$E0,$0F
+ $E7E0 DEFB $1F,$C0,$3F,$80,$3E,$80,$3E,$80,$7E,$00,$7C,$01,$7C,$01,$7C,$01
+ $E7F0 DEFB $07,$30,$03,$78,$03,$F8,$01,$FC,$01,$FC,$01,$FC,$00,$FE,$00,$FE
+ $E800 DEFB $F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$E0,$0F
+ $E810 DEFB $7C,$01,$44,$01,$3C,$81,$3C,$81,$38,$83,$38,$83,$7C,$01,$7C,$01
+ $E820 DEFB $A0,$0F,$E0,$0F,$E0,$0F,$E0,$0F,$E0,$0F,$F0,$03,$FC,$01,$FE,$00
+ $E830 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$87,$78,$03,$FC,$01
+ $E840 DEFB $00,$FF,$00,$FF,$00,$C7,$38,$83,$3C,$81,$3C,$81,$1C,$C1,$1C,$C1
+ $E850 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$F8,$06,$F0,$0C,$E0
+ $E860 DEFB $FE,$00,$EA,$00,$E4,$00,$FE,$00,$FE,$00,$7E,$00,$FD,$00,$FF,$00
+ $E870 DEFB $18,$C3,$1C,$C1,$1C,$C1,$1C,$C1,$3C,$81,$7C,$01,$FC,$01,$F8,$03
+ $E880 DEFB $0B,$E0,$07,$F0,$07,$F0,$07,$F0,$0F,$E0,$0F,$E0,$0F,$E0,$0F,$E0
+ $E890 DEFB $FF,$00,$FB,$00,$FB,$00,$FF,$00,$DF,$00,$BE,$00,$8E,$00,$76,$00
+ $E8A0 DEFB $F0,$07,$E0,$0F,$E0,$0F,$80,$0F,$70,$07,$F8,$03,$F8,$03,$F8,$03
+ $E8B0 DEFB $0F,$E0,$0F,$E0,$07,$F0,$00,$F8,$01,$FC,$00,$FE,$00,$FF,$00,$FF
+ $E8C0 DEFB $F7,$00,$F1,$00,$EE,$00,$1F,$00,$BF,$00,$DF,$00,$1C,$00,$0B,$E0
+ $E8D0 DEFB $48,$03,$78,$03,$F8,$03,$78,$03,$B4,$01,$AC,$01,$BC,$01,$B8,$03
+ $E8E0 DEFB $0F,$E0,$0F,$E0,$07,$F0,$07,$F0,$07,$F0,$02,$F8,$03,$F8,$03,$F8
+ $E8F0 DEFB $80,$07,$80,$3F,$80,$3F,$80,$3F,$40,$1F,$C0,$1F,$C0,$1F,$80,$3F
+ $E900 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FE,$01,$FC,$03,$F8,$07,$E0,$1F,$C0
+ $E910 DEFB $00,$C7,$38,$83,$7C,$01,$FC,$01,$F8,$03,$C0,$07,$C0,$1F,$80,$3F
+ $E920 DEFB $F0,$07,$F8,$03,$A8,$02,$91,$00,$FB,$00,$FF,$00,$FF,$00,$FF,$00
+ $E930 DEFB $3F,$80,$7E,$00,$FC,$01,$F8,$03,$F0,$07,$E0,$0F,$D0,$07,$E8,$03
+ $E940 DEFB $FE,$00,$FF,$00,$7F,$00,$C7,$00,$BB,$00,$BB,$00,$DD,$00,$5D,$00
+ $E950 DEFB $E8,$03,$74,$01,$F4,$01,$F8,$00,$FB,$00,$FF,$00,$FB,$00,$F7,$00
+ $E960 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $E970 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$60,$9F,$00,$FE,$00,$FE,$00,$FF,$00
+ $E980 DEFB $6E,$00,$2F,$80,$37,$80,$1F,$C0,$0E,$E0,$00,$F1,$00,$FF,$00,$FF
+ $E990 DEFB $E7,$00,$4F,$00,$5F,$00,$7E,$00,$7F,$00,$3F,$80,$3F,$80,$1F,$C0
+ $E9A0 DEFB $FF,$00,$FC,$00,$C0,$00,$07,$30,$07,$70,$0F,$60,$9F,$00,$AE,$00
+ $E9B0 DEFB $1E,$00,$00,$E1,$00,$0F,$F0,$07,$F0,$07,$E0,$0F,$00,$1F,$00,$FF
+ $E9C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$78,$87,$00,$FB,$00,$FB,$00,$FF,$00
+ $E9D0 DEFB $0F,$E0,$07,$F0,$03,$F8,$01,$FC,$00,$FE,$00,$FF,$00,$FF,$00,$FF
+ $E9E0 DEFB $E8,$01,$E8,$03,$F0,$07,$E0,$0F,$C0,$1F,$00,$3F,$00,$FF,$00,$FF
+ $E9F0 DEFB $07,$80,$77,$00,$6F,$00,$DF,$00,$DE,$00,$DF,$00,$DF,$00,$CF,$00
+ $EA00 DEFB $F0,$07,$F0,$07,$F0,$03,$EC,$01,$3E,$00,$C0,$00,$FF,$00,$FF,$00
+ $EA10 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$F8,$07,$C0,$3F,$00,$FF,$00,$FF,$00
+ $EA20 DEFB $D7,$00,$D9,$00,$6E,$00,$6F,$00,$6F,$00,$37,$80,$37,$80,$0F,$C0
+ $EA30 DEFB $FF,$00,$FC,$00,$02,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00
+ $EA40 DEFB $F0,$00,$00,$0F,$00,$3F,$C0,$1F,$E0,$0F,$E0,$0F,$C0,$1F,$00,$3F
+ $EA50 DEFB $04,$F0,$04,$F0,$07,$F0,$07,$F0,$0F,$E0,$0F,$E0,$1F,$C0,$1F,$C0
+ $EA60 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$83,$7C,$01
+ $EA70 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$F8,$06,$F0,$0F,$E0,$1F,$C0,$1D,$C0
+ $EA80 DEFB $FE,$00,$FE,$00,$FE,$00,$AB,$00,$92,$00,$FE,$00,$7F,$00,$9F,$00
+ $EA90 DEFB $00,$7F,$00,$7F,$00,$3F,$C0,$1F,$E0,$0F,$E0,$0F,$E0,$0F,$E0,$0F
+ $EAA0 DEFB $3D,$80,$38,$80,$37,$80,$2F,$80,$6F,$00,$6F,$00,$6F,$00,$6B,$00
+ $EAB0 DEFB $FE,$00,$FE,$00,$FE,$00,$C3,$00,$FF,$00,$FF,$00,$FF,$00,$CF,$00
+ $EAC0 DEFB $F0,$07,$F0,$07,$F0,$07,$70,$07,$70,$07,$B0,$07,$B8,$03,$B8,$03
+ $EAD0 DEFB $6D,$00,$37,$80,$37,$80,$37,$80,$37,$80,$37,$80,$6F,$00,$6F,$00
+ $EAE0 DEFB $07,$30,$07,$70,$07,$70,$07,$70,$07,$70,$07,$70,$07,$70,$03,$78
+ $EAF0 DEFB $B8,$03,$B8,$03,$D8,$03,$D8,$03,$D8,$03,$D8,$03,$D8,$03,$B8,$03
+ $EB00 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$E7,$18,$C3,$3C,$81,$3C,$81,$38,$83
+ $EB10 DEFB $70,$04,$73,$00,$E7,$00,$E7,$00,$E7,$00,$E7,$00,$F7,$00,$F7,$00
+ $EB20 DEFB $00,$3F,$C0,$1F,$E0,$0F,$E0,$0F,$E0,$0F,$E0,$09,$E6,$00,$E7,$00
+ $EB30 DEFB $E3,$00,$DC,$00,$BF,$00,$BF,$00,$BF,$00,$BF,$00,$BF,$00,$BF,$00
+ $EB40 DEFB $D7,$00,$33,$00,$FB,$00,$FB,$00,$FB,$00,$FB,$00,$FB,$00,$FE,$00
+ $EB50 DEFB $7F,$00,$3F,$80,$3F,$80,$3F,$80,$1F,$80,$20,$80,$20,$80,$3F,$80
+ $EB60 DEFB $FC,$01,$F8,$03,$F8,$03,$F8,$03,$F0,$07,$10,$07,$30,$07,$F8,$03
+ $EB70 DEFB $7F,$00,$FF,$00,$FF,$00,$DF,$00,$EF,$00,$F0,$00,$FC,$00,$7C,$01
+ $EB80 DEFB $F8,$03,$F8,$03,$F8,$03,$F8,$03,$FC,$01,$FC,$01,$FC,$01,$7E,$00
+ $EB90 DEFB $5C,$01,$64,$01,$3C,$81,$3C,$81,$3C,$81,$1E,$C0,$1E,$C0,$1E,$C0
+ $EBA0 DEFB $7E,$00,$3E,$80,$3E,$80,$1E,$C0,$3E,$80,$3C,$81,$7C,$01,$58,$03
+ $EBB0 DEFB $0E,$E0,$0E,$E0,$0D,$E0,$0D,$E0,$01,$F0,$03,$F8,$03,$F8,$03,$F8
+ $EBC0 DEFB $E8,$03,$F0,$07,$E0,$0F,$E0,$0F,$C0,$1F,$C0,$1F,$E0,$0F,$F0,$07
+ $EBD0 DEFB $01,$FC,$03,$F8,$03,$F8,$03,$F8,$03,$F8,$03,$F8,$01,$FC,$01,$FC
+ $EBE0 DEFB $02,$F8,$02,$F8,$03,$F8,$02,$F8,$02,$F8,$00,$FC,$00,$FE,$00,$FF
+ $EBF0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FE,$01,$FC,$03,$F8
+ $EC00 DEFB $00,$FE,$01,$FC,$01,$FC,$03,$F8,$03,$18,$E3,$00,$DF,$00,$B1,$00
+ $EC10 DEFB $F0,$07,$F8,$03,$F8,$03,$F8,$03,$C8,$03,$C8,$03,$F0,$07,$F0,$07
+ $EC20 DEFB $03,$F8,$06,$F0,$06,$F0,$0D,$E0,$0D,$E0,$0D,$E0,$0B,$E0,$0B,$E0
+ $EC30 DEFB $6E,$00,$EF,$00,$EF,$00,$F7,$00,$F7,$00,$FB,$00,$FB,$00,$FD,$00
+ $EC40 DEFB $E0,$0C,$83,$10,$4F,$00,$B8,$00,$D7,$00,$CF,$00,$FF,$00,$FE,$00
+ $EC50 DEFB $0A,$E0,$04,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$03,$F8,$01,$FC
+ $EC60 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07,$E0,$0F,$F0,$07,$F0,$07,$F0,$07
+ $EC70 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $EC80 DEFB $01,$FC,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$01,$F8,$07,$80,$7B,$00
+ $EC90 DEFB $F8,$03,$F8,$03,$FC,$01,$FC,$01,$FE,$00,$FE,$00,$FE,$00,$F8,$01
+ $ECA0 DEFB $03,$F8,$03,$F8,$07,$F0,$07,$F0,$06,$F0,$04,$F1,$00,$FB,$00,$FF
+ $ECB0 DEFB $FD,$00,$F8,$00,$80,$07,$00,$7F,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $ECC0 DEFB $F0,$07,$70,$07,$50,$07,$70,$07,$70,$07,$30,$83,$3C,$81,$3E,$80
+ $ECD0 DEFB $0A,$E0,$04,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$03,$F8,$03,$F8
+ $ECE0 DEFB $79,$00,$10,$06,$D0,$07,$E0,$07,$F0,$03,$FC,$00,$FF,$00,$FF,$00
+ $ECF0 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF,$00,$FF,$00,$FF,$00,$3F,$C0,$1F
+ $ED00 DEFB $01,$FC,$01,$FC,$01,$FC,$01,$FC,$01,$FC,$03,$F8,$03,$F8,$07,$F0
+ $ED10 DEFB $FF,$00,$FF,$00,$F3,$00,$E3,$08,$E7,$00,$C8,$00,$DF,$00,$BC,$00
+ $ED20 DEFB $E0,$0F,$F0,$07,$F0,$07,$E0,$0F,$C0,$1F,$80,$3F,$00,$7F,$00,$FF
+ $ED30 DEFB $07,$F0,$0A,$E0,$1E,$C0,$3C,$80,$78,$02,$70,$02,$7C,$01,$3E,$80
+ $ED40 DEFB $70,$03,$60,$0F,$E0,$0F,$C0,$1F,$C0,$1F,$80,$3F,$00,$7F,$00,$FF
+ $ED50 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07,$F8,$01,$FE,$00,$FF,$00,$FF,$00
+ $ED60 DEFB $F8,$01,$E0,$07,$00,$1F,$00,$FF,$00,$FF,$00,$FF,$00,$7F,$80,$3F
+ $ED70 DEFB $01,$FC,$01,$FC,$03,$F8,$03,$F8,$07,$F0,$07,$F0,$0F,$C0,$3F,$00
+ $ED80 DEFB $FF,$00,$FF,$00,$E7,$00,$C3,$18,$C5,$10,$86,$30,$8F,$20,$0F,$60
+ $ED90 DEFB $C0,$1F,$C0,$1F,$C0,$1F,$C0,$1F,$80,$3F,$80,$3F,$00,$7F,$00,$7F
+ $EDA0 DEFB $00,$FC,$03,$F0,$0F,$E0,$1F,$C0,$1C,$C0,$1C,$C1,$1C,$C1,$0E,$E0
+ $EDB0 DEFB $DF,$00,$DC,$00,$E0,$03,$00,$1F,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $EDC0 DEFB $1E,$C0,$1C,$C1,$18,$C3,$1C,$C1,$0C,$E1,$0E,$E0,$06,$F0,$00,$F9
+ $EDD0 DEFB $79,$00,$10,$06,$D0,$07,$F0,$07,$F0,$07,$F8,$03,$F8,$03,$FC,$01
+ $EDE0 DEFB $1C,$C1,$1C,$C1,$1C,$C1,$18,$C3,$18,$C3,$18,$C2,$39,$80,$3B,$80
+ $EDF0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FC,$03,$F8
+ $EE00 DEFB $07,$F0,$07,$F0,$0F,$E0,$0F,$E0,$1F,$C0,$3E,$00,$FE,$00,$FC,$01
+ $EE10 DEFB $FE,$00,$FF,$00,$FF,$00,$BF,$00,$0F,$40,$03,$F0,$01,$FC,$00,$FE
+ $EE20 DEFB $00,$FF,$00,$7F,$80,$3F,$C0,$1F,$C0,$1F,$C0,$1F,$E0,$0F,$E0,$0F
+ $EE30 DEFB $0B,$C0,$3B,$80,$3C,$80,$70,$03,$60,$0F,$E0,$0F,$C0,$1F,$C0,$1F
+ $EE40 DEFB $F0,$03,$80,$0F,$00,$7F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $EE50 DEFB $A0,$0F,$E0,$0F,$70,$07,$70,$07,$70,$07,$70,$03,$7C,$01,$3E,$80
+ $EE60 DEFB $1F,$C0,$11,$C0,$1E,$C0,$1F,$C0,$1F,$C0,$0F,$E0,$0F,$E0,$0F,$E0
+ $EE70 DEFB $FC,$01,$F8,$01,$64,$01,$9C,$01,$BC,$01,$BC,$01,$DC,$01,$DC,$01
+ $EE80 DEFB $0F,$E0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$03,$F8
+ $EE90 DEFB $DC,$01,$DC,$01,$DC,$01,$DC,$01,$DC,$01,$BC,$01,$DC,$01,$DC,$01
+ $EEA0 DEFB $02,$F8,$03,$F8,$03,$F8,$03,$F8,$03,$F8,$03,$F8,$03,$F8,$01,$FC
+ $EEB0 DEFB $58,$03,$C8,$03,$D8,$03,$D8,$03,$D8,$03,$D8,$03,$D8,$03,$B0,$07
+ $EEC0 DEFB $1C,$C1,$1C,$C1,$1C,$C1,$0C,$E1,$0C,$E1,$0C,$01,$EC,$01,$F4,$01
+ $EED0 DEFB $3A,$80,$3A,$80,$3B,$80,$3D,$80,$3F,$80,$3D,$80,$5F,$00,$5F,$00
+ $EEE0 DEFB $B6,$00,$56,$00,$F6,$00,$F6,$00,$F6,$00,$EE,$00,$9E,$00,$FE,$00
+ $EEF0 DEFB $5F,$00,$5F,$00,$5F,$00,$5F,$00,$5F,$00,$6F,$00,$6F,$00,$77,$00
+ $EF00 DEFB $FE,$00,$FE,$00,$F6,$00,$F6,$00,$FE,$00,$FE,$00,$FC,$01,$FC,$01
+ $EF10 DEFB $77,$00,$77,$00,$37,$80,$08,$C0,$08,$E0,$0F,$E0,$0F,$E0,$1F,$C0
+ $EF20 DEFB $FC,$01,$FC,$01,$F8,$01,$04,$01,$04,$01,$FC,$01,$FC,$01,$FC,$01
+ $EF30 DEFB $02,$F8,$02,$F8,$00,$FC,$01,$FC,$01,$FC,$01,$FC,$01,$FC,$00,$FE
+ $EF40 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FE,$01,$FC,$03,$F8
+ $EF50 DEFB $03,$F8,$06,$F0,$0F,$C0,$37,$80,$7B,$00,$7B,$00,$FB,$00,$F6,$00
+ $EF60 DEFB $ED,$00,$EF,$00,$F7,$00,$7B,$00,$BC,$00,$DF,$00,$C7,$00,$B8,$00
+ $EF70 DEFB $7D,$00,$73,$00,$66,$00,$00,$99,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $EF80 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$1F,$E0,$0F,$F0,$07
+ $EF90 DEFB $70,$07,$30,$07,$10,$07,$A0,$0F,$C0,$1F,$00,$3F,$C0,$07,$38,$03
+ $EFA0 DEFB $9C,$01,$DC,$01,$FA,$00,$C6,$00,$36,$00,$F4,$01,$E0,$03,$00,$1F
+ $EFB0 DEFB $80,$1F,$00,$7F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $EFC0 DEFB $00,$FF,$00,$FF,$00,$FE,$01,$FC,$01,$FC,$03,$F8,$03,$F8,$02,$F8
+ $EFD0 DEFB $00,$FF,$00,$FF,$00,$FC,$03,$F8,$07,$F0,$07,$F0,$06,$F0,$07,$F0
+ $EFE0 DEFB $00,$FF,$00,$FF,$00,$3F,$C0,$1F,$E0,$0F,$E0,$0F,$00,$0F,$00,$0F
+ $EFF0 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8,$02,$F8,$01,$FC,$03,$F8,$07,$F0
+ $F000 DEFB $07,$30,$CF,$00,$BF,$00,$7F,$00,$FF,$00,$FF,$00,$FF,$00,$EF,$00
+ $F010 DEFB $E0,$0F,$C0,$0F,$B0,$07,$F8,$03,$FC,$01,$FE,$00,$DF,$00,$DF,$00
+ $F020 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$7F,$80,$3F
+ $F030 DEFB $07,$F0,$0F,$E0,$0F,$E0,$0E,$E0,$0F,$E0,$07,$E0,$0B,$E0,$0D,$E0
+ $F040 DEFB $9F,$00,$7F,$00,$7F,$00,$FF,$00,$7F,$00,$7F,$00,$9F,$00,$EF,$00
+ $F050 DEFB $B7,$00,$E3,$08,$E1,$0C,$E0,$0E,$C0,$00,$DE,$00,$FF,$00,$FF,$00
+ $F060 DEFB $C0,$1F,$C0,$1F,$E0,$0F,$F0,$07,$70,$07,$78,$03,$38,$03,$78,$03
+ $F070 DEFB $0E,$E0,$0D,$E0,$01,$F0,$01,$FC,$01,$FC,$01,$FC,$03,$F8,$03,$F8
+ $F080 DEFB $F7,$00,$77,$00,$8F,$00,$FF,$00,$FB,$00,$F0,$04,$F0,$07,$E0,$0E
+ $F090 DEFB $FF,$00,$FF,$00,$FE,$00,$DC,$01,$3C,$01,$78,$03,$70,$07,$E0,$0F
+ $F0A0 DEFB $78,$03,$30,$07,$00,$CF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $F0B0 DEFB $03,$F8,$03,$F8,$07,$F0,$07,$F0,$07,$F0,$07,$F0,$0F,$E0,$0E,$E0
+ $F0C0 DEFB $C1,$1C,$C1,$1C,$C1,$1C,$81,$3C,$81,$3C,$00,$7E,$00,$7F,$00,$FF
+ $F0D0 DEFB $C0,$1F,$80,$3F,$80,$3F,$80,$3F,$00,$7F,$00,$FF,$00,$FF,$00,$FF
+ $F0E0 DEFB $0E,$E0,$1C,$C1,$1C,$C1,$18,$C3,$38,$83,$38,$83,$78,$03,$78,$03
+ $F0F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$F0
+ $F100 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$8F,$70,$03
+ $F110 DEFB $00,$FF,$00,$FF,$00,$FE,$01,$FC,$03,$F8,$04,$70,$88,$03,$70,$07
+ $F120 DEFB $0F,$C0,$3F,$80,$7F,$00,$FF,$00,$7F,$00,$FE,$00,$7F,$00,$0F,$80
+ $F130 DEFB $00,$00,$FF,$00,$EF,$00,$EF,$00,$FF,$00,$FF,$00,$7F,$00,$7F,$00
+ $F140 DEFB $EC,$01,$7E,$00,$BE,$00,$E8,$01,$86,$10,$80,$39,$80,$3F,$00,$7F
+ $F150 DEFB $00,$8F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $F160 DEFB $06,$F0,$06,$F0,$0D,$E0,$0C,$E0,$05,$F0,$06,$F0,$03,$F8,$01,$FC
+ $F170 DEFB $BC,$00,$86,$00,$73,$00,$C1,$0C,$80,$1E,$61,$0C,$32,$00,$00,$4D
+ $F180 DEFB $00,$FF,$00,$FF,$00,$7F,$80,$3F,$80,$3F,$00,$7F,$00,$FF,$00,$FF
+ $F190 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FE,$01,$FC,$01,$FC,$03,$00
+ $F1A0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$7F,$80,$07,$F8,$03,$F4,$01,$3E,$00
+ $F1B0 DEFB $00,$F0,$0F,$E0,$17,$00,$EF,$00,$0F,$00,$1F,$C0,$1F,$C0,$0D,$E0
+ $F1C0 DEFB $00,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$EF,$00,$F7,$00,$F4,$00
+ $F1D0 DEFB $FE,$00,$F7,$00,$EF,$00,$EF,$00,$F7,$00,$FF,$00,$FF,$00,$FD,$00
+ $F1E0 DEFB $FF,$00,$78,$00,$BE,$00,$C0,$01,$80,$3F,$80,$3F,$C0,$1F,$E0,$0F
+ $F1F0 DEFB $0E,$E0,$0E,$E0,$1C,$C1,$30,$82,$60,$0E,$40,$1E,$60,$0E,$20,$8F
+ $F200 DEFB $F0,$03,$E0,$0F,$60,$0F,$C0,$1F,$C0,$1F,$80,$3F,$C0,$0F,$70,$07
+ $F210 DEFB $02,$00,$00,$FC,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $F220 DEFB $F0,$07,$30,$07,$58,$03,$2C,$80,$37,$80,$03,$C8,$00,$FC,$00,$FF
+ $F230 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$E0
+ $F240 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$1F
+ $F250 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$8F,$70,$03
+ $F260 DEFB $00,$FF,$00,$FE,$01,$FC,$02,$F8,$05,$80,$79,$00,$00,$80,$05,$F0
+ $F270 DEFB $1F,$C0,$3F,$00,$FF,$00,$FF,$00,$FF,$00,$FC,$00,$E0,$03,$C0,$1F
+ $F280 DEFB $E0,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$7F,$00,$1F,$80,$07,$E0
+ $F290 DEFB $FC,$01,$F6,$00,$7F,$00,$BF,$00,$DC,$00,$C0,$03,$C0,$1F,$00,$1F
+ $F2A0 DEFB $1D,$C0,$23,$80,$0E,$80,$78,$01,$C0,$07,$00,$3F,$00,$FF,$00,$FF
+ $F2B0 DEFB $C0,$1F,$80,$3F,$00,$7F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $F2C0 DEFB $0E,$E0,$0C,$E1,$08,$E3,$18,$C3,$10,$C7,$30,$87,$30,$87,$18,$C3
+ $F2D0 DEFB $E0,$0F,$60,$0F,$30,$87,$10,$C7,$18,$C0,$0F,$E0,$07,$F0,$00,$F8
+ $F2E0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$F1,$0E,$80
+ $F2F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$91
+ $F300 DEFB $00,$FF,$00,$FF,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FE
+ $F310 DEFB $7F,$00,$7F,$00,$FF,$00,$FF,$00,$F7,$00,$F7,$00,$EB,$00,$ED,$00
+ $F320 DEFB $6E,$00,$5F,$00,$6D,$00,$72,$00,$B6,$00,$BE,$00,$D2,$00,$ED,$00
+ $F330 DEFB $00,$7F,$80,$3F,$80,$3F,$80,$3F,$00,$7F,$00,$FF,$00,$FF,$00,$7F
+ $F340 DEFB $00,$FE,$01,$FC,$01,$FC,$01,$FC,$00,$FE,$00,$FE,$00,$FF,$00,$FF
+ $F350 DEFB $C4,$10,$84,$30,$84,$30,$8C,$21,$CC,$01,$C4,$01,$66,$00,$66,$00
+ $F360 DEFB $F2,$00,$C6,$00,$C6,$10,$42,$18,$42,$18,$62,$08,$66,$00,$66,$00
+ $F370 DEFB $00,$FC,$03,$F8,$03,$F8,$01,$FC,$01,$1C,$E3,$00,$DF,$00,$B1,$00
+ $F380 DEFB $02,$00,$C6,$00,$6C,$00,$38,$00,$1C,$00,$36,$00,$63,$00,$40,$00
+ $F390 DEFB $10,$00,$18,$00,$18,$00,$7F,$00,$FE,$00,$18,$00,$18,$00,$08,$00
+ $F3A0 DEFB $00,$00,$00,$00,$20,$00,$FC,$00,$FF,$00,$20,$00,$00,$00,$00,$00
+ $F3B0 DEFB $00,$00,$00,$00,$20,$00,$FC,$00,$FF,$00,$20,$00,$00,$00,$00,$00
+ $F3C0 DEFB $00,$00,$00,$00,$3C,$00,$32,$00,$6E,$00,$6E,$00,$7C,$00,$00,$00
+ $F3D0 DEFB $00,$00,$18,$00,$3C,$00,$62,$00,$6E,$00,$3E,$00,$1C,$00,$00,$00
+ $F3E0 DEFB $1E,$00,$3E,$00,$7A,$00,$86,$00,$F4,$00,$F8,$00,$F0,$00,$00,$00
+ $F3F0 DEFB $1E,$00,$3E,$00,$7A,$00,$86,$00,$F4,$00,$F8,$00,$F0,$00,$00,$00
+ $F400 DEFB $00,$00,$00,$00,$00,$00,$FF,$00,$FF,$00,$00,$00,$00,$00,$00,$00
+ $F410 DEFB $18,$00,$18,$00,$18,$00,$18,$00,$18,$00,$18,$00,$18,$00,$18,$00
+ $F420 DEFB $00,$00,$0E,$00,$30,$00,$78,$00,$48,$00,$78,$00,$70,$00,$00,$00
+ $F430 DEFB $00,$00,$1C,$00,$18,$00,$34,$00,$3C,$00,$3C,$00,$38,$00,$00,$00
+ $F440 DEFB $1E,$C0,$3E,$80,$7A,$00,$86,$00,$F4,$01,$F8,$03,$F0,$07,$00,$0F
+ $F450 DEFB $1E,$C0,$3E,$80,$7A,$00,$86,$00,$F4,$01,$F8,$03,$F0,$07,$00,$0F
+ $F460 DEFB $FA,$00,$9E,$00,$BA,$00,$FA,$00,$FA,$00,$FE,$00,$FA,$00,$00,$00
+ $F470 DEFB $BE,$00,$FE,$00,$BE,$00,$BE,$00,$BE,$00,$FE,$00,$BE,$00,$00,$00
+ $F480 DEFB $08,$00,$18,$00,$38,$00,$7C,$00,$5E,$00,$5A,$00,$7E,$00,$3C,$00
+ $F490 DEFB $08,$00,$08,$00,$1C,$00,$36,$00,$3A,$00,$3A,$00,$3E,$00,$1C,$00
+ $F4A0 DEFB $3C,$00,$7A,$00,$DF,$00,$FF,$00,$FD,$00,$FF,$00,$76,$00,$3C,$00
+ $F4B0 DEFB $3C,$00,$76,$00,$DF,$00,$FF,$00,$FF,$00,$FF,$00,$6E,$00,$3C,$00
+ $F4C0 DEFB $7C,$01,$FC,$01,$FC,$01,$C8,$03,$98,$03,$08,$03,$38,$03,$90,$07
+ $F4D0 DEFB $F0,$04,$83,$00,$0F,$00,$B8,$00,$D7,$00,$CF,$00,$FF,$00,$FE,$00
+ $F4E0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FE,$01,$FC,$01,$FC
+ $F4F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$C1,$3E,$00,$FE,$00,$FE,$00
+ $F500 DEFB $00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FE,$00,$FA,$05,$F0,$0B,$E0
+ $F510 DEFB $C4,$01,$AC,$01,$84,$01,$9C,$01,$E8,$01,$FE,$00,$FF,$00,$FF,$00
+ $F520 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FC,$03,$F8,$03,$F8,$01,$FC,$01,$FC
+ $F530 DEFB $00,$FF,$00,$FF,$00,$83,$7C,$01,$FC,$01,$FC,$01,$88,$03,$58,$03
+ $F540 DEFB $01,$FC,$03,$00,$DF,$00,$3F,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $F550 DEFB $08,$03,$38,$03,$D0,$03,$FC,$01,$FE,$00,$FE,$00,$FF,$00,$FF,$00
+ $F560 DEFB $00,$FE,$01,$F8,$07,$F0,$07,$F0,$07,$F0,$01,$F8,$01,$FC,$01,$FC
+ $F570 DEFB $78,$03,$F8,$03,$E8,$02,$59,$00,$0B,$00,$BF,$00,$DF,$00,$FF,$00
+ $F580 DEFB $01,$FC,$03,$C0,$2F,$80,$5F,$00,$DE,$00,$DF,$00,$DF,$00,$CF,$00
+ $F590 DEFB $08,$03,$38,$03,$D0,$03,$FC,$01,$3E,$00,$C0,$00,$FF,$00,$FF,$00
+ $F5A0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+ $F5B0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$3F,$C0,$1F,$E0,$07,$38,$00
+ $F5C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$C0,$3F,$00,$FF,$00,$FE,$00
+ $F5D0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FC,$03,$80,$7F,$00
+ $F5E0 DEFB $00,$1F,$E0,$0F,$F0,$07,$F0,$07,$F0,$01,$F6,$00,$EF,$00,$07,$10
+ $F5F0 DEFB $DF,$00,$FF,$00,$FF,$00,$FF,$00,$3F,$00,$D7,$00,$D1,$00,$A0,$06
+ $F600 DEFB $71,$00,$8F,$00,$BF,$00,$7F,$00,$73,$00,$7C,$00,$BF,$00,$4F,$00
+ $F610 DEFB $F8,$00,$FF,$00,$FF,$00,$07,$00,$FF,$00,$FF,$00,$3F,$00,$CE,$00
+ $F620 DEFB $00,$F0,$07,$C0,$3E,$00,$F9,$00,$E7,$00,$DF,$00,$BF,$00,$38,$00
+ $F630 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$80,$7F,$00,$FF,$00,$FF,$00,$7E,$00
+ $F640 DEFB $00,$FF,$00,$FE,$01,$FC,$03,$F8,$07,$F0,$07,$F0,$06,$F0,$06,$F0
+ $F650 DEFB $00,$FF,$00,$1F,$E0,$0F,$F0,$07,$F0,$07,$F0,$07,$B0,$07,$50,$07
+ $F660 DEFB $F0,$07,$F0,$07,$F0,$01,$EC,$00,$1E,$00,$FE,$00,$FF,$00,$FF,$00
+ $F670 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $F680 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $F690 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $F6A0 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $F6B0 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $F6C0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FE,$00,$FE,$00,$98,$67,$00,$7F,$00
+ $F6D0 DEFB $00,$F0,$0D,$C0,$2B,$00,$ED,$00,$EE,$00,$B6,$00,$5B,$00,$6B,$00
+ $F6E0 DEFB $00,$0F,$B0,$03,$D4,$00,$B7,$00,$77,$00,$ED,$00,$DA,$00,$D6,$00
+ $F6F0 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$7F,$00,$7F,$00,$19,$E6,$00,$FE,$00
 
-; Tiles, 9 bytes each
+; Background tiles, 69 tiles, 9 bytes each
+;
+; .
+;
+; .
+;
+; #HTML[<img src="images/backtiles.png" />]
 b$F700 DEFB $FE,$82,$A2,$A2,$BA,$82,$FE,$00,$30
  $F709 DEFB $7F,$41,$7F,$00,$7F,$41,$7F,$00,$20
  $F712 DEFB $FF,$80,$80,$80,$FF,$08,$08,$08,$08
@@ -9803,7 +9560,7 @@ b$F700 DEFB $FE,$82,$A2,$A2,$BA,$82,$FE,$00,$30
  $F964 DEFB $8D,$C3,$B0,$B3,$CA,$40,$B0,$FE,$30
  $F96D DEFB $CA,$40,$B0,$C3,$9C,$AF
 
-; Room 84A8 initialization
+; Room #R$84A8 initialization
 ;
 ; Used by the routine at #R$B66A.
 c$F973 LD HL,$65DA   ;
@@ -9824,12 +9581,30 @@ c$F973 LD HL,$65DA   ;
  $F98C JP $B422      ;
 
 ; Data block at F98F
-b$F98F DEFB $82,$83,$84,$85,$86,$87,$85,$88
- $F997 DEFB $89,$8A,$8B,$89,$82,$83,$84,$00
- $F99F DEFB $8C,$00,$CB,$10,$CB,$10,$CB,$10
- $F9A7 DEFB $CB,$10,$21,$00,$00,$7E,$E6,$F8
- $F9AF DEFB $D3,$FE,$4E,$23,$0D,$20,$FD,$10
- $F9B7 DEFB $F4,$C9
+b$F98F DEFB $82,$83,$84
+ $F992 DEFB $85,$86,$87
+ $F995 DEFB $85,$88,$89
+ $F998 DEFB $8A,$8B,$89
+ $F99B DEFB $82,$83,$84
+ $F99E DEFB $00,$8C,$00
+
+; Routine at F9A1
+;
+; Used by the routines at #R$B596 and #R$FA31.
+c$F9A1 RL B          ;
+ $F9A3 RL B          ;
+ $F9A5 RL B          ;
+ $F9A7 RL B          ;
+ $F9A9 LD HL,$0000   ;
+*$F9AC LD A,(HL)     ;
+ $F9AD AND $F8       ;
+ $F9AF OUT ($FE),A   ;
+ $F9B1 LD C,(HL)     ;
+ $F9B2 INC HL        ;
+*$F9B3 DEC C         ;
+ $F9B4 JR NZ,$F9B3   ;
+ $F9B6 DJNZ $F9AC    ;
+ $F9B8 RET           ;
 
 ; Pause, then wait for any key pressed
 ;
@@ -9844,7 +9619,7 @@ c$F9B9 LD DE,$0000   ;
 *$F9C5 CALL $BBDF    ; Read Input
  $F9C8 LD A,($7222)  ;
  $F9CB CP $00        ;
- $F9CD LD A,($7232)  ;
+ $F9CD LD A,($7232)  ; get Input bits
  $F9D0 JR Z,$F9D7    ;
  $F9D2 BIT 4,A       ;
  $F9D4 RET NZ        ;
@@ -9867,190 +9642,199 @@ b$F9E4 DEFB $CD,$90,$65,$3E,$21,$32,$DB,$AE
  $FA14 DEFB $FE,$78,$3D,$20,$FD,$04,$AF,$D3
  $FA1C DEFB $FE,$7D,$E6,$F8,$D3,$FE,$2B,$7C
  $FA24 DEFB $B5,$20,$EA,$C9,$06,$01,$CD,$A1
- $FA2C DEFB $F9,$3A,$84,$71,$C9,$CD,$D9,$9D
- $FA34 DEFB $06,$01,$CD,$A1,$F9,$C9,$00,$00
- $FA3C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA44 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA4C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA54 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA5C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA64 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA6C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA74 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
- $FA7C DEFB $60,$04,$FF,$FF,$10,$86,$FF,$28
- $FA84 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FA8C DEFB $00,$DF,$FB,$DF,$FF,$F7,$FF,$DF
- $FA94 DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
- $FA9C DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
- $FAA4 DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
- $FAAC DEFB $F7,$FF,$DF,$FF,$08,$00,$00,$00
- $FAB4 DEFB $00,$FF,$FF,$00,$FF,$10,$00,$00
- $FABC DEFB $00,$00,$FF,$FF,$00,$FF,$10,$00
- $FAC4 DEFB $00,$00,$00,$FF,$FF,$00,$FF,$10
- $FACC DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
- $FAD4 DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
- $FADC DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
- $FAE4 DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
- $FAEC DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
- $FAF4 DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
- $FAFC DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
- $FB04 DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
- $FB0C DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB14 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
- $FB1C DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
- $FB24 DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
- $FB2C DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
- $FB34 DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
- $FB3C DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
- $FB44 DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
- $FB4C DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
- $FB54 DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
- $FB5C DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
- $FB64 DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
- $FB6C DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
- $FB74 DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
- $FB7C DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
- $FB84 DEFB $F7,$FF,$DF,$FF,$08,$00,$00,$00
- $FB8C DEFB $00,$FF,$FF,$00,$FF,$10,$1F,$FA
- $FB94 DEFB $FF,$A0,$A0,$FF,$F5,$1F,$28,$FF
- $FB9C DEFB $AA,$FF,$00,$00,$FF,$55,$FF,$28
- $FBA4 DEFB $F8,$AF,$FF,$05,$05,$FF,$5F,$F8
- $FBAC DEFB $28,$6E,$62,$62,$62,$62,$62,$6E
- $FBB4 DEFB $60,$30,$96,$97,$DB,$19,$DA,$9A
- $FBBC DEFB $9A,$9A,$30,$B4,$74,$EC,$CC,$2C
- $FBC4 DEFB $8C,$EC,$0C,$30,$DA,$9A,$B2,$B2
- $FBCC DEFB $B2,$B2,$B6,$30,$30,$EC,$8C,$AC
- $FBD4 DEFB $AC,$AC,$8C,$EC,$0C,$30,$62,$62
- $FBDC DEFB $6E,$60,$67,$6F,$5D,$5A,$30,$B6
- $FBE4 DEFB $B2,$B2,$B2,$32,$B2,$D6,$D0,$30
- $FBEC DEFB $FB,$18,$9C,$2E,$86,$C6,$FE,$7C
- $FBF4 DEFB $30,$00,$00,$00,$00,$00,$00,$00
- $FBFC DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FC04 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FC0C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FC14 DEFB $00,$00,$00,$00,$00,$FE,$FE,$C6
- $FC1C DEFB $38,$28,$28,$28,$7C,$21,$FE,$82
- $FC24 DEFB $A2,$22,$CA,$F2,$FC,$FF,$31,$CE
- $FC2C DEFB $F2,$FC,$FF,$FF,$FF,$FF,$FF,$31
- $FC34 DEFB $BE,$C2,$E2,$F2,$FA,$FC,$FE,$FF
- $FC3C DEFB $31,$00,$00,$00,$00,$00,$00,$00
- $FC44 DEFB $00,$08,$F3,$8F,$3F,$FF,$FF,$FF
- $FC4C DEFB $FF,$FF,$31,$FE,$82,$A2,$A0,$B3
- $FC54 DEFB $8F,$3F,$FF,$31,$FD,$83,$A7,$AF
- $FC5C DEFB $9F,$BF,$7F,$FF,$31,$07,$1B,$63
- $FC64 DEFB $87,$63,$1B,$07,$03,$28,$F0,$CC
- $FC6C DEFB $C3,$E1,$C6,$D8,$E0,$C0,$28,$FF
- $FC74 DEFB $FF,$FF,$FF,$FE,$FC,$F8,$F0,$32
- $FC7C DEFB $F0,$F8,$FC,$FE,$FF,$FF,$FF,$FF
- $FC84 DEFB $32,$FF,$FF,$FF,$FF,$7F,$3F,$1F
- $FC8C DEFB $0F,$32,$0F,$1F,$3F,$7F,$FF,$FF
- $FC94 DEFB $FF,$FF,$32,$07,$07,$07,$07,$FF
- $FC9C DEFB $FF,$FF,$FF,$20,$FF,$FF,$FF,$FF
- $FCA4 DEFB $E0,$E0,$E0,$E0,$20,$E0,$E0,$E0
- $FCAC DEFB $E0,$FF,$FF,$FF,$FF,$20,$70,$70
- $FCB4 DEFB $70,$70,$70,$70,$70,$70,$20,$00
- $FCBC DEFB $00,$00,$00,$00,$00,$00,$00,$10
- $FCC4 DEFB $1C,$1C,$1C,$1C,$1C,$1C,$1C,$1C
- $FCCC DEFB $20,$0E,$0E,$0E,$0E,$0E,$0E,$0E
- $FCD4 DEFB $0E,$20,$FF,$FF,$FF,$FF,$07,$07
- $FCDC DEFB $07,$07,$20,$38,$38,$38,$38,$FF
- $FCE4 DEFB $FF,$FF,$FF,$20,$38,$38,$38,$38
- $FCEC DEFB $38,$38,$38,$38,$20,$FF,$FF,$FF
- $FCF4 DEFB $FF,$38,$38,$38,$38,$20,$00,$FE
- $FCFC DEFB $02,$02,$02,$0A,$02,$02,$28,$02
- $FD04 DEFB $02,$02,$02,$02,$CA,$02,$FE,$28
- $FD0C DEFB $A0,$A0,$A0,$A0,$A0,$A0,$A0,$A0
- $FD14 DEFB $28,$A0,$A0,$A0,$A0,$A0,$BF,$80
- $FD1C DEFB $FF,$28,$E0,$E0,$70,$70,$B8,$B8
- $FD24 DEFB $DC,$1C,$20,$00,$00,$00,$00,$80
- $FD2C DEFB $80,$C0,$C0,$20,$EE,$8E,$A7,$A7
- $FD34 DEFB $BB,$83,$FD,$01,$30,$FF,$FF,$7F
- $FD3C DEFB $7F,$B8,$B8,$DC,$1C,$20,$0E,$0E
- $FD44 DEFB $07,$07,$FF,$FF,$FF,$FF,$20,$00
- $FD4C DEFB $00,$00,$00,$FF,$FF,$FF,$FF,$20
- $FD54 DEFB $00,$FF,$80,$A0,$A0,$A0,$A0,$A0
- $FD5C DEFB $28,$C0,$C0,$C0,$E0,$E0,$E0,$70
- $FD64 DEFB $70,$20,$01,$01,$01,$00,$00,$00
- $FD6C DEFB $00,$00,$20,$00,$00,$00,$00,$00
- $FD74 DEFB $80,$80,$80,$20,$0E,$0E,$07,$07
- $FD7C DEFB $07,$03,$03,$03,$20,$70,$38,$38
- $FD84 DEFB $38,$1C,$1C,$1C,$0E,$20,$FF,$FF
- $FD8C DEFB $FF,$FF,$00,$00,$00,$00,$20,$FF
- $FD94 DEFB $FF,$FF,$FF,$E0,$E0,$70,$70,$20
- $FD9C DEFB $D8,$9C,$9D,$9F,$9F,$9D,$DC,$18
- $FDA4 DEFB $30,$1A,$3A,$BA,$FA,$FA,$BA,$3A
- $FDAC DEFB $18,$30,$02,$02,$02,$02,$02,$0A
- $FDB4 DEFB $02,$02,$28,$00,$00,$00,$00,$00
- $FDBC DEFB $00,$00,$00,$20,$07,$07,$0E,$0E
- $FDC4 DEFB $1C,$1C,$3A,$38,$20,$76,$72,$E2
- $FDCC DEFB $E2,$DA,$C2,$BE,$80,$30,$00,$00
- $FDD4 DEFB $00,$00,$01,$01,$03,$03,$20,$FF
- $FDDC DEFB $FF,$FE,$FE,$1C,$1C,$3A,$38,$20
- $FDE4 DEFB $70,$70,$E0,$E0,$FF,$FF,$FF,$FF
- $FDEC DEFB $20,$BC,$BC,$9A,$9A,$9A,$9A,$BC
- $FDF4 DEFB $3C,$30,$80,$80,$80,$00,$00,$00
- $FDFC DEFB $00,$00,$20,$03,$03,$03,$07,$07
- $FE04 DEFB $07,$0E,$0E,$20,$70,$70,$E0,$E0
- $FE0C DEFB $E0,$C0,$C0,$C0,$20,$00,$00,$00
- $FE14 DEFB $00,$00,$01,$01,$01,$20,$0E,$1C
- $FE1C DEFB $1C,$1C,$38,$38,$38,$70,$20,$FF
- $FE24 DEFB $FF,$FF,$FF,$07,$07,$0E,$0E,$20
- $FE2C DEFB $7F,$41,$55,$41,$55,$41,$7F,$80
- $FE34 DEFB $28,$B6,$7D,$00,$00,$00,$00,$00
- $FE3C DEFB $00,$0E,$D8,$BE,$46,$DB,$A3,$B6
- $FE44 DEFB $CD,$7A,$0E,$03,$01,$02,$03,$01
- $FE4C DEFB $02,$01,$02,$0E,$C3,$3D,$66,$4E
- $FE54 DEFB $5E,$5E,$3C,$C3,$28,$FF,$73,$00
- $FE5C DEFB $8C,$FF,$FF,$00,$FF,$28,$3C,$7E
- $FE64 DEFB $BD,$BD,$BD,$A5,$7E,$C3,$20,$7F
- $FE6C DEFB $41,$3C,$DB,$5A,$DB,$3C,$3C,$20
- $FE74 DEFB $7F,$41,$00,$FF,$FF,$FF,$00,$00
- $FE7C DEFB $20,$00,$41,$7F,$00,$7F,$41,$7F
- $FE84 DEFB $00,$20,$FF,$FF,$FF,$FF,$FF,$FF
- $FE8C DEFB $FF,$FF,$20,$0F,$3F,$7F,$FF,$FF
- $FE94 DEFB $FF,$FF,$FF,$20,$00,$41,$7F,$00
- $FE9C DEFB $7F,$41,$00,$FF,$20,$5D,$5D,$5D
- $FEA4 DEFB $3C,$3D,$3D,$24,$FF,$20,$7B,$47
- $FEAC DEFB $6F,$1E,$3C,$78,$F0,$E0,$20,$E0
- $FEB4 DEFB $C0,$C0,$80,$80,$00,$00,$00,$20
- $FEBC DEFB $7D,$41,$7B,$03,$77,$47,$6F,$0F
- $FEC4 DEFB $20,$6E,$4E,$5C,$1D,$5D,$5D,$5D
- $FECC DEFB $1F,$20,$5F,$4F,$6F,$0F,$6F,$4F
- $FED4 DEFB $77,$07,$20,$77,$47,$7B,$03,$7B
- $FEDC DEFB $41,$7D,$00,$20,$7F,$41,$7F,$00
- $FEE4 DEFB $03,$7C,$7F,$1F,$20,$FF,$7F,$3F
- $FEEC DEFB $1F,$63,$40,$7F,$00,$20,$66,$FF
- $FEF4 DEFB $FF,$99,$66,$FF,$FF,$AA,$0D,$FF
- $FEFC DEFB $80,$3E,$C1,$1C,$E3,$08,$FF,$10
- $FF04 DEFB $42,$7E,$42,$52,$42,$52,$42,$7E
- $FF0C DEFB $27,$FF,$00,$80,$60,$1B,$04,$02
- $FF14 DEFB $01,$08,$01,$FE,$01,$00,$00,$00
- $FF1C DEFB $00,$00,$08,$FF,$00,$00,$00,$FF
- $FF24 DEFB $FF,$FF,$FF,$29,$80,$7F,$80,$00
- $FF2C DEFB $00,$00,$00,$00,$08,$FF,$80,$81
- $FF34 DEFB $86,$D8,$20,$40,$80,$08,$00,$22
- $FF3C DEFB $FF,$00,$FF,$22,$00,$00,$07,$32
- $FF44 DEFB $2E,$7B,$26,$32,$2E,$7B,$26,$07
- $FF4C DEFB $F0,$31,$3F,$F1,$F0,$31,$3F,$F1
- $FF54 DEFB $20,$0F,$8C,$FC,$8F,$0F,$8C,$FC
- $FF5C DEFB $8F,$20,$F1,$31,$3F,$F1,$F0,$31
- $FF64 DEFB $3F,$F1,$30,$0F,$8C,$FC,$8F,$4F
- $FF6C DEFB $8C,$FC,$8F,$30,$F6,$31,$3F,$F1
- $FF74 DEFB $F6,$31,$3F,$F1,$08,$6F,$8C,$FC
- $FF7C DEFB $8F,$6F,$8C,$FC,$8F,$08,$00,$00
- $FF84 DEFB $00,$00,$00,$00,$00,$00,$08,$FF
- $FF8C DEFB $80,$80,$80,$EF,$0F,$0F,$0F,$08
- $FF94 DEFB $FF,$80,$80,$00,$F7,$F0,$F0,$F0
- $FF9C DEFB $08,$84,$5B,$88,$F7,$22,$D5,$FF
- $FFA4 DEFB $FF,$30,$FF,$80,$3E,$C1,$1C,$E3
- $FFAC DEFB $08,$FF,$10,$44,$10,$FF,$00,$FF
- $FFB4 DEFB $FF,$FF,$FF,$30,$66,$00,$00,$00
- $FFBC DEFB $FF,$FF,$99,$99,$10,$B9,$B3,$B1
- $FFC4 DEFB $BB,$B9,$B3,$B3,$B3,$20,$00,$00
- $FFCC DEFB $00,$00,$FF,$FF,$00,$FF,$10,$3C
- $FFD4 DEFB $66,$42,$C3,$81,$81,$00,$00,$07
- $FFDC DEFB $D3,$D3,$D3,$D3,$D3,$D3,$FF,$81
- $FFE4 DEFB $08,$D3,$D3,$D3,$D3,$D3,$D3,$D3
- $FFEC DEFB $D3,$08,$81,$FF,$D3,$D3,$D3,$D3
- $FFF4 DEFB $D3,$D3,$08,$DF,$FB,$DF,$FF,$F7
- $FFFC DEFB $FF,$DF,$FF,$08
+ $FA2C DEFB $F9,$3A,$84,$71,$C9
+
+; Routine at FA31
+;
+; Used by the routine at #R$A434.
+c$FA31 CALL $9DD9    ;
+ $FA34 LD B,$01      ;
+ $FA36 CALL $F9A1    ;
+ $FA39 RET           ;
+
+; Data block at FA3A
+b$FA3A DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA42 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA4A DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA52 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA5A DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA62 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA6A DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA72 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FA7A DEFB $00,$FF,$60,$04,$FF,$FF,$10,$86
+ $FA82 DEFB $FF,$28,$00,$00,$00,$00,$00,$00
+ $FA8A DEFB $00,$00,$00,$DF,$FB,$DF,$FF,$F7
+ $FA92 DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FA9A DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FAA2 DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FAAA DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$00
+ $FAB2 DEFB $00,$00,$00,$FF,$FF,$00,$FF,$10
+ $FABA DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF
+ $FAC2 DEFB $10,$00,$00,$00,$00,$FF,$FF,$00
+ $FACA DEFB $FF,$10,$DF,$FB,$DF,$FF,$F7,$FF
+ $FAD2 DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
+ $FADA DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FAE2 DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FAEA DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FAF2 DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FAFA DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FB02 DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FB0A DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FB12 DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
+ $FB1A DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
+ $FB22 DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FB2A DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FB32 DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FB3A DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$DF
+ $FB42 DEFB $FB,$DF,$FF,$F7,$FF,$DF,$FF,$08
+ $FB4A DEFB $DF,$FB,$DF,$FF,$F7,$FF,$DF,$FF
+ $FB52 DEFB $08,$DF,$FB,$DF,$FF,$F7,$FF,$DF
+ $FB5A DEFB $FF,$08,$DF,$FB,$DF,$FF,$F7,$FF
+ $FB62 DEFB $DF,$FF,$08,$DF,$FB,$DF,$FF,$F7
+ $FB6A DEFB $FF,$DF,$FF,$08,$DF,$FB,$DF,$FF
+ $FB72 DEFB $F7,$FF,$DF,$FF,$08,$DF,$FB,$DF
+ $FB7A DEFB $FF,$F7,$FF,$DF,$FF,$08,$DF,$FB
+ $FB82 DEFB $DF,$FF,$F7,$FF,$DF,$FF,$08,$00
+ $FB8A DEFB $00,$00,$00,$FF,$FF,$00,$FF,$10
+ $FB92 DEFB $1F,$FA,$FF,$A0,$A0,$FF,$F5,$1F
+ $FB9A DEFB $28,$FF,$AA,$FF,$00,$00,$FF,$55
+ $FBA2 DEFB $FF,$28,$F8,$AF,$FF,$05,$05,$FF
+ $FBAA DEFB $5F,$F8,$28,$6E,$62,$62,$62,$62
+ $FBB2 DEFB $62,$6E,$60,$30,$96,$97,$DB,$19
+ $FBBA DEFB $DA,$9A,$9A,$9A,$30,$B4,$74,$EC
+ $FBC2 DEFB $CC,$2C,$8C,$EC,$0C,$30,$DA,$9A
+ $FBCA DEFB $B2,$B2,$B2,$B2,$B6,$30,$30,$EC
+ $FBD2 DEFB $8C,$AC,$AC,$AC,$8C,$EC,$0C,$30
+ $FBDA DEFB $62,$62,$6E,$60,$67,$6F,$5D,$5A
+ $FBE2 DEFB $30,$B6,$B2,$B2,$B2,$32,$B2,$D6
+ $FBEA DEFB $D0,$30,$FB,$18,$9C,$2E,$86,$C6
+ $FBF2 DEFB $FE,$7C,$30,$00,$00,$00,$00,$00
+ $FBFA DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC02 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC0A DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FC12 DEFB $00,$00,$00,$00,$00,$00,$00,$FE
+ $FC1A DEFB $FE,$C6,$38,$28,$28,$28,$7C,$21
+ $FC22 DEFB $FE,$82,$A2,$22,$CA,$F2,$FC,$FF
+ $FC2A DEFB $31,$CE,$F2,$FC,$FF,$FF,$FF,$FF
+ $FC32 DEFB $FF,$31,$BE,$C2,$E2,$F2,$FA,$FC
+ $FC3A DEFB $FE,$FF,$31,$00,$00,$00,$00,$00
+ $FC42 DEFB $00,$00,$00,$08,$F3,$8F,$3F,$FF
+ $FC4A DEFB $FF,$FF,$FF,$FF,$31,$FE,$82,$A2
+ $FC52 DEFB $A0,$B3,$8F,$3F,$FF,$31,$FD,$83
+ $FC5A DEFB $A7,$AF,$9F,$BF,$7F,$FF,$31,$07
+ $FC62 DEFB $1B,$63,$87,$63,$1B,$07,$03,$28
+ $FC6A DEFB $F0,$CC,$C3,$E1,$C6,$D8,$E0,$C0
+ $FC72 DEFB $28,$FF,$FF,$FF,$FF,$FE,$FC,$F8
+ $FC7A DEFB $F0,$32,$F0,$F8,$FC,$FE,$FF,$FF
+ $FC82 DEFB $FF,$FF,$32,$FF,$FF,$FF,$FF,$7F
+ $FC8A DEFB $3F,$1F,$0F,$32,$0F,$1F,$3F,$7F
+ $FC92 DEFB $FF,$FF,$FF,$FF,$32,$07,$07,$07
+ $FC9A DEFB $07,$FF,$FF,$FF,$FF,$20,$FF,$FF
+ $FCA2 DEFB $FF,$FF,$E0,$E0,$E0,$E0,$20,$E0
+ $FCAA DEFB $E0,$E0,$E0,$FF,$FF,$FF,$FF,$20
+ $FCB2 DEFB $70,$70,$70,$70,$70,$70,$70,$70
+ $FCBA DEFB $20,$00,$00,$00,$00,$00,$00,$00
+ $FCC2 DEFB $00,$10,$1C,$1C,$1C,$1C,$1C,$1C
+ $FCCA DEFB $1C,$1C,$20,$0E,$0E,$0E,$0E,$0E
+ $FCD2 DEFB $0E,$0E,$0E,$20,$FF,$FF,$FF,$FF
+ $FCDA DEFB $07,$07,$07,$07,$20,$38,$38,$38
+ $FCE2 DEFB $38,$FF,$FF,$FF,$FF,$20,$38,$38
+ $FCEA DEFB $38,$38,$38,$38,$38,$38,$20,$FF
+ $FCF2 DEFB $FF,$FF,$FF,$38,$38,$38,$38,$20
+ $FCFA DEFB $00,$FE,$02,$02,$02,$0A,$02,$02
+ $FD02 DEFB $28,$02,$02,$02,$02,$02,$CA,$02
+ $FD0A DEFB $FE,$28,$A0,$A0,$A0,$A0,$A0,$A0
+ $FD12 DEFB $A0,$A0,$28,$A0,$A0,$A0,$A0,$A0
+ $FD1A DEFB $BF,$80,$FF,$28,$E0,$E0,$70,$70
+ $FD22 DEFB $B8,$B8,$DC,$1C,$20,$00,$00,$00
+ $FD2A DEFB $00,$80,$80,$C0,$C0,$20,$EE,$8E
+ $FD32 DEFB $A7,$A7,$BB,$83,$FD,$01,$30,$FF
+ $FD3A DEFB $FF,$7F,$7F,$B8,$B8,$DC,$1C,$20
+ $FD42 DEFB $0E,$0E,$07,$07,$FF,$FF,$FF,$FF
+ $FD4A DEFB $20,$00,$00,$00,$00,$FF,$FF,$FF
+ $FD52 DEFB $FF,$20,$00,$FF,$80,$A0,$A0,$A0
+ $FD5A DEFB $A0,$A0,$28,$C0,$C0,$C0,$E0,$E0
+ $FD62 DEFB $E0,$70,$70,$20,$01,$01,$01,$00
+ $FD6A DEFB $00,$00,$00,$00,$20,$00,$00,$00
+ $FD72 DEFB $00,$00,$80,$80,$80,$20,$0E,$0E
+ $FD7A DEFB $07,$07,$07,$03,$03,$03,$20,$70
+ $FD82 DEFB $38,$38,$38,$1C,$1C,$1C,$0E,$20
+ $FD8A DEFB $FF,$FF,$FF,$FF,$00,$00,$00,$00
+ $FD92 DEFB $20,$FF,$FF,$FF,$FF,$E0,$E0,$70
+ $FD9A DEFB $70,$20,$D8,$9C,$9D,$9F,$9F,$9D
+ $FDA2 DEFB $DC,$18,$30,$1A,$3A,$BA,$FA,$FA
+ $FDAA DEFB $BA,$3A,$18,$30,$02,$02,$02,$02
+ $FDB2 DEFB $02,$0A,$02,$02,$28,$00,$00,$00
+ $FDBA DEFB $00,$00,$00,$00,$00,$20,$07,$07
+ $FDC2 DEFB $0E,$0E,$1C,$1C,$3A,$38,$20,$76
+ $FDCA DEFB $72,$E2,$E2,$DA,$C2,$BE,$80,$30
+ $FDD2 DEFB $00,$00,$00,$00,$01,$01,$03,$03
+ $FDDA DEFB $20,$FF,$FF,$FE,$FE,$1C,$1C,$3A
+ $FDE2 DEFB $38,$20,$70,$70,$E0,$E0,$FF,$FF
+ $FDEA DEFB $FF,$FF,$20,$BC,$BC,$9A,$9A,$9A
+ $FDF2 DEFB $9A,$BC,$3C,$30,$80,$80,$80,$00
+ $FDFA DEFB $00,$00,$00,$00,$20,$03,$03,$03
+ $FE02 DEFB $07,$07,$07,$0E,$0E,$20,$70,$70
+ $FE0A DEFB $E0,$E0,$E0,$C0,$C0,$C0,$20,$00
+ $FE12 DEFB $00,$00,$00,$00,$01,$01,$01,$20
+ $FE1A DEFB $0E,$1C,$1C,$1C,$38,$38,$38,$70
+ $FE22 DEFB $20,$FF,$FF,$FF,$FF,$07,$07,$0E
+ $FE2A DEFB $0E,$20,$7F,$41,$55,$41,$55,$41
+ $FE32 DEFB $7F,$80,$28,$B6,$7D,$00,$00,$00
+ $FE3A DEFB $00,$00,$00,$0E,$D8,$BE,$46,$DB
+ $FE42 DEFB $A3,$B6,$CD,$7A,$0E,$03,$01,$02
+ $FE4A DEFB $03,$01,$02,$01,$02,$0E,$C3,$3D
+ $FE52 DEFB $66,$4E,$5E,$5E,$3C,$C3,$28,$FF
+ $FE5A DEFB $73,$00,$8C,$FF,$FF,$00,$FF,$28
+ $FE62 DEFB $3C,$7E,$BD,$BD,$BD,$A5,$7E,$C3
+ $FE6A DEFB $20,$7F,$41,$3C,$DB,$5A,$DB,$3C
+ $FE72 DEFB $3C,$20,$7F,$41,$00,$FF,$FF,$FF
+ $FE7A DEFB $00,$00,$20,$00,$41,$7F,$00,$7F
+ $FE82 DEFB $41,$7F,$00,$20,$FF,$FF,$FF,$FF
+ $FE8A DEFB $FF,$FF,$FF,$FF,$20,$0F,$3F,$7F
+ $FE92 DEFB $FF,$FF,$FF,$FF,$FF,$20,$00,$41
+ $FE9A DEFB $7F,$00,$7F,$41,$00,$FF,$20,$5D
+ $FEA2 DEFB $5D,$5D,$3C,$3D,$3D,$24,$FF,$20
+ $FEAA DEFB $7B,$47,$6F,$1E,$3C,$78,$F0,$E0
+ $FEB2 DEFB $20,$E0,$C0,$C0,$80,$80,$00,$00
+ $FEBA DEFB $00,$20,$7D,$41,$7B,$03,$77,$47
+ $FEC2 DEFB $6F,$0F,$20,$6E,$4E,$5C,$1D,$5D
+ $FECA DEFB $5D,$5D,$1F,$20,$5F,$4F,$6F,$0F
+ $FED2 DEFB $6F,$4F,$77,$07,$20,$77,$47,$7B
+ $FEDA DEFB $03,$7B,$41,$7D,$00,$20,$7F,$41
+ $FEE2 DEFB $7F,$00,$03,$7C,$7F,$1F,$20,$FF
+ $FEEA DEFB $7F,$3F,$1F,$63,$40,$7F,$00,$20
+ $FEF2 DEFB $66,$FF,$FF,$99,$66,$FF,$FF,$AA
+ $FEFA DEFB $0D,$FF,$80,$3E,$C1,$1C,$E3,$08
+ $FF02 DEFB $FF,$10,$42,$7E,$42,$52,$42,$52
+ $FF0A DEFB $42,$7E,$27,$FF,$00,$80,$60,$1B
+ $FF12 DEFB $04,$02,$01,$08,$01,$FE,$01,$00
+ $FF1A DEFB $00,$00,$00,$00,$08,$FF,$00,$00
+ $FF22 DEFB $00,$FF,$FF,$FF,$FF,$29,$80,$7F
+ $FF2A DEFB $80,$00,$00,$00,$00,$00,$08,$FF
+ $FF32 DEFB $80,$81,$86,$D8,$20,$40,$80,$08
+ $FF3A DEFB $00,$22,$FF,$00,$FF,$22,$00,$00
+ $FF42 DEFB $07,$32,$2E,$7B,$26,$32,$2E,$7B
+ $FF4A DEFB $26,$07,$F0,$31,$3F,$F1,$F0,$31
+ $FF52 DEFB $3F,$F1,$20,$0F,$8C,$FC,$8F,$0F
+ $FF5A DEFB $8C,$FC,$8F,$20,$F1,$31,$3F,$F1
+ $FF62 DEFB $F0,$31,$3F,$F1,$30,$0F,$8C,$FC
+ $FF6A DEFB $8F,$4F,$8C,$FC,$8F,$30,$F6,$31
+ $FF72 DEFB $3F,$F1,$F6,$31,$3F,$F1,$08,$6F
+ $FF7A DEFB $8C,$FC,$8F,$6F,$8C,$FC,$8F,$08
+ $FF82 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FF8A DEFB $08,$FF,$80,$80,$80,$EF,$0F,$0F
+ $FF92 DEFB $0F,$08,$FF,$80,$80,$00,$F7,$F0
+ $FF9A DEFB $F0,$F0,$08,$84,$5B,$88,$F7,$22
+ $FFA2 DEFB $D5,$FF,$FF,$30,$FF,$80,$3E,$C1
+ $FFAA DEFB $1C,$E3,$08,$FF,$10,$44,$10,$FF
+ $FFB2 DEFB $00,$FF,$FF,$FF,$FF,$30,$66,$00
+ $FFBA DEFB $00,$00,$FF,$FF,$99,$99,$10,$B9
+ $FFC2 DEFB $B3,$B1,$BB,$B9,$B3,$B3,$B3,$20
+ $FFCA DEFB $00,$00,$00,$00,$FF,$FF,$00,$FF
+ $FFD2 DEFB $10,$3C,$66,$42,$C3,$81,$81,$00
+ $FFDA DEFB $00,$07,$D3,$D3,$D3,$D3,$D3,$D3
+ $FFE2 DEFB $FF,$81,$08,$D3,$D3,$D3,$D3,$D3
+ $FFEA DEFB $D3,$D3,$D3,$08,$81,$FF,$D3,$D3
+ $FFF2 DEFB $D3,$D3,$D3,$D3,$08,$DF,$FB,$DF
+ $FFFA DEFB $FF,$F7,$FF,$DF,$FF,$08

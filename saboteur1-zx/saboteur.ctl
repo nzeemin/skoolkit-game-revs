@@ -63,6 +63,14 @@ B $71CE,1,1 Dog X position
 B $71D3,1,1 Dog Y position
 b $71D4
 B $71D6,9,9 Room 79C6 dog data
+b $71F2 Sprite Dog 1
+B $71F2,12,4 #HTML[<img src="images/sprite-71f2.png" />]
+b $71FE Sprite Dog 2
+B $71FE,12,4 #HTML[<img src="images/sprite-71fe.png" />]
+b $720A Sprite Dog 3
+B $720A,12,4 #HTML[<img src="images/sprite-720a.png" />]
+b $7216 Sprite Dog 4
+B $7216,12,4 #HTML[<img src="images/sprite-7216.png" />]
 b $7222
 B $7222,1,1 Input method: 1 = Joystick, 0 = Keyboard or Protek
 B $7223,15,3 Ports and bits for the current input method
@@ -79,7 +87,7 @@ B $733A,1,1
 b $733B
 W $733B,8,2
 b $7343
-B $7343,1,1
+B $7343,1,1 ?? counter
 B $7344,1,1
 B $7345,1,1
 B $7346,1,1
@@ -176,7 +184,7 @@ C $746F,3 => #R$B702 Proceed to the next room token
 c $7472
 b $749C
 B $749D
-c $749E
+c $749E Decreasing Energy
 C $74C6,1 Decrease Energy
 c $74CD Draw NEAR/HELD item
 C $74CD,2 !!MUT-ARG!! item number
@@ -194,10 +202,6 @@ W $7924,2,2 Room to Right
 W $7926,4,2
 B $792A #HTML[<img src="images/rooms/791E.png" />]
 b $7984
-b $79A1
-b $79B1
-b $79BA
-b $79BE
 b $79C6 Room 79C6 (next to room with pier)
 W $79C6,2,2 Room procedure
 W $79C8,2,2 Initialization
@@ -1037,13 +1041,20 @@ C $9C71,3 get Ninja X
 C $9C75,3 Dog X position address
 C $9C80,3 get Dog direction
 C $9C8C,3 Set update flags for Dog
-b $9C9C
+C $9C96,3 Sprite Dog dead
+b $9C9C Sprite Dog dead
+B $9C9C,12,4 #HTML[<img src="images/sprite-9c9c.png" />]
 c $9CA8 ?? Part of Dog processing
 C $9CB3,3 get Dog direction
+C $9CC2,3 => Decrease Energy by B
 C $9CC5,3 get Dog direction
 C $9CD3,3 Dog X position address
 C $9CF8,3 Dog X position address
+C $9D20,3 Sprite Dog 1
+C $9D27,3 Sprite Dog 2
+C $9D2E,3 Sprite Dog 3
 C $9D37,3 Tile screen 3 start address
+C $9D3B,3 !!MUT-ARG!! current Dog sprite address
 C $9D40,3 get Dog direction
 C $9D58,3 Set update flags for Dog, 4x3 tiles
 c $9D5C Set update flags for Dog
@@ -1051,16 +1062,17 @@ C $9D61,3 Tile screen 1 start address
 c $9D75 ?? something about Dog
 C $9D89,2 => Set update flags for Dog, and RET
 c $9D8B ?? something about Dog
+C $9D8B,3 Sprite Dog 4
 C $9D98,3 get Dog direction
 C $9DB3,3 get Dog direction
 c $9DCD Initialize a dog; HL = dog data address
 C $9DCD,3 current dog data address
 C $9DD0,3 save current Dog data address
-c $9DD9
-C $9DD9 !!MUT-CMD!!
-c $9DDA
-b $9DEF
-c $9DF1
+c $9DD9 Decrease Energy by B
+C $9DD9 !!MUT-CMD!! $C5 PUSH BC or $C9 RET
+C $9DDA,3 Decrease Energy
+C $9DEC,3 Energy is out => Saboteur dead
+C $9DEF,2 !!UNUSED!!
 b $9DF5 Room 9DF5
 W $9DF5,2,2 Room procedure
 W $9DF7,2,2 Initialization
@@ -1125,97 +1137,99 @@ W $A024,2,2 Initialization
 W $A026,2,2 Room to Left
 W $A028,6,2
 B $A02E #HTML[<img src="images/rooms/A022.png" />]
-c $A0DF Room 94AB initialization
+b $A0B5 Sprite Ninja dead, 6x7 tiles
+B $A0B5,42,6 #HTML[<img src="images/sprite-a0b5.png" />]
+c $A0DF Room #R$94AB initialization
 C $A0DF,3,3 Guard data address
 C $A0E2,3,3 Initialize a guard
-c $A0E8 Room 7DA9 initialization
+c $A0E8 Room #R$7DA9 initialization
 C $A0E8,3 Guard data address
-c $A0ED Room 7E8C initialization
+c $A0ED Room #R$7E8C initialization
 C $A0ED,3 Guard data address
-c $A0F2 Room 920A initialization
+c $A0F2 Room #R$920A initialization
 C $A0F2,3 Guard data address
-c $A0F7 Room 8F84 initialization
+c $A0F7 Room #R$8F84 initialization
 C $A0F7,3 Guard data address
-c $A0FC Room 8B71 initialization
+c $A0FC Room #R$8B71 initialization
 C $A0FC,3 Guard data address
-c $A101 Room 8739 initialization
+c $A101 Room #R$8739 initialization
 C $A101,3 Guard data address
-c $A106 Room 858F initialization
+c $A106 Room #R$858F initialization
 C $A106,3 Guard data address
-c $A10B Room 84EE initialization
+c $A10B Room #R$84EE initialization
 C $A10B,3 Guard data address
-c $A110 Room 99A6 initialization
+c $A110 Room #R$99A6 initialization
 C $A110,3 Guard data address
-c $A115 Room 97F8 initialization
+c $A115 Room #R$97F8 initialization
 C $A115,3 Guard data address
-c $A11A Room 94CF initialization
+c $A11A Room #R$94CF initialization
 C $A11A,3 Guard data address
-c $A11F Room 9B51 initialization
+c $A11F Room #R$9B51 initialization
 C $A11F,3 Guard data address
-c $A124 Room 9F3A initialization
+c $A124 Room #R$9F3A initialization
 C $A124,3 Guard data address
-c $A129 Room 9F7E initialization
+c $A129 Room #R$9F7E initialization
 C $A129,3 Guard data address
-c $A12E Room 9EB8 initialization
+c $A12E Room #R$9EB8 initialization
 C $A12E,3 Guard data address
-c $A133 Room 9B19 initialization
+c $A133 Room #R$9B19 initialization
 C $A133,3 Guard data address
-c $A138 Room 9DF5 initialization
+c $A138 Room #R$9DF5 initialization
 C $A138,3 Guard data address
 c $A13D ?? UNUSED??
 C $A13D,3 Guard data address
-c $A142 Room 7A17 initialization
+c $A142 Room #R$7A17 initialization
 C $A142,3 Turret data address
 C $A145,3 Initialize a turret
-c $A14A Room 7D5A initialization
+c $A14A Room #R$7D5A initialization
 C $A14A,3 Turret data address
-c $A14F Room 7F48 initialization
+c $A14F Room #R$7F48 initialization
 C $A14F,3 Turret data address
-c $A154 Room 7EF2 initialization
+c $A154 Room #R$7EF2 initialization
 C $A154,3 Dog data address
 C $A15A,3 Turret data address
-c $A15F Room 909F initialization
+c $A15F Room #R$909F initialization
 C $A15F,3 Dog data address
 C $A165,3 Turret data address
-c $A16A Room 8FBD initialization
+c $A16A Room #R$8FBD initialization
 C $A16A,3 Turret data address
-c $A16F Room 92A7 initialization
+c $A16F Room #R$92A7 initialization
 C $A16F,3 Turret data address
-c $A174 Room 8B25 initialization
+c $A174 Room #R$8B25 initialization
 C $A174,3 Turret data address
-c $A179 Room 8526 initialization
+c $A179 Room #R$8526 initialization
 C $A179,3 Turret data address
 c $A17E ?? UNUSED??
 C $A17E,3 Turret data address
-c $A183 Room 95D6 initialization
+c $A183 Room #R$95D6 initialization
 C $A183,3 Turret data address
-c $A188 Room 968A initialization
+c $A188 Room #R$968A initialization
 C $A188,3 Turret data address
 c $A18D
 C $A18D,3 Turret data address
-c $A192 Room 9A9A initialization
+c $A192 Room #R$9A9A initialization
 C $A192,3 Turret data address
-c $A197 Room 9552 initialization
+c $A197 Room #R$9552 initialization
 C $A197,3 Turret data address
-c $A19C Room 9BE7 initialization
+c $A19C Room #R$9BE7 initialization
 C $A19C,3 Turret data address
-c $A1A1 Room 8D5C initialization
+c $A1A1 Room #R$8D5C initialization
 C $A1A1,3 Turret data address
-c $A1A6 Room 7C2E initialization
+c $A1A6 Room #R$7C2E initialization
 C $A1A6,3 Dog data address
 C $A1AC,3 Guard data address
 c $A1AF
 C $A1AF,3 Initialize a guard
-c $A1B5 Room 7F9C initialization
+c $A1B5 Room #R$7F9C initialization
 C $A1B5,3 Dog data address
 C $A1BB,3 Guard data address
-c $A1C0 Room 8162 initialization
+c $A1C0 Room #R$8162 initialization
 C $A1C0,3 Dog data address
 C $A1C6,3 Guard data address
-c $A1CB Room 80A7 initialization
+c $A1CB Room #R$80A7 initialization
 C $A1CB,3 Dog data address
 C $A1D1,3 Guard data address
-c $A1D6 Room 9B9D initialization
+c $A1D6 Room #R$9B9D initialization
 C $A1D6,3 Dog data address
 C $A1DC,3 Guard data address
 b $A1E1 Guards data, ?? records, 6 bytes each
@@ -1276,30 +1290,30 @@ B $A347,3,3 Room 968A turret
 B $A34A,3,3 Room 97A6 turret
 B $A34D,3,3 Room 9552 turret
 B $A350,3,3 Room 9BE7 turret
-c $A353 Room 81E5 initialization
+c $A353 Room #R$81E5 initialization
 C $A353,3 Dog data address
 C $A356,3 Initialize a dog
-c $A35C Room 7E05 initialization
+c $A35C Room #R$7E05 initialization
 C $A35C,3 Dog data address
-c $A361 Room 83ED initialization
+c $A361 Room #R$83ED initialization
 C $A361,3 Dog data address
-c $A366 Room 924E initialization
+c $A366 Room #R$924E initialization
 C $A366,3 Dog data address
-c $A36B Room 91BA initialization
+c $A36B Room #R$91BA initialization
 C $A36B,3 Dog data address
-c $A370 Room 90DB initialization
+c $A370 Room #R$90DB initialization
 C $A370,3 Dog data address
-c $A375 Room 8802 initialization
+c $A375 Room #R$8802 initialization
 C $A375,3 Dog data address
-c $A37A Room 8608 initialization
+c $A37A Room #R$8608 initialization
 C $A37A,3 Dog data address
-c $A37F Room 844E initialization
+c $A37F Room #R$844E initialization
 C $A37F,3 Dog data address
-c $A384 Room 9739 initialization
+c $A384 Room #R$9739 initialization
 C $A384,3 Dog data address
-c $A389 Room 9A5A initialization
+c $A389 Room #R$9A5A initialization
 C $A389,3 Dog data address
-c $A38E Room 80F6 initialization
+c $A38E Room #R$80F6 initialization
 C $A38E,3 Dog data address
 b $A393
 c $A3B5
@@ -1319,11 +1333,12 @@ C $A4A3,3 Tile screen 0 start address
 C $A4AC,3 Tile screen 5 start address
 C $A4B4,3 Tile screen 1 start address
 C $A4C0,3 Tile screen 2 start address
-C $A4CA,3
+C $A4CA,3 Decrease Energy by B
 C $A4FD,3 get Guard direction
 C $A539,3 Ninja Y address
 C $A54B,3 get Guard direction
 C $A552,3 Ninja X address
+C $A571,3 Sprite Ninja dead
 C $A58F,3 get Guard direction
 C $A5E7,3 get Guard direction
 C $A614,3 Ninja X address
@@ -1334,7 +1349,7 @@ C $A68D,3 get Guard direction
 C $A6AA,3 set Guard direction
 C $A6D8,3 set Guard direction
 C $A703,3 get Guard direction
-C $A70E,3 !!MUT-ARG!!
+C $A70E,3 !!MUT-ARG!! current Ninja sprite address
 C $A728,3 Tile screen 4 start address
 b $A747
 t $A752
@@ -1488,12 +1503,12 @@ C $B2F2,4 Mirror table half address
 b $B2FD
 c $B2FE Exchange $7239 (Ninja direction) and $71CD (dog direction)
 c $B30F Exchange $7239 (Ninja direction) and $7347 (Guard direction)
-c $B320
-c $B32A
-c $B334
-c $B33E
-c $B348
-c $B368 Room 97A6 initialization
+c $B320 ?? Object procedure
+c $B32A ?? Object procedure
+c $B334 ?? Object procedure
+c $B33E ?? Object procedure
+c $B348 ?? Object procedure
+c $B368 Room #R$97A6 initialization
 c $B371
 c $B38F Room token #0: ?? 3x3 tiles #R$7C21; params: 2 bytes (address)
 C $B396,3 Tile block address
@@ -1510,12 +1525,15 @@ C $B40D,3 Save Guard data address
 C $B41B,3 set Guard direction
 c $B41F Standard room procedure (for 63 rooms)
 c $B422 Standard room initialization (for 60 rooms)
+C $B422,3 => Finish room initialization
 c $B425 Rooms 7C9C/92EF initialization (redirect from #R$791B)
 C $B425,3,3 Guard data address
 C $B428,3,3 Initialize a guard
-c $B42E Room 79C6 initialization
+C $B42B,3 => Finish room initialization
+c $B42E Room #R$79C6 initialization
 C $B42E,3,3 Dog data address
 C $B431,3,3 Initialize a dog
+C $B434,3 => Finish room initialization
 b $B437
 c $B446 Room B513 procedure (initial Room)
 C $B446,3 Processing in the initial room
@@ -1534,6 +1552,7 @@ C $B47D,3 Process turret
 c $B483 Room procedure (for 14 rooms with a turret)
 C $B483,3 Process turret
 c $B489 Process turret
+C $B58A,3 Movement handler address
 C $B4D0,3 get Ninja X
 b $B4DD
 c $B4DE
@@ -1555,6 +1574,7 @@ C $B539,3 Ninja X address
 C $B577,3 Ninja X address
 C $B57A,1 Moving right one tile
 C $B57E,1 increase Ninja position in tilemap
+C $B58A,3 Movement handler address
 s $B595
 c $B596
 b $B59B
@@ -1564,6 +1584,8 @@ b $B5A8
 w $B5B0 Table of addresses for NEAR/HELD items
 b $B5C4
 c $B5C7
+C $B5DA,2 command = $C5 PUSH BC
+C $B5DC,3 set command = PUSH BC = enable Energy decrease
 C $B5F0,3 Pay value text address
 C $B5F9,3 Draw game screen frames and indicator text
 C $B5FD,3 set BORDCR = 0
@@ -1625,7 +1647,8 @@ W $B71C,2,2 #11: Fill to down-left; params: 4 bytes (count, filler, address)
 W $B71E,2,2 #12: Draw block of tiles; params: 6 bytes (srcaddr, width, height, address)
 W $B720,2,2 #13: Set border color; params: 1 byte
 W $B722,2,2 #14: Put one tile at the given address; params: 3 bytes (tile, address)
-c $B724
+c $B724 Room initialization
+N $B724 Called to finish room initialization from room initialization procedure
 C $B724,3 Tile screen 1 start address
 C $B727,2 Filler = $01 = "need update" mark
 C $B729,3 510 - 1
@@ -1654,7 +1677,8 @@ C $B7A7,3 Indicator Time value address
 C $B7AA,2 Two digits
 C $B7AC,3 Print string
 C $B7C7,3 Print string "BOMB"
-C $B7CA,3 "99"
+C $B7CA,3 !!MUT-ARG!! "99"
+C $B7CD,3 set Indicator Time value
 C $B7ED,3 Tile screen 1 start address
 C $B7F2,3 510 - 1
 C $B7F5,3 Tile screen 1 start address + 1
@@ -1667,6 +1691,7 @@ C $B80F,2 35 = number of records
 C $B811,3 Table address
 C $B81F,1 add Ninja position in tilemap
 c $B83C
+C $B848,1 increase Energy
 b $B84A
 W $B84A,2,2 ??
 B $B84C,1,1 ??
@@ -1680,7 +1705,7 @@ C $B891,3 NEAR item address
 C $B8A4,3 Draw NEAR/HELD item
 C $B8C5,3 Draw NEAR/HELD item
 C $B8CD,3 !!MUT-ARG!! => run handler
-c $B8D0
+c $B8D0 ?? Object procedure
 C $B8D0,3 Set update flags for Ninja, 6x7 tiles
 C $B8D3,3 Tile screen 4 start address
 C $B8D8,3 510 - 1
@@ -1695,6 +1720,7 @@ C $B9B5,3 Tile screen 0 start address
 C $B9C1,3 Tile screen 3 start address
 C $B9DB,3 Tile screen 4 start address
 C $BA03,3 Tile screen 2 start address
+C $BA0E,3 Decrease Energy by B
 C $BA41,3 Draw tile map on the screen
 b $BAB2
 t $BAC4
@@ -1705,7 +1731,7 @@ C $BBB4,3 Tile screen 1 start address
 c $BBBB Set update flags for Ninja, 6x7 tiles
 C $BBBB,3 get Ninja position in tilemap
 C $BBBE,3 Tile screen 1 start address
-c $BBD4
+c $BBD4 ?? Movement handler
 C $BBD4,3 Read Input
 C $BBD7,2 check FIRE bit
 c $BBDF Read Input
@@ -1714,9 +1740,11 @@ C $BBE7,2 read joystick port
 C $BBE9,3 store input bits
 c $BC0D
 N $BC0D Prepare screen background for title picture
+C $BC0D,3 !!MUT-ARG!!
 N $BC38 Show title picture
 C $BC38,3,3 Show title picture (two ninjas)
-c $BC55
+c $BC55 ?? Movement handler
+C $BC70,3 Decrease Energy by B
 C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
 C $BCC4,3 Read Input
 C $BCC7,2 check FIRE bit
@@ -1734,14 +1762,19 @@ C $BD9B,2 check DOWN bit
 c $BDAF
 c $BDB2
 C $BDB2,3 get Ninja position in tilemap
+C $BDD4,3 Movement handler address
 c $BDDD
 C $BDE5,4 get Ninja position in tilemap
-c $BE0D
+c $BE0D ?? Movement handler
 C $BE43,3 set Ninja position in tilemap
 c $BE5A
-c $BE63 ?? (B8CE handler)
+c $BE63 ?? Movement handler (B8CE handler)
+C $BE63,2 command = $C9 RET
+C $BE65,3 set command = RET = disable Energy decrease
+C $BE6B,3 Sprite Ninja dead
 c $BE71 Time is out
 C $BE78,3 "TIME OUT" / "MISSION TERMINATED"
+N $BEAA Saboteur is dead
 C $BEAB,3 "SABOTEUR DEAD" / "MISSION FAILURE"
 c $BEB3
 C $BEB3,3 !!MUT-ARG!! two-line message address
@@ -1750,7 +1783,7 @@ C $BEC3,3 Print string 2nd line
 C $BEDA,3 Pause, then wait for any key pressed
 C $BEDF,1 !!MUT-CMD!!
 C $BEEC,3 => Title picture and music, then go to Main menu
-t $BEEF
+t $BEEF Game over two-line messages
 T $BEEF,15
 T $BEFE,20
 T $BF12,15
@@ -1814,11 +1847,12 @@ C $C20D,3 Ninja X address
 C $C211,3 get Ninja position in tilemap
 C $C214,1 move one tile to right
 C $C215,3 set Ninja position in tilemap
-c $C22F ?? (B8CE handler)
+c $C22F ?? Movement handler (B8CE handler)
 C $C22F,3 Read Input
 C $C232,2 check DOWN bit
 C $C239,3 get Ninja position in tilemap
-c $C24B ?? (B8CE handler)
+C $C245,3 => Decrease Energy by B
+c $C24B ?? Movement handler (B8CE handler)
 C $C24B,3 get Ninja X
 C $C250,3 => Going to room at Left
 C $C253,3 get Ninja position in tilemap
@@ -1877,7 +1911,7 @@ C $C3CF,3 Ninja X address
 C $C3D2,1 one tile to right
 C $C3D3,3 get Ninja position in tilemap
 C $C3D6,1 move one tile right
-c $C3D9 Process movement ?? (B8CE handler)
+c $C3D9 ?? Movement handler (B8CE handler)
 C $C3D9,3 get Ninja position in tilemap
 N $C3EC Read and process Input
 C $C3EC,3 Read Input
@@ -1908,20 +1942,26 @@ C $C498,3 Ninja Y address
 C $C49B,1 one tile down
 C $C49C,3 get Ninja position in tilemap
 c $C4A4
-c $C4A7
-C $C4AE,3 get Ninja position in tilemap
-c $C4DE
+c $C4A7 ?? Movement handler
+C $C4AE,3 get Ninja position in tilema
+C $C4D0,3 Movement handler address
+c $C4DE ?? Movement handler
 c $C4E8
-c $C4F6
+C $C4ED,3 Movement handler address
+c $C4F6 Movement handler (used in initial room)
+C $C4FE,3 Decrease Energy by B
+C $C504,3 Movement handler address
 c $C50D
 C $C512,3 Ninja X address
 C $C51A,3 => Going to room at Left
 C $C51E,3 get Ninja position in tilemap
 C $C522,3 set Ninja position in tilemap
+C $C535,3 Decrease Energy by B
 C $C53D,3 get Ninja position in tilemap
 C $C546,3 Ninja Y address
 C $C54A,3 get Ninja position in tilemap
 C $C553,3 set Ninja position in tilemap
+C $C563,3 Movement handler address
 C $C56E,3 => Going to room at Right
 C $C572,3 get Ninja position in tilemap
 C $C576,3 set Ninja position in tilemap
@@ -1932,12 +1972,13 @@ c $C5A0
 c $C5A3
 C $C5A3,3 get Ninja position in tilemap
 C $C5AA,3 Tile screen 0 start address
-c $C5C6
+c $C5C6 ?? Movement handler
 C $C5C6,3 get Ninja position in tilemap
 C $C5CD,3 set Ninja position in tilemap
 C $C5D4,3 Ninja Y address
 C $C5DB,2 => Going to room Down from current
 C $C5DD,3 get Ninja position in tilemap
+C $C5F9,3 Decrease Energy by B
 c $C604 Going to room Down from current
 C $C605,3 set Ninja Y = 0
 C $C608,3 get Ninja position in tilemap
@@ -1965,11 +2006,13 @@ C $C63B,1 get Room Up address high byte
 C $C63D,3 set Current Room address
 C $C640,3 => Current Room changed
 c $C643
-c $C64C Room 791E initialization
+c $C649
+c $C64C Room #R$791E (room with pier) initialization
+C $C657,3 => Finish room initialization
 b $C65A
 b $C66B
-c $C671 Room 93DF/947C initialization
-c $C681 Room 982B initialization
+c $C671 Room #R$93DF/#R$947C (room right from vagon) initialization
+c $C681 Room #R$982B initialization
 c $C6A5 Room 7C9C procedure (tunnel vagon)
 C $C6A5,3 get Ninja X
 C $C6B2,4 get Ninja position in tilemap
@@ -2329,78 +2372,113 @@ T $D201
 B $D20E
 b $D210
 b $D256 Table ?? objects, 35 records, 7-byte records
-W $D256,2,2
-B $D258,5,5
-W $D25D,2,2
-B $D25F,5,5
-W $D264,2,2
-B $D266,5,5
-W $D26B,2,2
-B $D26D,5,5
-W $D272,2,2
-B $D274,5,5
-W $D279,2,2
-B $D27B,5,5
-W $D280,2,2
-B $D282,5,5
-W $D287,2,2
-B $D289,5,5
-W $D28E,2,2
-B $D290,5,5
-W $D295,2,2
-B $D297,5,5
-W $D29C,2,2
-B $D29E,5,5
-W $D2A3,2,2
-B $D2A5,5,5
-W $D2AA,2,2
-B $D2AC,5,5
-W $D2B1,2,2
-B $D2B3,5,5
-W $D2B8,2,2
-B $D2BA,5,5
-W $D2BF,2,2
-B $D2C1,5,5
-W $D2C6,2,2
-B $D2C8,5,5
-W $D2CD,2,2
-B $D2CF,5,5
-W $D2D4,2,2
-B $D2D6,5,5
-W $D2DB,2,2
-B $D2DD,5,5
-W $D2E2,2,2
-B $D2E4,5,5
-W $D2E9,2,2
-B $D2EB,5,5
-W $D2F0,2,2
-B $D2F2,5,5
-W $D2F7,2,2
-B $D2F9,5,5
-W $D2FE,2,2
-B $D300,5,5
-W $D305,2,2
-B $D307,5,5
-W $D30C,2,2
-B $D30E,5,5
-W $D313,2,2
-B $D315,5,5
-W $D31A,2,2
-B $D31C,5,5
-W $D321,2,2
-B $D323,5,5
-W $D328,2,2
-B $D32A,5,5
-W $D32F,2,2
-B $D331,5,5
-W $D336,2,2
-B $D338,5,5
-W $D33D,2,2
-B $D33F,5,5
-W $D344,2,2
-B $D346,5,5
+W $D256,2,2 Object ?? 00
+B $D258,3,3
+W $D25B,2,2
+W $D25D,2,2 Object ?? 01
+B $D25F,3,3
+W $D262,2,2
+W $D264,2,2 Object ?? 02
+B $D266,3,3
+W $D269,2,2
+W $D26B,2,2 Object ?? 03
+B $D26D,3,3
+W $D270,2,2
+W $D272,2,2 Object ?? 04
+B $D274,3,3
+W $D277,2,2
+W $D279,2,2 Object ?? 05
+B $D27B,3,3
+W $D27E,2,2
+W $D280,2,2 Object ?? 06
+B $D282,3,3
+W $D285,2,2
+W $D287,2,2 Object ?? 07
+B $D289,3,3
+W $D28C,2,2
+W $D28E,2,2 Object ?? 08
+B $D290,3,3
+W $D293,2,2
+W $D295,2,2 Object ?? 09
+B $D297,3,3
+W $D29A,2,2
+W $D29C,2,2 Object ?? 10
+B $D29E,3,3
+W $D2A1,2,2
+W $D2A3,2,2 Object ?? 11
+B $D2A5,3,3
+W $D2A8,2,2
+W $D2AA,2,2 Object ?? 12
+B $D2AC,3,3
+W $D2AF,2,2
+W $D2B1,2,2 Object ?? 13
+B $D2B3,3,3
+W $D2B6,2,2
+W $D2B8,2,2 Object ?? 14
+B $D2BA,3,3
+W $D2BD,2,2
+W $D2BF,2,2 Object ?? 15
+B $D2C1,3,3
+W $D2C4,2,2
+W $D2C6,2,2 Object ?? 16
+B $D2C8,3,3
+W $D2CB,2,2
+W $D2CD,2,2 Object ?? 17
+B $D2CF,3,3
+W $D2D2,2,2
+W $D2D4,2,2 Object ?? 18
+B $D2D6,3,3
+W $D2D9,2,2
+W $D2DB,2,2 Object ?? 19
+B $D2DD,3,3
+W $D2E0,2,2
+W $D2E2,2,2 Object ?? 20
+B $D2E4,3,3
+W $D2E7,2,2
+W $D2E9,2,2 Object ?? 21
+B $D2EB,3,3
+W $D2EE,2,2
+W $D2F0,2,2 Object ?? 22
+B $D2F2,3,3
+W $D2F5,2,2
+W $D2F7,2,2 Object ?? 23
+B $D2F9,3,3
+W $D2FC,2,2
+W $D2FE,2,2 Object ?? 24
+B $D300,3,3
+W $D303,2,2
+W $D305,2,2 Object ?? 25
+B $D307,3,3
+W $D30A,2,2
+W $D30C,2,2 Object ?? 26
+B $D30E,3,3
+W $D311,2,2
+W $D313,2,2 Object ?? 27
+B $D315,3,3
+W $D318,2,2
+W $D31A,2,2 Object ?? 28
+B $D31C,3,3
+W $D31F,2,2
+W $D321,2,2 Object ?? 29
+B $D323,3,3
+W $D326,2,2
+W $D328,2,2 Object ?? 30
+B $D32A,3,3
+W $D32D,2,2
+W $D32F,2,2 Object ?? 31
+B $D331,3,3
+W $D334,2,2
+W $D336,2,2 Object ?? 32
+B $D338,3,3
+W $D33B,2,2
+W $D33D,2,2 Object ?? 33
+B $D33F,3,3
+W $D342,2,2
+W $D344,2,2 Object ?? 34
+B $D346,3,3
+B $D349,2,2
 b $D34B
-B $D34B,2,2
+W $D34B,2,2
 b $D34D Table of objects, 35 records, 5 bytes each
 W $D34D,4,4
 B $D351,1,1
@@ -2458,62 +2536,44 @@ W $D3CF,4,4
 B $D3D3,1,1
 W $D3D4,4,4
 B $D3D8,1,1
-W $D3D9,4,4
+W $D3D9,4,4 #29
 B $D3DD,1,1
-W $D3DE,4,4 #30
-B $D3E2,1,1
-W $D3E3,4,4
-B $D3E7,1,1
-W $D3E8,4,4
-B $D3EC,1,1
-W $D3ED,4,4
-B $D3F1,1,1
-W $D3F2,4,4
-B $D3F6,1,1
-W $D3F7,4,4 #35
-B $D3FB,1,1
-b $D3FC
-t $D41C
-b $D41F
-t $D440
-b $D443
-t $D446
-b $D449
-t $D44C
-b $D44F
-t $D452
-b $D455
-t $D457
-b $D45A
-t $D46A
-b $D46D
-t $D470
-b $D473
-t $D476
-b $D479
-t $D47B
-b $D47F
-t $D4E6
-b $D4EC
-t $D4ED
-b $D4F1
-t $D512
-b $D515
-t $D518
-b $D51B
-b $D558
-t $D572
-b $D575
-t $D578
-b $D57B
-t $D57E
-b $D581
+b $D3DE Sprite Ninja walking 1
+B $D3DE,42,6 #HTML[<img src="images/sprite-d3de.png" />]
+b $D408 Sprite Ninja walking 2
+B $D408,42,6 #HTML[<img src="images/sprite-d408.png" />]
+b $D432 Sprite Ninja walking 3
+B $D432,42,6 #HTML[<img src="images/sprite-d432.png" />]
+b $D45C Sprite Ninja walking 4
+B $D45C,42,6 #HTML[<img src="images/sprite-d45c.png" />]
+b $D486 Sprite Ninja standing
+B $D486,42,6 #HTML[<img src="images/sprite-d486.png" />]
+b $D4B0 Sprite Ninja jumping 1
+B $D4B0,42,6 #HTML[<img src="images/sprite-d4b0.png" />]
+b $D4DA Sprite Ninja jumping 2
+B $D4DA,42,6 #HTML[<img src="images/sprite-d4da.png" />]
+b $D504 Sprite Ninja syanding hit
+B $D504,42,6 #HTML[<img src="images/sprite-d504.png" />]
+b $D52E Sprite Ninja on ladder
+B $D52E,42,6 #HTML[<img src="images/sprite-d52E.png" />]
+b $D558 Sprite Ninja sitting
+B $D558,42,6 #HTML[<img src="images/sprite-d558.png" />]
+b $D582 Sprite Ninja falling
+B $D582,42,6 #HTML[<img src="images/sprite-d582.png" />]
+b $D5AC Sprite Ninja jumping 3
+B $D5AC,42,6 #HTML[<img src="images/sprite-d5ac.png" />]
+b $D5D6 Sprite Ninja jumping 4
+B $D5D6,42,6 #HTML[<img src="images/sprite-d5d6.png" />]
+b $D600
+B $D600
 c $DE68
 C $DE6D,3 get Current Room address
 b $DE84
-c $DEC1
+c $DEC1 Clear strings on the screen
+N $DEC1 Clears 10 strings, 18 characters each; used to clear table of scores, menu etc.
+C $DECA,3 String 18 spaces
 C $DECD,3 Print string
-t $DEE6
+t $DEE6 String 18 spaces
 t $DEF8 Menu messages
 T $DEF8
 T $DF03
@@ -2527,6 +2587,7 @@ C $DF43,3 set BORDCR = $08
 C $DF54,3 get LASTK
 C $DF59,2 key pressed => Main menu
 c $DF60 Main menu
+C $DF60,3 Clear strings on the screen
 C $DF63,3 Menu messages address
 C $DF6B,3 Print string
 C $DF73,3 Print string
@@ -2549,7 +2610,7 @@ C $DFBE,3 get Input method
 C $DFC1,2 Joystick?
 C $DFC5,2 read joystick port
 C $DFC9,3 => Start Mission
-c $DFD4
+c $DFD4 Clear LASTK and do RST $38 once
 C $DFD5,3 clear LASTK
 c $DFDB Highlight Menu item
 c $DFE6 Unhighlight Menu item
@@ -2576,6 +2637,7 @@ T $E08A
 T $E08E
 T $E092
 c $E097 Redefine Keys
+C $E09A,3 Clear strings on the screen
 C $E097,3 Unhighlight Menu item
 C $E09D,3 Redefine keys messages
 C $E0A5,3 Print string "REDEFINE KEYS"
@@ -2589,6 +2651,7 @@ C $E0DD,3 Print string "RIGHT"
 C $E10A,3 get LASTK
 C $E145,3 Print string
 b $E17C
+T $E17C,1,1
 t $E1EC
 T $E1EC,1
 T $E1ED,17
@@ -2616,15 +2679,19 @@ T $E297,14
 W $E2A5,2,2
 c $E2A7 Start Mission
 C $E2A7,3 Unhighlight Menu item
+C $E2AA,3 Clear strings on the screen
 C $E2B5,3 Print string "ENTER SKILL LEVEL"
 C $E2BD,3 Print string "1 TO 9"
 C $E2D3,3 get LASTK
+C $E2DE,3 Skill level address
 C $E2E7,3 Print string
 C $E302,3 Print string "YOUR MISSION"
 C $E30A,3 Print string "WILL BE"
+C $E30D,3 get Skill level
 C $E318,1 * 16
 C $E319,3 Levels data base address
 C $E322,3 Print string - level description
+C $E33B,4 set Indicator Time value
 C $E343,4 set initial Time value
 C $E36F,2 Copy last 4 bytes: BOMB placement
 C $E37C,3 get LASTK
@@ -2692,13 +2759,22 @@ B $E43B
 W $E43C,4,2
 c $E440
 b $E494
-b $E700 Tiles with mask, 16 bytes each
-b $F700 Tiles, 9 bytes each
-B $F700,,9
-c $F973 Room 84A8 initialization
-C $F9C5,3 Read Input
+b $E700 Tiles with mask, 256 tiles, 16 bytes each
+N $E700 Used for Ninja on Tile Screen 2, and for Guard on Tile Screen 4
+N $E700 #HTML[<img src="images/tiles-e700.png" />]
+B $E700,,16
+b $F700 Background tiles, 69 tiles, 9 bytes each
+N $F700 #HTML[<img src="images/backtiles.png" />]
+B $F700,621,9
+c $F973 Room #R$84A8 initialization
+c $F9A1
 b $F98F
+B $F98F,18,3
 c $F9B9 Pause, then wait for any key pressed
+C $F9C5,3 Read Input
+C $F9CD,3 get Input bits
 C $F9D8,3 clear LASTK
 C $F9DC,3 get LASTK
 b $F9E4
+c $FA31
+b $FA3A

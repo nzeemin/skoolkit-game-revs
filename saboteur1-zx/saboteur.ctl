@@ -51,7 +51,7 @@ b $6F86 Tile screen 5 30x17 tiles, 510 bytes - front
 B $6F86,510,30
 b $7184
 W $7184,2,2 Current Room address
-W $7186,2,2 ??
+W $7186,2,2 Ninja sprite address
 b $71C3 Current Guard data
 W $71C3,2,2 Current Guard position in tilemap
 B $71C5,1,1 Current Guard X position
@@ -1318,15 +1318,21 @@ C $A38E,3 Dog data address
 b $A393
 c $A3B5
 C $A3B5,3 get Ninja Y
+C $A3CE,3 => Draw Guard on tilemap
 c $A3D1
 C $A3D1,3 get Ninja Y
+C $A3EB,3 => Draw Guard on tilemap
 c $A3EE
 C $A3EE,3 get Ninja Y
 C $A3F6,3 get Current Guard position in tilemap
+C $A40F,3 Sprite Ninja/Guard jumping 1
+C $A415,3 => Draw Guard on tilemap
 c $A418
 C $A418,3 get Ninja Y
+C $A431,3 => Draw Guard on tilemap
 c $A434
 C $A434,3 Set update flags for Guard, 6x7 tiles
+C $A447,3 => Draw Guard on tilemap
 C $A472,3 get Current Guard position in tilemap
 C $A483,3 get Guard direction
 C $A4A3,3 Tile screen 0 start address
@@ -1340,6 +1346,8 @@ C $A54B,3 get Guard direction
 C $A552,3 Ninja X address
 C $A571,3 Sprite Ninja dead
 C $A58F,3 get Guard direction
+C $A5BE,3 Sprite Ninja/Guard jumping 2
+C $A5DB,3 Sprite Ninja/Guard jumping 1
 C $A5E7,3 get Guard direction
 C $A614,3 Ninja X address
 C $A638,3 get Guard direction
@@ -1348,16 +1356,19 @@ C $A684,3 set Guard direction
 C $A68D,3 get Guard direction
 C $A6AA,3 set Guard direction
 C $A6D8,3 set Guard direction
+N $A6FF Draw Guard on tilemap
 C $A703,3 get Guard direction
-C $A70E,3 !!MUT-ARG!! current Ninja sprite address
+C $A70E,3 !!MUT-ARG!! current Ninja/Guard sprite address
+C $A716,3 Translate Ninja tile A into Guard tile
 C $A728,3 Tile screen 4 start address
+C $A735,3 Translate Ninja tile A into Guard tile
 b $A747
 t $A752
 b $A759
 c $A75B Set update flags for Guard, 6x7 tiles
 C $A75B,4 get Current Guard position in tilemap
 C $A75F,3 Tile screen 1 start address
-c $A775 ?? Translate byte A using $A787 table
+c $A775 Translate Ninja tile A into Guard tile, using $A787 table
 b $A787
 B $A787,38,8
 b $A7AD Pictures of NEAR/HELD items, 32x24px each
@@ -1591,20 +1602,22 @@ C $B5F9,3 Draw game screen frames and indicator text
 C $B5FD,3 set BORDCR = 0
 C $B612,3 set NEAR item
 C $B627,3 set current Dog data address = no dog
-C $B62A,3 set current Guarg data address = no guard
+C $B62A,3 set current Guard data address = no guard
 C $B643,3 Initial room address
 C $B646,3 set Current Room address
 C $B649,3 movement handler for initial room
 C $B64C,3 set movement handler address
-C $B657,3 set Ninja X
-C $B65C,3 set Ninja Y
+C $B64F,3 Sprite Ninja sitting
+C $B652,3 set Ninja sprite address
+C $B657,3 set Ninja X = 1
+C $B65C,3 set Ninja Y = 5
 C $B662,3 set Ninja position in tilemap: Y * 30 + X
 C $B667,3 set counter = 19
 c $B66A Current Room changed, entering the new Room
 C $B673,3,3 !!MUT-ARG!! current Dog data address
 C $B6A2,3 get Guard direction
 C $B6A9,3 set current Dog data address = no dog
-C $B6AC,3 set current Guarg data address = no guard
+C $B6AC,3 set current Guard data address = no guard
 C $B6BF,3 Tile screen 0 start address
 C $B6C2,1 fill with $00
 C $B6C7,3 510 - 1
@@ -1710,7 +1723,9 @@ C $B8D0,3 Set update flags for Ninja, 6x7 tiles
 C $B8D3,3 Tile screen 4 start address
 C $B8D8,3 510 - 1
 C $B8E0,3 get Ninja position in tilemap
+C $B8EE,4 get Ninja sprite address
 C $B907,3 Tile screen 2 start address
+C $B90B,4 get Ninja sprite address
 C $B922,3 Tile screen 3 start address
 C $B927,3 Tile screen 3 start address + 1
 C $B92A,3 510 - 1
@@ -1746,6 +1761,7 @@ C $BC38,3,3 Show title picture (two ninjas)
 c $BC55 ?? Movement handler
 C $BC70,3 Decrease Energy by B
 C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
+C $BCB9,3 => Ninja falling
 C $BCC4,3 Read Input
 C $BCC7,2 check FIRE bit
 N $BCCC FIRE pressed
@@ -1762,12 +1778,14 @@ C $BD9B,2 check DOWN bit
 c $BDAF
 c $BDB2
 C $BDB2,3 get Ninja position in tilemap
+C $BCB6,3 Check for falling
 C $BDD4,3 Movement handler address
 c $BDDD
 C $BDE5,4 get Ninja position in tilemap
 c $BE0D ?? Movement handler
 C $BE43,3 set Ninja position in tilemap
 c $BE5A
+C $BE5D,3 Sprite Ninja sitting
 c $BE63 ?? Movement handler (B8CE handler)
 C $BE63,2 command = $C9 RET
 C $BE65,3 set command = RET = disable Energy decrease
@@ -1796,10 +1814,13 @@ c $BF7B
 C $BF94,3 get Input bits
 C $BF99,2 check RIGHT bit
 C $BFA0,2 check LEFT bit
-c $BFB0 Set movement handler to HL, set ($7186) to DE
+C $BFAD,3 Sprite Ninja/Guard jumping 1
+c $BFB0 Set movement handler = HL, set Ninja sprite = DE
+C $BFB3,4 set Ninja sprite address = DE
 c $BFBA
 C $BFBF,3 get Ninja position in tilemap
-C $BFCC,3,3 Movement handler address
+C $BFCC,3 Movement handler address
+C $BFCF,3 Sprite Ninja sitting
 c $BFD5
 C $BFE6,3 Screen start address
 C $BFF1,2 Clear whole screen
@@ -1825,9 +1846,13 @@ T $C087,13
 c $C094
 b $C0E6
 c $C12E
+C $C12E,3 Movement handler for Ninja on ladder
+C $C134,3 Sprite Ninja on ladder
+C $C137,3 set Ninja sprite address
 C $C13A,3 => Move down one tile
 c $C13D
 C $C14B,3 Movement handler address
+C $C16B,3 set Ninja sprite address
 b $C171
 c $C1B6 ?? (B8CE handler)
 C $C1B6,3 get Ninja X
@@ -1847,6 +1872,8 @@ C $C20D,3 Ninja X address
 C $C211,3 get Ninja position in tilemap
 C $C214,1 move one tile to right
 C $C215,3 set Ninja position in tilemap
+C $C218,3 Check for falling
+C $C21B,3 => Ninja falling
 c $C22F ?? Movement handler (B8CE handler)
 C $C22F,3 Read Input
 C $C232,2 check DOWN bit
@@ -1874,8 +1901,11 @@ C $C2A5,1 moving one tile left
 C $C2A6,3 get Ninja position in tilemap
 C $C2A9,1 moving one tile left
 C $C2AA,3 set Ninja position in tilemap
+C $C2AD,3 Check for falling
+C $C2B0,3 => Ninja falling
 C $C2B3,3 Read Input
 C $C2B6,2 check LEFT bit
+C $C2EE,3 address for Ninja sprite address
 c $C2FA Going to room at Right
 C $C2FB,3 set Ninja X = 0
 C $C2FE,3 -24
@@ -1906,12 +1936,14 @@ C $C3BE,1 one tile to left
 C $C3BF,3 get Ninja position in tilemap
 C $C3C2,1 move one tile left
 C $C3C3,3 set Ninja position in tilemap
+C $C3C6,3 Movement handler for Ninja on ladder
+C $C3C9,3 Sprite Ninja on ladder
 c $C3CF Move RIGHT one tile
 C $C3CF,3 Ninja X address
 C $C3D2,1 one tile to right
 C $C3D3,3 get Ninja position in tilemap
 C $C3D6,1 move one tile right
-c $C3D9 ?? Movement handler (B8CE handler)
+c $C3D9 Movement handler (B8CE handler): Ninja on ladder
 C $C3D9,3 get Ninja position in tilemap
 N $C3EC Read and process Input
 C $C3EC,3 Read Input
@@ -1943,8 +1975,9 @@ C $C49B,1 one tile down
 C $C49C,3 get Ninja position in tilemap
 c $C4A4
 c $C4A7 ?? Movement handler
-C $C4AE,3 get Ninja position in tilema
+C $C4AE,3 get Ninja position in tilemap
 C $C4D0,3 Movement handler address
+C $C4D3,3 Sprite Ninja/Guard jumping 1
 c $C4DE ?? Movement handler
 c $C4E8
 C $C4ED,3 Movement handler address
@@ -1969,11 +2002,12 @@ c $C57B
 C $C585,4 get Ninja position in tilemap
 C $C58A,3 Tile screen 0 start address
 c $C5A0
-c $C5A3
+c $C5A3 Check for falling
 C $C5A3,3 get Ninja position in tilemap
 C $C5AA,3 Tile screen 0 start address
-c $C5C6 ?? Movement handler
+c $C5C6 Movement handler, Ninja falling
 C $C5C6,3 get Ninja position in tilemap
+C $C5C9,3 +30
 C $C5CD,3 set Ninja position in tilemap
 C $C5D4,3 Ninja Y address
 C $C5DB,2 => Going to room Down from current
@@ -2005,7 +2039,8 @@ C $C639,1 get Room Up address low byte
 C $C63B,1 get Room Up address high byte
 C $C63D,3 set Current Room address
 C $C640,3 => Current Room changed
-c $C643
+c $C643 Ninja falling
+C $C646,3 Sprite Ninja falling
 c $C649
 c $C64C Room #R$791E (room with pier) initialization
 C $C657,3 => Finish room initialization
@@ -2019,6 +2054,7 @@ C $C6B2,4 get Ninja position in tilemap
 C $C6B6,3 get Ninja X
 C $C6CE,3 set Ninja X
 C $C6D1,4 set Ninja position in tilemap
+C $C6D8,4 set Ninja sprite
 c $C6E2 ?? (B8CE handler)
 c $C70C
 b $C721 Font
@@ -2538,31 +2574,33 @@ W $D3D4,4,4
 B $D3D8,1,1
 W $D3D9,4,4 #29
 B $D3DD,1,1
-b $D3DE Sprite Ninja walking 1
+b $D3DE Ninja/Guard sprites
+N $D3DE Most of Ninja sprites are also Guard sprites, #R$A775 procedure and #R$A787 table used to translate Ninja tiles into Guard tiles.
+N $D3DE Sprite Ninja/Guard walking 1
 B $D3DE,42,6 #HTML[<img src="images/sprite-d3de.png" />]
-b $D408 Sprite Ninja walking 2
+N $D408 Sprite Ninja/Guard walking 2
 B $D408,42,6 #HTML[<img src="images/sprite-d408.png" />]
-b $D432 Sprite Ninja walking 3
+N $D432 Sprite Ninja/Guard walking 3
 B $D432,42,6 #HTML[<img src="images/sprite-d432.png" />]
-b $D45C Sprite Ninja walking 4
+N $D45C Sprite Ninja/Guard walking 4
 B $D45C,42,6 #HTML[<img src="images/sprite-d45c.png" />]
-b $D486 Sprite Ninja standing
+N $D486 Sprite Ninja/Guard standing
 B $D486,42,6 #HTML[<img src="images/sprite-d486.png" />]
-b $D4B0 Sprite Ninja jumping 1
+N $D4B0 Sprite Ninja/Guard jumping 1
 B $D4B0,42,6 #HTML[<img src="images/sprite-d4b0.png" />]
-b $D4DA Sprite Ninja jumping 2
+N $D4DA Sprite Ninja/Guard jumping 2
 B $D4DA,42,6 #HTML[<img src="images/sprite-d4da.png" />]
-b $D504 Sprite Ninja syanding hit
+N $D504 Sprite Ninja/Guard standing hit
 B $D504,42,6 #HTML[<img src="images/sprite-d504.png" />]
-b $D52E Sprite Ninja on ladder
+N $D52E Sprite Ninja on ladder
 B $D52E,42,6 #HTML[<img src="images/sprite-d52E.png" />]
-b $D558 Sprite Ninja sitting
+N $D558 Sprite Ninja sitting
 B $D558,42,6 #HTML[<img src="images/sprite-d558.png" />]
-b $D582 Sprite Ninja falling
+N $D582 Sprite Ninja falling
 B $D582,42,6 #HTML[<img src="images/sprite-d582.png" />]
-b $D5AC Sprite Ninja jumping 3
+N $D5AC Sprite Ninja jumping 3
 B $D5AC,42,6 #HTML[<img src="images/sprite-d5ac.png" />]
-b $D5D6 Sprite Ninja jumping 4
+N $D5D6 Sprite Ninja jumping 4
 B $D5D6,42,6 #HTML[<img src="images/sprite-d5d6.png" />]
 b $D600
 B $D600

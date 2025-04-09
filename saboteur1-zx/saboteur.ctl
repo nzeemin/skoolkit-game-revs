@@ -200,7 +200,7 @@ W $7920,2,2 Initialization
 W $7922,2,2
 W $7924,2,2 Room to Right
 W $7926,4,2
-B $792A #HTML[<img src="images/rooms/791E.png" />]
+B $792A,90,2,6,5*2,6,5*5,7*5,5,1 #HTML[<img src="images/rooms/791E.png" />]
 b $7984
 b $79C6 Room 79C6 (next to room with pier)
 W $79C6,2,2 Room procedure
@@ -208,7 +208,7 @@ W $79C8,2,2 Initialization
 W $79CA,2,2 Room to Left
 W $79CC,2,2 Room to Right
 W $79CE,4,2
-B $79D2 #HTML[<img src="images/rooms/79C6.png" />]
+B $79D2,69,2,6,6,5,7,6,5,7,4,5,7,4,4,1 #HTML[<img src="images/rooms/79C6.png" />]
 b $7A17 Room 7A17
 W $7A17,2,2 Room procedure
 W $7A19,2,2 Initialization
@@ -216,14 +216,14 @@ W $7A1B,2,2 Room to Left
 W $7A1D,2,2 Room to Right
 W $7A1F,2,2 Room Up
 W $7A21,2,2
-B $7A23 #HTML[<img src="images/rooms/7A17.png" />]
+B $7A23,82,2,5,5,6,6,5,5,5,4,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/7A17.png" />]
 b $7A75 Room 7A75
 W $7A75,2,2 Room procedure
 W $7A77,2,2 Initialization
 W $7A79,4,2
 W $7A7D,2,2 Room Up
 W $7A7F,2,2 Room Down
-B $7A81 #HTML[<img src="images/rooms/7A75.png" />]
+B $7A81,29,2,5,6,7,4,4,1 #HTML[<img src="images/rooms/7A75.png" />]
 b $7A9E Room 7A9E
 W $7A9E,2,2 Room procedure
 W $7AA0,2,2 Initialization
@@ -231,7 +231,7 @@ B $7AA2,2,2
 W $7AA4,2,2 Room to Right
 W $7AA6,2,2 Room Up
 W $7AA8,2,2
-B $7AAA #HTML[<img src="images/rooms/7A9E.png" />]
+B $7AAA,35,2,5,6,7,7,7,1 #HTML[<img src="images/rooms/7A9E.png" />]
 b $7ACD Room 7ACD
 W $7ACD,2,2 Room procedure
 W $7ACF,2,2 Initialization
@@ -239,7 +239,7 @@ W $7AD1,2,2 Room to Left
 W $7AD3,2,2 Room to Right
 W $7AD5,2,2 Room Up
 W $7AD7,2,2
-B $7AD9 #HTML[<img src="images/rooms/7ACD.png" />]
+B $7AD9,31,2,6,5,5,5,7,1 #HTML[<img src="images/rooms/7ACD.png" />]
 b $7AF8 Room 7AF8
 W $7AF8,2,2 Room procedure
 W $7AFA,2,2 Initialization
@@ -247,21 +247,22 @@ W $7AFC,2,2 Room to Left
 W $7AFE,2,2
 W $7B00,2,2 Room Up
 W $7B02,2,2
-B $7B04 #HTML[<img src="images/rooms/7AF8.png" />]
+B $7B04,75,2,6,5,7,5,5,5,7,5,5,4,4,7,7,1 #HTML[<img src="images/rooms/7AF8.png" />]
+B $7B4F,7
 b $7B56 Room 7B56
 W $7B56,2,2 Room procedure
 W $7B58,2,2 Initialization
 W $7B5A,4,2
 W $7B5E,2,2 Room Up
 W $7B60,2,2 Room Down
-B $7B62 #HTML[<img src="images/rooms/7B56.png" />]
+B $7B62,46,2,6,6,5,5,7,7,7,1 #HTML[<img src="images/rooms/7B56.png" />]
 b $7B90 Room 7B90
 W $7B90,2,2 Room procedure
 W $7B92,2,2 Initialization
 W $7B94,2,2 Room to Left
 W $7B96,2,2 Room to Right
 W $7B98,4,2
-B $7B9C #HTML[<img src="images/rooms/7B90.png" />]
+B $7B9C,54,2,6,5,4,5,6,6,5,7,7,1 #HTML[<img src="images/rooms/7B90.png" />]
 b $7BD2 Room 7BD2
 W $7BD2,2,2 Room procedure
 W $7BD4,2,2 Initialization
@@ -269,7 +270,8 @@ W $7BD6,2,2 Room to Left
 W $7BD8,2,2 Room to Right
 W $7BDA,2,2 Room Up
 W $7BDC,2,2 Room Down
-B $7BDE #HTML[<img src="images/rooms/7BD2.png" />]
+B $7BDE,46,2,6,5,4,7,7,7,7,1 #HTML[<img src="images/rooms/7BD2.png" />]
+B $7C0C,34
 b $7C21 Data 3x3 tiles for Room token #0
 B $7C21,9,3
 b $7C2A
@@ -281,7 +283,7 @@ W $7C32,2,2 Room to Left
 W $7C34,2,2
 W $7C36,2,2 Room Up
 W $7C38,2,2 Room Down
-B $7C3A #HTML[<img src="images/rooms/7C2E.png" />]
+B $7C3A,51,2,6,6,6,4,5,7,7,7,1 #HTML[<img src="images/rooms/7C2E.png" />]
 b $7C6D Room 7C6D
 W $7C6D,2,2 Room procedure
 W $7C6F,2,2 Initialization
@@ -289,14 +291,16 @@ W $7C71,2,2
 W $7C73,2,2 Room to Right
 W $7C75,2,2 Room Up
 W $7C77,2,2 Room Down
-B $7C79 #HTML[<img src="images/rooms/7C6D.png" />]
+B $7C79,33,2,7,6,5,5,7,1 #HTML[<img src="images/rooms/7C6D.png" />]
+B $7C9A,2
 b $7C9C Room 7C9C
 W $7C9C,2,2 Room procedure
 W $7C9E,2,2 Initialization
 W $7CA0,2,2 Room to Left
 W $7CA2,2,2 Room to Right
 W $7CA4,4,2
-B $7CA8 #HTML[<img src="images/rooms/7C9C.png" />]
+B $7CA8,61,2,5,6,6,6,7,7,7,7,7,1 #HTML[<img src="images/rooms/7C9C.png" />]
+B $7CE5,117
 b $7D5A Room 7D5A
 W $7D5A,2,2 Room procedure
 W $7D5C,2,2 Initialization
@@ -304,7 +308,7 @@ W $7D5E,2,2 Room to Left
 W $7D60,2,2 Room to Right
 W $7D62,2,2
 W $7D64,2,2 Room Down
-B $7D66 #HTML[<img src="images/rooms/7D5A.png" />]
+B $7D66,67,2,6,7,5,5,6,5,7,7,4,5,7,1 #HTML[<img src="images/rooms/7D5A.png" />]
 b $7DA9 Room 7DA9
 W $7DA9,2,2 Room procedure
 W $7DAB,2,2 Initialization
@@ -312,7 +316,7 @@ W $7DAD,2,2
 W $7DAF,2,2 Room to Right
 W $7DB1,2,2 Room Up
 W $7DB3,2,2 Room Down
-B $7DB5 #HTML[<img src="images/rooms/7DA9.png" />]
+B $7DB5,80,2,5,5,6,5,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/7DA9.png" />]
 b $7E05 Room 7E05
 W $7E05,2,2 Room procedure
 W $7E07,2,2 Initialization
@@ -320,7 +324,8 @@ W $7E09,2,2
 W $7E0B,2,2 Room to Right
 W $7E0D,2,2 Room Up
 W $7E0F,2,2 Room Down
-B $7E11 #HTML[<img src="images/rooms/7E05.png" />]
+B $7E11,106,5,7,7,7,7,5,7,7,7,7,7,7,7,7,5,6,1 #HTML[<img src="images/rooms/7E05.png" />]
+B $7E7B,17
 b $7E8C Room 7E8C
 W $7E8C,2,2 Room procedure
 W $7E8E,2,2 Initialization
@@ -328,13 +333,13 @@ W $7E90,2,2 Room to Left
 W $7E92,2,2 Room to Right
 W $7E94,2,2
 W $7E96,2,2 Room Down
-B $7E98 #HTML[<img src="images/rooms/7E8C.png" />]
+B $7E98,90,2,5,5,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/7E8C.png" />]
 b $7EF2 Room 7EF2
 W $7EF2,2,2 Room procedure
 W $7EF4,2,2 Initialization
 W $7EF6,2,2 Room to Left
 W $7EF8,6,2
-B $7EFE #HTML[<img src="images/rooms/7EF2.png" />]
+B $7EFE,74,2,5,5,5,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/7EF2.png" />]
 b $7F48 Room 7F48
 W $7F48,2,2 Room procedure
 W $7F4A,2,2 Initialization
@@ -342,14 +347,14 @@ W $7F4C,2,2
 W $7F4E,2,2 Room to Right
 W $7F50,2,2 Room Up
 W $7F52,2,2 Room Down
-B $7F54 #HTML[<img src="images/rooms/7F48.png" />]
+B $7F54,72,2,6,6,5,5,7,7,5,7,7,7,7,1 #HTML[<img src="images/rooms/7F48.png" />]
 b $7F9C Room 7F9C
 W $7F9C,2,2 Room procedure
 W $7F9E,2,2 Initialization
 W $7FA0,2,2 Room to Left
 W $7FA2,4,2
 W $7FA6,2,2 Room Down
-B $7FA8 #HTML[<img src="images/rooms/7F9C.png" />]
+B $7FA8,28,2,6,5,7,7,1 #HTML[<img src="images/rooms/7F9C.png" />]
 b $7FC4 Room 7FC4
 W $7FC4,2,2 Room procedure
 W $7FC6,2,2 Initialization
@@ -357,7 +362,7 @@ W $7FC8,2,2 Room to Left
 W $7FCA,2,2 Room to Right
 W $7FCC,2,2 Room Up
 W $7FCE,2,2
-B $7FD0 #HTML[<img src="images/rooms/7FC4.png" />]
+B $7FD0,56,2,6,5,5,7,5,5,6,7,7,1 #HTML[<img src="images/rooms/7FC4.png" />]
 b $8008 Room 8008
 W $8008,2,2 Room procedure
 W $800A,2,2 Initialization
@@ -365,7 +370,7 @@ W $800C,2,2 Room to Left
 W $800E,2,2
 W $8010,2,2 Room Up
 W $8012,2,2 Room Down
-B $8014 #HTML[<img src="images/rooms/8008.png" />]
+B $8014,98,2,5,5,6,6,5,7,7,7,7,7,7,7,7,7,5,1 #HTML[<img src="images/rooms/8008.png" />]
 b $8076 Room 8076
 W $8076,2,2 Room procedure
 W $8078,2,2 Initialization
@@ -373,20 +378,20 @@ W $807A,2,2
 B $807C,2,2
 W $807E,2,2 Room Up
 W $8080,2,2 Room Down
-B $8082 #HTML[<img src="images/rooms/8076.png" />]
+B $8082,37,2,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/8076.png" />]
 b $80A7 Room 80A7
 W $80A7,2,2 Room procedure
 W $80A9,2,2 Initialization
 W $80AB,2,2 Room to Left
 W $80AD,2,2 Room to Right
 W $80AF,4,2
-B $80B3 #HTML[<img src="images/rooms/80A7.png" />]
+B $80B3,67,5,5,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/80A7.png" />]
 b $80F6 Room 80F6
 W $80F6,2,2 Room procedure
 W $80F8,2,2 Initialization
 W $80FA,2,2 Room to Left
 W $80FC,6,2
-B $8102 #HTML[<img src="images/rooms/80F6.png" />]
+B $8102,96,5,6,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/80F6.png" />]
 b $8162 Room 8162
 W $8162,2,2 Room procedure
 W $8164,2,2 Initialization
@@ -394,14 +399,14 @@ W $8166,2,2 Room to Left
 W $8168,2,2
 W $816A,2,2 Room Up
 W $816C,2,2 Room Down
-B $816E #HTML[<img src="images/rooms/8162.png" />]
+B $816E,117,6,5,5,5,5,7,7,7,7,7,7,7,7,4,5,4,5,4,5,7,1 #HTML[<img src="images/rooms/8162.png" />]
 b $81E5 Room 81E5
 W $81E5,2,2 Room procedure
 W $81E7,2,2 Initialization
 W $81E9,2,2 Room to Left
 W $81EB,2,2 Room to Right
 W $81ED,4,2
-B $81F1 #HTML[<img src="images/rooms/81E5.png" />]
+B $81F1,71,6,6,5,5,5,5,5,4,4,5,5,5,5,5,1 #HTML[<img src="images/rooms/81E5.png" />]
 b $8238 Room 8238
 W $8238,2,2 Room procedure
 W $823A,2,2 Initialization
@@ -409,7 +414,7 @@ W $823C,2,2
 W $823E,2,2 Room to Right
 W $8240,2,2 Room Up
 W $8242,2,2 Room Down
-B $8244 #HTML[<img src="images/rooms/8238.png" />]
+B $8244,53,2,6,5,7,7,7,4,4,5,5,1 #HTML[<img src="images/rooms/8238.png" />]
 b $8279 Room 8279
 W $8279,2,2 Room procedure
 W $827B,2,2 Initialization
@@ -417,7 +422,7 @@ W $827D,2,2
 W $827F,2,2 Room to Right
 W $8281,2,2
 W $8283,2,2 Room Down
-B $8285 #HTML[<img src="images/rooms/8279.png" />]
+B $8285,88,7,5,5,5,5,7,7,7,7,7,7,7,7,4,1 #HTML[<img src="images/rooms/8279.png" />]
 b $82DD Room 82DD
 W $82DD,2,2 Room procedure
 W $82DF,2,2 Initialization
@@ -425,7 +430,7 @@ W $82E1,2,2 Room to Left
 W $82E3,2,2 Room to Right
 W $82E5,2,2
 W $82E7,2,2 Room Down
-B $82E9 #HTML[<img src="images/rooms/82DD.png" />]
+B $82E9,56,5,5,5,5,7,7,7,7,7,1 #HTML[<img src="images/rooms/82DD.png" />]
 b $8321 Room 8321
 W $8321,2,2 Room procedure
 W $8323,2,2 Initialization
@@ -433,14 +438,14 @@ W $8325,2,2 Room to Left
 W $8327,2,2
 W $8329,2,2 Room Up
 W $832B,2,2 Room Down
-B $832D #HTML[<img src="images/rooms/8321.png" />]
+B $832D,87,5,7,6,5,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/8321.png" />]
 b $8384 Room 8384
 W $8384,2,2 Room procedure
 W $8386,2,2 Initialization
 W $8388,4,2
 W $838C,2,2 Room Up
 W $838E,2,2 Room Down
-B $8390 #HTML[<img src="images/rooms/8384.png" />]
+B $8390,93,2,6,5,6,5,7,7,7,7,5,7,7,7,7,7,1 #HTML[<img src="images/rooms/8384.png" />]
 b $83ED Room 83ED
 W $83ED,2,2 Room procedure
 W $83EF,2,2 Initialization
@@ -448,14 +453,14 @@ W $83F1,2,2
 W $83F3,2,2 Room to Right
 W $83F5,2,2 Room Up
 W $83F7,2,2 Room Down
-B $83F9 #HTML[<img src="images/rooms/83ED.png" />]
+B $83F9,85,5,7,7,6,5,5,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/83ED.png" />]
 b $844E Room 844E
 W $844E,2,2 Room procedure
 W $8450,2,2 Initialization
 W $8452,2,2 Room to Left
 W $8454,4,2
 W $8458,2,2 Room Down
-B $845A #HTML[<img src="images/rooms/844E.png" />]
+B $845A,66,5,5,6,5,7,7,7,3,3,3,7,7,1 #HTML[<img src="images/rooms/844E.png" />]
 b $84A8 Room 84A8
 W $84A8,2,2 Room procedure
 W $84AA,2,2 Initialization
@@ -463,7 +468,7 @@ W $84AC,2,2 Room to Left
 W $84AE,2,2 Room to Right
 W $84B0,2,2
 W $84B2,2,2 Room Down
-B $84B4 #HTML[<img src="images/rooms/84A8.png" />]
+B $84B4,43,6,6,5,5,3,3,7,7,1 #HTML[<img src="images/rooms/84A8.png" />]
 b $84EE Room 84EE
 W $84EE,2,2 Room procedure
 W $84F0,2,2 Initialization
@@ -471,7 +476,7 @@ W $84F2,2,2
 W $84F4,2,2 Room to Right
 W $84F6,2,2 Room Up
 W $84F8,2,2
-B $84FA #HTML[<img src="images/rooms/84EE.png" />]
+B $84FA,44,6,6,7,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/84EE.png" />]
 b $8526 Room 8526
 W $8526,2,2 Room procedure
 W $8528,2,2 Initialization
@@ -479,14 +484,14 @@ W $852A,2,2
 W $852C,2,2 Room to Right
 W $852E,2,2 Room Up
 W $8530,2,2 Room Down
-B $8532 #HTML[<img src="images/rooms/8526.png" />]
+B $8532,69,7,7,5,7,3,3,3,7,7,7,7,5,1 #HTML[<img src="images/rooms/8526.png" />]
 b $858F Room 858F
 W $858F,2,2 Room procedure
 W $8591,2,2 Initialization
 W $8593,2,2 Room to Left
 W $8595,2,2 Room to Right
 W $8597,4,2
-B $859B #HTML[<img src="images/rooms/858F.png" />]
+B $859B,34,5,7,7,7,7,1 #HTML[<img src="images/rooms/858F.png" />]
 b $85BD Room 85BD
 W $85BD,2,2 Room procedure
 W $85BF,2,2 Initialization
@@ -494,7 +499,7 @@ W $85C1,2,2 Room to Left
 W $85C3,2,2
 W $85C5,2,2 Room Up
 W $85C7,2,2
-B $85C9 #HTML[<img src="images/rooms/85BD.png" />]
+B $85C9,63,5,6,5,7,3,3,3,3,3,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/85BD.png" />]
 b $8608 Room 8608
 W $8608,2,2 Room procedure
 W $860A,2,2 Initialization
@@ -502,14 +507,14 @@ W $860C,2,2
 W $860E,2,2 Room to Right
 W $8610,2,2
 W $8612,2,2 Room Down
-B $8614 #HTML[<img src="images/rooms/8606.png" />]
+B $8614,117,5,5,5,7,5,7,7,7,7,7,3,7,7,7,3,3,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/8606.png" />]
 b $8689 Room 8689
 W $8689,2,2 Room procedure
 W $868B,2,2 Initialization
 W $868D,2,2 Room to Left
 W $868F,4,2
 W $8693,2,2 Room Down
-B $8695 #HTML[<img src="images/rooms/8689.png" />]
+B $8695,96,5,6,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/8689.png" />]
 b $86FD Room 86FD
 W $86FD,2,2 Room procedure
 W $86FF,2,2 Initialization
@@ -517,7 +522,7 @@ W $8701,2,2 Room to Left
 W $8703,2,2 Room to Right
 W $8705,2,2 Room Up
 W $8707,2,2
-B $8709 #HTML[<img src="images/rooms/86FD.png" />]
+B $8709,48,5,5,5,6,7,7,3,3,3,3,1 #HTML[<img src="images/rooms/86FD.png" />]
 b $8739 Room 8739
 W $8739,2,2 Room procedure
 W $873B,2,2 Initialization
@@ -525,14 +530,14 @@ W $873D,2,2 Room to Left
 W $873F,2,2 Room to Right
 W $8741,2,2
 W $8743,2,2 Room Down
-B $8745 #HTML[<img src="images/rooms/8739.png" />]
+B $8745,68,5,5,5,5,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/8739.png" />]
 b $8799 Room 8799
 W $8799,2,2 Room procedure
 W $879B,2,2 Initialization
 W $879D,2,2
 W $879F,2,2 Room to Right
 W $87A1,4,2
-B $87A5 #HTML[<img src="images/rooms/8799.png" />]
+B $87A5,93,5,5,5,5,5,5,7,6,6,5,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/8799.png" />]
 b $8802 Room 8802
 W $8802,2,2 Room procedure
 W $8804,2,2 Initialization
@@ -540,7 +545,7 @@ W $8806,2,2 Room to Left
 W $8808,2,2
 W $880A,2,2 Room Up
 W $880C,2,2
-B $880E #HTML[<img src="images/rooms/8802.png" />]
+B $880E,38,5,5,6,5,3,3,3,7,1 #HTML[<img src="images/rooms/8802.png" />]
 b $8834 Room 8834
 W $8834,2,2 Room procedure
 W $8836,2,2 Initialization
@@ -548,7 +553,7 @@ W $8838,2,2 Room to Left
 W $883A,2,2 Room to Right
 W $883C,2,2 Room Up
 W $883E,2,2 Room Down
-B $8840 #HTML[<img src="images/rooms/8834.png" />]
+B $8840,88,5,5,5,5,5,7,4,7,7,5,7,5,5,5,5,5,1 #HTML[<img src="images/rooms/8834.png" />]
 b $889F Room 889F
 W $889F,2,2 Room procedure
 W $88A1,2,2 Initialization
@@ -556,14 +561,14 @@ W $88A3,2,2 Room to Left
 W $88A5,2,2 Room to Right
 W $88A7,2,2 Room Up
 W $88A9,2,2 Room Down
-B $88AB #HTML[<img src="images/rooms/889F.png" />]
+B $88AB,99,5,5,5,5,5,5,5,5,5,4,5,5,5,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/889F.png" />]
 b $890E Room 890E
 W $890E,2,2 Room procedure
 W $8910,2,2 Initialization
 W $8912,2,2 Room to Left
 W $8914,2,2 Room to Right
 W $8916,4,2
-B $891A #HTML[<img src="images/rooms/890E.png" />]
+B $891A,57,5,5,5,5,7,5,5,5,5,5,4,1 #HTML[<img src="images/rooms/890E.png" />]
 b $8953 Room 8953
 W $8953,2,2 Room procedure
 W $8955,2,2 Initialization
@@ -571,7 +576,7 @@ W $8957,2,2
 W $8959,2,2 Room to Right
 W $895B,2,2 Room Up
 W $895D,2,2 Room Down
-B $895F #HTML[<img src="images/rooms/8953.png" />]
+B $895F,90,5,5,5,5,5,5,5,5,7,7,5,5,5,5,5,5,5,1 #HTML[<img src="images/rooms/8953.png" />]
 b $89B9 Room 89B9
 W $89B9,2,2 Room procedure
 W $89BB,2,2 Initialization
@@ -579,7 +584,7 @@ W $89BD,2,2
 W $89BF,2,2 Room to Right
 W $89C1,2,2
 W $89C3,2,2 Room Down
-B $89C5 #HTML[<img src="images/rooms/89B9.png" />]
+B $89C5,104,4,4,5,5,5,5,5,5,7,7,7,5,5,5,5,7,7,5,5,1 #HTML[<img src="images/rooms/89B9.png" />]
 b $8A2D Room 8A2D
 W $8A2D,2,2 Room procedure
 W $8A2F,2,2 Initialization
@@ -587,7 +592,7 @@ W $8A31,2,2 Room to Left
 W $8A33,2,2 Room to Right
 W $8A35,2,2 Room Up
 W $8A37,2,2 Room Down
-B $8A39 #HTML[<img src="images/rooms/8A2D.png" />]
+B $8A39,72,5,5,5,5,5,5,5,7,5,5,5,7,7,1 #HTML[<img src="images/rooms/8A2D.png" />]
 b $8A81 Room 8A81
 W $8A81,2,2 Room procedure
 W $8A83,2,2 Initialization
@@ -595,7 +600,7 @@ W $8A85,2,2 Room to Left
 W $8A87,2,2 Room to Right
 W $8A89,2,2
 W $8A8B,2,2 Room Down
-B $8A8D #HTML[<img src="images/rooms/8A81.png" />]
+B $8A8D,103,5,5,5,5,5,7,7,7,5,5,5,5,5,7,5,5,7,7,1 #HTML[<img src="images/rooms/8A81.png" />]
 b $8AF4 Room 8AF4
 W $8AF4,2,2 Room procedure
 W $8AF6,2,2 Initialization
@@ -603,7 +608,7 @@ W $8AF8,2,2 Room to Left
 W $8AFA,2,2 Room to Right
 W $8AFC,2,2 Room Up
 W $8AFE,2,2 Room Down
-B $8B00 #HTML[<img src="images/rooms/8AF4.png" />]
+B $8B00,37,5,5,5,5,7,5,4,1 #HTML[<img src="images/rooms/8AF4.png" />]
 b $8B25 Room 8B25
 W $8B25,2,2 Room procedure
 W $8B27,2,2 Initialization
@@ -611,21 +616,21 @@ W $8B29,2,2
 W $8B2B,2,2 Room to Right
 W $8B2D,2,2
 W $8B2F,2,2 Room Down
-B $8B31 #HTML[<img src="images/rooms/8B25.png" />]
+B $8B31,64,5,5,7,7,7,7,7,7,5,6,1 #HTML[<img src="images/rooms/8B25.png" />]
 b $8B71 Room 8B71
 W $8B71,2,2 Room procedure
 W $8B73,2,2 Initialization
 W $8B75,2,2 Room to Left
 W $8B77,2,2 Room to Right
 W $8B79,4,2
-B $8B7D #HTML[<img src="images/rooms/8B71.png" />]
+B $8B7D,46,5,5,7,7,7,7,7,1 #HTML[<img src="images/rooms/8B71.png" />]
 b $8BAB Room 8BAB
 W $8BAB,2,2 Room procedure
 W $8BAD,2,2 Initialization
 W $8BAF,2,2 Room to Left
 W $8BB1,4,2
 W $8BB5,2,2 Room Down
-B $8BB7 #HTML[<img src="images/rooms/8BAB.png" />]
+B $8BB7,57,5,6,5,5,7,7,7,7,7,1 #HTML[<img src="images/rooms/8BAB.png" />]
 b $8BF0 Room 8BF0
 W $8BF0,2,2 Room procedure
 W $8BF2,2,2 Initialization
@@ -633,7 +638,7 @@ W $8BF4,2,2 Room to Left
 W $8BF6,2,2 Room to Right
 W $8BF8,2,2
 W $8BFA,2,2 Room Down
-B $8BFC #HTML[<img src="images/rooms/8BF0.png" />]
+B $8BFC,94,5,5,5,5,5,5,5,5,6,5,7,7,5,4,5,4,5,5,1 #HTML[<img src="images/rooms/8BF0.png" />]
 b $8C5A Room 8C5A
 W $8C5A,2,2 Room procedure
 W $8C5C,2,2 Initialization
@@ -641,14 +646,14 @@ W $8C5E,2,2 Room to Left
 W $8C60,2,2 Room to Right
 W $8C62,2,2
 W $8C64,2,2 Room Down
-B $8C66 #HTML[<img src="images/rooms/8C5A.png" />]
+B $8C66,98,5,5,5,5,5,5,5,5,6,5,7,5,5,4,5,5,5,5,5,1 #HTML[<img src="images/rooms/8C5A.png" />]
 b $8CC8 Room 8CC8
 W $8CC8,2,2 Room procedure
 W $8CCA,2,2 Initialization
 W $8CCC,2,2 Room to Left
 W $8CCE,2,2 Room to Right
 W $8CD0,4,2
-B $8CD4 #HTML[<img src="images/rooms/8CC8.png" />]
+B $8CD4,68,5,5,5,5,5,5,6,5,5,7,7,7,1 #HTML[<img src="images/rooms/8CC8.png" />]
 b $8D18 Room 8D18
 W $8D18,2,2 Room procedure
 W $8D1A,2,2 Initialization
@@ -656,21 +661,21 @@ W $8D1C,2,2 Room to Left
 W $8D1E,2,2 Room to Right
 W $8D20,2,2 Room Up
 W $8D22,2,2 Room Down
-B $8D24 #HTML[<img src="images/rooms/8D18.png" />]
+B $8D24,56,5,5,5,5,6,7,5,5,5,7,1 #HTML[<img src="images/rooms/8D18.png" />]
 b $8D5C Room 8D5C
 W $8D5C,2,2 Room procedure
 W $8D5E,2,2 Initialization
 W $8D60,2,2 Room to Left
 W $8D62,4,2
 W $8D66,2,2 Room Down
-B $8D68 #HTML[<img src="images/rooms/8D5C.png" />]
+B $8D68,98,2,5,6,5,5,6,5,7,7,7,7,7,7,7,5,4,5,1 #HTML[<img src="images/rooms/8D5C.png" />]
 b $8DCA Room 8DCA (helicopter)
 W $8DCA,2,2 Room procedure
 W $8DCC,2,2 Initialization
 W $8DCE,2,2
 W $8DD0,2,2 Room to Right
 W $8DD2,4,2
-B $8DD6 #HTML[<img src="images/rooms/8DCA.png" />]
+B $8DD6,113,2,5,6,5,5,5,5,4,6,4,5,7,7,7,7,7,5,7,7,6,1 #HTML[<img src="images/rooms/8DCA.png" />]
 b $8E4C
 b $8E5A
 b $8E5E
@@ -683,14 +688,14 @@ W $8EA0,2,2 Room to Left
 W $8EA2,2,2
 W $8EA4,2,2 Room Up
 W $8EA6,2,2 Room Down
-B $8EA8 #HTML[<img src="images/rooms/8E9C.png" />]
+B $8EA8,57,5,5,5,5,5,5,5,5,5,5,6,1 #HTML[<img src="images/rooms/8E9C.png" />]
 b $8EE1 Room 8EE1
 W $8EE1,2,2 Room procedure
 W $8EE3,2,2 Initialization
 W $8EE5,2,2 Room to Left
 W $8EE7,4,2
 W $8EEB,2,2 Room Down
-B $8EED #HTML[<img src="images/rooms/8EE1.png" />]
+B $8EED,51,5,5,4,4,6,6,5,5,5,5,1 #HTML[<img src="images/rooms/8EE1.png" />]
 b $8F20 Room 8F20
 W $8F20,2,2 Room procedure
 W $8F22,2,2 Initialization
@@ -698,7 +703,7 @@ W $8F24,2,2 Room to Left
 W $8F26,2,2
 W $8F28,2,2 Room Up
 W $8F2A,2,2 Room Down
-B $8F2C #HTML[<img src="images/rooms/8F20.png" />]
+B $8F2C,88,5,5,4,4,5,5,6,6,7,6,5,7,7,5,5,5,1 #HTML[<img src="images/rooms/8F20.png" />]
 b $8F84 Room 8F84
 W $8F84,2,2 Room procedure
 W $8F86,2,2 Initialization
@@ -706,7 +711,7 @@ W $8F88,2,2 Room to Left
 W $8F8A,2,2
 W $8F8C,2,2 Room Up
 W $8F8E,2,2 Room Down
-B $8F90 #HTML[<img src="images/rooms/8F84.png" />]
+B $8F90,45,2,6,5,6,4,7,7,7,1 #HTML[<img src="images/rooms/8F84.png" />]
 b $8FBD Room 8FBD
 W $8FBD,2,2 Room procedure
 W $8FBF,2,2 Initialization
@@ -714,7 +719,7 @@ W $8FC1,2,2 Room to Left
 W $8FC3,2,2 Room to Right
 W $8FC5,2,2
 W $8FC7,2,2 Room Down
-B $8FC9 #HTML[<img src="images/rooms/8FBD.png" />]
+B $8FC9,60,6,6,5,5,5,4,4,5,5,7,7,1 #HTML[<img src="images/rooms/8FBD.png" />]
 b $9005 Room 9005
 W $9005,2,2 Room procedure
 W $9007,2,2 Initialization
@@ -722,7 +727,7 @@ W $9009,2,2 Room to Left
 W $900B,2,2 Room to Right
 W $900D,2,2 Room Up
 W $900F,2,2
-B $9011 #HTML[<img src="images/rooms/9005.png" />]
+B $9011,66,5,7,7,7,4,5,6,5,5,7,7,1 #HTML[<img src="images/rooms/9005.png" />]
 b $9053 Room 9053
 W $9053,2,2 Room procedure
 W $9055,2,2 Initialization
@@ -730,14 +735,14 @@ W $9057,2,2 Room to Left
 W $9059,2,2 Room to Right
 W $905B,2,2 Room Up
 W $905D,2,2 Room Down
-B $905F #HTML[<img src="images/rooms/9053.png" />]
+B $905F,64,6,6,5,5,5,7,7,6,6,5,5,1 #HTML[<img src="images/rooms/9053.png" />]
 b $909F Room 909F
 W $909F,2,2 Room procedure
 W $90A1,2,2 Initialization
 W $90A3,2,2 Room to Left
 W $90A5,2,2 Room to Right
 W $90A7,4,2
-B $90AB #HTML[<img src="images/rooms/909F.png" />]
+B $90AB,48,5,5,6,5,5,7,7,7,1 #HTML[<img src="images/rooms/909F.png" />]
 b $90DB Room 90DB
 W $90DB,2,2 Room procedure
 W $90DD,2,2 Initialization
@@ -745,7 +750,7 @@ W $90DF,2,2 Room to Left
 W $90E1,2,2 Room to Right
 W $90E3,2,2 Room Up
 W $90E5,2,2
-B $90E7 #HTML[<img src="images/rooms/90DB.png" />]
+B $90E7,88,2,6,5,5,6,5,5,7,7,4,5,4,5,7,7,7,1 #HTML[<img src="images/rooms/90DB.png" />]
 b $913F Room 913F
 W $913F,2,2 Room procedure
 W $9141,2,2 Initialization
@@ -753,7 +758,7 @@ W $9143,2,2
 W $9145,2,2 Room to Right
 W $9147,2,2
 W $9149,2,2 Room Down
-B $914B #HTML[<img src="images/rooms/913F.png" />]
+B $914B,111,5,5,5,6,5,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/913F.png" />]
 b $91BA Room 91BA
 W $91BA,2,2 Room procedure
 W $91BC,2,2 Initialization
@@ -761,14 +766,14 @@ W $91BE,2,2 Room to Left
 W $91C0,2,2
 W $91C2,2,2 Room Up
 W $91C4,2,2 Room Down
-B $91C6 #HTML[<img src="images/rooms/91BA.png" />]
+B $91C6,68,5,4,5,6,5,7,5,7,7,7,3,3,3,1 #HTML[<img src="images/rooms/91BA.png" />]
 b $920A Room 920A
 W $920A,2,2 Room procedure
 W $920C,2,2 Initialization
 W $920E,2,2 Room to Left
 W $9210,2,2 Room to Right
 W $9212,4,2
-B $9216 #HTML[<img src="images/rooms/920A.png" />]
+B $9216,56,5,7,7,3,3,3,3,3,7,7,7,1 #HTML[<img src="images/rooms/920A.png" />]
 b $924E Room 924E
 W $924E,2,2 Room procedure
 W $9250,2,2 Initialization
@@ -776,21 +781,21 @@ W $9252,2,2 Room to Left
 W $9254,2,2
 W $9256,2,2 Room Up
 W $9258,2,2
-B $925A #HTML[<img src="images/rooms/924E.png" />]
+B $925A,77,5,7,5,7,7,7,7,7,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/924E.png" />]
 b $92A7 Room 92A7
 W $92A7,2,2 Room procedure
 W $92A9,2,2 Initialization
 W $92AB,2,2
 W $92AD,2,2 Room to Right
 W $92AF,4,2
-B $92B3 #HTML[<img src="images/rooms/92A7.png" />]
+B $92B3,60,5,7,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/92A7.png" />]
 b $92EF Room 92EF
 W $92EF,2,2 Room procedure
 W $92F1,2,2 Initialization
 W $92F3,2,2
 W $92F5,2,2 Room to Right
 W $92F7,4,2
-B $92FB #HTML[<img src="images/rooms/92EF.png" />]
+B $92FB,119,2,6,6,6,5,4,5,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/92EF.png" />]
 b $9376 Room 9376
 W $9376,2,2 Room procedure
 W $9378,2,2 Initialization
@@ -798,7 +803,7 @@ W $937A,2,2 Room to Left
 W $937C,2,2
 W $937E,2,2 Room Up
 B $9380,2,2
-B $9382 #HTML[<img src="images/rooms/9376.png" />]
+B $9382,93,2,6,6,5,5,6,5,7,7,7,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/9376.png" />]
 b $93DF Room 93DF
 W $93DF,2,2 Room procedure
 W $93E1,2,2 Initialization
@@ -806,55 +811,55 @@ W $93E3,2,2 Room to Left
 W $93E5,2,2 Room to Right
 W $93E7,2,2 Room Up
 W $93E9,2,2
-B $93EB #HTML[<img src="images/rooms/93DF.png" />]
+B $93EB,70,2,6,5,5,5,5,5,5,7,5,5,7,7,1 #HTML[<img src="images/rooms/93DF.png" />]
 b $9431 Room 9431
 W $9431,2,2 Room procedure
 W $9433,2,2 Initialization
 W $9435,4,2
 W $9439,2,2 Room Up
 W $943B,2,2 Room Down
-B $943D #HTML[<img src="images/rooms/9431.png" />]
+B $943D,20,2,7,5,5,1 #HTML[<img src="images/rooms/9431.png" />]
 b $9451 Room 9451
 W $9451,2,2 Room procedure
 W $9453,2,2 Initialization
 W $9455,6,2
 W $945B,2,2 Room Down
-B $945D #HTML[<img src="images/rooms/9451.png" />]
+B $945D,31,2,7,5,5,6,5,1 #HTML[<img src="images/rooms/9451.png" />]
 b $947C Room 947C
 W $947C,2,2 Room procedure
 W $947E,2,2 Initialization
 W $9480,2,2 Room to Left
 W $9482,2,2 Room to Right
 W $9484,4,2
-B $9488 #HTML[<img src="images/rooms/947C.png" />]
+B $9488,35,2,6,6,5,5,5,5,1 #HTML[<img src="images/rooms/947C.png" />]
 b $94AB Room 94AB
 W $94AB,2,2 Room procedure
 W $94AD,2,2 Initialization
 W $94AF,2,2 Room to Left
 W $94B1,2,2 Room to Right
 W $94B3,4,2
-B $94B7 #HTML[<img src="images/rooms/94AB.png" />]
+B $94B7,24,2,6,6,4,5,1 #HTML[<img src="images/rooms/94AB.png" />]
 b $94CF Room 94CF
 W $94CF,2,2 Room procedure
 W $94D1,2,2 Initialization
 W $94D3,2,2 Room to Left
 W $94D5,2,2 Room to Right
 W $94D7,4,2
-B $94DB #HTML[<img src="images/rooms/94CF.png" />]
+B $94DB,77,5,6,6,4,4,6,7,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/94CF.png" />]
 b $9552 Room 9552
 W $9552,2,2 Room procedure
 W $9554,2,2 Initialization
 W $9556,2,2 Room to Left
 W $9558,2,2 Room to Right
 W $955A,4,2
-B $955E #HTML[<img src="images/rooms/9552.png" />]
+B $955E,84,5,6,6,4,4,6,7,7,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/9552.png" />]
 b $95D6 Room 95D6
 W $95D6,2,2 Room procedure
 W $95D8,2,2 Initialization
 W $95DA,2,2 Room to Left
 W $95DC,2,2 Room to Right
 W $95DE,4,2
-B $95E2 #HTML[<img src="images/rooms/95D6.png" />]
+B $95E2,22,5,6,5,5,1 #HTML[<img src="images/rooms/95D6.png" />]
 b $95F8 Room 95F8
 W $95F8,2,2 Room procedure
 W $95FA,2,2 Initialization
@@ -862,7 +867,7 @@ W $95FC,2,2
 W $95FE,2,2 Room to Right
 W $9600,2,2
 W $9602,2,2 Room Down
-B $9604 #HTML[<img src="images/rooms/95F8.png" />]
+B $9604,48,2,6,5,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/95F8.png" />]
 b $9634 Room 9634
 W $9634,2,2 Room procedure
 W $9636,2,2 Initialization
@@ -870,7 +875,7 @@ W $9638,2,2
 W $963A,2,2 Room to Right
 W $963C,2,2 Room Up
 W $963E,2,2 Room Down
-B $9640 #HTML[<img src="images/rooms/9634.png" />]
+B $9640,70,6,6,5,4,5,7,7,5,5,5,7,7,1 #HTML[<img src="images/rooms/9634.png" />]
 b $968A Room 968A
 W $968A,2,2 Room procedure
 W $968C,2,2 Initialization
@@ -878,21 +883,21 @@ W $968E,2,2 Room to Left
 W $9690,2,2 Room to Right
 W $9692,2,2
 W $9694,2,2 Room Down
-B $9696 #HTML[<img src="images/rooms/968A.png" />]
+B $9696,54,6,5,6,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/968A.png" />]
 b $96CC Room 96CC
 W $96CC,2,2 Room procedure
 W $96CE,2,2 Initialization
 W $96D0,2,2 Room to Left
 W $96D2,4,2
 W $96D6,2,2 Room Down
-B $96D8 #HTML[<img src="images/rooms/96CC.png" />]
+B $96D8,27,5,6,5,5,5,1 #HTML[<img src="images/rooms/96CC.png" />]
 b $96F3 Room 96F3
 W $96F3,2,2 Room procedure
 W $96F5,2,2 Initialization
 W $96F7,2,2 Room to Left
 W $96F9,4,2
 W $96FD,2,2 Room Down
-B $96FF #HTML[<img src="images/rooms/96F3.png" />]
+B $96FF,22,6,5,5,5,1 #HTML[<img src="images/rooms/96F3.png" />]
 b $9715 Room 9715
 W $9715,2,2 Room procedure
 W $9717,2,2 Initialization
@@ -900,7 +905,7 @@ W $9719,2,2
 W $971B,2,2 Room to Right
 W $971D,2,2 Room Up
 W $971F,2,2 Room Down
-B $9721 #HTML[<img src="images/rooms/9715.png" />]
+B $9721,24,6,7,5,5,1 #HTML[<img src="images/rooms/9715.png" />]
 b $9739 Room 9739
 W $9739,2,2 Room procedure
 W $973B,2,2 Initialization
@@ -908,13 +913,13 @@ W $973D,2,2 Room to Left
 W $973F,2,2 Room to Right
 W $9741,2,2 Room Up
 W $9743,2,2 Room Down
-B $9745 #HTML[<img src="images/rooms/9739.png" />]
+B $9745,41,6,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9739.png" />]
 b $976E Room 976E
 W $976E,2,2 Room procedure
 W $9770,2,2 Initialization
 W $9772,2,2 Room to Left
 W $9774,6,2
-B $977A #HTML[<img src="images/rooms/976E.png" />]
+B $977A,44,2,6,6,5,5,5,5,5,4,1 #HTML[<img src="images/rooms/976E.png" />]
 b $97A6 Room 97A6
 W $97A6,2,2 Room procedure
 W $97A8,2,2 Initialization
@@ -922,14 +927,14 @@ W $97AA,2,2 Room to Left
 W $97AC,2,2 Room to Right
 W $97AE,2,2 Room Up
 W $97B0,2,2
-B $97B2 #HTML[<img src="images/rooms/97A6.png" />]
+B $97B2,70,6,5,5,7,6,4,4,5,7,7,7,6,1 #HTML[<img src="images/rooms/97A6.png" />]
 b $97F8 Room 97F8
 W $97F8,2,2 Room procedure
 W $97FA,2,2 Initialization
 W $97FC,2,2 Room to Left
 W $97FE,4,2
 W $9802,2,2 Room Down
-B $9804 #HTML[<img src="images/rooms/97F8.png" />]
+B $9804,39,2,6,6,5,5,7,7,1 #HTML[<img src="images/rooms/97F8.png" />]
 b $982B Room 982B
 W $982B,2,2 Room procedure
 W $982D,2,2 Initialization
@@ -937,35 +942,35 @@ W $982F,2,2 Room to Left
 W $9831,2,2
 W $9833,2,2 Room Up
 W $9835,2,2
-B $9837 #HTML[<img src="images/rooms/982B.png" />]
+B $9837,63,2,6,6,5,5,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/982B.png" />]
 b $9876 Room 9876
 W $9876,2,2 Room procedure
 W $9878,2,2 Initialization
 W $987A,2,2 Room to Left
 W $987C,2,2 Room to Right
 W $987E,4,2
-B $9882 #HTML[<img src="images/rooms/9876.png" />]
+B $9882,62,2,6,6,6,5,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/9876.png" />]
 b $98C0 Room 98C0 (think door)
 W $98C0,2,2 Room procedure
 W $98C2,2,2 Initialization
 W $98C4,2,2 Room to Left
 W $98C6,2,2 Room to Right
 W $98C8,4,2
-B $98CC #HTML[<img src="images/rooms/98C0.png" />]
+B $98CC,53,5,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/98C0.png" />]
 b $990D Room 990D
 W $990D,2,2 Room procedure
 W $990F,2,2 Initialization
 W $9911,4,2
 W $9915,2,2 Room Up
 W $9917,2,2
-B $9919 #HTML[<img src="images/rooms/990D.png" />]
+B $9919,126,6,6,6,5,7,7,7,6,5,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/990D.png" />]
 b $99A6 Room 99A6
 W $99A6,2,2 Room procedure
 W $99A8,2,2 Initialization
 W $99AA,2,2
 W $99AC,2,2 Room to Right
 W $99AE,4,2
-B $99B2 #HTML[<img src="images/rooms/99A6.png" />]
+B $99B2,108,5,5,5,6,6,4,7,6,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/99A6.png" />]
 b $9A1E Room 9A1E
 W $9A1E,2,2 Room procedure
 W $9A20,2,2 Initialization
@@ -973,7 +978,7 @@ W $9A22,2,2
 W $9A24,2,2 Room to Right
 W $9A26,2,2 Room Up
 W $9A28,2,2
-B $9A2A #HTML[<img src="images/rooms/9A1E.png" />]
+B $9A2A,48,2,6,6,5,6,5,7,5,5,1 #HTML[<img src="images/rooms/9A1E.png" />]
 b $9A5A Room 9A5A
 W $9A5A,2,2 Room procedure
 W $9A5C,2,2 Initialization
@@ -981,7 +986,7 @@ W $9A5E,2,2
 W $9A60,2,2 Room to Right
 W $9A62,2,2 Room Up
 W $9A64,2,2 Room Down
-B $9A66 #HTML[<img src="images/rooms/9A5A.png" />]
+B $9A66,52,2,6,6,5,6,5,7,7,7,1 #HTML[<img src="images/rooms/9A5A.png" />]
 b $9A9A Room 9A9A
 W $9A9A,2,2 Room procedure
 W $9A9C,2,2 Initialization
@@ -989,35 +994,35 @@ W $9A9E,2,2 Room to Left
 W $9AA0,2,2 Room to Right
 W $9AA2,2,2 Room Up
 W $9AA4,2,2
-B $9AA6 #HTML[<img src="images/rooms/9A9A.png" />]
+B $9AA6,54,5,5,6,4,5,7,7,7,7,1 #HTML[<img src="images/rooms/9A9A.png" />]
 b $9ADC Room 9ADC
 W $9ADC,2,2 Room procedure
 W $9ADE,2,2 Initialization
 W $9AE0,4,2
 W $9AE4,2,2 Room Up
 W $9AE6,2,2 Room Down
-B $9AE8 #HTML[<img src="images/rooms/9ADC.png" />]
+B $9AE8,49,2,6,6,5,7,5,5,5,7,1 #HTML[<img src="images/rooms/9ADC.png" />]
 b $9B19 Room 9B19
 W $9B19,2,2 Room procedure
 W $9B1B,2,2 Initialization
 W $9B1D,4,2
 W $9B21,2,2 Room Up
 W $9B23,2,2 Room Down
-B $9B25 #HTML[<img src="images/rooms/9B19.png" />]
+B $9B25,44,6,6,7,5,5,7,7,1 #HTML[<img src="images/rooms/9B19.png" />]
 b $9B51 Room 9B51
 W $9B51,2,2 Room procedure
 W $9B53,2,2 Initialization
 W $9B55,4,2
 W $9B59,2,2 Room Up
 W $9B5B,2,2 Room Down
-B $9B5D #HTML[<img src="images/rooms/9B51.png" />]
+B $9B5D,64,2,6,5,5,7,7,7,3,7,7,7,1 #HTML[<img src="images/rooms/9B51.png" />]
 b $9B9D Room 9B9D
 W $9B9D,2,2 Room procedure
 W $9B9F,2,2 Initialization
 W $9BA1,4,2
 W $9BA5,2,2 Room Up
 W $9BA7,2,2 Room Down
-B $9BA9 #HTML[<img src="images/rooms/9B9D.png" />]
+B $9BA9,62,2,6,6,7,7,7,7,7,3,3,3,3,1 #HTML[<img src="images/rooms/9B9D.png" />]
 b $9BE7 Room 9BE7
 W $9BE7,2,2 Room procedure
 W $9BE9,2,2 Initialization
@@ -1025,7 +1030,7 @@ W $9BEB,2,2
 W $9BED,2,2 Room to Right
 W $9BEF,2,2 Room Up
 W $9BF1,2,2 Room Down
-B $9BF3 #HTML[<img src="images/rooms/9BE7.png" />]
+B $9BF3,70,6,6,5,5,5,6,5,7,7,5,7,5,1 #HTML[<img src="images/rooms/9BE7.png" />]
 b $9C39
 B $9C39,7,7
 B $9C40,1,1 Ninja Y within the room, 0 at the top
@@ -1080,34 +1085,34 @@ W $9DF9,2,2 Room to Left
 W $9DFB,2,2
 W $9DFD,2,2 Room Up
 W $9DFF,2,2
-B $9E01 #HTML[<img src="images/rooms/9DF5.png" />]
+B $9E01,33,5,6,5,7,4,5,1 #HTML[<img src="images/rooms/9DF5.png" />]
 b $9E22 Room 9E22
 W $9E22,2,2 Room procedure
 W $9E24,2,2 Initialization
 W $9E26,6,2
 W $9E2C,2,2 Room Down
-B $9E2E #HTML[<img src="images/rooms/9E22.png" />]
+B $9E2E,69,2,6,6,5,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/9E22.png" />]
 b $9E73 Room 9E73
 W $9E73,2,2 Room procedure
 W $9E75,2,2 Initialization
 W $9E77,2,2 Room to Left
 W $9E79,4,2
 W $9E7D,2,2 Room Down
-B $9E7F #HTML[<img src="images/rooms/9E73.png" />]
+B $9E7F,57,5,6,6,5,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9E73.png" />]
 b $9EB8 Room 9EB8
 W $9EB8,2,2 Room procedure
 W $9EBA,2,2 Initialization
 W $9EBC,2,2 Room to Left
 W $9EBE,2,2 Room to Right
 W $9EC0,4,2
-B $9EC4 #HTML[<img src="images/rooms/9EB8.png" />]
+B $9EC4,21,5,5,5,5,1 #HTML[<img src="images/rooms/9EB8.png" />]
 b $9ED9 Room 9ED9
 W $9ED9,2,2 Room procedure
 W $9EDB,2,2 Initialization
 W $9EDD,2,2 Room to Left
 W $9EDF,2,2 Room to Right
 W $9EE1,4,2
-B $9EE5 #HTML[<img src="images/rooms/9ED9.png" />]
+B $9EE5,21,5,5,5,5,1 #HTML[<img src="images/rooms/9ED9.png" />]
 b $9EFA Room 9EFA
 W $9EFA,2,2 Room procedure
 W $9EFC,2,2 Initialization
@@ -1115,7 +1120,7 @@ W $9EFE,2,2
 W $9F00,2,2 Room to Right
 B $9F02,2,2
 W $9F04,2,2 Room Down
-B $9F06 #HTML[<img src="images/rooms/9EFA.png" />]
+B $9F06,52,5,6,6,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9EFA.png" />]
 b $9F3A Room 9F3A
 W $9F3A,2,2 Room procedure
 W $9F3C,2,2 Initialization
@@ -1123,20 +1128,20 @@ W $9F3E,2,2
 W $9F40,2,2 Room to Right
 W $9F42,2,2 Room Up
 W $9F44,2,2 Room Down
-B $9F46 #HTML[<img src="images/rooms/9F3A.png" />]
+B $9F46,56,6,5,6,7,7,5,5,7,7,1 #HTML[<img src="images/rooms/9F3A.png" />]
 b $9F7E Room 9F7E
 W $9F7E,2,2 Room procedure
 W $9F80,2,2 Initialization
 W $9F82,2,2 Room to Left
 W $9F84,2,2 Room to Right
 W $9F86,4,2
-B $9F8A #HTML[<img src="images/rooms/9F7E.png" />]
+B $9F8A,122,6,6,7,6,6,7,7,7,7,7,7,7,6,6,7,4,5,7,6,1 #HTML[<img src="images/rooms/9F7E.png" />]
 b $A022 Room A022
 W $A022,2,2 Room procedure
 W $A024,2,2 Initialization
 W $A026,2,2 Room to Left
 W $A028,6,2
-B $A02E #HTML[<img src="images/rooms/A022.png" />]
+B $A02E,121,6,6,6,7,7,7,7,7,7,7,6,6,7,4,5,7,6,5,7,1 #HTML[<img src="images/rooms/A022.png" />]
 b $A0B5 Sprite Ninja dead, 6x7 tiles
 B $A0B5,42,6 #HTML[<img src="images/sprite-a0b5.png" />]
 c $A0DF Room #R$94AB initialization
@@ -1403,7 +1408,7 @@ C $ACCF,3 Screen start address
 C $ACD2,3 Game screen frames/indicators RLE encoded sequence
 C $ACEE,3 * 8
 C $ACF1,1 * 9
-C $ACF2,3 Indicator tales address
+C $ACF2,3 Indicator tiles address
 C $AD21,3 Indicator messages address
 C $AD26,3 Print string "PAY : $ XXXXX"
 C $AD2E,3 Print string "99"
@@ -1420,7 +1425,10 @@ B $AD65,,8 #HTML[<img src="images/indicators.png" />]
 b $AE02 Tiles for game screen frames/indicators, 9 bytes each
 B $AE02,,9 #HTML[<img src="images/indtiles.png" />]
 c $AED1 Print string with standard font
-C $AED6,3 * 8
+R $AED1 C Length
+R $AED1 (HL) string address
+R $AED1 (DE) screen address
+C $AED8,1 * 8
 c $AEF0
 C $AF13,3 Pay value text address
 C $AF41,3 Print string "EXCELLENT WORK."
@@ -1578,7 +1586,7 @@ W $B515,2,2 Initialization
 W $B517,2,2
 W $B519,2,2 Room to Right
 W $B51B,4,2
-B $B51F #HTML[<img src="images/rooms/B513.png" />]
+B $B51F,19 #HTML[<img src="images/rooms/B513.png" />]
 c $B532 Movement handler for initial room (B8CE handler)
 C $B535,1 increase Ninja position in tilemap
 C $B539,3 Ninja X address
@@ -1758,7 +1766,7 @@ N $BC0D Prepare screen background for title picture
 C $BC0D,3 !!MUT-ARG!!
 N $BC38 Show title picture
 C $BC38,3,3 Show title picture (two ninjas)
-c $BC55 ?? Movement handler
+c $BC55 Movement handler: Ninja standing
 C $BC70,3 Decrease Energy by B
 C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
 C $BCB9,3 => Ninja falling
@@ -1874,9 +1882,11 @@ C $C214,1 move one tile to right
 C $C215,3 set Ninja position in tilemap
 C $C218,3 Check for falling
 C $C21B,3 => Ninja falling
-c $C22F ?? Movement handler (B8CE handler)
+C $C229,3 Sprite Ninja/Guard standing
+c $C22F Movement handler (B8CE handler): Ninja sitting
 C $C22F,3 Read Input
 C $C232,2 check DOWN bit
+C $C236,3 DOWN key released => stand up
 C $C239,3 get Ninja position in tilemap
 C $C245,3 => Decrease Energy by B
 c $C24B ?? Movement handler (B8CE handler)
@@ -2593,7 +2603,7 @@ B $D4DA,42,6 #HTML[<img src="images/sprite-d4da.png" />]
 N $D504 Sprite Ninja/Guard standing hit
 B $D504,42,6 #HTML[<img src="images/sprite-d504.png" />]
 N $D52E Sprite Ninja on ladder
-B $D52E,42,6 #HTML[<img src="images/sprite-d52E.png" />]
+B $D52E,42,6 #HTML[<img src="images/sprite-d52e.png" />]
 N $D558 Sprite Ninja sitting
 B $D558,42,6 #HTML[<img src="images/sprite-d558.png" />]
 N $D582 Sprite Ninja falling
@@ -2814,5 +2824,9 @@ C $F9CD,3 get Input bits
 C $F9D8,3 clear LASTK
 C $F9DC,3 get LASTK
 b $F9E4
+c $F9E7
+c $F9F9
+c $FA11
+c $FA28
 c $FA31
 b $FA3A

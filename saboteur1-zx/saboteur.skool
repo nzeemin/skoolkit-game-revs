@@ -4116,7 +4116,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
 *$A4E7 CP $14          ;
  $A4E9 JR NZ,$A52F     ;
  $A4EB LD (HL),$04     ;
- $A4ED LD HL,$D486     ;
+ $A4ED LD HL,$D486     ; Sprite Ninja/Guard standing
  $A4F0 LD ($A70F),HL   ;
  $A4F3 LD HL,($71C3)   ;
  $A4F6 LD DE,$003C     ;
@@ -4143,7 +4143,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A52C JP $A6FF        ;
 *$A52F CP $0A          ;
  $A531 JR NZ,$A56D     ;
- $A533 LD HL,$D486     ;
+ $A533 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A536 LD ($A70F),HL   ;
  $A539 LD HL,$9C40     ; Ninja Y address
  $A53C LD A,($71C6)    ;
@@ -4192,7 +4192,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A59B INC A           ;
  $A59C LD B,$06        ;
  $A59E CALL NZ,$FA31   ;
- $A5A1 LD HL,$D486     ;
+ $A5A1 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A5A4 LD ($A70F),HL   ;
  $A5A7 JP $A6FF        ;
 *$A5AA CP $05          ;
@@ -4240,7 +4240,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A605 POP HL          ;
  $A606 JP NZ,$A6FF     ;
  $A609 LD (HL),$03     ;
- $A60B LD HL,$D486     ;
+ $A60B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A60E LD ($A70F),HL   ;
  $A611 JP $A6FF        ;
 *$A614 LD HL,$9C41     ; Ninja X address
@@ -4254,7 +4254,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A626 JP Z,$A6FF      ;
  $A629 LD A,$04        ;
  $A62B LD (HL),A       ;
- $A62C LD HL,$D486     ;
+ $A62C LD HL,$D486     ; Sprite Ninja/Guard standing
  $A62F LD ($A70F),HL   ;
  $A632 JP $A6FF        ;
 *$A635 JR C,$A68C      ;
@@ -4267,7 +4267,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A644 JR Z,$A654      ;
  $A646 LD A,$04        ;
  $A648 LD ($7346),A    ;
- $A64B LD HL,$D486     ;
+ $A64B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A64E LD ($A70F),HL   ;
  $A651 JP $A6FF        ;
 *$A654 XOR A           ;
@@ -4303,7 +4303,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A699 JR Z,$A6A8      ;
  $A69B LD A,$04        ;
  $A69D LD ($7346),A    ;
- $A6A0 LD HL,$D486     ;
+ $A6A0 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A6A3 LD ($A70F),HL   ;
  $A6A6 JR $A6FF        ;
 *$A6A8 LD A,$01        ;
@@ -5644,13 +5644,11 @@ c$B489 LD A,($B4DD)    ;
 ; Data block at B4DD
 b$B4DD DEFB $32
 
-; Routine at B4DE
+; Increase PAY value by B * 100
 ;
 ; Used by the routines at #R$B724, #R$B937, #R$BC55, #R$BDB2, #R$BFD5 and
 ; #R$C4A7.
-;
-; B ??
-c$B4DE LD HL,$AD54   ;
+c$B4DE LD HL,$AD54   ; PAY value 3rd digit address
  $B4E1 LD A,$3A      ;
 *$B4E3 INC (HL)      ;
  $B4E4 CP (HL)       ;
@@ -5736,7 +5734,7 @@ c$B532 LD HL,($9C42) ;
  $B58A LD HL,$C4F6   ; Movement handler address
  $B58D LD A,$04      ;
  $B58F LD ($7343),A  ;
- $B592 JP $BFB0      ;
+ $B592 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Unused
 s$B595 DEFS $01
@@ -6061,7 +6059,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B7E5 DEC C         ;
  $B7E6 JR NZ,$B7DD   ;
  $B7E8 LD B,$32      ;
- $B7EA CALL $B4DE    ;
+ $B7EA CALL $B4DE    ; Increase PAY value by 5000
 *$B7ED LD HL,$678E   ; Tile screen 1 start address
  $B7F0 LD (HL),$00   ;
  $B7F2 LD BC,$01FD   ; 510 - 1
@@ -6347,7 +6345,7 @@ c$B937 LD IX,$A39F   ;
  $B9EC LD A,$09      ;
  $B9EE LD ($7346),A  ;
  $B9F1 LD B,$01      ;
- $B9F3 CALL $B4DE    ;
+ $B9F3 CALL $B4DE    ; Increase PAY value by 100 - Guard killed by weapon
  $B9F6 JP $BAD5      ;
 *$B9F9 PUSH HL       ;
  $B9FA LD HL,$B951   ;
@@ -6361,7 +6359,7 @@ c$B937 LD IX,$A39F   ;
  $BA08 CP $C8        ;
  $BA0A JR NC,$BA14   ;
  $BA0C LD B,$14      ;
- $BA0E CALL $9DD9    ; Decrease Energy by B
+ $BA0E CALL $9DD9    ; Decrease Energy by B = 20
  $BA11 JP $BAD5      ;
 *$BA14 LD A,(IX+$00) ;
  $BA17 LD (HL),A     ;
@@ -6605,7 +6603,7 @@ c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
 c$BBD4 CALL $BBDF    ; Read Input
  $BBD7 BIT 4,A       ; check FIRE bit
  $BBD9 JP NZ,$B8D0   ;
- $BBDC JP $C226      ;
+ $BBDC JP $C226      ; => Ninja standing
 
 ; Read Input
 ;
@@ -6730,8 +6728,8 @@ c$BC55 LD HL,$B5C5   ;
  $BCA9 BIT 0,A       ;
  $BCAB JR NZ,$BCB6   ;
  $BCAD LD HL,$BEEF   ; "SEPUKU" / "MISSION ABORTED"
- $BCB0 LD ($BEB4),HL ;
- $BCB3 JP $BE5A      ;
+ $BCB0 LD ($BEB4),HL ; set two-line Game Over message
+ $BCB3 JP $BE5A      ; Ninja sit, and then fall and DIE
 *$BCB6 CALL $C5A3    ; Check for falling
  $BCB9 JP Z,$C643    ; => Ninja falling
  $BCBC LD HL,$B595   ;
@@ -6788,7 +6786,7 @@ c$BC55 LD HL,$B5C5   ;
  $BD21 LD HL,$0190   ;
  $BD24 CALL $B371    ;
  $BD27 LD B,$32      ;
- $BD29 CALL $B4DE    ;
+ $BD29 CALL $B4DE    ; Increase PAY value by 5000
  $BD2C JP $B8D0      ;
 
 ; Message at BD2F
@@ -6863,10 +6861,10 @@ c$BD37 LD HL,$A39F   ;
  $BDA3 LD ($A3A2),A  ;
  $BDA6 CALL $F9F9    ;
  $BDA9 LD DE,$D504   ;
- $BDAC JP $BFB0      ;
+ $BDAC JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; Routine at BDAF
-c$BDAF JP $C226      ;
+; Ninja standing (redirect)
+c$BDAF JP $C226      ; => Ninja standing
 
 ; Routine at BDB2
 ;
@@ -6885,10 +6883,10 @@ c$BDB2 LD HL,($9C42) ; get Ninja position in tilemap
  $BDC9 LD ($7346),A  ;
  $BDCC CALL $B596    ;
  $BDCF LD B,$05      ;
- $BDD1 CALL $B4DE    ;
+ $BDD1 CALL $B4DE    ; Increase PAY value by 500 - Guard killed by punch/kick
 *$BDD4 LD HL,$BBD4   ; Movement handler address
  $BDD7 LD DE,$D504   ;
- $BDDA JP $BFB0      ;
+ $BDDA JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at BDDD
 ;
@@ -6909,8 +6907,8 @@ c$BDDD BIT 3,A       ;
  $BDFE LD HL,$68BC   ;
  $BE01 LD ($BA2B),HL ;
  $BE04 LD HL,$BE0D   ;
- $BE07 LD DE,$D486   ;
- $BE0A JP $BFB0      ;
+ $BE07 LD DE,$D486   ; Sprite Ninja/Guard standing
+ $BE0A JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; ?? Movement handler
 c$BE0D LD HL,$65B1   ;
@@ -6946,25 +6944,25 @@ c$BE0D LD HL,$65B1   ;
  $BE49 LD DE,$6861   ;
  $BE4C LD BC,$00D1   ;
  $BE4F LDIR          ;
- $BE51 LD HL,$C094   ;
- $BE54 LD DE,$C0E6   ;
- $BE57 JP $BFB0      ;
+ $BE51 LD HL,$C094   ; Movement handler (helicopter?)
+ $BE54 LD DE,$C0E6   ; Empty sprite
+ $BE57 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; Routine at BE5A
+; Ninja sit, and then fall and DIE
 ;
 ; Used by the routine at #R$BC55.
-c$BE5A LD HL,$BE63   ;
+c$BE5A LD HL,$BE63   ; Movement handler: Ninja dead
  $BE5D LD DE,$D558   ; Sprite Ninja sitting
- $BE60 JP $BFB0      ;
+ $BE60 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; ?? Movement handler (B8CE handler)
+; Movement handler (B8CE handler): Ninja dead
 ;
 ; Used by the routine at #R$BE71.
 c$BE63 LD A,$C9      ; command = $C9 RET
  $BE65 LD ($9DD9),A  ; set command = RET = disable Energy decrease
- $BE68 LD HL,$BEB3   ;
+ $BE68 LD HL,$BEB3   ; Movement handler: Game Over
  $BE6B LD DE,$A0B5   ; Sprite Ninja dead
- $BE6E JP $BFB0      ;
+ $BE6E JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Time is out
 ;
@@ -6973,8 +6971,8 @@ c$BE71 LD A,($B5C6)  ;
  $BE74 CP $02        ;
  $BE76 JR Z,$BE80    ;
  $BE78 LD HL,$BF35   ; "TIME OUT" / "MISSION TERMINATED"
- $BE7B LD ($BEB4),HL ;
- $BE7E JR $BE63      ;
+ $BE7B LD ($BEB4),HL ; set two-line Game Over message
+ $BE7E JR $BE63      ; => Ninja dead
 *$BE80 LD B,$06      ;
  $BE82 LD IX,$0000   ;
 *$BE86 LD C,$00      ;
@@ -7002,10 +7000,10 @@ c$BE71 LD A,($B5C6)  ;
 ; Saboteur is dead
 *$BEAA POP HL        ;
  $BEAB LD HL,$BF58   ; "SABOTEUR DEAD" / "MISSION FAILURE"
- $BEAE LD ($BEB4),HL ;
- $BEB1 JR $BE63      ;
+ $BEAE LD ($BEB4),HL ; set two-line Game Over message
+ $BEB1 JR $BE63      ; => Ninja dead
 
-; Routine at BEB3
+; Movement handler: Game Over
 ;
 ; Used by the routines at #R$B889 and #R$BFD5.
 c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
@@ -7080,7 +7078,7 @@ c$BF7B LD HL,$6592   ;
 ; Set movement handler = HL, set Ninja sprite = DE
 ;
 ; Used by the routines at #R$B532, #R$BD37, #R$BDB2, #R$BDDD, #R$BE0D, #R$BE5A,
-; #R$BE63, #R$BFBA, #R$C13D, #R$C1B6, #R$C339, #R$C3BB, #R$C4A7, #R$C4E8,
+; #R$BE63, #R$BFBA, #R$C13D, #R$C226, #R$C339, #R$C3BB, #R$C4A7, #R$C4E8,
 ; #R$C4F6, #R$C50D and #R$C649.
 c$BFB0 LD ($B8CE),HL ;
  $BFB3 LD ($7186),DE ; set Ninja sprite address = DE
@@ -7099,18 +7097,18 @@ c$BFBA BIT 2,A       ;
 ; This entry point is used by the routine at #R$C5C6.
 *$BFCC LD HL,$C22F   ; Movement handler address
  $BFCF LD DE,$D558   ; Sprite Ninja sitting
- $BFD2 JP $BFB0      ;
+ $BFD2 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; Routine at BFD5
+; Escaped; clear screen, show final messages, then Game Over
 ;
 ; Used by the routine at #R$C094.
 c$BFD5 LD B,$0A      ;
- $BFD7 CALL $B4DE    ;
+ $BFD7 CALL $B4DE    ; Increase PAY value by 1000 - Escape by Helicopter
  $BFDA LD A,($BD7A)  ;
  $BFDD CP $D4        ;
  $BFDF JR NZ,$C04A   ;
  $BFE1 LD B,$32      ;
- $BFE3 CALL $B4DE    ;
+ $BFE3 CALL $B4DE    ; Increase PAY value by 5000
  $BFE6 LD HL,$4000   ; Screen start address
  $BFE9 LD DE,$4001   ;
  $BFEC LD BC,$1800   ;
@@ -7142,7 +7140,7 @@ c$BFD5 LD B,$0A      ;
  $C030 CALL $AED1    ; Print string
  $C033 LD A,($E38B)  ;
  $C036 LD B,A        ;
- $C037 CALL $B4DE    ;
+ $C037 CALL $B4DE    ; Increase PAY value by B * 100
  $C03A LD DE,$486B   ;
  $C03D LD HL,$E1EC   ; Skill level address
  $C040 LD C,$01      ;
@@ -7153,13 +7151,13 @@ c$BFD5 LD B,$0A      ;
  $C04D CP $02        ;
  $C04F JR NZ,$C056   ;
  $C051 LD B,$64      ;
- $C053 CALL $B4DE    ;
+ $C053 CALL $B4DE    ; Increase PAY value by 10000 - Escape with Disk and Bomb
 *$C056 LD HL,$BF12   ; "ESCAPE" / "MISSION SUCCESSFUL"
- $C059 LD ($BEB4),HL ;
+ $C059 LD ($BEB4),HL ; set two-line Game Over message
  $C05C NOP           ;
  $C05D NOP           ;
  $C05E NOP           ;
- $C05F JP $BEB3      ;
+ $C05F JP $BEB3      ; => Game Over
 
 ; Message at C062
 t$C062 DEFM "DISK RETRIEVED"
@@ -7168,10 +7166,10 @@ t$C062 DEFM "DISK RETRIEVED"
  $C082 DEFM "LEVEL"
  $C087 DEFM "TOTAL PAY : $"
 
-; Routine at C094
+; ?? Movement handler (helicopter?)
 c$C094 LD HL,$7343   ;
  $C097 DEC (HL)      ;
- $C098 JP Z,$BFD5    ;
+ $C098 JP Z,$BFD5    ; => Escaped; final messages, then Game Over
  $C09B LD A,$10      ;
  $C09D OUT ($FE),A   ;
  $C09F LD HL,$4047   ;
@@ -7252,7 +7250,7 @@ c$C13D BIT 1,A       ;
 ; This entry point is used by the routine at #R$C3D9.
 *$C14B LD HL,$C24B   ; Movement handler address
  $C14E LD DE,$D3DE   ;
- $C151 JP $BFB0      ;
+ $C151 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 *$C154 BIT 0,A       ;
  $C156 JR Z,$C16E    ;
  $C158 LD HL,$7239   ;
@@ -7305,7 +7303,7 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1E1 JR NC,$C1EE   ;
  $C1E3 CALL $BBDF    ; Read Input
  $C1E6 BIT 0,A       ; check RIGHT bit
- $C1E8 JP Z,$C226    ;
+ $C1E8 JP Z,$C226    ; => Ninja standing
  $C1EB JP $B8D0      ;
 *$C1EE LD DE,$003B   ;
  $C1F1 ADD HL,DE     ;
@@ -7333,11 +7331,14 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C21E CALL $BBDF    ;
  $C221 BIT 0,A       ;
  $C223 JP NZ,$C2BB   ;
-; This entry point is used by the routines at #R$BBD4, #R$BDAF, #R$C22F,
-; #R$C24B, #R$C3D9, #R$C4DE, #R$C4F6, #R$C5A0 and #R$C6E2.
-*$C226 LD HL,$BC55   ;
+
+; Ninja standing
+;
+; Used by the routines at #R$BBD4, #R$BDAF, #R$C1B6, #R$C22F, #R$C24B, #R$C3D9,
+; #R$C4DE, #R$C4F6, #R$C5A0 and #R$C6E2.
+c$C226 LD HL,$BC55   ;
  $C229 LD DE,$D486   ; Sprite Ninja/Guard standing
- $C22C JP $BFB0      ;
+ $C22C JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Movement handler (B8CE handler): Ninja sitting
 c$C22F CALL $BBDF    ; Read Input
@@ -7377,7 +7378,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C276 JR NC,$C283   ;
  $C278 CALL $BBDF    ; Read Input
  $C27B BIT 1,A       ; check LEFT bit
- $C27D JP Z,$C226    ;
+ $C27D JP Z,$C226    ; => Ninja standing
  $C280 JP $B8D0      ;
 *$C283 LD DE,$003D   ; +61
  $C286 ADD HL,DE     ;
@@ -7404,7 +7405,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C2B0 JP Z,$C643    ; => Ninja falling
  $C2B3 CALL $BBDF    ; Read Input
  $C2B6 BIT 1,A       ; check LEFT bit
- $C2B8 JP Z,$C226    ;
+ $C2B8 JP Z,$C226    ; => Ninja standing
 ; This entry point is used by the routine at #R$C1B6.
 *$C2BB BIT 3,A       ;
  $C2BD LD A,$07      ;
@@ -7518,7 +7519,7 @@ c$C339 LD HL,$7343   ;
  $C387 LD DE,$D4DA   ;
  $C38A LD A,$03      ;
  $C38C LD ($7343),A  ;
- $C38F JP $BFB0      ;
+ $C38F JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at C392
 ;
@@ -7558,7 +7559,7 @@ c$C3BB LD HL,$9C41   ; Ninja X address
 ; This entry point is used by the routine at #R$C339.
 *$C3C6 LD HL,$C3D9   ; Movement handler for Ninja on ladder
  $C3C9 LD DE,$D52E   ; Sprite Ninja on ladder
- $C3CC JP $BFB0      ;
+ $C3CC JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Move RIGHT one tile
 ;
@@ -7578,7 +7579,7 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C3E3 JR Z,$C3EC    ;
  $C3E5 DEC HL        ;
  $C3E6 CALL $C392    ;
- $C3E9 JP NZ,$C226   ;
+ $C3E9 JP NZ,$C226   ; => Ninja standing
 ; Read and process Input
 *$C3EC CALL $BBDF    ; Read Input
  $C3EF BIT 0,A       ; check RIGHT bit
@@ -7699,19 +7700,19 @@ c$C4A7 LD HL,$7343   ;
  $C4C5 LD ($7346),A  ;
  $C4C8 CALL $B596    ;
  $C4CB LD B,$05      ;
- $C4CD CALL $B4DE    ;
+ $C4CD CALL $B4DE    ; Increase PAY value by 500 - Guard killed by punch/kick
 ; This entry point is used by the routine at #R$C339.
 *$C4D0 LD HL,$C4DE   ; Movement handler address
  $C4D3 LD DE,$D4B0   ; Sprite Ninja/Guard jumping 1
  $C4D6 LD A,$01      ;
  $C4D8 LD ($7343),A  ;
- $C4DB JP $BFB0      ;
+ $C4DB JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; ?? Movement handler
 c$C4DE LD HL,$7343   ;
  $C4E1 DEC (HL)      ;
  $C4E2 JP NZ,$B8D0   ;
- $C4E5 JP $C226      ;
+ $C4E5 JP $C226      ; => Ninja standing
 
 ; Routine at C4E8
 ;
@@ -7721,17 +7722,17 @@ c$C4E8 CALL $C57B    ;
  $C4EC POP HL        ;
  $C4ED LD HL,$C4F6   ; Movement handler address
  $C4F0 LD DE,$D5AC   ;
- $C4F3 JP $BFB0      ;
+ $C4F3 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Movement handler (used in initial room)
 c$C4F6 CALL $C57B    ;
  $C4F9 JP Z,$C504    ;
  $C4FC LD B,$03      ;
  $C4FE CALL $9DD9    ; Decrease Energy by B
- $C501 JP $C226      ;
+ $C501 JP $C226      ; => Ninja standing
 *$C504 LD HL,$C50D   ; Movement handler address
  $C507 LD DE,$D5D6   ;
- $C50A JP $BFB0      ;
+ $C50A JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at C50D
 c$C50D LD A,($7239)  ;
@@ -7778,7 +7779,7 @@ c$C50D LD A,($7239)  ;
  $C561 DJNZ $C53D    ;
  $C563 LD HL,$C5A0   ; Movement handler address
  $C566 LD DE,$D5AC   ;
- $C569 JP $BFB0      ;
+ $C569 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 *$C56C CP $18        ;
  $C56E JP Z,$C2FA    ; => Going to room at Right
  $C571 INC (HL)      ;
@@ -7813,8 +7814,8 @@ c$C57B LD A,($7239)  ;
  $C59E CP C          ;
  $C59F RET           ;
 
-; Routine at C5A0
-c$C5A0 JP $C226      ;
+; Ninja standing (redirect)
+c$C5A0 JP $C226      ; => Ninja standing
 
 ; Check for falling
 ;
@@ -7916,7 +7917,7 @@ c$C643 LD HL,$C5C6   ;
  $C646 LD DE,$D582   ; Sprite Ninja falling
 
 ; Routine at C649
-c$C649 JP $BFB0      ;
+c$C649 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Room #R$791E (room with pier) initialization
 c$C64C LD HL,$C65A   ;
@@ -7933,7 +7934,7 @@ b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
 ; Data block at C66B
 b$C66B DEFB $0E,$00,$0E,$00,$04,$00
 
-; Room #R$93DF/#R$947C (room right from vagon) initialization
+; Room #R$93DF/#R$947C (room right from Vagon) initialization
 c$C671 LD HL,$947C   ;
  $C674 LD ($7CA0),HL ;
  $C677 LD HL,$93DF   ;
@@ -7961,7 +7962,7 @@ c$C681 LD HL,$9A1E   ;
  $C6A0 JR NZ,$C697   ;
  $C6A2 JP $B724      ;
 
-; Room 7C9C procedure (tunnel vagon)
+; Room 7C9C procedure (tunnel Vagon)
 c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6A8 CP $0C        ;
  $C6AA JP NZ,$B937   ;
@@ -7984,12 +7985,12 @@ c$C6A5 LD A,($9C41)  ; get Ninja X
 *$C6CD LD A,B        ;
  $C6CE LD ($9C41),A  ; set Ninja X
  $C6D1 LD ($9C42),DE ; set Ninja position in tilemap
- $C6D5 LD DE,$D486   ;
+ $C6D5 LD DE,$D486   ; Sprite Ninja/Guard standing
  $C6D8 LD ($7186),DE ; set Ninja sprite
  $C6DC LD ($B8CE),HL ;
  $C6DF JP $B937      ;
 
-; ?? (B8CE handler)
+; ?? Movement handler (B8CE handler): moving Vagon ??
 c$C6E2 LD B,$02      ;
 *$C6E4 LD DE,$676F   ;
  $C6E7 LD HL,$676E   ;
@@ -8008,10 +8009,10 @@ c$C6E2 LD B,$02      ;
  $C700 LDIR          ;
  $C702 LD HL,$7343   ;
  $C705 DEC (HL)      ;
- $C706 JP Z,$C226    ;
+ $C706 JP Z,$C226    ; => Ninja standing
  $C709 JP $B8D0      ;
 
-; Routine at C70C
+; ?? Movement handler (B8CE handler): something in Vagon
 c$C70C LD B,$02      ;
 *$C70E LD DE,$6752   ;
  $C711 LD HL,$6753   ;

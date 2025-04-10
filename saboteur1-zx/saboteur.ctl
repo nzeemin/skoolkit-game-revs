@@ -271,7 +271,7 @@ W $7BD8,2,2 Room to Right
 W $7BDA,2,2 Room Up
 W $7BDC,2,2 Room Down
 B $7BDE,46,2,6,5,4,7,7,7,7,1 #HTML[<img src="images/rooms/7BD2.png" />]
-B $7C0C,34
+B $7C0C,21
 b $7C21 Data 3x3 tiles for Room token #0
 B $7C21,9,3
 b $7C2A
@@ -1345,20 +1345,27 @@ C $A4AC,3 Tile screen 5 start address
 C $A4B4,3 Tile screen 1 start address
 C $A4C0,3 Tile screen 2 start address
 C $A4CA,3 Decrease Energy by B
+C $A4ED,3 Sprite Ninja/Guard standing
 C $A4FD,3 get Guard direction
+C $A533,3 Sprite Ninja/Guard standing
 C $A539,3 Ninja Y address
 C $A54B,3 get Guard direction
 C $A552,3 Ninja X address
 C $A571,3 Sprite Ninja dead
 C $A58F,3 get Guard direction
+C $A5A1,3 Sprite Ninja/Guard standing
 C $A5BE,3 Sprite Ninja/Guard jumping 2
 C $A5DB,3 Sprite Ninja/Guard jumping 1
 C $A5E7,3 get Guard direction
+C $A60B,3 Sprite Ninja/Guard standing
 C $A614,3 Ninja X address
+C $A62C,3 Sprite Ninja/Guard standing
 C $A638,3 get Guard direction
+C $A64B,3 Sprite Ninja/Guard standing
 C $A655,3 set Guard direction
 C $A684,3 set Guard direction
 C $A68D,3 get Guard direction
+C $A6A0,3 Sprite Ninja/Guard standing
 C $A6AA,3 set Guard direction
 C $A6D8,3 set Guard direction
 N $A6FF Draw Guard on tilemap
@@ -1574,8 +1581,8 @@ c $B489 Process turret
 C $B58A,3 Movement handler address
 C $B4D0,3 get Ninja X
 b $B4DD
-c $B4DE
-R $B4DE B ??
+c $B4DE Increase PAY value by B * 100
+C $B4DE,3 PAY value 3rd digit address
 C $B4EF,3 Pay value text address
 C $B4F4,3 Screen address
 C $B4F7,3 => Print string
@@ -1594,6 +1601,7 @@ C $B577,3 Ninja X address
 C $B57A,1 Moving right one tile
 C $B57E,1 increase Ninja position in tilemap
 C $B58A,3 Movement handler address
+C $B592,3 Set movement handler = HL, Ninja sprite = DE
 s $B595
 c $B596
 b $B59B
@@ -1700,6 +1708,7 @@ C $B7AC,3 Print string
 C $B7C7,3 Print string "BOMB"
 C $B7CA,3 !!MUT-ARG!! "99"
 C $B7CD,3 set Indicator Time value
+C $B7EA,3 Increase PAY value by 5000
 C $B7ED,3 Tile screen 1 start address
 C $B7F2,3 510 - 1
 C $B7F5,3 Tile screen 1 start address + 1
@@ -1742,8 +1751,9 @@ c $B937
 C $B9B5,3 Tile screen 0 start address
 C $B9C1,3 Tile screen 3 start address
 C $B9DB,3 Tile screen 4 start address
+C $B9F3,3 Increase PAY value by 100 - Guard killed by weapon
 C $BA03,3 Tile screen 2 start address
-C $BA0E,3 Decrease Energy by B
+C $BA0E,3 Decrease Energy by B = 20
 C $BA41,3 Draw tile map on the screen
 b $BAB2
 t $BAC4
@@ -1757,6 +1767,7 @@ C $BBBE,3 Tile screen 1 start address
 c $BBD4 ?? Movement handler
 C $BBD4,3 Read Input
 C $BBD7,2 check FIRE bit
+C $BBDC,3 => Ninja standing
 c $BBDF Read Input
 C $BBE4,1 Input method = Keyboard/Protek?
 C $BBE7,2 read joystick port
@@ -1769,11 +1780,14 @@ C $BC38,3,3 Show title picture (two ninjas)
 c $BC55 Movement handler: Ninja standing
 C $BC70,3 Decrease Energy by B
 C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
+C $BCB0,3 set two-line Game Over message
+C $BCB3,3 Ninja sit, and then fall and DIE
 C $BCB9,3 => Ninja falling
 C $BCC4,3 Read Input
 C $BCC7,2 check FIRE bit
 N $BCCC FIRE pressed
 C $BCDE,3 get Ninja position in tilemap
+C $BD29,3 Increase PAY value by 5000
 t $BD2F
 c $BD33
 c $BD37
@@ -1783,26 +1797,43 @@ C $BD71,3 get Ninja Y
 C $BD91,3 get Input bits
 C $BD94,2 check UP bit
 C $BD9B,2 check DOWN bit
-c $BDAF
+C $BDAC,3 Set movement handler = HL, Ninja sprite = DE
+c $BDAF Ninja standing (redirect)
+C $BDAF,3 => Ninja standing
 c $BDB2
 C $BDB2,3 get Ninja position in tilemap
 C $BCB6,3 Check for falling
+C $BDD1,3 Increase PAY value by 500 - Guard killed by punch/kick
 C $BDD4,3 Movement handler address
+C $BDDA,3 Set movement handler = HL, Ninja sprite = DE
 c $BDDD
 C $BDE5,4 get Ninja position in tilemap
+C $BE07,3 Sprite Ninja/Guard standing
+C $BE0A,3 Set movement handler = HL, Ninja sprite = DE
 c $BE0D ?? Movement handler
 C $BE43,3 set Ninja position in tilemap
-c $BE5A
+C $BE51,3 Movement handler (helicopter?)
+C $BE54,3 Empty sprite
+C $BE57,3 Set movement handler = HL, Ninja sprite = DE
+c $BE5A Ninja sit, and then fall and DIE
+C $BE5A,3 Movement handler: Ninja dead
 C $BE5D,3 Sprite Ninja sitting
-c $BE63 ?? Movement handler (B8CE handler)
+C $BE60,3 Set movement handler = HL, Ninja sprite = DE
+c $BE63 Movement handler (B8CE handler): Ninja dead
 C $BE63,2 command = $C9 RET
 C $BE65,3 set command = RET = disable Energy decrease
+C $BE68,3 Movement handler: Game Over
 C $BE6B,3 Sprite Ninja dead
+C $BE6E,3 Set movement handler = HL, Ninja sprite = DE
 c $BE71 Time is out
 C $BE78,3 "TIME OUT" / "MISSION TERMINATED"
+C $BE7B,3 set two-line Game Over message
+C $BE7E,2 => Ninja dead
 N $BEAA Saboteur is dead
 C $BEAB,3 "SABOTEUR DEAD" / "MISSION FAILURE"
-c $BEB3
+C $BEAE,3 set two-line Game Over message
+C $BEB1,2 => Ninja dead
+c $BEB3 Movement handler: Game Over
 C $BEB3,3 !!MUT-ARG!! two-line message address
 C $BEBB,3 Print string 1st line
 C $BEC3,3 Print string 2nd line
@@ -1829,7 +1860,10 @@ c $BFBA
 C $BFBF,3 get Ninja position in tilemap
 C $BFCC,3 Movement handler address
 C $BFCF,3 Sprite Ninja sitting
-c $BFD5
+C $BFD2,3 Set movement handler = HL, Ninja sprite = DE
+c $BFD5 Escaped; clear screen, show final messages, then Game Over
+C $BFD7,3 Increase PAY value by 1000 - Escape by Helicopter
+C $BFE3,3 Increase PAY value by 5000
 C $BFE6,3 Screen start address
 C $BFF1,2 Clear whole screen
 C $BFF8,2 Clear all attributes
@@ -1842,16 +1876,21 @@ C $C01A,3 Print string "TOTAL PAY : $"
 C $C020,3 Messages address
 C $C025,3 Print string "BONUS: $05000"
 C $C030,3 Print string
+C $C037,3 Increase PAY value by B * 100
 C $C03D,3 Skill level address
 C $C042,3 Print skill level digit
+C $C053,3 Increase PAY value by 10000 - Escape with Disk and Bomb
 C $C056,3 "ESCAPE" / "MISSION SUCCESSFUL"
+C $C059,3 set two-line Game Over message
+C $C05F,3 => Game Over
 t $C062
 T $C062,14
 T $C070,5
 T $C075,13
 T $C082,5
 T $C087,13
-c $C094
+c $C094 ?? Movement handler (helicopter?)
+C $C098,3 => Escaped; final messages, then Game Over
 b $C0E6
 c $C12E
 C $C12E,3 Movement handler for Ninja on ladder
@@ -1860,6 +1899,7 @@ C $C137,3 set Ninja sprite address
 C $C13A,3 => Move down one tile
 c $C13D
 C $C14B,3 Movement handler address
+C $C151,3 Set movement handler = HL, Ninja sprite = DE
 C $C16B,3 set Ninja sprite address
 b $C171
 c $C1B6 ?? (B8CE handler)
@@ -1872,6 +1912,7 @@ C $C1D1,3 -30
 C $C1D5,3 set Ninja position in tilemap
 C $C1E3,3 Read Input
 C $C1E6,2 check RIGHT bit
+C $C1E8,3 => Ninja standing
 C $C1F9,3 get Ninja position in tilemap
 C $C200,3 set Ninja position in tilemap
 C $C203,3 Ninja Y address
@@ -1882,7 +1923,9 @@ C $C214,1 move one tile to right
 C $C215,3 set Ninja position in tilemap
 C $C218,3 Check for falling
 C $C21B,3 => Ninja falling
+c $C226 Ninja standing
 C $C229,3 Sprite Ninja/Guard standing
+C $C22C,3 Set movement handler = HL, Ninja sprite = DE
 c $C22F Movement handler (B8CE handler): Ninja sitting
 C $C22F,3 Read Input
 C $C232,2 check DOWN bit
@@ -1899,6 +1942,7 @@ C $C263,3 get Ninja position in tilemap
 C $C26A,3 set Ninja position in tilemap
 C $C278,3 Read Input
 C $C27B,2 check LEFT bit
+C $C27D,3 => Ninja standing
 C $C283,3 +61
 C $C28E,3 get Ninja position in tilemap
 C $C291,3 +30
@@ -1915,6 +1959,7 @@ C $C2AD,3 Check for falling
 C $C2B0,3 => Ninja falling
 C $C2B3,3 Read Input
 C $C2B6,2 check LEFT bit
+C $C2B8,3 => Ninja standing
 C $C2EE,3 address for Ninja sprite address
 c $C2FA Going to room at Right
 C $C2FB,3 set Ninja X = 0
@@ -1939,6 +1984,7 @@ C $C336,3 => Current Room changed
 c $C339 ?? (B8CE handler)
 C $C343,3 get Ninja position in tilemap
 C $C370,3 get Ninja position in tilemap
+C $C38F,3 Set movement handler = HL, Ninja sprite = DE
 c $C392
 c $C3BB Move LEFT one tile
 C $C3BB,3 Ninja X address
@@ -1948,6 +1994,7 @@ C $C3C2,1 move one tile left
 C $C3C3,3 set Ninja position in tilemap
 C $C3C6,3 Movement handler for Ninja on ladder
 C $C3C9,3 Sprite Ninja on ladder
+C $C3CC,3 Set movement handler = HL, Ninja sprite = DE
 c $C3CF Move RIGHT one tile
 C $C3CF,3 Ninja X address
 C $C3D2,1 one tile to right
@@ -1955,6 +2002,7 @@ C $C3D3,3 get Ninja position in tilemap
 C $C3D6,1 move one tile right
 c $C3D9 Movement handler (B8CE handler): Ninja on ladder
 C $C3D9,3 get Ninja position in tilemap
+C $C3E9,3 => Ninja standing
 N $C3EC Read and process Input
 C $C3EC,3 Read Input
 C $C3EF,2 check RIGHT bit
@@ -1988,12 +2036,18 @@ c $C4A7 ?? Movement handler
 C $C4AE,3 get Ninja position in tilemap
 C $C4D0,3 Movement handler address
 C $C4D3,3 Sprite Ninja/Guard jumping 1
+C $C4CD,3 Increase PAY value by 500 - Guard killed by punch/kick
+C $C4DB,3 Set movement handler = HL, Ninja sprite = DE
 c $C4DE ?? Movement handler
+C $C4E5,3 => Ninja standing
 c $C4E8
 C $C4ED,3 Movement handler address
+C $C4F3,3 Set movement handler = HL, Ninja sprite = DE
 c $C4F6 Movement handler (used in initial room)
 C $C4FE,3 Decrease Energy by B
+C $C501,3 => Ninja standing
 C $C504,3 Movement handler address
+C $C50A,3 Set movement handler = HL, Ninja sprite = DE
 c $C50D
 C $C512,3 Ninja X address
 C $C51A,3 => Going to room at Left
@@ -2005,13 +2059,15 @@ C $C546,3 Ninja Y address
 C $C54A,3 get Ninja position in tilemap
 C $C553,3 set Ninja position in tilemap
 C $C563,3 Movement handler address
+C $C569,3 Set movement handler = HL, Ninja sprite = DE
 C $C56E,3 => Going to room at Right
 C $C572,3 get Ninja position in tilemap
 C $C576,3 set Ninja position in tilemap
 c $C57B
 C $C585,4 get Ninja position in tilemap
 C $C58A,3 Tile screen 0 start address
-c $C5A0
+c $C5A0 Ninja standing (redirect)
+C $C5A0,3 => Ninja standing
 c $C5A3 Check for falling
 C $C5A3,3 get Ninja position in tilemap
 C $C5AA,3 Tile screen 0 start address
@@ -2052,21 +2108,24 @@ C $C640,3 => Current Room changed
 c $C643 Ninja falling
 C $C646,3 Sprite Ninja falling
 c $C649
+C $C649,3 Set movement handler = HL, Ninja sprite = DE
 c $C64C Room #R$791E (room with pier) initialization
 C $C657,3 => Finish room initialization
 b $C65A
 b $C66B
-c $C671 Room #R$93DF/#R$947C (room right from vagon) initialization
+c $C671 Room #R$93DF/#R$947C (room right from Train) initialization
 c $C681 Room #R$982B initialization
-c $C6A5 Room 7C9C procedure (tunnel vagon)
+c $C6A5 Room 7C9C procedure (tunnel Train)
 C $C6A5,3 get Ninja X
 C $C6B2,4 get Ninja position in tilemap
 C $C6B6,3 get Ninja X
 C $C6CE,3 set Ninja X
 C $C6D1,4 set Ninja position in tilemap
+C $C6D5,3 Sprite Ninja/Guard standing
 C $C6D8,4 set Ninja sprite
-c $C6E2 ?? (B8CE handler)
-c $C70C
+c $C6E2 ?? Movement handler (B8CE handler): moving Train ??
+C $C706,3 => Ninja standing
+c $C70C ?? Movement handler (B8CE handler): something in Train
 b $C721 Font
 N $C721 #HTML[<img src="images/font.png" />]
 B $C721,8,8 ' '

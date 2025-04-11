@@ -345,7 +345,7 @@ b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {M
 ; Data block at 733A
 b$733A DEFB $00
 
-; Data block at 733B
+; Table of four addresses of Ninja/Guard walking sprites
 b$733B DEFW $D3DE
  $733D DEFW $D408
  $733F DEFW $D432
@@ -3940,7 +3940,7 @@ b$A393 DEFB $90,$01,$01,$0A,$42,$01,$17,$01
  $A3AB DEFB $0A,$19,$00,$69,$00,$06,$06,$03
  $A3B3 DEFB $0F,$01
 
-; Routine at A3B5
+; ?? something about Ninja and Guard
 ;
 ; Used by the routine at #R$A434.
 c$A3B5 LD A,($9C40)  ; get Ninja Y
@@ -3952,11 +3952,11 @@ c$A3B5 LD A,($9C40)  ; get Ninja Y
  $A3C0 LD ($A3B4),A  ;
  $A3C3 LD A,$0B      ;
  $A3C5 LD ($7346),A  ;
- $A3C8 LD HL,$D504   ;
- $A3CB LD ($A70F),HL ;
+ $A3C8 LD HL,$D504   ; Sprite Ninja/Guard punching
+ $A3CB LD ($A70F),HL ; set Guard sprite
  $A3CE JP $A6FF      ; => Draw Guard on tilemap
 
-; Routine at A3D1
+; ?? something about Ninja and Guard
 ;
 ; Used by the routine at #R$A434.
 c$A3D1 LD A,($9C40)  ; get Ninja Y
@@ -3969,11 +3969,11 @@ c$A3D1 LD A,($9C40)  ; get Ninja Y
  $A3DF POP HL        ;
  $A3E0 LD A,$14      ;
  $A3E2 LD ($7346),A  ;
- $A3E5 LD HL,$D504   ;
- $A3E8 LD ($A70F),HL ;
+ $A3E5 LD HL,$D504   ; Sprite Ninja/Guard punching
+ $A3E8 LD ($A70F),HL ; set Guard sprite
  $A3EB JP $A6FF      ; => Draw Guard on tilemap
 
-; Routine at A3EE
+; ?? something about Ninja and Guard
 ;
 ; Used by the routine at #R$A434.
 c$A3EE LD A,($9C40)  ; get Ninja Y
@@ -3995,10 +3995,10 @@ c$A3EE LD A,($9C40)  ; get Ninja Y
  $A40A LD A,$02      ;
  $A40C LD ($A3B4),A  ;
  $A40F LD HL,$D4B0   ; Sprite Ninja/Guard jumping 1
- $A412 LD ($A70F),HL ;
+ $A412 LD ($A70F),HL ; set Guard sprite
  $A415 JP $A6FF      ; => Draw Guard on tilemap
 
-; Routine at A418
+; ?? something about Ninja and Guard
 ;
 ; Used by the routine at #R$A434.
 c$A418 LD A,($9C40)  ; get Ninja Y
@@ -4011,10 +4011,10 @@ c$A418 LD A,($9C40)  ; get Ninja Y
  $A426 LD A,$03      ;
  $A428 LD ($A3B4),A  ;
  $A42B LD HL,$D504   ;
- $A42E LD ($A70F),HL ;
+ $A42E LD ($A70F),HL ; set Guard sprite
  $A431 JP $A6FF      ; => Draw Guard on tilemap
 
-; Routine at A434
+; ?? something about Guard
 ;
 ; Used by the routines at #R$B44C and #R$B458.
 c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
@@ -4117,7 +4117,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A4E9 JR NZ,$A52F     ;
  $A4EB LD (HL),$04     ;
  $A4ED LD HL,$D486     ; Sprite Ninja/Guard standing
- $A4F0 LD ($A70F),HL   ;
+ $A4F0 LD ($A70F),HL   ; set Guard sprite
  $A4F3 LD HL,($71C3)   ;
  $A4F6 LD DE,$003C     ;
  $A4F9 LD B,$00        ;
@@ -4144,7 +4144,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
 *$A52F CP $0A          ;
  $A531 JR NZ,$A56D     ;
  $A533 LD HL,$D486     ; Sprite Ninja/Guard standing
- $A536 LD ($A70F),HL   ;
+ $A536 LD ($A70F),HL   ; set Guard sprite
  $A539 LD HL,$9C40     ; Ninja Y address
  $A53C LD A,($71C6)    ;
  $A53F ADD A,$03       ;
@@ -4171,7 +4171,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
 *$A56D CP $09          ;
  $A56F JR NZ,$A57A     ;
  $A571 LD HL,$A0B5     ; Sprite Ninja dead
- $A574 LD ($A70F),HL   ;
+ $A574 LD ($A70F),HL   ; set Guard sprite
  $A577 JP $A6FF        ;
 *$A57A CP $08          ;
  $A57C JR NZ,$A5AA     ;
@@ -4193,7 +4193,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A59C LD B,$06        ;
  $A59E CALL NZ,$FA31   ;
  $A5A1 LD HL,$D486     ; Sprite Ninja/Guard standing
- $A5A4 LD ($A70F),HL   ;
+ $A5A4 LD ($A70F),HL   ; set Guard sprite
  $A5A7 JP $A6FF        ;
 *$A5AA CP $05          ;
  $A5AC JR NZ,$A5C7     ;
@@ -4206,7 +4206,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5B9 LD ($A3B4),A    ;
  $A5BC LD (HL),$06     ;
  $A5BE LD HL,$D4DA     ; Sprite Ninja/Guard jumping 2
- $A5C1 LD ($A70F),HL   ;
+ $A5C1 LD ($A70F),HL   ; set Guard sprite
  $A5C4 JP $A6FF        ;
 *$A5C7 CP $06          ;
  $A5C9 JR NZ,$A5FC     ;
@@ -4219,7 +4219,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5D6 LD ($A3B4),A    ;
  $A5D9 LD (HL),$07     ;
  $A5DB LD HL,$D4B0     ; Sprite Ninja/Guard jumping 1
- $A5DE LD ($A70F),HL   ;
+ $A5DE LD ($A70F),HL   ; set Guard sprite
  $A5E1 LD HL,($71C3)   ;
  $A5E4 LD DE,$69CD     ;
  $A5E7 LD A,($7347)    ; get Guard direction
@@ -4241,7 +4241,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A606 JP NZ,$A6FF     ;
  $A609 LD (HL),$03     ;
  $A60B LD HL,$D486     ; Sprite Ninja/Guard standing
- $A60E LD ($A70F),HL   ;
+ $A60E LD ($A70F),HL   ; set Guard sprite
  $A611 JP $A6FF        ;
 *$A614 LD HL,$9C41     ; Ninja X address
  $A617 LD A,($71C5)    ;
@@ -4255,7 +4255,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A629 LD A,$04        ;
  $A62B LD (HL),A       ;
  $A62C LD HL,$D486     ; Sprite Ninja/Guard standing
- $A62F LD ($A70F),HL   ;
+ $A62F LD ($A70F),HL   ; set Guard sprite
  $A632 JP $A6FF        ;
 *$A635 JR C,$A68C      ;
  $A637 LD B,A          ;
@@ -4268,7 +4268,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A646 LD A,$04        ;
  $A648 LD ($7346),A    ;
  $A64B LD HL,$D486     ; Sprite Ninja/Guard standing
- $A64E LD ($A70F),HL   ;
+ $A64E LD ($A70F),HL   ; set Guard sprite
  $A651 JP $A6FF        ;
 *$A654 XOR A           ;
  $A655 LD ($7347),A    ; set Guard direction
@@ -4304,7 +4304,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A69B LD A,$04        ;
  $A69D LD ($7346),A    ;
  $A6A0 LD HL,$D486     ; Sprite Ninja/Guard standing
- $A6A3 LD ($A70F),HL   ;
+ $A6A3 LD ($A70F),HL   ; set Guard sprite
  $A6A6 JR $A6FF        ;
 *$A6A8 LD A,$01        ;
  $A6AA LD ($7347),A    ; set Guard direction
@@ -4339,9 +4339,9 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A6EE ADD A,A         ;
  $A6EF LD L,A          ;
  $A6F0 LD H,$00        ;
- $A6F2 LD DE,$733B     ;
+ $A6F2 LD DE,$733B     ; Table of four Ninja/Guard walking sprites
  $A6F5 ADD HL,DE       ;
- $A6F6 LD DE,$A70F     ;
+ $A6F6 LD DE,$A70F     ; Guard sprite address
  $A6F9 LD A,(HL)       ;
  $A6FA LD (DE),A       ;
  $A6FB INC HL          ;
@@ -4373,7 +4373,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A727 RET             ;
 *$A728 LD HL,$6D88     ; Tile screen 4 start address
  $A72B ADD HL,DE       ;
- $A72C LD DE,($A70F)   ;
+ $A72C LD DE,($A70F)   ; get Guard sprite address
  $A730 LD B,$07        ;
 *$A732 LD C,$06        ;
 *$A734 LD A,(DE)       ;
@@ -4435,7 +4435,7 @@ c$A775 EXX           ;
  $A785 EXX           ;
  $A786 RET           ;
 
-; Data block at A787
+; Table used to translate Ninja tiles to Guard tiles
 b$A787 DEFB $50,$C7,$51,$DC,$54,$DD,$EA,$DE
  $A78F DEFB $13,$DF,$15,$E0,$16,$E1,$00,$E2
  $A797 DEFB $01,$E3,$03,$E4,$04,$E5,$4D,$E6
@@ -5329,7 +5329,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
 ; Used by the routine at #R$B148.
 c$B2E8 PUSH BC       ;
  $B2E9 LD B,A        ;
- $B2EA LD A,($7239)  ; Get mirror flag
+ $B2EA LD A,($7239)  ; Get Ninja direction
  $B2ED CP $00        ;
  $B2EF LD A,B        ;
  $B2F0 POP BC        ;
@@ -5733,7 +5733,7 @@ c$B532 LD HL,($9C42) ;
  $B587 LD DE,$D5AC   ;
  $B58A LD HL,$C4F6   ; Movement handler address
  $B58D LD A,$04      ;
- $B58F LD ($7343),A  ;
+ $B58F LD ($7343),A  ; set counter = 4
  $B592 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Unused
@@ -5811,7 +5811,7 @@ c$B5C7 CALL $AC44    ;
  $B609 OUT ($FE),A   ;
  $B60B INC A         ;
  $B60C LD ($D48F),A  ;
- $B60F LD ($7239),A  ;
+ $B60F LD ($7239),A  ; set Ninja direction = 1
  $B612 LD ($B84F),A  ; set NEAR item
  $B615 LD HL,$70D0   ;
  $B618 LD ($B53E),HL ;
@@ -6207,7 +6207,7 @@ c$B8D0 CALL $BBBB    ; Set update flags for Ninja, 6x7 tiles
  $B8DB LD DE,$6D89   ;
  $B8DE LDIR          ;
  $B8E0 LD HL,($9C42) ; get Ninja position in tilemap
- $B8E3 LD A,($7239)  ;
+ $B8E3 LD A,($7239)  ; get Ninja direction
  $B8E6 CP $00        ;
  $B8E8 JR NZ,$B907   ;
  $B8EA LD DE,$6991   ;
@@ -6255,7 +6255,7 @@ c$B8D0 CALL $BBBB    ; Set update flags for Ninja, 6x7 tiles
  $B935 LD L,A        ;
  $B936 JP (HL)       ;
 
-; Routine at B937
+; Standard room procedure (redirect from #R$B41F)
 ;
 ; Used by the routines at #R$B41F, #R$B446, #R$B44C, #R$B452, #R$B458, #R$B47A,
 ; #R$B483 and #R$C6A5.
@@ -6578,7 +6578,7 @@ c$BBAE LD L,(IX+$01) ;
  $BBB1 LD H,(IX+$02) ;
  $BBB4 LD DE,$678E   ; Tile screen 1 start address
  $BBB7 ADD HL,DE     ;
- $BBB8 LD (HL),$01   ;
+ $BBB8 LD (HL),$01   ; set "need update" mark
  $BBBA RET           ;
 
 ; Set update flags for Ninja, 6x7 tiles
@@ -6631,7 +6631,7 @@ c$BBDF PUSH HL       ;
  $BBFC LD A,(HL)     ;
  $BBFD ADD A,A       ;
  $BBFE ADD A,A       ;
- $BBFF ADD A,A       ;
+ $BBFF ADD A,A       ; * 8
  $BC00 ADD A,$C1     ;
  $BC02 LD ($BC06),A  ;
  $BC05 SET 1,C       ;
@@ -6819,7 +6819,7 @@ c$BD37 LD HL,$A39F   ;
  $BD59 LD A,($9C41)  ; get Ninja X
  $BD5C INC A         ;
  $BD5D LD B,A        ;
- $BD5E LD A,($7239)  ;
+ $BD5E LD A,($7239)  ; get Ninja direction
  $BD61 DEC A         ;
  $BD62 JR NZ,$BD6A   ;
  $BD64 INC B         ;
@@ -6839,7 +6839,7 @@ c$BD37 LD HL,$A39F   ;
  $BD7E XOR A         ;
  $BD7F LD ($BD7A),A  ;
  $BD82 LD B,$03      ;
- $BD84 LD A,($7239)  ;
+ $BD84 LD A,($7239)  ; get Ninja direction
  $BD87 CP $00        ;
  $BD89 JR Z,$BD8D    ;
  $BD8B INC B         ;
@@ -6871,7 +6871,7 @@ c$BDAF JP $C226      ; => Ninja standing
 ; Used by the routines at #R$BC55 and #R$BD37.
 c$BDB2 LD HL,($9C42) ; get Ninja position in tilemap
  $BDB5 LD DE,$6DAA   ;
- $BDB8 LD A,($7239)  ;
+ $BDB8 LD A,($7239)  ; get Ninja direction
  $BDBB CP $01        ;
  $BDBD JR Z,$BDC2    ;
  $BDBF LD DE,$6DA7   ;
@@ -7061,7 +7061,7 @@ c$BF7B LD HL,$6592   ;
  $BF87 JP C,$C16E    ;
  $BF8A LD A,$03      ;
  $BF8C LD ($7343),A  ;
- $BF8F LD A,($7239)  ;
+ $BF8F LD A,($7239)  ; get Ninja direction
  $BF92 CP $00        ;
  $BF94 LD A,($7232)  ; get Input bits
  $BF97 JR Z,$BFA0    ;
@@ -7241,7 +7241,7 @@ c$C12E LD HL,$C3D9   ; Movement handler for Ninja on ladder
 ; Used by the routine at #R$BFBA.
 c$C13D BIT 1,A       ;
  $C13F JR Z,$C154    ;
- $C141 LD HL,$7239   ;
+ $C141 LD HL,$7239   ; Ninja direction address
  $C144 XOR A         ;
  $C145 CP (HL)       ;
  $C146 JR Z,$C14B    ;
@@ -7253,7 +7253,7 @@ c$C13D BIT 1,A       ;
  $C151 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 *$C154 BIT 0,A       ;
  $C156 JR Z,$C16E    ;
- $C158 LD HL,$7239   ;
+ $C158 LD HL,$7239   ; Ninja direction address
  $C15B XOR A         ;
  $C15C CP (HL)       ;
  $C15D JR NZ,$C162   ;
@@ -7367,11 +7367,11 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C25F LD HL,$9C40   ; Ninja Y address
  $C262 DEC (HL)      ; moving one row up
  $C263 LD HL,($9C42) ; get Ninja position in tilemap
- $C266 LD DE,$FFE2   ;
+ $C266 LD DE,$FFE2   ; -30
  $C269 ADD HL,DE     ;
  $C26A LD ($9C42),HL ; set Ninja position in tilemap
  $C26D JR $C2A2      ;
-*$C26F LD DE,$FFE1   ;
+*$C26F LD DE,$FFE1   ; -31
  $C272 ADD HL,DE     ;
  $C273 LD A,$64      ;
  $C275 CP (HL)       ;
@@ -7430,7 +7430,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C2E4 OUT (C),A     ;
  $C2E6 DJNZ $C2E2    ;
 *$C2E8 LD H,$00      ;
- $C2EA LD DE,$733B   ;
+ $C2EA LD DE,$733B   ; Table of four Ninja/Guard walking sprites
  $C2ED ADD HL,DE     ;
  $C2EE LD DE,$7186   ; address for Ninja sprite address
  $C2F1 LD A,(HL)     ;
@@ -7483,7 +7483,7 @@ c$C319 LD A,$18      ;
 c$C339 LD HL,$7343   ;
  $C33C DEC (HL)      ;
  $C33D JP NZ,$B8D0   ;
- $C340 LD A,($7239)  ;
+ $C340 LD A,($7239)  ; get Ninja direction
  $C343 LD HL,($9C42) ; get Ninja position in tilemap
  $C346 LD DE,$6592   ;
  $C349 ADD HL,DE     ;
@@ -7507,7 +7507,7 @@ c$C339 LD HL,$7343   ;
  $C36B JR Z,$C3C6    ;
  $C36D LD DE,$65CC   ;
  $C370 LD HL,($9C42) ; get Ninja position in tilemap
- $C373 LD A,($7239)  ;
+ $C373 LD A,($7239)  ; get Ninja direction
  $C376 CP $00        ;
  $C378 JR Z,$C37D    ;
  $C37A LD DE,$65D1   ;
@@ -7518,7 +7518,7 @@ c$C339 LD HL,$7343   ;
  $C384 LD HL,$C4A7   ;
  $C387 LD DE,$D4DA   ;
  $C38A LD A,$03      ;
- $C38C LD ($7343),A  ;
+ $C38C LD ($7343),A  ; set counter = 3
  $C38F JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at C392
@@ -7591,12 +7591,12 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C3FA LD A,$64      ;
  $C3FC CP (HL)       ;
  $C3FD JR C,$C42C    ;
- $C3FF LD DE,$001E   ;
+ $C3FF LD DE,$001E   ; 30
  $C402 ADD HL,DE     ;
  $C403 CP (HL)       ;
  $C404 JR NC,$C42C   ;
  $C406 LD A,$01      ;
- $C408 LD ($7239),A  ;
+ $C408 LD ($7239),A  ; set Ninja direction = 1
  $C40B JP $C162      ;
 *$C40E BIT 1,A       ; check LEFT bit
  $C410 JR Z,$C42C    ;
@@ -7607,12 +7607,12 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C419 LD A,$64      ;
  $C41B CP (HL)       ;
  $C41C JR C,$C42C    ;
- $C41E LD DE,$001E   ;
+ $C41E LD DE,$001E   ; 30
  $C421 ADD HL,DE     ;
  $C422 CP (HL)       ;
  $C423 JR NC,$C42C   ;
  $C425 XOR A         ;
- $C426 LD ($7239),A  ;
+ $C426 LD ($7239),A  ; set Ninja direction = 0
  $C429 JP $C14B      ;
 ; Check if UP pressed
 *$C42C LD A,($7232)  ; get Input bits
@@ -7647,10 +7647,10 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
 ; This entry point is used by the routine at #R$C498.
 *$C467 ADD HL,DE     ;
  $C468 LD ($9C42),HL ; set Ninja position in tilemap
- $C46B LD A,($7239)  ;
- $C46E INC A         ;
+ $C46B LD A,($7239)  ; get Ninja direction
+ $C46E INC A         ; invert direction
  $C46F AND $01       ;
- $C471 LD ($7239),A  ;
+ $C471 LD ($7239),A  ; set Ninja direction
  $C474 JP $B8D0      ;
 ; Check if DOWN pressed
 *$C477 BIT 2,A       ;
@@ -7688,7 +7688,7 @@ c$C4A7 LD HL,$7343   ;
  $C4AB JP NZ,$B8D0   ;
  $C4AE LD HL,($9C42) ; get Ninja position in tilemap
  $C4B1 LD DE,$6DC9   ;
- $C4B4 LD A,($7239)  ;
+ $C4B4 LD A,($7239)  ; get Ninja direction
  $C4B7 CP $01        ;
  $C4B9 JR Z,$C4BE    ;
  $C4BB LD DE,$6DC4   ;
@@ -7705,7 +7705,7 @@ c$C4A7 LD HL,$7343   ;
 *$C4D0 LD HL,$C4DE   ; Movement handler address
  $C4D3 LD DE,$D4B0   ; Sprite Ninja/Guard jumping 1
  $C4D6 LD A,$01      ;
- $C4D8 LD ($7343),A  ;
+ $C4D8 LD ($7343),A  ; set counter = 1
  $C4DB JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; ?? Movement handler
@@ -7735,7 +7735,7 @@ c$C4F6 CALL $C57B    ;
  $C50A JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at C50D
-c$C50D LD A,($7239)  ;
+c$C50D LD A,($7239)  ; get Ninja direction
  $C510 CP $00        ;
  $C512 LD HL,$9C41   ; Ninja X address
  $C515 LD A,(HL)     ;
@@ -7791,11 +7791,11 @@ c$C50D LD A,($7239)  ;
 ; Routine at C57B
 ;
 ; Used by the routines at #R$C4E8, #R$C4F6 and #R$C50D.
-c$C57B LD A,($7239)  ;
+c$C57B LD A,($7239)  ; get Ninja direction
  $C57E LD L,A        ;
  $C57F ADD A,A       ;
  $C580 ADD A,A       ;
- $C581 ADD A,L       ;
+ $C581 ADD A,L       ; * 5
  $C582 LD L,A        ;
  $C583 LD H,$00      ;
  $C585 LD DE,($9C42) ; get Ninja position in tilemap
@@ -7825,7 +7825,7 @@ c$C5A3 LD HL,($9C42) ; get Ninja position in tilemap
  $C5A9 ADD HL,DE     ;
  $C5AA LD DE,$6590   ; Tile screen 0 start address
  $C5AD ADD HL,DE     ;
- $C5AE LD A,($7239)  ;
+ $C5AE LD A,($7239)  ; get Ninja direction
  $C5B1 LD D,$00      ;
  $C5B3 LD E,A        ;
  $C5B4 ADD HL,DE     ;
@@ -7934,7 +7934,7 @@ b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
 ; Data block at C66B
 b$C66B DEFB $0E,$00,$0E,$00,$04,$00
 
-; Room #R$93DF/#R$947C (room right from Vagon) initialization
+; Room #R$93DF/#R$947C (room right from Train) initialization
 c$C671 LD HL,$947C   ;
  $C674 LD ($7CA0),HL ;
  $C677 LD HL,$93DF   ;
@@ -7962,12 +7962,12 @@ c$C681 LD HL,$9A1E   ;
  $C6A0 JR NZ,$C697   ;
  $C6A2 JP $B724      ;
 
-; Room 7C9C procedure (tunnel Vagon)
+; Room 7C9C procedure (tunnel Train)
 c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6A8 CP $0C        ;
  $C6AA JP NZ,$B937   ;
  $C6AD LD A,$4B      ;
- $C6AF LD ($7343),A  ;
+ $C6AF LD ($7343),A  ; set counter = 75
  $C6B2 LD DE,($9C42) ; get Ninja position in tilemap
  $C6B6 LD A,($9C41)  ; get Ninja X
  $C6B9 INC A         ;
@@ -7990,7 +7990,7 @@ c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6DC LD ($B8CE),HL ;
  $C6DF JP $B937      ;
 
-; ?? Movement handler (B8CE handler): moving Vagon ??
+; ?? Movement handler (B8CE handler): moving Train ??
 c$C6E2 LD B,$02      ;
 *$C6E4 LD DE,$676F   ;
  $C6E7 LD HL,$676E   ;
@@ -8012,7 +8012,7 @@ c$C6E2 LD B,$02      ;
  $C706 JP Z,$C226    ; => Ninja standing
  $C709 JP $B8D0      ;
 
-; ?? Movement handler (B8CE handler): something in Vagon
+; ?? Movement handler (B8CE handler): something in Train
 c$C70C LD B,$02      ;
 *$C70E LD DE,$6752   ;
  $C711 LD HL,$6753   ;
@@ -8633,7 +8633,7 @@ b$D3DE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d3de.png"
  $D4F2 DEFB $FF,$FF,$2D,$2E,$FF,$FF ;
  $D4F8 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
  $D4FE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; }
-; Sprite Ninja/Guard standing hit
+; Sprite Ninja/Guard punching
  $D504 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d504.png"
  $D50A DEFB $FF,$FF,$00,$01,$FF,$FF ; />]
  $D510 DEFB $FF,$FF,$2F,$30,$31,$FF ;

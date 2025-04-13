@@ -343,19 +343,19 @@ b$723A DEFB $01,$81,$41,$C1,$21,$A1,$61,$E1,$11,$91,$51,$D1,$31,$B1,$71,$F1 ; {M
  $732A DEFB $0E,$8E,$4E,$CE,$2E,$AE,$6E,$EE,$1E,$9E,$5E,$DE,$3E,$BE,$7E,$FE ; }
 
 ; Data block at 733A
-b$733A DEFB $00
+b$733A DEFB $00      ; Ninja walking phase
 
 ; Table of four addresses of Ninja/Guard walking sprites
-b$733B DEFW $D3DE
- $733D DEFW $D408
- $733F DEFW $D432
- $7341 DEFW $D45C
+b$733B DEFW $D3DE    ; Sprite Ninja/Guard walking 1
+ $733D DEFW $D408    ; Sprite Ninja/Guard walking 2
+ $733F DEFW $D432    ; Sprite Ninja/Guard walking 3
+ $7341 DEFW $D45C    ; Sprite Ninja/Guard walking 4
 
 ; Data block at 7343
-b$7343 DEFB $07      ; ?? counter
+b$7343 DEFB $07      ; Counter used in movement handlers
  $7344 DEFB $00
  $7345 DEFB $14
- $7346 DEFB $0A
+ $7346 DEFB $0A      ; Guard walking phase ??
  $7347 DEFB $01      ; Guard direction
  $7348 DEFB $05,$08
 
@@ -735,126 +735,129 @@ w$751B DEFW $5061,$5161,$5261,$5361
  $7553 DEFW $54C1,$55C1,$56C1,$57C1
 
 ; Data block at 755B
-b$755B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7563 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $756B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7573 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $757B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7583 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $758B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7593 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $759B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75A3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75AB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75B3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75BB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75C3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75CB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75D3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75DB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75E3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75EB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75F3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $75FB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7603 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $760B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7613 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $761B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7623 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $762B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7633 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $763B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7643 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $764B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7653 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $765B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7663 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $766B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7673 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $767B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7683 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $768B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7693 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $769B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76A3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76AB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76B3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76BB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76C3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76CB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76D3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76DB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76E3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76EB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76F3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $76FB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7703 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $770B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7713 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $771B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7723 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $772B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7733 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $773B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7743 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $774B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7753 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $775B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7763 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $776B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7773 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $777B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7783 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $778B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7793 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $779B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77A3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77AB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77B3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77BB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77C3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77CB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77D3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77DB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77E3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77EB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77F3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $77FB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7803 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $780B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7813 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $781B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7823 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $782B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7833 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $783B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7843 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $784B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7853 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $785B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7863 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $786B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7873 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $787B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7883 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $788B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7893 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $789B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78A3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78AB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78B3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78BB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78C3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78CB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78D3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78DB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78E3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78EB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78F3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78FB DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7903 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $790B DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $7913 DEFB $00,$00,$00,$00,$00
+b$755B DEFB $00      ; Ninja falling count, to decrease Energy on hit
+
+; Data block at 755C
+b$755C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7564 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $756C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7574 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $757C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7584 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $758C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7594 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $759C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75A4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75AC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75B4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75BC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75C4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75CC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75D4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75DC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75E4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75EC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $75FC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7604 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $760C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7614 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $761C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7624 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $762C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7634 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $763C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7644 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $764C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7654 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $765C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7664 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $766C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7674 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $767C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7684 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $768C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7694 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $769C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76A4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76AC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76B4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76BC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76C4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76CC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76D4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76DC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76E4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76EC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $76FC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7704 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $770C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7714 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $771C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7724 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $772C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7734 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $773C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7744 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $774C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7754 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $775C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7764 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $776C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7774 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $777C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7784 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $778C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7794 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $779C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77A4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77AC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77B4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77BC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77C4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77CC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77D4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77DC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77E4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77EC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $77FC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7804 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $780C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7814 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $781C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7824 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $782C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7834 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $783C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7844 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $784C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7854 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $785C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7864 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $786C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7874 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $787C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7884 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $788C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7894 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $789C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78A4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78AC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78B4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78BC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78C4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78CC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78D4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78DC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78E4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78EC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $78FC DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7904 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $790C DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $7914 DEFB $00,$00,$00,$00
 
 ; Room procedure (for 19 rooms with a guard)
 c$7918 JP $B44C      ;
@@ -1712,7 +1715,7 @@ b$8608 DEFW $B452                       ; Room procedure
  $8610 DEFW $0000
  $8612 DEFW $8526                       ; Room Down
  $8614 DEFB $02,$1E,$FF,$70,$67         ; {#HTML[<img
- $8619 DEFB $02,$1C,$FF,$82,$66         ; src="images/rooms/8606.png" />]
+ $8619 DEFB $02,$1C,$FF,$82,$66         ; src="images/rooms/8608.png" />]
  $861E DEFB $02,$0C,$FF,$74,$66         ;
  $8623 DEFB $0C,$E3,$81,$02,$10,$90,$65 ;
  $862A DEFB $02,$0E,$FF,$92,$65         ;
@@ -3416,8 +3419,8 @@ c$9D8B LD HL,$7216   ; Sprite Dog 4
 ; #R$A1D6, #R$A353 and #R$B42E.
 c$9DCD LD DE,$71CB   ; current dog data address
  $9DD0 LD ($B674),HL ; save current Dog data address
- $9DD3 LD BC,$0009   ;
- $9DD6 LDIR          ;
+ $9DD3 LD BC,$0009   ; 9 = size of Dog data
+ $9DD6 LDIR          ; Copy Dog data
  $9DD8 RET           ;
 
 ; Decrease Energy by B
@@ -3629,197 +3632,193 @@ b$A0B5 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-a0b5.png"
 
 ; Room #R$94AB initialization
 c$A0DF LD HL,$A1E1   ; Guard data address
-; This entry point is used by the routines at #R$A0E8, #R$A0ED, #R$A0F2,
-; #R$A0F7, #R$A0FC, #R$A101, #R$A106, #R$A10B, #R$A110, #R$A115, #R$A11A,
-; #R$A11F, #R$A124, #R$A129, #R$A12E, #R$A133, #R$A138 and #R$A13D.
+; Initialize a guard, then Standard room initialization
 *$A0E2 CALL $B40A    ; Initialize a guard
 ; This entry point is used by the routine at #R$A142.
-*$A0E5 JP $B422      ;
+*$A0E5 JP $B422      ; Standard room initialization
 
 ; Room #R$7DA9 initialization
 c$A0E8 LD HL,$A1E7   ; Guard data address
- $A0EB JR $A0E2      ;
+ $A0EB JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$7E8C initialization
 c$A0ED LD HL,$A1ED   ; Guard data address
- $A0F0 JR $A0E2      ;
+ $A0F0 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$920A initialization
 c$A0F2 LD HL,$A1F3   ; Guard data address
- $A0F5 JR $A0E2      ;
+ $A0F5 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$8F84 initialization
 c$A0F7 LD HL,$A1F9   ; Guard data address
- $A0FA JR $A0E2      ;
+ $A0FA JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$8B71 initialization
 c$A0FC LD HL,$A1FF   ; Guard data address
- $A0FF JR $A0E2      ;
+ $A0FF JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$8739 initialization
 c$A101 LD HL,$A205   ; Guard data address
- $A104 JR $A0E2      ;
+ $A104 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$858F initialization
 c$A106 LD HL,$A20B   ; Guard data address
- $A109 JR $A0E2      ;
+ $A109 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$84EE initialization
 c$A10B LD HL,$A211   ; Guard data address
- $A10E JR $A0E2      ;
+ $A10E JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$99A6 initialization
 c$A110 LD HL,$A21D   ; Guard data address
- $A113 JR $A0E2      ;
+ $A113 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$97F8 initialization
 c$A115 LD HL,$A223   ; Guard data address
- $A118 JR $A0E2      ;
+ $A118 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$94CF initialization
 c$A11A LD HL,$A229   ; Guard data address
- $A11D JR $A0E2      ;
+ $A11D JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9B51 initialization
 c$A11F LD HL,$A22F   ; Guard data address
- $A122 JR $A0E2      ;
+ $A122 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9F3A initialization
 c$A124 LD HL,$A235   ; Guard data address
- $A127 JR $A0E2      ;
+ $A127 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9F7E initialization
 c$A129 LD HL,$A23B   ; Guard data address
- $A12C JR $A0E2      ;
+ $A12C JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9EB8 initialization
 c$A12E LD HL,$A241   ; Guard data address
- $A131 JR $A0E2      ;
+ $A131 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9B19 initialization
 c$A133 LD HL,$A247   ; Guard data address
- $A136 JR $A0E2      ;
+ $A136 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9DF5 initialization
 c$A138 LD HL,$A24D   ; Guard data address
- $A13B JR $A0E2      ;
+ $A13B JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; ?? UNUSED??
 c$A13D LD HL,$A217   ; Guard data address
- $A140 JR $A0E2      ;
+ $A140 JR $A0E2      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$7A17 initialization
 c$A142 LD HL,$A33E   ; Turret data address
-; This entry point is used by the routines at #R$A14A, #R$A14F, #R$A154,
-; #R$A15F, #R$A16A, #R$A16F, #R$A174, #R$A179, #R$A17E, #R$A183, #R$A188,
-; #R$A18D, #R$A192, #R$A197, #R$A19C and #R$A1A1.
+; Initialize a turret, then Standard room initialization
 *$A145 CALL $B461    ; Initialize a turret
- $A148 JR $A0E5      ;
+ $A148 JR $A0E5      ; Standard room initialization
 
 ; Room #R$7D5A initialization
 c$A14A LD HL,$A32F   ; Turret data address
- $A14D JR $A145      ;
+ $A14D JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$7F48 initialization
 c$A14F LD HL,$A332   ; Turret data address
- $A152 JR $A145      ;
+ $A152 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$7EF2 initialization
 c$A154 LD HL,$A299   ; Dog data address
- $A157 CALL $9DCD    ;
+ $A157 CALL $9DCD    ; Initialize a dog
  $A15A LD HL,$A338   ; Turret data address
- $A15D JR $A145      ;
+ $A15D JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$909F initialization
 c$A15F LD HL,$A2E9   ; Dog data address
- $A162 CALL $9DCD    ;
+ $A162 CALL $9DCD    ; Initialize a dog
  $A165 LD HL,$A338   ; Turret data address
- $A168 JR $A145      ;
+ $A168 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$8FBD initialization
 c$A16A LD HL,$A335   ; Turret data address
- $A16D JR $A145      ;
+ $A16D JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$92A7 initialization
 c$A16F LD HL,$A338   ; Turret data address
- $A172 JR $A145      ;
+ $A172 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$8B25 initialization
 c$A174 LD HL,$A33B   ; Turret data address
- $A177 JR $A145      ;
+ $A177 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$8526 initialization
 c$A179 LD HL,$A33E   ; Turret data address
- $A17C JR $A145      ;
+ $A17C JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; ?? UNUSED??
 c$A17E LD HL,$A341   ; Turret data address
- $A181 JR $A145      ;
+ $A181 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$95D6 initialization
 c$A183 LD HL,$A344   ; Turret data address
- $A186 JR $A145      ;
+ $A186 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$968A initialization
 c$A188 LD HL,$A347   ; Turret data address
- $A18B JR $A145      ;
+ $A18B JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Routine at A18D
 ;
 ; Used by the routine at #R$B368.
 c$A18D LD HL,$A34A   ; Turret data address
- $A190 JR $A145      ;
+ $A190 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$9A9A initialization
 c$A192 LD HL,$A332   ; Turret data address
- $A195 JR $A145      ;
+ $A195 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$9552 initialization
 c$A197 LD HL,$A34D   ; Turret data address
- $A19A JR $A145      ;
+ $A19A JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$9BE7 initialization
 c$A19C LD HL,$A350   ; Turret data address
- $A19F JR $A145      ;
+ $A19F JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$8D5C initialization
 c$A1A1 LD HL,$A33B   ; Turret data address
- $A1A4 JR $A145      ;
+ $A1A4 JR $A145      ; Initialize a turret, then Standard room initialization
 
 ; Room #R$7C2E initialization
 c$A1A6 LD HL,$A271   ; Dog data address
- $A1A9 CALL $9DCD    ;
+ $A1A9 CALL $9DCD    ; Initialize a dog
  $A1AC LD HL,$A253   ; Guard data address
 
 ; Routine at A1AF
 ;
 ; Used by the routines at #R$A1B5, #R$A1C0, #R$A1CB and #R$A1D6.
 c$A1AF CALL $B40A    ; Initialize a guard
- $A1B2 JP $B422      ;
+ $A1B2 JP $B422      ; Standard room initialization
 
 ; Room #R$7F9C initialization
 c$A1B5 LD HL,$A27B   ; Dog data address
- $A1B8 CALL $9DCD    ;
+ $A1B8 CALL $9DCD    ; Initialize a dog
  $A1BB LD HL,$A259   ; Guard data address
- $A1BE JR $A1AF      ;
+ $A1BE JR $A1AF      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$8162 initialization
 c$A1C0 LD HL,$A28F   ; Dog data address
- $A1C3 CALL $9DCD    ;
+ $A1C3 CALL $9DCD    ; Initialize a dog
  $A1C6 LD HL,$A25F   ; Guard data address
- $A1C9 JR $A1AF      ;
+ $A1C9 JR $A1AF      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$80A7 initialization
 c$A1CB LD HL,$A2AD   ; Dog data address
- $A1CE CALL $9DCD    ;
+ $A1CE CALL $9DCD    ; Initialize a dog
  $A1D1 LD HL,$A265   ; Guard data address
- $A1D4 JR $A1AF      ;
+ $A1D4 JR $A1AF      ; Initialize a guard, then Standard room initialization
 
 ; Room #R$9B9D initialization
 c$A1D6 LD HL,$A325   ; Dog data address
- $A1D9 CALL $9DCD    ;
+ $A1D9 CALL $9DCD    ; Initialize a dog
  $A1DC LD HL,$A26B   ; Guard data address
- $A1DF JR $A1AF      ;
+ $A1DF JR $A1AF      ; Initialize a guard, then Standard room initialization
 
 ; Guards data, ?? records, 6 bytes each
 b$A1E1 DEFB $9D,$00,$07,$05,$0A,$01 ; Room 94AB guard
@@ -3884,61 +3883,61 @@ b$A32F DEFB $C4,$00,$0E ; Room 7A17 turret
 
 ; Room #R$81E5 initialization
 c$A353 LD HL,$A285   ; Dog data address
-; This entry point is used by the routines at #R$A35C, #R$A361, #R$A366,
-; #R$A36B, #R$A370, #R$A375, #R$A37A, #R$A37F, #R$A384, #R$A389 and #R$A38E.
+; Initialize a dog, then Standard room initialization
 *$A356 CALL $9DCD    ; Initialize a dog
- $A359 JP $B422      ;
+ $A359 JP $B422      ; Standard room initialization
 
 ; Room #R$7E05 initialization
 c$A35C LD HL,$A2A3   ; Dog data address
- $A35F JR $A356      ;
+ $A35F JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$83ED initialization
 c$A361 LD HL,$A2B7   ; Dog data address
- $A364 JR $A356      ;
+ $A364 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$924E initialization
 c$A366 LD HL,$A2CB   ; Dog data address
- $A369 JR $A356      ;
+ $A369 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$91BA initialization
 c$A36B LD HL,$A2D5   ; Dog data address
- $A36E JR $A356      ;
+ $A36E JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$90DB initialization
 c$A370 LD HL,$A2DF   ; Dog data address
- $A373 JR $A356      ;
+ $A373 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$8802 initialization
 c$A375 LD HL,$A2F3   ; Dog data address
- $A378 JR $A356      ;
+ $A378 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$8608 initialization
 c$A37A LD HL,$A2FD   ; Dog data address
- $A37D JR $A356      ;
+ $A37D JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$844E initialization
 c$A37F LD HL,$A307   ; Dog data address
- $A382 JR $A356      ;
+ $A382 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$9739 initialization
 c$A384 LD HL,$A311   ; Dog data address
- $A387 JR $A356      ;
+ $A387 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$9A5A initialization
 c$A389 LD HL,$A31B   ; Dog data address
- $A38C JR $A356      ;
+ $A38C JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Room #R$80F6 initialization
 c$A38E LD HL,$A2C1   ; Dog data address
- $A391 JR $A356      ;
+ $A391 JR $A356      ; Initialize a dog, then Standard room initialization
 
 ; Data block at A393
 b$A393 DEFB $90,$01,$01,$0A,$42,$01,$17,$01
  $A39B DEFB $06,$01,$00,$00,$00,$C4,$00,$00
  $A3A3 DEFB $03,$06,$10,$00,$45,$01,$05,$05
  $A3AB DEFB $0A,$19,$00,$69,$00,$06,$06,$03
- $A3B3 DEFB $0F,$01
+ $A3B3 DEFB $0F
+ $A3B4 DEFB $01                             ; ??
 
 ; ?? something about Ninja and Guard
 ;
@@ -3994,7 +3993,7 @@ c$A3EE LD A,($9C40)  ; get Ninja Y
  $A407 LD ($7346),A  ;
  $A40A LD A,$02      ;
  $A40C LD ($A3B4),A  ;
- $A40F LD HL,$D4B0   ; Sprite Ninja/Guard jumping 1
+ $A40F LD HL,$D4B0   ; Sprite Ninja/Guard jumping
  $A412 LD ($A70F),HL ; set Guard sprite
  $A415 JP $A6FF      ; => Draw Guard on tilemap
 
@@ -4010,7 +4009,7 @@ c$A418 LD A,($9C40)  ; get Ninja Y
  $A423 LD ($7346),A  ;
  $A426 LD A,$03      ;
  $A428 LD ($A3B4),A  ;
- $A42B LD HL,$D504   ;
+ $A42B LD HL,$D504   ; Sprite Ninja/Guard punching
  $A42E LD ($A70F),HL ; set Guard sprite
  $A431 JP $A6FF      ; => Draw Guard on tilemap
 
@@ -4205,7 +4204,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5B7 LD A,$03        ;
  $A5B9 LD ($A3B4),A    ;
  $A5BC LD (HL),$06     ;
- $A5BE LD HL,$D4DA     ; Sprite Ninja/Guard jumping 2
+ $A5BE LD HL,$D4DA     ; Sprite Ninja/Guard jump-kick
  $A5C1 LD ($A70F),HL   ; set Guard sprite
  $A5C4 JP $A6FF        ;
 *$A5C7 CP $06          ;
@@ -4218,7 +4217,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5D4 LD A,$01        ;
  $A5D6 LD ($A3B4),A    ;
  $A5D9 LD (HL),$07     ;
- $A5DB LD HL,$D4B0     ; Sprite Ninja/Guard jumping 1
+ $A5DB LD HL,$D4B0     ; Sprite Ninja/Guard jumping
  $A5DE LD ($A70F),HL   ; set Guard sprite
  $A5E1 LD HL,($71C3)   ;
  $A5E4 LD DE,$69CD     ;
@@ -4333,10 +4332,10 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A6E1 ADD HL,DE       ;
  $A6E2 LD ($71C3),HL   ;
  $A6E5 LD A,($7346)    ;
- $A6E8 INC A           ;
- $A6E9 AND $03         ;
+ $A6E8 INC A           ; next walking phase
+ $A6E9 AND $03         ; 0..3
  $A6EB LD ($7346),A    ;
- $A6EE ADD A,A         ;
+ $A6EE ADD A,A         ; * 2
  $A6EF LD L,A          ;
  $A6F0 LD H,$00        ;
  $A6F2 LD DE,$733B     ; Table of four Ninja/Guard walking sprites
@@ -5519,7 +5518,7 @@ c$B40A LD DE,$71C3   ; address to store guard data
  $B415 LD A,(HL)     ;
  $B416 LD ($7346),A  ;
  $B419 INC HL        ;
- $B41A LD A,(HL)     ;
+ $B41A LD A,(HL)     ; get Guard direction from Guard data
  $B41B LD ($7347),A  ; set Guard direction
  $B41E RET           ;
 
@@ -5549,22 +5548,22 @@ b$B437 DEFB $21,$D6,$71,$CD,$CD,$9D,$21,$6B
 
 ; Room B513 procedure (initial Room)
 c$B446 CALL $B4FA    ; Processing in the initial room
- $B449 JP $B937      ;
+ $B449 JP $B937      ; Standard room procedure
 
 ; Room procedure (for 19 rooms with a guard) (redirect from #R$7918)
 ;
 ; Used by the routine at #R$7918.
 c$B44C CALL $A434    ; Process a guard
- $B44F JP $B937      ;
+ $B44F JP $B937      ; Standard room procedure
 
 ; Room procedure (for 18 rooms with a dog)
 c$B452 CALL $9C44    ; Process a dog
- $B455 JP $B937      ;
+ $B455 JP $B937      ; Standard room procedure
 
 ; Room procedure (for 5 rooms with a guard and a dog)
 c$B458 CALL $9C44    ; Process a dog
  $B45B CALL $A434    ; Process a guard
- $B45E JP $B937      ;
+ $B45E JP $B937      ; Standard room procedure
 
 ; Turret initialization; HL = turret data address
 ;
@@ -5588,11 +5587,11 @@ c$B461 LD E,(HL)     ;
 ; Room procedure (for 2 rooms with a turret and a dog)
 c$B47A CALL $9C44    ; Process a dog
  $B47D CALL $B489    ; Process turret
- $B480 JP $B937      ;
+ $B480 JP $B937      ; Standard room procedure
 
 ; Room procedure (for 14 rooms with a turret)
 c$B483 CALL $B489    ; Process turret
- $B486 JP $B937      ;
+ $B486 JP $B937      ; Standard room procedure
 
 ; Process turret
 ;
@@ -5658,7 +5657,7 @@ c$B4DE LD HL,$AD54   ; PAY value 3rd digit address
  $B4EB JR $B4E3      ;
 *$B4ED DJNZ $B4DE    ;
  $B4EF LD HL,$AD52   ; Pay value text address
- $B4F2 LD C,$05      ;
+ $B4F2 LD C,$05      ; five digits
  $B4F4 LD DE,$506F   ; Screen address
  $B4F7 JP $AED1      ; => Print string
 
@@ -5720,9 +5719,9 @@ c$B532 LD HL,($9C42) ;
 *$B56B DJNZ $B56B    ;
  $B56D XOR A         ;
  $B56E OUT (C),A     ;
- $B570 LD HL,$7343   ;
- $B573 DEC (HL)      ;
- $B574 JP NZ,$B8D0   ;
+ $B570 LD HL,$7343   ; counter address
+ $B573 DEC (HL)      ; decrease counter
+ $B574 JP NZ,$B8D0   ; => Object procedure
  $B577 LD HL,$9C41   ; Ninja X address
  $B57A INC (HL)      ; Moving right one tile
  $B57B LD HL,($9C42) ;
@@ -5730,7 +5729,7 @@ c$B532 LD HL,($9C42) ;
  $B57F LD ($9C42),HL ;
  $B582 LD HL,$70E3   ;
  $B585 LD (HL),$FF   ;
- $B587 LD DE,$D5AC   ;
+ $B587 LD DE,$D5AC   ; Sprite Ninja jumping 3
  $B58A LD HL,$C4F6   ; Movement handler address
  $B58D LD A,$04      ;
  $B58F LD ($7343),A  ; set counter = 4
@@ -5761,9 +5760,7 @@ c$B59E DEC C         ;
 
 ; Data block at B5A7
 b$B5A7 DEFB $FF
-
-; Data block at B5A8
-b$B5A8 DEFB $67,$68,$6A,$6A,$6A,$6A,$6A,$6B
+ $B5A8 DEFB $67,$68,$6A,$6A,$6A,$6A,$6A,$6B
 
 ; Table of addresses for NEAR/HELD items
 w$B5B0 DEFW $A7AD
@@ -5811,7 +5808,7 @@ c$B5C7 CALL $AC44    ;
  $B609 OUT ($FE),A   ;
  $B60B INC A         ;
  $B60C LD ($D48F),A  ;
- $B60F LD ($7239),A  ; set Ninja direction = 1
+ $B60F LD ($7239),A  ; set Ninja direction = 1 = right
  $B612 LD ($B84F),A  ; set NEAR item
  $B615 LD HL,$70D0   ;
  $B618 LD ($B53E),HL ;
@@ -5956,7 +5953,7 @@ w$B706 DEFW $B38F    ; #0: ?? 3x3 tiles $7C21; params: 2 bytes (address)
  $B722 DEFW $734D    ; #14: Put one tile at the given address; params: 3 bytes
                      ; (tile, address)
 
-; Room initialization
+; Finish room initialization
 ;
 ; Used by the routines at #R$B422, #R$B425, #R$B42E, #R$C64C and #R$C681.
 ;
@@ -6860,7 +6857,7 @@ c$BD37 LD HL,$A39F   ;
 *$BDA2 LD A,B        ;
  $BDA3 LD ($A3A2),A  ;
  $BDA6 CALL $F9F9    ;
- $BDA9 LD DE,$D504   ;
+ $BDA9 LD DE,$D504   ; Sprite Ninja/Guard punching
  $BDAC JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Ninja standing (redirect)
@@ -6885,7 +6882,7 @@ c$BDB2 LD HL,($9C42) ; get Ninja position in tilemap
  $BDCF LD B,$05      ;
  $BDD1 CALL $B4DE    ; Increase PAY value by 500 - Guard killed by punch/kick
 *$BDD4 LD HL,$BBD4   ; Movement handler address
- $BDD7 LD DE,$D504   ;
+ $BDD7 LD DE,$D504   ; Sprite Ninja/Guard punching
  $BDDA JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Routine at BDDD
@@ -6900,7 +6897,7 @@ c$BDDD BIT 3,A       ;
  $BDEC CP (HL)       ;
  $BDED JP NZ,$BF7B   ;
  $BDF0 LD A,$0B      ;
- $BDF2 LD ($7343),A  ;
+ $BDF2 LD ($7343),A  ; set counter = 11
  $BDF5 LD HL,$65BC   ;
  $BDF8 LD ($BE0E),HL ;
  $BDFB LD ($BE1D),HL ;
@@ -6926,8 +6923,8 @@ c$BE0D LD HL,$65B1   ;
  $BE24 LD DE,$01FD   ;
  $BE27 ADD HL,DE     ;
  $BE28 LD (HL),A     ;
- $BE29 LD HL,$7343   ;
- $BE2C DEC (HL)      ;
+ $BE29 LD HL,$7343   ; counter address
+ $BE2C DEC (HL)      ; decrease counter
  $BE2D JP NZ,$B8D0   ;
  $BE30 LD (HL),$14   ;
  $BE32 LD HL,$675A   ;
@@ -7060,7 +7057,7 @@ c$BF7B LD HL,$6592   ;
  $BF86 CP (HL)       ;
  $BF87 JP C,$C16E    ;
  $BF8A LD A,$03      ;
- $BF8C LD ($7343),A  ;
+ $BF8C LD ($7343),A  ; set counter = 3
  $BF8F LD A,($7239)  ; get Ninja direction
  $BF92 CP $00        ;
  $BF94 LD A,($7232)  ; get Input bits
@@ -7072,14 +7069,14 @@ c$BF7B LD HL,$6592   ;
  $BFA2 CALL NZ,$C4E8 ;
 *$BFA5 LD HL,$C339   ;
  $BFA8 LD A,$02      ;
- $BFAA LD ($7343),A  ;
- $BFAD LD DE,$D4B0   ; Sprite Ninja/Guard jumping 1
+ $BFAA LD ($7343),A  ; set counter = 2
+ $BFAD LD DE,$D4B0   ; Sprite Ninja/Guard jumping
 
 ; Set movement handler = HL, set Ninja sprite = DE
 ;
 ; Used by the routines at #R$B532, #R$BD37, #R$BDB2, #R$BDDD, #R$BE0D, #R$BE5A,
 ; #R$BE63, #R$BFBA, #R$C13D, #R$C226, #R$C339, #R$C3BB, #R$C4A7, #R$C4E8,
-; #R$C4F6, #R$C50D and #R$C649.
+; #R$C4F6, #R$C50D and #R$C643.
 c$BFB0 LD ($B8CE),HL ;
  $BFB3 LD ($7186),DE ; set Ninja sprite address = DE
  $BFB7 JP $B8D0      ;
@@ -7167,8 +7164,8 @@ t$C062 DEFM "DISK RETRIEVED"
  $C087 DEFM "TOTAL PAY : $"
 
 ; ?? Movement handler (helicopter?)
-c$C094 LD HL,$7343   ;
- $C097 DEC (HL)      ;
+c$C094 LD HL,$7343   ; counter address
+ $C097 DEC (HL)      ; decrease counter
  $C098 JP Z,$BFD5    ; => Escaped; final messages, then Game Over
  $C09B LD A,$10      ;
  $C09D OUT ($FE),A   ;
@@ -7246,10 +7243,10 @@ c$C13D BIT 1,A       ;
  $C145 CP (HL)       ;
  $C146 JR Z,$C14B    ;
  $C148 DEC (HL)      ;
- $C149 JR $C16E      ;
+ $C149 JR $C16E      ; => Object procedure
 ; This entry point is used by the routine at #R$C3D9.
 *$C14B LD HL,$C24B   ; Movement handler address
- $C14E LD DE,$D3DE   ;
+ $C14E LD DE,$D3DE   ; Sprite Ninja/Guard walking 1
  $C151 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 *$C154 BIT 0,A       ;
  $C156 JR Z,$C16E    ;
@@ -7258,15 +7255,15 @@ c$C13D BIT 1,A       ;
  $C15C CP (HL)       ;
  $C15D JR NZ,$C162   ;
  $C15F INC (HL)      ;
- $C160 JR $C16E      ;
+ $C160 JR $C16E      ; => Object procedure
 ; This entry point is used by the routine at #R$C3D9.
-*$C162 LD HL,$C1B6   ;
+*$C162 LD HL,$C1B6   ; Movement handler address
  $C165 LD ($B8CE),HL ;
- $C168 LD HL,$D3DE   ;
+ $C168 LD HL,$D3DE   ; Sprite Ninja/Guard walking 1
  $C16B LD ($7186),HL ; set Ninja sprite address
 ; This entry point is used by the routines at #R$BF7B, #R$C22F, #R$C24B and
 ; #R$C50D.
-*$C16E JP $B8D0      ;
+*$C16E JP $B8D0      ; => Object procedure
 
 ; Data block at C171
 b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
@@ -7279,9 +7276,9 @@ b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
  $C1A9 DEFB $19,$22,$42,$9C,$CD,$DF,$BB,$CB
  $C1B1 DEFB $57,$20,$BA,$18,$70
 
-; ?? (B8CE handler)
+; Movement handler ?? (B8CE handler)
 c$C1B6 LD A,($9C41)  ; get Ninja X
- $C1B9 CP $18        ;
+ $C1B9 CP $18        ; 24 ?
  $C1BB JP Z,$C2FA    ; => Going to room at Right
  $C1BE LD HL,($9C42) ; get Ninja position in tilemap
  $C1C1 LD DE,$6648   ;
@@ -7290,13 +7287,13 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1C7 CP (HL)       ;
  $C1C8 JR NC,$C1DA   ;
  $C1CA LD HL,$9C40   ; Ninja Y address
- $C1CD DEC (HL)      ;
+ $C1CD DEC (HL)      ; one row up
  $C1CE LD HL,($9C42) ; get Ninja position in tilemap
  $C1D1 LD DE,$FFE2   ; -30
  $C1D4 ADD HL,DE     ;
  $C1D5 LD ($9C42),HL ; set Ninja position in tilemap
  $C1D8 JR $C20D      ;
-*$C1DA LD DE,$FFE3   ;
+*$C1DA LD DE,$FFE3   ; -29
  $C1DD ADD HL,DE     ;
  $C1DE LD A,$64      ;
  $C1E0 CP (HL)       ;
@@ -7304,8 +7301,8 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1E3 CALL $BBDF    ; Read Input
  $C1E6 BIT 0,A       ; check RIGHT bit
  $C1E8 JP Z,$C226    ; => Ninja standing
- $C1EB JP $B8D0      ;
-*$C1EE LD DE,$003B   ;
+ $C1EB JP $B8D0      ; => Object procedure
+*$C1EE LD DE,$003B   ; +59
  $C1F1 ADD HL,DE     ;
  $C1F2 CP (HL)       ;
  $C1F3 JR C,$C20D    ;
@@ -7313,14 +7310,14 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1F6 CP (HL)       ;
  $C1F7 JR C,$C20D    ;
  $C1F9 LD HL,($9C42) ; get Ninja position in tilemap
- $C1FC LD DE,$001E   ;
+ $C1FC LD DE,$001E   ; +30
  $C1FF ADD HL,DE     ;
  $C200 LD ($9C42),HL ; set Ninja position in tilemap
  $C203 LD HL,$9C40   ; Ninja Y address
- $C206 INC (HL)      ;
+ $C206 INC (HL)      ; one row down
  $C207 LD A,(HL)     ;
- $C208 CP $0A        ;
- $C20A JP Z,$C604    ; => Going to room Down from current
+ $C208 CP $0A        ; at the room bottom?
+ $C20A JP Z,$C604    ; yes => Going to room Down from current
 *$C20D LD HL,$9C41   ; Ninja X address
  $C210 INC (HL)      ;
  $C211 LD HL,($9C42) ; get Ninja position in tilemap
@@ -7328,15 +7325,15 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C215 LD ($9C42),HL ; set Ninja position in tilemap
  $C218 CALL $C5A3    ; Check for falling
  $C21B JP Z,$C643    ; => Ninja falling
- $C21E CALL $BBDF    ;
- $C221 BIT 0,A       ;
+ $C21E CALL $BBDF    ; Read Input
+ $C221 BIT 0,A       ; check RIGHT bit
  $C223 JP NZ,$C2BB   ;
 
 ; Ninja standing
 ;
 ; Used by the routines at #R$BBD4, #R$BDAF, #R$C1B6, #R$C22F, #R$C24B, #R$C3D9,
 ; #R$C4DE, #R$C4F6, #R$C5A0 and #R$C6E2.
-c$C226 LD HL,$BC55   ;
+c$C226 LD HL,$BC55   ; Movement handler: Ninja standing
  $C229 LD DE,$D486   ; Sprite Ninja/Guard standing
  $C22C JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
@@ -7352,14 +7349,14 @@ c$C22F CALL $BBDF    ; Read Input
  $C242 CP (HL)       ;
  $C243 LD B,$02      ;
  $C245 CALL Z,$9DD9  ; => Decrease Energy by B
- $C248 JP $C16E      ;
+ $C248 JP $C16E      ; => Object procedure
 
 ; ?? Movement handler (B8CE handler)
 c$C24B LD A,($9C41)  ; get Ninja X
- $C24E CP $00        ;
+ $C24E CP $00        ; at very left?
  $C250 JP Z,$C319    ; => Going to room at Left
  $C253 LD HL,($9C42) ; get Ninja position in tilemap
- $C256 LD DE,$6645   ;
+ $C256 LD DE,$6645   ; = $6590 (Tile screen 0) + 181
  $C259 ADD HL,DE     ;
  $C25A LD A,$64      ;
  $C25C CP (HL)       ;
@@ -7368,7 +7365,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C262 DEC (HL)      ; moving one row up
  $C263 LD HL,($9C42) ; get Ninja position in tilemap
  $C266 LD DE,$FFE2   ; -30
- $C269 ADD HL,DE     ;
+ $C269 ADD HL,DE     ; one row up
  $C26A LD ($9C42),HL ; set Ninja position in tilemap
  $C26D JR $C2A2      ;
 *$C26F LD DE,$FFE1   ; -31
@@ -7379,7 +7376,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C278 CALL $BBDF    ; Read Input
  $C27B BIT 1,A       ; check LEFT bit
  $C27D JP Z,$C226    ; => Ninja standing
- $C280 JP $B8D0      ;
+ $C280 JP $B8D0      ; => Object procedure
 *$C283 LD DE,$003D   ; +61
  $C286 ADD HL,DE     ;
  $C287 CP (HL)       ;
@@ -7392,9 +7389,9 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C294 ADD HL,DE     ;
  $C295 LD ($9C42),HL ; set Ninja position in tilemap
  $C298 LD HL,$9C40   ; Ninja Y address
- $C29B INC (HL)      ; moving one tile right
+ $C29B INC (HL)      ; moving one row down
  $C29C LD A,(HL)     ;
- $C29D CP $0A        ;
+ $C29D CP $0A        ; at room bottom?
  $C29F JP Z,$C604    ; => Going to room Down from current
 *$C2A2 LD HL,$9C41   ; Ninja X address
  $C2A5 DEC (HL)      ; moving one tile left
@@ -7406,16 +7403,16 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C2B3 CALL $BBDF    ; Read Input
  $C2B6 BIT 1,A       ; check LEFT bit
  $C2B8 JP Z,$C226    ; => Ninja standing
-; This entry point is used by the routine at #R$C1B6.
-*$C2BB BIT 3,A       ;
+; LEFT or RIGHT key pressed
+*$C2BB BIT 3,A       ; check for UP bit
  $C2BD LD A,$07      ;
- $C2BF LD ($7343),A  ;
+ $C2BF LD ($7343),A  ; set counter = 7
  $C2C2 CALL NZ,$C4E8 ;
  $C2C5 LD A,($733A)  ;
- $C2C8 INC A         ;
- $C2C9 AND $03       ;
+ $C2C8 INC A         ; next walking phase
+ $C2C9 AND $03       ; 0..3
  $C2CB LD ($733A),A  ;
- $C2CE ADD A,A       ;
+ $C2CE ADD A,A       ; * 2
  $C2CF LD L,A        ;
  $C2D0 LD A,$00      ;
  $C2D2 LD ($A39E),A  ;
@@ -7439,7 +7436,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C2F4 INC DE        ;
  $C2F5 LD A,(HL)     ;
  $C2F6 LD (DE),A     ;
- $C2F7 JP $C16E      ;
+ $C2F7 JP $C16E      ; => Object procedure
 
 ; Going to room at Right
 ;
@@ -7480,14 +7477,14 @@ c$C319 LD A,$18      ;
  $C336 JP $B66A      ; => Current Room changed
 
 ; ?? (B8CE handler)
-c$C339 LD HL,$7343   ;
- $C33C DEC (HL)      ;
- $C33D JP NZ,$B8D0   ;
+c$C339 LD HL,$7343   ; counter address
+ $C33C DEC (HL)      ; decrease counter
+ $C33D JP NZ,$B8D0   ; => Object procedure
  $C340 LD A,($7239)  ; get Ninja direction
  $C343 LD HL,($9C42) ; get Ninja position in tilemap
  $C346 LD DE,$6592   ;
  $C349 ADD HL,DE     ;
- $C34A CP $00        ;
+ $C34A CP $00        ; left ?
  $C34C JR NZ,$C361   ;
  $C34E LD A,(HL)     ;
  $C34F CP $0C        ;
@@ -7504,11 +7501,11 @@ c$C339 LD HL,$7343   ;
  $C365 JR Z,$C3CF    ;
  $C367 DEC HL        ;
 *$C368 CALL $C392    ;
- $C36B JR Z,$C3C6    ;
+ $C36B JR Z,$C3C6    ; => Ninja on ladder
  $C36D LD DE,$65CC   ;
  $C370 LD HL,($9C42) ; get Ninja position in tilemap
  $C373 LD A,($7239)  ; get Ninja direction
- $C376 CP $00        ;
+ $C376 CP $00        ; left ?
  $C378 JR Z,$C37D    ;
  $C37A LD DE,$65D1   ;
 *$C37D ADD HL,DE     ;
@@ -7521,7 +7518,7 @@ c$C339 LD HL,$7343   ;
  $C38C LD ($7343),A  ; set counter = 3
  $C38F JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; Routine at C392
+; Check if tile is a ladder
 ;
 ; Used by the routines at #R$BFBA, #R$C339 and #R$C3D9.
 c$C392 LD A,(HL)     ;
@@ -7556,7 +7553,7 @@ c$C3BB LD HL,$9C41   ; Ninja X address
  $C3C2 DEC HL        ; move one tile left
 ; This entry point is used by the routine at #R$C3CF.
 *$C3C3 LD ($9C42),HL ; set Ninja position in tilemap
-; This entry point is used by the routine at #R$C339.
+; Ninja on ladder now
 *$C3C6 LD HL,$C3D9   ; Movement handler for Ninja on ladder
  $C3C9 LD DE,$D52E   ; Sprite Ninja on ladder
  $C3CC JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
@@ -7568,51 +7565,52 @@ c$C3CF LD HL,$9C41   ; Ninja X address
  $C3D2 INC (HL)      ; one tile to right
  $C3D3 LD HL,($9C42) ; get Ninja position in tilemap
  $C3D6 INC HL        ; move one tile right
- $C3D7 JR $C3C3      ;
+ $C3D7 JR $C3C3      ; => Set Ninja position in tilemap; Ninja on ladder
 
 ; Movement handler (B8CE handler): Ninja on ladder
 c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
- $C3DC LD DE,$6647   ;
+ $C3DC LD DE,$6647   ; = $6590 (Tile screen 0) + 183
  $C3DF ADD HL,DE     ;
  $C3E0 LD A,$0C      ;
- $C3E2 CP (HL)       ;
- $C3E3 JR Z,$C3EC    ;
+ $C3E2 CP (HL)       ; ladder?
+ $C3E3 JR Z,$C3EC    ; yes => Read and process Input
  $C3E5 DEC HL        ;
  $C3E6 CALL $C392    ;
- $C3E9 JP NZ,$C226   ; => Ninja standing
+ $C3E9 JP NZ,$C226   ; not ladder => Ninja standing
 ; Read and process Input
 *$C3EC CALL $BBDF    ; Read Input
  $C3EF BIT 0,A       ; check RIGHT bit
  $C3F1 JR Z,$C40E    ;
 ; Pressed RIGHT
  $C3F3 LD HL,($9C42) ; get Ninja position in tilemap
- $C3F6 LD DE,$6648   ;
+ $C3F6 LD DE,$6648   ; = $6590 (Tile screen 0) + 184
  $C3F9 ADD HL,DE     ;
  $C3FA LD A,$64      ;
  $C3FC CP (HL)       ;
  $C3FD JR C,$C42C    ;
- $C3FF LD DE,$001E   ; 30
+ $C3FF LD DE,$001E   ; +30
  $C402 ADD HL,DE     ;
  $C403 CP (HL)       ;
  $C404 JR NC,$C42C   ;
  $C406 LD A,$01      ;
- $C408 LD ($7239),A  ; set Ninja direction = 1
+ $C408 LD ($7239),A  ; set Ninja direction = 1 = right
  $C40B JP $C162      ;
+; Check if LEFT pressed
 *$C40E BIT 1,A       ; check LEFT bit
  $C410 JR Z,$C42C    ;
 ; Pressed LEFT
  $C412 LD HL,($9C42) ; get Ninja position in tilemap
- $C415 LD DE,$6645   ;
+ $C415 LD DE,$6645   ; = $6590 (Tile screen 0) + 181
  $C418 ADD HL,DE     ;
  $C419 LD A,$64      ;
  $C41B CP (HL)       ;
  $C41C JR C,$C42C    ;
- $C41E LD DE,$001E   ; 30
+ $C41E LD DE,$001E   ; +30
  $C421 ADD HL,DE     ;
  $C422 CP (HL)       ;
  $C423 JR NC,$C42C   ;
  $C425 XOR A         ;
- $C426 LD ($7239),A  ; set Ninja direction = 0
+ $C426 LD ($7239),A  ; set Ninja direction = 0 = left
  $C429 JP $C14B      ;
 ; Check if UP pressed
 *$C42C LD A,($7232)  ; get Input bits
@@ -7628,22 +7626,22 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C43F DEC HL        ;
  $C440 CALL $C392    ;
  $C443 JR Z,$C447    ;
- $C445 JR $C495      ;
+ $C445 JR $C495      ; => Object procedure
 *$C447 LD A,($9C40)  ; get Ninja Y
- $C44A CP $00        ;
- $C44C JP Z,$C623    ;
- $C44F LD DE,$FF2E   ;
+ $C44A CP $00        ; top row?
+ $C44C JP Z,$C623    ; yes => Going to room Up from current
+ $C44F LD DE,$FF2E   ; -210 = 7 rows higher
  $C452 ADD HL,DE     ;
  $C453 LD A,$EA      ;
  $C455 CP (HL)       ;
- $C456 JR Z,$C495    ;
+ $C456 JR Z,$C495    ; => Object procedure
  $C458 LD A,$FF      ;
  $C45A CP (HL)       ;
- $C45B JR Z,$C495    ;
+ $C45B JR Z,$C495    ; => Object procedure
  $C45D LD HL,$9C40   ; Ninja Y address
- $C460 DEC (HL)      ;
+ $C460 DEC (HL)      ; one row up
  $C461 LD HL,($9C42) ; get Ninja position in tilemap
- $C464 LD DE,$FFE2   ;
+ $C464 LD DE,$FFE2   ; -30
 ; This entry point is used by the routine at #R$C498.
 *$C467 ADD HL,DE     ;
  $C468 LD ($9C42),HL ; set Ninja position in tilemap
@@ -7651,10 +7649,10 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C46E INC A         ; invert direction
  $C46F AND $01       ;
  $C471 LD ($7239),A  ; set Ninja direction
- $C474 JP $B8D0      ;
+ $C474 JP $B8D0      ; => Object procedure
 ; Check if DOWN pressed
-*$C477 BIT 2,A       ;
- $C479 JR Z,$C495    ;
+*$C477 BIT 2,A       ; check DOWN bit
+ $C479 JR Z,$C495    ; => Object procedure
 ; Pressed DOWN
  $C47B LD A,($9C40)  ; get Ninja Y
  $C47E CP $0A        ;
@@ -7668,7 +7666,7 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C48F DEC HL        ;
  $C490 CALL $C392    ;
  $C493 JR Z,$C498    ; => Move down one tile
-*$C495 JP $B8D0      ;
+*$C495 JP $B8D0      ; => Object procedure
 
 ; Move DOWN one tile
 ;
@@ -7676,25 +7674,26 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
 c$C498 LD HL,$9C40   ; Ninja Y address
  $C49B INC (HL)      ; one tile down
  $C49C LD HL,($9C42) ; get Ninja position in tilemap
- $C49F LD DE,$001E   ;
- $C4A2 JR $C467      ;
+ $C49F LD DE,$001E   ; +30
+ $C4A2 JR $C467      ; => set Ninja position = HL, invert direction, Object
+                     ; procedure
 
 ; Routine at C4A4
 c$C4A4 LD A,($7239)  ;
 
 ; ?? Movement handler
-c$C4A7 LD HL,$7343   ;
- $C4AA DEC (HL)      ;
- $C4AB JP NZ,$B8D0   ;
+c$C4A7 LD HL,$7343   ; counter address
+ $C4AA DEC (HL)      ; decrease counter
+ $C4AB JP NZ,$B8D0   ; => Object procedure
  $C4AE LD HL,($9C42) ; get Ninja position in tilemap
- $C4B1 LD DE,$6DC9   ;
+ $C4B1 LD DE,$6DC9   ; value for right dir = $6D88 (Tile screen 4) + 65
  $C4B4 LD A,($7239)  ; get Ninja direction
- $C4B7 CP $01        ;
+ $C4B7 CP $01        ; direction = right?
  $C4B9 JR Z,$C4BE    ;
- $C4BB LD DE,$6DC4   ;
+ $C4BB LD DE,$6DC4   ; value for left dir = $6D88 (Tile screen 4) + 60
 *$C4BE ADD HL,DE     ;
  $C4BF LD A,(HL)     ;
- $C4C0 INC A         ;
+ $C4C0 INC A         ; = $FF ?
  $C4C1 JR Z,$C4D0    ;
  $C4C3 LD A,$09      ;
  $C4C5 LD ($7346),A  ;
@@ -7703,38 +7702,38 @@ c$C4A7 LD HL,$7343   ;
  $C4CD CALL $B4DE    ; Increase PAY value by 500 - Guard killed by punch/kick
 ; This entry point is used by the routine at #R$C339.
 *$C4D0 LD HL,$C4DE   ; Movement handler address
- $C4D3 LD DE,$D4B0   ; Sprite Ninja/Guard jumping 1
+ $C4D3 LD DE,$D4B0   ; Sprite Ninja/Guard jumping
  $C4D6 LD A,$01      ;
  $C4D8 LD ($7343),A  ; set counter = 1
  $C4DB JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; ?? Movement handler
-c$C4DE LD HL,$7343   ;
- $C4E1 DEC (HL)      ;
- $C4E2 JP NZ,$B8D0   ;
+c$C4DE LD HL,$7343   ; counter address
+ $C4E1 DEC (HL)      ; decrease counter
+ $C4E2 JP NZ,$B8D0   ; => Object procedure
  $C4E5 JP $C226      ; => Ninja standing
 
 ; Routine at C4E8
 ;
 ; Used by the routines at #R$BF7B and #R$C24B.
-c$C4E8 CALL $C57B    ;
+c$C4E8 CALL $C57B    ; Check for ??
  $C4EB RET NZ        ;
  $C4EC POP HL        ;
  $C4ED LD HL,$C4F6   ; Movement handler address
- $C4F0 LD DE,$D5AC   ;
+ $C4F0 LD DE,$D5AC   ; Sprite Ninja jumping 3
  $C4F3 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Movement handler (used in initial room)
-c$C4F6 CALL $C57B    ;
+c$C4F6 CALL $C57B    ; Check for ??
  $C4F9 JP Z,$C504    ;
  $C4FC LD B,$03      ;
  $C4FE CALL $9DD9    ; Decrease Energy by B
  $C501 JP $C226      ; => Ninja standing
 *$C504 LD HL,$C50D   ; Movement handler address
- $C507 LD DE,$D5D6   ;
+ $C507 LD DE,$D5D6   ; Sprite Ninja jumping 4
  $C50A JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
-; Routine at C50D
+; Movement handler ??
 c$C50D LD A,($7239)  ; get Ninja direction
  $C510 CP $00        ;
  $C512 LD HL,$9C41   ; Ninja X address
@@ -7746,10 +7745,10 @@ c$C50D LD A,($7239)  ; get Ninja direction
  $C51E LD HL,($9C42) ; get Ninja position in tilemap
  $C521 DEC HL        ;
  $C522 LD ($9C42),HL ; set Ninja position in tilemap
-*$C525 CALL $C57B    ;
+*$C525 CALL $C57B    ; Check for ??
  $C528 JR NZ,$C533   ;
- $C52A LD HL,$7343   ;
- $C52D DEC (HL)      ;
+ $C52A LD HL,$7343   ; counter address
+ $C52D DEC (HL)      ; decrease counter
  $C52E JP NZ,$C16E   ;
  $C531 JR $C538      ;
 *$C533 LD B,$04      ;
@@ -7777,8 +7776,8 @@ c$C50D LD A,($7239)  ; get Ninja direction
  $C55F ADD HL,DE     ;
  $C560 EX DE,HL      ;
  $C561 DJNZ $C53D    ;
- $C563 LD HL,$C5A0   ; Movement handler address
- $C566 LD DE,$D5AC   ;
+ $C563 LD HL,$C5A0   ; Movement handler: switch Ninja to standing
+ $C566 LD DE,$D5AC   ; Sprite Ninja jumping 3
  $C569 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 *$C56C CP $18        ;
  $C56E JP Z,$C2FA    ; => Going to room at Right
@@ -7803,7 +7802,7 @@ c$C57B LD A,($7239)  ; get Ninja direction
  $C58A LD DE,$6590   ; Tile screen 0 start address
  $C58D ADD HL,DE     ;
  $C58E LD BC,$0400   ;
- $C591 LD DE,$001E   ;
+ $C591 LD DE,$001E   ; +30
  $C594 LD A,$64      ;
 *$C596 CP (HL)       ;
  $C597 JR NC,$C59A   ;
@@ -7811,10 +7810,10 @@ c$C57B LD A,($7239)  ; get Ninja direction
 *$C59A ADD HL,DE     ;
  $C59B DJNZ $C596    ;
  $C59D XOR A         ;
- $C59E CP C          ;
+ $C59E CP C          ; now Z=0: falling, Z=1: not falling
  $C59F RET           ;
 
-; Ninja standing (redirect)
+; Switch Ninja to standing (redirect)
 c$C5A0 JP $C226      ; => Ninja standing
 
 ; Check for falling
@@ -7841,17 +7840,17 @@ c$C5A3 LD HL,($9C42) ; get Ninja position in tilemap
  $C5C4 CP C          ;
  $C5C5 RET           ;
 
-; Movement handler, Ninja falling
+; Movement handler: Ninja falling down
 c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5C9 LD DE,$001E   ; +30
- $C5CC ADD HL,DE     ;
+ $C5CC ADD HL,DE     ; one tile-line lower
  $C5CD LD ($9C42),HL ; set Ninja position in tilemap
  $C5D0 LD HL,$755B   ;
- $C5D3 INC (HL)      ;
+ $C5D3 INC (HL)      ; increase falling counter
  $C5D4 LD HL,$9C40   ; Ninja Y address
- $C5D7 INC (HL)      ;
+ $C5D7 INC (HL)      ; increase Ninja Y
  $C5D8 LD A,(HL)     ;
- $C5D9 CP $0A        ;
+ $C5D9 CP $0A        ; at room bottom?
  $C5DB JR Z,$C604    ; => Going to room Down from current
  $C5DD LD HL,($9C42) ; get Ninja position in tilemap
  $C5E0 LD DE,$6664   ;
@@ -7861,16 +7860,17 @@ c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5E7 JR C,$C5EE    ;
  $C5E9 INC HL        ;
  $C5EA CP (HL)       ;
- $C5EB JP NC,$B8D0   ;
+ $C5EB JP NC,$B8D0   ; => Object procedure
+; Ninja hit somehting after falling
 *$C5EE LD A,$01      ;
  $C5F0 LD ($A39E),A  ;
- $C5F3 LD HL,$755B   ;
- $C5F6 LD B,(HL)     ;
- $C5F7 LD (HL),$00   ;
+ $C5F3 LD HL,$755B   ; falling counter address
+ $C5F6 LD B,(HL)     ; get counter value
+ $C5F7 LD (HL),$00   ; clear falling counter
  $C5F9 CALL $9DD9    ; Decrease Energy by B
  $C5FC LD B,$32      ;
  $C5FE CALL $B59E    ;
- $C601 JP $BFCC      ;
+ $C601 JP $BFCC      ; => Ninja sitting now
 
 ; Going to room Down from current
 ;
@@ -7913,11 +7913,9 @@ c$C623 LD A,$0A      ;
 ; Ninja falling
 ;
 ; Used by the routines at #R$BC55, #R$C1B6 and #R$C24B.
-c$C643 LD HL,$C5C6   ;
+c$C643 LD HL,$C5C6   ; Movement handler address: Ninja falling
  $C646 LD DE,$D582   ; Sprite Ninja falling
-
-; Routine at C649
-c$C649 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
+ $C649 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; Room #R$791E (room with pier) initialization
 c$C64C LD HL,$C65A   ;
@@ -7926,7 +7924,7 @@ c$C64C LD HL,$C65A   ;
  $C655 LDIR          ;
  $C657 JP $B724      ; => Finish room initialization
 
-; Data block at C65A
+; ?? Data for room with pier
 b$C65A DEFB $E3,$E3,$E3,$F6,$F6,$E3,$E3,$E3
  $C662 DEFB $F6,$F6,$E3,$E3,$E3,$E3,$E3,$E3
  $C66A DEFB $E3
@@ -7960,12 +7958,12 @@ c$C681 LD HL,$9A1E   ;
  $C69E ADD HL,DE     ;
  $C69F DEC C         ;
  $C6A0 JR NZ,$C697   ;
- $C6A2 JP $B724      ;
+ $C6A2 JP $B724      ; => Finish room initialization
 
 ; Room 7C9C procedure (tunnel Train)
 c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6A8 CP $0C        ;
- $C6AA JP NZ,$B937   ;
+ $C6AA JP NZ,$B937   ; => Standard room procedure
  $C6AD LD A,$4B      ;
  $C6AF LD ($7343),A  ; set counter = 75
  $C6B2 LD DE,($9C42) ; get Ninja position in tilemap
@@ -7988,7 +7986,7 @@ c$C6A5 LD A,($9C41)  ; get Ninja X
  $C6D5 LD DE,$D486   ; Sprite Ninja/Guard standing
  $C6D8 LD ($7186),DE ; set Ninja sprite
  $C6DC LD ($B8CE),HL ;
- $C6DF JP $B937      ;
+ $C6DF JP $B937      ; => Standard room procedure
 
 ; ?? Movement handler (B8CE handler): moving Train ??
 c$C6E2 LD B,$02      ;
@@ -8007,10 +8005,10 @@ c$C6E2 LD B,$02      ;
  $C6FB LD (HL),$01   ;
  $C6FD LD BC,$001D   ;
  $C700 LDIR          ;
- $C702 LD HL,$7343   ;
- $C705 DEC (HL)      ;
+ $C702 LD HL,$7343   ; counter address
+ $C705 DEC (HL)      ; decrease counter
  $C706 JP Z,$C226    ; => Ninja standing
- $C709 JP $B8D0      ;
+ $C709 JP $B8D0      ; => Object procedure
 
 ; ?? Movement handler (B8CE handler): something in Train
 c$C70C LD B,$02      ;
@@ -8617,7 +8615,7 @@ b$D3DE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d3de.png"
  $D49E DEFB $FF,$0A,$0B,$0C,$0D,$FF ;
  $D4A4 DEFB $FF,$FF,$0E,$0F,$10,$FF ;
  $D4AA DEFB $FF,$FF,$11,$FF,$12,$FF ; }
-; Sprite Ninja/Guard jumping 1
+; Sprite Ninja/Guard jumping
  $D4B0 DEFB $FF,$FF,$13,$14,$FF,$FF ; {#HTML[<img src="images/sprite-d4b0.png"
  $D4B6 DEFB $FF,$15,$16,$17,$FF,$FF ; />]
  $D4BC DEFB $FF,$18,$19,$1A,$FF,$FF ;
@@ -8625,7 +8623,7 @@ b$D3DE DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-d3de.png"
  $D4C8 DEFB $FF,$FF,$1E,$1F,$FF,$FF ;
  $D4CE DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
  $D4D4 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; }
-; Sprite Ninja/Guard jumping 2
+; Sprite Ninja/Guard jump-kick
  $D4DA DEFB $FF,$FF,$20,$21,$FF,$FF ; {#HTML[<img src="images/sprite-d4da.png"
  $D4E0 DEFB $4D,$22,$23,$FF,$FF,$FF ; />]
  $D4E6 DEFB $4E,$24,$25,$26,$27,$2C ;

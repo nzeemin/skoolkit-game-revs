@@ -32,7 +32,7 @@ b $62DB Title picture (two ninjas), RLE encoded
 B $62DB,,8 #HTML[<img src="images/title.png" />]
 B $658F,1,1
 b $6590 Tile screen 0 30x17 tiles, 510 bytes - background
-B $6590,,30
+C $6590
 T $65E7
 T $65F2
 b $678E Tile screen 1 30x17 tiles, 510 bytes - update flags
@@ -61,7 +61,7 @@ B $71BB,8,2 Block 2x4 tiles
 b $71C3 Current Guard data
 W $71C3,2,2 Current Guard position in tilemap
 B $71C5,1,1 Current Guard X position
-B $71C6,1,1 Current Guard X position
+B $71C6,1,1 Current Guard Y position
 b $71C7
 b $71CB Current Dog data, 9 bytes
 B $71CD,1,1 Dog direction
@@ -99,7 +99,7 @@ W $733F,2,2 Sprite Ninja/Guard walking 3
 W $7341,2,2 Sprite Ninja/Guard walking 4
 b $7343
 B $7343,1,1 Counter used in movement handlers
-B $7344,1,1
+B $7344,1,1 ?? flag 0 / 1 ?? something with Dog
 B $7345,1,1
 B $7346,1,1 Guard walking phase ??
 B $7347,1,1 Guard direction
@@ -218,6 +218,7 @@ C $74C3,3 Energy address
 C $74C6,1 Decrease Energy
 c $74CD Draw NEAR/HELD item
 C $74CD,2 !!MUT-ARG!! item number
+C $7501,3 28
 b $750B
 w $751B
 W $751B,,8
@@ -225,7 +226,7 @@ b $755B
 B $755B,1,1 Ninja falling count, to decrease Energy on hit
 b $755C
 c $7918 Room procedure (for 19 rooms with a guard)
-c $791B Rooms 7C9C/92EF initialization
+c $791B Rooms #R$7C9C/#R$92EF initialization
 b $791E Room 791E (room with pier)
 W $791E,2,2 Room procedure
 W $7920,2,2 Initialization
@@ -1097,8 +1098,9 @@ C $9D2E,3 Sprite Dog 3
 C $9D37,3 Tile screen 3 start address
 C $9D3B,3 !!MUT-ARG!! current Dog sprite address
 C $9D40,3 get Dog direction
+C $9D51,3 26
 C $9D58,3 Set update flags for Dog, 4x3 tiles
-c $9D5C Set update flags for Dog
+c $9D5C Set update flags for Dog, 4x3 tiles
 C $9D61,3 Tile screen 1 start address
 c $9D75 ?? something about Dog
 C $9D89,2 => Set update flags for Dog, and RET
@@ -1284,7 +1286,7 @@ C $A186,2 Initialize a turret, then Standard room initialization
 c $A188 Room #R$968A initialization
 C $A188,3 Turret data address
 C $A18B,2 Initialize a turret, then Standard room initialization
-c $A18D
+c $A18D Finish Room #R$97A6 initialization
 C $A18D,3 Turret data address
 C $A190,2 Initialize a turret, then Standard room initialization
 c $A192 Room #R$9A9A initialization
@@ -1303,7 +1305,7 @@ c $A1A6 Room #R$7C2E initialization
 C $A1A6,3 Dog data address
 C $A1A9,3 Initialize a dog
 C $A1AC,3 Guard data address
-c $A1AF
+c $A1AF Finish room initialization
 C $A1AF,3 Initialize a guard
 C $A1B2,3 Standard room initialization
 c $A1B5 Room #R$7F9C initialization
@@ -1326,7 +1328,7 @@ C $A1D6,3 Dog data address
 C $A1D9,3 Initialize a dog
 C $A1DC,3 Guard data address
 C $A1DF,2 Initialize a guard, then Standard room initialization
-b $A1E1 Guards data, ?? records, 6 bytes each
+b $A1E1 Guards data, 24 records, 6 bytes each
 B $A1E1,6,6 Room 94AB guard
 B $A1E7,6,6 Room 7DA9 guard
 B $A1ED,6,6 Room 7E8C guard
@@ -1346,11 +1348,11 @@ B $A23B,6,6 Room 9F7E guard
 B $A241,6,6 Room 9EB8 guard
 B $A247,6,6 Room 9B19 guard
 B $A24D,6,6 Room 9DF5 guard
-B $A253,6,6
-B $A259,6,6
-B $A25F,6,6
-B $A265,6,6
-B $A26B,6,6
+B $A253,6,6 Room 7C2E guard
+B $A259,6,6 Room 7F9C guard
+B $A25F,6,6 Room 8162 guard
+B $A265,6,6 Room 80A7 guard
+B $A26B,6,6 Room 9B9D guard
 b $A271 Dogs data, 19 records, 10 bytes each
 N $A271 +$02: Dog direction
 N $A271 +$03: Dog X position
@@ -1429,22 +1431,26 @@ b $A393
 B $A3B4,1,1 ??
 c $A3B5 ?? something about Ninja and Guard
 C $A3B5,3 get Ninja Y
+C $A3B8,3 Current Guard Y position address
 C $A3C8,3 Sprite Ninja/Guard punching
 C $A3CB,3 set Guard sprite
 C $A3CE,3 => Draw Guard on tilemap
 c $A3D1 ?? something about Ninja and Guard
 C $A3D1,3 get Ninja Y
+C $A3D4,3 Current Guard Y position address
 C $A3E5,3 Sprite Ninja/Guard punching
 C $A3E8,3 set Guard sprite
 C $A3EB,3 => Draw Guard on tilemap
 c $A3EE ?? something about Ninja and Guard
 C $A3EE,3 get Ninja Y
+C $A3F1,3 Current Guard Y position address
 C $A3F6,3 get Current Guard position in tilemap
 C $A40F,3 Sprite Ninja/Guard jumping
 C $A412,3 set Guard sprite
 C $A415,3 => Draw Guard on tilemap
 c $A418 ?? something about Ninja and Guard
 C $A418,3 get Ninja Y
+C $A41B,3 Current Guard Y position address
 C $A42B,3 Sprite Ninja/Guard punching
 C $A42E,3 set Guard sprite
 C $A431,3 => Draw Guard on tilemap
@@ -1461,6 +1467,8 @@ C $A4CA,3 Decrease Energy by B
 C $A4ED,3 Sprite Ninja/Guard standing
 C $A4F0,3 set Guard sprite
 C $A4FD,3 get Guard direction
+C $A500,2 left?
+C $A508,3 65
 C $A533,3 Sprite Ninja/Guard standing
 C $A536,3 set Guard sprite
 C $A539,3 Ninja Y address
@@ -1500,16 +1508,19 @@ N $A6FF Draw Guard on tilemap
 C $A703,3 get Guard direction
 C $A70E,3 !!MUT-ARG!! current Ninja/Guard sprite address
 C $A716,3 Translate Ninja tile A into Guard tile
+C $A720,3 36
 C $A728,3 Tile screen 4 start address
 C $A72C,4 get Guard sprite address
 C $A735,3 Translate Ninja tile A into Guard tile
+C $A73F,3 24
 b $A747
 t $A752
 b $A759
 c $A75B Set update flags for Guard, 6x7 tiles
 C $A75B,4 get Current Guard position in tilemap
 C $A75F,3 Tile screen 1 start address
-c $A775 Translate Ninja tile A into Guard tile, using $A787 table
+C $A763,3 24
+c $A775 Translate Ninja tile A into Guard tile, using #R$A787 table
 b $A787 Table used to translate Ninja tiles to Guard tiles
 B $A787,38,8
 b $A7AD Pictures of NEAR/HELD items, 32x24px each
@@ -1572,23 +1583,28 @@ C $AF49,3 Print string "YOU ARE ONE OF"
 C $AF51,3 Print string " OUR TEN BEST"
 C $AF59,3 Print string "NINJA SABOTEURS."
 C $AF61,3 Print string "ENTER YOUR NAME..."
+C $AF6B,3 address of string 10 spaces
 C $AF6E,3 Print string
+C $AF7B,3 address of string 10 spaces
 C $AF85,3 clear LASTK
 C $AF89,3 get LASTK
 c $AF9C
 C $AFAD,3 Print string
+C $AFC0,3 KEY-SCAN
 C $AFED,3 Pay value text address
+C $AFF9,3 address of string 10 spaces
 c $B005 Print table of records
 C $B014,3 Print string
 C $B01A,3 Print string
 C $B023,3 Print string
 C $B029,3 Print string
+C $B02E,3 +14
 c $B040
 C $B04D,3 Print string
 t $B061
 t $B066 Table of records
 T $B066,130,13
-t $B0E8
+t $B0E8 String 10 spaces
 t $B0F2
 T $B101
 T $B10F
@@ -1664,6 +1680,9 @@ c $B32A ?? Object procedure
 c $B334 ?? Object procedure
 c $B33E ?? Object procedure
 c $B348 ?? Object procedure
+C $B353,3 28
+C $B365,3 => Object procedure
+C $B36E,3 => Finish Room 97A6 initialization
 c $B368 Room #R$97A6 initialization
 c $B371
 c $B38F Room token #00: Barrel, 3x3 tiles #R$7C21; params: 2 bytes (address)
@@ -1683,7 +1702,7 @@ C $B41B,3 set Guard direction
 c $B41F Standard room procedure (for 63 rooms)
 c $B422 Standard room initialization (for 60 rooms)
 C $B422,3 => Finish room initialization
-c $B425 Rooms 7C9C/92EF initialization (redirect from #R$791B)
+c $B425 Rooms #R$7C9C/#R$92EF initialization (redirect from #R$791B)
 C $B425,3,3 Guard data address
 C $B428,3,3 Initialize a guard
 C $B42B,3 => Finish room initialization
@@ -1692,7 +1711,7 @@ C $B42E,3,3 Dog data address
 C $B431,3,3 Initialize a dog
 C $B434,3 => Finish room initialization
 b $B437
-c $B446 Room B513 procedure (initial Room)
+c $B446 Room #R$B513 procedure (initial Room)
 C $B446,3 Processing in the initial room
 C $B449,3 Standard room procedure
 c $B44C Room procedure (for 19 rooms with a guard) (redirect from #R$7918)
@@ -1733,10 +1752,13 @@ b $B4DD
 B $B4DD,1,1 Turret counter 50..0
 c $B4DE Increase PAY value by B * 100
 C $B4DE,3 PAY value 3rd digit address
+C $B4E1,2 ':' = '9' + 1
+C $B4E8,2 '0'
+C $B4EA,1 previous digit
 C $B4EF,3 Pay value text address
 C $B4F2,2 five digits
 C $B4F4,3 Screen address
-C $B4F7,3 => Print string
+C $B4F7,3 => Print string, and RET
 c $B4FA Processing in initial room - the boat moving
 b $B513 Room B513: Initial Room
 W $B513,2,2 Room procedure
@@ -1748,6 +1770,9 @@ B $B51F,19 #HTML[<img src="images/rooms/B513.png" />]
 c $B532 Movement handler for initial room (B8CE handler)
 C $B535,1 increase Ninja position in tilemap
 C $B539,3 Ninja X address
+C $B540,3 Boat sprite address
+C $B546,2 copy Boat sprite
+C $B56B,2 delay
 C $B570,3 counter address
 C $B573,1 decrease counter
 C $B574,3 => Object procedure
@@ -1758,14 +1783,24 @@ C $B587,3 Sprite Ninja jumping 3
 C $B58A,3 Movement handler address
 C $B592,3 Set movement handler = HL, Ninja sprite = DE
 C $B58F,3 set counter = 4
-s $B595
+b $B595
 c $B596
 b $B59B
 c $B59E
-b $B5A7
+b $B5A7 Boat sprite for initial room
 B $B5A7
 B $B5A8
 w $B5B0 Table of addresses for NEAR/HELD items
+W $B5B0,2,2 #0 Nothing
+W $B5B2,2,2 #1 Shuriken
+W $B5B4,2,2 #2 Knife
+W $B5B6,2,2 #3 ??
+W $B5B8,2,2 #4 Brick
+W $B5BA,2,2 #5 Pipe
+W $B5BC,2,2 #6 Granade
+W $B5BE,2,2 #7 Disk
+W $B5C0,2,2 #8 Bomb
+W $B5C2,2,2 #9 Console
 b $B5C4
 B $B5C4,1,1
 B $B5C5,1,1 Ninja standing counter
@@ -1873,6 +1908,7 @@ C $B7AC,3 Print string
 C $B7C7,3 Print string "BOMB"
 C $B7CA,3 !!MUT-ARG!! "99"
 C $B7CD,3 set Indicator Time value
+C $B7D8,3 28
 C $B7EA,3 Increase PAY value by 5000
 C $B7ED,3 Tile screen 1 start address
 C $B7F2,3 510 - 1
@@ -1895,6 +1931,11 @@ W $B84D,2,2 ??
 B $B84F,1,1 NEAR item
 B $B850,1,1 ?? HELD item tile ??
 c $B851
+C $B851,2 35 objects
+C $B853,3 7 = size of record in Table of Objects
+C $B856,4 = #R$D256 (address for Table of Objects) + 3
+C $B867,2 next record
+C $B869,2 continue the loop
 c $B86C
 c $B889
 C $B891,3 NEAR item address
@@ -1951,6 +1992,7 @@ N $BC0D Prepare screen background for title picture
 C $BC0D,3 !!MUT-ARG!!
 N $BC38 Show title picture
 C $BC38,3,3 Show title picture (two ninjas)
+C $BC48,3 address of string 10 spaces
 c $BC55 Movement handler: Ninja standing
 C $BC5D,3 get Energy
 C $BC70,3 Decrease Energy by B
@@ -2421,7 +2463,7 @@ C $C652,3 17
 C $C655,2 copy bytes to Background
 C $C657,3 => Finish room initialization
 b $C65A Data for room with pier
-b $C66B
+b $C66B Guard data for rooms #R$7C9C/#R$92EF
 c $C671 Room #R$93DF/#R$947C (room right from Train) initialization
 C $C671,3 room #R$947C at left of Train 1
 C $C674,3 set "room to left" for room #R$7C9C
@@ -2434,6 +2476,7 @@ C $C684,3 set "room to left" for room #R$7C9C
 C $C687,3 room #R$982B at right of Train 2
 C $C68A,3 set "room to right" for room #R$7C9C
 C $C68D,2 tile for "2" sign
+N $C68F Fill 3x3 block with tile for "1"/"2" sign
 c $C6A5 Room 7C9C procedure (tunnel Train)
 C $C6A2,3 => Finish room initialization
 C $C6A5,3 get Ninja X
@@ -2813,6 +2856,7 @@ B $D1FE,3
 T $D201
 B $D20E
 b $D210
+B $D210,70,10
 b $D256 Table ?? objects, 35 records, 7-byte records
 W $D256,2,2 Object ?? 00
 B $D258,3,3
@@ -3131,11 +3175,13 @@ W $E2A5,2,2
 c $E2A7 Start Mission
 C $E2A7,3 Unhighlight Menu item
 C $E2AA,3 Clear strings on the screen
+C $E2AD,3 "ENTER SKILL LEVEL"
 C $E2B5,3 Print string "ENTER SKILL LEVEL"
 C $E2BD,3 Print string "1 TO 9"
 C $E2D3,3 get LASTK
 C $E2DE,3 Skill level address
 C $E2E7,3 Print string
+C $E2F7,3 Clear strings on the screen
 C $E302,3 Print string "YOUR MISSION"
 C $E30A,3 Print string "WILL BE"
 C $E30D,3 get Skill level
@@ -3210,13 +3256,19 @@ B $E43B
 W $E43C,4,2
 c $E440
 b $E494
-b $E700 Tiles with mask, 256 tiles, 16 bytes each
-N $E700 Used for Ninja on Tile Screen 2, and for Guard on Tile Screen 4
+C $E45F,3 BEEPER
+b $E700 Ninja/Guard tiles, tiles with mask, 159 tiles, 16 bytes each
+N $E700 Used to draw Ninja tiles on Tile Screen 2 (see #R$B1A3), and Guard tiles on Tile Screen 4 (see #R$B230).
 N $E700 #HTML[<img src="images/tiles-e700.png" />]
 B $E700,,16
-b $F700 Background tiles, 69 tiles, 9 bytes each
+b $F0F0 Dog tiles, tiles with mask, 61 tiles, 16 bytes each
+N $F0F0 Used to draw tiles from Tile screen 3, see #R$B1FC.
+B $F0F0,,16
+b $F700 Background tiles, 59 tiles, 9 bytes each
+N $F700 Used to draw background level, see #R$B177.
 N $F700 #HTML[<img src="images/backtiles.png" />]
-B $F700,621,9
+B $F700,531,9
+c $F913
 c $F973 Room #R$84A8 initialization
 c $F9A1
 b $F98F
@@ -3226,10 +3278,12 @@ C $F9C5,3 Read Input
 C $F9CD,3 get Input bits
 C $F9D8,3 clear LASTK
 C $F9DC,3 get LASTK
-b $F9E4
+c $F9E4
 c $F9E7
 c $F9F9
 c $FA11
 c $FA28
 c $FA31
 b $FA3A
+b $FFF7 Background tile $FF
+B $FFF7,9,9

@@ -734,7 +734,7 @@ c$74CD LD A,$00      ; !!MUT-ARG!! item number
  $74CF LD H,$00      ;
  $74D1 LD L,A        ;
  $74D2 ADD HL,HL     ;
- $74D3 LD DE,$B5B0   ;
+ $74D3 LD DE,$B5B0   ; !!MUT-ARG!! address for Table of items
  $74D6 ADD HL,DE     ;
  $74D7 LD E,(HL)     ;
  $74D8 INC HL        ;
@@ -3682,7 +3682,7 @@ b$A022 DEFW $B41F                           ; Room procedure
  $A0A7 DEFB $94,$00,$0D,$94,$9C,$9B,$93,$92
  $A0AF DEFB $00,$00,$0D,$0D,$93,$92
 
-; Sprite Ninja dead, 6x7 tiles
+; Sprite Ninja/Guard dead, 6x7 tiles
 b$A0B5 DEFB $FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[<img src="images/sprite-a0b5.png"
  $A0BB DEFB $FF,$FF,$FF,$FF,$FF,$FF ; />]
  $A0C1 DEFB $FF,$FF,$FF,$FF,$FF,$FF ;
@@ -5422,7 +5422,7 @@ c$B2E8 PUSH BC       ;
  $B2FC RET           ;
 
 ; Data block at B2FD
-b$B2FD DEFB $C3
+b$B2FD DEFB $C3      ; Counter for Ninja/Guard head tile change
 
 ; Exchange $7239 (Ninja direction) and $71CD (dog direction)
 ;
@@ -5499,7 +5499,7 @@ c$B368 LD A,($97D0)  ;
  $B36B LD ($66F5),A  ;
  $B36E JP $A18D      ; => Finish Room 97A6 initialization
 
-; Routine at B371
+; Play melody ??; HL = melody address
 ;
 ; Used by the routine at #R$BC55.
 c$B371 DI            ;
@@ -5848,7 +5848,7 @@ c$B59E DEC C         ;
 b$B5A7 DEFB $FF
  $B5A8 DEFB $67,$68,$6A,$6A,$6A,$6A,$6A,$6B
 
-; Table of addresses for NEAR/HELD items
+; Table of items: addresses for NEAR/HELD items
 w$B5B0 DEFW $A7AD    ; #0 Nothing
  $B5B2 DEFW $A819    ; #1 Shuriken
  $B5B4 DEFW $A885    ; #2 Knife
@@ -5878,7 +5878,7 @@ c$B5C7 CALL $AC44    ;
  $B5DC LD ($9DD9),A  ; set command = PUSH BC = enable Energy decrease
  $B5DF LD HL,$BEAA   ;
  $B5E2 LD ($9DED),HL ;
- $B5E5 LD HL,$B8D0   ;
+ $B5E5 LD HL,$B8D0   ; Object procedure address
  $B5E8 LD ($D285),HL ;
  $B5EB LD ($B366),HL ;
  $B5EE LD A,$30      ;
@@ -5893,16 +5893,16 @@ c$B5C7 CALL $AC44    ;
  $B600 LD ($B5C6),A  ;
  $B603 LD ($B850),A  ;
  $B606 LD ($D48E),A  ;
- $B609 OUT ($FE),A   ;
+ $B609 OUT ($FE),A   ; set border black, sound off
  $B60B INC A         ;
- $B60C LD ($D48F),A  ;
+ $B60C LD ($D48F),A  ; set head tile for Ninja/Guard standing sprite
  $B60F LD ($7239),A  ; set Ninja direction = 1 = right
  $B612 LD ($B84F),A  ; set NEAR item
  $B615 LD HL,$70D0   ;
  $B618 LD ($B53E),HL ;
- $B61B LD HL,$B5B0   ;
+ $B61B LD HL,$B5B0   ; address for Table of items
  $B61E LD ($74D4),HL ;
- $B621 CALL $B851    ;
+ $B621 CALL $B851    ; Set initial data in Table of Objects
  $B624 LD HL,$0000   ;
  $B627 LD ($B674),HL ; set current Dog data address = no dog
  $B62A LD ($B696),HL ; set current Guard data address = no guard
@@ -6129,7 +6129,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B7BB CP (HL)       ;
  $B7BC JR Z,$B7ED    ;
  $B7BE LD (HL),A     ;
- $B7BF LD HL,$BD2F   ;
+ $B7BF LD HL,$BD2F   ; "BOMB"
  $B7C2 LD DE,$50D6   ;
  $B7C5 LD C,$04      ;
  $B7C7 CALL $AED1    ; Print string "BOMB"
@@ -6193,7 +6193,7 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B837 DJNZ $B833    ;
  $B839 JP $B891      ;
 
-; Routine at B83C
+; Increase Energy a bit
 ;
 ; Used by the routine at #R$BC55.
 c$B83C LD A,($749D)  ;
@@ -6211,7 +6211,7 @@ b$B84A DEFW $D2FB    ; ??
  $B84F DEFB $00      ; NEAR item
  $B850 DEFB $C8      ; ?? HELD item tile ??
 
-; Routine at B851
+; Set initial data in Table of Objects
 ;
 ; Used by the routine at #R$B5C7.
 c$B851 LD B,$23      ; 35 objects
@@ -6676,22 +6676,22 @@ c$BBAE LD L,(IX+$01) ;
 c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
  $BBBE LD DE,$678E   ; Tile screen 1 start address
  $BBC1 ADD HL,DE     ;
- $BBC2 LD DE,$0018   ;
+ $BBC2 LD DE,$0018   ; 30
  $BBC5 LD A,$01      ;
  $BBC7 LD B,$07      ;
 *$BBC9 LD C,$06      ;
 *$BBCB LD (HL),A     ;
  $BBCC INC HL        ;
  $BBCD DEC C         ;
- $BBCE JR NZ,$BBCB   ;
- $BBD0 ADD HL,DE     ;
- $BBD1 DJNZ $BBC9    ;
+ $BBCE JR NZ,$BBCB   ; continue by columns
+ $BBD0 ADD HL,DE     ; next row
+ $BBD1 DJNZ $BBC9    ; continue by rows
  $BBD3 RET           ;
 
-; ?? Movement handler
+; Movement handler: Ninja punching
 c$BBD4 CALL $BBDF    ; Read Input
  $BBD7 BIT 4,A       ; check FIRE bit
- $BBD9 JP NZ,$B8D0   ;
+ $BBD9 JP NZ,$B8D0   ; => Object procedure
  $BBDC JP $C226      ; => Ninja standing
 
 ; Read Input
@@ -6727,7 +6727,7 @@ c$BBDF PUSH HL       ;
 *$BC07 DJNZ $BBF3    ;
  $BC09 LD A,C        ;
  $BC0A POP BC        ;
- $BC0B JR $BBE9      ;
+ $BC0B JR $BBE9      ; => store input bits and RET
 
 ; Routine at BC0D
 ;
@@ -6741,13 +6741,13 @@ c$BC0D LD SP,$6257   ; !!MUT-ARG!!
  $BC11 POP HL        ;
  $BC12 EXX           ;
 ; This entry point is used by the routine at #R$F9E7.
-*$BC13 LD HL,$E5DC   ;
- $BC16 LD ($E442),HL ;
+*$BC13 LD HL,$E5DC   ; Melody start address
+ $BC16 LD ($E442),HL ; set melody current address
  $BC19 LD HL,$4000   ;
  $BC1C LD BC,$1000   ;
  $BC1F LD DE,$4001   ;
  $BC22 LD (HL),$00   ;
- $BC24 LDIR          ;
+ $BC24 LDIR          ; clear screen
  $BC26 LD C,$00      ;
 *$BC28 PUSH HL       ;
  $BC29 LD B,$04      ;
@@ -6777,8 +6777,14 @@ c$BC0D LD SP,$6257   ; !!MUT-ARG!!
  $BC52 JP $DF37      ;
 
 ; Movement handler: Ninja standing
-c$BC55 LD HL,$B5C5   ;
- $BC58 DEC (HL)      ;
+;
+; .
+;
+; .
+;
+; Increase Energy if needed
+c$BC55 LD HL,$B5C5   ; Ninja standing counter address
+ $BC58 DEC (HL)      ; decrease counter
  $BC59 JR NZ,$BC76   ;
  $BC5B LD (HL),$02   ;
  $BC5D LD A,($749C)  ; get Energy
@@ -6787,20 +6793,21 @@ c$BC55 LD HL,$B5C5   ;
  $BC64 LD A,($749D)  ;
  $BC67 CP $01        ;
  $BC69 JR Z,$BC76    ;
-*$BC6B CALL $B83C    ;
+*$BC6B CALL $B83C    ; Increase Energy a bit
  $BC6E LD B,$01      ;
  $BC70 CALL $9DD9    ; Decrease Energy by B
- $BC73 CALL $B83C    ;
-*$BC76 LD HL,$B2FD   ;
- $BC79 INC (HL)      ;
+ $BC73 CALL $B83C    ; Increase Energy a bit
+; Move the head if needed
+*$BC76 LD HL,$B2FD   ; address for head movement counter
+ $BC79 INC (HL)      ; increase counter
  $BC7A JR NZ,$BC98   ;
  $BC7C LD (HL),$BE   ;
 *$BC7E LD A,($D48E)  ;
  $BC81 XOR $F4       ;
  $BC83 LD ($D48E),A  ;
  $BC86 LD A,($D48F)  ;
- $BC89 XOR $F4       ;
- $BC8B LD ($D48F),A  ;
+ $BC89 XOR $F4       ; change between $01 and $F5 tiles
+ $BC8B LD ($D48F),A  ; set head tile for Ninja/Guard standing sprite
  $BC8E LD A,($D495)  ;
  $BC91 XOR $F2       ;
  $BC93 LD ($D495),A  ;
@@ -6866,19 +6873,19 @@ c$BC55 LD HL,$B5C5   ;
  $BD0E LD A,B        ;
  $BD0F LD ($BD7A),A  ;
  $BD12 CP $D4        ;
- $BD14 JP NZ,$B8D0   ;
+ $BD14 JP NZ,$B8D0   ; => Object procedure
  $BD17 LD HL,$B5C6   ;
  $BD1A XOR A         ;
  $BD1B CP (HL)       ;
- $BD1C JP NZ,$B8D0   ;
+ $BD1C JP NZ,$B8D0   ; => Object procedure
  $BD1F LD (HL),$01   ;
  $BD21 LD HL,$0190   ;
  $BD24 CALL $B371    ;
  $BD27 LD B,$32      ;
  $BD29 CALL $B4DE    ; Increase PAY value by 5000
- $BD2C JP $B8D0      ;
+ $BD2C JP $B8D0      ; => Object procedure
 
-; Message at BD2F
+; "BOMB" message
 t$BD2F DEFM "BOMB"
 
 ; Routine at BD33
@@ -7017,7 +7024,7 @@ c$BE0D LD HL,$65B1   ;
  $BE28 LD (HL),A     ;
  $BE29 LD HL,$7343   ; counter address
  $BE2C DEC (HL)      ; decrease counter
- $BE2D JP NZ,$B8D0   ;
+ $BE2D JP NZ,$B8D0   ; => Object procedure
  $BE30 LD (HL),$14   ;
  $BE32 LD HL,$675A   ;
  $BE35 LD DE,$6958   ;
@@ -7159,7 +7166,7 @@ c$BF7B LD HL,$6592   ;
  $BF9E JR $BFA5      ;
 *$BFA0 BIT 1,A       ; check LEFT bit
  $BFA2 CALL NZ,$C4E8 ;
-*$BFA5 LD HL,$C339   ;
+*$BFA5 LD HL,$C339   ; Movement handler: Ninja jumping
  $BFA8 LD A,$02      ;
  $BFAA LD ($7343),A  ; set counter = 2
  $BFAD LD DE,$D4B0   ; Sprite Ninja/Guard jumping
@@ -7171,7 +7178,7 @@ c$BF7B LD HL,$6592   ;
 ; #R$C4F6, #R$C50D and #R$C643.
 c$BFB0 LD ($B8CE),HL ;
  $BFB3 LD ($7186),DE ; set Ninja sprite address = DE
- $BFB7 JP $B8D0      ;
+ $BFB7 JP $B8D0      ; => Object procedure
 
 ; Routine at BFBA
 ;
@@ -7182,9 +7189,9 @@ c$BFBA BIT 2,A       ;
  $BFC2 LD DE,$6664   ;
  $BFC5 ADD HL,DE     ;
  $BFC6 CALL $C392    ;
- $BFC9 JP Z,$C12E    ;
+ $BFC9 JP Z,$C12E    ; => Ninja on ladder
 ; This entry point is used by the routine at #R$C5C6.
-*$BFCC LD HL,$C22F   ; Movement handler address
+*$BFCC LD HL,$C22F   ; Movement handler: Ninja sitting
  $BFCF LD DE,$D558   ; Sprite Ninja sitting
  $BFD2 JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
@@ -7303,7 +7310,7 @@ c$C094 LD HL,$7343   ; counter address
  $C0DE JR NZ,$C0A7   ;
  $C0E0 XOR A         ;
  $C0E1 OUT ($FE),A   ;
- $C0E3 JP $B8D0      ;
+ $C0E3 JP $B8D0      ; => Object procedure
 
 ; Data block at C0E6
 b$C0E6 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -7316,7 +7323,7 @@ b$C0E6 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
  $C11E DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
  $C126 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-; Routine at C12E
+; Ninja on ladder
 ;
 ; Used by the routine at #R$BFBA.
 c$C12E LD HL,$C3D9   ; Movement handler for Ninja on ladder
@@ -7432,7 +7439,7 @@ c$C226 LD HL,$BC55   ; Movement handler: Ninja standing
 ; Movement handler (B8CE handler): Ninja sitting
 c$C22F CALL $BBDF    ; Read Input
  $C232 BIT 2,A       ; check DOWN bit
- $C234 JR NZ,$C239   ;
+ $C234 JR NZ,$C239   ; still pressed =>
  $C236 JP $C226      ; DOWN key released => stand up
 *$C239 LD HL,($9C42) ; get Ninja position in tilemap
  $C23C LD DE,$703C   ;
@@ -7443,7 +7450,7 @@ c$C22F CALL $BBDF    ; Read Input
  $C245 CALL Z,$9DD9  ; => Decrease Energy by B
  $C248 JP $C16E      ; => Object procedure
 
-; ?? Movement handler (B8CE handler)
+; Movement handler (B8CE handler): Ninja walking
 c$C24B LD A,($9C41)  ; get Ninja X
  $C24E CP $00        ; at very left?
  $C250 JP Z,$C319    ; => Going to room at Left
@@ -7568,7 +7575,7 @@ c$C319 LD A,$18      ;
  $C333 LD ($7184),HL ; set Current Room address
  $C336 JP $B66A      ; => Current Room changed
 
-; ?? (B8CE handler)
+; Movement handler (B8CE handler): Ninja jumping
 c$C339 LD HL,$7343   ; counter address
  $C33C DEC (HL)      ; decrease counter
  $C33D JP NZ,$B8D0   ; => Object procedure
@@ -7576,8 +7583,8 @@ c$C339 LD HL,$7343   ; counter address
  $C343 LD HL,($9C42) ; get Ninja position in tilemap
  $C346 LD DE,$6592   ;
  $C349 ADD HL,DE     ;
- $C34A CP $00        ; left ?
- $C34C JR NZ,$C361   ;
+ $C34A CP $00        ; direction = left ?
+ $C34C JR NZ,$C361   ; no =>
  $C34E LD A,(HL)     ;
  $C34F CP $0C        ;
  $C351 JR Z,$C3BB    ;
@@ -8180,9 +8187,7 @@ b$C721 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; ' '
  $C8D9 DEFB $00,$52,$52,$52,$56,$56,$7E,$00 ; 'W'
  $C8E1 DEFB $00,$42,$24,$18,$18,$2C,$46,$00 ; 'X'
  $C8E9 DEFB $00,$42,$42,$7E,$18,$18,$18,$00 ; 'Y'
-
-; Data block at C8F1
-b$C8F1 DEFB $00,$7E,$02,$7E,$60,$60,$7E,$00 ; 'Z'
+ $C8F1 DEFB $00,$7E,$02,$7E,$60,$60,$7E,$00 ; 'Z'
 
 ; Data block at C8F9
 b$C8F9 DEFM " "
@@ -8478,7 +8483,7 @@ b$C8F9 DEFM " "
  $D201 DEFM "OD21         "
  $D20E DEFB $54,$B7
 
-; Data block at D210
+; Table of 35 records, 2 bytes each, see #R$B851
 b$D210 DEFB $04,$CE,$09,$63,$09,$63,$09,$63,$09,$63
  $D21A DEFB $09,$63,$09,$63,$09,$D4,$05,$D0,$05,$D0
  $D224 DEFB $05,$D0,$06,$D2,$08,$D6,$02,$CA,$03,$CC
@@ -8508,7 +8513,7 @@ b$D256 DEFW $6F02       ; Object ?? 00
  $D27E DEFW $B33E
  $D280 DEFW $6FE2       ; Object ?? 06
  $D282 DEFB $1F,$09,$63
- $D285 DEFW $B8D0
+ $D285 DEFW $B8D0       ; Standard Object procedure
  $D287 DEFW $6669       ; Object ?? 07
  $D289 DEFB $9C,$09,$D4
  $D28C DEFW $0000
@@ -9022,8 +9027,8 @@ t$DEF8 DEFM "J  KEMPSTON"
 ; Routine at DF37
 ;
 ; Used by the routine at #R$BC0D.
-c$DF37 LD A,$01      ;
- $DF39 OUT ($FE),A   ;
+c$DF37 LD A,$01      ; blue
+ $DF39 OUT ($FE),A   ; set border color, sound off
  $DF3B LD ($5C09),A  ; set REPDEL = 1
  $DF3E LD ($5C0A),A  ; set REPPER = 1
  $DF41 LD A,$08      ;
@@ -9031,8 +9036,8 @@ c$DF37 LD A,$01      ;
  $DF46 CALL $E04D    ;
  $DF49 LD DE,$00D4   ;
 *$DF4C PUSH DE       ;
- $DF4D CALL $E440    ;
- $DF50 CALL $DFD4    ;
+ $DF4D CALL $E440    ; Play next note in melody
+ $DF50 CALL $DFD4    ; Clear LASTK and do RST $38 once
  $DF53 POP DE        ;
  $DF54 LD A,($5C08)  ; get LASTK
  $DF57 CP $00        ;
@@ -9066,8 +9071,8 @@ c$DF60 CALL $DEC1    ; Clear strings on the screen
  $DF91 CALL $DFDB    ; Highlight Menu item
  $DF94 LD DE,$00D4   ;
 *$DF97 PUSH DE       ;
- $DF98 CALL $E440    ;
- $DF9B CALL $DFD4    ;
+ $DF98 CALL $E440    ; Play next note in melody
+ $DF9B CALL $DFD4    ; Clear LASTK and do RST $38 once
  $DF9E POP DE        ;
  $DF9F LD A,($5C08)  ; get LASTK
  $DFA2 CP $61        ;
@@ -9179,8 +9184,8 @@ b$E039 DEFB $EF,$01,$EF,$08,$EF,$10,$F7,$10,$EF,$04 ; Protek ports/bits
 ; Routine at E04D
 ;
 ; Used by the routines at #R$DF37, #R$DF60, #R$E097 and #R$E2A7.
-c$E04D CALL $E440    ;
- $E050 CALL $DFD4    ;
+c$E04D CALL $E440    ; Play next note in melody
+ $E050 CALL $DFD4    ; Clear LASTK and do RST $38 once
  $E053 LD A,($5C08)  ; get LASTK
  $E056 CP $00        ;
  $E058 RET Z         ;
@@ -9244,8 +9249,8 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E0FD DJNZ $E0F9    ;
  $E0FF PUSH DE       ;
 *$E100 PUSH IX       ;
- $E102 CALL $DFD4    ;
- $E105 CALL $E440    ;
+ $E102 CALL $DFD4    ; Clear LASTK and do RST $38 once
+ $E105 CALL $E440    ; Play next note in melody
  $E108 POP IX        ;
  $E10A LD A,($5C08)  ; get LASTK
  $E10D CP $5B        ;
@@ -9295,7 +9300,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E158 DJNZ $E154    ;
  $E15A EXX           ;
  $E15B PUSH HL       ;
- $E15C LD HL,$0020   ;
+ $E15C LD HL,$0020   ; 32
  $E15F ADD HL,DE     ;
  $E160 EX DE,HL      ;
  $E161 POP HL        ;
@@ -9403,8 +9408,8 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2CA LD (HL),A     ;
  $E2CB INC HL        ;
  $E2CC LD (HL),A     ;
-*$E2CD CALL $E440    ;
- $E2D0 CALL $DFD4    ;
+*$E2CD CALL $E440    ; Play next note in melody
+ $E2D0 CALL $DFD4    ; Clear LASTK and do RST $38 once
  $E2D3 LD A,($5C08)  ; get LASTK
  $E2D6 CP $31        ;
  $E2D8 JR C,$E2CD    ;
@@ -9465,7 +9470,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E340 LD E,(HL)     ;
  $E341 INC HL        ;
  $E342 LD D,(HL)     ;
- $E343 LD ($B7CB),DE ; set initial Time value
+ $E343 LD ($B7CB),DE ; set initial Time value for BOMB
  $E347 INC HL        ;
  $E348 LD A,(HL)     ;
  $E349 LD ($97D0),A  ;
@@ -9490,8 +9495,8 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E36F LDIR          ; Copy last 4 bytes: BOMB placement
  $E371 LD DE,$0019   ;
 *$E374 PUSH DE       ;
- $E375 CALL $DFD4    ;
- $E378 CALL $E440    ;
+ $E375 CALL $DFD4    ; Clear LASTK and do RST $38 once
+ $E378 CALL $E440    ; Play next note in melody
  $E37B POP DE        ;
  $E37C LD A,($5C08)  ; get LASTK
  $E37F CP $00        ;
@@ -9584,7 +9589,7 @@ b$E38C DEFB $14,$19,$32
  $E43C DEFW $8608
  $E43E DEFW $6787
 
-; Routine at E440
+; Play next note in melody
 ;
 ; Used by the routines at #R$DF37, #R$DF60, #R$E04D, #R$E097 and #R$E2A7.
 c$E440 LD IX,$E51C   ;
@@ -9626,85 +9631,140 @@ c$E440 LD IX,$E51C   ;
  $E48F LD DE,$0002   ;
  $E492 JR $E468      ;
 
-; Data block at E494
-b$E494 DEFB $AE,$E4,$AE,$E4,$08,$E5,$3A,$E5
- $E49C DEFB $08,$E5,$6C,$E5,$AE,$E4,$AE,$E4
- $E4A4 DEFB $08,$E5,$3A,$E5,$08,$E5,$6C,$E5
- $E4AC DEFB $CA,$E5,$9A,$08,$19,$00,$9A,$08
- $E4B4 DEFB $19,$00,$9A,$08,$31,$00,$8C,$03
- $E4BC DEFB $75,$00,$9A,$08,$19,$00,$8C,$03
- $E4C4 DEFB $75,$00,$9A,$08,$19,$00,$8C,$03
- $E4CC DEFB $75,$00,$3E,$04,$62,$00,$C6,$04
- $E4D4 DEFB $57,$00,$9A,$08,$19,$00,$9A,$08
- $E4DC DEFB $19,$00,$9A,$08,$31,$00,$8C,$03
- $E4E4 DEFB $75,$00,$9A,$08,$19,$00,$8C,$03
- $E4EC DEFB $75,$00,$9A,$08,$19,$00,$8C,$03
- $E4F4 DEFB $75,$00,$3E,$04,$31,$00,$C6,$04
- $E4FC DEFB $2C,$00,$B3,$05,$25,$00,$6A,$06
- $E504 DEFB $21,$00,$00,$FE,$9A,$08,$19,$00
- $E50C DEFB $9A,$08,$19,$00,$9A,$08,$31,$00
- $E514 DEFB $CA,$02,$93,$00,$9A,$08,$19,$00
- $E51C DEFB $CA,$02,$93,$00,$9A,$08,$19,$00
- $E524 DEFB $CA,$02,$93,$00,$9A,$08,$19,$00
- $E52C DEFB $CA,$02,$93,$00,$26,$03,$83,$00
- $E534 DEFB $8C,$03,$75,$00,$00,$FE,$9A,$08
- $E53C DEFB $19,$00,$9A,$08,$19,$00,$9A,$08
- $E544 DEFB $31,$00,$CA,$02,$93,$00,$9A,$08
- $E54C DEFB $19,$00,$CA,$02,$93,$00,$9A,$08
- $E554 DEFB $19,$00,$CA,$02,$93,$00,$26,$03
- $E55C DEFB $41,$00,$8C,$03,$3A,$00,$3E,$04
- $E564 DEFB $31,$00,$C6,$04,$2C,$00,$00,$FE
- $E56C DEFB $9A,$08,$19,$00,$9A,$08,$19,$00
- $E574 DEFB $9A,$08,$31,$00,$CA,$02,$93,$00
- $E57C DEFB $9A,$08,$19,$00,$CA,$02,$93,$00
- $E584 DEFB $9A,$08,$19,$00,$CA,$02,$93,$00
- $E58C DEFB $54,$02,$57,$00,$79,$02,$52,$00
- $E594 DEFB $CA,$02,$49,$00,$26,$03,$41,$00
- $E59C DEFB $54,$02,$57,$00,$C4,$03,$37,$00
- $E5A4 DEFB $3E,$04,$31,$00,$C4,$03,$37,$00
- $E5AC DEFB $57,$03,$3E,$00,$C4,$03,$37,$00
- $E5B4 DEFB $3E,$04,$31,$00,$C6,$04,$2C,$00
- $E5BC DEFB $B3,$05,$25,$00,$6A,$06,$21,$00
- $E5C4 DEFB $A6,$07,$1C,$00,$00,$FE,$9A,$08
- $E5CC DEFB $31,$00,$00,$FF,$00,$FF,$00,$FF
- $E5D4 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$FF
- $E5DC DEFB $00,$FD,$00,$00,$00,$00,$00,$00
- $E5E4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E5EC DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E5F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E5FC DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E604 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E60C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E614 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E61C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E624 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E62C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E634 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E63C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E644 DEFB $00,$00,$FF,$00,$FF,$00,$FF,$00
- $E64C DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E654 DEFB $FF,$01,$FC,$01,$FC,$01,$FC,$01
- $E65C DEFB $FC,$01,$FC,$01,$00,$03,$00,$FF
- $E664 DEFB $00,$FF,$20,$FC,$01,$FC,$01,$FC
- $E66C DEFB $01,$FC,$01,$FC,$01,$FC,$01,$FC
- $E674 DEFB $01,$FC,$01,$20,$00,$FF,$00,$FF
- $E67C DEFB $00,$03,$FC,$01,$FC,$01,$FC,$01
- $E684 DEFB $FC,$01,$FC,$01,$20,$FF,$00,$FF
- $E68C DEFB $00,$FF,$00,$FF,$00,$FF,$00,$00
- $E694 DEFB $00,$00,$FF,$00,$FF,$20,$00,$00
- $E69C DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E6A4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E6AC DEFB $FF,$00,$FF,$00,$00,$FF,$00,$FF
- $E6B4 DEFB $00,$FF,$00,$FF,$00,$FF,$00,$20
- $E6BC DEFB $3F,$80,$3F,$80,$3F,$80,$3F,$80
- $E6C4 DEFB $3F,$80,$00,$C0,$00,$FF,$00,$FF
- $E6CC DEFB $20,$3F,$80,$3F,$80,$3F,$80,$3F
- $E6D4 DEFB $80,$3F,$80,$3F,$80,$3F,$80,$3F
- $E6DC DEFB $80,$20,$00,$FF,$00,$FF,$00,$C0
- $E6E4 DEFB $3F,$80,$3F,$80,$3F,$80,$3F,$80
- $E6EC DEFB $3F,$80,$20,$00,$00,$00,$00,$00
- $E6F4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $E6FC DEFB $00,$00,$00,$00
+; Table for melodies
+w$E494 DEFW $E4AE
+ $E496 DEFW $E4AE
+ $E498 DEFW $E508
+ $E49A DEFW $E53A
+ $E49C DEFW $E508
+ $E49E DEFW $E56C
+ $E4A0 DEFW $E4AE
+ $E4A2 DEFW $E4AE
+ $E4A4 DEFW $E508
+ $E4A6 DEFW $E53A
+ $E4A8 DEFW $E508
+ $E4AA DEFW $E56C
+ $E4AC DEFW $E5CA
+
+; Melodies
+b$E4AE DEFB $9A,$08,$19,$00 ; {Melody
+ $E4B2 DEFB $9A,$08,$19,$00 ;
+ $E4B6 DEFB $9A,$08,$31,$00 ;
+ $E4BA DEFB $8C,$03,$75,$00 ;
+ $E4BE DEFB $9A,$08,$19,$00 ;
+ $E4C2 DEFB $8C,$03,$75,$00 ;
+ $E4C6 DEFB $9A,$08,$19,$00 ;
+ $E4CA DEFB $8C,$03,$75,$00 ;
+ $E4CE DEFB $3E,$04,$62,$00 ;
+ $E4D2 DEFB $C6,$04,$57,$00 ;
+ $E4D6 DEFB $9A,$08,$19,$00 ;
+ $E4DA DEFB $9A,$08,$19,$00 ;
+ $E4DE DEFB $9A,$08,$31,$00 ;
+ $E4E2 DEFB $8C,$03,$75,$00 ;
+ $E4E6 DEFB $9A,$08,$19,$00 ;
+ $E4EA DEFB $8C,$03,$75,$00 ;
+ $E4EE DEFB $9A,$08,$19,$00 ;
+ $E4F2 DEFB $8C,$03,$75,$00 ;
+ $E4F6 DEFB $3E,$04,$31,$00 ;
+ $E4FA DEFB $C6,$04,$2C,$00 ;
+ $E4FE DEFB $B3,$05,$25,$00 ;
+ $E502 DEFB $6A,$06,$21,$00 ;
+ $E506 DEFB $00,$FE         ; }
+ $E508 DEFB $9A,$08,$19,$00 ; {Melody
+ $E50C DEFB $9A,$08,$19,$00 ;
+ $E510 DEFB $9A,$08,$31,$00 ;
+ $E514 DEFB $CA,$02,$93,$00 ;
+ $E518 DEFB $9A,$08,$19,$00 ;
+ $E51C DEFB $CA,$02,$93,$00 ;
+ $E520 DEFB $9A,$08,$19,$00 ;
+ $E524 DEFB $CA,$02,$93,$00 ;
+ $E528 DEFB $9A,$08,$19,$00 ;
+ $E52C DEFB $CA,$02,$93,$00 ;
+ $E530 DEFB $26,$03,$83,$00 ;
+ $E534 DEFB $8C,$03,$75,$00 ;
+ $E538 DEFB $00,$FE         ; }
+ $E53A DEFB $9A,$08,$19,$00 ; {Melody
+ $E53E DEFB $9A,$08,$19,$00 ;
+ $E542 DEFB $9A,$08,$31,$00 ;
+ $E546 DEFB $CA,$02,$93,$00 ;
+ $E54A DEFB $9A,$08,$19,$00 ;
+ $E54E DEFB $CA,$02,$93,$00 ;
+ $E552 DEFB $9A,$08,$19,$00 ;
+ $E556 DEFB $CA,$02,$93,$00 ;
+ $E55A DEFB $26,$03,$41,$00 ;
+ $E55E DEFB $8C,$03,$3A,$00 ;
+ $E562 DEFB $3E,$04,$31,$00 ;
+ $E566 DEFB $C6,$04,$2C,$00 ;
+ $E56A DEFB $00,$FE         ; }
+ $E56C DEFB $9A,$08,$19,$00 ; {Melody
+ $E570 DEFB $9A,$08,$19,$00 ;
+ $E574 DEFB $9A,$08,$31,$00 ;
+ $E578 DEFB $CA,$02,$93,$00 ;
+ $E57C DEFB $9A,$08,$19,$00 ;
+ $E580 DEFB $CA,$02,$93,$00 ;
+ $E584 DEFB $9A,$08,$19,$00 ;
+ $E588 DEFB $CA,$02,$93,$00 ;
+ $E58C DEFB $54,$02,$57,$00 ;
+ $E590 DEFB $79,$02,$52,$00 ;
+ $E594 DEFB $CA,$02,$49,$00 ;
+ $E598 DEFB $26,$03,$41,$00 ;
+ $E59C DEFB $54,$02,$57,$00 ;
+ $E5A0 DEFB $C4,$03,$37,$00 ;
+ $E5A4 DEFB $3E,$04,$31,$00 ;
+ $E5A8 DEFB $C4,$03,$37,$00 ;
+ $E5AC DEFB $57,$03,$3E,$00 ;
+ $E5B0 DEFB $C4,$03,$37,$00 ;
+ $E5B4 DEFB $3E,$04,$31,$00 ;
+ $E5B8 DEFB $C6,$04,$2C,$00 ;
+ $E5BC DEFB $B3,$05,$25,$00 ;
+ $E5C0 DEFB $6A,$06,$21,$00 ;
+ $E5C4 DEFB $A6,$07,$1C,$00 ;
+ $E5C8 DEFB $00,$FE         ; }
+ $E5CA DEFB $9A,$08,$31,$00 ; {Melody
+ $E5CE DEFB $00,$FF,$00,$FF ;
+ $E5D2 DEFB $00,$FF,$00,$FF ;
+ $E5D6 DEFB $00,$FF,$00,$FF ;
+ $E5DA DEFB $00,$FF         ; }
+ $E5DC DEFB $00,$FD         ; Melody end/restart
+
+; Data block at E5DE
+b$E5DE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E5E6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E5EE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E5F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E5FE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E606 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E60E DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E616 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E61E DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E626 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E62E DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E636 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E63E DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E646 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+ $E64E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$01
+ $E656 DEFB $FC,$01,$FC,$01,$FC,$01,$FC,$01
+ $E65E DEFB $FC,$01,$00,$03,$00,$FF,$00,$FF
+ $E666 DEFB $20,$FC,$01,$FC,$01,$FC,$01,$FC
+ $E66E DEFB $01,$FC,$01,$FC,$01,$FC,$01,$FC
+ $E676 DEFB $01,$20,$00,$FF,$00,$FF,$00,$03
+ $E67E DEFB $FC,$01,$FC,$01,$FC,$01,$FC,$01
+ $E686 DEFB $FC,$01,$20,$FF,$00,$FF,$00,$FF
+ $E68E DEFB $00,$FF,$00,$FF,$00,$00,$00,$00
+ $E696 DEFB $FF,$00,$FF,$20,$00,$00,$00,$00
+ $E69E DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E6A6 DEFB $00,$00,$00,$00,$00,$00,$FF,$00
+ $E6AE DEFB $FF,$00,$00,$FF,$00,$FF,$00,$FF
+ $E6B6 DEFB $00,$FF,$00,$FF,$00,$20,$3F,$80
+ $E6BE DEFB $3F,$80,$3F,$80,$3F,$80,$3F,$80
+ $E6C6 DEFB $00,$C0,$00,$FF,$00,$FF,$20,$3F
+ $E6CE DEFB $80,$3F,$80,$3F,$80,$3F,$80,$3F
+ $E6D6 DEFB $80,$3F,$80,$3F,$80,$3F,$80,$20
+ $E6DE DEFB $00,$FF,$00,$FF,$00,$C0,$3F,$80
+ $E6E6 DEFB $3F,$80,$3F,$80,$3F,$80,$3F,$80
+ $E6EE DEFB $20,$00,$00,$00,$00,$00,$00,$00
+ $E6F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $E6FE DEFB $00,$00
 
 ; Ninja/Guard tiles, tiles with mask, 159 tiles, 16 bytes each
 ;

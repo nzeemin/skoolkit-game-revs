@@ -31,9 +31,18 @@ C $62D8,2 Continue loop for columns
 b $62DB Title picture (two ninjas), RLE encoded
 B $62DB,,8 #HTML[<img src="images/title.png" />]
 B $658F,1,1
-b $6590 Tile screen 0 30x17 tiles, 510 bytes - background
-C $6590
-T $65E7
+c $6590 Tile screen 0 30x17 tiles, 510 bytes - background
+C $6590,3 Start of screen attribute area
+C $65BF,3 Start of anti-piracy message
+C $65C2,3 Screen address
+C $65C7,3 Print string
+C $65CA,3 Screen address
+C $65CF,3 Print string
+C $65D2,3 Screen address
+C $65D7,3 Print string
+N $65DA Wait for any key and RET
+t $65E7 Start of anti-piracy message
+T $65E7,,32
 T $65F2
 b $678E Tile screen 1 30x17 tiles, 510 bytes - update flags
 T $678E
@@ -57,7 +66,7 @@ B $7194,12,4 Block 4x3 tiles
 B $71A0,9,3 Block 3x3 tiles
 B $71A9,16,4 Block 4x4 tiles
 B $71B9,2 Block 2x9 tiles
-B $71BB,8,2 Block 2x4 tiles
+B $71BB,8,2 Block 2x4 tiles - Console
 b $71C3 Current Guard data
 W $71C3,2,2 Current Guard position in tilemap
 B $71C5,1,1 Current Guard X position
@@ -425,6 +434,7 @@ W $80AD,2,2 Room to Right
 W $80AF,4,2
 B $80B3,67,5,5,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/80A7.png" />]
 b $80F6 Room 80F6
+N $80F6 Console: flips trigger "D": set/remove wall in room #R$9739.
 W $80F6,2,2 Room procedure
 W $80F8,2,2 Initialization
 W $80FA,2,2 Room to Left
@@ -693,6 +703,7 @@ W $8CCE,2,2 Room to Right
 W $8CD0,4,2
 B $8CD4,68,5,5,5,5,5,5,6,5,5,7,7,7,1 #HTML[<img src="images/rooms/8CC8.png" />]
 b $8D18 Room 8D18
+N $8D18 Console
 W $8D18,2,2 Room procedure
 W $8D1A,2,2 Initialization
 W $8D1C,2,2 Room to Left
@@ -759,6 +770,7 @@ W $8FC5,2,2
 W $8FC7,2,2 Room Down
 B $8FC9,60,6,6,5,5,5,4,4,5,5,7,7,1 #HTML[<img src="images/rooms/8FBD.png" />]
 b $9005 Room 9005
+N $9005 Console: flips trigger "B", set/remove wall in room #R$8F20, see #R$B33E.
 W $9005,2,2 Room procedure
 W $9007,2,2 Initialization
 W $9009,2,2 Room to Left
@@ -821,6 +833,7 @@ W $9256,2,2 Room Up
 W $9258,2,2
 B $925A,77,5,7,5,7,7,7,7,7,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/924E.png" />]
 b $92A7 Room 92A7
+N $92A7 3rd console: flips trigger "A": set/remove wall in room #R$7F48.
 W $92A7,2,2 Room procedure
 W $92A9,2,2 Initialization
 W $92AB,2,2
@@ -828,6 +841,7 @@ W $92AD,2,2 Room to Right
 W $92AF,4,2
 B $92B3,60,5,7,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/92A7.png" />]
 b $92EF Room 92EF
+N $92EF 1st conosole: flips trigger "C": set/remove wall in room #R$8D5C.
 W $92EF,2,2 Room procedure
 W $92F1,2,2 Initialization
 W $92F3,2,2
@@ -1003,6 +1017,7 @@ W $9915,2,2 Room Up
 W $9917,2,2
 B $9919,126,6,6,6,5,7,7,7,6,5,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/990D.png" />]
 b $99A6 Room 99A6
+N $99A6 Console: flips trigger "E": set/remove wall in room #R$97A6.
 W $99A6,2,2 Room procedure
 W $99A8,2,2 Initialization
 W $99AA,2,2
@@ -1465,41 +1480,67 @@ C $A4AC,3 Tile screen 5 start address
 C $A4B4,3 Tile screen 1 start address
 C $A4C0,3 Tile screen 2 start address
 C $A4CA,3 Decrease Energy by B
+C $A4DC,3 => Draw Guard on tilemap
+C $A4E4,3 => Draw Guard on tilemap
 C $A4ED,3 Sprite Ninja/Guard standing
 C $A4F0,3 set Guard sprite
 C $A4FD,3 get Guard direction
 C $A500,2 left?
 C $A508,3 65
+C $A52C,3 => Draw Guard on tilemap
 C $A533,3 Sprite Ninja/Guard standing
 C $A536,3 set Guard sprite
 C $A539,3 Ninja Y address
+C $A542,3 => Draw Guard on tilemap
 C $A54B,3 get Guard direction
 C $A552,3 Ninja X address
+C $A55A,3 => Draw Guard on tilemap
+C $A562,3 => Draw Guard on tilemap
+C $A56A,3 => Draw Guard on tilemap
 C $A571,3 Sprite Ninja dead
 C $A574,3 set Guard sprite
+C $A577,3 => Draw Guard on tilemap
+C $A584,3 => Draw Guard on tilemap
 C $A58F,3 get Guard direction
+C $A59E,3 => Decrease Energy by B + Sound
 C $A5A1,3 Sprite Ninja/Guard standing
 C $A5A4,3 set Guard sprite
+C $A5A7,3 => Draw Guard on tilemap
+C $A5B4,3 => Draw Guard on tilemap
 C $A5BE,3 Sprite Ninja/Guard jump-kick
 C $A5C1,3 set Guard sprite
+C $A5C4,3 => Draw Guard on tilemap
+C $A5D1,3 => Draw Guard on tilemap
 C $A5DB,3 Sprite Ninja/Guard jumping
 C $A5DE,3 set Guard sprite
 C $A5E7,3 get Guard direction
+C $A5F6,3 => Decrease Energy by B + Sound
+C $A5F9,3 => Draw Guard on tilemap
+C $A606,3 => Draw Guard on tilemap
 C $A60B,3 Sprite Ninja/Guard standing
 C $A60E,3 set Guard sprite
+C $A611,3 => Draw Guard on tilemap
 C $A614,3 Ninja X address
+C $A626,3 => Draw Guard on tilemap
 C $A62C,3 Sprite Ninja/Guard standing
 C $A62F,3 set Guard sprite
+C $A632,3 => Draw Guard on tilemap
 C $A638,3 get Guard direction
 C $A64B,3 Sprite Ninja/Guard standing
 C $A64E,3 set Guard sprite
-C $A655,3 set Guard direction
-C $A684,3 set Guard direction
+C $A651,3 => Draw Guard on tilemap
+C $A655,3 set Guard direction = left
+C $A658,3 => Draw Guard on tilemap
+C $A67C,3 => Draw Guard on tilemap
+C $A684,3 set Guard direction = left
 C $A68D,3 get Guard direction
 C $A6A0,3 Sprite Ninja/Guard standing
 C $A6A3,3 set Guard sprite
-C $A6AA,3 set Guard direction
-C $A6D8,3 set Guard direction
+C $A6A6,2 => Draw Guard on tilemap
+C $A6AA,3 set Guard direction = right
+C $A6AD,2 => Draw Guard on tilemap
+C $A6D0,2 => Draw Guard on tilemap
+C $A6D8,3 set Guard direction = right
 C $A6E8,1 next walking phase
 C $A6E9,2 0..3
 C $A6EE,1 * 2
@@ -1507,13 +1548,25 @@ C $A6F2,3 Table of four Ninja/Guard walking sprites
 C $A6F6,3 Guard sprite address
 N $A6FF Draw Guard on tilemap
 C $A703,3 get Guard direction
+C $A706,2 left?
+C $A708,2 right =>
+C $A70A,3 Tile screen 4 start address + 5
 C $A70E,3 !!MUT-ARG!! current Ninja/Guard sprite address
+C $A711,2 7 rows
+C $A713,2 6 rows
 C $A716,3 Translate Ninja tile A into Guard tile
 C $A720,3 36
+C $A723,1 next row
+C $A725,2 continue loop by rows
 C $A728,3 Tile screen 4 start address
 C $A72C,4 get Guard sprite address
+C $A730,2 7 rows
+C $A732,2 6 rows
+C $A734,1 get tile
 C $A735,3 Translate Ninja tile A into Guard tile
 C $A73F,3 24
+C $A742,1 next row
+C $A744,2 continue loop by rows
 b $A747
 t $A752
 b $A759
@@ -1547,9 +1600,11 @@ B $AB79,96,8 #HTML[#UDGARRAY4,,,4,,;$AB79-$ABD8-1-32(itemcons)] Console
 B $ABD9,12,8 attributes
 b $ABE5
 c $AC44
-w $AC72
+C $AC44,3 address for Table of Guard data addresses
+C $AC57,3 address for Table of Dog data addresses
+w $AC72 Table of Guard data addresses, 24 records
 W $AC72,48,8
-w $ACA2
+w $ACA2 Table of Dog data addresses, 20 records
 W $ACA2,40,8
 c $ACCA Draw game screen frames and indicator text
 C $ACCF,3 Screen start address
@@ -1616,7 +1671,7 @@ B $B13E,9,9
 b $B147
 c $B148 Draw tile map on the screen
 C $B148,3 Screen attributes address
-C $B14B,2 17 tile lines
+C $B14B,2 17 rows
 C $B150,3 Tile screen 5 start address
 C $B156,3 Tile screen 4 start address
 C $B15C,3 Tile screen 1 start address
@@ -1671,21 +1726,36 @@ C $B2E3,1 Decrease line counter
 C $B2E4,3 Continue loop by lines
 c $B2E8 Mirror byte if needed
 C $B2EA,3 get Ninja direction
-C $B2F1,1 No need to mirror => return
+C $B2ED,2 left?
+C $B2F1,1 right - no need to mirror => return
 C $B2F2,4 Mirror table half address
 b $B2FD
 B $B2FD,1,1 Counter for Ninja/Guard head tile change
 c $B2FE Exchange $7239 (Ninja direction) and $71CD (dog direction)
+C $B2FF,3 get Ninja direction
+C $B303,3 get Dog direction
 c $B30F Exchange $7239 (Ninja direction) and $7347 (Guard direction)
-c $B320 ?? Object procedure
-c $B32A ?? Object procedure
-c $B334 ?? Object procedure
-c $B33E ?? Object procedure
-c $B348 ?? Object procedure
+C $B310,3 get Ninja direction
+C $B314,3 get Guard direction
+c $B320 Object procedure: flip trigger "D": set/remove wall in room #R$9739
+C $B328,2 => Change Console color in NEAR
+c $B32A Object procedure: flip trigger "E": set/remove wall in room #R$97A6
+C $B332,2 => Change Console color in NEAR
+c $B334 Object procedure: flip trigger "C": set/remove wall in room #R$8D5C
+C $B33C,2 => Change Console color in NEAR
+c $B33E Object procedure: flip trigger "B": set/remove wall in room #R$8F20
+C $B346,2 => Change Console color in NEAR
+c $B348 Object procedure: flip trigger "A": set/remove wall in room #R$7F48
+N $B350 Change Console color in NEAR, so we see that console action worked
+C $B350,3 address in screen attributes
 C $B353,3 28
-C $B365,3 => Object procedure
-C $B36E,3 => Finish Room 97A6 initialization
+C $B356,2 3 rows
+C $B358,2 4 columns
+C $B361,1 next row
+C $B365,3 => Update Ninja on tilemap
 c $B368 Room #R$97A6 initialization
+C $B368,3 get trigger "E" value
+C $B36E,3 => Finish Room 97A6 initialization
 c $B371 Play melody ??; HL = melody address
 c $B38F Room token #00: Barrel, 3x3 tiles #R$7C21; params: 2 bytes (address)
 C $B396,3 Tile block address
@@ -1693,6 +1763,8 @@ C $B3AC,3 => #R$B702 Proceed to the next room token
 s $B3AF
 c $B3B0
 C $B3B6,3 current dog data address
+C $B3E1,3 Mirror table address
+C $B3EE,1 store reversed byte
 C $B3F8,3 set REPDEL = 1
 C $B3FB,3 set REPPER = 1
 s $B401
@@ -1777,7 +1849,7 @@ C $B546,2 copy Boat sprite
 C $B56B,2 delay
 C $B570,3 counter address
 C $B573,1 decrease counter
-C $B574,3 => Object procedure
+C $B574,3 => Update Ninja on tilemap
 C $B577,3 Ninja X address
 C $B57A,1 Moving right one tile
 C $B57E,1 increase Ninja position in tilemap
@@ -1809,7 +1881,7 @@ B $B5C5,1,1 Ninja standing counter
 c $B5C7
 C $B5DA,2 command = $C5 PUSH BC
 C $B5DC,3 set command = PUSH BC = enable Energy decrease
-C $B5E5,3 Object procedure address
+C $B5E5,3 Object procedure address for "Update Ninja on tilemap"
 C $B5F0,3 Pay value text address
 C $B5F9,3 Draw game screen frames and indicator text
 C $B5FD,3 set BORDCR = 0
@@ -1951,10 +2023,11 @@ C $B8A4,3 Draw NEAR/HELD item
 C $B8A8,3 -26
 C $B8C5,3 Draw NEAR/HELD item
 C $B8CD,3 !!MUT-ARG!! => run handler
-c $B8D0 ?? Object procedure
+c $B8D0 Update Ninja on tilemap
 C $B8D0,3 Set update flags for Ninja, 6x7 tiles
 C $B8D3,3 Tile screen 4 start address
 C $B8D8,3 510 - 1
+N $B8E0 Draw Ninja on tilemap
 C $B8E0,3 get Ninja position in tilemap
 C $B8E3,3 get Ninja direction
 C $B8EE,4 get Ninja sprite address
@@ -1993,7 +2066,7 @@ C $BBD1,2 continue by rows
 c $BBD4 Movement handler: Ninja punching
 C $BBD4,3 Read Input
 C $BBD7,2 check FIRE bit
-C $BBD9,3 => Object procedure
+C $BBD9,3 => Update Ninja on tilemap
 C $BBDC,3 => Ninja standing
 c $BBDF Read Input
 C $BBFF,1 * 8
@@ -2032,10 +2105,10 @@ C $BCC4,3 Read Input
 C $BCC7,2 check FIRE bit
 N $BCCC FIRE pressed
 C $BCDE,3 get Ninja position in tilemap
-C $BD14,3 => Object procedure
-C $BD1C,3 => Object procedure
+C $BD14,3 => Update Ninja on tilemap
+C $BD1C,3 => Update Ninja on tilemap
 C $BD29,3 Increase PAY value by 5000
-C $BD2C,3 => Object procedure
+C $BD2C,3 => Update Ninja on tilemap
 t $BD2F "BOMB" message
 c $BD33
 c $BD37
@@ -2065,9 +2138,14 @@ C $BE04,3 Movement handler
 C $BE07,3 Sprite Ninja/Guard standing
 C $BE0A,3 Set movement handler = HL, Ninja sprite = DE
 c $BE0D ?? Movement handler
+C $BE0D,3 !!MUT-ARG!!
+C $BE17,3 511
+C $BE1C,3 !!MUT-ARG!!
+C $BE24,3 509
 C $BE29,3 counter address
 C $BE2C,1 decrease counter
-C $BE2D,3 => Object procedure
+C $BE2D,3 => Update Ninja on tilemap
+C $BE38,2 10
 C $BE43,3 set Ninja position in tilemap
 C $BE4C,3 210 - 1 = 7 rows
 C $BE51,3 Movement handler (helicopter?)
@@ -2097,6 +2175,7 @@ C $BEBB,3 Print string 1st line
 C $BEC3,3 Print string 2nd line
 C $BEDA,3 Pause, then wait for any key pressed
 C $BEDF,1 !!MUT-CMD!!
+C $BEE7,2 "LD A,(BC)" instruction code
 C $BEEC,3 => Title picture and music, then go to Main menu
 t $BEEF Game over two-line messages
 T $BEEF,15
@@ -2109,7 +2188,7 @@ T $BF58,15
 T $BF67,20
 c $BF7B
 C $BF82,3 => Object procedure
-C $BF87,3 => Object procedure
+C $BF87,3 => Update Ninja on tilemap
 C $BF8C,3 set counter = 3
 C $BF8F,3 get Ninja direction
 C $BF94,3 get Input bits
@@ -2120,7 +2199,7 @@ C $BFAA,3 set counter = 2
 C $BFAD,3 Sprite Ninja/Guard jumping
 c $BFB0 Set movement handler = HL, set Ninja sprite = DE
 C $BFB3,4 set Ninja sprite address = DE
-C $BFB7,3 => Object procedure
+C $BFB7,3 => Update Ninja on tilemap
 c $BFBA
 C $BFBF,3 get Ninja position in tilemap
 C $BFC9,3 => Ninja on ladder
@@ -2145,6 +2224,7 @@ C $C030,3 Print string
 C $C037,3 Increase PAY value by B * 100
 C $C03D,3 Skill level address
 C $C042,3 Print skill level digit
+C $C045,2 "INC D" instruction code
 C $C053,3 Increase PAY value by 10000 - Escape with Disk and Bomb
 C $C056,3 "ESCAPE" / "MISSION SUCCESSFUL"
 C $C059,3 set two-line Game Over message
@@ -2159,7 +2239,7 @@ c $C094 ?? Movement handler (helicopter?)
 C $C094,3 counter address
 C $C097,1 decrease counter
 C $C098,3 => Escaped; final messages, then Game Over
-C $C0E3,3 => Object procedure
+C $C0E3,3 => Update Ninja on tilemap
 b $C0E6
 c $C12E Ninja on ladder
 C $C12E,3 Movement handler for Ninja on ladder
@@ -2168,16 +2248,16 @@ C $C137,3 set Ninja sprite address
 C $C13A,3 => Move down one tile
 c $C13D
 C $C141,3 Ninja direction address
-C $C149,2 => Object procedure
+C $C149,2 => Update Ninja on tilemap
 C $C14B,3 Movement handler address
 C $C14E,3 Sprite Ninja/Guard walking 1
 C $C151,3 Set movement handler = HL, Ninja sprite = DE
 C $C158,3 Ninja direction address
-C $C160,2 => Object procedure
+C $C160,2 => Update Ninja on tilemap
 C $C162,3 Movement handler address
 C $C168,3 Sprite Ninja/Guard walking 1
 C $C16B,3 set Ninja sprite address
-C $C16E,3 => Object procedure
+C $C16E,3 => Update Ninja on tilemap
 b $C171
 c $C1B6 Movement handler ?? (B8CE handler)
 C $C1B6,3 get Ninja X
@@ -2193,7 +2273,7 @@ C $C1DA,3 -29
 C $C1E3,3 Read Input
 C $C1E6,2 check RIGHT bit
 C $C1E8,3 => Ninja standing
-C $C1EB,3 => Object procedure
+C $C1EB,3 => Update Ninja on tilemap
 C $C1EE,3 +59
 C $C1F9,3 get Ninja position in tilemap
 C $C1FC,3 +30
@@ -2238,7 +2318,7 @@ C $C26F,3 -31
 C $C278,3 Read Input
 C $C27B,2 check LEFT bit
 C $C27D,3 => Ninja standing
-C $C280,3 => Object procedure
+C $C280,3 => Update Ninja on tilemap
 C $C283,3 +61
 C $C28E,3 get Ninja position in tilemap
 C $C291,3 +30
@@ -2289,7 +2369,7 @@ C $C336,3 => Current Room changed
 c $C339 Movement handler (B8CE handler): Ninja jumping
 C $C339,3 counter address
 C $C33C,1 decrease counter
-C $C33D,3 => Object procedure
+C $C33D,3 => Update Ninja on tilemap
 C $C340,3 get Ninja direction
 C $C343,3 get Ninja position in tilemap
 C $C34A,2 direction = left ?
@@ -2345,13 +2425,13 @@ C $C42C,3 get Input bits
 C $C42F,2 check UP bit
 N $C433 Pressed UP
 C $C433,3 get Ninja position in tilemap
-C $C445,2 => Object procedure
+C $C445,2 => Update Ninja on tilemap
 C $C447,3 get Ninja Y
 C $C44A,2 top row?
 C $C44C,3 yes => Going to room Up from current
 C $C44F,3 -210 = 7 rows higher
-C $C456,2 => Object procedure
-C $C45B,2 => Object procedure
+C $C456,2 => Update Ninja on tilemap
+C $C45B,2 => Update Ninja on tilemap
 C $C45D,3 Ninja Y address
 C $C460,1 one row up
 C $C461,3 get Ninja position in tilemap
@@ -2360,17 +2440,17 @@ C $C46B,3 get Ninja direction
 C $C46E,1 invert direction
 C $C464,3 -30
 C $C471,3 set Ninja direction
-C $C474,3 => Object procedure
+C $C474,3 => Update Ninja on tilemap
 N $C477 Check if DOWN pressed
 C $C477,2 check DOWN bit
-C $C479,2 => Object procedure
+C $C479,2 => Update Ninja on tilemap
 N $C47B Pressed DOWN
 C $C47B,3 get Ninja Y
 C $C480,3 => Going to room Down from current
 C $C483,3 get Ninja position in tilemap
 C $C48D,2 => Move down one tile
 C $C493,2 => Move down one tile
-C $C495,3 => Object procedure
+C $C495,3 => Update Ninja on tilemap
 c $C498 Move DOWN one tile
 C $C498,3 Ninja Y address
 C $C49B,1 one tile down
@@ -2382,7 +2462,7 @@ C $C4A4,3 get Ninja direction
 c $C4A7 ?? Movement handler
 C $C4A7,3 counter address
 C $C4AA,1 decrease counter
-C $C4AB,3 => Object procedure
+C $C4AB,3 => Update Ninja on tilemap
 C $C4AE,3 get Ninja position in tilemap
 C $C4B1,3 value for right dir = $6D88 (Tile screen 4) + 65
 C $C4B4,3 get Ninja direction
@@ -2397,7 +2477,7 @@ C $C4DB,3 Set movement handler = HL, Ninja sprite = DE
 c $C4DE ?? Movement handler
 C $C4DE,3 counter address
 C $C4E1,1 decrease counter
-C $C4E2,3 => Object procedure
+C $C4E2,3 => Update Ninja on tilemap
 C $C4E5,3 => Ninja standing
 c $C4E8
 C $C4E8,3 Check for ??
@@ -2449,15 +2529,17 @@ C $C5AE,3 get Ninja direction
 c $C5C6 Movement handler: Ninja falling down
 C $C5C6,3 get Ninja position in tilemap
 C $C5C9,3 +30
-C $C5CC,1 one tile-line lower
+C $C5CC,1 one row lower
 C $C5CD,3 set Ninja position in tilemap
+C $C5D0,3 falling counter address
 C $C5D3,1 increase falling counter
 C $C5D4,3 Ninja Y address
 C $C5D7,1 increase Ninja Y
+C $C5D8,1 get Ninja Y
 C $C5D9,2 at room bottom?
 C $C5DB,2 => Going to room Down from current
 C $C5DD,3 get Ninja position in tilemap
-C $C5EB,3 => Object procedure
+C $C5EB,3 => Update Ninja on tilemap
 N $C5EE Ninja hit somehting after falling
 C $C5F3,3 falling counter address
 C $C5F6,1 get counter value
@@ -2468,7 +2550,7 @@ c $C604 Going to room Down from current
 C $C605,3 set Ninja Y = 0
 C $C608,3 get Ninja position in tilemap
 C $C60B,3 -300
-C $C60E,1 10 tile lines higher
+C $C60E,1 10 rows higher
 C $C60F,3 set Ninja position in tilemap
 C $C612,3 get Current Room address
 C $C615,3 offset in room description
@@ -2481,7 +2563,7 @@ c $C623 Going to room Up from current
 C $C625,3 set Ninja Y = 10
 C $C628,3 get Ninja position in tilemap
 C $C62B,3 +300
-C $C62E,1 10 tile lines lower
+C $C62E,1 10 rows lower
 C $C62F,3 set Ninja position in tilemap
 C $C632,3 get Current Room address
 C $C635,3 offset in room description
@@ -2535,7 +2617,7 @@ c $C6E2 Movement handler (B8CE handler): Train moving left
 C $C702,3 counter address
 C $C705,1 decrease counter
 C $C706,3 => Ninja standing
-C $C709,3 => Object procedure
+C $C709,3 => Update Ninja on tilemap
 c $C70C Movement handler (B8CE handler): Train moving right
 b $C721 Font
 N $C721 #HTML[<img src="images/font.png" />]
@@ -2897,24 +2979,24 @@ b $D256 Table ?? objects, 35 records, 7-byte records
 W $D256,2,2 Object ?? 00
 B $D258,3,3
 W $D25B,2,2
-W $D25D,2,2 Object ?? 01
+W $D25D,2,2 Object: Console in room #R$80F6
 B $D25F,3,3
-W $D262,2,2
-W $D264,2,2 Object ?? 02
+W $D262,2,2 Object procedure: flip trigger "D": set/remove wall in room #R$9739
+W $D264,2,2 Object: Console in room #R$99A6
 B $D266,3,3
-W $D269,2,2
-W $D26B,2,2 Object ?? 03
+W $D269,2,2 Object procedure: flip trigger "E": set/remove wall in room #R$97A6
+W $D26B,2,2 Object: Console in room #R$92A7
 B $D26D,3,3
-W $D270,2,2
-W $D272,2,2 Object ?? 04
+W $D270,2,2 Object procedure: flip trigger "A": set/remove wall in room #R$7F48
+W $D272,2,2 Object: Console in room #R$92EF
 B $D274,3,3
-W $D277,2,2
-W $D279,2,2 Object ?? 05
+W $D277,2,2 Object procedure: flip trigger "C": set/remove wall in room #R$8D5C
+W $D279,2,2 Object: Console in room #R$9005
 B $D27B,3,3
-W $D27E,2,2
+W $D27E,2,2 Object procedure: flip trigger "B": set/remove wall in room #R$8F20
 W $D280,2,2 Object ?? 06
 B $D282,3,3
-W $D285,2,2 Standard Object procedure
+W $D285,2,2 Object procedure "Update Ninja on tilemap"
 W $D287,2,2 Object ?? 07
 B $D289,3,3
 W $D28C,2,2
@@ -2930,7 +3012,7 @@ W $D2A1,2,2
 W $D2A3,2,2 Object ?? 11
 B $D2A5,3,3
 W $D2A8,2,2
-W $D2AA,2,2 Object ?? 12
+W $D2AA,2,2 Object ?? 12 BOMB ??
 B $D2AC,3,3
 W $D2AF,2,2
 W $D2B1,2,2 Object ?? 13
@@ -3050,15 +3132,15 @@ W $D3BB,4,4
 B $D3BF,1,1
 W $D3C0,4,4
 B $D3C4,1,1
-W $D3C5,4,4
+W $D3C5,4,4 Console in room #R$80F6
 B $D3C9,1,1
-W $D3CA,4,4
+W $D3CA,4,4 Console in room #R$99A6
 B $D3CE,1,1
-W $D3CF,4,4
+W $D3CF,4,4 Console in room #R$92A7, see #R$D26B
 B $D3D3,1,1
-W $D3D4,4,4
+W $D3D4,4,4 Console in room #R$92EF
 B $D3D8,1,1
-W $D3D9,4,4 #29
+W $D3D9,4,4 Console in room #R$9005
 B $D3DD,1,1
 b $D3DE Ninja/Guard sprites
 N $D3DE Most of Ninja sprites are also Guard sprites, #R$A775 procedure and #R$A787 table used to translate Ninja tiles into Guard tiles.
@@ -3239,6 +3321,7 @@ C $E319,3 Levels data base address
 C $E322,3 Print string - level description
 C $E33B,4 set Indicator Time value
 C $E343,4 set initial Time value for BOMB
+C $E35D,3 set count for wall in #R$8F20 room
 C $E36F,2 Copy last 4 bytes: BOMB placement
 C $E375,3 Clear LASTK and do RST $38 once
 C $E378,3 Play next note in melody
@@ -3330,7 +3413,7 @@ N $F700 #HTML[<img src="images/backtiles.png" />]
 B $F700,531,9
 c $F913
 c $F973 Room #R$84A8 initialization
-c $F9A1
+c $F9A1 Sound ??
 b $F98F
 B $F98F,18,3
 c $F9B9 Pause, then wait for any key pressed
@@ -3339,11 +3422,14 @@ C $F9CD,3 get Input bits
 C $F9D8,3 clear LASTK
 C $F9DC,3 get LASTK
 c $F9E4
-c $F9E7
+C $F9E4,3 Prepare screen, show anti-piracy message, and wait for any key
+c $F9E7 Start point after loading
 c $F9F9
 c $FA11
 c $FA28
-c $FA31
+c $FA31 Decrease Energy by B + Sound
+C $FA31,3 Decrease Energy by B
+C $FA36,3 Sound
 b $FA3A
 b $FFF7 Background tile $FF
 B $FFF7,9,9

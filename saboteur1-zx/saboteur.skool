@@ -154,46 +154,49 @@ b$62DB DEFB $00,$07,$FF,$01,$00,$01,$FF,$01 ; {#HTML[<img
 ; Tile screen 0 30x17 tiles, 510 bytes - background
 ;
 ; Used by the routine at #R$F9E4.
-b$6590 LD HL,$5800
- $6593 LD DE,$5801
- $6596 LD BC,$0020
- $6599 LD (HL),$46
- $659B LDIR
- $659D LD BC,$02C0
- $65A0 LD (HL),$0F
- $65A2 LDIR
- $65A4 LD BC,$001F
- $65A7 LD (HL),$06
- $65A9 LDIR
- $65AB LD HL,$58E0
- $65AE LD DE,$0000
- $65B1 LD C,$07
- $65B3 LD A,$06
-*$65B5 LD B,$20
-*$65B7 LD (HL),A
- $65B8 INC HL
- $65B9 DJNZ $65B7
- $65BB ADD HL,DE
- $65BC DEC C
- $65BD JR NZ,$65B5
- $65BF LD HL,$65E7
- $65C2 LD DE,$4000
- $65C5 LD C,$00
- $65C7 CALL $AED1
- $65CA LD DE,$4800
- $65CD LD C,$00
- $65CF CALL $AED1
- $65D2 LD DE,$5000
- $65D5 LD C,$00
- $65D7 CALL $AED1
-*$65DA XOR A
- $65DB LD ($5C08),A
- $65DE RST $38
- $65DF LD A,($5C08)
- $65E2 CP $00
- $65E4 JR Z,$65DA
- $65E6 RET
- $65E7 DEFM "          ",$60
+c$6590 LD HL,$5800   ; Start of screen attribute area
+ $6593 LD DE,$5801   ;
+ $6596 LD BC,$0020   ;
+ $6599 LD (HL),$46   ;
+ $659B LDIR          ;
+ $659D LD BC,$02C0   ;
+ $65A0 LD (HL),$0F   ;
+ $65A2 LDIR          ;
+ $65A4 LD BC,$001F   ;
+ $65A7 LD (HL),$06   ;
+ $65A9 LDIR          ;
+ $65AB LD HL,$58E0   ;
+ $65AE LD DE,$0000   ;
+ $65B1 LD C,$07      ;
+ $65B3 LD A,$06      ;
+*$65B5 LD B,$20      ;
+*$65B7 LD (HL),A     ;
+ $65B8 INC HL        ;
+ $65B9 DJNZ $65B7    ;
+ $65BB ADD HL,DE     ;
+ $65BC DEC C         ;
+ $65BD JR NZ,$65B5   ;
+ $65BF LD HL,$65E7   ; Start of anti-piracy message
+ $65C2 LD DE,$4000   ; Screen address
+ $65C5 LD C,$00      ;
+ $65C7 CALL $AED1    ; Print string
+ $65CA LD DE,$4800   ; Screen address
+ $65CD LD C,$00      ;
+ $65CF CALL $AED1    ; Print string
+ $65D2 LD DE,$5000   ; Screen address
+ $65D5 LD C,$00      ;
+ $65D7 CALL $AED1    ; Print string
+; Wait for any key and RET
+*$65DA XOR A         ;
+ $65DB LD ($5C08),A  ;
+ $65DE RST $38       ;
+ $65DF LD A,($5C08)  ;
+ $65E2 CP $00        ;
+ $65E4 JR Z,$65DA    ;
+ $65E6 RET           ;
+
+; Start of anti-piracy message
+t$65E7 DEFM "          ",$60
  $65F2 DEFM "100  REWARD           If your copy  of this game doesnot  have  a"
  $6633 DEFM " blue  cassette bodywith DURELL  embossed on it, anddoes not have"
  $6674 DEFM " DURELL on the leadin strip then it is a forgery.   Please send a"
@@ -310,7 +313,7 @@ b$7184 DEFW $84A8                   ; Current Room address
  $71B1 DEFB $0D,$13,$0D,$0D         ;
  $71B5 DEFB $12,$12,$12,$12         ; }
  $71B9 DEFB $07,$0A                 ; Block 2x9 tiles
- $71BB DEFB $1F,$20                 ; {Block 2x4 tiles
+ $71BB DEFB $1F,$20                 ; {Block 2x4 tiles - Console
  $71BD DEFB $21,$22                 ;
  $71BF DEFB $23,$24                 ;
  $71C1 DEFB $25,$26                 ; }
@@ -1439,6 +1442,12 @@ b$80A7 DEFW $B458                       ; Room procedure
  $80F5 DEFB $FF                         ; }
 
 ; Room 80F6
+;
+; .
+;
+; .
+;
+; Console: flips trigger "D": set/remove wall in room #R$9739.
 b$80F6 DEFW $B452                       ; Room procedure
  $80F8 DEFW $A38E                       ; Initialization
  $80FA DEFW $80A7                       ; Room to Left
@@ -2231,6 +2240,12 @@ b$8CC8 DEFW $B41F                       ; Room procedure
  $8D17 DEFB $FF                         ; }
 
 ; Room 8D18
+;
+; .
+;
+; .
+;
+; Console
 b$8D18 DEFW $B41F                       ; Room procedure
  $8D1A DEFW $B422                       ; Initialization
  $8D1C DEFW $8C5A                       ; Room to Left
@@ -2429,6 +2444,12 @@ b$8FBD DEFW $B483                       ; Room procedure
  $9004 DEFB $FF                         ; }
 
 ; Room 9005
+;
+; .
+;
+; .
+;
+; Console: flips trigger "B", set/remove wall in room #R$8F20, see #R$B33E.
 b$9005 DEFW $B41F                       ; Room procedure
  $9007 DEFW $B422                       ; Initialization
  $9009 DEFW $92A7                       ; Room to Left
@@ -2604,6 +2625,12 @@ b$924E DEFW $B452                       ; Room procedure
  $92A6 DEFB $FF                         ; }
 
 ; Room 92A7
+;
+; .
+;
+; .
+;
+; 3rd console: flips trigger "A": set/remove wall in room #R$7F48.
 b$92A7 DEFW $B483                       ; Room procedure
  $92A9 DEFW $A16F                       ; Initialization
  $92AB DEFW $0000
@@ -2622,6 +2649,12 @@ b$92A7 DEFW $B483                       ; Room procedure
  $92EE DEFB $FF                         ; }
 
 ; Room 92EF
+;
+; .
+;
+; .
+;
+; 1st conosole: flips trigger "C": set/remove wall in room #R$8D5C.
 b$92EF DEFW $7918                       ; Room procedure
  $92F1 DEFW $791B                       ; Initialization
  $92F3 DEFW $0000
@@ -3083,6 +3116,12 @@ b$990D DEFW $B41F                           ; Room procedure
  $999F DEFB $BE,$AC,$BE,$AD,$AB,$AD,$AB
 
 ; Room 99A6
+;
+; .
+;
+; .
+;
+; Console: flips trigger "E": set/remove wall in room #R$97A6.
 b$99A6 DEFW $7918                       ; Room procedure
  $99A8 DEFW $A110                       ; Initialization
  $99AA DEFW $0000
@@ -4179,10 +4218,10 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A4D5 OUT ($FE),A     ;
  $A4D7 LD A,($A3B4)    ;
  $A4DA CP $00          ;
- $A4DC JP NZ,$A6FF     ;
+ $A4DC JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A4DF LD A,$04        ;
  $A4E1 LD ($7346),A    ;
- $A4E4 JP $A6FF        ;
+ $A4E4 JP $A6FF        ; => Draw Guard on tilemap
 *$A4E7 CP $14          ;
  $A4E9 JR NZ,$A52F     ;
  $A4EB LD (HL),$04     ;
@@ -4210,7 +4249,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A524 LD A,($71C6)    ;
  $A527 ADD A,$02       ;
  $A529 LD (IX+$05),A   ;
- $A52C JP $A6FF        ;
+ $A52C JP $A6FF        ; => Draw Guard on tilemap
 *$A52F CP $0A          ;
  $A531 JR NZ,$A56D     ;
  $A533 LD HL,$D486     ; Sprite Ninja/Guard standing
@@ -4219,7 +4258,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A53C LD A,($71C6)    ;
  $A53F ADD A,$03       ;
  $A541 CP (HL)         ;
- $A542 JP C,$A6FF      ;
+ $A542 JP C,$A6FF      ; => Draw Guard on tilemap
  $A545 LD A,($A39E)    ;
  $A548 DEC A           ;
  $A549 JR Z,$A565      ;
@@ -4230,26 +4269,26 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A555 JR Z,$A55F      ;
  $A557 ADD A,$02       ;
  $A559 CP (HL)         ;
- $A55A JP C,$A6FF      ;
+ $A55A JP C,$A6FF      ; => Draw Guard on tilemap
  $A55D JR $A565        ;
 *$A55F SUB $03         ;
  $A561 CP (HL)         ;
- $A562 JP NC,$A6FF     ;
+ $A562 JP NC,$A6FF     ; => Draw Guard on tilemap
 *$A565 LD A,$04        ;
  $A567 LD ($7346),A    ;
- $A56A JP $A6FF        ;
+ $A56A JP $A6FF        ; => Draw Guard on tilemap
 *$A56D CP $09          ;
  $A56F JR NZ,$A57A     ;
  $A571 LD HL,$A0B5     ; Sprite Ninja dead
  $A574 LD ($A70F),HL   ; set Guard sprite
- $A577 JP $A6FF        ;
+ $A577 JP $A6FF        ; => Draw Guard on tilemap
 *$A57A CP $08          ;
  $A57C JR NZ,$A5AA     ;
  $A57E PUSH HL         ;
  $A57F LD HL,$A3B4     ;
  $A582 DEC (HL)        ;
  $A583 POP HL          ;
- $A584 JP NZ,$A6FF     ;
+ $A584 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A587 LD (HL),$03     ;
  $A589 LD HL,($71C3)   ;
  $A58C LD DE,$69CC     ;
@@ -4261,30 +4300,30 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A59A LD A,(HL)       ;
  $A59B INC A           ;
  $A59C LD B,$06        ;
- $A59E CALL NZ,$FA31   ;
+ $A59E CALL NZ,$FA31   ; => Decrease Energy by B + Sound
  $A5A1 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A5A4 LD ($A70F),HL   ; set Guard sprite
- $A5A7 JP $A6FF        ;
+ $A5A7 JP $A6FF        ; => Draw Guard on tilemap
 *$A5AA CP $05          ;
  $A5AC JR NZ,$A5C7     ;
  $A5AE PUSH HL         ;
  $A5AF LD HL,$A3B4     ;
  $A5B2 DEC (HL)        ;
  $A5B3 POP HL          ;
- $A5B4 JP NZ,$A6FF     ;
+ $A5B4 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A5B7 LD A,$03        ;
  $A5B9 LD ($A3B4),A    ;
  $A5BC LD (HL),$06     ;
  $A5BE LD HL,$D4DA     ; Sprite Ninja/Guard jump-kick
  $A5C1 LD ($A70F),HL   ; set Guard sprite
- $A5C4 JP $A6FF        ;
+ $A5C4 JP $A6FF        ; => Draw Guard on tilemap
 *$A5C7 CP $06          ;
  $A5C9 JR NZ,$A5FC     ;
  $A5CB PUSH HL         ;
  $A5CC LD HL,$A3B4     ;
  $A5CF DEC (HL)        ;
  $A5D0 POP HL          ;
- $A5D1 JP NZ,$A6FF     ;
+ $A5D1 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A5D4 LD A,$01        ;
  $A5D6 LD ($A3B4),A    ;
  $A5D9 LD (HL),$07     ;
@@ -4300,19 +4339,19 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5F2 LD A,(HL)       ;
  $A5F3 INC A           ;
  $A5F4 LD B,$0A        ;
- $A5F6 CALL NZ,$FA31   ;
- $A5F9 JP $A6FF        ;
+ $A5F6 CALL NZ,$FA31   ; => Decrease Energy by B + Sound
+ $A5F9 JP $A6FF        ; => Draw Guard on tilemap
 *$A5FC CP $07          ;
  $A5FE JR NZ,$A614     ;
  $A600 PUSH HL         ;
  $A601 LD HL,$A3B4     ;
  $A604 DEC (HL)        ;
  $A605 POP HL          ;
- $A606 JP NZ,$A6FF     ;
+ $A606 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A609 LD (HL),$03     ;
  $A60B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A60E LD ($A70F),HL   ; set Guard sprite
- $A611 JP $A6FF        ;
+ $A611 JP $A6FF        ; => Draw Guard on tilemap
 *$A614 LD HL,$9C41     ; Ninja X address
  $A617 LD A,($71C5)    ;
  $A61A SUB (HL)        ;
@@ -4321,12 +4360,12 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A620 LD HL,$7346     ;
  $A623 LD A,$0A        ;
  $A625 CP (HL)         ;
- $A626 JP Z,$A6FF      ;
+ $A626 JP Z,$A6FF      ; => Draw Guard on tilemap
  $A629 LD A,$04        ;
  $A62B LD (HL),A       ;
  $A62C LD HL,$D486     ; Sprite Ninja/Guard standing
  $A62F LD ($A70F),HL   ; set Guard sprite
- $A632 JP $A6FF        ;
+ $A632 JP $A6FF        ; => Draw Guard on tilemap
 *$A635 JR C,$A68C      ;
  $A637 LD B,A          ;
  $A638 LD A,($7347)    ; get Guard direction
@@ -4339,10 +4378,10 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A648 LD ($7346),A    ;
  $A64B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A64E LD ($A70F),HL   ; set Guard sprite
- $A651 JP $A6FF        ;
+ $A651 JP $A6FF        ; => Draw Guard on tilemap
 *$A654 XOR A           ;
- $A655 LD ($7347),A    ; set Guard direction
- $A658 JP $A6FF        ;
+ $A655 LD ($7347),A    ; set Guard direction = left
+ $A658 JP $A6FF        ; => Draw Guard on tilemap
 *$A65B LD A,B          ;
  $A65C CP $03          ;
  $A65E CALL Z,$A3EE    ;
@@ -4357,11 +4396,11 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A675 JR NZ,$A67F     ;
  $A677 LD A,$03        ;
  $A679 LD ($7346),A    ;
- $A67C JP $A6FF        ;
+ $A67C JP $A6FF        ; => Draw Guard on tilemap
 *$A67F LD HL,$71C5     ;
  $A682 DEC (HL)        ;
  $A683 XOR A           ;
- $A684 LD ($7347),A    ; set Guard direction
+ $A684 LD ($7347),A    ; set Guard direction = left
  $A687 LD DE,$FFFF     ;
  $A68A JR $A6DE        ;
 *$A68C LD B,A          ;
@@ -4375,10 +4414,10 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A69D LD ($7346),A    ;
  $A6A0 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A6A3 LD ($A70F),HL   ; set Guard sprite
- $A6A6 JR $A6FF        ;
+ $A6A6 JR $A6FF        ; => Draw Guard on tilemap
 *$A6A8 LD A,$01        ;
- $A6AA LD ($7347),A    ; set Guard direction
- $A6AD JR $A6FF        ;
+ $A6AA LD ($7347),A    ; set Guard direction = right
+ $A6AD JR $A6FF        ; => Draw Guard on tilemap
 *$A6AF LD A,B          ;
  $A6B0 CP $FD          ;
  $A6B2 CALL Z,$A3EE    ;
@@ -4393,11 +4432,11 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A6C9 JR NZ,$A6D2     ;
  $A6CB LD A,$03        ;
  $A6CD LD ($7346),A    ;
- $A6D0 JR $A6FF        ;
+ $A6D0 JR $A6FF        ; => Draw Guard on tilemap
 *$A6D2 LD HL,$71C5     ;
  $A6D5 INC (HL)        ;
  $A6D6 LD A,$01        ;
- $A6D8 LD ($7347),A    ; set Guard direction
+ $A6D8 LD ($7347),A    ; set Guard direction = right
  $A6DB LD DE,$0001     ;
 *$A6DE LD HL,($71C3)   ;
  $A6E1 ADD HL,DE       ;
@@ -4421,13 +4460,13 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
 ; Draw Guard on tilemap
 *$A6FF LD DE,($71C3)   ;
  $A703 LD A,($7347)    ; get Guard direction
- $A706 CP $00          ;
- $A708 JR NZ,$A728     ;
- $A70A LD HL,$6D8D     ;
+ $A706 CP $00          ; left?
+ $A708 JR NZ,$A728     ; right =>
+ $A70A LD HL,$6D8D     ; Tile screen 4 start address + 5
  $A70D ADD HL,DE       ;
  $A70E LD DE,$D432     ; !!MUT-ARG!! current Ninja/Guard sprite address
- $A711 LD B,$07        ;
-*$A713 LD C,$06        ;
+ $A711 LD B,$07        ; 7 rows
+*$A713 LD C,$06        ; 6 rows
 *$A715 LD A,(DE)       ;
  $A716 CALL $A775      ; Translate Ninja tile A into Guard tile
  $A719 LD (HL),A       ;
@@ -4437,16 +4476,16 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A71D JR NZ,$A715     ;
  $A71F PUSH DE         ;
  $A720 LD DE,$0024     ; 36
- $A723 ADD HL,DE       ;
+ $A723 ADD HL,DE       ; next row
  $A724 POP DE          ;
- $A725 DJNZ $A713      ;
+ $A725 DJNZ $A713      ; continue loop by rows
  $A727 RET             ;
 *$A728 LD HL,$6D88     ; Tile screen 4 start address
  $A72B ADD HL,DE       ;
  $A72C LD DE,($A70F)   ; get Guard sprite address
- $A730 LD B,$07        ;
-*$A732 LD C,$06        ;
-*$A734 LD A,(DE)       ;
+ $A730 LD B,$07        ; 7 rows
+*$A732 LD C,$06        ; 6 rows
+*$A734 LD A,(DE)       ; get tile
  $A735 CALL $A775      ; Translate Ninja tile A into Guard tile
  $A738 LD (HL),A       ;
  $A739 INC HL          ;
@@ -4455,9 +4494,9 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A73C JR NZ,$A734     ;
  $A73E PUSH DE         ;
  $A73F LD DE,$0018     ; 24
- $A742 ADD HL,DE       ;
+ $A742 ADD HL,DE       ; next row
  $A743 POP DE          ;
- $A744 DJNZ $A732      ;
+ $A744 DJNZ $A732      ; continue loop by rows
  $A746 RET             ;
 
 ; Data block at A747
@@ -4671,7 +4710,7 @@ b$ABE5 DEFB $04,$66,$06,$03,$4B,$E3,$C3,$43
 ; Routine at AC44
 ;
 ; Used by the routine at #R$B5C7.
-c$AC44 LD HL,$AC72   ;
+c$AC44 LD HL,$AC72   ; address for Table of Guard data addresses
  $AC47 LD B,$18      ;
 *$AC49 LD E,(HL)     ;
  $AC4A INC HL        ;
@@ -4683,7 +4722,7 @@ c$AC44 LD HL,$AC72   ;
  $AC52 LD (HL),$0A   ;
  $AC54 POP HL        ;
  $AC55 DJNZ $AC49    ;
- $AC57 LD HL,$ACA2   ;
+ $AC57 LD HL,$ACA2   ; address for Table of Dog data addresses
  $AC5A LD B,$14      ;
 *$AC5C LD E,(HL)     ;
  $AC5D INC HL        ;
@@ -4702,7 +4741,7 @@ c$AC44 LD HL,$AC72   ;
  $AC6F DJNZ $AC5C    ;
  $AC71 RET           ;
 
-; Data block at AC72
+; Table of Guard data addresses, 24 records
 w$AC72 DEFW $A26B,$A265,$A25F,$A259
  $AC7A DEFW $A253,$A217,$A24D,$A247
  $AC82 DEFW $A241,$A23B,$A235,$A22F
@@ -4710,7 +4749,7 @@ w$AC72 DEFW $A26B,$A265,$A25F,$A259
  $AC92 DEFW $A20B,$A205,$A1FF,$A1F9
  $AC9A DEFW $A1F3,$A1ED,$A1E7,$A1E1
 
-; Data block at ACA2
+; Table of Dog data addresses, 20 records
 w$ACA2 DEFW $A31B,$A311,$A307,$A2FD
  $ACAA DEFW $A2F3,$A2DF,$A2D5,$A2CB
  $ACB2 DEFW $A2C1,$A2B7,$A2A3,$A285
@@ -5146,7 +5185,7 @@ b$B147 DEFB $30
 ;
 ; Used by the routines at #R$B724 and #R$B937.
 c$B148 LD HL,$5821   ; Screen attributes address
- $B14B LD B,$11      ; 17 tile lines
+ $B14B LD B,$11      ; 17 rows
  $B14D LD ($7233),HL ;
  $B150 LD HL,$6F86   ; Tile screen 5 start address
  $B153 LD ($7235),HL ;
@@ -5412,10 +5451,10 @@ c$B148 LD HL,$5821   ; Screen attributes address
 c$B2E8 PUSH BC       ;
  $B2E9 LD B,A        ;
  $B2EA LD A,($7239)  ; get Ninja direction
- $B2ED CP $00        ;
+ $B2ED CP $00        ; left?
  $B2EF LD A,B        ;
  $B2F0 POP BC        ;
- $B2F1 RET NZ        ; No need to mirror => return
+ $B2F1 RET NZ        ; right - no need to mirror => return
  $B2F2 LD IX,$72BA   ; Mirror table half address
  $B2F6 LD ($B2FB),A  ;
  $B2F9 LD A,(IX+$7E) ;
@@ -5428,9 +5467,9 @@ b$B2FD DEFB $C3      ; Counter for Ninja/Guard head tile change
 ;
 ; Used by the routine at #R$B148.
 c$B2FE PUSH AF       ;
- $B2FF LD A,($7239)  ;
+ $B2FF LD A,($7239)  ; get Ninja direction
  $B302 PUSH AF       ;
- $B303 LD A,($71CD)  ;
+ $B303 LD A,($71CD)  ; get Dog direction
  $B306 LD ($7239),A  ;
  $B309 POP AF        ;
  $B30A LD ($71CD),A  ;
@@ -5441,61 +5480,60 @@ c$B2FE PUSH AF       ;
 ;
 ; Used by the routine at #R$B148.
 c$B30F PUSH AF       ;
- $B310 LD A,($7239)  ;
+ $B310 LD A,($7239)  ; get Ninja direction
  $B313 PUSH AF       ;
- $B314 LD A,($7347)  ;
+ $B314 LD A,($7347)  ; get Guard direction
  $B317 LD ($7239),A  ;
  $B31A POP AF        ;
  $B31B LD ($7347),A  ;
  $B31E POP AF        ;
  $B31F RET           ;
 
-; ?? Object procedure
+; Object procedure: flip trigger "D": set/remove wall in room #R$9739
 c$B320 LD A,($9756)  ;
  $B323 XOR $06       ;
  $B325 LD ($9756),A  ;
- $B328 JR $B350      ;
+ $B328 JR $B350      ; => Change Console color in NEAR
 
-; ?? Object procedure
+; Object procedure: flip trigger "E": set/remove wall in room #R$97A6
 c$B32A LD A,($97D0)  ;
  $B32D XOR $FF       ;
  $B32F LD ($97D0),A  ;
- $B332 JR $B350      ;
+ $B332 JR $B350      ; => Change Console color in NEAR
 
-; ?? Object procedure
+; Object procedure: flip trigger "C": set/remove wall in room #R$8D5C
 c$B334 LD A,($8DBC)  ;
  $B337 XOR $06       ;
  $B339 LD ($8DBC),A  ;
- $B33C JR $B350      ;
+ $B33C JR $B350      ; => Change Console color in NEAR
 
-; ?? Object procedure
+; Object procedure: flip trigger "B": set/remove wall in room #R$8F20
 c$B33E LD A,($8F32)  ;
  $B341 XOR $08       ;
  $B343 LD ($8F32),A  ;
- $B346 JR $B350      ;
+ $B346 JR $B350      ; => Change Console color in NEAR
 
-; ?? Object procedure
+; Object procedure: flip trigger "A": set/remove wall in room #R$7F48
 c$B348 LD A,($7F7B)  ;
  $B34B XOR $09       ;
  $B34D LD ($7F7B),A  ;
-; This entry point is used by the routines at #R$B320, #R$B32A, #R$B334 and
-; #R$B33E.
-*$B350 LD HL,$5A7B   ;
+; Change Console color in NEAR, so we see that console action worked
+*$B350 LD HL,$5A7B   ; address in screen attributes
  $B353 LD DE,$001C   ; 28
- $B356 LD C,$03      ;
-*$B358 LD B,$04      ;
+ $B356 LD C,$03      ; 3 rows
+*$B358 LD B,$04      ; 4 columns
 *$B35A LD A,(HL)     ;
  $B35B XOR $06       ;
  $B35D LD (HL),A     ;
  $B35E INC HL        ;
  $B35F DJNZ $B35A    ;
- $B361 ADD HL,DE     ;
+ $B361 ADD HL,DE     ; next row
  $B362 DEC C         ;
  $B363 JR NZ,$B358   ;
- $B365 JP $B8D0      ; => Object procedure
+ $B365 JP $B8D0      ; => Update Ninja on tilemap
 
 ; Room #R$97A6 initialization
-c$B368 LD A,($97D0)  ;
+c$B368 LD A,($97D0)  ; get trigger "E" value
  $B36B LD ($66F5),A  ;
  $B36E JP $A18D      ; => Finish Room 97A6 initialization
 
@@ -5571,14 +5609,14 @@ c$B3B0 LD HL,$C681   ;
  $B3DA LD ($734B),HL ;
  $B3DD LD B,$00      ;
  $B3DF LD D,$80      ;
- $B3E1 LD HL,$723A   ;
+ $B3E1 LD HL,$723A   ; Mirror table address
 *$B3E4 LD C,$08      ;
  $B3E6 LD A,D        ;
 *$B3E7 RR A          ;
  $B3E9 RL E          ;
  $B3EB DEC C         ;
  $B3EC JR NZ,$B3E7   ;
- $B3EE LD (HL),E     ;
+ $B3EE LD (HL),E     ; store reversed byte
  $B3EF INC HL        ;
  $B3F0 INC D         ;
  $B3F1 DJNZ $B3E4    ;
@@ -5807,7 +5845,7 @@ c$B532 LD HL,($9C42) ;
  $B56E OUT (C),A     ;
  $B570 LD HL,$7343   ; counter address
  $B573 DEC (HL)      ; decrease counter
- $B574 JP NZ,$B8D0   ; => Object procedure
+ $B574 JP NZ,$B8D0   ; => Update Ninja on tilemap
  $B577 LD HL,$9C41   ; Ninja X address
  $B57A INC (HL)      ; Moving right one tile
  $B57B LD HL,($9C42) ;
@@ -5878,7 +5916,7 @@ c$B5C7 CALL $AC44    ;
  $B5DC LD ($9DD9),A  ; set command = PUSH BC = enable Energy decrease
  $B5DF LD HL,$BEAA   ;
  $B5E2 LD ($9DED),HL ;
- $B5E5 LD HL,$B8D0   ; Object procedure address
+ $B5E5 LD HL,$B8D0   ; Object procedure address for "Update Ninja on tilemap"
  $B5E8 LD ($D285),HL ;
  $B5EB LD ($B366),HL ;
  $B5EE LD A,$30      ;
@@ -6284,7 +6322,7 @@ c$B889 INC DE        ;
  $B8CA LD ($A39E),A  ;
  $B8CD JP $BEB3      ; !!MUT-ARG!! => run handler
 
-; ?? Object procedure
+; Update Ninja on tilemap
 ;
 ; Used by the routines at #R$B348, #R$B532, #R$BBD4, #R$BC55, #R$BE0D, #R$BFB0,
 ; #R$C094, #R$C13D, #R$C1B6, #R$C24B, #R$C339, #R$C3D9, #R$C4A7, #R$C4DE,
@@ -6295,6 +6333,7 @@ c$B8D0 CALL $BBBB    ; Set update flags for Ninja, 6x7 tiles
  $B8D8 LD BC,$01FD   ; 510 - 1
  $B8DB LD DE,$6D89   ;
  $B8DE LDIR          ;
+; Draw Ninja on tilemap
  $B8E0 LD HL,($9C42) ; get Ninja position in tilemap
  $B8E3 LD A,($7239)  ; get Ninja direction
  $B8E6 CP $00        ;
@@ -6691,7 +6730,7 @@ c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
 ; Movement handler: Ninja punching
 c$BBD4 CALL $BBDF    ; Read Input
  $BBD7 BIT 4,A       ; check FIRE bit
- $BBD9 JP NZ,$B8D0   ; => Object procedure
+ $BBD9 JP NZ,$B8D0   ; => Update Ninja on tilemap
  $BBDC JP $C226      ; => Ninja standing
 
 ; Read Input
@@ -6760,7 +6799,7 @@ c$BC0D LD SP,$6257   ; !!MUT-ARG!!
  $BC34 INC HL        ;
  $BC35 DEC C         ;
  $BC36 JR NZ,$BC28   ;
-; Show title picture
+; Show the title picture
  $BC38 CALL $6289    ; Show title picture (two ninjas)
 ; This entry point is used by the routine at #R$DF60.
 *$BC3B CALL $AEF0    ;
@@ -6873,17 +6912,17 @@ c$BC55 LD HL,$B5C5   ; Ninja standing counter address
  $BD0E LD A,B        ;
  $BD0F LD ($BD7A),A  ;
  $BD12 CP $D4        ;
- $BD14 JP NZ,$B8D0   ; => Object procedure
+ $BD14 JP NZ,$B8D0   ; => Update Ninja on tilemap
  $BD17 LD HL,$B5C6   ;
  $BD1A XOR A         ;
  $BD1B CP (HL)       ;
- $BD1C JP NZ,$B8D0   ; => Object procedure
+ $BD1C JP NZ,$B8D0   ; => Update Ninja on tilemap
  $BD1F LD (HL),$01   ;
  $BD21 LD HL,$0190   ;
  $BD24 CALL $B371    ;
  $BD27 LD B,$32      ;
  $BD29 CALL $B4DE    ; Increase PAY value by 5000
- $BD2C JP $B8D0      ; => Object procedure
+ $BD2C JP $B8D0      ; => Update Ninja on tilemap
 
 ; "BOMB" message
 t$BD2F DEFM "BOMB"
@@ -7007,28 +7046,28 @@ c$BDDD BIT 3,A       ;
  $BE0A JP $BFB0      ; Set movement handler = HL, Ninja sprite = DE
 
 ; ?? Movement handler
-c$BE0D LD HL,$65B1   ;
+c$BE0D LD HL,$65B1   ; !!MUT-ARG!!
  $BE10 LD A,$01      ;
  $BE12 LD (HL),A     ;
  $BE13 DEC HL        ;
  $BE14 LD ($BE0E),HL ;
- $BE17 LD DE,$01FF   ;
+ $BE17 LD DE,$01FF   ; 511
  $BE1A ADD HL,DE     ;
  $BE1B LD (HL),A     ;
- $BE1C LD HL,$65C7   ;
+ $BE1C LD HL,$65C7   ; !!MUT-ARG!!
  $BE1F LD (HL),A     ;
  $BE20 INC HL        ;
  $BE21 LD ($BE1D),HL ;
- $BE24 LD DE,$01FD   ;
+ $BE24 LD DE,$01FD   ; 509
  $BE27 ADD HL,DE     ;
  $BE28 LD (HL),A     ;
  $BE29 LD HL,$7343   ; counter address
  $BE2C DEC (HL)      ; decrease counter
- $BE2D JP NZ,$B8D0   ; => Object procedure
+ $BE2D JP NZ,$B8D0   ; => Update Ninja on tilemap
  $BE30 LD (HL),$14   ;
  $BE32 LD HL,$675A   ;
  $BE35 LD DE,$6958   ;
- $BE38 LD B,$0A      ;
+ $BE38 LD B,$0A      ; 10
 *$BE3A LD (HL),A     ;
  $BE3B LD (DE),A     ;
  $BE3C INC DE        ;
@@ -7130,7 +7169,7 @@ c$BEB3 LD HL,$BEEF   ; !!MUT-ARG!! two-line message address
  $BEE4 NOP           ;
  $BEE5 NOP           ;
  $BEE6 NOP           ;
- $BEE7 LD A,$0A      ;
+ $BEE7 LD A,$0A      ; "LD A,(BC)" instruction code
  $BEE9 LD ($BEDF),A  ;
  $BEEC JP $BC0D      ; => Title picture and music, then go to Main menu
 
@@ -7154,7 +7193,7 @@ c$BF7B LD HL,$6592   ;
  $BF82 JP C,$C16E    ; => Object procedure
  $BF85 INC HL        ;
  $BF86 CP (HL)       ;
- $BF87 JP C,$C16E    ; => Object procedure
+ $BF87 JP C,$C16E    ; => Update Ninja on tilemap
  $BF8A LD A,$03      ;
  $BF8C LD ($7343),A  ; set counter = 3
  $BF8F LD A,($7239)  ; get Ninja direction
@@ -7178,7 +7217,7 @@ c$BF7B LD HL,$6592   ;
 ; #R$C4F6, #R$C50D and #R$C643.
 c$BFB0 LD ($B8CE),HL ;
  $BFB3 LD ($7186),DE ; set Ninja sprite address = DE
- $BFB7 JP $B8D0      ; => Object procedure
+ $BFB7 JP $B8D0      ; => Update Ninja on tilemap
 
 ; Routine at BFBA
 ;
@@ -7241,7 +7280,7 @@ c$BFD5 LD B,$0A      ;
  $C03D LD HL,$E1EC   ; Skill level address
  $C040 LD C,$01      ;
  $C042 CALL $AED1    ; Print skill level digit
- $C045 LD A,$14      ;
+ $C045 LD A,$14      ; "INC D" instruction code
  $C047 LD ($BEDF),A  ;
 *$C04A LD A,($B5C6)  ;
  $C04D CP $02        ;
@@ -7310,7 +7349,7 @@ c$C094 LD HL,$7343   ; counter address
  $C0DE JR NZ,$C0A7   ;
  $C0E0 XOR A         ;
  $C0E1 OUT ($FE),A   ;
- $C0E3 JP $B8D0      ; => Object procedure
+ $C0E3 JP $B8D0      ; => Update Ninja on tilemap
 
 ; Data block at C0E6
 b$C0E6 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -7342,7 +7381,7 @@ c$C13D BIT 1,A       ;
  $C145 CP (HL)       ;
  $C146 JR Z,$C14B    ;
  $C148 DEC (HL)      ;
- $C149 JR $C16E      ; => Object procedure
+ $C149 JR $C16E      ; => Update Ninja on tilemap
 ; This entry point is used by the routine at #R$C3D9.
 *$C14B LD HL,$C24B   ; Movement handler address
  $C14E LD DE,$D3DE   ; Sprite Ninja/Guard walking 1
@@ -7354,7 +7393,7 @@ c$C13D BIT 1,A       ;
  $C15C CP (HL)       ;
  $C15D JR NZ,$C162   ;
  $C15F INC (HL)      ;
- $C160 JR $C16E      ; => Object procedure
+ $C160 JR $C16E      ; => Update Ninja on tilemap
 ; This entry point is used by the routine at #R$C3D9.
 *$C162 LD HL,$C1B6   ; Movement handler address
  $C165 LD ($B8CE),HL ;
@@ -7362,7 +7401,7 @@ c$C13D BIT 1,A       ;
  $C16B LD ($7186),HL ; set Ninja sprite address
 ; This entry point is used by the routines at #R$BF7B, #R$C22F, #R$C24B and
 ; #R$C50D.
-*$C16E JP $B8D0      ; => Object procedure
+*$C16E JP $B8D0      ; => Update Ninja on tilemap
 
 ; Data block at C171
 b$C171 DEFB $3A,$40,$9C,$FE,$00,$CA,$26,$C2
@@ -7400,7 +7439,7 @@ c$C1B6 LD A,($9C41)  ; get Ninja X
  $C1E3 CALL $BBDF    ; Read Input
  $C1E6 BIT 0,A       ; check RIGHT bit
  $C1E8 JP Z,$C226    ; => Ninja standing
- $C1EB JP $B8D0      ; => Object procedure
+ $C1EB JP $B8D0      ; => Update Ninja on tilemap
 *$C1EE LD DE,$003B   ; +59
  $C1F1 ADD HL,DE     ;
  $C1F2 CP (HL)       ;
@@ -7475,7 +7514,7 @@ c$C24B LD A,($9C41)  ; get Ninja X
  $C278 CALL $BBDF    ; Read Input
  $C27B BIT 1,A       ; check LEFT bit
  $C27D JP Z,$C226    ; => Ninja standing
- $C280 JP $B8D0      ; => Object procedure
+ $C280 JP $B8D0      ; => Update Ninja on tilemap
 *$C283 LD DE,$003D   ; +61
  $C286 ADD HL,DE     ;
  $C287 CP (HL)       ;
@@ -7578,7 +7617,7 @@ c$C319 LD A,$18      ;
 ; Movement handler (B8CE handler): Ninja jumping
 c$C339 LD HL,$7343   ; counter address
  $C33C DEC (HL)      ; decrease counter
- $C33D JP NZ,$B8D0   ; => Object procedure
+ $C33D JP NZ,$B8D0   ; => Update Ninja on tilemap
  $C340 LD A,($7239)  ; get Ninja direction
  $C343 LD HL,($9C42) ; get Ninja position in tilemap
  $C346 LD DE,$6592   ;
@@ -7725,7 +7764,7 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C43F DEC HL        ;
  $C440 CALL $C392    ;
  $C443 JR Z,$C447    ;
- $C445 JR $C495      ; => Object procedure
+ $C445 JR $C495      ; => Update Ninja on tilemap
 *$C447 LD A,($9C40)  ; get Ninja Y
  $C44A CP $00        ; top row?
  $C44C JP Z,$C623    ; yes => Going to room Up from current
@@ -7733,10 +7772,10 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C452 ADD HL,DE     ;
  $C453 LD A,$EA      ;
  $C455 CP (HL)       ;
- $C456 JR Z,$C495    ; => Object procedure
+ $C456 JR Z,$C495    ; => Update Ninja on tilemap
  $C458 LD A,$FF      ;
  $C45A CP (HL)       ;
- $C45B JR Z,$C495    ; => Object procedure
+ $C45B JR Z,$C495    ; => Update Ninja on tilemap
  $C45D LD HL,$9C40   ; Ninja Y address
  $C460 DEC (HL)      ; one row up
  $C461 LD HL,($9C42) ; get Ninja position in tilemap
@@ -7748,10 +7787,10 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C46E INC A         ; invert direction
  $C46F AND $01       ;
  $C471 LD ($7239),A  ; set Ninja direction
- $C474 JP $B8D0      ; => Object procedure
+ $C474 JP $B8D0      ; => Update Ninja on tilemap
 ; Check if DOWN pressed
 *$C477 BIT 2,A       ; check DOWN bit
- $C479 JR Z,$C495    ; => Object procedure
+ $C479 JR Z,$C495    ; => Update Ninja on tilemap
 ; Pressed DOWN
  $C47B LD A,($9C40)  ; get Ninja Y
  $C47E CP $0A        ;
@@ -7765,7 +7804,7 @@ c$C3D9 LD HL,($9C42) ; get Ninja position in tilemap
  $C48F DEC HL        ;
  $C490 CALL $C392    ;
  $C493 JR Z,$C498    ; => Move down one tile
-*$C495 JP $B8D0      ; => Object procedure
+*$C495 JP $B8D0      ; => Update Ninja on tilemap
 
 ; Move DOWN one tile
 ;
@@ -7783,7 +7822,7 @@ c$C4A4 LD A,($7239)  ; get Ninja direction
 ; ?? Movement handler
 c$C4A7 LD HL,$7343   ; counter address
  $C4AA DEC (HL)      ; decrease counter
- $C4AB JP NZ,$B8D0   ; => Object procedure
+ $C4AB JP NZ,$B8D0   ; => Update Ninja on tilemap
  $C4AE LD HL,($9C42) ; get Ninja position in tilemap
  $C4B1 LD DE,$6DC9   ; value for right dir = $6D88 (Tile screen 4) + 65
  $C4B4 LD A,($7239)  ; get Ninja direction
@@ -7809,7 +7848,7 @@ c$C4A7 LD HL,$7343   ; counter address
 ; ?? Movement handler
 c$C4DE LD HL,$7343   ; counter address
  $C4E1 DEC (HL)      ; decrease counter
- $C4E2 JP NZ,$B8D0   ; => Object procedure
+ $C4E2 JP NZ,$B8D0   ; => Update Ninja on tilemap
  $C4E5 JP $C226      ; => Ninja standing
 
 ; Routine at C4E8
@@ -7942,13 +7981,13 @@ c$C5A3 LD HL,($9C42) ; get Ninja position in tilemap
 ; Movement handler: Ninja falling down
 c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5C9 LD DE,$001E   ; +30
- $C5CC ADD HL,DE     ; one tile-line lower
+ $C5CC ADD HL,DE     ; one row lower
  $C5CD LD ($9C42),HL ; set Ninja position in tilemap
- $C5D0 LD HL,$755B   ;
+ $C5D0 LD HL,$755B   ; falling counter address
  $C5D3 INC (HL)      ; increase falling counter
  $C5D4 LD HL,$9C40   ; Ninja Y address
  $C5D7 INC (HL)      ; increase Ninja Y
- $C5D8 LD A,(HL)     ;
+ $C5D8 LD A,(HL)     ; get Ninja Y
  $C5D9 CP $0A        ; at room bottom?
  $C5DB JR Z,$C604    ; => Going to room Down from current
  $C5DD LD HL,($9C42) ; get Ninja position in tilemap
@@ -7959,7 +7998,7 @@ c$C5C6 LD HL,($9C42) ; get Ninja position in tilemap
  $C5E7 JR C,$C5EE    ;
  $C5E9 INC HL        ;
  $C5EA CP (HL)       ;
- $C5EB JP NC,$B8D0   ; => Object procedure
+ $C5EB JP NC,$B8D0   ; => Update Ninja on tilemap
 ; Ninja hit somehting after falling
 *$C5EE LD A,$01      ;
  $C5F0 LD ($A39E),A  ;
@@ -7978,7 +8017,7 @@ c$C604 XOR A         ;
  $C605 LD ($9C40),A  ; set Ninja Y = 0
  $C608 LD HL,($9C42) ; get Ninja position in tilemap
  $C60B LD DE,$FED4   ; -300
- $C60E ADD HL,DE     ; 10 tile lines higher
+ $C60E ADD HL,DE     ; 10 rows higher
  $C60F LD ($9C42),HL ; set Ninja position in tilemap
  $C612 LD HL,($7184) ; get Current Room address
  $C615 LD DE,$000A   ; offset in room description
@@ -7997,7 +8036,7 @@ c$C623 LD A,$0A      ;
  $C625 LD ($9C40),A  ; set Ninja Y = 10
  $C628 LD HL,($9C42) ; get Ninja position in tilemap
  $C62B LD DE,$012C   ; +300
- $C62E ADD HL,DE     ; 10 tile lines lower
+ $C62E ADD HL,DE     ; 10 rows lower
  $C62F LD ($9C42),HL ; set Ninja position in tilemap
  $C632 LD HL,($7184) ; get Current Room address
  $C635 LD DE,$0008   ; offset in room description
@@ -8107,7 +8146,7 @@ c$C6E2 LD B,$02      ;
  $C702 LD HL,$7343   ; counter address
  $C705 DEC (HL)      ; decrease counter
  $C706 JP Z,$C226    ; => Ninja standing
- $C709 JP $B8D0      ; => Object procedure
+ $C709 JP $B8D0      ; => Update Ninja on tilemap
 
 ; Movement handler (B8CE handler): Train moving right
 c$C70C LD B,$02      ;
@@ -8496,24 +8535,29 @@ b$D210 DEFB $04,$CE,$09,$63,$09,$63,$09,$63,$09,$63
 b$D256 DEFW $6F02       ; Object ?? 00
  $D258 DEFB $58,$04,$CE
  $D25B DEFW $0000
- $D25D DEFW $6664       ; Object ?? 01
+ $D25D DEFW $6664       ; Object: Console in room #R$80F6
  $D25F DEFB $7C,$09,$63
- $D262 DEFW $B320
- $D264 DEFW $6664       ; Object ?? 02
+ $D262 DEFW $B320       ; Object procedure: flip trigger "D": set/remove wall
+                        ; in room #R$9739
+ $D264 DEFW $6664       ; Object: Console in room #R$99A6
  $D266 DEFB $7D,$09,$63
- $D269 DEFW $B32A
- $D26B DEFW $6664       ; Object ?? 03
+ $D269 DEFW $B32A       ; Object procedure: flip trigger "E": set/remove wall
+                        ; in room #R$97A6
+ $D26B DEFW $6664       ; Object: Console in room #R$92A7
  $D26D DEFB $7E,$09,$63
- $D270 DEFW $B348
- $D272 DEFW $6664       ; Object ?? 04
+ $D270 DEFW $B348       ; Object procedure: flip trigger "A": set/remove wall
+                        ; in room #R$7F48
+ $D272 DEFW $6664       ; Object: Console in room #R$92EF
  $D274 DEFB $7F,$09,$63
- $D277 DEFW $B334
- $D279 DEFW $6664       ; Object ?? 05
+ $D277 DEFW $B334       ; Object procedure: flip trigger "C": set/remove wall
+                        ; in room #R$8D5C
+ $D279 DEFW $6664       ; Object: Console in room #R$9005
  $D27B DEFB $80,$09,$63
- $D27E DEFW $B33E
+ $D27E DEFW $B33E       ; Object procedure: flip trigger "B": set/remove wall
+                        ; in room #R$8F20
  $D280 DEFW $6FE2       ; Object ?? 06
  $D282 DEFB $1F,$09,$63
- $D285 DEFW $B8D0       ; Standard Object procedure
+ $D285 DEFW $B8D0       ; Object procedure "Update Ninja on tilemap"
  $D287 DEFW $6669       ; Object ?? 07
  $D289 DEFB $9C,$09,$D4
  $D28C DEFW $0000
@@ -8529,7 +8573,7 @@ b$D256 DEFW $6F02       ; Object ?? 00
  $D2A3 DEFW $6664       ; Object ?? 11
  $D2A5 DEFB $65,$06,$D2
  $D2A8 DEFW $0000
- $D2AA DEFW $6664       ; Object ?? 12
+ $D2AA DEFW $6664       ; Object ?? 12 BOMB ??
  $D2AC DEFB $66,$08,$D6
  $D2AF DEFW $0000
  $D2B1 DEFW $6664       ; Object ?? 13
@@ -8651,15 +8695,15 @@ b$D34D DEFW $9ED9,$66DF
  $D3BF DEFB $7A
  $D3C0 DEFW $79C6,$6785
  $D3C4 DEFB $7B
- $D3C5 DEFW $80F6,$6773
+ $D3C5 DEFW $80F6,$6773 ; Console in room #R$80F6
  $D3C9 DEFB $7C
- $D3CA DEFW $99A6,$6783
+ $D3CA DEFW $99A6,$6783 ; Console in room #R$99A6
  $D3CE DEFB $7D
- $D3CF DEFW $92A7,$675D
+ $D3CF DEFW $92A7,$675D ; Console in room #R$92A7, see #R$D26B
  $D3D3 DEFB $7E
- $D3D4 DEFW $92EF,$6668
+ $D3D4 DEFW $92EF,$6668 ; Console in room #R$92EF
  $D3D8 DEFB $7F
- $D3D9 DEFW $9005,$66B5 ; #29
+ $D3D9 DEFW $9005,$66B5 ; Console in room #R$9005
  $D3DD DEFB $80
 
 ; Ninja/Guard sprites
@@ -9485,7 +9529,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E358 LD ($8DBC),A  ;
  $E35B INC HL        ;
  $E35C LD A,(HL)     ;
- $E35D LD ($8F32),A  ;
+ $E35D LD ($8F32),A  ; set count for wall in #R$8F20 room
  $E360 INC HL        ;
  $E361 LD BC,$0004   ;
  $E364 LD DE,$E388   ;
@@ -10184,7 +10228,7 @@ b$F98F DEFB $82,$83,$84
  $F99B DEFB $82,$83,$84
  $F99E DEFB $00,$8C,$00
 
-; Routine at F9A1
+; Sound ??
 ;
 ; Used by the routines at #R$B596, #R$FA28 and #R$FA31.
 c$F9A1 RL B          ;
@@ -10229,9 +10273,10 @@ c$F9B9 LD DE,$0000   ;
  $F9E2 JR $F9C5      ;
 
 ; Routine at F9E4
-c$F9E4 CALL $6590    ;
+c$F9E4 CALL $6590    ; Prepare screen, show anti-piracy message, and wait for
+                     ; any key
 
-; Routine at F9E7
+; Start point after loading
 c$F9E7 LD A,$21      ;
  $F9E9 LD ($AEDB),A  ;
  $F9EC LD A,$C6      ;
@@ -10282,12 +10327,12 @@ c$FA28 LD B,$01      ;
  $FA2D LD A,($7184)  ;
  $FA30 RET           ;
 
-; Routine at FA31
+; Decrease Energy by B + Sound
 ;
 ; Used by the routine at #R$A434.
-c$FA31 CALL $9DD9    ;
+c$FA31 CALL $9DD9    ; Decrease Energy by B
  $FA34 LD B,$01      ;
- $FA36 CALL $F9A1    ;
+ $FA36 CALL $F9A1    ; Sound
  $FA39 RET           ;
 
 ; Data block at FA3A

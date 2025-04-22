@@ -3315,7 +3315,7 @@ c$9C44 LD HL,$71D3   ; dog Y position address
  $9C52 XOR A         ;
  $9C53 CP (HL)       ;
  $9C54 JR NZ,$9C5A   ;
- $9C56 LD (HL),$19   ;
+ $9C56 LD (HL),$19   ; !!MUT-ARG!! ??
  $9C58 JR $9C80      ;
 *$9C5A DEC (HL)      ;
  $9C5B CP (HL)       ;
@@ -3513,10 +3513,12 @@ c$9D8B LD HL,$7216   ; Sprite Dog 4
 *$9DC7 LD ($71CF),A  ;
  $9DCA JP $9D34      ;
 
-; Initialize a dog; HL = dog data address
+; Initialize a dog
 ;
 ; Used by the routines at #R$A154, #R$A15F, #R$A1A6, #R$A1B5, #R$A1C0, #R$A1CB,
 ; #R$A1D6, #R$A353 and #R$B42E.
+;
+; HL dog data address
 c$9DCD LD DE,$71CB   ; current dog data address
  $9DD0 LD ($B674),HL ; save current Dog data address
  $9DD3 LD BC,$0009   ; 9 = size of Dog data
@@ -4047,7 +4049,7 @@ b$A393 DEFB $90,$01,$01,$0A,$42,$01,$17,$01
  $A3A3 DEFB $03,$06,$10,$00,$45,$01,$05,$05
  $A3AB DEFB $0A,$19,$00,$69,$00,$06,$06,$03
  $A3B3 DEFB $0F
- $A3B4 DEFB $01                             ; ??
+ $A3B4 DEFB $01                             ; ?? Guard counter
 
 ; ?? something about Ninja and Guard
 ;
@@ -4057,7 +4059,7 @@ c$A3B5 LD A,($9C40)  ; get Ninja Y
  $A3BB CP (HL)       ;
  $A3BC RET NZ        ;
  $A3BD POP HL        ;
- $A3BE LD A,$14      ;
+ $A3BE LD A,$14      ; !!MUT-ARG!! ??
  $A3C0 LD ($A3B4),A  ;
  $A3C3 LD A,$0B      ;
  $A3C5 LD ($7346),A  ;
@@ -4782,9 +4784,9 @@ c$ACCA EXX           ;
  $ACEB LD L,A        ;
  $ACEC PUSH HL       ;
  $ACED POP DE        ;
- $ACEE ADD HL,HL     ; {* 8
+ $ACEE ADD HL,HL     ;
  $ACEF ADD HL,HL     ;
- $ACF0 ADD HL,HL     ; }
+ $ACF0 ADD HL,HL     ; * 8
  $ACF1 ADD HL,DE     ; * 9
  $ACF2 LD DE,$AE02   ; Indicator tiles address
  $ACF5 ADD HL,DE     ;
@@ -5631,9 +5633,11 @@ c$B3B0 LD HL,$C681   ;
 ; Unused
 s$B401 DEFS $09
 
-; Initialize a guard; HL = guard data address
+; Initialize a guard
 ;
 ; Used by the routines at #R$A0DF, #R$A1AF and #R$B425.
+;
+; HL guard data address
 c$B40A LD DE,$71C3   ; address to store guard data
  $B40D LD ($B696),HL ; Save Guard data address
  $B410 LD BC,$0004   ;
@@ -5688,9 +5692,11 @@ c$B458 CALL $9C44    ; Process a dog
  $B45B CALL $A434    ; Process a guard
  $B45E JP $B937      ; Standard room procedure
 
-; Turret initialization; HL = turret data address
+; Turret initialization
 ;
 ; Used by the routine at #R$A142.
+;
+; HL turret data address
 c$B461 LD E,(HL)     ; get Turret offset low byte
  $B462 INC HL        ;
  $B463 LD D,(HL)     ; get Turret offset high byte
@@ -5746,7 +5752,7 @@ c$B489 LD A,($B4DD)    ; get Turret counter
  $B4BB JR C,$B4B4      ;
  $B4BD LD (IX+$06),L   ;
  $B4C0 LD (IX+$05),B   ;
- $B4C3 LD A,$32        ;
+ $B4C3 LD A,$32        ; !!MUT-ARG!! ??
  $B4C5 POP HL          ;
 *$B4C6 LD ($B4DD),A    ; update Turret counter
  $B4C9 LD A,$01        ;
@@ -5754,7 +5760,7 @@ c$B489 LD A,($B4DD)    ; get Turret counter
                        ; Screen 1
  $B4CE LD (HL),$2D     ;
  $B4D0 LD A,($9C41)    ; get Ninja X
- $B4D3 LD B,$0F        ; !!MUT-ARG!!
+ $B4D3 LD B,$0F        ; !!MUT-ARG!! Turret counter value
  $B4D5 CP B            ;
  $B4D6 RET Z           ;
  $B4D7 DEC (HL)        ;
@@ -5972,7 +5978,7 @@ c$B5C7 CALL $AC44    ;
 ;
 ; Used by the routines at #R$C2FA, #R$C319, #R$C604 and #R$C623.
 c$B66A LD A,($71D4)  ;
- $B66D LD ($0000),A  ; !!MUT-ARG!!
+ $B66D LD ($0000),A  ; !!MUT-ARG!! address for current Dog flag
  $B670 LD HL,$71CB   ;
  $B673 LD DE,$0000   ; !!MUT-ARG!! current Dog data address
  $B676 LD BC,$0009   ;
@@ -6117,12 +6123,12 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B75E CP (HL)       ;
  $B75F JR NZ,$B768   ;
  $B761 INC HL        ;
- $B762 LD E,(HL)     ;
+ $B762 LD E,(HL)     ; get address in Tile screen 0, low byte
  $B763 INC HL        ;
- $B764 LD D,(HL)     ;
+ $B764 LD D,(HL)     ; get address in Tile screen 0, high byte
  $B765 INC HL        ;
- $B766 LD A,(HL)     ;
- $B767 LD (DE),A     ;
+ $B766 LD A,(HL)     ; get tile byte
+ $B767 LD (DE),A     ; set tile byte in Tile screen 0
 *$B768 POP HL        ;
  $B769 LD DE,$0005   ;
  $B76C ADD HL,DE     ; next object
@@ -8647,6 +8653,16 @@ b$D256 DEFW $6F02       ; Object ?? 00
 b$D34B DEFW $6664
 
 ; Table of objects, 35 records, 5 bytes each
+;
+; .
+;
+; .
+;
+; +$00/$01: room address
+; .
+; +$02/$03: address in Tile screen 0
+; .
+; +$04: tile byte
 b$D34D DEFW $9ED9,$66DF
  $D351 DEFB $81
  $D352 DEFW $9E22,$671C
@@ -9077,7 +9093,7 @@ c$DF37 LD A,$01      ; blue
  $DF3E LD ($5C0A),A  ; set REPPER = 1
  $DF41 LD A,$08      ;
  $DF43 LD ($5C48),A  ; set BORDCR = $08
- $DF46 CALL $E04D    ;
+ $DF46 CALL $E04D    ; Clear key buffer playing melody
  $DF49 LD DE,$00D4   ;
 *$DF4C PUSH DE       ;
  $DF4D CALL $E440    ; Play next note in melody
@@ -9098,20 +9114,20 @@ c$DF60 CALL $DEC1    ; Clear strings on the screen
  $DF63 LD HL,$DEF8   ; Menu messages address
  $DF66 LD DE,$402D   ;
  $DF69 LD C,$0B      ;
- $DF6B CALL $AED1    ; Print string
+ $DF6B CALL $AED1    ; Print string "J  KEMPSTON"
  $DF6E LD C,$0B      ;
  $DF70 LD DE,$406D   ;
- $DF73 CALL $AED1    ; Print string
+ $DF73 CALL $AED1    ; Print string "K  KEYBOARD"
  $DF76 LD C,$09      ;
  $DF78 LD DE,$40AD   ;
- $DF7B CALL $AED1    ; Print string
+ $DF7B CALL $AED1    ; Print string "P  PROTEK"
  $DF7E LD C,$10      ;
  $DF80 LD DE,$40ED   ;
- $DF83 CALL $AED1    ; Print string
+ $DF83 CALL $AED1    ; Print string "R  REDEFINE KEYS"
  $DF86 LD C,$10      ;
  $DF88 LD DE,$484D   ;
- $DF8B CALL $AED1    ; Print string
- $DF8E CALL $E04D    ;
+ $DF8B CALL $AED1    ; Print string "S  START MISSION"
+ $DF8E CALL $E04D    ; Clear key buffer playing melody
  $DF91 CALL $DFDB    ; Highlight Menu item
  $DF94 LD DE,$00D4   ;
 *$DF97 PUSH DE       ;
@@ -9221,11 +9237,11 @@ c$E015 CALL $DFE6    ; Unhighlight Menu item
  $E035 DJNZ $E02C    ;
  $E037 JR $DFCC      ;
 
-; Data block at E039
+; Ports/bits for Protek and Keyboard
 b$E039 DEFB $EF,$01,$EF,$08,$EF,$10,$F7,$10,$EF,$04 ; Protek ports/bits
  $E043 DEFB $7F,$01,$FD,$01,$FE,$02,$7F,$08,$7F,$04 ; Keyboard input ports/bits
 
-; Routine at E04D
+; Clear key buffer playing melody
 ;
 ; Used by the routines at #R$DF37, #R$DF60, #R$E097 and #R$E2A7.
 c$E04D CALL $E440    ; Play next note in melody
@@ -9275,7 +9291,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E0D8 LD DE,$484F   ;
  $E0DB LD C,$05      ;
  $E0DD CALL $AED1    ; Print string "RIGHT"
- $E0E0 CALL $E04D    ;
+ $E0E0 CALL $E04D    ; Clear key buffer playing melody
  $E0E3 EXX           ;
  $E0E4 LD DE,$58CD   ;
  $E0E7 LD BC,$7223   ;
@@ -9297,7 +9313,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E105 CALL $E440    ; Play next note in melody
  $E108 POP IX        ;
  $E10A LD A,($5C08)  ; get LASTK
- $E10D CP $5B        ;
+ $E10D CP $5B        ; '['
  $E10F JR C,$E113    ;
  $E111 SUB $20       ;
 *$E113 LD B,$25      ;
@@ -9332,7 +9348,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E142 LD HL,$E17C   ;
  $E145 CALL $AED1    ; Print string
  $E148 PUSH IX       ;
- $E14A CALL $E04D    ;
+ $E14A CALL $E04D    ; Clear key buffer playing melody
  $E14D POP IX        ;
  $E14F POP DE        ;
  $E150 LD A,$0E      ;
@@ -9349,7 +9365,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E160 EX DE,HL      ;
  $E161 POP HL        ;
  $E162 EXX           ;
- $E163 LD HL,$0020   ;
+ $E163 LD HL,$0020   ; 32
  $E166 RR D          ;
  $E168 RR D          ;
  $E16A RR D          ;
@@ -9361,7 +9377,7 @@ c$E097 CALL $DFE6    ; Unhighlight Menu item
  $E174 POP BC        ;
  $E175 DEC B         ;
  $E176 JP NZ,$E0F4   ;
- $E179 JP $DF60      ;
+ $E179 JP $DF60      ; => Main menu
 
 ; Data block at E17C
 b$E17C DEFM "M"
@@ -9444,7 +9460,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2B8 LD DE,$4092   ;
  $E2BB LD C,$06      ;
  $E2BD CALL $AED1    ; Print string "1 TO 9"
- $E2C0 CALL $E04D    ;
+ $E2C0 CALL $E04D    ; Clear key buffer playing melody
  $E2C3 LD HL,$58F3   ;
  $E2C6 LD A,$B1      ;
  $E2C8 LD (HL),A     ;
@@ -9464,7 +9480,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2E2 LD DE,$40F4   ;
  $E2E5 LD C,$01      ;
  $E2E7 CALL $AED1    ; Print string
- $E2EA CALL $E04D    ;
+ $E2EA CALL $E04D    ; Clear key buffer playing melody
  $E2ED LD HL,$58F3   ;
  $E2F0 LD A,$0E      ;
  $E2F2 LD (HL),A     ;
@@ -9473,7 +9489,7 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E2F5 INC HL        ;
  $E2F6 LD (HL),A     ;
  $E2F7 CALL $DEC1    ; Clear strings on the screen
- $E2FA LD HL,$E204   ;
+ $E2FA LD HL,$E204   ; "YOUR MISSION"
  $E2FD LD DE,$406F   ;
  $E300 LD C,$0C      ;
  $E302 CALL $AED1    ; Print string "YOUR MISSION"
@@ -9498,13 +9514,13 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E327 LD H,(HL)     ;
  $E328 LD L,A        ;
  $E329 LD A,(HL)     ;
- $E32A LD ($A3BF),A  ;
+ $E32A LD ($A3BF),A  ; set Guard counter value
  $E32D INC HL        ;
  $E32E LD A,(HL)     ;
- $E32F LD ($9C57),A  ;
+ $E32F LD ($9C57),A  ; set Dog counter value
  $E332 INC HL        ;
  $E333 LD A,(HL)     ;
- $E334 LD ($B4C4),A  ;
+ $E334 LD ($B4C4),A  ; set Turret counter value
  $E337 INC HL        ;
  $E338 LD E,(HL)     ;
  $E339 INC HL        ;
@@ -9514,28 +9530,28 @@ c$E2A7 CALL $DFE6    ; Unhighlight Menu item
  $E340 LD E,(HL)     ;
  $E341 INC HL        ;
  $E342 LD D,(HL)     ;
- $E343 LD ($B7CB),DE ; set initial Time value for BOMB
+ $E343 LD ($B7CB),DE ; set Time value for BOMB
  $E347 INC HL        ;
  $E348 LD A,(HL)     ;
- $E349 LD ($97D0),A  ;
+ $E349 LD ($97D0),A  ; set flag for wall in room #R$97A6
  $E34C INC HL        ;
  $E34D LD A,(HL)     ;
- $E34E LD ($9756),A  ;
+ $E34E LD ($9756),A  ; set count for wall in room #R$9739
  $E351 INC HL        ;
  $E352 LD A,(HL)     ;
- $E353 LD ($7F7B),A  ;
+ $E353 LD ($7F7B),A  ; set count for wall in room #R$7F48
  $E356 INC HL        ;
  $E357 LD A,(HL)     ;
- $E358 LD ($8DBC),A  ;
+ $E358 LD ($8DBC),A  ; set count for wall in room #R$8D5C
  $E35B INC HL        ;
  $E35C LD A,(HL)     ;
- $E35D LD ($8F32),A  ; set count for wall in #R$8F20 room
+ $E35D LD ($8F32),A  ; set count for wall in room #R$8F20
  $E360 INC HL        ;
  $E361 LD BC,$0004   ;
  $E364 LD DE,$E388   ;
  $E367 LDIR          ;
  $E369 LD BC,$0004   ;
- $E36C LD DE,$D357   ;
+ $E36C LD DE,$D357   ; address for BOMB in Table of objects #R$D34D
  $E36F LDIR          ; Copy last 4 bytes: BOMB placement
  $E371 LD DE,$0019   ;
 *$E374 PUSH DE       ;
@@ -9560,6 +9576,30 @@ b$E388 DEFM " 10",$0A
 ;
 ; .
 ;
+; +$00: Guard counter value
+; .
+; +$01: Dog counter value
+; .
+; +$02: Turret counter value
+; .
+; +$03/$04: two digits for TIME value
+; .
+; +$05/$06: two digits for BOMB timer
+; .
+; +$07: flag for wall in room #R$97A6
+; .
+; +$08: count for wall in room #R$9739: $01 = no wall, $07 = put wall
+; .
+; +$09: count for wall in room #R$7F48
+; .
+; +$0A: count for wall in room #R$8D5C
+; .
+; +$0B: count for wall in room #R$8F20: $01 = no wall, $09 = put wall
+; .
+; +$10/$11: room for BOMB placement
+; .
+; +$12/$13: address in Tile screen 0 for BOMB placement
+; .
 ; Level 1 "EXTREMELY EASY"
 b$E38C DEFB $14,$19,$32
  $E38F DEFM "9999"

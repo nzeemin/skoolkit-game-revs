@@ -1092,6 +1092,7 @@ W $9C42,2,2 Ninja position in tilemap: Y * 30 + X
 c $9C44 Process a dog
 C $9C44,3 dog Y position address
 C $9C47,3 get Ninja Y
+C $9C56,2 !!MUT-ARG!! ??
 C $9C5E,3 get Dog direction
 C $9C65,3 get Ninja X
 C $9C69,3 Dog X position address
@@ -1124,7 +1125,8 @@ c $9D8B ?? something about Dog
 C $9D8B,3 Sprite Dog 4
 C $9D98,3 get Dog direction
 C $9DB3,3 get Dog direction
-c $9DCD Initialize a dog; HL = dog data address
+c $9DCD Initialize a dog
+R $9DCD HL dog data address
 C $9DCD,3 current dog data address
 C $9DD0,3 save current Dog data address
 C $9DD3,3 9 = size of Dog data
@@ -1444,10 +1446,11 @@ c $A38E Room #R$80F6 initialization
 C $A38E,3 Dog data address
 C $A391,2 Initialize a dog, then Standard room initialization
 b $A393
-B $A3B4,1,1 ??
+B $A3B4,1,1 ?? Guard counter
 c $A3B5 ?? something about Ninja and Guard
 C $A3B5,3 get Ninja Y
 C $A3B8,3 Current Guard Y position address
+C $A3BE,2 !!MUT-ARG!! ??
 C $A3C8,3 Sprite Ninja/Guard punching
 C $A3CB,3 set Guard sprite
 C $A3CE,3 => Draw Guard on tilemap
@@ -1609,7 +1612,7 @@ W $ACA2,40,8
 c $ACCA Draw game screen frames and indicator text
 C $ACCF,3 Screen start address
 C $ACD2,3 Game screen frames/indicators RLE encoded sequence
-C $ACEE,3 * 8
+C $ACF0,1 * 8
 C $ACF1,1 * 9
 C $ACF2,3 Indicator tiles address
 C $AD21,3 Indicator messages address
@@ -1768,7 +1771,8 @@ C $B3EE,1 store reversed byte
 C $B3F8,3 set REPDEL = 1
 C $B3FB,3 set REPPER = 1
 s $B401
-c $B40A Initialize a guard; HL = guard data address
+c $B40A Initialize a guard
+R $B40A HL guard data address
 C $B40A,3 address to store guard data
 C $B40D,3 Save Guard data address
 C $B41A,1 get Guard direction from Guard data
@@ -1798,7 +1802,8 @@ c $B458 Room procedure (for 5 rooms with a guard and a dog)
 C $B458,3 Process a dog
 C $B45B,3 Process a guard
 C $B45E,3 Standard room procedure
-c $B461 Turret initialization; HL = turret data address
+c $B461 Turret initialization
+R $B461 HL turret data address
 C $B461,1 get Turret offset low byte
 C $B463,1 get Turret offset high byte
 C $B464,1 save offset
@@ -1818,10 +1823,11 @@ C $B489,3 get Turret counter
 C $B48C,1 decrease counter
 C $B48D,3 !!MUT-ARG!! Turret address on Tile Screen 5
 C $B4AB,3 -30
+C $B4C3,2 !!MUT-ARG!! ??
 C $B4C6,3 update Turret counter
 C $B4CB,3 !!MUT-ARG!! set "need update" mark for Turret on Tile Screen 1
 C $B4D0,3 get Ninja X
-C $B4D3,2 !!MUT-ARG!!
+C $B4D3,2 !!MUT-ARG!! Turret counter value
 b $B4DD
 B $B4DD,1,1 Turret counter 50..0
 c $B4DE Increase PAY value by B * 100
@@ -1904,7 +1910,7 @@ C $B65C,3 set Ninja Y = 5
 C $B662,3 set Ninja position in tilemap: Y * 30 + X
 C $B667,3 set counter = 19
 c $B66A Current Room changed, entering the new Room
-C $B66D,3 !!MUT-ARG!!
+C $B66D,3 !!MUT-ARG!! address for current Dog flag
 C $B673,3 !!MUT-ARG!! current Dog data address
 C $B681,3 Find record for the current room in #R$DE84 table
 C $B686,2 found =>
@@ -1974,6 +1980,10 @@ C $B74E,3 Table of objects address
 C $B751,2 35 objects
 C $B754,3 get Current Room address, low byte
 C $B75B,3 get Current Room address, high byte
+C $B762,1 get address in Tile screen 0, low byte
+C $B764,1 get address in Tile screen 0, high byte
+C $B766,1 get tile byte
+C $B767,1 set tile byte in Tile screen 0
 C $B76C,1 next object
 C $B76D,2 continue loop by objects
 C $B77C,3 clear LASTK
@@ -3084,6 +3094,9 @@ B $D349,2,2
 b $D34B
 W $D34B,2,2
 b $D34D Table of objects, 35 records, 5 bytes each
+N $D34D +$00/$01: room address
+N $D34D +$02/$03: address in Tile screen 0
+N $D34D +$04: tile byte
 W $D34D,4,4
 B $D351,1,1
 W $D352,4,4
@@ -3197,6 +3210,7 @@ C $DF39,2 set border color, sound off
 C $DF3B,3 set REPDEL = 1
 C $DF3E,3 set REPPER = 1
 C $DF43,3 set BORDCR = $08
+C $DF46,3 Clear key buffer playing melody
 C $DF4D,3 Play next note in melody
 C $DF50,3 Clear LASTK and do RST $38 once
 C $DF54,3 get LASTK
@@ -3204,11 +3218,12 @@ C $DF59,2 key pressed => Main menu
 c $DF60 Main menu
 C $DF60,3 Clear strings on the screen
 C $DF63,3 Menu messages address
-C $DF6B,3 Print string
-C $DF73,3 Print string
-C $DF7B,3 Print string
-C $DF83,3 Print string
-C $DF8B,3 Print string
+C $DF6B,3 Print string "J  KEMPSTON"
+C $DF73,3 Print string "K  KEYBOARD"
+C $DF7B,3 Print string "P  PROTEK"
+C $DF83,3 Print string "R  REDEFINE KEYS"
+C $DF8B,3 Print string "S  START MISSION"
+C $DF8E,3 Clear key buffer playing melody
 C $DF91,3 Highlight Menu item
 C $DF98,3 Play next note in melody
 C $DF9B,3 Clear LASTK and do RST $38 once
@@ -3240,10 +3255,10 @@ C $E00D,3 Highlight Menu item
 c $E015 Protek selected in Main menu
 C $E015,3 Unhighlight Menu item
 C $E01E,3 Highlight Menu item
-b $E039
+b $E039 Ports/bits for Protek and Keyboard
 B $E039,10,10 Protek ports/bits
 B $E043,10,10 Keyboard input ports/bits
-c $E04D
+c $E04D Clear key buffer playing melody
 C $E04D,3 Play next note in melody
 C $E050,3 Clear LASTK and do RST $38 once
 C $E053,3 get LASTK
@@ -3267,11 +3282,16 @@ C $E0C5,3 Print string "UP"
 C $E0CD,3 Print string "DOWN"
 C $E0D5,3 Print string "LEFT"
 C $E0DD,3 Print string "RIGHT"
+C $E0E0,3 Clear key buffer playing melody
 C $E102,3 Clear LASTK and do RST $38 once
 C $E105,3 Play next note in melody
 C $E10A,3 get LASTK
+C $E10D,2 '['
 C $E145,3 Print string
+C $E14A,3 Clear key buffer playing melody
 C $E15C,3 32
+C $E163,3 32
+C $E179,3 => Main menu
 b $E17C
 b $E17D
 T $E17C,1,1
@@ -3307,11 +3327,14 @@ C $E2AA,3 Clear strings on the screen
 C $E2AD,3 "ENTER SKILL LEVEL"
 C $E2B5,3 Print string "ENTER SKILL LEVEL"
 C $E2BD,3 Print string "1 TO 9"
+C $E2C0,3 Clear key buffer playing melody
 C $E2CD,3 Play next note in melody
 C $E2D0,3 Clear LASTK and do RST $38 once
 C $E2D3,3 get LASTK
 C $E2DE,3 Skill level address
 C $E2E7,3 Print string
+C $E2EA,3 Clear key buffer playing melody
+C $E2FA,3 "YOUR MISSION"
 C $E2F7,3 Clear strings on the screen
 C $E302,3 Print string "YOUR MISSION"
 C $E30A,3 Print string "WILL BE"
@@ -3319,9 +3342,17 @@ C $E30D,3 get Skill level
 C $E318,1 * 16
 C $E319,3 Levels data base address
 C $E322,3 Print string - level description
+C $E32A,3 set Guard counter value
+C $E32F,3 set Dog counter value
+C $E334,3 set Turret counter value
 C $E33B,4 set Indicator Time value
-C $E343,4 set initial Time value for BOMB
-C $E35D,3 set count for wall in #R$8F20 room
+C $E343,4 set Time value for BOMB
+C $E349,3 set flag for wall in room #R$97A6
+C $E34E,3 set count for wall in room #R$9739
+C $E35D,3 set count for wall in room #R$8F20
+C $E353,3 set count for wall in room #R$7F48
+C $E358,3 set count for wall in room #R$8D5C
+C $E36C,3 address for BOMB in Table of objects #R$D34D
 C $E36F,2 Copy last 4 bytes: BOMB placement
 C $E375,3 Clear LASTK and do RST $38 once
 C $E378,3 Play next note in melody
@@ -3329,6 +3360,18 @@ C $E37C,3 get LASTK
 b $E388
 T $E388,4
 b $E38C Levels data
+N $E38C +$00: Guard counter value
+N $E38C +$01: Dog counter value
+N $E38C +$02: Turret counter value
+N $E38C +$03/$04: two digits for TIME value
+N $E38C +$05/$06: two digits for BOMB timer
+N $E38C +$07: flag for wall in room #R$97A6
+N $E38C +$08: count for wall in room #R$9739: $01 = no wall, $07 = put wall
+N $E38C +$09: count for wall in room #R$7F48
+N $E38C +$0A: count for wall in room #R$8D5C
+N $E38C +$0B: count for wall in room #R$8F20: $01 = no wall, $09 = put wall
+N $E38C +$10/$11: room for BOMB placement
+N $E38C +$12/$13: address in Tile screen 0 for BOMB placement
 N $E38C Level 1 "EXTREMELY EASY"
 B $E38C,3,3
 T $E38F,4

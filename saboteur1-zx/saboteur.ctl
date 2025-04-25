@@ -1769,288 +1769,745 @@ B $9130,7 Block 4x7 tiles from $798E to $7031
 B $9137,7 Block 4x7 tiles from $798E to $7014
 B $913E,1 End of sequence
 b $913F Room 913F
+N $913F #HTML[<img src="images/rooms/913F.png" />]
 W $913F,2,2 Room procedure
 W $9141,2,2 Initialization
 W $9143,2,2
 W $9145,2,2 Room to Right
 W $9147,2,2
 W $9149,2,2 Room Down
-B $914B,111,5,5,5,6,5,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/913F.png" />]
+B $914B,5 Triangle with $FF, count=9 at $65AD
+B $9150,5 Fill horz 39 tiles with $FF at $6767
+B $9155,5 Fill horz 5 tiles with $FF at $6590
+B $915A,6 Rectangle 3x3 tiles with $FF at $65AE
+B $9160,5 Fill vert 12 tiles with $EB at $6609
+B $9165,7 Block 2x1 tiles from $7984 to $6779
+B $916C,7 Block 3x3 tiles from $71A0 to $710E
+B $9173,7 Block 3x3 tiles from $7C18 to $7111
+B $917A,7 Block 2x1 tiles from $7E8A to $714E
+B $9181,7 Block 3x4 tiles from $7C0C to $70FE
+B $9188,7 Block 3x1 tiles from $7E87 to $713A
+B $918F,7 Block 3x1 tiles from $7E87 to $7156
+B $9196,7 Block 2x1 tiles from $7E8A to $7137
+B $919D,7 Block 2x1 tiles from $7E8A to $7154
+B $91A4,7 Block 2x1 tiles from $7E8A to $715A
+B $91AB,7 Block 2x1 tiles from $7E8A to $7140
+B $91B2,7 Block 2x1 tiles from $7E8A to $7143
+B $91B9,1 End of sequence
 b $91BA Room 91BA
+N $91BA #HTML[<img src="images/rooms/91BA.png" />]
 W $91BA,2,2 Room procedure
 W $91BC,2,2 Initialization
 W $91BE,2,2 Room to Left
 W $91C0,2,2
 W $91C2,2,2 Room Up
 W $91C4,2,2 Room Down
-B $91C6,68,5,4,5,6,5,7,5,7,7,7,3,3,3,1 #HTML[<img src="images/rooms/91BA.png" />]
+B $91C6,5 Fill horz 4 tiles with $FF at $6590
+B $91CB,4 Put tile $2A at $6FA5
+B $91CF,5 Fill vert 7 tiles with $2B at $6FC3
+B $91D4,6 Rectangle 4x3 tiles with $FF at $669E
+B $91DA,5 Fill horz 152 tiles with $FF at $66F6
+B $91DF,7 Block 2 tiles from $81E3 to $65AC copy 11 times
+B $91E6,5 Triangle with $FF, count=2 at $66C0
+B $91EB,7 Block 2 tiles from $7348 to $65A4 copy 12 times
+B $91F2,7 Block 2x5 tiles from $7984 to $670C
+B $91F9,7 Block 3x3 tiles from $7C18 to $709B
+B $9200,3 Barrel 3x3 tiles at $709F
+B $9203,3 Barrel 3x3 tiles at $70A2
+B $9206,3 Barrel 3x3 tiles at $70AD
+B $9209,1 End of sequence
 b $920A Room 920A
+N $920A #HTML[<img src="images/rooms/920A.png" />]
 W $920A,2,2 Room procedure
 W $920C,2,2 Initialization
 W $920E,2,2 Room to Left
 W $9210,2,2 Room to Right
-W $9212,4,2
-B $9216,56,5,7,7,3,3,3,3,3,7,7,7,1 #HTML[<img src="images/rooms/920A.png" />]
+W $9212,2,2
+W $9214,2,2
+B $9216,5 Fill horz 30 tiles with $FF at $6770
+B $921B,7 Block 3x4 tiles from $7C0C to $70F1
+B $9222,7 Block 3x3 tiles from $71A0 to $7113
+B $9229,3 Barrel 3x3 tiles at $7117
+B $922C,3 Barrel 3x3 tiles at $711A
+B $922F,3 Barrel 3x3 tiles at $70BE
+B $9232,3 Barrel 3x3 tiles at $70C1
+B $9235,3 Barrel 3x3 tiles at $7126
+B $9238,7 Block 4x3 tiles from $7E7B to $70C4
+B $923F,7 Block 4x3 tiles from $7E7B to $711B
+B $9246,7 Block 4x3 tiles from $7E7B to $7120
+B $924D,1 End of sequence
 b $924E Room 924E
+N $924E #HTML[<img src="images/rooms/924E.png" />]
 W $924E,2,2 Room procedure
 W $9250,2,2 Initialization
 W $9252,2,2 Room to Left
 W $9254,2,2
 W $9256,2,2 Room Up
 W $9258,2,2
-B $925A,77,5,7,5,7,7,7,7,7,3,3,3,3,3,3,3,3,1 #HTML[<img src="images/rooms/924E.png" />]
+B $925A,5 Fill horz 16 tiles with $FF at $659E
+B $925F,7 Block 2 tiles from $81E3 to $65CA copy 14 times
+B $9266,5 Fill horz 32 tiles with $FF at $676E
+B $926B,7 Block 2 tiles from $7348 to $65C2 copy 15 times
+B $9272,7 Block 2x1 tiles from $71B9 to $65A4
+B $9279,7 Block 3x3 tiles from $71A0 to $711C
+B $9280,7 Block 3x3 tiles from $71A0 to $70CB
+B $9287,7 Block 4x3 tiles from $7E7B to $7124
+B $928E,3 Barrel 3x3 tiles at $705D
+B $9291,3 Barrel 3x3 tiles at $70B5
+B $9294,3 Barrel 3x3 tiles at $70B9
+B $9297,3 Barrel 3x3 tiles at $70BC
+B $929A,3 Barrel 3x3 tiles at $710E
+B $929D,3 Barrel 3x3 tiles at $7111
+B $92A0,3 Barrel 3x3 tiles at $7114
+B $92A3,3 Barrel 3x3 tiles at $7118
+B $92A6,1 End of sequence
 b $92A7 Room 92A7
+N $92A7 #HTML[<img src="images/rooms/92A7.png" />]
 N $92A7 3rd console: flips trigger "A": set/remove wall in room #R$7F48.
 W $92A7,2,2 Room procedure
 W $92A9,2,2 Initialization
 W $92AB,2,2
 W $92AD,2,2 Room to Right
-W $92AF,4,2
-B $92B3,60,5,7,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/92A7.png" />]
+W $92AF,2,2
+W $92B1,2,2
+B $92B3,5 Fill horz 32 tiles with $FF at $6590
+B $92B8,7 Block 2 tiles from $81E3 to $65CC copy 13 times
+B $92BF,5 Fill horz 60 tiles with $FF at $6752
+B $92C4,7 Block 4x4 tiles from $71A9 to $70D1
+B $92CB,7 Block 4x4 tiles from $71A9 to $70E1
+B $92D2,7 Block 2x4 tiles from $71BB to $70D6
+B $92D9,7 Block 2x4 tiles from $71BB to $70D8
+B $92E0,7 Block 2x4 tiles from $71BB to $70DB
+B $92E7,7 Block 2x4 tiles from $71BB to $70DE
+B $92EE,1 End of sequence
 b $92EF Room 92EF
+N $92EF #HTML[<img src="images/rooms/92EF.png" />]
 N $92EF 1st conosole: flips trigger "C": set/remove wall in room #R$8D5C.
 W $92EF,2,2 Room procedure
 W $92F1,2,2 Initialization
 W $92F3,2,2
 W $92F5,2,2 Room to Right
-W $92F7,4,2
-B $92FB,119,2,6,6,6,5,4,5,7,7,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/92EF.png" />]
+W $92F7,2,2
+W $92F9,2,2
+B $92FB,2 Fill entire screen with $FF
+B $92FD,6 Rectangle 26x6 tiles with $00 at $65B2
+B $9303,6 Rectangle 22x6 tiles with $02 at $66DE
+B $9309,6 Rectangle 6x4 tiles with $CC at $671C
+B $930F,5 Fill horz 7 tiles with $D1 at $6738
+B $9314,4 Put tile $D0 at $673D
+B $9318,5 Fill horz 12 tiles with $CD at $6722
+B $931D,7 Block 1x4 tiles from $9372 to $6724
+B $9324,7 Block 1x4 tiles from $9372 to $6726
+B $932B,7 Block 1x4 tiles from $9372 to $6728
+B $9332,7 Block 1x4 tiles from $9372 to $672A
+B $9339,7 Block 1x4 tiles from $9372 to $672C
+B $9340,7 Block 1x4 tiles from $9372 to $672E
+B $9347,7 Block 4x4 tiles from $71A9 to $6FE1
+B $934E,7 Block 2x4 tiles from $71BB to $6FE6
+B $9355,7 Block 2x4 tiles from $71BB to $6FE9
+B $935C,7 Block 2x4 tiles from $71BB to $6FEC
+B $9363,7 Block 2x4 tiles from $71BB to $6FEF
+B $936A,7 Block 2x4 tiles from $71BB to $6FF2
+B $9371,1 End of sequence
+B $9372
 b $9376 Room 9376
+N $9376 #HTML[<img src="images/rooms/9376.png" />]
 W $9376,2,2 Room procedure
 W $9378,2,2 Initialization
 W $937A,2,2 Room to Left
 W $937C,2,2
 W $937E,2,2 Room Up
-B $9380,2,2
-B $9382,93,2,6,6,5,5,6,5,7,7,7,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/9376.png" />]
+W $9380,2,2
+B $9382,2 Fill entire screen with $FF
+B $9384,6 Rectangle 12x6 tiles with $02 at $6680
+B $938A,6 Rectangle 11x6 tiles with $02 at $6690
+B $9390,5 Fill horz 12 tiles with $03 at $6662
+B $9395,5 Fill horz 11 tiles with $03 at $6672
+B $939A,6 Rectangle 11x2 tiles with $0C at $70FE
+B $93A0,5 Fill horz 11 tiles with $0B at $70E0
+B $93A5,7 Block 2 tiles from $71B9 to $6594 copy 14 times
+B $93AC,7 Block 2 tiles from $71B9 to $65A4 copy 14 times
+B $93B3,7 Block 6x2 tiles from $7188 to $70F3
+B $93BA,5 Fill vert 7 tiles with $FD at $659A
+B $93BF,5 Fill vert 7 tiles with $FD at $65A2
+B $93C4,5 Fill vert 7 tiles with $FD at $65A9
+B $93C9,7 Block 1x3 tiles from $7B4F to $6736
+B $93D0,7 Block 1x3 tiles from $7B4F to $673A
+B $93D7,7 Block 1x3 tiles from $7B4F to $673E
+B $93DE,1 End of sequence
 b $93DF Room 93DF
+N $93DF #HTML[<img src="images/rooms/93DF.png" />]
 W $93DF,2,2 Room procedure
 W $93E1,2,2 Initialization
 W $93E3,2,2 Room to Left
 W $93E5,2,2 Room to Right
 W $93E7,2,2 Room Up
 W $93E9,2,2
-B $93EB,70,2,6,5,5,5,5,5,5,7,5,5,7,7,1 #HTML[<img src="images/rooms/93DF.png" />]
+B $93EB,2 Fill entire screen with $02
+B $93ED,6 Rectangle 5x2 tiles with $21 at $6716
+B $93F3,5 Fill horz 4 tiles with $03 at $667C
+B $93F8,5 Fill horz 153 tiles with $FF at $6590
+B $93FD,5 Fill horz 16 tiles with $FF at $6636
+B $9402,5 Fill horz 4 tiles with $FF at $665E
+B $9407,5 Fill horz 17 tiles with $FF at $671B
+B $940C,5 Fill horz 86 tiles with $FF at $6738
+B $9411,7 Block 2 tiles from $71B9 to $6596 copy 13 times
+B $9418,5 Fill vert 5 tiles with $FD at $659E
+B $941D,5 Fill vert 6 tiles with $FD at $65A7
+B $9422,7 Block 1x4 tiles from $7B4F to $6724
+B $9429,7 Block 1x3 tiles from $7B4F to $674B
+B $9430,1 End of sequence
 b $9431 Room 9431
+N $9431 #HTML[<img src="images/rooms/9431.png" />]
 W $9431,2,2 Room procedure
 W $9433,2,2 Initialization
-W $9435,4,2
+W $9435,2,2
+W $9437,2,2
 W $9439,2,2 Room Up
 W $943B,2,2 Room Down
-B $943D,20,2,7,5,5,1 #HTML[<img src="images/rooms/9431.png" />]
+B $943D,2 Fill entire screen with $FF
+B $943F,7 Block 2 tiles from $71B9 to $6596 copy 17 times
+B $9446,5 Fill vert 17 tiles with $FD at $659E
+B $944B,5 Fill vert 17 tiles with $FD at $65A7
+B $9450,1 End of sequence
 b $9451 Room 9451
+N $9451 #HTML[<img src="images/rooms/9451.png" />]
 W $9451,2,2 Room procedure
 W $9453,2,2 Initialization
-W $9455,6,2
+W $9455,2,2
+W $9457,2,2
+W $9459,2,2
 W $945B,2,2 Room Down
-B $945D,31,2,7,5,5,6,5,1 #HTML[<img src="images/rooms/9451.png" />]
+B $945D,2 Fill entire screen with $FF
+B $945F,7 Block 2x4 tiles from $7984 to $671C
+B $9466,5 Fill vert 17 tiles with $FD at $659E
+B $946B,5 Fill vert 17 tiles with $FD at $65A7
+B $9470,6 Rectangle 24x6 tiles with $02 at $6665
+B $9476,5 Fill horz 24 tiles with $03 at $6647
+B $947B,1 End of sequence
 b $947C Room 947C
+N $947C #HTML[<img src="images/rooms/947C.png" />]
 W $947C,2,2 Room procedure
 W $947E,2,2 Initialization
 W $9480,2,2 Room to Left
 W $9482,2,2 Room to Right
-W $9484,4,2
-B $9488,35,2,6,6,5,5,5,5,1 #HTML[<img src="images/rooms/947C.png" />]
+W $9484,2,2
+W $9486,2,2
+B $9488,2 Fill entire screen with $FF
+B $948A,6 Rectangle 21x7 tiles with $02 at $6626
+B $9490,6 Rectangle 7x6 tiles with $02 at $6679
+B $9496,5 Fill vert 8 tiles with $02 at $663B
+B $949B,5 Fill vert 7 tiles with $02 at $665A
+B $94A0,5 Fill horz 8 tiles with $21 at $672C
+B $94A5,5 Fill horz 7 tiles with $21 at $674B
+B $94AA,1 End of sequence
 b $94AB Room 94AB
+N $94AB #HTML[<img src="images/rooms/94AB.png" />]
 W $94AB,2,2 Room procedure
 W $94AD,2,2 Initialization
 W $94AF,2,2 Room to Left
 W $94B1,2,2 Room to Right
-W $94B3,4,2
-B $94B7,24,2,6,6,4,5,1 #HTML[<img src="images/rooms/94AB.png" />]
+W $94B3,2,2
+W $94B5,2,2
+B $94B7,2 Fill entire screen with $FF
+B $94B9,6 Rectangle 30x7 tiles with $00 at $6626
+B $94BF,6 Rectangle 2x7 tiles with $02 at $6642
+B $94C5,4 Put tile $2A at $7037
+B $94C9,5 Fill vert 6 tiles with $2B at $7055
+B $94CE,1 End of sequence
 b $94CF Room 94CF
+N $94CF #HTML[<img src="images/rooms/94CF.png" />]
 W $94CF,2,2 Room procedure
 W $94D1,2,2 Initialization
 W $94D3,2,2 Room to Left
 W $94D5,2,2 Room to Right
-W $94D7,4,2
-B $94DB,77,5,6,6,4,4,6,7,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/94CF.png" />]
+W $94D7,2,2
+W $94D9,2,2
+B $94DB,5 Fill horz 60 tiles with $FF at $6752
+B $94E0,6 Rectangle 18x7 tiles with $0D at $6680
+B $94E6,6 Rectangle 27x2 tiles with $A3 at $6590
+B $94EC,4 Put tile $9C at $65AB
+B $94F0,4 Put tile $9B at $65C9
+B $94F4,6 Rectangle 18x6 tiles with $BF at $65CC
+B $94FA,7 Block 2x4 tiles from $71BB to $70E8
+B $9501,5 Fill horz 18 tiles with $BA at $65CC
+B $9506,5 Fill horz 18 tiles with $B3 at $6662
+B $950B,7 Block 1x6 tiles from $9528 to $65CD
+B $9512,7 Block 1x6 tiles from $952E to $65D4
+B $9519,7 Block 2x6 tiles from $9534 to $65DA
+B $9520,7 Block 3x6 tiles from $9540 to $65DE
+B $9527,1 End of sequence
+B $9528
 b $9552 Room 9552
+N $9552 #HTML[<img src="images/rooms/9552.png" />]
 W $9552,2,2 Room procedure
 W $9554,2,2 Initialization
 W $9556,2,2 Room to Left
 W $9558,2,2 Room to Right
-W $955A,4,2
-B $955E,84,5,6,6,4,4,6,7,7,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/9552.png" />]
+W $955A,2,2
+W $955C,2,2
+B $955E,5 Fill horz 60 tiles with $FF at $6752
+B $9563,6 Rectangle 18x7 tiles with $0D at $668C
+B $9569,6 Rectangle 27x2 tiles with $A3 at $6593
+B $956F,4 Put tile $9E at $6592
+B $9573,4 Put tile $9D at $65B0
+B $9577,6 Rectangle 18x6 tiles with $BF at $65D8
+B $957D,7 Block 2x4 tiles from $71BB to $70DD
+B $9584,7 Block 2x4 tiles from $71BB to $70E3
+B $958B,5 Fill horz 18 tiles with $BA at $65D8
+B $9590,5 Fill horz 18 tiles with $B3 at $666E
+B $9595,7 Block 1x6 tiles from $9528 to $65E8
+B $959C,7 Block 1x6 tiles from $95B2 to $65E1
+B $95A3,7 Block 2x6 tiles from $95B8 to $65DA
+B $95AA,7 Block 3x6 tiles from $95C4 to $65D5
+B $95B1,1 End of sequence
+B $95B2
 b $95D6 Room 95D6
+N $95D6 #HTML[<img src="images/rooms/95D6.png" />]
 W $95D6,2,2 Room procedure
 W $95D8,2,2 Initialization
 W $95DA,2,2 Room to Left
 W $95DC,2,2 Room to Right
-W $95DE,4,2
-B $95E2,22,5,6,5,5,1 #HTML[<img src="images/rooms/95D6.png" />]
+W $95DE,2,2
+W $95E0,2,2
+B $95E2,5 Fill horz 150 tiles with $FF at $6590
+B $95E7,6 Rectangle 16x5 tiles with $FF at $6706
+B $95ED,5 Fill horz 7 tiles with $00 at $6706
+B $95F2,5 Fill horz 16 tiles with $FA at $6716
+B $95F7,1 End of sequence
 b $95F8 Room 95F8
+N $95F8 #HTML[<img src="images/rooms/95F8.png" />]
 W $95F8,2,2 Room procedure
 W $95FA,2,2 Initialization
 W $95FC,2,2
 W $95FE,2,2 Room to Right
 W $9600,2,2
 W $9602,2,2 Room Down
-B $9604,48,2,6,5,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/95F8.png" />]
+B $9604,2 Fill entire screen with $FF
+B $9606,6 Rectangle 23x8 tiles with $00 at $662D
+B $960C,5 Triangle with $FF, count=3 at $662D
+B $9611,5 Fill horz 12 tiles with $FA at $6728
+B $9616,5 Fill horz 10 tiles with $00 at $6748
+B $961B,5 Fill horz 22 tiles with $00 at $675A
+B $9620,5 Fill horz 24 tiles with $00 at $6776
+B $9625,7 Block 2 tiles from $7348 to $6634 copy 12 times
+B $962C,7 Block 2x1 tiles from $889D to $6724
+B $9633,1 End of sequence
 b $9634 Room 9634
+N $9634 #HTML[<img src="images/rooms/9634.png" />]
 W $9634,2,2 Room procedure
 W $9636,2,2 Initialization
 W $9638,2,2
 W $963A,2,2 Room to Right
 W $963C,2,2 Room Up
 W $963E,2,2 Room Down
-B $9640,70,6,6,5,4,5,7,7,5,5,5,7,7,1 #HTML[<img src="images/rooms/9634.png" />]
+B $9640,6 Rectangle 4x13 tiles with $FF at $6590
+B $9646,6 Rectangle 24x4 tiles with $FF at $671C
+B $964C,5 Triangle with $FF, count=5 at $6684
+B $9651,4 Put tile $00 at $6684
+B $9655,5 Triangle with $FF, count=3 at $671B
+B $965A,7 Block 2x2 tiles from $9686 to $6752
+B $9661,7 Block 2 tiles from $7348 to $659E copy 13 times
+B $9668,5 Fill horz 12 tiles with $00 at $6728
+B $966D,5 Fill horz 12 tiles with $00 at $6762
+B $9672,5 Fill horz 16 tiles with $00 at $677C
+B $9677,7 Block 2 tiles from $7348 to $676B copy 2 times
+B $967E,7 Block 2x1 tiles from $889D to $674D
+B $9685,1 End of sequence
+B $9686
 b $968A Room 968A
+N $968A #HTML[<img src="images/rooms/968A.png" />]
 W $968A,2,2 Room procedure
 W $968C,2,2 Initialization
 W $968E,2,2 Room to Left
 W $9690,2,2 Room to Right
 W $9692,2,2
 W $9694,2,2 Room Down
-B $9696,54,6,5,6,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/968A.png" />]
+B $9696,6 Rectangle 16x5 tiles with $FF at $659E
+B $969C,5 Fill vert 12 tiles with $3A at $6640
+B $96A1,6 Rectangle 11x2 tiles with $FF at $6752
+B $96A7,5 Fill horz 16 tiles with $FF at $6734
+B $96AC,5 Fill horz 9 tiles with $FA at $6744
+B $96B1,5 Fill horz 6 tiles with $FA at $676A
+B $96B6,7 Block 2x4 tiles from $71BB to $70B6
+B $96BD,7 Block 2 tiles from $7348 to $675E copy 2 times
+B $96C4,7 Block 2x1 tiles from $889D to $6740
+B $96CB,1 End of sequence
 b $96CC Room 96CC
+N $96CC #HTML[<img src="images/rooms/96CC.png" />]
 W $96CC,2,2 Room procedure
 W $96CE,2,2 Initialization
 W $96D0,2,2 Room to Left
-W $96D2,4,2
+W $96D2,2,2
+W $96D4,2,2
 W $96D6,2,2 Room Down
-B $96D8,27,5,6,5,5,5,1 #HTML[<img src="images/rooms/96CC.png" />]
+B $96D8,5 Fill horz 150 tiles with $FF at $6590
+B $96DD,6 Rectangle 15x12 tiles with $FF at $6635
+B $96E3,5 Triangle with $FF, count=9 at $6634
+B $96E8,5 Fill vert 12 tiles with $3A at $6627
+B $96ED,5 Fill horz 4 tiles with $FA at $6752
+B $96F2,1 End of sequence
 b $96F3 Room 96F3
+N $96F3 #HTML[<img src="images/rooms/96F3.png" />]
 W $96F3,2,2 Room procedure
 W $96F5,2,2 Initialization
 W $96F7,2,2 Room to Left
-W $96F9,4,2
+W $96F9,2,2
+W $96FB,2,2
 W $96FD,2,2 Room Down
-B $96FF,22,6,5,5,5,1 #HTML[<img src="images/rooms/96F3.png" />]
+B $96FF,6 Rectangle 15x17 tiles with $FF at $659F
+B $9705,5 Fill vert 17 tiles with $3A at $6591
+B $970A,5 Fill vert 10 tiles with $3A at $6668
+B $970F,5 Fill horz 9 tiles with $FA at $6680
+B $9714,1 End of sequence
 b $9715 Room 9715
+N $9715 #HTML[<img src="images/rooms/9715.png" />]
 W $9715,2,2 Room procedure
 W $9717,2,2 Initialization
 W $9719,2,2
 W $971B,2,2 Room to Right
 W $971D,2,2 Room Up
 W $971F,2,2 Room Down
-B $9721,24,6,7,5,5,1 #HTML[<img src="images/rooms/9715.png" />]
+B $9721,6 Rectangle 11x17 tiles with $FF at $6590
+B $9727,7 Block 2 tiles from $7348 to $659C copy 17 times
+B $972E,5 Fill vert 17 tiles with $3A at $65AA
+B $9733,5 Fill horz 8 tiles with $FA at $6696
+B $9738,1 End of sequence
 b $9739 Room 9739
+N $9739 #HTML[<img src="images/rooms/9739.png" />]
 W $9739,2,2 Room procedure
 W $973B,2,2 Initialization
 W $973D,2,2 Room to Left
 W $973F,2,2 Room to Right
 W $9741,2,2 Room Up
 W $9743,2,2 Room Down
-B $9745,41,6,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9739.png" />]
+B $9745,6 Rectangle 11x10 tiles with $FF at $6590
+B $974B,5 Triangle with $00, count=6 at $6612
+B $9750,5 Fill horz 34 tiles with $FF at $676C
+B $9755,5 Fill vert 1 tiles with $E4 at $66A0
+B $975A,5 Fill vert 15 tiles with $3A at $65AA
+B $975F,7 Block 2x1 tiles from $889D to $6776
+B $9766,7 Block 2 tiles from $7348 to $659C copy 16 times
+B $976D,1 End of sequence
 b $976E Room 976E
+N $976E #HTML[<img src="images/rooms/976E.png" />]
 W $976E,2,2 Room procedure
 W $9770,2,2 Initialization
 W $9772,2,2 Room to Left
-W $9774,6,2
-B $977A,44,2,6,6,5,5,5,5,5,4,1 #HTML[<img src="images/rooms/976E.png" />]
+W $9774,2,2
+W $9776,2,2
+W $9778,2,2
+B $977A,2 Fill entire screen with $FF
+B $977C,6 Rectangle 15x8 tiles with $00 at $6590
+B $9782,6 Rectangle 7x7 tiles with $00 at $6680
+B $9788,5 Fill horz 6 tiles with $00 at $6687
+B $978D,5 Fill horz 4 tiles with $00 at $66A5
+B $9792,5 Fill horz 2 tiles with $00 at $66C3
+B $9797,5 Fill vert 15 tiles with $3A at $6591
+B $979C,5 Fill vert 15 tiles with $3A at $6596
+B $97A1,4 Put tile $FA at $66E0
+B $97A5,1 End of sequence
 b $97A6 Room 97A6
+N $97A6 #HTML[<img src="images/rooms/97A6.png" />]
 W $97A6,2,2 Room procedure
 W $97A8,2,2 Initialization
 W $97AA,2,2 Room to Left
 W $97AC,2,2 Room to Right
 W $97AE,2,2 Room Up
 W $97B0,2,2
-B $97B2,70,6,5,5,7,6,4,4,5,7,7,7,6,1 #HTML[<img src="images/rooms/97A6.png" />]
+B $97B2,6 Rectangle 9x7 tiles with $FF at $6680
+B $97B8,5 Fill horz 60 tiles with $FF at $6752
+B $97BD,5 Triangle with $FF, count=6 at $66A7
+B $97C2,7 Block 2 tiles from $7348 to $6596 copy 8 times
+B $97C9,6 Rectangle 4x8 tiles with $FF at $65AA
+B $97CF,4 Put tile $00 at $6731
+B $97D3,4 Put tile $2A at $7091
+B $97D7,5 Fill vert 6 tiles with $2B at $70AF
+B $97DC,7 Block 4x7 tiles from $79AA to $7082
+B $97E3,7 Block 4x7 tiles from $79AA to $7025
+B $97EA,7 Block 4x7 tiles from $79AA to $7006
+B $97F1,6 Rectangle 2x7 tiles with $02 at $669C
+B $97F7,1 End of sequence
 b $97F8 Room 97F8
+N $97F8 #HTML[<img src="images/rooms/97F8.png" />]
 W $97F8,2,2 Room procedure
 W $97FA,2,2 Initialization
 W $97FC,2,2 Room to Left
-W $97FE,4,2
+W $97FE,2,2
+W $9800,2,2
 W $9802,2,2 Room Down
-B $9804,39,2,6,6,5,5,7,7,1 #HTML[<img src="images/rooms/97F8.png" />]
+B $9804,2 Fill entire screen with $FF
+B $9806,6 Rectangle 28x7 tiles with $02 at $6680
+B $980C,6 Rectangle 16x4 tiles with $02 at $660E
+B $9812,5 Triangle with $02, count=3 at $662B
+B $9817,5 Triangle with $02, count=3 at $663C
+B $981C,7 Block 2 tiles from $71B9 to $6699 copy 9 times
+B $9823,7 Block 2x1 tiles from $7984 to $676B
+B $982A,1 End of sequence
 b $982B Room 982B
+N $982B #HTML[<img src="images/rooms/982B.png" />]
 W $982B,2,2 Room procedure
 W $982D,2,2 Initialization
 W $982F,2,2 Room to Left
 W $9831,2,2
 W $9833,2,2 Room Up
 W $9835,2,2
-B $9837,63,2,6,6,5,5,5,5,7,7,7,7,1 #HTML[<img src="images/rooms/982B.png" />]
+B $9837,2 Fill entire screen with $FF
+B $9839,6 Rectangle 19x6 tiles with $02 at $65B7
+B $983F,6 Rectangle 19x6 tiles with $02 at $6662
+B $9845,5 Triangle with $02, count=5 at $65D4
+B $984A,5 Triangle with $02, count=5 at $6675
+B $984F,5 Fill horz 18 tiles with $21 at $6716
+B $9854,5 Fill horz 17 tiles with $21 at $6734
+B $9859,7 Block 2 tiles from $71B9 to $65A9 copy 7 times
+B $9860,7 Block 4x7 tiles from $798E to $7086
+B $9867,7 Block 4x7 tiles from $798E to $702F
+B $986E,7 Block 4x7 tiles from $798E to $6FF5
+B $9875,1 End of sequence
 b $9876 Room 9876
+N $9876 #HTML[<img src="images/rooms/9876.png" />]
 W $9876,2,2 Room procedure
 W $9878,2,2 Initialization
 W $987A,2,2 Room to Left
 W $987C,2,2 Room to Right
-W $987E,4,2
-B $9882,62,2,6,6,6,5,5,5,5,7,7,7,1 #HTML[<img src="images/rooms/9876.png" />]
+W $987E,2,2
+W $9880,2,2
+B $9882,2 Fill entire screen with $FF
+B $9884,6 Rectangle 10x7 tiles with $00 at $6680
+B $988A,6 Rectangle 14x7 tiles with $00 at $662E
+B $9890,6 Rectangle 10x7 tiles with $00 at $65C2
+B $9896,5 Triangle with $00, count=2 at $664B
+B $989B,5 Triangle with $00, count=3 at $65DF
+B $98A0,5 Triangle with $00, count=2 at $6702
+B $98A5,5 Triangle with $00, count=3 at $6696
+B $98AA,7 Block 4x7 tiles from $798E to $707F
+B $98B1,7 Block 4x7 tiles from $798E to $7031
+B $98B8,7 Block 4x7 tiles from $798E to $7014
+B $98BF,1 End of sequence
 b $98C0 Room 98C0 (think door)
+N $98C0 #HTML[<img src="images/rooms/98C0.png" />]
 W $98C0,2,2 Room procedure
 W $98C2,2,2 Initialization
 W $98C4,2,2 Room to Left
 W $98C6,2,2 Room to Right
-W $98C8,4,2
-B $98CC,53,5,5,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/98C0.png" />]
+W $98C8,2,2
+W $98CA,2,2
+B $98CC,5 Fill horz 240 tiles with $FF at $6590
+B $98D1,5 Fill horz 60 tiles with $FF at $6752
+B $98D6,7 Block 4x3 tiles from $7E7B to $70EF
+B $98DD,7 Block 3x3 tiles from $71A0 to $7098
+B $98E4,7 Block 3x3 tiles from $71A0 to $70F4
+B $98EB,7 Block 1x5 tiles from $9903 to $66AB
+B $98F2,7 Block 1x5 tiles from $9908 to $66AE
+B $98F9,7 Block 2 tiles from $9901 to $668E copy 7 times
+B $9900,1 End of sequence
+B $9901
 b $990D Room 990D
+N $990D #HTML[<img src="images/rooms/990D.png" />]
 W $990D,2,2 Room procedure
 W $990F,2,2 Initialization
-W $9911,4,2
+W $9911,2,2
+W $9913,2,2
 W $9915,2,2 Room Up
 W $9917,2,2
-B $9919,126,6,6,6,5,7,7,7,6,5,7,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/990D.png" />]
+B $9919,6 Rectangle 20x17 tiles with $FF at $659A
+B $991F,6 Rectangle 17x12 tiles with $00 at $659B
+B $9925,6 Rectangle 8x4 tiles with $00 at $670C
+B $992B,5 Triangle with $00, count=3 at $670B
+B $9930,7 Block 2 tiles from $7348 to $65A9 copy 16 times
+B $9937,7 Block 4x7 tiles from $79AA to $70A5
+B $993E,7 Block 4x7 tiles from $79AA to $7086
+B $9945,6 Rectangle 2x17 tiles with $0D at $6594
+B $994B,5 Fill vert 7 tiles with $2B at $7026
+B $9950,7 Block 3x1 tiles from $9997 to $65B2
+B $9957,7 Block 3x1 tiles from $9997 to $662A
+B $995E,7 Block 3x1 tiles from $9997 to $66C0
+B $9965,7 Block 3x1 tiles from $9997 to $6738
+B $996C,7 Block 4x3 tiles from $999A to $65CC
+B $9973,7 Block 4x3 tiles from $999A to $6626
+B $997A,7 Block 4x3 tiles from $999A to $6680
+B $9981,7 Block 4x3 tiles from $999A to $66DA
+B $9988,7 Block 4x3 tiles from $999A to $6734
+B $998F,7 Block 4x2 tiles from $999E to $6590
+B $9996,1 End of sequence
+B $9997
 b $99A6 Room 99A6
+N $99A6 #HTML[<img src="images/rooms/99A6.png" />]
 N $99A6 Console: flips trigger "E": set/remove wall in room #R$97A6.
 W $99A6,2,2 Room procedure
 W $99A8,2,2 Initialization
 W $99AA,2,2
 W $99AC,2,2 Room to Right
-W $99AE,4,2
-B $99B2,108,5,5,5,6,6,4,7,6,7,7,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/99A6.png" />]
+W $99AE,2,2
+W $99B0,2,2
+B $99B2,5 Fill horz 30 tiles with $FF at $6770
+B $99B7,5 Fill vert 14 tiles with $FF at $65D6
+B $99BC,5 Fill vert 7 tiles with $2B at $709E
+B $99C1,6 Rectangle 20x2 tiles with $FF at $659A
+B $99C7,6 Rectangle 3x8 tiles with $FF at $65E7
+B $99CD,4 Put tile $00 at $66B9
+B $99D1,7 Block 2x4 tiles from $71BB to $7101
+B $99D8,6 Rectangle 2x16 tiles with $0D at $6594
+B $99DE,7 Block 4x3 tiles from $999A to $65CC
+B $99E5,7 Block 4x3 tiles from $999A to $6626
+B $99EC,7 Block 4x3 tiles from $999A to $6680
+B $99F3,7 Block 4x3 tiles from $999A to $66DA
+B $99FA,7 Block 4x2 tiles from $999A to $6734
+B $9A01,7 Block 3x1 tiles from $9997 to $65EE
+B $9A08,7 Block 3x1 tiles from $9997 to $6648
+B $9A0F,7 Block 3x1 tiles from $9997 to $66C0
+B $9A16,7 Block 4x2 tiles from $999E to $6590
+B $9A1D,1 End of sequence
 b $9A1E Room 9A1E
+N $9A1E #HTML[<img src="images/rooms/9A1E.png" />]
 W $9A1E,2,2 Room procedure
 W $9A20,2,2 Initialization
 W $9A22,2,2
 W $9A24,2,2 Room to Right
 W $9A26,2,2 Room Up
 W $9A28,2,2
-B $9A2A,48,2,6,6,5,6,5,7,5,5,1 #HTML[<img src="images/rooms/9A1E.png" />]
+B $9A2A,2 Fill entire screen with $FF
+B $9A2C,6 Rectangle 6x8 tiles with $02 at $6592
+B $9A32,6 Rectangle 8x6 tiles with $02 at $65D4
+B $9A38,5 Triangle with $02, count=6 at $668F
+B $9A3D,6 Rectangle 14x6 tiles with $02 at $6672
+B $9A43,5 Triangle with $02, count=4 at $65FA
+B $9A48,7 Block 2 tiles from $71B9 to $6594 copy 8 times
+B $9A4F,5 Fill horz 15 tiles with $21 at $6725
+B $9A54,5 Fill horz 14 tiles with $21 at $6744
+B $9A59,1 End of sequence
 b $9A5A Room 9A5A
+N $9A5A #HTML[<img src="images/rooms/9A5A.png" />]
 W $9A5A,2,2 Room procedure
 W $9A5C,2,2 Initialization
 W $9A5E,2,2
 W $9A60,2,2 Room to Right
 W $9A62,2,2 Room Up
 W $9A64,2,2 Room Down
-B $9A66,52,2,6,6,5,6,5,7,7,7,1 #HTML[<img src="images/rooms/9A5A.png" />]
+B $9A66,2 Fill entire screen with $FF
+B $9A68,6 Rectangle 28x11 tiles with $00 at $6592
+B $9A6E,6 Rectangle 7x4 tiles with $00 at $66F1
+B $9A74,5 Triangle with $00, count=3 at $66F0
+B $9A79,6 Rectangle 6x2 tiles with $02 at $6754
+B $9A7F,5 Fill horz 4 tiles with $02 at $6737
+B $9A84,7 Block 2 tiles from $71B9 to $66FC copy 5 times
+B $9A8B,7 Block 2x1 tiles from $7984 to $66DE
+B $9A92,7 Block 2 tiles from $7348 to $6599 copy 11 times
+B $9A99,1 End of sequence
 b $9A9A Room 9A9A
+N $9A9A #HTML[<img src="images/rooms/9A9A.png" />]
 W $9A9A,2,2 Room procedure
 W $9A9C,2,2 Initialization
 W $9A9E,2,2 Room to Left
 W $9AA0,2,2 Room to Right
 W $9AA2,2,2 Room Up
 W $9AA4,2,2
-B $9AA6,54,5,5,6,4,5,7,7,7,7,1 #HTML[<img src="images/rooms/9A9A.png" />]
+B $9AA6,5 Fill horz 10 tiles with $FF at $6591
+B $9AAB,5 Fill horz 60 tiles with $FF at $6752
+B $9AB0,6 Rectangle 4x8 tiles with $FF at $65AA
+B $9AB6,4 Put tile $2A at $7090
+B $9ABA,5 Fill vert 6 tiles with $2B at $70AE
+B $9ABF,7 Block 2 tiles from $7348 to $65A5 copy 15 times
+B $9AC6,7 Block 4x4 tiles from $71A9 to $70D4
+B $9ACD,7 Block 4x4 tiles from $71A9 to $70DB
+B $9AD4,7 Block 4x4 tiles from $71A9 to $70E0
+B $9ADB,1 End of sequence
 b $9ADC Room 9ADC
+N $9ADC #HTML[<img src="images/rooms/9ADC.png" />]
 W $9ADC,2,2 Room procedure
 W $9ADE,2,2 Initialization
-W $9AE0,4,2
+W $9AE0,2,2
+W $9AE2,2,2
 W $9AE4,2,2 Room Up
 W $9AE6,2,2 Room Down
-B $9AE8,49,2,6,6,5,7,5,5,5,7,1 #HTML[<img src="images/rooms/9ADC.png" />]
+B $9AE8,2 Fill entire screen with $FF
+B $9AEA,6 Rectangle 24x8 tiles with $00 at $6592
+B $9AF0,6 Rectangle 15x7 tiles with $00 at $668B
+B $9AF6,5 Triangle with $00, count=6 at $668A
+B $9AFB,7 Block 2 tiles from $7348 to $65A5 copy 17 times
+B $9B02,5 Fill vert 15 tiles with $3A at $65A0
+B $9B07,5 Fill horz 13 tiles with $FF at $6670
+B $9B0C,5 Fill horz 13 tiles with $27 at $7066
+B $9B11,7 Block 2x1 tiles from $889D to $6767
+B $9B18,1 End of sequence
 b $9B19 Room 9B19
+N $9B19 #HTML[<img src="images/rooms/9B19.png" />]
 W $9B19,2,2 Room procedure
 W $9B1B,2,2 Initialization
-W $9B1D,4,2
+W $9B1D,2,2
+W $9B1F,2,2
 W $9B21,2,2 Room Up
 W $9B23,2,2 Room Down
-B $9B25,44,6,6,7,5,5,7,7,1 #HTML[<img src="images/rooms/9B19.png" />]
+B $9B25,6 Rectangle 2x17 tiles with $FF at $6590
+B $9B2B,6 Rectangle 4x17 tiles with $FF at $65AA
+B $9B31,7 Block 2 tiles from $7348 to $65A5 copy 17 times
+B $9B38,5 Fill vert 17 tiles with $3A at $65A0
+B $9B3D,5 Fill horz 26 tiles with $FA at $66F9
+B $9B42,7 Block 3x3 tiles from $71A0 to $7096
+B $9B49,7 Block 2x1 tiles from $889D to $670D
+B $9B50,1 End of sequence
 b $9B51 Room 9B51
+N $9B51 #HTML[<img src="images/rooms/9B51.png" />]
 W $9B51,2,2 Room procedure
 W $9B53,2,2 Initialization
-W $9B55,4,2
+W $9B55,2,2
+W $9B57,2,2
 W $9B59,2,2 Room Up
 W $9B5B,2,2 Room Down
-B $9B5D,64,2,6,5,5,7,7,7,3,7,7,7,1 #HTML[<img src="images/rooms/9B51.png" />]
+B $9B5D,2 Fill entire screen with $FF
+B $9B5F,6 Rectangle 26x14 tiles with $00 at $6592
+B $9B65,5 Fill vert 7 tiles with $00 at $667F
+B $9B6A,5 Fill vert 7 tiles with $2B at $7074
+B $9B6F,7 Block 2 tiles from $7348 to $675B copy 2 times
+B $9B76,7 Block 2 tiles from $7348 to $65A5 copy 14 times
+B $9B7D,7 Block 2x1 tiles from $889D to $673D
+B $9B84,3 Barrel 3x3 tiles at $70D5
+B $9B87,7 Block 4x4 tiles from $8789 to $70B4
+B $9B8E,7 Block 4x4 tiles from $8789 to $70C0
+B $9B95,7 Block 3x3 tiles from $71A0 to $70E9
+B $9B9C,1 End of sequence
 b $9B9D Room 9B9D
+N $9B9D #HTML[<img src="images/rooms/9B9D.png" />]
 W $9B9D,2,2 Room procedure
 W $9B9F,2,2 Initialization
-W $9BA1,4,2
+W $9BA1,2,2
+W $9BA3,2,2
 W $9BA5,2,2 Room Up
 W $9BA7,2,2 Room Down
-B $9BA9,62,2,6,6,7,7,7,7,7,3,3,3,3,1 #HTML[<img src="images/rooms/9B9D.png" />]
+B $9BA9,2 Fill entire screen with $FF
+B $9BAB,6 Rectangle 26x7 tiles with $00 at $66A0
+B $9BB1,6 Rectangle 24x8 tiles with $00 at $6594
+B $9BB7,7 Block 2x1 tiles from $889D to $6785
+B $9BBE,7 Block 2x1 tiles from $889D to $668A
+B $9BC5,7 Block 2 tiles from $7348 to $66A8 copy 7 times
+B $9BCC,7 Block 2 tiles from $7348 to $65A6 copy 8 times
+B $9BD3,7 Block 3x3 tiles from $71A0 to $7124
+B $9BDA,3 Barrel 3x3 tiles at $70B5
+B $9BDD,3 Barrel 3x3 tiles at $710F
+B $9BE0,3 Barrel 3x3 tiles at $7112
+B $9BE3,3 Barrel 3x3 tiles at $7119
+B $9BE6,1 End of sequence
 b $9BE7 Room 9BE7
+N $9BE7 #HTML[<img src="images/rooms/9BE7.png" />]
 W $9BE7,2,2 Room procedure
 W $9BE9,2,2 Initialization
 W $9BEB,2,2
 W $9BED,2,2 Room to Right
 W $9BEF,2,2 Room Up
 W $9BF1,2,2 Room Down
-B $9BF3,70,6,6,5,5,5,6,5,7,7,5,7,5,1 #HTML[<img src="images/rooms/9BE7.png" />]
+B $9BF3,6 Rectangle 2x12 tiles with $FF at $6626
+B $9BF9,6 Rectangle 9x5 tiles with $FF at $6596
+B $9BFF,5 Triangle with $FF, count=5 at $6595
+B $9C04,5 Triangle with $FF, count=9 at $6628
+B $9C09,5 Fill horz 4 tiles with $FF at $65AA
+B $9C0E,6 Rectangle 4x4 tiles with $FF at $6730
+B $9C14,5 Fill vert 17 tiles with $3A at $65A0
+B $9C19,7 Block 2 tiles from $7348 to $65A2 copy 13 times
+B $9C20,7 Block 2 tiles from $7348 to $6749 copy 3 times
+B $9C27,5 Fill horz 26 tiles with $FA at $6717
+B $9C2C,7 Block 2x1 tiles from $889D to $672B
+B $9C33,5 Fill vert 4 tiles with $F9 at $66A5
+B $9C38,1 End of sequence
 b $9C39
 B $9C39,7,7
 B $9C40,1,1 Ninja Y within the room, 0 at the top
@@ -2105,69 +2562,179 @@ C $9DDE,3 get Energy
 C $9DEC,3 Energy is out => Saboteur dead
 C $9DEF,2 !!UNUSED!!
 b $9DF5 Room 9DF5
+N $9DF5 #HTML[<img src="images/rooms/9DF5.png" />]
 W $9DF5,2,2 Room procedure
 W $9DF7,2,2 Initialization
 W $9DF9,2,2 Room to Left
 W $9DFB,2,2
 W $9DFD,2,2 Room Up
 W $9DFF,2,2
-B $9E01,33,5,6,5,7,4,5,1 #HTML[<img src="images/rooms/9DF5.png" />]
+B $9E01,5 Fill horz 7 tiles with $FF at $6590
+B $9E06,6 Rectangle 2x12 tiles with $FF at $65AC
+B $9E0C,5 Fill horz 122 tiles with $FF at $6714
+B $9E11,7 Block 2 tiles from $7348 to $65A4 copy 13 times
+B $9E18,4 Put tile $2A at $6FA7
+B $9E1C,5 Fill vert 11 tiles with $2B at $6FC5
+B $9E21,1 End of sequence
 b $9E22 Room 9E22
+N $9E22 #HTML[<img src="images/rooms/9E22.png" />]
 W $9E22,2,2 Room procedure
 W $9E24,2,2 Initialization
-W $9E26,6,2
+W $9E26,2,2
+W $9E28,2,2
+W $9E2A,2,2
 W $9E2C,2,2 Room Down
-B $9E2E,69,2,6,6,5,7,7,7,7,7,7,7,1 #HTML[<img src="images/rooms/9E22.png" />]
+B $9E2E,2 Fill entire screen with $FF
+B $9E30,6 Rectangle 20x2 tiles with $00 at $675A
+B $9E36,6 Rectangle 26x12 tiles with $02 at $65B0
+B $9E3C,5 Triangle with $FF, count=5 at $65C9
+B $9E41,7 Block 2 tiles from $7348 to $6748 copy 3 times
+B $9E48,7 Block 2x1 tiles from $889D to $672A
+B $9E4F,7 Block 2x4 tiles from $71BB to $70A5
+B $9E56,7 Block 3x3 tiles from $71A0 to $70B7
+B $9E5D,7 Block 3x3 tiles from $71A0 to $70BD
+B $9E64,7 Block 3x3 tiles from $71A0 to $70CA
+B $9E6B,7 Block 3x4 tiles from $849C to $7096
+B $9E72,1 End of sequence
 b $9E73 Room 9E73
+N $9E73 #HTML[<img src="images/rooms/9E73.png" />]
 W $9E73,2,2 Room procedure
 W $9E75,2,2 Initialization
 W $9E77,2,2 Room to Left
-W $9E79,4,2
+W $9E79,2,2
+W $9E7B,2,2
 W $9E7D,2,2 Room Down
-B $9E7F,57,5,6,6,5,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9E73.png" />]
+B $9E7F,5 Fill horz 120 tiles with $FF at $6590
+B $9E84,6 Rectangle 6x13 tiles with $FF at $6620
+B $9E8A,6 Rectangle 6x6 tiles with $FF at $66E4
+B $9E90,5 Triangle with $FF, count=4 at $671F
+B $9E95,5 Fill horz 12 tiles with $FA at $66DA
+B $9E9A,5 Fill vert 13 tiles with $3A at $6618
+B $9E9F,5 Fill vert 7 tiles with $3A at $660C
+B $9EA4,5 Fill horz 10 tiles with $FA at $66E9
+B $9EA9,7 Block 2 tiles from $7348 to $661A copy 13 times
+B $9EB0,7 Block 2x1 tiles from $889D to $66EC
+B $9EB7,1 End of sequence
 b $9EB8 Room 9EB8
+N $9EB8 #HTML[<img src="images/rooms/9EB8.png" />]
 W $9EB8,2,2 Room procedure
 W $9EBA,2,2 Initialization
 W $9EBC,2,2 Room to Left
 W $9EBE,2,2 Room to Right
-W $9EC0,4,2
-B $9EC4,21,5,5,5,5,1 #HTML[<img src="images/rooms/9EB8.png" />]
+W $9EC0,2,2
+W $9EC2,2,2
+B $9EC4,5 Fill horz 120 tiles with $FF at $6590
+B $9EC9,5 Fill horz 30 tiles with $FA at $66DA
+B $9ECE,5 Fill vert 7 tiles with $28 at $7003
+B $9ED3,5 Fill vert 7 tiles with $28 at $7013
+B $9ED8,1 End of sequence
 b $9ED9 Room 9ED9
+N $9ED9 #HTML[<img src="images/rooms/9ED9.png" />]
 W $9ED9,2,2 Room procedure
 W $9EDB,2,2 Initialization
 W $9EDD,2,2 Room to Left
 W $9EDF,2,2 Room to Right
-W $9EE1,4,2
-B $9EE5,21,5,5,5,5,1 #HTML[<img src="images/rooms/9ED9.png" />]
+W $9EE1,2,2
+W $9EE3,2,2
+B $9EE5,5 Fill horz 120 tiles with $FF at $6590
+B $9EEA,5 Fill horz 30 tiles with $FA at $66DA
+B $9EEF,5 Fill vert 7 tiles with $28 at $7005
+B $9EF4,5 Fill vert 7 tiles with $28 at $7011
+B $9EF9,1 End of sequence
 b $9EFA Room 9EFA
+N $9EFA #HTML[<img src="images/rooms/9EFA.png" />]
 W $9EFA,2,2 Room procedure
 W $9EFC,2,2 Initialization
 W $9EFE,2,2
 W $9F00,2,2 Room to Right
-B $9F02,2,2
+W $9F02,2,2
 W $9F04,2,2 Room Down
-B $9F06,52,5,6,6,5,5,5,5,7,7,1 #HTML[<img src="images/rooms/9EFA.png" />]
+B $9F06,5 Fill horz 125 tiles with $FF at $6590
+B $9F0B,6 Rectangle 5x12 tiles with $FF at $6626
+B $9F11,6 Rectangle 20x5 tiles with $FF at $6701
+B $9F17,5 Fill horz 19 tiles with $FF at $66DF
+B $9F1C,5 Fill horz 6 tiles with $FA at $66F2
+B $9F21,5 Fill vert 7 tiles with $3A at $6616
+B $9F26,5 Fill vert 7 tiles with $28 at $7017
+B $9F2B,7 Block 2 tiles from $7348 to $660E copy 13 times
+B $9F32,7 Block 2x1 tiles from $889D to $66E0
+B $9F39,1 End of sequence
 b $9F3A Room 9F3A
+N $9F3A #HTML[<img src="images/rooms/9F3A.png" />]
 W $9F3A,2,2 Room procedure
 W $9F3C,2,2 Initialization
 W $9F3E,2,2
 W $9F40,2,2 Room to Right
 W $9F42,2,2 Room Up
 W $9F44,2,2 Room Down
-B $9F46,56,6,5,6,7,7,5,5,7,7,1 #HTML[<img src="images/rooms/9F3A.png" />]
+B $9F46,6 Rectangle 5x15 tiles with $FF at $6590
+B $9F4C,5 Fill horz 60 tiles with $FF at $6752
+B $9F51,6 Rectangle 20x2 tiles with $FF at $6599
+B $9F57,7 Block 2 tiles from $7348 to $6596 copy 15 times
+B $9F5E,7 Block 2x4 tiles from $71BB to $70E3
+B $9F65,5 Fill vert 13 tiles with $3A at $65DA
+B $9F6A,5 Fill vert 13 tiles with $3A at $65E5
+B $9F6F,7 Block 2x1 tiles from $889D to $6768
+B $9F76,7 Block 2x1 tiles from $7348 to $6786
+B $9F7D,1 End of sequence
 b $9F7E Room 9F7E
+N $9F7E #HTML[<img src="images/rooms/9F7E.png" />]
 W $9F7E,2,2 Room procedure
 W $9F80,2,2 Initialization
 W $9F82,2,2 Room to Left
 W $9F84,2,2 Room to Right
-W $9F86,4,2
-B $9F8A,122,6,6,7,6,6,7,7,7,7,7,7,7,6,6,7,4,5,7,6,1 #HTML[<img src="images/rooms/9F7E.png" />]
+W $9F86,2,2
+W $9F88,2,2
+B $9F8A,6 Rectangle 2x2 tiles with $FF at $6752
+B $9F90,6 Rectangle 27x2 tiles with $A3 at $6755
+B $9F96,7 Block 1x2 tiles from $A008 to $6754
+B $9F9D,6 Rectangle 26x10 tiles with $F5 at $7020
+B $9FA3,6 Rectangle 2x2 tiles with $FF at $7020
+B $9FA9,7 Block 2x2 tiles from $A004 to $662A
+B $9FB0,7 Block 4x4 tiles from $A00A to $707C
+B $9FB7,7 Block 4x4 tiles from $A00A to $7080
+B $9FBE,7 Block 4x4 tiles from $A00A to $7084
+B $9FC5,7 Block 4x4 tiles from $A00A to $7088
+B $9FCC,7 Block 4x4 tiles from $A00A to $708C
+B $9FD3,7 Block 4x4 tiles from $A00A to $7090
+B $9FDA,6 Rectangle 24x4 tiles with $1B at $6686
+B $9FE0,6 Rectangle 24x2 tiles with $A3 at $65F0
+B $9FE6,7 Block 1x2 tiles from $A008 to $65EF
+B $9FED,4 Put tile $98 at $65D3
+B $9FF1,5 Fill horz 22 tiles with $0D at $65D4
+B $9FF6,7 Block 4x2 tiles from $A01A to $65A6
+B $9FFD,6 Rectangle 4x2 tiles with $0D at $65AA
+B $A003,1 End of sequence
+B $A004
 b $A022 Room A022
+N $A022 #HTML[<img src="images/rooms/A022.png" />]
 W $A022,2,2 Room procedure
 W $A024,2,2 Initialization
 W $A026,2,2 Room to Left
-W $A028,6,2
-B $A02E,121,6,6,6,7,7,7,7,7,7,7,6,6,7,4,5,7,6,5,7,1 #HTML[<img src="images/rooms/A022.png" />]
+W $A028,2,2
+W $A02A,2,2
+W $A02C,2,2
+B $A02E,6 Rectangle 27x2 tiles with $A3 at $6752
+B $A034,6 Rectangle 26x10 tiles with $F5 at $701C
+B $A03A,6 Rectangle 2x2 tiles with $FF at $7034
+B $A040,7 Block 2x2 tiles from $A0A7 to $663E
+B $A047,7 Block 4x4 tiles from $A00A to $7076
+B $A04E,7 Block 4x4 tiles from $A00A to $707A
+B $A055,7 Block 4x4 tiles from $A00A to $707E
+B $A05C,7 Block 4x4 tiles from $A00A to $7082
+B $A063,7 Block 4x4 tiles from $A00A to $7086
+B $A06A,7 Block 4x4 tiles from $A00A to $708A
+B $A071,6 Rectangle 24x4 tiles with $1B at $6680
+B $A077,6 Rectangle 24x2 tiles with $A3 at $65EA
+B $A07D,7 Block 1x2 tiles from $A0AB to $6602
+B $A084,4 Put tile $94 at $65E2
+B $A088,5 Fill horz 22 tiles with $0D at $65CC
+B $A08D,7 Block 4x2 tiles from $A0AD to $6594
+B $A094,6 Rectangle 4x2 tiles with $0D at $6590
+B $A09A,5 Fill vert 8 tiles with $FF at $667B
+B $A09F,7 Block 1x2 tiles from $A0AB to $676D
+B $A0A6,1 End of sequence
+B $A0A7
 b $A0B5 Sprite Ninja/Guard dead, 6x7 tiles
 B $A0B5,42,6 #HTML[<img src="images/sprite-a0b5.png" />]
 c $A0DF Room #R$94AB initialization
@@ -2808,12 +3375,18 @@ C $B4F4,3 Screen address
 C $B4F7,3 => Print string, and RET
 c $B4FA Processing in initial room - the boat moving
 b $B513 Room B513: Initial Room
+N $B513 #HTML[<img src="images/rooms/B513.png" />]
 W $B513,2,2 Room procedure
 W $B515,2,2 Initialization
 W $B517,2,2
 W $B519,2,2 Room to Right
-W $B51B,4,2
-B $B51F,19 #HTML[<img src="images/rooms/B513.png" />]
+W $B51B,2,2
+W $B51D,2,2
+B $B51F,2 Fill entire screen with $0D
+B $B521,5 Fill horz 30 tiles with $F5 at $6770
+B $B526,5 Fill horz 30 tiles with $0B at $70EE
+B $B52B,6 Rectangle 30x3 tiles with $0C at $710C
+B $B531,1 End of sequence
 c $B532 Movement handler for initial room (B8CE handler)
 C $B535,1 increase Ninja position in tilemap
 C $B539,3 Ninja X address

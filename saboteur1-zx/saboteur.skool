@@ -298,23 +298,26 @@ b$6F86 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,
  $7166 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 ; Data block at 7184
-b$7184 DEFW $84A8                   ; Current Room address
- $7186 DEFW $A0B5                   ; Ninja sprite address
- $7188 DEFB $FF,$2F,$30,$31,$32,$FF ; {Block 6x2 tiles
- $718E DEFB $33,$34,$35,$36,$37,$38 ; }
- $7194 DEFB $0E,$0F,$10,$11         ; {Block 4x3 tiles
- $7198 DEFB $12,$0D,$0D,$0D         ;
+b$7184 DEFW $84A8    ; Current Room address
+ $7186 DEFW $A0B5    ; Ninja sprite address
+
+; Blocks for rooms
+b$7188 DEFB $FF,$2F,$30,$31,$32,$FF ; {#HTML[<img src="images/blocks/7188.png"
+ $718E DEFB $33,$34,$35,$36,$37,$38 ; />] Front block 6x2 - pile of garbage}
+ $7194 DEFB $0E,$0F,$10,$11         ; {#HTML[<img src="images/blocks/7194.png"
+ $7198 DEFB $12,$0D,$0D,$0D         ; />] Back block 4x3 - pier fencing
  $719C DEFB $12,$0D,$0D,$0D         ; }
- $71A0 DEFB $00,$01,$02             ; {Block 3x3 tiles
- $71A3 DEFB $03,$04,$05             ;
+ $71A0 DEFB $00,$01,$02             ; {#HTML[<img src="images/blocks/71A0.png"
+ $71A3 DEFB $03,$04,$05             ; />] Front block 3x3 - box
  $71A6 DEFB $06,$07,$08             ; }
- $71A9 DEFB $0D,$0D,$0D,$0E         ; {Block 4x4 tiles
- $71AD DEFB $0F,$10,$10,$11         ;
+ $71A9 DEFB $0D,$0D,$0D,$0E         ; {#HTML[<img src="images/blocks/71A9.png"
+ $71AD DEFB $0F,$10,$10,$11         ; />] Front block 4x4 - computer part
  $71B1 DEFB $0D,$13,$0D,$0D         ;
  $71B5 DEFB $12,$12,$12,$12         ; }
- $71B9 DEFB $07,$0A                 ; Block 2x9 tiles - ladder
- $71BB DEFB $1F,$20                 ; {Block 2x4 tiles - Console
- $71BD DEFB $21,$22                 ;
+ $71B9 DEFB $07,$0A                 ; #HTML[<img src="images/blocks/71b9.png"
+                                    ; />] Back block 2x1 - ladder black on blue
+ $71BB DEFB $1F,$20                 ; {#HTML[<img src="images/blocks/71bb.png"
+ $71BD DEFB $21,$22                 ; />] Front block 2x4 - console
  $71BF DEFB $23,$24                 ;
  $71C1 DEFB $25,$26                 ; }
 
@@ -952,16 +955,25 @@ b$791E DEFW $B446                       ; Room procedure
  $7983 DEFB $FF                         ; End of sequence
 
 ; Data block at 7984
-b$7984 DEFB $F1,$F0,$07,$0A,$07,$0A,$07,$0A
- $798C DEFB $07,$0A
- $798E DEFB $FF,$FF,$39,$58,$FF,$39,$3A,$58
- $7996 DEFB $39,$3A,$3A,$58,$3A,$3A,$3A,$58
- $799E DEFB $3A,$3A,$3B,$FF,$3A,$3B,$FF,$FF
- $79A6 DEFB $3B,$FF,$FF,$FF
- $79AA DEFB $59,$3C,$FF,$FF,$59,$3D,$3C,$FF
- $79B2 DEFB $59,$3D,$3D,$3C,$59,$3D,$3D,$3D
- $79BA DEFB $FF,$3E,$3D,$3D,$FF,$FF,$3E,$3D
- $79C2 DEFB $FF,$FF,$FF,$3E
+b$7984 DEFB $F1,$F0         ; {#HTML[<img src="images/blocks/7984.png" />] Back
+ $7986 DEFB $07,$0A         ; block 2x5 - ladder black on blue
+ $7988 DEFB $07,$0A         ;
+ $798A DEFB $07,$0A         ;
+ $798C DEFB $07,$0A         ; }
+ $798E DEFB $FF,$FF,$39,$58 ; {#HTML[<img src="images/blocks/798E.png" />]
+ $7992 DEFB $FF,$39,$3A,$58 ; Front block 4x7 - ladder fencing
+ $7996 DEFB $39,$3A,$3A,$58 ;
+ $799A DEFB $3A,$3A,$3A,$58 ;
+ $799E DEFB $3A,$3A,$3B,$FF ;
+ $79A2 DEFB $3A,$3B,$FF,$FF ;
+ $79A6 DEFB $3B,$FF,$FF,$FF ; }
+ $79AA DEFB $59,$3C,$FF,$FF ; {#HTML[<img src="images/blocks/79AA.png" />]
+ $79AE DEFB $59,$3D,$3C,$FF ; Front block 4x7 - ladder fencing
+ $79B2 DEFB $59,$3D,$3D,$3C ;
+ $79B6 DEFB $59,$3D,$3D,$3D ;
+ $79BA DEFB $FF,$3E,$3D,$3D ;
+ $79BE DEFB $FF,$FF,$3E,$3D ;
+ $79C2 DEFB $FF,$FF,$FF,$3E ; }
 
 ; Room 79C6 (next to room with pier)
 ;
@@ -1125,9 +1137,16 @@ b$7AF8 DEFW $B41F                       ; Room procedure
  $7B40 DEFB $05,$01,$02,$4F,$7B,$56,$67 ; Block 1x2 tiles from #R$7B4F to $6756
  $7B47 DEFB $05,$01,$02,$4F,$7B,$5E,$67 ; Block 1x2 tiles from #R$7B4F to $675E
  $7B4E DEFB $FF                         ; End of sequence
- $7B4F DEFB $FE,$FD
- $7B51 DEFB $FD
- $7B52 DEFB $FD,$FD,$FD,$FC
+
+; Blocks for rooms
+b$7B4F DEFB $FE      ; {#HTML[<img src="images/blocks/7b4f.png" />] Back block
+ $7B50 DEFB $FD      ; 1x2 - vertical pipe}
+ $7B51 DEFB $FD      ; #HTML[<img src="images/blocks/7b51.png" />] Back block
+                     ; 1x1 - vertical pipe
+ $7B52 DEFB $FD      ; {#HTML[<img src="images/blocks/7b52.png" />] Back block
+ $7B53 DEFB $FD      ; 1x4 - vertical pipe
+ $7B54 DEFB $FD      ;
+ $7B55 DEFB $FC      ; }
 
 ; Room 7B56
 ;
@@ -1190,40 +1209,39 @@ b$7B90 DEFW $B41F                       ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/7BD2.png" />]
-b$7BD2 DEFW $B41F                           ; Room procedure
- $7BD4 DEFW $B422                           ; Initialization
- $7BD6 DEFW $7B90                           ; Room to Left
- $7BD8 DEFW $7D5A                           ; Room to Right
- $7BDA DEFW $8162                           ; Room Up
- $7BDC DEFW $7A75                           ; Room Down
- $7BDE DEFB $04,$01                         ; Fill entire screen with $01
- $7BE0 DEFB $03,$FF,$14,$03,$34,$67         ; Rectangle 20x3 tiles with $FF at
-                                            ; $6734
- $7BE6 DEFB $02,$0A,$FF,$84,$67             ; Fill horz 10 tiles with $FF at
-                                            ; $6784
- $7BEB DEFB $0E,$FF,$66,$67                 ; Put tile $FF at $6766
- $7BEF DEFB $05,$03,$04,$0C,$7C,$B5,$70     ; Block 3x4 tiles from #R$7C0C to
-                                            ; $70B5
- $7BF6 DEFB $05,$03,$03,$18,$7C,$24,$71     ; Block 3x3 tiles from #R$7C18 to
-                                            ; $7124
- $7BFD DEFB $0C,$2A,$7C,$02,$0E,$9E,$65     ; Block 2 tiles from #R$7C2A to
-                                            ; $659E copy 14 times
- $7C04 DEFB $05,$02,$03,$84,$79,$3C,$67     ; Block 2x3 tiles from #R$7984 to
-                                            ; $673C
- $7C0B DEFB $FF                             ; End of sequence
- $7C0C DEFB $3F,$40,$41,$42,$43,$44,$45,$46
- $7C14 DEFB $47,$48,$49,$4A
- $7C18 DEFB $4B,$4C,$4D,$45,$46,$47,$48,$49
- $7C20 DEFB $4A
+b$7BD2 DEFW $B41F                       ; Room procedure
+ $7BD4 DEFW $B422                       ; Initialization
+ $7BD6 DEFW $7B90                       ; Room to Left
+ $7BD8 DEFW $7D5A                       ; Room to Right
+ $7BDA DEFW $8162                       ; Room Up
+ $7BDC DEFW $7A75                       ; Room Down
+ $7BDE DEFB $04,$01                     ; Fill entire screen with $01
+ $7BE0 DEFB $03,$FF,$14,$03,$34,$67     ; Rectangle 20x3 tiles with $FF at
+                                        ; $6734
+ $7BE6 DEFB $02,$0A,$FF,$84,$67         ; Fill horz 10 tiles with $FF at $6784
+ $7BEB DEFB $0E,$FF,$66,$67             ; Put tile $FF at $6766
+ $7BEF DEFB $05,$03,$04,$0C,$7C,$B5,$70 ; Block 3x4 tiles from #R$7C0C to $70B5
+ $7BF6 DEFB $05,$03,$03,$18,$7C,$24,$71 ; Block 3x3 tiles from #R$7C18 to $7124
+ $7BFD DEFB $0C,$2A,$7C,$02,$0E,$9E,$65 ; Block 2 tiles from #R$7C2A to $659E
+                                        ; copy 14 times
+ $7C04 DEFB $05,$02,$03,$84,$79,$3C,$67 ; Block 2x3 tiles from #R$7984 to $673C
+ $7C0B DEFB $FF                         ; End of sequence
 
-; Data 3x3 tiles for Room token #00 - a Barrel
-b$7C21 DEFB $14,$15,$16
- $7C24 DEFB $17,$18,$19
- $7C27 DEFB $1A,$1B,$1C
-
-; Data block at 7C2A
-b$7C2A DEFB $06,$09
- $7C2C DEFB $ED,$EC
+; Blocks for rooms
+b$7C0C DEFB $3F,$40,$41 ; {#HTML[<img src="images/blocks/7c0c.png" />] Front
+ $7C0F DEFB $42,$43,$44 ; block 3x4
+ $7C12 DEFB $45,$46,$47 ;
+ $7C15 DEFB $48,$49,$4A ; }
+ $7C18 DEFB $4B,$4C,$4D ; {#HTML[<img src="images/blocks/7c18.png" />] Front
+ $7C1B DEFB $45,$46,$47 ; block 3x3
+ $7C1E DEFB $48,$49,$4A ; }
+ $7C21 DEFB $14,$15,$16 ; {#HTML[<img src="images/blocks/7c21.png" />] Front
+ $7C24 DEFB $17,$18,$19 ; block 3x3 - barrel - to drow using token #00
+ $7C27 DEFB $1A,$1B,$1C ; }
+ $7C2A DEFB $06,$09     ; #HTML[<img src="images/blocks/7c2a.png" />] Back
+                        ; block 2x1 - ladder black on green
+ $7C2C DEFB $ED,$EC     ; #HTML[<img src="images/blocks/7c2c.png" />] Back
+                        ; block 2x1 - ladder black on green
 
 ; Room 7C2E
 ;
@@ -1275,7 +1293,10 @@ b$7C6D DEFW $B41F                       ; Room procedure
  $7C92 DEFB $0C,$B9,$71,$02,$0E,$A4,$65 ; Block 2 tiles from #R$71B9 to $65A4
                                         ; copy 14 times
  $7C99 DEFB $FF                         ; End of sequence
- $7C9A DEFB $06,$09
+
+; Blocks for rooms
+b$7C9A DEFB $06,$09  ; #HTML[<img src="images/blocks/7c9a.png" />] Back block
+                     ; 2x1 - ladder black on green
 
 ; Room 7C9C
 ;
@@ -1303,28 +1324,31 @@ b$7C9C DEFW $C6A5                       ; Room procedure
  $7CD6 DEFB $05,$05,$07,$E5,$7C,$87,$66 ; Block 5x7 tiles from #R$7CE5 to $6687
  $7CDD DEFB $05,$05,$07,$37,$7D,$92,$66 ; Block 5x7 tiles from #R$7D37 to $6692
  $7CE4 DEFB $FF                         ; End of sequence
- $7CE5 DEFB $02,$E9,$E8,$E7,$E7         ; {Train part 5x7 tiles
- $7CEA DEFB $17,$0D,$15,$15,$0D         ;
- $7CEF DEFB $18,$0D,$15,$15,$0D         ;
- $7CF4 DEFB $19,$0D,$0D,$0D,$0D         ;
- $7CF9 DEFB $22,$22,$22,$22,$22         ;
- $7CFE DEFB $22,$22,$22,$22,$22         ;
- $7D03 DEFB $1F,$0D,$0D,$0D,$0D         ; }
- $7D08 DEFB $FB,$FB,$FF,$FF,$FB         ; Train part 5x1 tiles
- $7D0D DEFB $56,$4E,$4E,$4E,$4E,$57     ; {Train part 6x7 tiles - central part
- $7D13 DEFB $52,$4F,$4F,$4F,$4F,$54     ;
- $7D19 DEFB $52,$4F,$4F,$4F,$4F,$54     ;
- $7D1F DEFB $52,$6C,$6D,$6E,$50,$54     ;
- $7D25 DEFB $53,$6F,$70,$71,$51,$55     ;
- $7D2B DEFB $53,$72,$73,$74,$51,$55     ;
- $7D31 DEFB $52,$50,$50,$50,$50,$54     ; }
- $7D37 DEFB $E7,$E7,$E6,$E5,$02         ; {Train part 5x7 tiles
- $7D3C DEFB $0D,$15,$15,$0D,$1C         ;
- $7D41 DEFB $0D,$15,$15,$0D,$1D         ;
- $7D46 DEFB $0D,$0D,$0D,$0D,$1E         ;
- $7D4B DEFB $22,$22,$22,$22,$22         ;
- $7D50 DEFB $22,$22,$22,$22,$22         ;
- $7D55 DEFB $0D,$0D,$0D,$0D,$20         ; }
+
+; Blocks for rooms
+b$7CE5 DEFB $02,$E9,$E8,$E7,$E7     ; {#HTML[<img src="images/blocks/7ce5.png"
+ $7CEA DEFB $17,$0D,$15,$15,$0D     ; />] Back block 5x7 - Train part
+ $7CEF DEFB $18,$0D,$15,$15,$0D     ;
+ $7CF4 DEFB $19,$0D,$0D,$0D,$0D     ;
+ $7CF9 DEFB $22,$22,$22,$22,$22     ;
+ $7CFE DEFB $22,$22,$22,$22,$22     ;
+ $7D03 DEFB $1F,$0D,$0D,$0D,$0D     ; }
+ $7D08 DEFB $FB,$FB,$FF,$FF,$FB     ; #HTML[<img src="images/blocks/7d08.png"
+                                    ; />] Back block 5x1 - Train part
+ $7D0D DEFB $56,$4E,$4E,$4E,$4E,$57 ; {#HTML[<img src="images/blocks/7d0d.png"
+ $7D13 DEFB $52,$4F,$4F,$4F,$4F,$54 ; />] Front block 6x7 - Train central part
+ $7D19 DEFB $52,$4F,$4F,$4F,$4F,$54 ;
+ $7D1F DEFB $52,$6C,$6D,$6E,$50,$54 ;
+ $7D25 DEFB $53,$6F,$70,$71,$51,$55 ;
+ $7D2B DEFB $53,$72,$73,$74,$51,$55 ;
+ $7D31 DEFB $52,$50,$50,$50,$50,$54 ; }
+ $7D37 DEFB $E7,$E7,$E6,$E5,$02     ; {#HTML[<img src="images/blocks/7d37.png"
+ $7D3C DEFB $0D,$15,$15,$0D,$1C     ; />] Back block 5x7 - Train part
+ $7D41 DEFB $0D,$15,$15,$0D,$1D     ;
+ $7D46 DEFB $0D,$0D,$0D,$0D,$1E     ;
+ $7D4B DEFB $22,$22,$22,$22,$22     ;
+ $7D50 DEFB $22,$22,$22,$22,$22     ;
+ $7D55 DEFB $0D,$0D,$0D,$0D,$20     ; }
 
 ; Room 7D5A
 ;
@@ -1423,11 +1447,15 @@ b$7E05 DEFW $B452                       ; Room procedure
  $7E6F DEFB $02,$05,$FF,$90,$65         ; Fill horz 5 tiles with $FF at $6590
  $7E74 DEFB $03,$FF,$03,$03,$AE,$65     ; Rectangle 3x3 tiles with $FF at $65AE
  $7E7A DEFB $FF                         ; End of sequence
- $7E7B DEFB $00,$01,$01,$02             ; {Block 4x3 wooden box
- $7E7F DEFB $03,$04,$04,$05             ;
- $7E83 DEFB $06,$07,$07,$08             ; }
- $7E87 DEFB $09,$1D,$0A                 ; Block 3x1
- $7E8A DEFB $09,$0A                     ; Block 2x1
+
+; Blocks for rooms
+b$7E7B DEFB $00,$01,$01,$02 ; {#HTML[<img src="images/blocks/7e7b.png" />]
+ $7E7F DEFB $03,$04,$04,$05 ; Front block 4x3 wooden box
+ $7E83 DEFB $06,$07,$07,$08 ; }
+ $7E87 DEFB $09,$1D,$0A     ; #HTML[<img src="images/blocks/7e87.png" />] Block
+                            ; 3x1
+ $7E8A DEFB $09,$0A         ; #HTML[<img src="images/blocks/7e8A.png" />] Block
+                            ; 2x1
 
 ; Room 7E8C
 ;
@@ -1949,10 +1977,12 @@ b$844E DEFW $B452                       ; Room procedure
  $848D DEFB $05,$04,$03,$7B,$7E,$1F,$71 ; Block 4x3 tiles from #R$7E7B to $711F
  $8494 DEFB $05,$03,$04,$9C,$84,$07,$71 ; Block 3x4 tiles from #R$849C to $7107
  $849B DEFB $FF                         ; End of sequence
- $849C DEFB $00,$01,$02                 ; {Block 3x4
- $849F DEFB $03,$04,$05                 ;
- $84A2 DEFB $03,$04,$05                 ;
- $84A5 DEFB $06,$07,$08                 ; }
+
+; Blocks for rooms
+b$849C DEFB $00,$01,$02 ; {#HTML[<img src="images/blocks/849C.png" />] Front
+ $849F DEFB $03,$04,$05 ; block 3x4
+ $84A2 DEFB $03,$04,$05 ;
+ $84A5 DEFB $06,$07,$08 ; }
 
 ; Room 84A8
 ;
@@ -1961,29 +1991,28 @@ b$844E DEFW $B452                       ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/84A8.png" />]
-b$84A8 DEFW $B41F                           ; Room procedure
- $84AA DEFW $F973                           ; Initialization
- $84AC DEFW $84EE                           ; Room to Left
- $84AE DEFW $844E                           ; Room to Right
+b$84A8 DEFW $B41F                       ; Room procedure
+ $84AA DEFW $F973                       ; Initialization
+ $84AC DEFW $84EE                       ; Room to Left
+ $84AE DEFW $844E                       ; Room to Right
  $84B0 DEFW $0000
- $84B2 DEFW $82DD                           ; Room Down
- $84B4 DEFB $03,$FF,$0D,$02,$52,$67         ; Rectangle 13x2 tiles with $FF at
-                                            ; $6752
- $84BA DEFB $03,$FF,$0C,$02,$64,$67         ; Rectangle 12x2 tiles with $FF at
-                                            ; $6764
- $84C0 DEFB $02,$03,$FF,$BC,$65             ; Fill horz 3 tiles with $FF at
-                                            ; $65BC
- $84C5 DEFB $02,$0D,$FF,$9A,$65             ; Fill horz 13 tiles with $FF at
-                                            ; $659A
- $84CA DEFB $00,$F0,$70                     ; Barrel 3x3 tiles at $70F0
- $84CD DEFB $00,$97,$70                     ; Barrel 3x3 tiles at $7097
- $84D0 DEFB $05,$04,$03,$7B,$7E,$04,$71     ; Block 4x3 tiles from #R$7E7B to
-                                            ; $7104
- $84D7 DEFB $05,$05,$03,$DF,$84,$F2,$70     ; Block 5x3 tiles from #R$84DF to
-                                            ; $70F2
- $84DE DEFB $FF                             ; End of sequence
- $84DF DEFB $00,$01,$01,$01,$02,$03,$04,$04
- $84E7 DEFB $04,$05,$06,$07,$07,$07,$08
+ $84B2 DEFW $82DD                       ; Room Down
+ $84B4 DEFB $03,$FF,$0D,$02,$52,$67     ; Rectangle 13x2 tiles with $FF at
+                                        ; $6752
+ $84BA DEFB $03,$FF,$0C,$02,$64,$67     ; Rectangle 12x2 tiles with $FF at
+                                        ; $6764
+ $84C0 DEFB $02,$03,$FF,$BC,$65         ; Fill horz 3 tiles with $FF at $65BC
+ $84C5 DEFB $02,$0D,$FF,$9A,$65         ; Fill horz 13 tiles with $FF at $659A
+ $84CA DEFB $00,$F0,$70                 ; Barrel 3x3 tiles at $70F0
+ $84CD DEFB $00,$97,$70                 ; Barrel 3x3 tiles at $7097
+ $84D0 DEFB $05,$04,$03,$7B,$7E,$04,$71 ; Block 4x3 tiles from #R$7E7B to $7104
+ $84D7 DEFB $05,$05,$03,$DF,$84,$F2,$70 ; Block 5x3 tiles from #R$84DF to $70F2
+ $84DE DEFB $FF                         ; End of sequence
+
+; Blocks for rooms
+b$84DF DEFB $00,$01,$01,$01,$02 ; {#HTML[<img src="images/blocks/84df.png" />]
+ $84E4 DEFB $03,$04,$04,$04,$05 ; Front block 5x3 - box
+ $84E9 DEFB $06,$07,$07,$07,$08 ; }
 
 ; Room 84EE
 ;
@@ -2021,38 +2050,35 @@ b$84EE DEFW $7918                       ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/8526.png" />]
-b$8526 DEFW $B483                           ; Room procedure
- $8528 DEFW $A179                           ; Initialization
+b$8526 DEFW $B483                       ; Room procedure
+ $8528 DEFW $A179                       ; Initialization
  $852A DEFW $0000
- $852C DEFW $858F                           ; Room to Right
- $852E DEFW $8608                           ; Room Up
- $8530 DEFW $84EE                           ; Room Down
- $8532 DEFB $0C,$E3,$81,$02,$10,$90,$65     ; Block 2 tiles from #R$81E3 to
-                                            ; $6590 copy 16 times
- $8539 DEFB $0C,$48,$73,$02,$10,$98,$65     ; Block 2 tiles from #R$7348 to
-                                            ; $6598 copy 16 times
- $8540 DEFB $02,$1E,$FF,$70,$67             ; Fill horz 30 tiles with $FF at
-                                            ; $6770
- $8545 DEFB $05,$02,$01,$84,$79,$78,$67     ; Block 2x1 tiles from #R$7984 to
-                                            ; $6778
- $854C DEFB $00,$B4,$70                     ; Barrel 3x3 tiles at $70B4
- $854F DEFB $00,$0F,$71                     ; Barrel 3x3 tiles at $710F
- $8552 DEFB $00,$26,$71                     ; Barrel 3x3 tiles at $7126
- $8555 DEFB $05,$02,$02,$77,$85,$38,$71     ; Block 2x2 tiles from #R$8577 to
-                                            ; $7138
- $855C DEFB $05,$03,$04,$9C,$84,$00,$71     ; Block 3x4 tiles from #R$849C to
-                                            ; $7100
- $8563 DEFB $05,$02,$02,$77,$85,$3E,$71     ; Block 2x2 tiles from #R$8577 to
-                                            ; $713E
- $856A DEFB $05,$02,$02,$77,$85,$41,$71     ; Block 2x2 tiles from #R$8577 to
-                                            ; $7141
- $8571 DEFB $02,$06,$FF,$9F,$65             ; Fill horz 6 tiles with $FF at
-                                            ; $659F
- $8576 DEFB $FF                             ; End of sequence
- $8577 DEFB $00,$02,$06,$08
- $857B DEFB $00,$01,$01,$01,$02,$03,$04,$04
- $8583 DEFB $04,$05,$03,$04,$04,$04,$05,$06
- $858B DEFB $07,$07,$07,$08
+ $852C DEFW $858F                       ; Room to Right
+ $852E DEFW $8608                       ; Room Up
+ $8530 DEFW $84EE                       ; Room Down
+ $8532 DEFB $0C,$E3,$81,$02,$10,$90,$65 ; Block 2 tiles from #R$81E3 to $6590
+                                        ; copy 16 times
+ $8539 DEFB $0C,$48,$73,$02,$10,$98,$65 ; Block 2 tiles from #R$7348 to $6598
+                                        ; copy 16 times
+ $8540 DEFB $02,$1E,$FF,$70,$67         ; Fill horz 30 tiles with $FF at $6770
+ $8545 DEFB $05,$02,$01,$84,$79,$78,$67 ; Block 2x1 tiles from #R$7984 to $6778
+ $854C DEFB $00,$B4,$70                 ; Barrel 3x3 tiles at $70B4
+ $854F DEFB $00,$0F,$71                 ; Barrel 3x3 tiles at $710F
+ $8552 DEFB $00,$26,$71                 ; Barrel 3x3 tiles at $7126
+ $8555 DEFB $05,$02,$02,$77,$85,$38,$71 ; Block 2x2 tiles from #R$8577 to $7138
+ $855C DEFB $05,$03,$04,$9C,$84,$00,$71 ; Block 3x4 tiles from #R$849C to $7100
+ $8563 DEFB $05,$02,$02,$77,$85,$3E,$71 ; Block 2x2 tiles from #R$8577 to $713E
+ $856A DEFB $05,$02,$02,$77,$85,$41,$71 ; Block 2x2 tiles from #R$8577 to $7141
+ $8571 DEFB $02,$06,$FF,$9F,$65         ; Fill horz 6 tiles with $FF at $659F
+ $8576 DEFB $FF                         ; End of sequence
+
+; Blocks for rooms
+b$8577 DEFB $00,$02             ; {#HTML[<img src="images/blocks/8577.png" />]
+ $8579 DEFB $06,$08             ; Front block 2x2 - box}
+ $857B DEFB $00,$01,$01,$01,$02 ; {#HTML[<img src="images/blocks/857b.png" />]
+ $8580 DEFB $03,$04,$04,$04,$05 ; Front block 5x4 - box
+ $8585 DEFB $03,$04,$04,$04,$05 ;
+ $858A DEFB $06,$07,$07,$07,$08 ; }
 
 ; Room 858F
 ;
@@ -2155,42 +2181,33 @@ b$8608 DEFW $B452                       ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/8689.png" />]
-b$8689 DEFW $B41F                           ; Room procedure
- $868B DEFW $B422                           ; Initialization
- $868D DEFW $86FD                           ; Room to Left
+b$8689 DEFW $B41F                       ; Room procedure
+ $868B DEFW $B422                       ; Initialization
+ $868D DEFW $86FD                       ; Room to Left
  $868F DEFW $0000
  $8691 DEFW $0000
- $8693 DEFW $85BD                           ; Room Down
- $8695 DEFB $02,$39,$FF,$BC,$66             ; Fill horz 57 tiles with $FF at
-                                            ; $66BC
- $869A DEFB $03,$FF,$03,$11,$AB,$65         ; Rectangle 3x17 tiles with $FF at
-                                            ; $65AB
- $86A0 DEFB $05,$02,$02,$84,$79,$C9,$66     ; Block 2x2 tiles from #R$7984 to
-                                            ; $66C9
- $86A7 DEFB $0C,$48,$73,$02,$05,$05,$67     ; Block 2 tiles from #R$7348 to
-                                            ; $6705 copy 5 times
- $86AE DEFB $05,$03,$03,$18,$7C,$67,$70     ; Block 3x3 tiles from #R$7C18 to
-                                            ; $7067
- $86B5 DEFB $05,$04,$02,$F5,$86,$21,$70     ; Block 4x2 tiles from #R$86F5 to
-                                            ; $7021
- $86BC DEFB $05,$04,$03,$7B,$7E,$5B,$70     ; Block 4x3 tiles from #R$7E7B to
-                                            ; $705B
- $86C3 DEFB $05,$03,$03,$A0,$71,$60,$70     ; Block 3x3 tiles from #R$71A0 to
-                                            ; $7060
- $86CA DEFB $05,$03,$01,$87,$7E,$96,$70     ; Block 3x1 tiles from #R$7E87 to
-                                            ; $7096
- $86D1 DEFB $05,$05,$03,$DF,$84,$B9,$6F     ; Block 5x3 tiles from #R$84DF to
-                                            ; $6FB9
- $86D8 DEFB $05,$03,$03,$A0,$71,$12,$70     ; Block 3x3 tiles from #R$71A0 to
-                                            ; $7012
- $86DF DEFB $05,$04,$03,$7B,$7E,$15,$70     ; Block 4x3 tiles from #R$7E7B to
-                                            ; $7015
- $86E6 DEFB $05,$04,$03,$7B,$7E,$6B,$70     ; Block 4x3 tiles from #R$7E7B to
-                                            ; $706B
- $86ED DEFB $05,$04,$03,$7B,$7E,$6F,$70     ; Block 4x3 tiles from #R$7E7B to
-                                            ; $706F
- $86F4 DEFB $FF                             ; End of sequence
- $86F5 DEFB $00,$01,$01,$02,$06,$07,$07,$08
+ $8693 DEFW $85BD                       ; Room Down
+ $8695 DEFB $02,$39,$FF,$BC,$66         ; Fill horz 57 tiles with $FF at $66BC
+ $869A DEFB $03,$FF,$03,$11,$AB,$65     ; Rectangle 3x17 tiles with $FF at
+                                        ; $65AB
+ $86A0 DEFB $05,$02,$02,$84,$79,$C9,$66 ; Block 2x2 tiles from #R$7984 to $66C9
+ $86A7 DEFB $0C,$48,$73,$02,$05,$05,$67 ; Block 2 tiles from #R$7348 to $6705
+                                        ; copy 5 times
+ $86AE DEFB $05,$03,$03,$18,$7C,$67,$70 ; Block 3x3 tiles from #R$7C18 to $7067
+ $86B5 DEFB $05,$04,$02,$F5,$86,$21,$70 ; Block 4x2 tiles from #R$86F5 to $7021
+ $86BC DEFB $05,$04,$03,$7B,$7E,$5B,$70 ; Block 4x3 tiles from #R$7E7B to $705B
+ $86C3 DEFB $05,$03,$03,$A0,$71,$60,$70 ; Block 3x3 tiles from #R$71A0 to $7060
+ $86CA DEFB $05,$03,$01,$87,$7E,$96,$70 ; Block 3x1 tiles from #R$7E87 to $7096
+ $86D1 DEFB $05,$05,$03,$DF,$84,$B9,$6F ; Block 5x3 tiles from #R$84DF to $6FB9
+ $86D8 DEFB $05,$03,$03,$A0,$71,$12,$70 ; Block 3x3 tiles from #R$71A0 to $7012
+ $86DF DEFB $05,$04,$03,$7B,$7E,$15,$70 ; Block 4x3 tiles from #R$7E7B to $7015
+ $86E6 DEFB $05,$04,$03,$7B,$7E,$6B,$70 ; Block 4x3 tiles from #R$7E7B to $706B
+ $86ED DEFB $05,$04,$03,$7B,$7E,$6F,$70 ; Block 4x3 tiles from #R$7E7B to $706F
+ $86F4 DEFB $FF                         ; End of sequence
+
+; Blocks for rooms
+b$86F5 DEFB $00,$01,$01,$02 ; {#HTML[<img src="images/blocks/86f5.png" />]
+ $86F9 DEFB $06,$07,$07,$08 ; Front block 4x2 - box}
 
 ; Room 86FD
 ;
@@ -2225,37 +2242,31 @@ b$86FD DEFW $B41F                       ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/8739.png" />]
-b$8739 DEFW $7918                           ; Room procedure
- $873B DEFW $A101                           ; Initialization
- $873D DEFW $8799                           ; Room to Left
- $873F DEFW $8802                           ; Room to Right
+b$8739 DEFW $7918                       ; Room procedure
+ $873B DEFW $A101                       ; Initialization
+ $873D DEFW $8799                       ; Room to Left
+ $873F DEFW $8802                       ; Room to Right
  $8741 DEFW $0000
- $8743 DEFW $86FD                           ; Room Down
- $8745 DEFB $01,$09,$3A,$94,$65             ; Fill vert 9 tiles with $3A at
-                                            ; $6594
- $874A DEFB $01,$09,$3A,$9E,$65             ; Fill vert 9 tiles with $3A at
-                                            ; $659E
- $874F DEFB $01,$09,$3A,$A1,$65             ; Fill vert 9 tiles with $3A at
-                                            ; $65A1
- $8754 DEFB $01,$05,$3A,$A8,$65             ; Fill vert 5 tiles with $3A at
-                                            ; $65A8
- $8759 DEFB $02,$78,$FF,$9E,$66             ; Fill horz 120 tiles with $FF at
-                                            ; $669E
- $875E DEFB $05,$02,$04,$84,$79,$A1,$66     ; Block 2x4 tiles from #R$7984 to
-                                            ; $66A1
- $8765 DEFB $0C,$48,$73,$02,$04,$19,$67     ; Block 2 tiles from #R$7348 to
-                                            ; $6719 copy 4 times
- $876C DEFB $05,$02,$04,$BB,$71,$2E,$70     ; Block 2x4 tiles from #R$71BB to
-                                            ; $702E
- $8773 DEFB $05,$03,$03,$18,$7C,$44,$70     ; Block 3x3 tiles from #R$7C18 to
-                                            ; $7044
- $877A DEFB $05,$03,$04,$0C,$7C,$23,$70     ; Block 3x4 tiles from #R$7C0C to
-                                            ; $7023
- $8781 DEFB $05,$03,$04,$0C,$7C,$33,$70     ; Block 3x4 tiles from #R$7C0C to
-                                            ; $7033
- $8788 DEFB $FF                             ; End of sequence
- $8789 DEFB $00,$01,$01,$02,$03,$04,$04,$05
- $8791 DEFB $03,$04,$04,$05,$06,$07,$07,$08
+ $8743 DEFW $86FD                       ; Room Down
+ $8745 DEFB $01,$09,$3A,$94,$65         ; Fill vert 9 tiles with $3A at $6594
+ $874A DEFB $01,$09,$3A,$9E,$65         ; Fill vert 9 tiles with $3A at $659E
+ $874F DEFB $01,$09,$3A,$A1,$65         ; Fill vert 9 tiles with $3A at $65A1
+ $8754 DEFB $01,$05,$3A,$A8,$65         ; Fill vert 5 tiles with $3A at $65A8
+ $8759 DEFB $02,$78,$FF,$9E,$66         ; Fill horz 120 tiles with $FF at $669E
+ $875E DEFB $05,$02,$04,$84,$79,$A1,$66 ; Block 2x4 tiles from #R$7984 to $66A1
+ $8765 DEFB $0C,$48,$73,$02,$04,$19,$67 ; Block 2 tiles from #R$7348 to $6719
+                                        ; copy 4 times
+ $876C DEFB $05,$02,$04,$BB,$71,$2E,$70 ; Block 2x4 tiles from #R$71BB to $702E
+ $8773 DEFB $05,$03,$03,$18,$7C,$44,$70 ; Block 3x3 tiles from #R$7C18 to $7044
+ $877A DEFB $05,$03,$04,$0C,$7C,$23,$70 ; Block 3x4 tiles from #R$7C0C to $7023
+ $8781 DEFB $05,$03,$04,$0C,$7C,$33,$70 ; Block 3x4 tiles from #R$7C0C to $7033
+ $8788 DEFB $FF                         ; End of sequence
+
+; Blocks for rooms
+b$8789 DEFB $00,$01,$01,$02 ; {#HTML[<img src="images/blocks/8789.png" />]
+ $878D DEFB $03,$04,$04,$05 ; Front block 4x4
+ $8791 DEFB $03,$04,$04,$05 ;
+ $8795 DEFB $06,$07,$07,$08 ; }
 
 ; Room 8799
 ;
@@ -2347,9 +2358,16 @@ b$8834 DEFW $B41F                       ; Room procedure
  $888D DEFB $02,$06,$FA,$CD,$66         ; Fill horz 6 tiles with $FA at $66CD
  $8892 DEFB $01,$03,$28,$88,$6F         ; Fill vert 3 tiles with $28 at $6F88
  $8897 DEFB $FF                         ; End of sequence
- $8898 DEFB $F9
- $8899 DEFB $F8,$F9,$F9,$F9
- $889D DEFB $EF,$EE
+
+; Blocks for rooms
+b$8898 DEFB $F9      ; #HTML[<img src="images/blocks/8898.png" />] Back block
+                     ; 1x1
+ $8899 DEFB $F8      ; {#HTML[<img src="images/blocks/8899.png" />] Back block
+ $889A DEFB $F9      ; 1x4
+ $889B DEFB $F9      ;
+ $889C DEFB $F9      ; }
+ $889D DEFB $EF,$EE  ; #HTML[<img src="images/blocks/889d.png" />] Back block
+                     ; 2x1 - ladder on yellow
 
 ; Room 889F
 ;
@@ -2831,33 +2849,39 @@ b$8DCA DEFW $B41F                       ; Room procedure
  $8E39 DEFB $05,$03,$04,$90,$8E,$56,$66 ; Block 3x4 tiles from #R$8E90 to $6656
  $8E40 DEFB $03,$1B,$04,$04,$8B,$66     ; Rectangle 4x4 tiles with $1B at $668B
  $8E46 DEFB $FF                         ; End of sequence
- $8E47 DEFB $64,$65,$5A,$5A,$5B
 
-; Data block at 8E4C
-b$8E4C DEFB $FF,$5C,$63,$FF,$FF,$FF,$62,$5A
- $8E54 DEFB $5A,$61,$62,$5A,$5A,$5A
-
-; Data block at 8E5A
-b$8E5A DEFB $60,$5A,$5A,$5A
-
-; Data block at 8E5E
-b$8E5E DEFB $5F,$5D,$5A,$5A
-
-; Data block at 8E62
-b$8E62 DEFB $5E
- $8E63 DEFB $23,$24
- $8E65 DEFB $D3,$D2
- $8E67 DEFB $E0,$D9,$D8,$D5,$E0
- $8E6C DEFB $01,$DA,$DC,$DB,$DD,$D7,$DE,$D6
- $8E74 DEFB $DF,$D6,$01,$E1
- $8E78 DEFB $2F,$30,$01,$2E,$28,$31,$2D,$28
- $8E80 DEFB $28,$2B,$28,$2C,$28,$28,$2A,$28
- $8E88 DEFB $29
-
-; Data block at 8E89
-b$8E89 DEFB $01,$27,$01,$01,$25,$26,$01
- $8E90 DEFB $36,$01,$01,$34,$35,$37,$28,$28
- $8E98 DEFB $01,$32,$33,$01
+; Blocks for rooms
+b$8E47 DEFB $64,$65,$5A,$5A     ; {#HTML[<img src="images/blocks/8e47.png" />]
+ $8E4B DEFB $5B,$FF,$5C,$63     ; Front block 4x7
+ $8E4F DEFB $FF,$FF,$FF,$62     ;
+ $8E53 DEFB $5A,$5A,$61,$62     ;
+ $8E57 DEFB $5A,$5A,$5A,$60     ;
+ $8E5B DEFB $5A,$5A,$5A,$5F     ;
+ $8E5F DEFB $5D,$5A,$5A,$5E     ; }
+ $8E63 DEFB $23                 ; {Block 1x2
+ $8E64 DEFB $24                 ; }
+ $8E65 DEFB $D3                 ; {Block 1x2
+ $8E66 DEFB $D2                 ; }
+ $8E67 DEFB $E0,$D9,$D8,$D5,$E0 ; #HTML[<img src="images/blocks/8e67.png" />]
+                                ; Back block 5x1
+ $8E6C DEFB $01,$DA             ; {#HTML[<img src="images/blocks/8e6c.png" />]
+ $8E6E DEFB $DC,$DB             ; Back block 2x6
+ $8E70 DEFB $DD,$D7             ;
+ $8E72 DEFB $DE,$D6             ;
+ $8E74 DEFB $DF,$D6             ;
+ $8E76 DEFB $01,$E1             ; }
+ $8E78 DEFB $2F,$30,$01         ; {#HTML[<img src="images/blocks/8e78.png" />]
+ $8E7B DEFB $2E,$28,$31         ; Back block 3x8
+ $8E7E DEFB $2D,$28,$28         ;
+ $8E81 DEFB $2B,$28,$2C         ;
+ $8E84 DEFB $28,$28,$2A         ;
+ $8E87 DEFB $28,$29,$01         ;
+ $8E8A DEFB $27,$01,$01         ;
+ $8E8D DEFB $25,$26,$01         ; }
+ $8E90 DEFB $36,$01,$01         ; {#HTML[<img src="images/blocks/8e90.png" />]
+ $8E93 DEFB $34,$35,$37         ; Back block 3x4
+ $8E96 DEFB $28,$28,$01         ;
+ $8E99 DEFB $32,$33,$01         ; }
 
 ; Room 8E9C
 ;
@@ -3291,7 +3315,12 @@ b$92EF DEFW $7918                       ; Room procedure
  $9363 DEFB $05,$02,$04,$BB,$71,$EF,$6F ; Block 2x4 tiles from #R$71BB to $6FEF
  $936A DEFB $05,$02,$04,$BB,$71,$F2,$6F ; Block 2x4 tiles from #R$71BB to $6FF2
  $9371 DEFB $FF                         ; End of sequence
- $9372 DEFB $CE,$CF,$CF,$CF
+
+; Blocks for rooms
+b$9372 DEFB $CE      ; {#HTML[<img src="images/blocks/9372.png" />] Back block
+ $9373 DEFB $CF      ; 1x4
+ $9374 DEFB $CF      ;
+ $9375 DEFB $CF      ; }
 
 ; Room 9376
 ;
@@ -3449,44 +3478,55 @@ b$94AB DEFW $7918                   ; Room procedure
 ; .
 ;
 ; #HTML[<img src="images/rooms/94CF.png" />]
-b$94CF DEFW $7918                           ; Room procedure
- $94D1 DEFW $A11A                           ; Initialization
- $94D3 DEFW $9552                           ; Room to Left
- $94D5 DEFW $9A9A                           ; Room to Right
+b$94CF DEFW $7918                       ; Room procedure
+ $94D1 DEFW $A11A                       ; Initialization
+ $94D3 DEFW $9552                       ; Room to Left
+ $94D5 DEFW $9A9A                       ; Room to Right
  $94D7 DEFW $0000
  $94D9 DEFW $0000
- $94DB DEFB $02,$3C,$FF,$52,$67             ; Fill horz 60 tiles with $FF at
-                                            ; $6752
- $94E0 DEFB $03,$0D,$12,$07,$80,$66         ; Rectangle 18x7 tiles with $0D at
-                                            ; $6680
- $94E6 DEFB $03,$A3,$1B,$02,$90,$65         ; Rectangle 27x2 tiles with $A3 at
-                                            ; $6590
- $94EC DEFB $0E,$9C,$AB,$65                 ; Put tile $9C at $65AB
- $94F0 DEFB $0E,$9B,$C9,$65                 ; Put tile $9B at $65C9
- $94F4 DEFB $03,$BF,$12,$06,$CC,$65         ; Rectangle 18x6 tiles with $BF at
-                                            ; $65CC
- $94FA DEFB $05,$02,$04,$BB,$71,$E8,$70     ; Block 2x4 tiles from #R$71BB to
-                                            ; $70E8
- $9501 DEFB $02,$12,$BA,$CC,$65             ; Fill horz 18 tiles with $BA at
-                                            ; $65CC
- $9506 DEFB $02,$12,$B3,$62,$66             ; Fill horz 18 tiles with $B3 at
-                                            ; $6662
- $950B DEFB $05,$01,$06,$28,$95,$CD,$65     ; Block 1x6 tiles from #R$9528 to
-                                            ; $65CD
- $9512 DEFB $05,$01,$06,$2E,$95,$D4,$65     ; Block 1x6 tiles from #R$952E to
-                                            ; $65D4
- $9519 DEFB $05,$02,$06,$34,$95,$DA,$65     ; Block 2x6 tiles from #R$9534 to
-                                            ; $65DA
- $9520 DEFB $05,$03,$06,$40,$95,$DE,$65     ; Block 3x6 tiles from #R$9540 to
-                                            ; $65DE
- $9527 DEFB $FF                             ; End of sequence
- $9528 DEFB $A9,$A8,$A8,$A8,$A8,$A7
- $952E DEFB $A6,$A5,$A4,$A8,$A2,$A1
- $9534 DEFB $BA,$CB,$BF,$CA,$C9,$C8,$C7,$C6
- $953C DEFB $CA,$BF,$C4,$B3
- $9540 DEFB $BA,$BA,$C3,$BF,$C2,$C1,$BF,$C0
- $9548 DEFB $00,$C2,$C1,$00,$C0,$00,$00,$C1
- $9550 DEFB $00,$00
+ $94DB DEFB $02,$3C,$FF,$52,$67         ; Fill horz 60 tiles with $FF at $6752
+ $94E0 DEFB $03,$0D,$12,$07,$80,$66     ; Rectangle 18x7 tiles with $0D at
+                                        ; $6680
+ $94E6 DEFB $03,$A3,$1B,$02,$90,$65     ; Rectangle 27x2 tiles with $A3 at
+                                        ; $6590
+ $94EC DEFB $0E,$9C,$AB,$65             ; Put tile $9C at $65AB
+ $94F0 DEFB $0E,$9B,$C9,$65             ; Put tile $9B at $65C9
+ $94F4 DEFB $03,$BF,$12,$06,$CC,$65     ; Rectangle 18x6 tiles with $BF at
+                                        ; $65CC
+ $94FA DEFB $05,$02,$04,$BB,$71,$E8,$70 ; Block 2x4 tiles from #R$71BB to $70E8
+ $9501 DEFB $02,$12,$BA,$CC,$65         ; Fill horz 18 tiles with $BA at $65CC
+ $9506 DEFB $02,$12,$B3,$62,$66         ; Fill horz 18 tiles with $B3 at $6662
+ $950B DEFB $05,$01,$06,$28,$95,$CD,$65 ; Block 1x6 tiles from #R$9528 to $65CD
+ $9512 DEFB $05,$01,$06,$2E,$95,$D4,$65 ; Block 1x6 tiles from #R$952E to $65D4
+ $9519 DEFB $05,$02,$06,$34,$95,$DA,$65 ; Block 2x6 tiles from #R$9534 to $65DA
+ $9520 DEFB $05,$03,$06,$40,$95,$DE,$65 ; Block 3x6 tiles from #R$9540 to $65DE
+ $9527 DEFB $FF                         ; End of sequence
+
+; Blocks for rooms
+b$9528 DEFB $A9         ; {#HTML[<img src="images/blocks/9528.png" />] Back
+ $9529 DEFB $A8         ; block 1x6
+ $952A DEFB $A8         ;
+ $952B DEFB $A8         ;
+ $952C DEFB $A8         ;
+ $952D DEFB $A7         ; }
+ $952E DEFB $A6         ; {#HTML[<img src="images/blocks/952E.png" />] Back
+ $952F DEFB $A5         ; block 1x6
+ $9530 DEFB $A4         ;
+ $9531 DEFB $A8         ;
+ $9532 DEFB $A2         ;
+ $9533 DEFB $A1         ; }
+ $9534 DEFB $BA,$CB     ; {#HTML[<img src="images/blocks/9534.png" />] Back
+ $9536 DEFB $BF,$CA     ; block 2x6
+ $9538 DEFB $C9,$C8     ;
+ $953A DEFB $C7,$C6     ;
+ $953C DEFB $CA,$BF     ;
+ $953E DEFB $C4,$B3     ; }
+ $9540 DEFB $BA,$BA,$C3 ; {#HTML[<img src="images/blocks/9540.png" />] Back
+ $9543 DEFB $BF,$C2,$C1 ; block 3x6
+ $9546 DEFB $BF,$C0,$00 ;
+ $9549 DEFB $C2,$C1,$00 ;
+ $954C DEFB $C0,$00,$00 ;
+ $954F DEFB $C1,$00,$00 ; }
 
 ; Room 9552
 ;

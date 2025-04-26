@@ -61,12 +61,13 @@ B $6F86,510,30
 b $7184
 W $7184,2,2 Current Room address
 W $7186,2,2 Ninja sprite address
-B $7188,12,6 Block 6x2 tiles
-B $7194,12,4 Block 4x3 tiles
-B $71A0,9,3 Block 3x3 tiles
-B $71A9,16,4 Block 4x4 tiles
-B $71B9,2 Block 2x9 tiles - ladder
-B $71BB,8,2 Block 2x4 tiles - Console
+b $7188 Blocks for rooms
+B $7188,12,6 #HTML[<img src="images/blocks/7188.png" />] Front block 6x2 - pile of garbage
+B $7194,12,4 #HTML[<img src="images/blocks/7194.png" />] Back block 4x3 - pier fencing
+B $71A0,9,3 #HTML[<img src="images/blocks/71A0.png" />] Front block 3x3 - box
+B $71A9,16,4 #HTML[<img src="images/blocks/71A9.png" />] Front block 4x4 - computer part
+B $71B9,2,2 #HTML[<img src="images/blocks/71b9.png" />] Back block 2x1 - ladder black on blue
+B $71BB,8,2 #HTML[<img src="images/blocks/71bb.png" />] Front block 2x4 - console
 b $71C3 Current Guard data
 W $71C3,2,2 Current Guard position in tilemap
 B $71C5,1,1 Current Guard X position
@@ -263,8 +264,9 @@ B $7977,7 Block 4x3 tiles from #R$7194 to $6621
 B $797E,5 Fill vert 3 tiles with $12 at $6625
 B $7983,1 End of sequence
 b $7984
-B $798E
-B $79AA
+B $7984,10,2 #HTML[<img src="images/blocks/7984.png" />] Back block 2x5 - ladder black on blue
+B $798E,28,4 #HTML[<img src="images/blocks/798E.png" />] Front block 4x7 - ladder fencing
+B $79AA,28,4 #HTML[<img src="images/blocks/79AA.png" />] Front block 4x7 - ladder fencing
 b $79C6 Room 79C6 (next to room with pier)
 N $79C6 #HTML[<img src="images/rooms/79C6.png" />]
 W $79C6,2,2 Room procedure
@@ -379,8 +381,10 @@ B $7B3C,4 Put tile $FE at $678A
 B $7B40,7 Block 1x2 tiles from #R$7B4F to $6756
 B $7B47,7 Block 1x2 tiles from #R$7B4F to $675E
 B $7B4E,1 End of sequence
-B $7B51
-B $7B52
+b $7B4F Blocks for rooms
+B $7B4F,2,1 #HTML[<img src="images/blocks/7b4f.png" />] Back block 1x2 - vertical pipe
+B $7B51,1,1 #HTML[<img src="images/blocks/7b51.png" />] Back block 1x1 - vertical pipe
+B $7B52,4,1 #HTML[<img src="images/blocks/7b52.png" />] Back block 1x4 - vertical pipe
 b $7B56 Room 7B56
 N $7B56 #HTML[<img src="images/rooms/7B56.png" />]
 W $7B56,2,2 Room procedure
@@ -434,13 +438,12 @@ B $7BF6,7 Block 3x3 tiles from #R$7C18 to $7124
 B $7BFD,7 Block 2 tiles from #R$7C2A to $659E copy 14 times
 B $7C04,7 Block 2x3 tiles from #R$7984 to $673C
 B $7C0B,1 End of sequence
-B $7C0C
-B $7C18
-b $7C21 Data 3x3 tiles for Room token #00 - a Barrel
-B $7C21,9,3
-b $7C2A
-B $7C2A,4,4
-B $7C2C
+b $7C0C Blocks for rooms
+B $7C0C,12,3 #HTML[<img src="images/blocks/7c0c.png" />] Front block 3x4
+B $7C18,9,3 #HTML[<img src="images/blocks/7c18.png" />] Front block 3x3
+B $7C21,9,3 #HTML[<img src="images/blocks/7c21.png" />] Front block 3x3 - barrel - to drow using token #00
+B $7C2A,2,2 #HTML[<img src="images/blocks/7c2a.png" />] Back block 2x1 - ladder black on green
+B $7C2C,2,2 #HTML[<img src="images/blocks/7c2c.png" />] Back block 2x1 - ladder black on green
 b $7C2E Room 7C2E
 N $7C2E #HTML[<img src="images/rooms/7C2E.png" />]
 W $7C2E,2,2 Room procedure
@@ -474,6 +477,8 @@ B $7C88,5 Fill horz 9 tiles with $03 at $6672
 B $7C8D,5 Fill horz 5 tiles with $03 at $6699
 B $7C92,7 Block 2 tiles from #R$71B9 to $65A4 copy 14 times
 B $7C99,1 End of sequence
+b $7C9A Blocks for rooms
+B $7C9A,2,2 #HTML[<img src="images/blocks/7c9a.png" />] Back block 2x1 - ladder black on green
 b $7C9C Room 7C9C
 N $7C9C #HTML[<img src="images/rooms/7C9C.png" />]
 W $7C9C,2,2 Room procedure
@@ -493,10 +498,11 @@ B $7CCF,7 Block 5x1 tiles from #R$7D08 to $6762
 B $7CD6,7 Block 5x7 tiles from #R$7CE5 to $6687
 B $7CDD,7 Block 5x7 tiles from #R$7D37 to $6692
 B $7CE4,1 End of sequence
-B $7CE5,35,5 Train part 5x7 tiles
-B $7D08,5,5 Train part 5x1 tiles
-B $7D0D,42,6 Train part 6x7 tiles - central part
-B $7D37,35,5 Train part 5x7 tiles
+b $7CE5 Blocks for rooms
+B $7CE5,35,5 #HTML[<img src="images/blocks/7ce5.png" />] Back block 5x7 - Train part
+B $7D08,5,5 #HTML[<img src="images/blocks/7d08.png" />] Back block 5x1 - Train part
+B $7D0D,42,6 #HTML[<img src="images/blocks/7d0d.png" />] Front block 6x7 - Train central part
+B $7D37,35,5 #HTML[<img src="images/blocks/7d37.png" />] Back block 5x7 - Train part
 b $7D5A Room 7D5A
 N $7D5A #HTML[<img src="images/rooms/7D5A.png" />]
 W $7D5A,2,2 Room procedure
@@ -565,9 +571,10 @@ B $7E68,7 Block 2x1 tiles from #R$7E8A to $7164
 B $7E6F,5 Fill horz 5 tiles with $FF at $6590
 B $7E74,6 Rectangle 3x3 tiles with $FF at $65AE
 B $7E7A,1 End of sequence
-B $7E7B,12,4 Block 4x3 wooden box
-B $7E87,3,3 Block 3x1
-B $7E8A,2,2 Block 2x1
+b $7E7B Blocks for rooms
+B $7E7B,12,4 #HTML[<img src="images/blocks/7e7b.png" />] Front block 4x3 wooden box
+B $7E87,3,3 #HTML[<img src="images/blocks/7e87.png" />] Block 3x1
+B $7E8A,2,2 #HTML[<img src="images/blocks/7e8A.png" />] Block 2x1
 b $7E8C Room 7E8C
 N $7E8C #HTML[<img src="images/rooms/7E8C.png" />]
 W $7E8C,2,2 Room procedure
@@ -951,7 +958,8 @@ B $848A,3 Barrel 3x3 tiles at $7119
 B $848D,7 Block 4x3 tiles from #R$7E7B to $711F
 B $8494,7 Block 3x4 tiles from #R$849C to $7107
 B $849B,1 End of sequence
-B $849C,12,3 Block 3x4
+b $849C Blocks for rooms
+B $849C,12,3 #HTML[<img src="images/blocks/849C.png" />] Front block 3x4
 b $84A8 Room 84A8
 N $84A8 #HTML[<img src="images/rooms/84A8.png" />]
 W $84A8,2,2 Room procedure
@@ -969,7 +977,8 @@ B $84CD,3 Barrel 3x3 tiles at $7097
 B $84D0,7 Block 4x3 tiles from #R$7E7B to $7104
 B $84D7,7 Block 5x3 tiles from #R$84DF to $70F2
 B $84DE,1 End of sequence
-B $84DF
+b $84DF Blocks for rooms
+B $84DF,15,5 #HTML[<img src="images/blocks/84df.png" />] Front block 5x3 - box
 b $84EE Room 84EE
 N $84EE #HTML[<img src="images/rooms/84EE.png" />]
 W $84EE,2,2 Room procedure
@@ -1011,8 +1020,9 @@ B $8563,7 Block 2x2 tiles from #R$8577 to $713E
 B $856A,7 Block 2x2 tiles from #R$8577 to $7141
 B $8571,5 Fill horz 6 tiles with $FF at $659F
 B $8576,1 End of sequence
-B $8577
-B $857B
+b $8577 Blocks for rooms
+B $8577,4,2 #HTML[<img src="images/blocks/8577.png" />] Front block 2x2 - box
+B $857B,20,5 #HTML[<img src="images/blocks/857b.png" />] Front block 5x4 - box
 b $858F Room 858F
 N $858F #HTML[<img src="images/rooms/858F.png" />]
 W $858F,2,2 Room procedure
@@ -1109,7 +1119,8 @@ B $86DF,7 Block 4x3 tiles from #R$7E7B to $7015
 B $86E6,7 Block 4x3 tiles from #R$7E7B to $706B
 B $86ED,7 Block 4x3 tiles from #R$7E7B to $706F
 B $86F4,1 End of sequence
-B $86F5
+b $86F5 Blocks for rooms
+B $86F5,8,4 #HTML[<img src="images/blocks/86f5.png" />] Front block 4x2 - box
 b $86FD Room 86FD
 N $86FD #HTML[<img src="images/rooms/86FD.png" />]
 W $86FD,2,2 Room procedure
@@ -1149,6 +1160,8 @@ B $8773,7 Block 3x3 tiles from #R$7C18 to $7044
 B $877A,7 Block 3x4 tiles from #R$7C0C to $7023
 B $8781,7 Block 3x4 tiles from #R$7C0C to $7033
 B $8788,1 End of sequence
+b $8789 Blocks for rooms
+B $8789,16,4 #HTML[<img src="images/blocks/8789.png" />] Front block 4x4
 b $8799 Room 8799
 N $8799 #HTML[<img src="images/rooms/8799.png" />]
 W $8799,2,2 Room procedure
@@ -1216,9 +1229,10 @@ B $8888,5 Fill horz 4 tiles with $FA at $66E0
 B $888D,5 Fill horz 6 tiles with $FA at $66CD
 B $8892,5 Fill vert 3 tiles with $28 at $6F88
 B $8897,1 End of sequence
-B $8898
-B $8899
-B $889D
+b $8898 Blocks for rooms
+B $8898,1,1 #HTML[<img src="images/blocks/8898.png" />] Back block 1x1
+B $8899,4,1 #HTML[<img src="images/blocks/8899.png" />] Back block 1x4
+B $889D,2,2 #HTML[<img src="images/blocks/889d.png" />] Back block 2x1 - ladder on yellow
 b $889F Room 889F
 N $889F #HTML[<img src="images/rooms/889F.png" />]
 W $889F,2,2 Room procedure
@@ -1589,18 +1603,14 @@ B $8E32,7 Block 1x2 tiles from #R$8E65 to $6634
 B $8E39,7 Block 3x4 tiles from #R$8E90 to $6656
 B $8E40,6 Rectangle 4x4 tiles with $1B at $668B
 B $8E46,1 End of sequence
-B $8E47
-b $8E4C
-b $8E5A
-b $8E5E
-b $8E62
-B $8E63
-B $8E65
-B $8E67
-B $8E6C
-B $8E78
-b $8E89
-B $8E90
+b $8E47 Blocks for rooms
+B $8E47,28,4 #HTML[<img src="images/blocks/8e47.png" />] Front block 4x7
+B $8E63,2,1 Block 1x2
+B $8E65,2,1 Block 1x2
+B $8E67,5,5 #HTML[<img src="images/blocks/8e67.png" />] Back block 5x1
+B $8E6C,12,2 #HTML[<img src="images/blocks/8e6c.png" />] Back block 2x6
+B $8E78,24,3 #HTML[<img src="images/blocks/8e78.png" />] Back block 3x8
+B $8E90,12,3 #HTML[<img src="images/blocks/8e90.png" />] Back block 3x4
 b $8E9C Room 8E9C
 N $8E9C #HTML[<img src="images/rooms/8E9C.png" />]
 W $8E9C,2,2 Room procedure
@@ -1925,7 +1935,8 @@ B $935C,7 Block 2x4 tiles from #R$71BB to $6FEC
 B $9363,7 Block 2x4 tiles from #R$71BB to $6FEF
 B $936A,7 Block 2x4 tiles from #R$71BB to $6FF2
 B $9371,1 End of sequence
-B $9372
+b $9372 Blocks for rooms
+B $9372,4,1 #HTML[<img src="images/blocks/9372.png" />] Back block 1x4
 b $9376 Room 9376
 N $9376 #HTML[<img src="images/rooms/9376.png" />]
 W $9376,2,2 Room procedure
@@ -2053,10 +2064,11 @@ B $9512,7 Block 1x6 tiles from #R$952E to $65D4
 B $9519,7 Block 2x6 tiles from #R$9534 to $65DA
 B $9520,7 Block 3x6 tiles from #R$9540 to $65DE
 B $9527,1 End of sequence
-B $9528
-B $952E
-B $9534
-B $9540
+b $9528 Blocks for rooms
+B $9528,6,1 #HTML[<img src="images/blocks/9528.png" />] Back block 1x6
+B $952E,6,1 #HTML[<img src="images/blocks/952E.png" />] Back block 1x6
+B $9534,12,2 #HTML[<img src="images/blocks/9534.png" />] Back block 2x6
+B $9540,18,3 #HTML[<img src="images/blocks/9540.png" />] Back block 3x6
 b $9552 Room 9552
 N $9552 #HTML[<img src="images/rooms/9552.png" />]
 W $9552,2,2 Room procedure

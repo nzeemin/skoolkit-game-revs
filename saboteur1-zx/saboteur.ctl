@@ -263,7 +263,7 @@ B $7970,7 Block 4x3 tiles from #R$7194 to $661D
 B $7977,7 Block 4x3 tiles from #R$7194 to $6621
 B $797E,5 Fill vert 3 tiles with $12 at $6625
 B $7983,1 End of sequence
-b $7984
+b $7984 Blocks for rooms
 B $7984,10,2 #HTML[<img src="images/blocks/7984.png" />] Back block 2x5 - ladder black on blue
 B $798E,28,4 #HTML[<img src="images/blocks/798E.png" />] Front block 4x7 - ladder fencing
 B $79AA,28,4 #HTML[<img src="images/blocks/79AA.png" />] Front block 4x7 - ladder fencing
@@ -785,7 +785,8 @@ B $81D2,4 Put tile $2A at $6FBC
 B $81D6,5 Fill vert 5 tiles with $2B at $6FDA
 B $81DB,7 Block 2 tiles from #R$7C2C to $677E copy 1 times
 B $81E2,1 End of sequence
-B $81E3,2,2
+b $81E3 Blocks for rooms
+B $81E3,2,2 Block 2x1
 b $81E5 Room 81E5
 N $81E5 #HTML[<img src="images/rooms/81E5.png" />]
 W $81E5,2,2 Room procedure
@@ -2092,9 +2093,10 @@ B $959C,7 Block 1x6 tiles from #R$95B2 to $65E1
 B $95A3,7 Block 2x6 tiles from #R$95B8 to $65DA
 B $95AA,7 Block 3x6 tiles from #R$95C4 to $65D5
 B $95B1,1 End of sequence
-B $95B2
-B $95B8
-B $95C4
+b $95B2 Blocks for rooms
+B $95B2,6,1 #HTML[<img src="images/blocks/95b2.png" />] Back block 1x6
+B $95B8,12,2 #HTML[<img src="images/blocks/95b8.png" />] Back block 2x6
+B $95C4,18,3 #HTML[<img src="images/blocks/95c4.png" />] Back block 3x6
 b $95D6 Room 95D6
 N $95D6 #HTML[<img src="images/rooms/95D6.png" />]
 W $95D6,2,2 Room procedure
@@ -2147,7 +2149,8 @@ B $9672,5 Fill horz 16 tiles with $00 at $677C
 B $9677,7 Block 2 tiles from #R$7348 to $676B copy 2 times
 B $967E,7 Block 2x1 tiles from #R$889D to $674D
 B $9685,1 End of sequence
-B $9686
+b $9686 Blocks for rooms
+B $9686,4,2 #HTML[<img src="images/blocks/9686.png" />] Back block 2x2
 b $968A Room 968A
 N $968A #HTML[<img src="images/rooms/968A.png" />]
 W $968A,2,2 Room procedure
@@ -2334,9 +2337,10 @@ B $98EB,7 Block 1x5 tiles from #R$9903 to $66AB
 B $98F2,7 Block 1x5 tiles from #R$9908 to $66AE
 B $98F9,7 Block 2 tiles from #R$9901 to $668E copy 7 times
 B $9900,1 End of sequence
-B $9901
-B $9903
-B $9908
+b $9901 Blocks for rooms
+B $9901,2,2 #HTML[<img src="images/blocks/9901.png" />] Back block 2x1
+B $9903,5,1 #HTML[<img src="images/blocks/9903.png" />] Back block 1x5
+B $9908,5,1 #HTML[<img src="images/blocks/9908.png" />] Back block 1x5
 b $990D Room 990D
 N $990D #HTML[<img src="images/rooms/990D.png" />]
 W $990D,2,2 Room procedure
@@ -2365,9 +2369,10 @@ B $9981,7 Block 4x3 tiles from #R$999A to $66DA
 B $9988,7 Block 4x3 tiles from #R$999A to $6734
 B $998F,7 Block 4x2 tiles from #R$999E to $6590
 B $9996,1 End of sequence
-B $9997
-B $999A
-B $999E
+b $9997 Blocks for rooms
+B $9997,3,3 #HTML[<img src="images/blocks/9997.png" />] Back block 3x1
+B $999A,4,4 #HTML[<img src="images/blocks/999a.png" />] Back block 4x1
+B $999E,8,4 #HTML[<img src="images/blocks/999e.png" />] Back block 4x2
 b $99A6 Room 99A6
 N $99A6 #HTML[<img src="images/rooms/99A6.png" />]
 N $99A6 Console: flips trigger "E": set/remove wall in room #R$97A6.
@@ -2742,9 +2747,11 @@ B $9FF1,5 Fill horz 22 tiles with $0D at $65D4
 B $9FF6,7 Block 4x2 tiles from #R$A01A to $65A6
 B $9FFD,6 Rectangle 4x2 tiles with $0D at $65AA
 B $A003,1 End of sequence
-B $A004
-B $A008
-B $A00A
+b $A004 Blocks for rooms
+B $A004,4,2 #HTML[<img src="images/blocks/a004.png" />] Back block 2x2
+B $A008,2,1 #HTML[<img src="images/blocks/a008.png" />] Back block 1x2
+B $A00A,16,4 #HTML[<img src="images/blocks/a00a.png" />] Front block 4x4
+B $A01A,8,4 #HTML[<img src="images/blocks/a01a.png" />] Back block 4x2
 b $A022 Room A022
 N $A022 #HTML[<img src="images/rooms/A022.png" />]
 W $A022,2,2 Room procedure
@@ -2773,9 +2780,10 @@ B $A094,6 Rectangle 4x2 tiles with $0D at $6590
 B $A09A,5 Fill vert 8 tiles with $FF at $667B
 B $A09F,7 Block 1x2 tiles from #R$A0AB to $676D
 B $A0A6,1 End of sequence
-B $A0A7
-B $A0AB
-B $A0AD
+b $A0A7 Blocks for rooms
+B $A0A7,4,2 #HTML[<img src="images/blocks/a0a7.png" />] Back block 2x2
+B $A0AB,2,1 #HTML[<img src="images/blocks/a0ab.png" />] Back block 1x2
+B $A0AD,8,4 #HTML[<img src="images/blocks/a0ad.png" />] Back block 4x2
 b $A0B5 Sprite Ninja/Guard dead, 6x7 tiles
 B $A0B5,42,6 #HTML[<img src="images/sprite-a0b5.png" />]
 c $A0DF Room #R$94AB initialization
@@ -3450,7 +3458,7 @@ b $B59B
 c $B59E
 b $B5A7 Boat sprite for initial room
 B $B5A7
-B $B5A8
+B $B5A8,8,8 #HTML[<img src="images/blocks/b5a8.png" />]
 w $B5B0 Table of items: addresses for NEAR/HELD items
 W $B5B0,2,2 #0 Nothing
 W $B5B2,2,2 #1 Shuriken

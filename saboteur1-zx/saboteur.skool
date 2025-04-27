@@ -307,10 +307,10 @@ b$7188 DEFB $FF,$2F,$30,$31,$32,$FF ; {#HTML[<img src="images/blocks/7188.png"
  $7194 DEFB $0E,$0F,$10,$11         ; {#HTML[<img src="images/blocks/7194.png"
  $7198 DEFB $12,$0D,$0D,$0D         ; />] Back block 4x3 - pier fencing
  $719C DEFB $12,$0D,$0D,$0D         ; }
- $71A0 DEFB $00,$01,$02             ; {#HTML[<img src="images/blocks/71A0.png"
+ $71A0 DEFB $00,$01,$02             ; {#HTML[<img src="images/blocks/71a0.png"
  $71A3 DEFB $03,$04,$05             ; />] Front block 3x3 - box
  $71A6 DEFB $06,$07,$08             ; }
- $71A9 DEFB $0D,$0D,$0D,$0E         ; {#HTML[<img src="images/blocks/71A9.png"
+ $71A9 DEFB $0D,$0D,$0D,$0E         ; {#HTML[<img src="images/blocks/71a9.png"
  $71AD DEFB $0F,$10,$10,$11         ; />] Front block 4x4 - computer part
  $71B1 DEFB $0D,$13,$0D,$0D         ;
  $71B5 DEFB $12,$12,$12,$12         ; }
@@ -409,7 +409,8 @@ b$733B DEFW $D3DE    ; Sprite Ninja/Guard walking 1
 b$7343 DEFB $07      ; Counter used in movement handlers
  $7344 DEFB $00      ; ?? flag 0 / 1 ?? something with Dog
  $7345 DEFB $14
- $7346 DEFB $0A      ; Guard walking phase ??
+ $7346 DEFB $0A      ; Guard walking phase $00..$03 or other state: $09 = Guard
+                     ; dead; ...
  $7347 DEFB $01      ; Guard direction
  $7348 DEFB $05,$08
 
@@ -695,15 +696,15 @@ c$7472 DI            ;
  $748A JR NZ,$7481   ;
  $748C LD SP,($74F1) ;
  $7490 LD A,$13      ;
- $7492 LD ($749C),A  ; set Energy
+ $7492 LD ($749C),A  ; set Energy = MAX
  $7495 LD A,$01      ;
  $7497 LD ($749D),A  ;
  $749A EI            ;
  $749B RET           ;
 
 ; Data block at 749C
-b$749C DEFB $13      ; Energy
- $749D DEFB $01      ; Energy
+b$749C DEFB $13      ; Energy $04..$13
+ $749D DEFB $01      ; Energy lower, running bit
 
 ; Decreasing Energy
 ;
@@ -960,14 +961,14 @@ b$7984 DEFB $F1,$F0         ; {#HTML[<img src="images/blocks/7984.png" />] Back
  $7988 DEFB $07,$0A         ;
  $798A DEFB $07,$0A         ;
  $798C DEFB $07,$0A         ; }
- $798E DEFB $FF,$FF,$39,$58 ; {#HTML[<img src="images/blocks/798E.png" />]
+ $798E DEFB $FF,$FF,$39,$58 ; {#HTML[<img src="images/blocks/798e.png" />]
  $7992 DEFB $FF,$39,$3A,$58 ; Front block 4x7 - ladder fencing
  $7996 DEFB $39,$3A,$3A,$58 ;
  $799A DEFB $3A,$3A,$3A,$58 ;
  $799E DEFB $3A,$3A,$3B,$FF ;
  $79A2 DEFB $3A,$3B,$FF,$FF ;
  $79A6 DEFB $3B,$FF,$FF,$FF ; }
- $79AA DEFB $59,$3C,$FF,$FF ; {#HTML[<img src="images/blocks/79AA.png" />]
+ $79AA DEFB $59,$3C,$FF,$FF ; {#HTML[<img src="images/blocks/79aa.png" />]
  $79AE DEFB $59,$3D,$3C,$FF ; Front block 4x7 - ladder fencing
  $79B2 DEFB $59,$3D,$3D,$3C ;
  $79B6 DEFB $59,$3D,$3D,$3D ;
@@ -1454,7 +1455,7 @@ b$7E7B DEFB $00,$01,$01,$02 ; {#HTML[<img src="images/blocks/7e7b.png" />]
  $7E83 DEFB $06,$07,$07,$08 ; }
  $7E87 DEFB $09,$1D,$0A     ; #HTML[<img src="images/blocks/7e87.png" />] Block
                             ; 3x1
- $7E8A DEFB $09,$0A         ; #HTML[<img src="images/blocks/7e8A.png" />] Block
+ $7E8A DEFB $09,$0A         ; #HTML[<img src="images/blocks/7e8a.png" />] Block
                             ; 2x1
 
 ; Room 7E8C
@@ -1981,7 +1982,7 @@ b$844E DEFW $B452                       ; Room procedure
  $849B DEFB $FF                         ; End of sequence
 
 ; Blocks for rooms
-b$849C DEFB $00,$01,$02 ; {#HTML[<img src="images/blocks/849C.png" />] Front
+b$849C DEFB $00,$01,$02 ; {#HTML[<img src="images/blocks/849c.png" />] Front
  $849F DEFB $03,$04,$05 ; block 3x4
  $84A2 DEFB $03,$04,$05 ;
  $84A5 DEFB $06,$07,$08 ; }
@@ -3511,7 +3512,7 @@ b$9528 DEFB $A9         ; {#HTML[<img src="images/blocks/9528.png" />] Back
  $952B DEFB $A8         ;
  $952C DEFB $A8         ;
  $952D DEFB $A7         ; }
- $952E DEFB $A6         ; {#HTML[<img src="images/blocks/952E.png" />] Back
+ $952E DEFB $A6         ; {#HTML[<img src="images/blocks/952e.png" />] Back
  $952F DEFB $A5         ; block 1x6
  $9530 DEFB $A4         ;
  $9531 DEFB $A8         ;
@@ -4399,19 +4400,19 @@ c$9CA8 CP $00        ;
 ; Set update flags for Dog, 4x3 tiles
 ;
 ; Used by the routines at #R$9C44 and #R$9CA8.
-c$9D5C LD C,$03      ;
+c$9D5C LD C,$03      ; 3 rows
  $9D5E LD HL,($71CB) ;
  $9D61 LD DE,$678E   ; Tile screen 1 start address
  $9D64 ADD HL,DE     ;
- $9D65 LD A,$01      ;
- $9D67 LD DE,$001A   ;
-*$9D6A LD B,$04      ;
-*$9D6C LD (HL),A     ;
- $9D6D INC HL        ;
+ $9D65 LD A,$01      ; "need to update" flag
+ $9D67 LD DE,$001A   ; 26
+*$9D6A LD B,$04      ; 4 columns
+*$9D6C LD (HL),A     ; set the flag
+ $9D6D INC HL        ; next column
  $9D6E DJNZ $9D6C    ;
- $9D70 ADD HL,DE     ;
+ $9D70 ADD HL,DE     ; next row
  $9D71 DEC C         ;
- $9D72 JR NZ,$9D6A   ;
+ $9D72 JR NZ,$9D6A   ; continue loop by rows
  $9D74 RET           ;
 
 ; ?? something about Dog
@@ -4484,15 +4485,15 @@ c$9DD9 RET           ; !!MUT-CMD!! $C5 PUSH BC or $C9 RET
  $9DDA CALL $749E    ; Decrease Energy
  $9DDD POP BC        ;
  $9DDE LD A,($749C)  ; get Energy
- $9DE1 CP $04        ;
+ $9DE1 CP $04        ; Energy = MIN ?
  $9DE3 JR NZ,$9DF1   ;
- $9DE5 LD A,($749D)  ;
+ $9DE5 LD A,($749D)  ; get Energy lower
  $9DE8 CP $01        ;
  $9DEA JR NZ,$9DF1   ;
  $9DEC JP $BEAA      ; Energy is out => Saboteur dead
  $9DEF DI            ; {!!UNUSED!!
  $9DF0 RET           ; }
-*$9DF1 DJNZ $9DD9    ;
+*$9DF1 DJNZ $9DD9    ; continue loop by B
  $9DF3 DI            ;
  $9DF4 RET           ;
 
@@ -4963,6 +4964,12 @@ c$A1D6 LD HL,$A325   ; Dog data address
  $A1DF JR $A1AF      ; Initialize a guard, then Standard room initialization
 
 ; Guards data, 24 records, 6 bytes each
+;
+; .
+;
+; .
+;
+; +$04: Guard energy, initially 10
 b$A1E1 DEFB $9D,$00,$07,$05,$0A,$01 ; Room 94AB guard
  $A1E7 DEFB $18,$01,$0A,$09,$0A,$00 ; Room 7DA9 guard
  $A1ED DEFB $14,$01,$06,$09,$0A,$00 ; Room 7E8C guard
@@ -5144,7 +5151,7 @@ c$A3EE LD A,($9C40)  ; get Ninja Y
  $A405 LD A,$05      ;
  $A407 LD ($7346),A  ;
  $A40A LD A,$02      ;
- $A40C LD ($A3B4),A  ;
+ $A40C LD ($A3B4),A  ; set Guard counter
  $A40F LD HL,$D4B0   ; Sprite Ninja/Guard jumping
  $A412 LD ($A70F),HL ; set Guard sprite
  $A415 JP $A6FF      ; => Draw Guard on tilemap
@@ -5160,7 +5167,7 @@ c$A418 LD A,($9C40)  ; get Ninja Y
  $A421 LD A,$08      ;
  $A423 LD ($7346),A  ;
  $A426 LD A,$03      ;
- $A428 LD ($A3B4),A  ;
+ $A428 LD ($A3B4),A  ; set Guard counter
  $A42B LD HL,$D504   ; Sprite Ninja/Guard punching
  $A42E LD ($A70F),HL ; set Guard sprite
  $A431 JP $A6FF      ; => Draw Guard on tilemap
@@ -5171,11 +5178,12 @@ c$A418 LD A,($9C40)  ; get Ninja Y
 c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A437 LD HL,$7346     ;
  $A43A LD A,(HL)       ;
+; Guard state = $0B ?
  $A43B CP $0B          ;
  $A43D JP NZ,$A4E7     ;
- $A440 LD HL,$A3B4     ;
- $A443 DEC (HL)        ;
- $A444 LD A,(HL)       ;
+ $A440 LD HL,$A3B4     ; Guard counter address
+ $A443 DEC (HL)        ; decrease Guard counter
+ $A444 LD A,(HL)       ; get Guard counter
  $A445 CP $06          ;
  $A447 JP NC,$A6FF     ; => Draw Guard on tilemap
  $A44A LD A,$10        ;
@@ -5201,30 +5209,30 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A476 EX DE,HL        ;
  $A477 POP HL          ;
  $A478 LD B,A          ;
- $A479 LD A,$2B        ;
- $A47B LD ($A4D0),A    ;
- $A47E LD A,$1B        ;
- $A480 LD ($A4D1),A    ;
+ $A479 LD A,$2B        ; "DEC HL" instruction
+ $A47B LD ($A4D0),A    ; set the instruction
+ $A47E LD A,$1B        ; "DEC DE" instruction
+ $A480 LD ($A4D1),A    ; set the instruction
  $A483 LD A,($7347)    ; get Guard direction
- $A486 CP $00          ;
- $A488 JR Z,$A4A2      ;
- $A48A LD A,$1A        ;
+ $A486 CP $00          ; left?
+ $A488 JR Z,$A4A2      ; yes =>
+ $A48A LD A,$1A        ; 26
  $A48C SUB B           ;
  $A48D LD B,A          ;
  $A48E INC DE          ;
  $A48F INC DE          ;
  $A490 INC DE          ;
  $A491 INC DE          ;
- $A492 INC DE          ;
+ $A492 INC DE          ; +5
  $A493 INC HL          ;
  $A494 INC HL          ;
  $A495 INC HL          ;
  $A496 INC HL          ;
- $A497 INC HL          ;
- $A498 LD A,$23        ;
- $A49A LD ($A4D0),A    ;
- $A49D LD A,$13        ;
- $A49F LD ($A4D1),A    ;
+ $A497 INC HL          ; +5
+ $A498 LD A,$23        ; "INC HL" instruction
+ $A49A LD ($A4D0),A    ; set the instruction
+ $A49D LD A,$13        ; "INC DE" instruction
+ $A49F LD ($A4D1),A    ; set the instruction
 *$A4A2 PUSH HL         ;
  $A4A3 LD HL,$6590     ; Tile screen 0 start address
  $A4A6 ADD HL,DE       ;
@@ -5253,29 +5261,30 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A4CA CALL $9DD9      ; Decrease Energy by B
 *$A4CD LD B,$01        ;
 *$A4CF POP HL          ;
- $A4D0 DEC HL          ;
- $A4D1 DEC DE          ;
+ $A4D0 DEC HL          ; !!MUT-CMD!! "DEC HL" or "INC HL" instruction
+ $A4D1 DEC DE          ; !!MUT-CMD!! "DEC DE" or "INC DE" instruction
  $A4D2 DJNZ $A4A2      ;
  $A4D4 XOR A           ;
  $A4D5 OUT ($FE),A     ;
- $A4D7 LD A,($A3B4)    ;
+ $A4D7 LD A,($A3B4)    ; get Guard counter
  $A4DA CP $00          ;
  $A4DC JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A4DF LD A,$04        ;
- $A4E1 LD ($7346),A    ;
+ $A4E1 LD ($7346),A    ; set Guard state = $04
  $A4E4 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $14 ?
 *$A4E7 CP $14          ;
  $A4E9 JR NZ,$A52F     ;
- $A4EB LD (HL),$04     ;
+ $A4EB LD (HL),$04     ; set Guard state = $04
  $A4ED LD HL,$D486     ; Sprite Ninja/Guard standing
  $A4F0 LD ($A70F),HL   ; set Guard sprite
- $A4F3 LD HL,($71C3)   ;
- $A4F6 LD DE,$003C     ;
+ $A4F3 LD HL,($71C3)   ; get Guard position in tilemap
+ $A4F6 LD DE,$003C     ; 60
  $A4F9 LD B,$00        ;
  $A4FB LD C,$03        ;
  $A4FD LD A,($7347)    ; get Guard direction
  $A500 CP $00          ; left?
- $A502 JR Z,$A50B      ;
+ $A502 JR Z,$A50B      ; left =>
  $A504 LD C,$05        ;
  $A506 LD B,$05        ;
  $A508 LD DE,$0041     ; 65
@@ -5292,52 +5301,55 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A527 ADD A,$02       ;
  $A529 LD (IX+$05),A   ;
  $A52C JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $0A ?
 *$A52F CP $0A          ;
  $A531 JR NZ,$A56D     ;
  $A533 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A536 LD ($A70F),HL   ; set Guard sprite
  $A539 LD HL,$9C40     ; Ninja Y address
- $A53C LD A,($71C6)    ;
- $A53F ADD A,$03       ;
- $A541 CP (HL)         ;
- $A542 JP C,$A6FF      ; => Draw Guard on tilemap
+ $A53C LD A,($71C6)    ; get Guard Y
+ $A53F ADD A,$03       ; Guard Y + 3
+ $A541 CP (HL)         ; compare with Ninja Y
+ $A542 JP C,$A6FF      ; Guard above Ninja => Draw Guard on tilemap
  $A545 LD A,($A39E)    ;
  $A548 DEC A           ;
  $A549 JR Z,$A565      ;
- $A54B LD A,($7347)    ; get Guard direction
- $A54E DEC A           ;
- $A54F LD A,($71C5)    ;
+ $A54B LD A,($7347)    ; get Guard direction: 0 / 1
+ $A54E DEC A           ; $FF left / 0 right
+ $A54F LD A,($71C5)    ; get Guard X
  $A552 LD HL,$9C41     ; Ninja X address
- $A555 JR Z,$A55F      ;
- $A557 ADD A,$02       ;
- $A559 CP (HL)         ;
- $A55A JP C,$A6FF      ; => Draw Guard on tilemap
+ $A555 JR Z,$A55F      ; right =>
+ $A557 ADD A,$02       ; for left, Guard X + 2
+ $A559 CP (HL)         ; compare with Ninja X
+ $A55A JP C,$A6FF      ; Guard still behind Ninja => Draw Guard on tilemap
  $A55D JR $A565        ;
-*$A55F SUB $03         ;
- $A561 CP (HL)         ;
- $A562 JP NC,$A6FF     ; => Draw Guard on tilemap
-*$A565 LD A,$04        ;
- $A567 LD ($7346),A    ;
+*$A55F SUB $03         ; for right, Guard X - 3
+ $A561 CP (HL)         ; compare with Ninja X
+ $A562 JP NC,$A6FF     ; Guard not reached Ninja => Draw Guard on tilemap
+*$A565 LD A,$04        ; state $04
+ $A567 LD ($7346),A    ; set Guard state = $04
  $A56A JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $09 ? - Guard is dead
 *$A56D CP $09          ;
  $A56F JR NZ,$A57A     ;
  $A571 LD HL,$A0B5     ; Sprite Ninja dead
  $A574 LD ($A70F),HL   ; set Guard sprite
  $A577 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $08 ?
 *$A57A CP $08          ;
  $A57C JR NZ,$A5AA     ;
  $A57E PUSH HL         ;
- $A57F LD HL,$A3B4     ;
- $A582 DEC (HL)        ;
+ $A57F LD HL,$A3B4     ; Guard counter address
+ $A582 DEC (HL)        ; decrease Guard counter
  $A583 POP HL          ;
  $A584 JP NZ,$A6FF     ; => Draw Guard on tilemap
- $A587 LD (HL),$03     ;
+ $A587 LD (HL),$03     ; set Guard state = walking state 3
  $A589 LD HL,($71C3)   ;
- $A58C LD DE,$69CC     ;
+ $A58C LD DE,$69CC     ; $69CC = $698C (Tile screen 2) + 64
  $A58F LD A,($7347)    ; get Guard direction
- $A592 CP $01          ;
- $A594 JR Z,$A599      ;
- $A596 LD DE,$69C9     ;
+ $A592 CP $01          ; right?
+ $A594 JR Z,$A599      ; yes =>
+ $A596 LD DE,$69C9     ; $69C9 = $698C (Tile screen 2) + 61
 *$A599 ADD HL,DE       ;
  $A59A LD A,(HL)       ;
  $A59B INC A           ;
@@ -5346,85 +5358,91 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A5A1 LD HL,$D486     ; Sprite Ninja/Guard standing
  $A5A4 LD ($A70F),HL   ; set Guard sprite
  $A5A7 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $05 ? - Preparing for jump-kick
 *$A5AA CP $05          ;
  $A5AC JR NZ,$A5C7     ;
  $A5AE PUSH HL         ;
- $A5AF LD HL,$A3B4     ;
- $A5B2 DEC (HL)        ;
+ $A5AF LD HL,$A3B4     ; Guard counter address
+ $A5B2 DEC (HL)        ; decrease Guard counter
  $A5B3 POP HL          ;
  $A5B4 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A5B7 LD A,$03        ;
- $A5B9 LD ($A3B4),A    ;
- $A5BC LD (HL),$06     ;
+ $A5B9 LD ($A3B4),A    ; set Guard counter value
+ $A5BC LD (HL),$06     ; set Guard state = $06: jump-kick
  $A5BE LD HL,$D4DA     ; Sprite Ninja/Guard jump-kick
  $A5C1 LD ($A70F),HL   ; set Guard sprite
  $A5C4 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $06 ?
 *$A5C7 CP $06          ;
  $A5C9 JR NZ,$A5FC     ;
  $A5CB PUSH HL         ;
- $A5CC LD HL,$A3B4     ;
- $A5CF DEC (HL)        ;
+ $A5CC LD HL,$A3B4     ; Guard counter address
+ $A5CF DEC (HL)        ; decrease Guard counter
  $A5D0 POP HL          ;
  $A5D1 JP NZ,$A6FF     ; => Draw Guard on tilemap
  $A5D4 LD A,$01        ;
- $A5D6 LD ($A3B4),A    ;
- $A5D9 LD (HL),$07     ;
+ $A5D6 LD ($A3B4),A    ; set Guard counter value
+ $A5D9 LD (HL),$07     ; set Guard state = $07: back to standing
  $A5DB LD HL,$D4B0     ; Sprite Ninja/Guard jumping
  $A5DE LD ($A70F),HL   ; set Guard sprite
- $A5E1 LD HL,($71C3)   ;
- $A5E4 LD DE,$69CD     ;
+ $A5E1 LD HL,($71C3)   ; get Guard position in tilemap
+ $A5E4 LD DE,$69CD     ; $69CD = $698C (Tile screen 2) + 65
  $A5E7 LD A,($7347)    ; get Guard direction
- $A5EA CP $01          ;
- $A5EC JR Z,$A5F1      ;
- $A5EE LD DE,$69C8     ;
-*$A5F1 ADD HL,DE       ;
- $A5F2 LD A,(HL)       ;
- $A5F3 INC A           ;
- $A5F4 LD B,$0A        ;
- $A5F6 CALL NZ,$FA31   ; => Decrease Energy by B + Sound
+ $A5EA CP $01          ; right?
+ $A5EC JR Z,$A5F1      ; right =>
+ $A5EE LD DE,$69C8     ; $69C8 = $698C (Tile screen 2) + 60
+*$A5F1 ADD HL,DE       ; now HL = address in Ninja tile screen
+ $A5F2 LD A,(HL)       ; get tile from Ninja screen
+ $A5F3 INC A           ; $FF ?
+ $A5F4 LD B,$0A        ; 10 damage
+ $A5F6 CALL NZ,$FA31   ; not $FF => Decrease Energy by 10 + Sound
  $A5F9 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state = $07 ? - back to standing
 *$A5FC CP $07          ;
  $A5FE JR NZ,$A614     ;
  $A600 PUSH HL         ;
- $A601 LD HL,$A3B4     ;
- $A604 DEC (HL)        ;
+ $A601 LD HL,$A3B4     ; Guard counter address
+ $A604 DEC (HL)        ; decrease Guard counter
  $A605 POP HL          ;
- $A606 JP NZ,$A6FF     ; => Draw Guard on tilemap
- $A609 LD (HL),$03     ;
+ $A606 JP NZ,$A6FF     ; counter not zero => Draw Guard on tilemap
+ $A609 LD (HL),$03     ; set Guard state = walking phase 3
  $A60B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A60E LD ($A70F),HL   ; set Guard sprite
  $A611 JP $A6FF        ; => Draw Guard on tilemap
+; Guard state is none of the above
 *$A614 LD HL,$9C41     ; Ninja X address
- $A617 LD A,($71C5)    ;
- $A61A SUB (HL)        ;
- $A61B JR NZ,$A635     ;
+ $A617 LD A,($71C5)    ; get Guard X
+ $A61A SUB (HL)        ; compare to Ninja X
+ $A61B JR NZ,$A635     ; not equal =>
  $A61D CALL $A418      ;
- $A620 LD HL,$7346     ;
+ $A620 LD HL,$7346     ; Guard state address
  $A623 LD A,$0A        ;
- $A625 CP (HL)         ;
- $A626 JP Z,$A6FF      ; => Draw Guard on tilemap
+ $A625 CP (HL)         ; Guard state = $0A ?
+ $A626 JP Z,$A6FF      ; Guard state is $0A => Draw Guard on tilemap
  $A629 LD A,$04        ;
- $A62B LD (HL),A       ;
+ $A62B LD (HL),A       ; set Guard state = $04
  $A62C LD HL,$D486     ; Sprite Ninja/Guard standing
  $A62F LD ($A70F),HL   ; set Guard sprite
  $A632 JP $A6FF        ; => Draw Guard on tilemap
-*$A635 JR C,$A68C      ;
- $A637 LD B,A          ;
+; Guard X != Ninja X
+*$A635 JR C,$A68C      ; Guard X < Ninja X =>
+; Ninja X < Guard X
+ $A637 LD B,A          ; save value "Guard X - Ninja X"
  $A638 LD A,($7347)    ; get Guard direction
- $A63B CP $00          ;
- $A63D JR Z,$A65B      ;
- $A63F LD A,($7346)    ;
- $A642 CP $04          ;
+ $A63B CP $00          ; left?
+ $A63D JR Z,$A65B      ; left =>
+ $A63F LD A,($7346)    ; get Guard state
+ $A642 CP $04          ; Guard state = $04 ?
  $A644 JR Z,$A654      ;
  $A646 LD A,$04        ;
- $A648 LD ($7346),A    ;
+ $A648 LD ($7346),A    ; set Guard state = $04
  $A64B LD HL,$D486     ; Sprite Ninja/Guard standing
  $A64E LD ($A70F),HL   ; set Guard sprite
  $A651 JP $A6FF        ; => Draw Guard on tilemap
 *$A654 XOR A           ;
  $A655 LD ($7347),A    ; set Guard direction = left
  $A658 JP $A6FF        ; => Draw Guard on tilemap
-*$A65B LD A,B          ;
+*$A65B LD A,B          ; restore value "Guard X - Ninja X"
  $A65C CP $03          ;
  $A65E CALL Z,$A3EE    ;
  $A661 CP $01          ;
@@ -5433,11 +5451,11 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A668 CALL Z,$A3D1    ;
  $A66B CP $0C          ;
  $A66D CALL Z,$A3B5    ;
- $A670 LD A,($7346)    ;
- $A673 CP $04          ;
- $A675 JR NZ,$A67F     ;
- $A677 LD A,$03        ;
- $A679 LD ($7346),A    ;
+ $A670 LD A,($7346)    ; get Guard state
+ $A673 CP $04          ; Guard state = $04 ?
+ $A675 JR NZ,$A67F     ; no =>
+ $A677 LD A,$03        ; walking phase 3
+ $A679 LD ($7346),A    ; set Guard state
  $A67C JP $A6FF        ; => Draw Guard on tilemap
 *$A67F LD HL,$71C5     ;
  $A682 DEC (HL)        ;
@@ -5445,6 +5463,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A684 LD ($7347),A    ; set Guard direction = left
  $A687 LD DE,$FFFF     ;
  $A68A JR $A6DE        ;
+; Guard X < Ninja X
 *$A68C LD B,A          ;
  $A68D LD A,($7347)    ; get Guard direction
  $A690 CP $01          ;
@@ -5480,9 +5499,9 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A6D6 LD A,$01        ;
  $A6D8 LD ($7347),A    ; set Guard direction = right
  $A6DB LD DE,$0001     ;
-*$A6DE LD HL,($71C3)   ;
+*$A6DE LD HL,($71C3)   ; get Guard position in tilemap
  $A6E1 ADD HL,DE       ;
- $A6E2 LD ($71C3),HL   ;
+ $A6E2 LD ($71C3),HL   ; update Guard position in tilemap
  $A6E5 LD A,($7346)    ;
  $A6E8 INC A           ; next walking phase
  $A6E9 AND $03         ; 0..3
@@ -5500,7 +5519,7 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
  $A6FD LD A,(HL)       ;
  $A6FE LD (DE),A       ;
 ; Draw Guard on tilemap
-*$A6FF LD DE,($71C3)   ;
+*$A6FF LD DE,($71C3)   ; get Guard position in tilemap
  $A703 LD A,($7347)    ; get Guard direction
  $A706 CP $00          ; left?
  $A708 JR NZ,$A728     ; right =>
@@ -5543,13 +5562,8 @@ c$A434 CALL $A75B      ; Set update flags for Guard, 6x7 tiles
 
 ; Data block at A747
 b$A747 DEFB $61,$45,$81,$45,$A1,$45,$C1,$45
- $A74F DEFB $E1,$45,$01
-
-; Message at A752
-t$A752 DEFM "M!MAMaM"
-
-; Data block at A759
-b$A759 DEFB $81,$4D
+ $A74F DEFB $E1,$45,$01,$4D,$21,$4D,$41,$4D
+ $A757 DEFB $61,$4D,$81,$4D
 
 ; Set update flags for Guard, 6x7 tiles
 ;
@@ -5558,35 +5572,35 @@ c$A75B LD DE,($71C3) ; get Current Guard position in tilemap
  $A75F LD HL,$678E   ; Tile screen 1 start address
  $A762 ADD HL,DE     ;
  $A763 LD DE,$0018   ; 24
- $A766 LD A,$01      ;
- $A768 LD B,$07      ;
-*$A76A LD C,$06      ;
-*$A76C LD (HL),A     ;
- $A76D INC HL        ;
+ $A766 LD A,$01      ; "need to update" flag
+ $A768 LD B,$07      ; 7 rows
+*$A76A LD C,$06      ; 6 columns
+*$A76C LD (HL),A     ; set the flag
+ $A76D INC HL        ; next column
  $A76E DEC C         ;
- $A76F JR NZ,$A76C   ;
- $A771 ADD HL,DE     ;
- $A772 DJNZ $A76A    ;
+ $A76F JR NZ,$A76C   ; continue loop by columns
+ $A771 ADD HL,DE     ; next row
+ $A772 DJNZ $A76A    ; continue loop by rows
  $A774 RET           ;
 
 ; Translate Ninja tile A into Guard tile, using #R$A787 table
 ;
 ; Used by the routine at #R$A434.
 c$A775 EXX           ;
- $A776 LD HL,$A787   ;
- $A779 LD B,$13      ;
-*$A77B CP (HL)       ;
+ $A776 LD HL,$A787   ; Translate table address
+ $A779 LD B,$13      ; 19 records
+*$A77B CP (HL)       ; found the tile?
  $A77C INC HL        ;
  $A77D JR NZ,$A782   ;
- $A77F LD A,(HL)     ;
+ $A77F LD A,(HL)     ; get the new tile
  $A780 EXX           ;
  $A781 RET           ;
 *$A782 INC HL        ;
- $A783 DJNZ $A77B    ;
+ $A783 DJNZ $A77B    ; continue the loop
  $A785 EXX           ;
  $A786 RET           ;
 
-; Table used to translate Ninja tiles to Guard tiles
+; Table used to translate Ninja tiles to Guard tiles, 19 records
 b$A787 DEFB $50,$C7,$51,$DC,$54,$DD,$EA,$DE
  $A78F DEFB $13,$DF,$15,$E0,$16,$E1,$00,$E2
  $A797 DEFB $01,$E3,$03,$E4,$04,$E5,$4D,$E6
@@ -5749,23 +5763,23 @@ b$ABE5 DEFB $04,$66,$06,$03,$4B,$E3,$C3,$43
  $AC35 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $AC3D DEFB $00,$00,$00,$00,$00,$00,$00
 
-; Routine at AC44
+; Reset Guard data and Dog data
 ;
 ; Used by the routine at #R$B5C7.
 c$AC44 LD HL,$AC72   ; address for Table of Guard data addresses
- $AC47 LD B,$18      ;
+ $AC47 LD B,$18      ; 24
 *$AC49 LD E,(HL)     ;
  $AC4A INC HL        ;
- $AC4B LD D,(HL)     ;
+ $AC4B LD D,(HL)     ; now DE = Guard data address
  $AC4C INC HL        ;
  $AC4D PUSH HL       ;
  $AC4E LD HL,$0004   ;
  $AC51 ADD HL,DE     ;
- $AC52 LD (HL),$0A   ;
+ $AC52 LD (HL),$0A   ; set initial Guard energy = 10
  $AC54 POP HL        ;
  $AC55 DJNZ $AC49    ;
  $AC57 LD HL,$ACA2   ; address for Table of Dog data addresses
- $AC5A LD B,$14      ;
+ $AC5A LD B,$14      ; 20
 *$AC5C LD E,(HL)     ;
  $AC5D INC HL        ;
  $AC5E LD D,(HL)     ;
@@ -6954,14 +6968,15 @@ w$B5B0 DEFW $A7AD    ; #0 Nothing
  $B5C2 DEFW $AB79    ; #9 Console
 
 ; Data block at B5C4
-b$B5C4 DEFB $15
+b$B5C4 DEFB $15      ; Time fast counter 50..0
  $B5C5 DEFB $01      ; Ninja standing counter
- $B5C6 DEFB $00
+ $B5C6 DEFB $00      ; Time mode: $00 = time ticking; $01 = Time stopped; $02 =
+                     ; BOMB ticking mode
 
 ; Routine at B5C7
 ;
 ; Used by the routine at #R$B3B0.
-c$B5C7 CALL $AC44    ;
+c$B5C7 CALL $AC44    ; Reset Guard data and Dog data
  $B5CA LD ($BC0E),SP ;
  $B5CE LD HL,$B7CB   ;
  $B5D1 LD ($E345),HL ;
@@ -6972,7 +6987,8 @@ c$B5C7 CALL $AC44    ;
  $B5DF LD HL,$BEAA   ;
  $B5E2 LD ($9DED),HL ;
  $B5E5 LD HL,$B8D0   ; Object procedure address for "Update Ninja on tilemap"
- $B5E8 LD ($D285),HL ;
+ $B5E8 LD ($D285),HL ; set Object procedure for object #6 in Table of objects
+                     ; #R$D256
  $B5EB LD ($B366),HL ;
  $B5EE LD A,$30      ;
  $B5F0 LD HL,$AD52   ; Pay value text address
@@ -6983,7 +6999,7 @@ c$B5C7 CALL $AC44    ;
  $B5F9 CALL $ACCA    ; Draw game screen frames and indicator text
  $B5FC XOR A         ;
  $B5FD LD ($5C48),A  ; set BORDCR = 0
- $B600 LD ($B5C6),A  ;
+ $B600 LD ($B5C6),A  ; set Time mode = time ticking
  $B603 LD ($B850),A  ;
  $B606 LD ($D48E),A  ;
  $B609 OUT ($FE),A   ; set border black, sound off
@@ -7193,40 +7209,43 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B77F RST $38       ;
  $B780 DI            ;
  $B781 LD A,($5C08)  ; get LASTK
- $B784 LD A,($B5C6)  ;
- $B787 CP $01        ;
- $B789 JR Z,$B7AF    ;
- $B78B LD HL,$B5C4   ;
- $B78E DEC (HL)      ;
- $B78F JR NZ,$B7AF   ;
- $B791 LD (HL),$28   ;
- $B793 LD HL,$AD58   ;
+ $B784 LD A,($B5C6)  ; get Time mode
+ $B787 CP $01        ; time stopped?
+ $B789 JR Z,$B7AF    ; yes =>
+; Decrease Time, check if Time is out
+ $B78B LD HL,$B5C4   ; address for Time fast counter
+ $B78E DEC (HL)      ; decrease the counter
+ $B78F JR NZ,$B7AF   ; not zero => skip Time decrease
+ $B791 LD (HL),$28   ; reset fast counter to 50
+ $B793 LD HL,$AD58   ; address for Time lower digit
  $B796 DEC (HL)      ; Decrease Time lower digit
  $B797 LD A,$2F      ;
  $B799 CP (HL)       ;
  $B79A JR NZ,$B7A4   ;
- $B79C LD (HL),$39   ;
- $B79E DEC HL        ;
- $B79F DEC (HL)      ; Decrease Time higher digit
+ $B79C LD (HL),$39   ; '9'
+ $B79E DEC HL        ; go to higher digit
+ $B79F DEC (HL)      ; decrease Time higher digit
  $B7A0 CP (HL)       ;
  $B7A1 JP Z,$BE71    ; time is out =>
-*$B7A4 LD DE,$5097   ;
+*$B7A4 LD DE,$5097   ; screen address for timer value
  $B7A7 LD HL,$AD57   ; Indicator Time value address
  $B7AA LD C,$02      ; Two digits
  $B7AC CALL $AED1    ; Print string
-*$B7AF LD A,($D28B)  ;
- $B7B2 CP $D6        ;
+; Check for BOMB
+*$B7AF LD A,($D28B)  ; check Object #7 in Table of objects #R$D256
+ $B7B2 CP $D6        ; BOMB tile?
  $B7B4 JR NZ,$B7ED   ;
- $B7B6 LD HL,$B5C6   ;
+; BOMB ticking mode
+ $B7B6 LD HL,$B5C6   ; Time mode address
  $B7B9 LD A,$02      ;
- $B7BB CP (HL)       ;
+ $B7BB CP (HL)       ; already in BOMB ticking mode?
  $B7BC JR Z,$B7ED    ;
- $B7BE LD (HL),A     ;
+ $B7BE LD (HL),A     ; set Time mode = BOMB ticking mode
  $B7BF LD HL,$BD2F   ; "BOMB"
- $B7C2 LD DE,$50D6   ;
+ $B7C2 LD DE,$50D6   ; screen address under timer value
  $B7C5 LD C,$04      ;
  $B7C7 CALL $AED1    ; Print string "BOMB"
- $B7CA LD HL,$3939   ; !!MUT-ARG!! "99"
+ $B7CA LD HL,$3939   ; !!MUT-ARG!! "99" bomb timer initial value
  $B7CD LD ($AD57),HL ; set Indicator Time value
  $B7D0 LD A,$01      ;
  $B7D2 LD ($B5C4),A  ;
@@ -7289,9 +7308,9 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
 ; Increase Energy a bit
 ;
 ; Used by the routine at #R$BC55.
-c$B83C LD A,($749D)  ;
+c$B83C LD A,($749D)  ; get Energy lower
  $B83F RRC A         ;
- $B841 LD ($749D),A  ;
+ $B841 LD ($749D),A  ; set Energy lower
  $B844 RET NC        ;
  $B845 LD HL,$749C   ; Energy address
  $B848 INC (HL)      ; increase Energy
@@ -7321,9 +7340,12 @@ c$B851 LD B,$23      ; 35 objects
  $B869 DJNZ $B85D    ; continue the loop
  $B86B RET           ;
 
-; Routine at B86C
+; ?? Adjust table #R$751B by DE
 ;
 ; Used by the routine at #R$B889.
+;
+; DE ??
+; A ??
 c$B86C LD B,$18      ;
  $B86E LD ($74F4),A  ;
  $B871 LD IX,$751B   ;
@@ -7770,11 +7792,11 @@ c$BBAE LD L,(IX+$01) ;
 c$BBBB LD HL,($9C42) ; get Ninja position in tilemap
  $BBBE LD DE,$678E   ; Tile screen 1 start address
  $BBC1 ADD HL,DE     ;
- $BBC2 LD DE,$0018   ; 30
- $BBC5 LD A,$01      ;
- $BBC7 LD B,$07      ;
-*$BBC9 LD C,$06      ;
-*$BBCB LD (HL),A     ;
+ $BBC2 LD DE,$0018   ; 24
+ $BBC5 LD A,$01      ; "need to update" mark
+ $BBC7 LD B,$07      ; 7 rows
+*$BBC9 LD C,$06      ; 6 columns
+*$BBCB LD (HL),A     ; set the flag
  $BBCC INC HL        ;
  $BBCD DEC C         ;
  $BBCE JR NZ,$BBCB   ; continue by columns
@@ -7880,27 +7902,27 @@ c$BC0D LD SP,$6257   ; !!MUT-ARG!!
 c$BC55 LD HL,$B5C5   ; Ninja standing counter address
  $BC58 DEC (HL)      ; decrease counter
  $BC59 JR NZ,$BC76   ;
- $BC5B LD (HL),$02   ;
+ $BC5B LD (HL),$02   ; reload the counter
  $BC5D LD A,($749C)  ; get Energy
  $BC60 CP $13        ;
  $BC62 JR NZ,$BC6B   ;
- $BC64 LD A,($749D)  ;
+ $BC64 LD A,($749D)  ; get Energy lower
  $BC67 CP $01        ;
  $BC69 JR Z,$BC76    ;
 *$BC6B CALL $B83C    ; Increase Energy a bit
  $BC6E LD B,$01      ;
  $BC70 CALL $9DD9    ; Decrease Energy by B
  $BC73 CALL $B83C    ; Increase Energy a bit
-; Move the head if needed
+; Move the head (idle animation)
 *$BC76 LD HL,$B2FD   ; address for head movement counter
  $BC79 INC (HL)      ; increase counter
- $BC7A JR NZ,$BC98   ;
- $BC7C LD (HL),$BE   ;
+ $BC7A JR NZ,$BC98   ; not zero => skip head animation
+ $BC7C LD (HL),$BE   ; reset counter (how often head moves)
 *$BC7E LD A,($D48E)  ;
- $BC81 XOR $F4       ;
+ $BC81 XOR $F4       ; toggle tile
  $BC83 LD ($D48E),A  ;
- $BC86 LD A,($D48F)  ;
- $BC89 XOR $F4       ; change between $01 and $F5 tiles
+ $BC86 LD A,($D48F)  ; set head tile
+ $BC89 XOR $F4       ; toggle between $01 and $F5 tiles
  $BC8B LD ($D48F),A  ; set head tile for Ninja/Guard standing sprite
  $BC8E LD A,($D495)  ;
  $BC91 XOR $F2       ;
@@ -7909,17 +7931,18 @@ c$BC55 LD HL,$B5C5   ; Ninja standing counter address
 *$BC98 LD A,$D2      ;
  $BC9A CP (HL)       ;
  $BC9B JR Z,$BC7E    ;
+; Check for suicide key combination
 *$BC9D LD A,$FE      ;
  $BC9F IN A,($FE)    ;
- $BCA1 BIT 0,A       ;
- $BCA3 JR NZ,$BCB6   ;
+ $BCA1 BIT 0,A       ; check for CAPS SHIFT key
+ $BCA3 JR NZ,$BCB6   ; not pressed => skip suicide
  $BCA5 LD A,$7F      ;
  $BCA7 IN A,($FE)    ;
- $BCA9 BIT 0,A       ;
- $BCAB JR NZ,$BCB6   ;
+ $BCA9 BIT 0,A       ; check for "1" key
+ $BCAB JR NZ,$BCB6   ; not pressed => skip suicide
  $BCAD LD HL,$BEEF   ; "SEPUKU" / "MISSION ABORTED"
  $BCB0 LD ($BEB4),HL ; set two-line Game Over message
- $BCB3 JP $BE5A      ; Ninja sit, and then fall and DIE
+ $BCB3 JP $BE5A      ; => Ninja sit, and then fall and DIE
 *$BCB6 CALL $C5A3    ; Check for falling
  $BCB9 JP Z,$C643    ; => Ninja falling
  $BCBC LD HL,$B595   ;
@@ -7931,11 +7954,11 @@ c$BC55 LD HL,$B5C5   ; Ninja standing counter address
  $BCC7 BIT 4,A       ; check FIRE bit
  $BCC9 JP Z,$BDDD    ;
 ; FIRE pressed
- $BCCC LD HL,$B595   ;
+ $BCCC LD HL,$B595   ; action cooldown counter
  $BCCF XOR A         ;
- $BCD0 CP (HL)       ;
+ $BCD0 CP (HL)       ; check if counter is 0
  $BCD1 JP NZ,$BDB2   ;
- $BCD4 LD (HL),$05   ;
+ $BCD4 LD (HL),$05   ; reset cooldown (5 ticks until next action)
  $BCD6 LD A,($B84C)  ;
  $BCD9 CP $63        ;
  $BCDB JR Z,$BD33    ;
@@ -7946,9 +7969,9 @@ c$BC55 LD HL,$B5C5   ; Ninja standing counter address
  $BCE5 LD A,$9C      ;
  $BCE7 CP (HL)       ;
  $BCE8 JR NZ,$BCF3   ;
- $BCEA LD A,($B5C6)  ;
- $BCED CP $02        ;
- $BCEF JR Z,$BD37    ;
+ $BCEA LD A,($B5C6)  ; get Time mode
+ $BCED CP $02        ; BOMB ticking mode?
+ $BCEF JR Z,$BD37    ; yes =>
  $BCF1 JR $BCF7      ;
 *$BCF3 XOR A         ;
  $BCF4 CP B          ;
@@ -7963,19 +7986,19 @@ c$BC55 LD HL,$B5C5   ; Ninja standing counter address
  $BD06 SRL A         ;
 *$BD08 LD (DE),A     ;
  $BD09 LD A,$09      ;
- $BD0B LD ($D28A),A  ;
+ $BD0B LD ($D28A),A  ; set ?? in Object #7 in Table of objects #R$D256
  $BD0E LD A,B        ;
  $BD0F LD ($BD7A),A  ;
  $BD12 CP $D4        ;
  $BD14 JP NZ,$B8D0   ; => Update Ninja on tilemap
- $BD17 LD HL,$B5C6   ;
- $BD1A XOR A         ;
+ $BD17 LD HL,$B5C6   ; Time mode address
+ $BD1A XOR A         ; 0 = time ticking
  $BD1B CP (HL)       ;
  $BD1C JP NZ,$B8D0   ; => Update Ninja on tilemap
- $BD1F LD (HL),$01   ;
+ $BD1F LD (HL),$01   ; set Time mode = time stopped
  $BD21 LD HL,$0190   ;
- $BD24 CALL $B371    ;
- $BD27 LD B,$32      ;
+ $BD24 CALL $B371    ; Play melody
+ $BD27 LD B,$32      ; 50
  $BD29 CALL $B4DE    ; Increase PAY value by 5000
  $BD2C JP $B8D0      ; => Update Ninja on tilemap
 
@@ -8024,7 +8047,7 @@ c$BD37 LD HL,$A39F   ;
  $BD71 LD A,($9C40)  ; get Ninja Y
  $BD74 ADD A,$02     ;
  $BD76 LD ($A3A4),A  ;
- $BD79 LD A,$C8      ;
+ $BD79 LD A,$C8      ; !!MUT-ARG!!
  $BD7B LD ($A39F),A  ;
  $BD7E XOR A         ;
  $BD7F LD ($BD7A),A  ;
@@ -8157,12 +8180,13 @@ c$BE63 LD A,$C9      ; command = $C9 RET
 ; Time is out
 ;
 ; Used by the routine at #R$B724.
-c$BE71 LD A,($B5C6)  ;
- $BE74 CP $02        ;
- $BE76 JR Z,$BE80    ;
+c$BE71 LD A,($B5C6)  ; get Time mode
+ $BE74 CP $02        ; BOMB ticking mode?
+ $BE76 JR Z,$BE80    ; yes =>
  $BE78 LD HL,$BF35   ; "TIME OUT" / "MISSION TERMINATED"
  $BE7B LD ($BEB4),HL ; set two-line Game Over message
  $BE7E JR $BE63      ; => Ninja dead
+; BOMB explodes
 *$BE80 LD B,$06      ;
  $BE82 LD IX,$0000   ;
 *$BE86 LD C,$00      ;
@@ -8337,10 +8361,10 @@ c$BFD5 LD B,$0A      ;
  $C042 CALL $AED1    ; Print skill level digit
  $C045 LD A,$14      ; "INC D" instruction code
  $C047 LD ($BEDF),A  ;
-*$C04A LD A,($B5C6)  ;
- $C04D CP $02        ;
- $C04F JR NZ,$C056   ;
- $C051 LD B,$64      ;
+*$C04A LD A,($B5C6)  ; get Time mode
+ $C04D CP $02        ; BOMB ticking mode?
+ $C04F JR NZ,$C056   ; no =>
+ $C051 LD B,$64      ; 100
  $C053 CALL $B4DE    ; Increase PAY value by 10000 - Escape with Disk and Bomb
 *$C056 LD HL,$BF12   ; "ESCAPE" / "MISSION SUCCESSFUL"
  $C059 LD ($BEB4),HL ; set two-line Game Over message
@@ -9587,6 +9611,14 @@ b$D210 DEFB $04,$CE,$09,$63,$09,$63,$09,$63,$09,$63
  $D24C DEFB $04,$CE,$04,$CE,$04,$CE,$04,$CE,$04,$CE
 
 ; Table ?? objects, 35 records, 7-byte records
+;
+; .
+;
+; .
+;
+; +$04: Object tile
+; .
+; +$05/$06: Object procedure, or $0000
 b$D256 DEFW $6F02       ; Object ?? 00
  $D258 DEFB $58,$04,$CE
  $D25B DEFW $0000
@@ -9613,7 +9645,7 @@ b$D256 DEFW $6F02       ; Object ?? 00
  $D280 DEFW $6FE2       ; Object ?? 06
  $D282 DEFB $1F,$09,$63
  $D285 DEFW $B8D0       ; Object procedure "Update Ninja on tilemap"
- $D287 DEFW $6669       ; Object ?? 07
+ $D287 DEFW $6669       ; Object ?? 07 Diskette
  $D289 DEFB $9C,$09,$D4
  $D28C DEFW $0000
  $D28E DEFW $659B       ; Object ?? 08

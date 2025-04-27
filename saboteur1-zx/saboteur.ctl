@@ -64,8 +64,8 @@ W $7186,2,2 Ninja sprite address
 b $7188 Blocks for rooms
 B $7188,12,6 #HTML[<img src="images/blocks/7188.png" />] Front block 6x2 - pile of garbage
 B $7194,12,4 #HTML[<img src="images/blocks/7194.png" />] Back block 4x3 - pier fencing
-B $71A0,9,3 #HTML[<img src="images/blocks/71A0.png" />] Front block 3x3 - box
-B $71A9,16,4 #HTML[<img src="images/blocks/71A9.png" />] Front block 4x4 - computer part
+B $71A0,9,3 #HTML[<img src="images/blocks/71a0.png" />] Front block 3x3 - box
+B $71A9,16,4 #HTML[<img src="images/blocks/71a9.png" />] Front block 4x4 - computer part
 B $71B9,2,2 #HTML[<img src="images/blocks/71b9.png" />] Back block 2x1 - ladder black on blue
 B $71BB,8,2 #HTML[<img src="images/blocks/71bb.png" />] Front block 2x4 - console
 b $71C3 Current Guard data
@@ -111,7 +111,7 @@ b $7343
 B $7343,1,1 Counter used in movement handlers
 B $7344,1,1 ?? flag 0 / 1 ?? something with Dog
 B $7345,1,1
-B $7346,1,1 Guard walking phase ??
+B $7346,1,1 Guard walking phase $00..$03 or other state: $09 = Guard dead; ...
 B $7347,1,1 Guard direction
 c $734A Proceed to the next room token (redirect to #R$B702)
 c $734D Room token #0E: Put one tile at the given address; params: 3 bytes (tile, address)
@@ -218,10 +218,10 @@ C $7453,1 Skip token byte
 C $7460,3 30
 C $746F,3 => #R$B702 Proceed to the next room token
 c $7472
-C $7492,3 set Energy
+C $7492,3 set Energy = MAX
 b $749C
-B $749C,1,1 Energy
-B $749D,1,1 Energy
+B $749C,1,1 Energy $04..$13
+B $749D,1,1 Energy lower, running bit
 c $749E Decreasing Energy
 C $74A6,3 get Energy
 C $74C3,3 Energy address
@@ -265,8 +265,8 @@ B $797E,5 Fill vert 3 tiles with $12 at $6625
 B $7983,1 End of sequence
 b $7984 Blocks for rooms
 B $7984,10,2 #HTML[<img src="images/blocks/7984.png" />] Back block 2x5 - ladder black on blue
-B $798E,28,4 #HTML[<img src="images/blocks/798E.png" />] Front block 4x7 - ladder fencing
-B $79AA,28,4 #HTML[<img src="images/blocks/79AA.png" />] Front block 4x7 - ladder fencing
+B $798E,28,4 #HTML[<img src="images/blocks/798e.png" />] Front block 4x7 - ladder fencing
+B $79AA,28,4 #HTML[<img src="images/blocks/79aa.png" />] Front block 4x7 - ladder fencing
 b $79C6 Room 79C6 (next to room with pier)
 N $79C6 #HTML[<img src="images/rooms/79C6.png" />]
 W $79C6,2,2 Room procedure
@@ -574,7 +574,7 @@ B $7E7A,1 End of sequence
 b $7E7B Blocks for rooms
 B $7E7B,12,4 #HTML[<img src="images/blocks/7e7b.png" />] Front block 4x3 wooden box
 B $7E87,3,3 #HTML[<img src="images/blocks/7e87.png" />] Block 3x1
-B $7E8A,2,2 #HTML[<img src="images/blocks/7e8A.png" />] Block 2x1
+B $7E8A,2,2 #HTML[<img src="images/blocks/7e8a.png" />] Block 2x1
 b $7E8C Room 7E8C
 N $7E8C #HTML[<img src="images/rooms/7E8C.png" />]
 W $7E8C,2,2 Room procedure
@@ -960,7 +960,7 @@ B $848D,7 Block 4x3 tiles from #R$7E7B to $711F
 B $8494,7 Block 3x4 tiles from #R$849C to $7107
 B $849B,1 End of sequence
 b $849C Blocks for rooms
-B $849C,12,3 #HTML[<img src="images/blocks/849C.png" />] Front block 3x4
+B $849C,12,3 #HTML[<img src="images/blocks/849c.png" />] Front block 3x4
 b $84A8 Room 84A8
 N $84A8 #HTML[<img src="images/rooms/84A8.png" />]
 W $84A8,2,2 Room procedure
@@ -2067,7 +2067,7 @@ B $9520,7 Block 3x6 tiles from #R$9540 to $65DE
 B $9527,1 End of sequence
 b $9528 Blocks for rooms
 B $9528,6,1 #HTML[<img src="images/blocks/9528.png" />] Back block 1x6
-B $952E,6,1 #HTML[<img src="images/blocks/952E.png" />] Back block 1x6
+B $952E,6,1 #HTML[<img src="images/blocks/952e.png" />] Back block 1x6
 B $9534,12,2 #HTML[<img src="images/blocks/9534.png" />] Back block 2x6
 B $9540,18,3 #HTML[<img src="images/blocks/9540.png" />] Back block 3x6
 b $9552 Room 9552
@@ -2584,7 +2584,15 @@ C $9D40,3 get Dog direction
 C $9D51,3 26
 C $9D58,3 Set update flags for Dog, 4x3 tiles
 c $9D5C Set update flags for Dog, 4x3 tiles
+C $9D5C,2 3 rows
 C $9D61,3 Tile screen 1 start address
+C $9D65,2 "need to update" flag
+C $9D67,3 26
+C $9D6A,2 4 columns
+C $9D6C,1 set the flag
+C $9D6D,1 next column
+C $9D70,1 next row
+C $9D72,2 continue loop by rows
 c $9D75 ?? something about Dog
 C $9D89,2 => Set update flags for Dog, and RET
 c $9D8B ?? something about Dog
@@ -2601,8 +2609,11 @@ c $9DD9 Decrease Energy by B
 C $9DD9 !!MUT-CMD!! $C5 PUSH BC or $C9 RET
 C $9DDA,3 Decrease Energy
 C $9DDE,3 get Energy
+C $9DE1,2 Energy = MIN ?
+C $9DE5,3 get Energy lower
 C $9DEC,3 Energy is out => Saboteur dead
 C $9DEF,2 !!UNUSED!!
+C $9DF1,2 continue loop by B
 b $9DF5 Room 9DF5
 N $9DF5 #HTML[<img src="images/rooms/9DF5.png" />]
 W $9DF5,2,2 Room procedure
@@ -2930,6 +2941,7 @@ C $A1D9,3 Initialize a dog
 C $A1DC,3 Guard data address
 C $A1DF,2 Initialize a guard, then Standard room initialization
 b $A1E1 Guards data, 24 records, 6 bytes each
+N $A1E1 +$04: Guard energy, initially 10
 B $A1E1,6,6 Room 94AB guard
 B $A1E7,6,6 Room 7DA9 guard
 B $A1ED,6,6 Room 7E8C guard
@@ -3047,78 +3059,174 @@ c $A3EE ?? something about Ninja and Guard
 C $A3EE,3 get Ninja Y
 C $A3F1,3 Current Guard Y position address
 C $A3F6,3 get Current Guard position in tilemap
+C $A40C,3 set Guard counter
 C $A40F,3 Sprite Ninja/Guard jumping
 C $A412,3 set Guard sprite
 C $A415,3 => Draw Guard on tilemap
 c $A418 ?? something about Ninja and Guard
 C $A418,3 get Ninja Y
 C $A41B,3 Current Guard Y position address
+C $A428,3 set Guard counter
 C $A42B,3 Sprite Ninja/Guard punching
 C $A42E,3 set Guard sprite
 C $A431,3 => Draw Guard on tilemap
 c $A434 ?? something about Guard
 C $A434,3 Set update flags for Guard, 6x7 tiles
+N $A43B Guard state = $0B ?
+C $A440,3 Guard counter address
+C $A443,1 decrease Guard counter
+C $A444,1 get Guard counter
 C $A447,3 => Draw Guard on tilemap
 C $A472,3 get Current Guard position in tilemap
+C $A479,2 "DEC HL" instruction
+C $A47B,3 set the instruction
+C $A47E,2 "DEC DE" instruction
+C $A480,3 set the instruction
 C $A483,3 get Guard direction
+C $A486,2 left?
+C $A488,2 yes =>
+C $A48A,2 26
+C $A492,1 +5
+C $A497,1 +5
+C $A498,2 "INC HL" instruction
+C $A49A,3 set the instruction
+C $A49D,2 "INC DE" instruction
+C $A49F,3 set the instruction
 C $A4A3,3 Tile screen 0 start address
 C $A4AC,3 Tile screen 5 start address
 C $A4B4,3 Tile screen 1 start address
 C $A4C0,3 Tile screen 2 start address
 C $A4CA,3 Decrease Energy by B
+C $A4D0,1 !!MUT-CMD!! "DEC HL" or "INC HL" instruction
+C $A4D1,1 !!MUT-CMD!! "DEC DE" or "INC DE" instruction
+C $A4D7,3 get Guard counter
 C $A4DC,3 => Draw Guard on tilemap
+C $A4E1,3 set Guard state = $04
 C $A4E4,3 => Draw Guard on tilemap
+N $A4E7 Guard state = $14 ?
+C $A4EB,2 set Guard state = $04
 C $A4ED,3 Sprite Ninja/Guard standing
 C $A4F0,3 set Guard sprite
+C $A4F3,3 get Guard position in tilemap
+C $A4F6,3 60
 C $A4FD,3 get Guard direction
 C $A500,2 left?
+C $A502,2 left =>
 C $A508,3 65
 C $A52C,3 => Draw Guard on tilemap
+N $A52F Guard state = $0A ?
 C $A533,3 Sprite Ninja/Guard standing
 C $A536,3 set Guard sprite
 C $A539,3 Ninja Y address
-C $A542,3 => Draw Guard on tilemap
-C $A54B,3 get Guard direction
+C $A53C,3 get Guard Y
+C $A53F,2 Guard Y + 3
+C $A541,1 compare with Ninja Y
+C $A542,3 Guard above Ninja => Draw Guard on tilemap
+C $A54B,3 get Guard direction: 0 / 1
+C $A54E,1 $FF left / 0 right
+C $A54F,3 get Guard X
 C $A552,3 Ninja X address
-C $A55A,3 => Draw Guard on tilemap
-C $A562,3 => Draw Guard on tilemap
+C $A555,2 right =>
+C $A557,2 for left, Guard X + 2
+C $A559,1 compare with Ninja X
+C $A55A,3 Guard still behind Ninja => Draw Guard on tilemap
+C $A55F,2 for right, Guard X - 3
+C $A561,1 compare with Ninja X
+C $A562,3 Guard not reached Ninja => Draw Guard on tilemap
+C $A565,2 state $04
+C $A567,3 set Guard state = $04
 C $A56A,3 => Draw Guard on tilemap
+N $A56D Guard state = $09 ? - Guard is dead
 C $A571,3 Sprite Ninja dead
 C $A574,3 set Guard sprite
 C $A577,3 => Draw Guard on tilemap
+N $A57A Guard state = $08 ?
+C $A57F,3 Guard counter address
+C $A582,1 decrease Guard counter
 C $A584,3 => Draw Guard on tilemap
+C $A587,2 set Guard state = walking state 3
+C $A58C,3 $69CC = $698C (Tile screen 2) + 64
 C $A58F,3 get Guard direction
+C $A592,2 right?
+C $A594,2 yes =>
+C $A596,3 $69C9 = $698C (Tile screen 2) + 61
 C $A59E,3 => Decrease Energy by B + Sound
 C $A5A1,3 Sprite Ninja/Guard standing
 C $A5A4,3 set Guard sprite
 C $A5A7,3 => Draw Guard on tilemap
+N $A5AA Guard state = $05 ? - Preparing for jump-kick
+C $A5AF,3 Guard counter address
+C $A5B2,1 decrease Guard counter
 C $A5B4,3 => Draw Guard on tilemap
+C $A5B9,3 set Guard counter value
+C $A5BC,2 set Guard state = $06: jump-kick
 C $A5BE,3 Sprite Ninja/Guard jump-kick
 C $A5C1,3 set Guard sprite
 C $A5C4,3 => Draw Guard on tilemap
+N $A5C7 Guard state = $06 ?
+C $A5CC,3 Guard counter address
+C $A5CF,1 decrease Guard counter
 C $A5D1,3 => Draw Guard on tilemap
+C $A5D6,3 set Guard counter value
+C $A5D9,2 set Guard state = $07: back to standing
 C $A5DB,3 Sprite Ninja/Guard jumping
 C $A5DE,3 set Guard sprite
+C $A5E1,3 get Guard position in tilemap
+C $A5E4,3 $69CD = $698C (Tile screen 2) + 65
 C $A5E7,3 get Guard direction
-C $A5F6,3 => Decrease Energy by B + Sound
+C $A5EA,2 right?
+C $A5EC,2 right =>
+C $A5EE,3 $69C8 = $698C (Tile screen 2) + 60
+C $A5F1,1 now HL = address in Ninja tile screen
+C $A5F2,1 get tile from Ninja screen
+C $A5F3,1 $FF ?
+C $A5F4,2 10 damage
+C $A5F6,3 not $FF => Decrease Energy by 10 + Sound
 C $A5F9,3 => Draw Guard on tilemap
-C $A606,3 => Draw Guard on tilemap
+N $A5FC Guard state = $07 ? - back to standing
+C $A601,3 Guard counter address
+C $A604,1 decrease Guard counter
+C $A606,3 counter not zero => Draw Guard on tilemap
+C $A609,2 set Guard state = walking phase 3
 C $A60B,3 Sprite Ninja/Guard standing
 C $A60E,3 set Guard sprite
 C $A611,3 => Draw Guard on tilemap
+N $A614 Guard state is none of the above
 C $A614,3 Ninja X address
-C $A626,3 => Draw Guard on tilemap
+C $A617,3 get Guard X
+C $A61A,1 compare to Ninja X
+C $A61B,2 not equal =>
+C $A620,3 Guard state address
+C $A625,1 Guard state = $0A ?
+C $A626,3 Guard state is $0A => Draw Guard on tilemap
+C $A62B,1 set Guard state = $04
 C $A62C,3 Sprite Ninja/Guard standing
 C $A62F,3 set Guard sprite
 C $A632,3 => Draw Guard on tilemap
+N $A635 Guard X != Ninja X
+C $A635,2 Guard X < Ninja X =>
+N $A637 Ninja X < Guard X
+C $A637,1 save value "Guard X - Ninja X"
 C $A638,3 get Guard direction
+C $A63B,2 left?
+C $A63D,2 left =>
+C $A63F,3 get Guard state
+C $A642,2 Guard state = $04 ?
+C $A648,3 set Guard state = $04
 C $A64B,3 Sprite Ninja/Guard standing
 C $A64E,3 set Guard sprite
 C $A651,3 => Draw Guard on tilemap
 C $A655,3 set Guard direction = left
 C $A658,3 => Draw Guard on tilemap
+C $A65B,1 restore value "Guard X - Ninja X"
+C $A670,3 get Guard state
+C $A673,2 Guard state = $04 ?
+C $A675,2 no =>
+C $A677,2 walking phase 3
+C $A679,3 set Guard state
 C $A67C,3 => Draw Guard on tilemap
 C $A684,3 set Guard direction = left
+N $A68C Guard X < Ninja X
 C $A68D,3 get Guard direction
 C $A6A0,3 Sprite Ninja/Guard standing
 C $A6A3,3 set Guard sprite
@@ -3127,12 +3235,15 @@ C $A6AA,3 set Guard direction = right
 C $A6AD,2 => Draw Guard on tilemap
 C $A6D0,2 => Draw Guard on tilemap
 C $A6D8,3 set Guard direction = right
+C $A6DE,3 get Guard position in tilemap
+C $A6E2,3 update Guard position in tilemap
 C $A6E8,1 next walking phase
 C $A6E9,2 0..3
 C $A6EE,1 * 2
 C $A6F2,3 Table of four Ninja/Guard walking sprites
 C $A6F6,3 Guard sprite address
 N $A6FF Draw Guard on tilemap
+C $A6FF,4 get Guard position in tilemap
 C $A703,3 get Guard direction
 C $A706,2 left?
 C $A708,2 right =>
@@ -3154,14 +3265,25 @@ C $A73F,3 24
 C $A742,1 next row
 C $A744,2 continue loop by rows
 b $A747
-t $A752
-b $A759
 c $A75B Set update flags for Guard, 6x7 tiles
 C $A75B,4 get Current Guard position in tilemap
 C $A75F,3 Tile screen 1 start address
 C $A763,3 24
+C $A766,2 "need to update" flag
+C $A768,2 7 rows
+C $A76A,2 6 columns
+C $A76C,1 set the flag
+C $A76D,1 next column
+C $A76F,2 continue loop by columns
+C $A771,1 next row
+C $A772,2 continue loop by rows
 c $A775 Translate Ninja tile A into Guard tile, using #R$A787 table
-b $A787 Table used to translate Ninja tiles to Guard tiles
+C $A776,3 Translate table address
+C $A779,2 19 records
+C $A77B,1 found the tile?
+C $A77F,1 get the new tile
+C $A783,2 continue the loop
+b $A787 Table used to translate Ninja tiles to Guard tiles, 19 records
 B $A787,38,8
 b $A7AD Pictures of NEAR/HELD items, 32x24px each
 B $A7AD,96,8 #HTML[#UDGARRAY4,,,4,,;$A7AD-$A80C-1-32(itemnoth)] Nothing
@@ -3185,9 +3307,13 @@ B $AB6D,12,8 attributes
 B $AB79,96,8 #HTML[#UDGARRAY4,,,4,,;$AB79-$ABD8-1-32(itemcons)] Console
 B $ABD9,12,8 attributes
 b $ABE5
-c $AC44
+c $AC44 Reset Guard data and Dog data
 C $AC44,3 address for Table of Guard data addresses
+C $AC47,2 24
+C $AC4B,1 now DE = Guard data address
+C $AC52,2 set initial Guard energy = 10
 C $AC57,3 address for Table of Dog data addresses
+C $AC5A,2 20
 w $AC72 Table of Guard data addresses, 24 records
 W $AC72,48,8
 w $ACA2 Table of Dog data addresses, 20 records
@@ -3471,15 +3597,19 @@ W $B5BE,2,2 #7 Disk
 W $B5C0,2,2 #8 Bomb
 W $B5C2,2,2 #9 Console
 b $B5C4
-B $B5C4,1,1
+B $B5C4,1,1 Time fast counter 50..0
 B $B5C5,1,1 Ninja standing counter
+B $B5C6,1,1 Time mode: $00 = time ticking; $01 = Time stopped; $02 = BOMB ticking mode
 c $B5C7
+C $B5C7,3 Reset Guard data and Dog data
 C $B5DA,2 command = $C5 PUSH BC
 C $B5DC,3 set command = PUSH BC = enable Energy decrease
 C $B5E5,3 Object procedure address for "Update Ninja on tilemap"
+C $B5E8,3 set Object procedure for object #6 in Table of objects #R$D256
 C $B5F0,3 Pay value text address
 C $B5F9,3 Draw game screen frames and indicator text
 C $B5FD,3 set BORDCR = 0
+C $B600,3 set Time mode = time ticking
 C $B609,2 set border black, sound off
 C $B60C,3 set head tile for Ninja/Guard standing sprite
 C $B60F,3 set Ninja direction = 1 = right
@@ -3577,15 +3707,35 @@ C $B76C,1 next object
 C $B76D,2 continue loop by objects
 C $B77C,3 clear LASTK
 C $B781,3 get LASTK
+C $B784,3 get Time mode
+C $B787,2 time stopped?
+C $B789,2 yes =>
+N $B78B Decrease Time, check if Time is out
+C $B78B,3 address for Time fast counter
+C $B78E,1 decrease the counter
+C $B78F,2 not zero => skip Time decrease
+C $B791,2 reset fast counter to 50
+C $B793,3 address for Time lower digit
 C $B796,1 Decrease Time lower digit
-C $B79F,1 Decrease Time higher digit
+C $B79C,2 '9'
+C $B79E,1 go to higher digit
+C $B79F,1 decrease Time higher digit
 C $B7A1,3 time is out =>
+C $B7A4,3 screen address for timer value
 C $B7A7,3 Indicator Time value address
 C $B7AA,2 Two digits
 C $B7AC,3 Print string
+N $B7AF Check for BOMB
+C $B7AF,3 check Object #7 in Table of objects #R$D256
+C $B7B2,2 BOMB tile?
+N $B7B6 BOMB ticking mode
+C $B7B6,3 Time mode address
+C $B7BB,1 already in BOMB ticking mode?
+C $B7BE,1 set Time mode = BOMB ticking mode
 C $B7BF,3 "BOMB"
+C $B7C2,3 screen address under timer value
 C $B7C7,3 Print string "BOMB"
-C $B7CA,3 !!MUT-ARG!! "99"
+C $B7CA,3 !!MUT-ARG!! "99" bomb timer initial value
 C $B7CD,3 set Indicator Time value
 C $B7D8,3 28
 C $B7EA,3 Increase PAY value by 5000
@@ -3601,6 +3751,8 @@ C $B80F,2 35 = number of records
 C $B811,3 Table address
 C $B81F,1 add Ninja position in tilemap
 c $B83C Increase Energy a bit
+C $B83C,3 get Energy lower
+C $B841,3 set Energy lower
 C $B845,3 Energy address
 C $B848,1 increase Energy
 b $B84A
@@ -3615,7 +3767,9 @@ C $B853,3 7 = size of record in Table of Objects
 C $B856,4 = #R$D256 (address for Table of Objects) + 3
 C $B867,2 next record
 C $B869,2 continue the loop
-c $B86C
+c $B86C ?? Adjust table #R$751B by DE
+R $B86C DE ??
+R $B86C A ??
 c $B889
 C $B891,3 NEAR item address
 C $B8A4,3 Draw NEAR/HELD item
@@ -3658,7 +3812,11 @@ C $BBB8,2 set "need update" mark
 c $BBBB Set update flags for Ninja, 6x7 tiles
 C $BBBB,3 get Ninja position in tilemap
 C $BBBE,3 Tile screen 1 start address
-C $BBC2,3 30
+C $BBC2,3 24
+C $BBC5,2 "need to update" mark
+C $BBC7,2 7 rows
+C $BBC9,2 6 columns
+C $BBCB,1 set the flag
 C $BBCE,2 continue by columns
 C $BBD0,1 next row
 C $BBD1,2 continue by rows
@@ -3682,30 +3840,53 @@ C $BC24,2 clear screen
 N $BC38 Show the title picture
 C $BC38,3,3 Show title picture (two ninjas)
 C $BC48,3 address of string 10 spaces
+N $BC9D Check for suicide key combination
 c $BC55 Movement handler: Ninja standing
 N $BC55 Increase Energy if needed
 C $BC55,3 Ninja standing counter address
 C $BC58,1 decrease counter
+C $BC5B,2 reload the counter
 C $BC5D,3 get Energy
+C $BC64,3 get Energy lower
 C $BC6B,3 Increase Energy a bit
 C $BC70,3 Decrease Energy by B
 C $BC73,3 Increase Energy a bit
-N $BC76 Move the head if needed
+N $BC76 Move the head (idle animation)
 C $BC76,3 address for head movement counter
 C $BC79,1 increase counter
-C $BC89,2 change between $01 and $F5 tiles
+C $BC7A,2 not zero => skip head animation
+C $BC7C,2 reset counter (how often head moves)
+C $BC81,2 toggle tile
+C $BC86,3 set head tile
+C $BC89,2 toggle between $01 and $F5 tiles
 C $BC8B,3 set head tile for Ninja/Guard standing sprite
+C $BCA1,2 check for CAPS SHIFT key
+C $BCA3,2 not pressed => skip suicide
+C $BCA9,2 check for "1" key
+C $BCAB,2 not pressed => skip suicide
 C $BCAD,3 "SEPUKU" / "MISSION ABORTED"
 C $BCB0,3 set two-line Game Over message
-C $BCB3,3 Ninja sit, and then fall and DIE
+C $BCB3,3 => Ninja sit, and then fall and DIE
 C $BCB6,3 Check for falling
 C $BCB9,3 => Ninja falling
 C $BCC4,3 Read Input
 C $BCC7,2 check FIRE bit
 N $BCCC FIRE pressed
+C $BCCC,3 action cooldown counter
+C $BCD0,1 check if counter is 0
+C $BCD4,2 reset cooldown (5 ticks until next action)
 C $BCDE,3 get Ninja position in tilemap
+C $BCEA,3 get Time mode
+C $BCED,2 BOMB ticking mode?
+C $BCEF,2 yes =>
+C $BD0B,3 set ?? in Object #7 in Table of objects #R$D256
 C $BD14,3 => Update Ninja on tilemap
+C $BD17,3 Time mode address
+C $BD1A,1 0 = time ticking
 C $BD1C,3 => Update Ninja on tilemap
+C $BD1F,2 set Time mode = time stopped
+C $BD24,3 Play melody
+C $BD27,2 50
 C $BD29,3 Increase PAY value by 5000
 C $BD2C,3 => Update Ninja on tilemap
 t $BD2F "BOMB" message
@@ -3715,6 +3896,7 @@ C $BD52,3 get Ninja position in tilemap
 C $BD59,3 get Ninja X
 C $BD5E,3 get Ninja direction
 C $BD71,3 get Ninja Y
+C $BD79,2 !!MUT-ARG!!
 C $BD84,3 get Ninja direction
 C $BD91,3 get Input bits
 C $BD94,2 check UP bit
@@ -3761,9 +3943,13 @@ C $BE68,3 Movement handler: Game Over
 C $BE6B,3 Sprite Ninja dead
 C $BE6E,3 Set movement handler = HL, Ninja sprite = DE
 c $BE71 Time is out
+C $BE71,3 get Time mode
+C $BE74,2 BOMB ticking mode?
+C $BE76,2 yes =>
 C $BE78,3 "TIME OUT" / "MISSION TERMINATED"
 C $BE7B,3 set two-line Game Over message
 C $BE7E,2 => Ninja dead
+N $BE80 BOMB explodes
 N $BEAA Saboteur is dead
 C $BEAB,3 "SABOTEUR DEAD" / "MISSION FAILURE"
 C $BEAE,3 set two-line Game Over message
@@ -3824,6 +4010,10 @@ C $C037,3 Increase PAY value by B * 100
 C $C03D,3 Skill level address
 C $C042,3 Print skill level digit
 C $C045,2 "INC D" instruction code
+C $C04A,3 get Time mode
+C $C04D,2 BOMB ticking mode?
+C $C04F,2 no =>
+C $C051,2 100
 C $C053,3 Increase PAY value by 10000 - Escape with Disk and Bomb
 C $C056,3 "ESCAPE" / "MISSION SUCCESSFUL"
 C $C059,3 set two-line Game Over message
@@ -4575,6 +4765,8 @@ B $D20E
 b $D210 Table of 35 records, 2 bytes each, see #R$B851
 B $D210,70,10
 b $D256 Table ?? objects, 35 records, 7-byte records
+N $D256 +$04: Object tile
+N $D256 +$05/$06: Object procedure, or $0000
 W $D256,2,2 Object ?? 00
 B $D258,3,3
 W $D25B,2,2
@@ -4596,7 +4788,7 @@ W $D27E,2,2 Object procedure: flip trigger "B": set/remove wall in room #R$8F20
 W $D280,2,2 Object ?? 06
 B $D282,3,3
 W $D285,2,2 Object procedure "Update Ninja on tilemap"
-W $D287,2,2 Object ?? 07
+W $D287,2,2 Object ?? 07 Diskette
 B $D289,3,3
 W $D28C,2,2
 W $D28E,2,2 Object ?? 08

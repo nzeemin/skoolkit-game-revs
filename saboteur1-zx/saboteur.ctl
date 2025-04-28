@@ -3044,28 +3044,29 @@ b $A393
 B $A3B4,1,1 ?? Guard counter
 c $A3B5 ?? something about Ninja and Guard
 C $A3B5,3 get Ninja Y
-C $A3B8,3 Current Guard Y position address
+C $A3B8,3 Guard Y position address
 C $A3BE,2 !!MUT-ARG!! ??
 C $A3C8,3 Sprite Ninja/Guard punching
 C $A3CB,3 set Guard sprite
 C $A3CE,3 => Draw Guard on tilemap
 c $A3D1 ?? something about Ninja and Guard
 C $A3D1,3 get Ninja Y
-C $A3D4,3 Current Guard Y position address
+C $A3D4,3 Guard Y position address
 C $A3E5,3 Sprite Ninja/Guard punching
 C $A3E8,3 set Guard sprite
 C $A3EB,3 => Draw Guard on tilemap
 c $A3EE ?? something about Ninja and Guard
 C $A3EE,3 get Ninja Y
-C $A3F1,3 Current Guard Y position address
-C $A3F6,3 get Current Guard position in tilemap
+C $A3F1,3 Guard Y position address
+C $A3F6,3 get Guard position in tilemap
+C $A3F9,3 $6592 = $6590 (Tile screen 0) + 2
 C $A40C,3 set Guard counter
 C $A40F,3 Sprite Ninja/Guard jumping
 C $A412,3 set Guard sprite
 C $A415,3 => Draw Guard on tilemap
 c $A418 ?? something about Ninja and Guard
 C $A418,3 get Ninja Y
-C $A41B,3 Current Guard Y position address
+C $A41B,3 Guard Y position address
 C $A428,3 set Guard counter
 C $A42B,3 Sprite Ninja/Guard punching
 C $A42E,3 set Guard sprite
@@ -3077,6 +3078,11 @@ C $A440,3 Guard counter address
 C $A443,1 decrease Guard counter
 C $A444,1 get Guard counter
 C $A447,3 => Draw Guard on tilemap
+C $A44E,3 get Guard Y
+C $A451,1 Guard Y * 2
+C $A455,1 Guard Y * 2 + 1
+C $A463,3 get Guard X
+C $A46D,3 get Guard X
 C $A472,3 get Current Guard position in tilemap
 C $A479,2 "DEC HL" instruction
 C $A47B,3 set the instruction
@@ -3113,6 +3119,9 @@ C $A4FD,3 get Guard direction
 C $A500,2 left?
 C $A502,2 left =>
 C $A508,3 65
+C $A50F,3 get Guard X
+C $A524,3 get Guard Y
+C $A527,2 Guard Y + 2
 C $A52C,3 => Draw Guard on tilemap
 N $A52F Guard state = $0A ?
 C $A533,3 Sprite Ninja/Guard standing
@@ -3219,26 +3228,48 @@ C $A651,3 => Draw Guard on tilemap
 C $A655,3 set Guard direction = left
 C $A658,3 => Draw Guard on tilemap
 C $A65B,1 restore value "Guard X - Ninja X"
+C $A65C,2 3
+C $A661,2 1
+C $A666,2 9
+C $A66B,2 12
 C $A670,3 get Guard state
 C $A673,2 Guard state = $04 ?
 C $A675,2 no =>
 C $A677,2 walking phase 3
 C $A679,3 set Guard state
 C $A67C,3 => Draw Guard on tilemap
+C $A67F,3 Guard X address
+C $A682,1 decrease Guard X - move one tile left
 C $A684,3 set Guard direction = left
 N $A68C Guard X < Ninja X
 C $A68D,3 get Guard direction
+C $A690,2 right?
+C $A692,2 right =>
+C $A694,3 get Guard state
+C $A697,2 Guard state = $04 ?
+C $A69D,3 set Guard state = $04
 C $A6A0,3 Sprite Ninja/Guard standing
 C $A6A3,3 set Guard sprite
 C $A6A6,2 => Draw Guard on tilemap
 C $A6AA,3 set Guard direction = right
 C $A6AD,2 => Draw Guard on tilemap
+C $A6B0,2 -3
+C $A6B5,2 -1
+C $A6BA,2 -9
+C $A6BF,2 -12
+C $A6C4,3 get Guard state
+C $A6C7,2 Guard state = $04 ?
+C $A6CD,3 set Guard state = walking phase 3
 C $A6D0,2 => Draw Guard on tilemap
+C $A6D2,3 Guard X address
+C $A6D5,1 increase Guard X - move one tile right
 C $A6D8,3 set Guard direction = right
 C $A6DE,3 get Guard position in tilemap
 C $A6E2,3 update Guard position in tilemap
+C $A6E5,3 get Guard state
 C $A6E8,1 next walking phase
 C $A6E9,2 0..3
+C $A6EB,3 set Guard state
 C $A6EE,1 * 2
 C $A6F2,3 Table of four Ninja/Guard walking sprites
 C $A6F6,3 Guard sprite address
@@ -3972,6 +4003,7 @@ T $BF44,20
 T $BF58,15
 T $BF67,20
 c $BF7B
+C $BF7B,3 $6592 = $6590 (Tile screen 0) + 2
 C $BF82,3 => Object procedure
 C $BF87,3 => Update Ninja on tilemap
 C $BF8C,3 set counter = 3
@@ -4161,6 +4193,7 @@ C $C33C,1 decrease counter
 C $C33D,3 => Update Ninja on tilemap
 C $C340,3 get Ninja direction
 C $C343,3 get Ninja position in tilemap
+C $C346,3 $6592 = $6590 (Tile screen 0) + 2
 C $C34A,2 direction = left ?
 C $C34C,2 no =>
 C $C36B,2 => Ninja on ladder
@@ -4964,9 +4997,9 @@ N $D5AC Sprite Ninja jumping 3
 B $D5AC,42,6 #HTML[<img src="images/sprite-d5ac.png" />]
 N $D5D6 Sprite Ninja jumping 4
 B $D5D6,42,6 #HTML[<img src="images/sprite-d5d6.png" />]
-b $D600 Front tiles, 134 tiles, 16 bytes each
+b $D600 Front tiles, 124 tiles, 17 bytes each
 N $D600 #HTML[<img src="images/tiles-d600.png" />]
-B $D600,,16
+B $D600,,17
 c $DE68 Find record for the current room in #R$DE84 table
 C $DE68,2 20 records
 C $DE6D,3 get Current Room address low byte
@@ -5078,7 +5111,7 @@ b $E17D
 T $E17C,1,1
 B $E17D,111,3
 t $E1EC
-T $E1EC,1
+T $E1EC,1 Current Level digit
 T $E1ED,17
 T $E1FE,6
 T $E204,12
@@ -5237,9 +5270,13 @@ N $F700 #HTML[<img src="images/backtiles.png" />]
 B $F700,531,9
 c $F913
 c $F973 Room #R$84A8 initialization
+C $F973,3 tile screen address
+C $F976,3 block address
+C $F979,2 6 rows
+C $F97B,2 3 columns
 c $F9A1 Sound ??
-b $F98F
-B $F98F,18,3
+b $F98F Block 3x6 tiles for room 84A8
+B $F98F,18,3 #HTML[<img src="images/blocks/f98f.png" />] Back block 3x6 - crane
 c $F9B9 Pause, then wait for any key pressed
 C $F9C5,3 Read Input
 C $F9CD,3 get Input bits

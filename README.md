@@ -59,5 +59,5 @@ Original: for ZX Spectrum, 1985, Durell Software.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/saboteur1-zx/saboteur/
 
-Status: Have some progress (170K .ctl file).
+Status: Have really good progress (184K .ctl file).
 

@@ -5119,7 +5119,7 @@ b$A393 DEFB $90,$01,$01,$0A,$42,$01,$17,$01
 ; Used by the routine at #R$A434.
 c$A3B5 LD A,($9C40)  ; get Ninja Y
  $A3B8 LD HL,$71C6   ; Guard Y position address
- $A3BB CP (HL)       ;
+ $A3BB CP (HL)       ; compare Ninja Y to Guard Y
  $A3BC RET NZ        ;
  $A3BD POP HL        ;
  $A3BE LD A,$14      ; !!MUT-ARG!! ??
@@ -5135,7 +5135,7 @@ c$A3B5 LD A,($9C40)  ; get Ninja Y
 ; Used by the routine at #R$A434.
 c$A3D1 LD A,($9C40)  ; get Ninja Y
  $A3D4 LD HL,$71C6   ; Guard Y position address
- $A3D7 CP (HL)       ;
+ $A3D7 CP (HL)       ; compare Ninja Y to Guard Y
  $A3D8 RET NZ        ;
  $A3D9 LD A,($A3A6)  ;
  $A3DC CP $00        ;
@@ -5152,11 +5152,11 @@ c$A3D1 LD A,($9C40)  ; get Ninja Y
 ; Used by the routine at #R$A434.
 c$A3EE LD A,($9C40)  ; get Ninja Y
  $A3F1 LD HL,$71C6   ; Guard Y position address
- $A3F4 CP (HL)       ;
+ $A3F4 CP (HL)       ; compare Ninja Y to Guard Y
  $A3F5 RET NZ        ;
  $A3F6 LD HL,($71C3) ; get Guard position in tilemap
  $A3F9 LD DE,$6592   ; $6592 = $6590 (Tile screen 0) + 2
- $A3FC ADD HL,DE     ;
+ $A3FC ADD HL,DE     ; now HL in Back tile screen
  $A3FD LD A,$64      ;
  $A3FF CP (HL)       ;
  $A400 RET C         ;
@@ -5177,7 +5177,7 @@ c$A3EE LD A,($9C40)  ; get Ninja Y
 ; Used by the routine at #R$A434.
 c$A418 LD A,($9C40)  ; get Ninja Y
  $A41B LD HL,$71C6   ; Guard Y position address
- $A41E CP (HL)       ;
+ $A41E CP (HL)       ; compare Ninja Y to Guard Y
  $A41F RET NZ        ;
  $A420 POP HL        ;
  $A421 LD A,$08      ;
@@ -5586,7 +5586,7 @@ b$A747 DEFB $61,$45,$81,$45,$A1,$45,$C1,$45
 ; Used by the routine at #R$A434.
 c$A75B LD DE,($71C3) ; get Current Guard position in tilemap
  $A75F LD HL,$678E   ; Tile screen 1 start address
- $A762 ADD HL,DE     ;
+ $A762 ADD HL,DE     ; now HL in update flags tilemap
  $A763 LD DE,$0018   ; 24
  $A766 LD A,$01      ; "need to update" flag
  $A768 LD B,$07      ; 7 rows
@@ -5766,7 +5766,7 @@ b$A7AD DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,,,4,,;$A7AD-$A80
  $ABE1 DEFB $07,$07,$0D,$07                 ; }
 
 ; Explosion image, 3x3 tiles
-b$ABE5 DEFB $04,$66,$06,$03,$4B,$E3,$C3,$43 ; {#HTML[#UDGARRAY3,,,1,,;$ABE5-$AC2C-8-24(ade5)]
+b$ABE5 DEFB $04,$66,$06,$03,$4B,$E3,$C3,$43 ; {#HTML[#UDGARRAY3,$42,,1,,;$ABE5-$AC2C-8-24(ade5)]
  $ABED DEFB $48,$08,$18,$18,$39,$BB,$FF,$FF ;
  $ABF5 DEFB $01,$04,$60,$C0,$86,$1C,$F8,$F1 ;
  $ABFD DEFB $03,$7F,$1F,$03,$43,$C7,$0F,$AF ;
@@ -6000,7 +6000,7 @@ c$AED1 LD A,(HL)     ;
 ; Routine at AEF0
 ;
 ; Used by the routine at #R$BC0D.
-c$AEF0 LD HL,$5800   ;
+c$AEF0 LD HL,$5800   ; attributes screen address
  $AEF3 LD C,$10      ;
 *$AEF5 LD B,$0C      ;
 *$AEF7 LD (HL),$08   ;
@@ -6039,7 +6039,7 @@ c$AEF0 LD HL,$5800   ;
  $AF30 LD A,B        ;
  $AF31 CP $0B        ;
  $AF33 JR NZ,$AF12   ;
- $AF35 JP $B005      ;
+ $AF35 JP $B005      ; => Print table of records
 *$AF38 PUSH BC       ;
  $AF39 LD DE,$402C   ;
  $AF3C LD HL,$B0F2   ;
@@ -6060,7 +6060,7 @@ c$AEF0 LD HL,$5800   ;
  $AF64 POP BC        ;
  $AF65 LD C,$0A      ;
  $AF67 PUSH BC       ;
- $AF68 LD DE,$484D   ;
+ $AF68 LD DE,$484D   ; screen address
  $AF6B LD HL,$B0E8   ; address of string 10 spaces
  $AF6E CALL $AED1    ; Print string
  $AF71 LD B,$01      ;
@@ -6249,11 +6249,10 @@ t$B0F2 DEFM "EXCELLENT WORK."
  $B11C DEFM "NINJA SABOTEURS."
  $B12C DEFM "ENTER YOUR NAME..."
 
-; Data block at B13E
-b$B13E DEFB $FE,$82,$A2,$00,$FE,$FF,$FF,$7E,$32
-
-; Data block at B147
-b$B147 DEFB $30
+; Tile buffer
+b$B13E DEFB $FE,$82,$A2,$00,$FE,$FF,$FF,$7E ; Pixel bytes
+ $B146 DEFB $32                             ; Attribute byte
+ $B147 DEFB $30                             ; Background attribute byte
 
 ; Draw tile map on the screen
 ;
@@ -6266,7 +6265,7 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B156 LD HL,$6D88   ; Tile screen 4 start address
  $B159 LD ($7237),HL ;
  $B15C LD HL,$678E   ; Tile screen 1 start address
- $B15F LD DE,$4021   ; Game screen start address
+ $B15F LD DE,$4021   ; screen address where game screen starts
  $B162 EXX           ;
  $B163 LD HL,$6590   ; Tile screen 0 start address
  $B166 LD DE,$698C   ; Tile screen 2 start address
@@ -6284,11 +6283,11 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B177 EXX           ;
  $B178 LD A,(HL)     ; get byte from Tile screen 0 tile
  $B179 EXX           ;
- $B17A LD HL,$B1A3   ;
- $B17D CP $FF        ;
+ $B17A LD HL,$B1A3   ; for non-$FF, don't skip Ninja tile processing
+ $B17D CP $FF        ; $FF - "earth" background?
  $B17F JR NZ,$B184   ; byte <> $FF =>
- $B181 LD HL,$B1F9   ;
-*$B184 LD ($B1A1),HL ;
+ $B181 LD HL,$B1F9   ; for $FF, skip Ninja tile processing
+*$B184 LD ($B1A1),HL ; save the chosen jump address ($B1A3 or $B1F9)
  $B187 LD H,$00      ;
  $B189 LD L,A        ;
  $B18A PUSH HL       ;
@@ -6297,23 +6296,23 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B18D ADD HL,HL     ;
  $B18E POP DE        ;
  $B18F ADD HL,DE     ; * 9
- $B190 LD DE,$F700   ; Tiles start address
- $B193 ADD HL,DE     ; now HL = tile address
+ $B190 LD DE,$F700   ; Background tiles start address
+ $B193 ADD HL,DE     ; now HL = tile data address
  $B194 LD DE,$B13E   ; Tile buffer address
- $B197 LD B,$09      ;
-*$B199 LD A,(HL)     ;
- $B19A LD (DE),A     ;
- $B19B INC HL        ;
- $B19C INC DE        ;
- $B19D DJNZ $B199    ;
- $B19F LD (DE),A     ;
+ $B197 LD B,$09      ; 8 pixel bytes + attribute byte
+*$B199 LD A,(HL)     ; get byte from tile data
+ $B19A LD (DE),A     ; store the byte to tile buffer
+ $B19B INC HL        ; move to next byte in tile data
+ $B19C INC DE        ; move to next byte in tile buffer
+ $B19D DJNZ $B199    ; loop for 9 bytes
+ $B19F LD (DE),A     ; save attribute byte once more
  $B1A0 JP $B1A3      ; !!MUT-ARG!! $B1A3 or $B1F9
 ; Process Tile screen 2 tile - Ninja
 *$B1A3 EXX           ;
  $B1A4 LD A,(DE)     ; get tile from Tile Screen 2 tile
  $B1A5 EXX           ;
- $B1A6 CP $FF        ;
- $B1A8 JR Z,$B1F9    ;
+ $B1A6 CP $FF        ; $FF - transparent?
+ $B1A8 JR Z,$B1F9    ; $FF => skip Ninja tile drawing
  $B1AA LD L,A        ;
  $B1AB CP $C8        ;
  $B1AD JR C,$B1D5    ;
@@ -6326,40 +6325,40 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B1BB CP $D8        ;
  $B1BD JR NC,$B1CC   ;
  $B1BF LD H,$07      ;
- $B1C1 LD A,($B146)  ;
+ $B1C1 LD A,($B146)  ; get attribute byte from the tile buffer
  $B1C4 AND $38       ;
  $B1C6 CP $20        ;
  $B1C8 JR C,$B1CC    ;
  $B1CA LD H,$01      ;
-*$B1CC LD A,($B146)  ;
+*$B1CC LD A,($B146)  ; get attribute byte from the tile buffer
  $B1CF AND $F8       ;
  $B1D1 OR H          ;
- $B1D2 LD ($B146),A  ;
+ $B1D2 LD ($B146),A  ; set attribute byte
 *$B1D5 LD H,$00      ;
  $B1D7 ADD HL,HL     ;
  $B1D8 ADD HL,HL     ;
  $B1D9 ADD HL,HL     ;
  $B1DA ADD HL,HL     ; * 16
- $B1DB LD DE,$E700   ;
- $B1DE ADD HL,DE     ;
- $B1DF LD B,$08      ;
- $B1E1 LD DE,$B13E   ;
+ $B1DB LD DE,$E700   ; Ninja tiles base address
+ $B1DE ADD HL,DE     ; now HL = tile data address
+ $B1DF LD B,$08      ; 8 bytes
+ $B1E1 LD DE,$B13E   ; Tile buffer address
 *$B1E4 INC HL        ;
- $B1E5 LD A,(DE)     ;
+ $B1E5 LD A,(DE)     ; get byte from tile buffer
  $B1E6 LD C,A        ;
- $B1E7 LD A,(HL)     ;
+ $B1E7 LD A,(HL)     ; get byte from tile data (mask)
  $B1E8 CALL $B2E8    ; Mirror byte if needed
- $B1EB AND C         ;
+ $B1EB AND C         ; AND with byte from the buffer - apply the mask
  $B1EC LD C,A        ;
  $B1ED DEC HL        ;
- $B1EE LD A,(HL)     ;
+ $B1EE LD A,(HL)     ; get byte from tile data (pixels)
  $B1EF CALL $B2E8    ; Mirror byte if needed
- $B1F2 OR C          ;
+ $B1F2 OR C          ; OR with the byte from buffer - apply pixels
  $B1F3 INC HL        ;
  $B1F4 INC HL        ;
  $B1F5 LD (DE),A     ;
  $B1F6 INC DE        ;
- $B1F7 DJNZ $B1E4    ;
+ $B1F7 DJNZ $B1E4    ; loop for all 8 bytes
 *$B1F9 JP $B1FC      ;
 ; Process Tile screen 3 tile - Dog
 *$B1FC EXX           ;
@@ -6367,21 +6366,22 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B1FE EXX           ;
  $B1FF POP BC        ;
  $B200 LD A,(BC)     ; get tile from Tile screen 3
- $B201 CP $FF        ;
- $B203 JR Z,$B230    ;
- $B205 CALL $B2FE    ;
+ $B201 CP $FF        ; $FF - transparent?
+ $B203 JR Z,$B230    ; $FF => skip Dog tile drawing
+ $B205 CALL $B2FE    ; Exchange $7239 (Ninja direction) and $71CD (Dog
+                     ; direction)
  $B208 LD H,$00      ;
  $B20A LD L,A        ;
  $B20B ADD HL,HL     ;
  $B20C ADD HL,HL     ;
  $B20D ADD HL,HL     ;
  $B20E ADD HL,HL     ; * 16
- $B20F LD DE,$F0F0   ;
- $B212 ADD HL,DE     ;
+ $B20F LD DE,$F0F0   ; Dog tiles base address
+ $B212 ADD HL,DE     ; now HL = tile data address
  $B213 LD B,$08      ;
- $B215 LD DE,$B13E   ;
+ $B215 LD DE,$B13E   ; Tile buffer address
 *$B218 INC HL        ;
- $B219 LD A,(DE)     ;
+ $B219 LD A,(DE)     ; get byte from tile buffer
  $B21A LD C,A        ;
  $B21B LD A,(HL)     ;
  $B21C CALL $B2E8    ; Mirror byte if needed
@@ -6396,90 +6396,93 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B229 LD (DE),A     ;
  $B22A INC DE        ;
  $B22B DJNZ $B218    ;
- $B22D CALL $B2FE    ;
+ $B22D CALL $B2FE    ; Exchange $7239 (Ninja direction) and $71CD (Dog
+                     ; direction)
 ; Process Tile screen 4 tile - Guard
 *$B230 LD HL,($7237) ; get address in Tile screen 4
- $B233 LD A,(HL)     ;
- $B234 CP $FF        ;
- $B236 JR Z,$B263    ;
+ $B233 LD A,(HL)     ; get tile from the tilemap
+ $B234 CP $FF        ; $FF - transparent?
+ $B236 JR Z,$B263    ; $FF => skip Guard tile drawing
  $B238 LD H,$00      ;
  $B23A LD L,A        ;
  $B23B ADD HL,HL     ;
  $B23C ADD HL,HL     ;
  $B23D ADD HL,HL     ;
  $B23E ADD HL,HL     ; * 16
- $B23F LD DE,$E700   ;
- $B242 ADD HL,DE     ;
+ $B23F LD DE,$E700   ; tiles base address
+ $B242 ADD HL,DE     ; now HL = tile data address
  $B243 LD B,$08      ;
- $B245 LD DE,$B13E   ;
- $B248 CALL $B30F    ;
+ $B245 LD DE,$B13E   ; Tile buffer address
+ $B248 CALL $B30F    ; Exchange $7239 (Ninja direction) and $7347 (Guard
+                     ; direction)
 *$B24B INC HL        ;
- $B24C LD A,(DE)     ;
+ $B24C LD A,(DE)     ; get byte from tile buffer
  $B24D LD C,A        ;
- $B24E LD A,(HL)     ;
+ $B24E LD A,(HL)     ; get byte from tile data (mask)
  $B24F CALL $B2E8    ; Mirror byte if needed
- $B252 AND C         ;
+ $B252 AND C         ; AND with byte from buffer - masking
  $B253 LD C,A        ;
  $B254 DEC HL        ;
- $B255 LD A,(HL)     ;
+ $B255 LD A,(HL)     ; get byte from tile data (pixels)
  $B256 CALL $B2E8    ; Mirror byte if needed
- $B259 OR C          ;
+ $B259 OR C          ; OR with byte from buffer
  $B25A INC HL        ;
  $B25B INC HL        ;
- $B25C LD (DE),A     ;
+ $B25C LD (DE),A     ; save result byte to tile buffer
  $B25D INC DE        ;
- $B25E DJNZ $B24B    ;
- $B260 CALL $B30F    ;
+ $B25E DJNZ $B24B    ; loop for all 8 bytes
+ $B260 CALL $B30F    ; Exchange $7239 (Ninja direction) and $7347 (Guard
+                     ; direction)
 ; Process Tile screen 5 tile - front
 *$B263 LD HL,($7235) ; get address in Tile screen 5
- $B266 LD A,(HL)     ;
- $B267 CP $FF        ;
- $B269 JR Z,$B293    ;
+ $B266 LD A,(HL)     ; get tile from the tilemap
+ $B267 CP $FF        ; $FF - transparent?
+ $B269 JR Z,$B293    ; $FF => skip front tile drawing
  $B26B LD H,$00      ;
  $B26D LD L,A        ;
- $B26E LD A,($B147)  ;
- $B271 LD ($B146),A  ;
+ $B26E LD A,($B147)  ; get Background tile attribute
+ $B271 LD ($B146),A  ; set it as current tile attribute
  $B274 PUSH HL       ;
  $B275 ADD HL,HL     ;
  $B276 ADD HL,HL     ;
  $B277 ADD HL,HL     ;
  $B278 ADD HL,HL     ; * 16
  $B279 POP DE        ;
- $B27A ADD HL,DE     ;
- $B27B LD DE,$D600   ;
- $B27E ADD HL,DE     ;
+ $B27A ADD HL,DE     ; * 17
+ $B27B LD DE,$D600   ; Front tiles base address
+ $B27E ADD HL,DE     ; now HL = address of tile data
  $B27F LD B,$08      ;
- $B281 LD DE,$B13E   ;
-*$B284 LD A,(DE)     ;
- $B285 AND (HL)      ;
- $B286 INC HL        ;
- $B287 OR (HL)       ;
- $B288 LD (DE),A     ;
- $B289 INC HL        ;
- $B28A INC DE        ;
- $B28B DJNZ $B284    ;
- $B28D LD A,(HL)     ;
- $B28E CP $FF        ;
- $B290 JR Z,$B293    ;
- $B292 LD (DE),A     ;
+ $B281 LD DE,$B13E   ; Tile buffer address
+*$B284 LD A,(DE)     ; get byte from buffer
+ $B285 AND (HL)      ; AND with mask byte
+ $B286 INC HL        ; move to next byte in tile data
+ $B287 OR (HL)       ; OR with pixel byte
+ $B288 LD (DE),A     ; store result back to tile buffer
+ $B289 INC HL        ; move to next byte in tile data
+ $B28A INC DE        ; move to next buffer byte
+ $B28B DJNZ $B284    ; loop for all 8 bytes
+ $B28D LD A,(HL)     ; get attribute byte from the tile data
+ $B28E CP $FF        ; $FF?
+ $B290 JR Z,$B293    ; $FF => skip
+ $B292 LD (DE),A     ; set as current attribute
 ; Draw prepared tile on the screen
 *$B293 NOP           ;
  $B294 POP DE        ;
  $B295 PUSH DE       ;
- $B296 LD HL,$B13E   ;
- $B299 LD B,$08      ;
-*$B29B LD A,(HL)     ;
- $B29C LD (DE),A     ;
+ $B296 LD HL,$B13E   ; Tile buffer address
+ $B299 LD B,$08      ; 8 bytes
+*$B29B LD A,(HL)     ; get byte from the buffer
+ $B29C LD (DE),A     ; put byte on the screen
  $B29D INC HL        ;
  $B29E INC D         ;
- $B29F DJNZ $B29B    ;
- $B2A1 LD A,(HL)     ;
+ $B29F DJNZ $B29B    ; loop for all 8 bytes
+ $B2A1 LD A,(HL)     ; get attribute byte from the buffer
  $B2A2 LD HL,($7233) ; get address in screen attributes
- $B2A5 LD (HL),A     ;
+ $B2A5 LD (HL),A     ; put the attribute
+; Next column
  $B2A6 POP DE        ;
  $B2A7 POP BC        ;
  $B2A8 POP HL        ;
-; Next column
 *$B2A9 INC DE        ; Next address in screen
  $B2AA INC HL        ; Next address in Tile screen 1
  $B2AB EXX           ;
@@ -6510,10 +6513,10 @@ c$B148 LD HL,$5821   ; Screen attributes address
  $B2D5 RL D          ;
  $B2D7 RL D          ;
  $B2D9 PUSH HL       ;
- $B2DA LD HL,($7233) ; {Increase address in screen attributes by 2 - next row
+ $B2DA LD HL,($7233) ; get screen attributes address
  $B2DD INC HL        ;
- $B2DE INC HL        ;
- $B2DF LD ($7233),HL ; }
+ $B2DE INC HL        ; increase address by 2 - next row
+ $B2DF LD ($7233),HL ; set screen attributes address
  $B2E2 POP HL        ;
  $B2E3 DEC B         ; Decrease line counter
  $B2E4 JP NZ,$B16D   ; Continue loop by lines
@@ -7069,7 +7072,8 @@ c$B66A LD A,($71D4)  ;
  $B673 LD DE,$0000   ; !!MUT-ARG!! current Dog data address
  $B676 LD BC,$0009   ;
  $B679 LDIR          ;
- $B67B LD HL,$B263   ;
+ $B67B LD HL,$B263   ; For first drawing entering the room, skip Dog and Guard
+                     ; tiles drawing
  $B67E LD ($B1FA),HL ;
  $B681 CALL $DE68    ; Find record for the current room in #R$DE84 table
  $B684 CP $00        ;
@@ -7082,7 +7086,7 @@ c$B66A LD A,($71D4)  ;
  $B695 LD DE,$0000   ; !!MUT-ARG!! current Guard data address
  $B698 LD BC,$0004   ;
  $B69B LDIR          ;
- $B69D LD A,($7346)  ;
+ $B69D LD A,($7346)  ; get Guard state
  $B6A0 LD (DE),A     ;
  $B6A1 INC DE        ;
  $B6A2 LD A,($7347)  ; get Guard direction
@@ -7220,11 +7224,11 @@ c$B724 LD HL,$678E   ; Tile screen 1 start address
  $B769 LD DE,$0005   ;
  $B76C ADD HL,DE     ; next object
  $B76D DJNZ $B753    ; continue loop by objects
- $B76F LD A,($7346)  ;
+ $B76F LD A,($7346)  ; get Guard state
  $B772 CP $09        ;
  $B774 JR Z,$B77B    ;
  $B776 LD A,$0A      ;
- $B778 LD ($7346),A  ;
+ $B778 LD ($7346),A  ; set Guard state = $0A
 
 ; Game loop start
 ;
@@ -7500,7 +7504,7 @@ c$B937 LD IX,$A39F   ;
  $B947 JP Z,$BA20    ;
  $B94A CALL $BBAE    ;
  $B94D LD B,$02      ;
-*$B94F LD A,(IX+$03) ;
+*$B94F LD A,(IX+$03) ; !!MUT-ARG!!
  $B952 LD DE,$0000   ;
  $B955 CP $03        ;
  $B957 JR NC,$B95F   ;
@@ -7570,11 +7574,11 @@ c$B937 LD IX,$A39F   ;
  $B9E0 POP HL        ;
  $B9E1 INC A         ;
  $B9E2 JR Z,$B9F9    ;
- $B9E4 LD A,($7346)  ;
+ $B9E4 LD A,($7346)  ; get Guard state
  $B9E7 CP $09        ;
  $B9E9 JP Z,$BAD5    ;
  $B9EC LD A,$09      ;
- $B9EE LD ($7346),A  ;
+ $B9EE LD ($7346),A  ; set Guard state = $09
  $B9F1 LD B,$01      ;
  $B9F3 CALL $B4DE    ; Increase PAY value by 100 - Guard killed by weapon
  $B9F6 JP $BAD5      ;
@@ -7618,7 +7622,7 @@ c$B937 LD IX,$A39F   ;
  $BA3E POP DE        ;
  $BA3F DJNZ $BA2F    ;
  $BA41 CALL $B148    ; Draw tile map on the screen
- $BA44 LD HL,$B1FC   ;
+ $BA44 LD HL,$B1FC   ; Restore drawing of Dog and Guard tiles
  $BA47 LD ($B1FA),HL ;
  $BA4A LD HL,$BAB2   ;
  $BA4D XOR A         ;
@@ -7718,13 +7722,13 @@ c$BAD5 CALL $FA28    ;
  $BB04 LD ($BA2B),HL ;
  $BB07 LD H,$00      ;
  $BB09 LD A,(IX+$05) ;
- $BB0C ADD A,A       ; *2
+ $BB0C ADD A,A       ; * 2
  $BB0D LD L,A        ;
  $BB0E LD DE,$5800   ;
  $BB11 ADD HL,HL     ;
  $BB12 ADD HL,HL     ;
  $BB13 ADD HL,HL     ;
- $BB14 ADD HL,HL     ; *32
+ $BB14 ADD HL,HL     ; * 32
  $BB15 ADD HL,DE     ; now HL = address in screen attributes
  $BB16 LD D,$00      ;
  $BB18 LD E,(IX+$06) ;

@@ -3127,6 +3127,7 @@ B $A3B4,1,1 ?? Guard counter
 c $A3B5 ?? something about Ninja and Guard
 C $A3B5,3 get Ninja Y
 C $A3B8,3 Guard Y position address
+C $A3BB,1 compare Ninja Y to Guard Y
 C $A3BE,2 !!MUT-ARG!! ??
 C $A3C5,3 set Guard state = $0B
 C $A3C8,3 Sprite Ninja/Guard punching
@@ -3135,6 +3136,7 @@ C $A3CE,3 => Draw Guard on tilemap
 c $A3D1 ?? something about Ninja and Guard
 C $A3D1,3 get Ninja Y
 C $A3D4,3 Guard Y position address
+C $A3D7,1 compare Ninja Y to Guard Y
 C $A3E2,3 set Guard state = $14
 C $A3E5,3 Sprite Ninja/Guard punching
 C $A3E8,3 set Guard sprite
@@ -3142,8 +3144,10 @@ C $A3EB,3 => Draw Guard on tilemap
 c $A3EE ?? something about Ninja and Guard
 C $A3EE,3 get Ninja Y
 C $A3F1,3 Guard Y position address
+C $A3F4,1 compare Ninja Y to Guard Y
 C $A3F6,3 get Guard position in tilemap
 C $A3F9,3 $6592 = $6590 (Tile screen 0) + 2
+C $A3FC,1 now HL in Back tile screen
 C $A407,3 set Guard state = $05
 C $A40C,3 set Guard counter
 C $A40F,3 Sprite Ninja/Guard jumping
@@ -3152,6 +3156,7 @@ C $A415,3 => Draw Guard on tilemap
 c $A418 ?? something about Ninja and Guard
 C $A418,3 get Ninja Y
 C $A41B,3 Guard Y position address
+C $A41E,1 compare Ninja Y to Guard Y
 C $A423,3 set Guard state = $08
 C $A428,3 set Guard counter
 C $A42B,3 Sprite Ninja/Guard punching
@@ -3387,6 +3392,7 @@ b $A747
 c $A75B Set update flags for Guard, 6x7 tiles
 C $A75B,4 get Current Guard position in tilemap
 C $A75F,3 Tile screen 1 start address
+C $A762,1 now HL in update flags tilemap
 C $A763,3 24
 C $A766,2 "need to update" flag
 C $A768,2 7 rows
@@ -3426,7 +3432,7 @@ B $AB6D,12,8 attributes
 B $AB79,96,8 #HTML[#UDGARRAY4,,,4,,;$AB79-$ABD8-1-32(itemcons)] Console
 B $ABD9,12,8 attributes
 b $ABE5 Explosion image, 3x3 tiles
-B $ABE5,72,8 #HTML[#UDGARRAY3,,,1,,;$ABE5-$AC2C-8-24(ade5)]
+B $ABE5,72,8 #HTML[#UDGARRAY3,$42,,1,,;$ABE5-$AC2C-8-24(ade5)]
 b $AC2D
 c $AC44 Reset Guard data and Dog data
 C $AC44,3 address for Table of Guard data addresses
@@ -3466,12 +3472,15 @@ R $AED1 (HL) string address
 R $AED1 (DE) screen address
 C $AED8,1 * 8
 c $AEF0
+C $AEF0,3 attributes screen address
 C $AF13,3 Pay value text address
+C $AF35,3 => Print table of records
 C $AF41,3 Print string "EXCELLENT WORK."
 C $AF49,3 Print string "YOU ARE ONE OF"
 C $AF51,3 Print string " OUR TEN BEST"
 C $AF59,3 Print string "NINJA SABOTEURS."
 C $AF61,3 Print string "ENTER YOUR NAME..."
+C $AF68,3 screen address
 C $AF6B,3 address of string 10 spaces
 C $AF6E,3 Print string
 C $AF7B,3 address of string 10 spaces
@@ -3499,16 +3508,17 @@ T $B101
 T $B10F
 T $B11C
 T $B12C
-b $B13E
-B $B13E,9,9
-b $B147
+b $B13E Tile buffer
+B $B13E,8,8 Pixel bytes
+B $B146,1,1 Attribute byte
+B $B147,1,1 Background attribute byte
 c $B148 Draw tile map on the screen
 C $B148,3 Screen attributes address
 C $B14B,2 17 rows
 C $B150,3 Tile screen 5 start address
 C $B156,3 Tile screen 4 start address
 C $B15C,3 Tile screen 1 start address
-C $B15F,3 Game screen start address
+C $B15F,3 screen address where game screen starts
 C $B163,3 Tile screen 0 start address
 C $B166,3 Tile screen 2 start address
 C $B169,3 Tile screen 3 start address
@@ -3518,33 +3528,110 @@ C $B170,1 Check "need update" flag in Tile screen 1
 C $B171,3 zero => Skip this tile rendering
 N $B177 Process Tile screen 0 - background tile
 C $B178,1 get byte from Tile screen 0 tile
+C $B17A,3 for non-$FF, don't skip Ninja tile processing
+C $B17D,2 $FF - "earth" background?
 C $B17F,2 byte <> $FF =>
+C $B181,3 for $FF, skip Ninja tile processing
+C $B184,3 save the chosen jump address ($B1A3 or $B1F9)
 C $B18F,1 * 9
-C $B190,3 Tiles start address
-C $B193,1 now HL = tile address
+C $B190,3 Background tiles start address
+C $B193,1 now HL = tile data address
 C $B194,3 Tile buffer address
+C $B197,2 8 pixel bytes + attribute byte
+C $B199,1 get byte from tile data
+C $B19A,1 store the byte to tile buffer
+C $B19B,1 move to next byte in tile data
+C $B19C,1 move to next byte in tile buffer
+C $B19D,2 loop for 9 bytes
+C $B19F,1 save attribute byte once more
 C $B1A0,3 !!MUT-ARG!! $B1A3 or $B1F9
 N $B1A3 Process Tile screen 2 tile - Ninja
 C $B1A4,1 get tile from Tile Screen 2 tile
+C $B1A6,2 $FF - transparent?
+C $B1A8,2 $FF => skip Ninja tile drawing
+C $B1C1,3 get attribute byte from the tile buffer
+C $B1CC,3 get attribute byte from the tile buffer
+C $B1D2,3 set attribute byte
 C $B1DA,1 * 16
+C $B1DB,3 Ninja tiles base address
+C $B1DE,1 now HL = tile data address
+C $B1DF,2 8 bytes
+C $B1E1,3 Tile buffer address
+C $B1E5,1 get byte from tile buffer
+C $B1E7,1 get byte from tile data (mask)
 C $B1E8,3 Mirror byte if needed
+C $B1EB,1 AND with byte from the buffer - apply the mask
+C $B1EE,1 get byte from tile data (pixels)
 C $B1EF,3 Mirror byte if needed
+C $B1F2,1 OR with the byte from buffer - apply pixels
+C $B1F7,2 loop for all 8 bytes
 N $B1FC Process Tile screen 3 tile - Dog
 C $B200,1 get tile from Tile screen 3
+C $B201,2 $FF - transparent?
+C $B203,2 $FF => skip Dog tile drawing
+C $B205,3 Exchange $7239 (Ninja direction) and $71CD (Dog direction)
 C $B20E,1 * 16
+C $B20F,3 Dog tiles base address
+C $B212,1 now HL = tile data address
+C $B215,3 Tile buffer address
+C $B219,1 get byte from tile buffer
 C $B21C,3 Mirror byte if needed
 C $B223,3 Mirror byte if needed
+C $B22D,3 Exchange $7239 (Ninja direction) and $71CD (Dog direction)
 N $B230 Process Tile screen 4 tile - Guard
 C $B230,3 get address in Tile screen 4
+C $B233,1 get tile from the tilemap
+C $B234,2 $FF - transparent?
+C $B236,2 $FF => skip Guard tile drawing
 C $B23E,1 * 16
+C $B23F,3 tiles base address
+C $B242,1 now HL = tile data address
+C $B245,3 Tile buffer address
+C $B248,3 Exchange $7239 (Ninja direction) and $7347 (Guard direction)
+C $B24C,1 get byte from tile buffer
+C $B24E,1 get byte from tile data (mask)
 C $B24F,3 Mirror byte if needed
+C $B252,1 AND with byte from buffer - masking
+C $B255,1 get byte from tile data (pixels)
 C $B256,3 Mirror byte if needed
+C $B259,1 OR with byte from buffer
+C $B25C,1 save result byte to tile buffer
+C $B25E,2 loop for all 8 bytes
+C $B260,3 Exchange $7239 (Ninja direction) and $7347 (Guard direction)
 N $B263 Process Tile screen 5 tile - front
 C $B263,3 get address in Tile screen 5
+C $B266,1 get tile from the tilemap
+C $B267,2 $FF - transparent?
+C $B269,2 $FF => skip front tile drawing
+C $B26E,3 get Background tile attribute
+C $B271,3 set it as current tile attribute
 C $B278,1 * 16
+C $B27A,1 * 17
+C $B27B,3 Front tiles base address
+C $B27E,1 now HL = address of tile data
+C $B281,3 Tile buffer address
+C $B284,1 get byte from buffer
+C $B285,1 AND with mask byte
+C $B286,1 move to next byte in tile data
+C $B287,1 OR with pixel byte
+C $B288,1 store result back to tile buffer
+C $B289,1 move to next byte in tile data
+C $B28A,1 move to next buffer byte
+C $B28B,2 loop for all 8 bytes
+C $B28D,1 get attribute byte from the tile data
+C $B28E,2 $FF?
+C $B290,2 $FF => skip
+C $B292,1 set as current attribute
 N $B293 Draw prepared tile on the screen
+C $B296,3 Tile buffer address
+C $B299,2 8 bytes
+C $B29B,1 get byte from the buffer
+C $B29C,1 put byte on the screen
+C $B29F,2 loop for all 8 bytes
+C $B2A1,1 get attribute byte from the buffer
 C $B2A2,3 get address in screen attributes
-N $B2A9 Next column
+C $B2A5,1 put the attribute
+N $B2A6 Next column
 C $B2A9,1 Next address in screen
 C $B2AA,1 Next address in Tile screen 1
 C $B2AD,1 Next address in Tile screen 0
@@ -3554,7 +3641,9 @@ C $B2C2,1 Next address in Tile screen 4
 C $B2C7,1 Decrease column counter
 C $B2C8,3 Continue loop by columns
 N $B2CB Next tile row
-C $B2DA,8 Increase address in screen attributes by 2 - next row
+C $B2DA,3 get screen attributes address
+C $B2DE,1 increase address by 2 - next row
+C $B2DF,3 set screen attributes address
 C $B2E3,1 Decrease line counter
 C $B2E4,3 Continue loop by lines
 c $B2E8 Mirror byte if needed
@@ -3758,10 +3847,12 @@ C $B667,3 set counter = 19
 c $B66A Current Room changed, entering the new Room
 C $B66D,3 !!MUT-ARG!! address for current Dog flag
 C $B673,3 !!MUT-ARG!! current Dog data address
+C $B67B,3 For first drawing entering the room, skip Dog and Guard tiles drawing
 C $B681,3 Find record for the current room in #R$DE84 table
 C $B686,2 found =>
 C $B68B,1 get flag
 C $B695,3 !!MUT-ARG!! current Guard data address
+C $B69D,3 get Guard state
 C $B6A2,3 get Guard direction
 C $B6A9,3 set current Dog data address = no dog
 C $B6AC,3 set current Guard data address = no guard
@@ -3838,6 +3929,8 @@ C $B767,1 set tile byte in Tile screen 0
 C $B768,1 restore address in Table of objects
 C $B76C,1 next object
 C $B76D,2 continue loop by objects
+C $B76F,3 get Guard state
+C $B778,3 set Guard state = $0A
 c $B77B Game loop start
 C $B77C,3 clear LASTK
 C $B781,3 get LASTK
@@ -3944,17 +4037,21 @@ C $B927,3 Tile screen 3 start address + 1
 C $B92A,3 510 - 1
 C $B92F,3 get Current Room address
 c $B937 Standard room procedure (redirect from #R$B41F)
+C $B94F,3 !!MUT-ARG!!
 C $B959,3 -30
 C $B963,3 +30
 C $B9B5,3 Tile screen 0 start address
 C $B9C1,3 Tile screen 3 start address
 C $B9DB,3 Tile screen 4 start address
+C $B9E4,3 get Guard state
+C $B9EE,3 set Guard state = $09
 C $B9F3,3 Increase PAY value by 100 - Guard killed by weapon
 C $BA03,3 Tile screen 2 start address
 C $BA0E,3 Decrease Energy by B = 20
 C $BA2A,3 !!MUT-ARG!!
 C $BA3A,3 +30
 C $BA41,3 Draw tile map on the screen
+C $BA44,3 Restore drawing of Dog and Guard tiles
 C $BA4F,3 => Game loop start
 N $BA52 Draw Explosion image on the screen and make some noise
 C $BA57,3 !!MUT-ARG!! address on the screen
@@ -3972,8 +4069,8 @@ c $BAD5
 C $BAD8,2 current room address low byte = $CA ?
 C $BADF,2 current room address high byte = $8D ?
 C $BAE1,3 room #R$8DCA (room with helicopter) =>
-C $BB0C,1 *2
-C $BB14,1 *32
+C $BB0C,1 * 2
+C $BB14,1 * 32
 C $BB15,1 now HL = address in screen attributes
 C $BB28,4 Address for table of screen addresses for 17 rows
 C $BB2C,3 !!MUT-ARG!!

@@ -4049,6 +4049,7 @@ c $B937 Standard room procedure (redirect from #R$B41F)
 C $B94F,3 !!MUT-ARG!!
 C $B959,3 -30
 C $B963,3 +30
+C $B9A7,3 get object X
 C $B9B5,3 Tile screen 0 start address
 C $B9C1,3 Tile screen 3 start address
 C $B9DB,3 Tile screen 4 start address

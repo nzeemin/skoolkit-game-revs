@@ -1,1 +1,1 @@
-C:\bin\skoolkit-8.2\skool2html.py hydrofool.skool hydrofool.ref -H -1
+C:\bin\skoolkit-9.6\skool2html.py hydrofool.skool hydrofool.ref -H -1

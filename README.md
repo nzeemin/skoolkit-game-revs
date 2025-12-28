@@ -10,8 +10,9 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/highwayencounter-zx/highway
 
 Status: Not finished (18K .ctl file).
 
-The reverse intended to re-create the game on another platform,
-see [uknc-highwayencounter](https://github.com/nzeemin/uknc-highwayencounter).
+Follow-up projects:
+* [uknc-highwayencounter](https://github.com/nzeemin/uknc-highwayencounter)
+* [bk0011m-hwyenc](https://github.com/nzeemin/bk0011m-hwyenc)
 
 
 ## Desolate
@@ -22,8 +23,12 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/desolate-ti83plus/desolate/
 
 Status: Not finished, but have a good progress (38K .ctl file).
 
-The reverse was done to re-create the game on another platforms,
-see [spectrum-desolate](https://github.com/nzeemin/spectrum-desolate), [uknc-desolate](https://github.com/nzeemin/uknc-desolate).
+Follow-up projects:
+* [spectrum-desolate](https://github.com/nzeemin/spectrum-desolate)
+* [uknc-desolate](https://github.com/nzeemin/uknc-desolate)
+* [vector06c-desolate](https://github.com/nzeemin/vector06c-desolate)
+* [korvet-desolate](https://github.com/nzeemin/korvet-desolate)
+* [specialist-desolate](https://github.com/nzeemin/specialist-desolate)
 
 
 ## Commando
@@ -52,6 +57,9 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 
 Status: Work in progress (60K .ctl file).
 
+Follow-up projects:
+* [vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive)
+
 
 ## Saboteur
 
@@ -61,3 +69,13 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/saboteur1-zx/saboteur/
 
 Status: Have pretty good progress (189K .ctl file).
 
+Follow-up projects:
+* [uknc-saboteur1](https://github.com/nzeemin/uknc-saboteur1)
+* [bk0011m-saboteur1](https://github.com/nzeemin/bk0011m-saboteur1)
+* [vector06c-saboteur1](https://github.com/nzeemin/vector06c-saboteur1)
+
+## Robin of the Wood
+
+Original: for ZX Spectrum, 1985, Odin Computer Graphics.
+
+Status: just started.

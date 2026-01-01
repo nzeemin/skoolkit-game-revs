@@ -307,85 +307,83 @@ t $7A81
 b $7A85
 t $7A91
 b $7A96
-t $7D49
-b $7D4C
-t $804C
-b $804F
-t $8056
-b $8059
-t $8064
-b $806A
-t $80C3
-b $80C7
-t $811A
-b $811D
-t $8140
-b $8145
-t $814B
-b $814E
-t $8167
-b $816B
-t $8188
-b $818C
-t $81B4
-b $81B7
-t $81E8
-b $81ED
-t $81F4
-b $81F7
-t $8201
-s $8207
-t $8208
-b $820E
-t $8212
-b $8215
-t $8235
-b $823F
-t $824A
-b $824E
-t $8259
-b $8260
-t $826E
-b $8272
-t $828D
-b $8292
-t $82A5
+b $7B39
+B $7B3A
+b $7B6A
+B $7B6B
+b $7BA1
+B $7BA2
+b $7BE6
+B $7BE7
+b $7C1D
+B $7C1E
+b $7C50
+B $7C51
+b $7C8B
+B $7C8C
+b $7CBA
+B $7CBB
+b $7CE7
+B $7CE8
+b $7D1C
+B $7D1D
+b $7D53
+B $7D54
+b $7D82
+B $7D83
+b $7DBF
+N $7DBF #HTML[<img src="images/rooms/7DBF.png" />]
+B $7DC0
+b $7DFC
+B $7DFD
+b $7E37
+B $7E38
+b $7E70
+B $7E71
+b $7EA7
+B $7EA8
+b $7EE8
+B $7EE9
+b $7F11
+N $7F11 #HTML[<img src="images/rooms/7F11.png" />]
+B $7F12
+b $7F36
+B $7F37
+b $7F65
+B $7F66
+b $7F88
+B $7F89
+b $7FBB
+B $7FBC
+b $7FF0
+N $7FF0 #HTML[<img src="images/rooms/7FF0.png" />]
+B $7FF1
+b $8021
+B $8022
+b $804C
+B $804D
+b $80B1
+B $80B2
+b $8110
+B $8111
+b $8167
+B $8168
+b $81B6
+B $81B7
+b $8207
+b $8208
+b $8265
+B $8266
 b $82AA
-t $82AC
-b $82AF
-t $82B0
-b $82B6
-t $82BB
-b $82C1
-t $82CC
-b $82D0
-t $82D4
-b $82D9
-t $82F9
-b $82FF
-t $8300
-b $8303
-t $8304
-b $8307
-t $8317
-b $831E
-t $8324
-b $8327
-t $8328
-b $832E
-t $833C
-b $833F
-t $834A
-b $834E
-t $834F
-b $8353
-t $835F
-b $8362
-t $8364
-b $8367
-t $8397
-b $839D
-t $83BD
+B $82AB
+b $82E9
+B $82EA
+b $833C
+B $833D
+b $8381
+N $8381 #HTML[<img src="images/rooms/8381.png" />]
+B $8382
+b $83BC
 b $83C1
 t $83DC
 b $83E1
@@ -622,10 +620,10 @@ t $8C48
 b $8C66
 t $8C7B
 b $8C80
-c $8C8D
+c $8C8D Sound of evil laughter
 c $8CAA
-b $8CD4
-t $8E21
+b $8CD4 Data for Sound of evil laughter
+B $8CD4,,12
 b $8E24 Robin sprites
 B $8E27,96,8 #HTML[#UDGARRAY3,,3,3,,;$8E27-$8E86-1-24(robin0)] Robin 0
 B $8E87,3
@@ -780,10 +778,20 @@ B $A35F,120,8 #HTML[#UDGARRAY3,,3,3,,;$A35F-$A3D6-1-24(witch1)] Witch 1
 B $A3D7,120,8 #HTML[#UDGARRAY3,,3,3,,;$A3D7-$A44E-1-24(witch2)] Witch 2
 b $A44F
 b $A45E Druid sprites
-B $A461,96,8 #HTML[#UDGARRAY3,,3,3,,;$A461-$A4C0-1-24(druid0)] Druid 0
+B $A461,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A461-$A4C0-1-24(druid0)] Druid 0
 B $A4C1,3
-B $A4C4,96,8 #HTML[#UDGARRAY3,,3,3,,;$A4C4-$A523-1-24(druid1)] Druid 1
+B $A4C4,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A4C4-$A523-1-24(druid1)] Druid 1
 B $A524,3
+B $A527,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A527-$A586-1-24(druid2)] Druid 2
+B $A587,3
+B $A58A,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A58A-$A5E9-1-24(druid3)] Druid 3
+B $A5EA,3
+B $A5ED,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A5ED-$A64C-1-24(druid4)] Druid 4
+B $A64D,3
+B $A650,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A650-$A6AF-1-24(druid5)] Druid 5
+B $A6B0,3
+B $A6B3,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A6B3-$A712-1-24(druid6)] Druid 6
+B $A713,3
 t $A8BA
 b $A8BD
 t $A8D6
@@ -791,6 +799,7 @@ b $A8D9
 c $AA31
 b $AC13
 c $AC83
+C $AC85,3 Clear the shadow screen
 t $ACC6 Menu messages
 T $ACC6
 B $ACCD,1
@@ -913,6 +922,9 @@ t $B50B
 b $B510
 t $B582
 b $B586
+b $B587 Ornament at the left side of the game screen
+B $B589
+b $B5C0 Ornament at the right side of the game screen
 t $B5FB
 b $B5FE
 t $B5FF
@@ -976,6 +988,8 @@ b $B7E5
 t $B848
 s $B866
 c $B867
+C $B8D4,3 Sound of evil laughter
+C $B8E3,3 Clear the shadow screen
 b $B8FB
 c $B919
 c $BA85
@@ -1005,13 +1019,17 @@ c $BF54
 b $BF67
 B $BF6F,1 Energy level
 c $BF70 START point after game loading
+C $BF71,3 set initial stack pointer
 C $BF74,3 Call Menu, return on game start
 C $BF77,2 Geme started =>
 c $BF79
 c $BF80
+C $C02A,3 Clear the shadow screen
 c $C055
 c $C072
 c $C0AF
+C $C0B4,2 zero => end, return
+C $C0C8,3 Draw one object on the shadow screen
 c $C0D1
 c $C15E
 c $C18E
@@ -1027,9 +1045,12 @@ c $C444
 c $C462
 c $C4B6
 c $C4D2
+C $C4ED,3 Clear the shadow screen
 c $C517
 c $C53B
 b $C547
+B $C547,1 Room number in the room block
+W $C54A,2 Room block base address: $7B39
 t $C550
 b $C558
 t $C559
@@ -1073,6 +1094,30 @@ c $CC47
 c $CC52
 b $CC7A
 c $CD6C Menu procedure, return on game start
+C $CD6C,2 Delay for sound procedure
+C $CD7A,3 Sound
+C $CD7D,3 Clear screen pixels
+C $CD82,3 Clear screen attributes
+C $CD95,3 Branched antlers, left part
+C $CD98,3 Print string
+C $CD9B,3 Branched antlers, right part
+C $CD9E,3 Print string
+C $CDA1,3 Ornament at the left side of the game screen
+C $CDA4,3 Print string
+C $CDA7,3 Ornament at the right side of the game screen
+C $CDAA,3 Print string
+C $CDAD,3 "(C) 1985  ODIN COMPUTER GRAPHICS"
+C $CDB0,3 Print string
+C $CDC0,3 Draw menu items
+C $CDC3,3 Wait keyboard pressed
+C $CE39,3 Clear the shadow screen
+C $CE44,3 Draw the Odin sign on the shadow screen
+C $CE47,3 Sliding to the sides opens the screen with Odin sign
+C $CE4B,3 Clear the shadow screen
+C $CE4E,3 Draw current room on the shadow screen
+C $CE5F,3 Draw Robin and others on the shadow screen
+C $CE62,3 Sound of evil laughter
+C $CE65,3 Sliding to the sides opens the game screen
 c $CE6D
 c $CE81
 c $CF4A
@@ -1080,20 +1125,29 @@ c $CF4D
 c $CF71
 c $CFB3
 c $CFC7
-c $CFE1
+c $CFE1 Print string
+R $CFE1 I:HL ??
 c $CFEE
 c $D004
-c $D024
-c $D032
-c $D03F
-c $D059
+c $D024 Clear screen pixels
+c $D032 Clear screen attributes
+R $D032 A Attribute value to fill in the screen
+c $D03F Clear the shadow screen
+R $D03F A Attribute value to fill in the shadow screen
+N $D04B Clear shadow screen pixels
+c $D059 Clear E500 area
 c $D067
 c $D085
+C $D086,3 Clear the shadow screen
 c $D095
 b $D0AD
 c $D0CB
 c $D0FF
+C $D101,3 Clear the shadow screen
 C $D107,3 Data and messages to redefine keyboard keys
+C $D10A,3 Print string
+C $D118,3 Print string
+C $D135,3 Print string
 c $D140
 c $D14B
 c $D156
@@ -1125,23 +1179,23 @@ t $D27C
 b $D294
 t $D295
 b $D2A4
-t $D2CB
-b $D2D4
-t $D2D5
-s $D2E4
-t $D2E5
-b $D2F4
-t $D2F5
-b $D304
-t $D308
-b $D311
-t $D318
-b $D327
-t $D329
-b $D338
-t $D339
-b $D348
-t $D34B
+b $D2C3 Branched antlers, left part
+B $D2D4
+B $D2D5
+B $D2E4
+B $D2E5
+B $D2F4
+B $D2F5
+B $D304
+b $D305 Branched antlers, right part
+B $D318
+B $D327
+B $D329
+B $D338
+B $D339
+B $D348
+b $D349
+T $D34B
 s $D36B
 t $D36C
 s $D38C
@@ -1196,36 +1250,14 @@ c $DFE7
 c $DFF4
 c $E00D
 b $E016
-t $E51E
-b $E521
-t $F001
-b $F004
-t $F009
-b $F00C
-t $F017
-b $F01A
-t $F025
-b $F02A
-t $F02E
-b $F031
-t $F246
-b $F249
-t $F26A
-b $F26D
-t $F27E
-b $F281
-t $F5E6
-b $F5E9
-t $F5F2
-b $F5F5
-t $F61F
-b $F622
-t $F628
-b $F62B
-t $F675
-b $F678
-t $F67A
-b $F67E
+b $E500
+B $E500,576
+b $E740
+b $E800
+B $E800,,32
+b $EB00 Shadow screen, pixels, 144 lines by 32 bytes
+B $EB00,,32
+b $FD00
 t $FEBD
 b $FEC0
 t $FEF5
@@ -1242,4 +1274,4 @@ t $FFA4
 s $FFA7
 t $FFA9
 b $FFAF
-c $FFF4
+b $FFF4

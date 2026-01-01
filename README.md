@@ -46,7 +46,7 @@ Original: for ZX Spectrum, 1987.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: Started, some progress (16K .ctl file).
+Status: just started (16K .ctl file).
 
 
 ## Scuba Dive
@@ -78,4 +78,4 @@ Follow-up projects:
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
-Status: just started.
+Status: just started (16K .ctl file).

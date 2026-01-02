@@ -303,246 +303,534 @@ t $79C4
 b $79C8
 t $79F3
 b $79F9
-t $7A81
-b $7A85
-t $7A91
-b $7A96
-b $7B39
+B $79F9,,16
+b $7B39 Room type descriptors
+N $7B39 Room type $00
 B $7B3A
-b $7B6A
+N $7B6A Room type $01
 B $7B6B
-b $7BA1
+N $7BA1 Room type $02
 B $7BA2
-b $7BE6
+N $7BE6 Room type $03
 B $7BE7
-b $7C1D
+N $7C1D Room type $04
 B $7C1E
-b $7C50
+N $7C50 Room type $05
 B $7C51
-b $7C8B
+N $7C8B Room type $06
 B $7C8C
-b $7CBA
+N $7CBA Room type $07
 B $7CBB
-b $7CE7
+N $7CE7 Room type $08
 B $7CE8
-b $7D1C
+N $7D1C Room type $09
 B $7D1D
-b $7D53
+N $7D53 Room type $0A
 B $7D54
-b $7D82
+N $7D82 Room type $0B
 B $7D83
-b $7DBF
-N $7DBF #HTML[<img src="images/rooms/7DBF.png" />]
+N $7DBF Room type $0C
 B $7DC0
-b $7DFC
+N $7DFC Room type $0D
 B $7DFD
-b $7E37
+N $7E37 Room type $0E
 B $7E38
-b $7E70
+N $7E70 Room type $0F
 B $7E71
-b $7EA7
+N $7EA7 Room type $10
 B $7EA8
-b $7EE8
+N $7EE8 Room type $11
 B $7EE9
-b $7F11
-N $7F11 #HTML[<img src="images/rooms/7F11.png" />]
+N $7F11 Room type $12
 B $7F12
-b $7F36
+N $7F36 Room type $13
 B $7F37
-b $7F65
+N $7F65 Room type $14
 B $7F66
-b $7F88
+N $7F88 Room type $15
 B $7F89
-b $7FBB
+N $7FBB Room type $16
 B $7FBC
-b $7FF0
-N $7FF0 #HTML[<img src="images/rooms/7FF0.png" />]
+N $7FF0 Room type $17
 B $7FF1
-b $8021
-B $8022
-b $804C
+N $8021 Room type $18
+B $8022,42,8
+N $804C Room type $19
 B $804D
-b $80B1
+N $80B1 Room type $1A
 B $80B2
-b $8110
+N $8110 Room type $1B
 B $8111
-b $8167
+N $8167 Room type $1C
 B $8168
-b $81B6
+N $81B6 Room type $1D
 B $81B7
-b $8207
-b $8208
-b $8265
+N $8207 Room type $1E
+B $8207,1 Nothing
+N $8208 Room type $1F
+B $8209,92,8
+N $8265 Room type $20
 B $8266
-b $82AA
+N $82AA Room type $21
 B $82AB
-b $82E9
+N $82E9 Room type $22
 B $82EA
-b $833C
+N $833C Room type $23
 B $833D
-b $8381
-N $8381 #HTML[<img src="images/rooms/8381.png" />]
+N $8381 Room type $24
 B $8382
-b $83BC
-b $83C1
-t $83DC
-b $83E1
-t $83E4
-b $83EA
-t $83FE
-b $8401
-t $8415
-b $841C
-t $8526
-b $852B
-t $8532
-b $8536
-t $8542
-b $8546
-t $8555
-b $8559
-t $855E
-b $8561
-t $857B
-b $8581
-t $858A
-b $858D
-t $8595
-b $8598
-t $85B6
-b $85B9
-t $85BC
-b $85C0
-t $85CC
-b $85CF
-t $85D0
-b $85D4
-t $85FE
-b $8604
-t $8607
-b $860B
-t $8610
-b $8613
-t $8615
-b $861B
-t $8624
-b $862A
-t $8637
-b $863A
-t $863D
-b $8640
-t $8646
-b $864C
-t $8660
-b $8663
-t $8664
-b $8667
-t $867A
-b $867D
-t $867E
-b $8681
-t $868C
-b $8690
-t $8692
-b $8697
-t $869C
-b $86A0
-t $86A7
-b $86AA
-t $86B1
-b $86B7
-t $86C0
-b $86C3
-t $86C6
-b $86CA
-t $86D3
-b $86D6
-t $86E4
-b $86E7
-t $86F4
-b $86F9
-t $8706
-b $870A
-t $8715
-b $8718
-t $8719
-b $871D
-t $8723
-b $872A
-t $872C
-b $8732
-t $8737
-b $873A
-t $873E
-b $8741
-t $8771
-b $8776
-t $8779
-b $877D
-t $8789
-b $878E
-t $878F
-b $8795
-t $87A8
-b $87AB
-t $87B8
-b $87BD
-t $87D4
-b $87D7
-t $87DA
-b $87DD
-t $87E4
-b $87E7
-t $87ED
-b $87F0
-t $87F4
-b $87F7
-t $8807
-b $880C
-t $8819
-b $881C
-t $881D
-b $8821
-t $8822
-b $8825
-t $8830
-b $8834
-t $884B
-b $884F
-t $8854
-b $8857
-t $8881
-b $8884
-t $8886
-b $8889
-t $8891
-b $8894
-t $889E
-b $88A2
-t $88A5
-b $88AA
-t $88AB
-b $88AE
-t $88B1
-b $88B4
-t $88C2
-b $88C5
-t $88CD
-b $88D2
-t $88ED
-b $88F0
-t $88F3
-b $88F6
-t $88F8
-b $88FE
-t $890B
-b $8911
-t $891F
-b $8924
-t $8925
-b $8928
-t $892A
-b $892D
+N $83BC Room type $25
+B $83BD
+N $83F5 Room type $26
+B $83F6,60,8
+b $8432
+b $8511 Additional room descriptors
+N $8511 Room type $00
+B $8511,1,1 Nothing
+N $8512 Room type $01
+B $8512,1,1 Nothing
+N $8513 Room type $02
+B $8513,1,1 Nothing
+N $8514 Room type $03
+B $8514,1,1 Nothing
+N $8515 Room type $04
+B $8515,1,1
+B $8516,2,2
+N $8518 Room type $05
+B $8518,1,1 Nothing
+N $8519 Room type $06
+B $8519,1,1
+B $851A,2,2
+N $851C Room type $07
+B $851C,1,1 Nothing
+N $851D Room type $08
+B $851D,1,1 Nothing
+N $851E Room type $09
+B $851E,1,1 Nothing
+N $851F Room type $0A
+B $851F,1,1 Nothing
+N $8520 Room type $0B
+B $8520,1,1 Nothing
+N $8521 Room type $0C
+B $8521,1,1 Nothing
+N $8522 Room type $0D
+B $8522,1,1
+B $8523,2,2
+N $8525 Room type $0E
+B $8525,1,1
+B $8526,6,6
+N $852C Room type $0F
+B $852C,1,1 Nothing
+N $852D Room type $10
+B $852D,1,1 Nothing
+N $852E Room type $11
+B $852E,1,1 Nothing
+N $852F Room type $12
+B $852F,1,1 Nothing
+N $8530 Room type $13
+B $8530,1,1 Nothing
+N $8531 Room type $14
+B $8531,1,1
+B $8532,4,4
+N $8536 Room type $15
+B $8536,1,1 Nothing
+N $8537 Room type $16
+B $8537,1,1 Nothing
+N $8538 Room type $17
+B $8538,1,1 Nothing
+N $8539 Room type $18
+B $8539,1,1 Nothing
+N $853A Room type $19
+B $853A,1,1 Nothing
+N $853B Room type $1A
+B $853B,1,1 Nothing
+N $853C Room type $1B
+B $853C,1,1
+B $853D,4,4
+N $8541 Room type $1C
+B $8541,1,1
+B $8542,4,4
+N $8546 Room type $1D
+B $8546,1,1 Nothing
+N $8547 Room type $1E
+B $8547,1,1 Nothing
+N $8548 Room type $1F
+B $8548,1,1 Nothing
+N $8549 Room type $20
+B $8549,1,1 Nothing
+N $854A Room type $21
+B $854A,1,1
+B $854B,2,2
+N $854D Room type $22
+B $854D,1,1 Nothing
+N $854E Room type $23
+B $854E,1,1
+B $854F,4,4
+N $8553 Room type $24
+B $8553,1,1 Nothing
+N $8554 Room type $25
+B $8554,1,1
+B $8555,4,4
+N $8559 Room type $26
+B $8559,1,1 Nothing
+N $855A Room type $27
+B $855A,1,1 Nothing
+N $855B Room type $28
+B $855B,1,1
+B $855C,6,6
+N $8562 Room type $29
+B $8562,1,1
+B $8563,4,4
+N $8567 Room type $2A
+B $8567,1,1 Nothing
+N $8568 Room type $2B
+B $8568,1,1 Nothing
+N $8569 Room type $2C
+B $8569,1,1 Nothing
+N $856A Room type $2D
+B $856A,1,1 Nothing
+N $856B Room type $2E
+B $856B,1,1
+B $856C,2,2
+N $856E Room type $2F
+B $856E,1,1 Nothing
+N $856F Room type $30
+B $856F,1,1 Nothing
+N $8570 Room type $31
+B $8570,1,1 Nothing
+N $8571 Room type $32
+B $8571,1,1 Nothing
+N $8572 Room type $33
+B $8572,1,1 Nothing
+N $8573 Room type $34
+B $8573,1,1 Nothing
+N $8574 Room type $35
+B $8574,1,1
+B $8575,4,4
+N $8579 Room type $36
+B $8579,1,1
+B $857A,10,8
+N $8584 Room type $37
+B $8584,1,1
+B $8585,4,4
+N $8589 Room type $38
+B $8589,1,1
+B $858A,10,8
+N $8594 Room type $39
+B $8594,1,1
+B $8595,4,4
+N $8599 Room type $3A
+B $8599,1,1 Nothing
+N $859A Room type $3B
+B $859A,1,1
+B $859B,6,6
+N $85A1 Room type $3C
+B $85A1,1,1
+B $85A2,18,8
+N $85B4 Room type $3D
+B $85B4,1,1
+B $85B5,34,8
+N $85D7 Room type $3E
+B $85D7,1,1
+B $85D8,6,6
+N $85DE Room type $3F
+B $85DE,1,1
+B $85DF,2,2
+N $85E1 Room type $40
+B $85E1,1,1 Nothing
+N $85E2 Room type $41
+B $85E2,1,1 Nothing
+N $85E3 Room type $42
+B $85E3,1,1 Nothing
+N $85E4 Room type $43
+B $85E4,1,1 Nothing
+N $85E5 Room type $44
+B $85E5,1,1 Nothing
+N $85E6 Room type $45
+B $85E6,1,1
+B $85E7,4,4
+N $85EB Room type $46
+B $85EB,1,1
+B $85EC,8,8
+N $85F4 Room type $47
+B $85F4,1,1
+B $85F5,8,8
+N $85FD Room type $48
+B $85FD,1,1
+B $85FE,6,6
+N $8604 Room type $49
+B $8604,1,1
+B $8605,8,8
+N $860D Room type $4A
+B $860D,1,1
+B $860E,20,8
+N $8622 Room type $4B
+B $8622,1,1
+B $8623,12,8
+N $862F Room type $4C
+B $862F,1,1
+B $8630,20,8
+N $8644 Room type $4D
+B $8644,1,1
+B $8645,30,8
+N $8663 Room type $4E
+B $8663,1,1
+B $8664,4,4
+N $8668 Room type $4F
+B $8668,1,1 Nothing
+N $8669 Room type $50
+B $8669,1,1 Nothing
+N $866A Room type $51
+B $866A,1,1
+B $866B,4,4
+N $866F Room type $52
+B $866F,1,1 Nothing
+N $8670 Room type $53
+B $8670,1,1 Nothing
+N $8671 Room type $54
+B $8671,1,1 Nothing
+N $8672 Room type $55
+B $8672,1,1
+B $8673,6,6
+N $8679 Room type $56
+B $8679,1,1
+B $867A,16,8
+N $868A Room type $57
+B $868A,1,1
+B $868B,6,6
+N $8691 Room type $58
+B $8691,1,1
+B $8692,8,8
+N $869A Room type $59
+B $869A,1,1 Nothing
+N $869B Room type $5A
+B $869B,1,1
+B $869C,20,8
+N $86B0 Room type $5B
+B $86B0,1,1
+B $86B1,14,8
+N $86BF Room type $5C
+B $86BF,1,1
+B $86C0,26,8
+N $86DA Room type $5D
+B $86DA,1,1
+B $86DB,16,8
+N $86EB Room type $5E
+B $86EB,1,1
+B $86EC,4,4
+N $86F0 Room type $5F
+B $86F0,1,1
+B $86F1,2,2
+N $86F3 Room type $60
+B $86F3,1,1
+B $86F4,6,6
+N $86FA Room type $61
+B $86FA,1,1 Nothing
+N $86FB Room type $62
+B $86FB,1,1 Nothing
+N $86FC Room type $63
+B $86FC,1,1 Nothing
+N $86FD Room type $64
+B $86FD,1,1
+B $86FE,2,2
+N $8700 Room type $65
+B $8700,1,1
+B $8701,14,8
+N $870F Room type $66
+B $870F,1,1
+B $8710,4,4
+N $8714 Room type $67
+B $8714,1,1
+B $8715,8,8
+N $871D Room type $68
+B $871D,1,1
+B $871E,12,8
+N $872A Room type $69
+B $872A,1,1 Nothing
+N $872B Room type $6A
+B $872B,1,1
+B $872C,6,6
+N $8732 Room type $6B
+B $8732,1,1
+B $8733,14,8
+N $8741 Room type $6C
+B $8741,1,1
+B $8742,14,8
+N $8750 Room type $6D
+B $8750,1,1
+B $8751,8,8
+N $8759 Room type $6E
+B $8759,1,1
+B $875A,8,8
+N $8762 Room type $6F
+B $8762,1,1
+B $8763,8,8
+N $876B Room type $70
+B $876B,1,1 Nothing
+N $876C Room type $71
+B $876C,1,1 Nothing
+N $876D Room type $72
+B $876D,1,1 Nothing
+N $876E Room type $73
+B $876E,1,1
+B $876F,8,8
+N $8777 Room type $74
+B $8777,1,1 Nothing
+N $8778 Room type $75
+B $8778,1,1
+B $8779,4,4
+N $877D Room type $76
+B $877D,1,1
+B $877E,16,8
+N $878E Room type $77
+B $878E,1,1
+B $878F,6,6
+N $8795 Room type $78
+B $8795,1,1 Nothing
+N $8796 Room type $79
+B $8796,1,1
+B $8797,2,2
+N $8799 Room type $7A
+B $8799,1,1
+B $879A,18,8
+N $87AC Room type $7B
+B $87AC,1,1
+B $87AD,22,8
+N $87C3 Room type $7C
+B $87C3,1,1
+B $87C4,10,8
+N $87CE Room type $7D
+B $87CE,1,1
+B $87CF,10,8
+N $87D9 Room type $7E
+B $87D9,1,1
+B $87DA,6,6
+N $87E0 Room type $7F
+B $87E0,1,1
+B $87E1,2,2
+N $87E3 Room type $80
+B $87E3,1,1
+B $87E4,4,4
+N $87E8 Room type $81
+B $87E8,1,1 Nothing
+N $87E9 Room type $82
+B $87E9,1,1 Nothing
+N $87EA Room type $83
+B $87EA,1,1 Nothing
+N $87EB Room type $84
+B $87EB,1,1 Nothing
+N $87EC Room type $85
+B $87EC,1,1
+B $87ED,4,4
+N $87F1 Room type $86
+B $87F1,1,1
+B $87F2,8,8
+N $87FA Room type $87
+B $87FA,1,1
+B $87FB,4,4
+N $87FF Room type $88
+B $87FF,1,1
+B $8800,6,6
+N $8806 Room type $89
+B $8806,1,1
+B $8807,6,6
+N $880D Room type $8A
+B $880D,1,1
+B $880E,28,8
+N $882A Room type $8B
+B $882A,1,1
+B $882B,4,4
+N $882F Room type $8C
+B $882F,1,1
+B $8830,26,8
+N $884A Room type $8D
+B $884A,1,1
+B $884B,22,8
+N $8861 Room type $8E
+B $8861,1,1
+B $8862,4,4
+N $8866 Room type $8F
+B $8866,1,1 Nothing
+N $8867 Room type $90
+B $8867,1,1 Nothing
+N $8868 Room type $91
+B $8868,1,1
+B $8869,4,4
+N $886D Room type $92
+B $886D,1,1
+B $886E,6,6
+N $8874 Room type $93
+B $8874,1,1 Nothing
+N $8875 Room type $94
+B $8875,1,1 Nothing
+N $8876 Room type $95
+B $8876,1,1
+B $8877,4,4
+N $887B Room type $96
+B $887B,1,1
+B $887C,8,8
+N $8884 Room type $97
+B $8884,1,1 Nothing
+N $8885 Room type $98
+B $8885,1,1
+B $8886,4,4
+N $888A Room type $99
+B $888A,1,1
+B $888B,4,4
+N $888F Room type $9A
+B $888F,1,1 Nothing
+N $8890 Room type $9B
+B $8890,1,1
+B $8891,4,4
+N $8895 Room type $9C
+B $8895,1,1
+B $8896,14,8
+N $88A4 Room type $9D
+B $88A4,1,1
+B $88A5,34,8
+N $88C7 Room type $9E
+B $88C7,1,1
+B $88C8,4,4
+N $88CC Room type $9F
+B $88CC,1,1
+B $88CD,6,6
+N $88D3 Room type $A0
+B $88D3,1,1 Nothing
+N $88D4 Room type $A1
+B $88D4,1,1 Nothing
+N $88D5 Room type $A2
+B $88D5,1,1 Nothing
+N $88D6 Room type $A3
+B $88D6,1,1
+B $88D7,2,2
+N $88D9 Room type $A4
+B $88D9,1,1 Nothing
+N $88DA Room type $A5
+B $88DA,1,1
+B $88DB,8,8
+N $88E3 Room type $A6
+B $88E3,1,1
+B $88E4,12,8
+N $88F0 Room type $A7
+B $88F0,1,1
+B $88F1,6,6
+N $88F7 Room type $A8
+B $88F7,1,1
+B $88F8,12,8
+N $8904 Room type $A9
+B $8904,1,1
+B $8905,4,4
+N $8909 Room type $AA
+B $8909,1,1 Nothing
+N $890A Room type $AB
+B $890A,1,1
+B $890B,6,6
+N $8911 Room type $AC
+B $8911,1,1
+B $8912,22,8
+N $8928 Room type $AD
+B $8928,1,1
+B $8929,12,8
 t $8936
 b $893A
 t $8943
@@ -566,18 +854,33 @@ b $89A2
 t $89A4
 b $89A7
 t $89BB
-b $89BF
+b $89C0 Room $8511 + $D3
+b $89C1 Room $8511 + $D4
+b $89C2
 t $89E0
 b $89E5
 t $89E8
-b $89EB
-t $89EE
-b $89F5
-t $8A15
-b $8A19
-t $8A22
-b $8A25
-t $8A2A
+b $89EB Room $8511 + $E4
+B $89EC
+b $89FA Room $8511 + $E5
+B $89FB
+b $8A13 Room $8511 + $F4
+B $8A13,1 Nothing
+b $8A14 Room $8511 + $F5
+B $8A15
+b $8A19 Room $8511 + $F6
+B $8A1A
+b $8A1C Room $8511 + $F7
+B $8A1D
+b $8A21 Room $8511 + $F8
+B $8A22
+b $8A26 Room $8511 + $F9
+B $8A26,1 Nothing
+b $8A27 Room $8511 + $FA
+B $8A27,1 Nothing
+b $8A28 Room $8511 + $FB
+B $8A28,1 Nothing
+b $8A29 Room $8511 + $FC
 b $8A2E
 c $8A79
 c $8A7E
@@ -1050,6 +1353,7 @@ c $C517
 c $C53B
 b $C547
 B $C547,1 Room number in the room block
+W $C548,2 Current room number ??
 W $C54A,2 Room block base address: $7B39
 t $C550
 b $C558

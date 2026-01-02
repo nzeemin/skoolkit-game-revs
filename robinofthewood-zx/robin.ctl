@@ -4,384 +4,378 @@ B $4000,6144,32 Pixels
 B $5800,768,32 Attributes
 @ $5B00 start
 @ $5B00 org
-b $5B00
-t $5B27
-b $5B2A
-t $5B2B
-b $5B2E
-t $5B35
-b $5B38
-t $5B39
-b $5B3C
-t $5B3D
-b $5B40
-t $5B41
-b $5B44
-t $5B45
-b $5B48
-t $5B49
-b $5B4C
-t $5B4D
-b $5B50
-t $5B51
-b $5B56
-t $5B57
-b $5B5C
-t $5B61
-b $5B64
-t $5B77
-b $5B7A
-t $5B7B
-b $5B80
-t $5B83
-b $5B86
-t $5B89
-b $5B8C
-t $5B93
-b $5B96
-t $5B9B
-b $5BA0
-t $5BA1
-b $5BA4
-t $5C1C
-b $5C1F
-t $5C42
-b $5C45
-t $5CB4
-b $5CB7
-t $5CDA
-b $5CDD
-t $5CFD
-b $5D00
-t $5D01
-b $5D05
-t $5D62
-b $5D65
-t $5DEC
-b $5DEF
-t $5DF4
-b $5DF7
-t $5E20
-b $5E23
-t $5E59
-b $5E5C
-t $5ED6
-b $5ED9
-t $5EE1
-b $5EE5
-t $5EFC
-b $5F02
-t $5F05
-b $5F0A
-t $5F50
-b $5F54
-t $5F7D
-b $5F80
-t $5FCE
-b $5FD1
-t $5FFA
-b $5FFD
-t $6001
-b $6005
-t $6008
-b $600B
-t $6013
-b $6017
-t $6045
-b $6048
-t $604D
-b $6051
-t $60D1
-b $60D6
-t $60F7
-b $60FA
-t $6132
-b $6137
-t $6143
-b $614B
-t $6159
-b $615E
-t $6165
-b $616A
-t $6172
-b $6176
-t $617E
-b $6182
-t $6188
-b $618C
-t $618D
-b $6190
-t $61A0
-b $61A3
-t $61D1
-b $61D4
-t $61D5
-b $61D8
-t $6200
-b $6203
-t $6215
-b $6218
-t $624A
-b $624E
-t $626F
-b $6272
-t $6297
-b $629A
-t $62A2
-b $62A5
-t $633E
-b $6342
-t $6380
-b $6383
-t $63BA
-b $63BD
-t $646F
-b $6472
-t $661B
-b $6623
-t $666B
-b $666E
-t $66AC
-b $66B1
-t $6707
-b $670A
-t $6796
-b $679A
-t $679F
-b $67A4
-t $67CB
-b $67CE
-t $67F7
-b $67FA
-t $686B
-b $686E
-t $688B
-b $6890
-t $6895
-b $6899
-t $68B3
-b $68B6
-t $68CF
-b $68D2
-t $6956
-b $6959
-t $69AE
-b $69B1
-t $6A2D
-b $6A30
-t $6A41
-b $6A44
-t $6AAE
-b $6AB3
-t $6AD6
-b $6AD9
-t $6B13
-b $6B16
-t $6B24
-b $6B27
-t $6B2B
-b $6B2F
-t $6BA0
-b $6BA3
-t $6BBF
-b $6BC2
-t $6BC7
-b $6BCA
-t $6BCB
-b $6BCE
-t $6BFC
-b $6BFF
-t $6D5F
-b $6D62
-t $6D67
-b $6D6A
-t $6DD0
-b $6DD3
-t $6F26
-b $6F29
-t $6F97
-b $6F9A
-t $7030
-b $7033
-t $7158
-b $715B
-t $7179
-b $717C
-t $7189
-b $718C
-t $71A0
-b $71A3
-t $71AA
-b $71AD
-t $71DA
-b $71DD
-t $71F4
-b $71F8
-t $7230
-b $7234
-t $7278
-b $727B
-t $72DC
-b $72DF
-t $72E2
-b $72E6
-t $72EA
-b $72ED
-t $731F
-b $7323
-t $7327
-b $732A
-t $732C
-b $7330
-t $7347
-b $734B
-t $734F
-b $7354
-t $7366
-b $7369
-t $736E
-b $7371
-t $73F3
-b $73F6
-t $7451
-b $7454
-t $7463
-b $7466
-t $7468
-b $746B
-t $749A
-b $749E
-t $74E2
-b $74E7
-t $74E9
-b $74EC
-t $7577
-b $758A
-t $758F
-b $7596
-t $75FC
-b $760C
-t $760D
-b $7610
-t $7612
-b $7618
-t $7619
-b $761C
-t $76A1
-b $76AF
-t $7752
-b $775E
-t $77C8
-b $77CC
-t $77CD
-b $77D0
-t $7803
-b $7809
-t $780D
-b $7814
-t $78BF
-b $78C3
-t $78D9
-b $78DD
-t $78E4
-b $78EA
-t $793F
-b $7942
-t $794F
-b $7952
-t $7957
-b $795B
-t $7982
-b $7988
-t $7990
-b $7993
-t $7999
-b $799C
-t $799F
-b $79A4
-t $79C4
-b $79C8
-t $79F3
-b $79F9
+w $5B00 Table for block addresses
+b $5BA8 Block $00
+B $5BA8,1,1
+B $5BA9,128,8 #HTML[#UDGARRAY4,,3,4,,;$5BA9-$5C28-1-32(block00)]
+b $5C39 Block $01
+B $5C39,1,1
+B $5C3A,64,8 #HTML[#UDGARRAY4,,3,4,,;$5C3A-$5C79-1-32(block01)]
+b $5C82 Block $02
+B $5C82,1,1
+B $5C83,32,8 #HTML[#UDGARRAY4,,3,4,,;$5C83-$5CA2-1-32(block02)]
+b $5CA4 Block $03
+B $5CA4,1,1
+B $5CA5,32,8 #HTML[#UDGARRAY4,,3,4,,;$5CA5-$5CC4-1-32(block03)]
+b $5CC9 Block $04
+B $5CC9,1,1
+B $5CCA,64,8 #HTML[#UDGARRAY4,,3,4,,;$5CCA-$5D09-1-32(block04)]
+b $5D12 Block $05
+B $5D12,1,1
+B $5D13,96,8 #HTML[#UDGARRAY4,,3,4,,;$5D13-$5D72-1-32(block05)]
+b $5D7F Block $06
+B $5D7F,1,1
+B $5D80,128,8 #HTML[#UDGARRAY4,,3,4,,;$5D80-$5DFF-1-32(block06)]
+b $5E10 Block $07
+B $5E10,1,1
+B $5E11,96,8 #HTML[#UDGARRAY4,,3,4,,;$5E11-$5E70-1-32(block07)]
+b $5E7D Block $08
+B $5E7D,1,1
+B $5E7E,128,8 #HTML[#UDGARRAY4,,3,4,,;$5E7E-$5EFD-1-32(block08)]
+b $5F0E Block $09
+B $5F0E,1,1
+B $5F0F,64,8 #HTML[#UDGARRAY4,,3,4,,;$5F0F-$5F4E-1-32(block09)]
+b $5F57 Block $0A
+B $5F57,1,1
+B $5F58,32,8 #HTML[#UDGARRAY4,,3,4,,;$5F58-$5F77-1-32(block0A)]
+b $5F79 Block $0B
+B $5F79,1,1
+B $5F7A,32,8 #HTML[#UDGARRAY4,,3,4,,;$5F7A-$5F99-1-32(block0B)]
+b $5F9B Block $0C
+B $5F9B,1,1
+B $5F9C,64,8 #HTML[#UDGARRAY4,,3,4,,;$5F9C-$5FDB-1-32(block0C)]
+b $5FE4 Block $0D
+B $5FE4,1,1
+B $5FE5,96,8 #HTML[#UDGARRAY4,,3,4,,;$5FE5-$6044-1-32(block0D)]
+b $6051 Block $0E
+B $6051,1,1
+B $6052,128,8 #HTML[#UDGARRAY4,,3,4,,;$6052-$60D1-1-32(block0E)]
+b $60E2 Block $0F
+B $60E2,1,1
+B $60E3,96,8 #HTML[#UDGARRAY4,,3,4,,;$60E3-$6142-1-32(block0F)]
+b $614F Block $10
+B $614F,1,1
+B $6150,96,8 #HTML[#UDGARRAY4,,3,4,,;$6150-$61AF-1-32(block10)]
+b $61B1 Block $11
+B $61B1,1,1
+B $61B2,64,8 #HTML[#UDGARRAY4,,3,4,,;$61B2-$61F1-1-32(block11)]
+b $61F3 Block $12
+B $61F3,1,1
+B $61F4,32,8 #HTML[#UDGARRAY4,,3,4,,;$61F4-$6213-1-32(block12)]
+b $6215 Block $13
+B $6215,1,1
+B $6216,32,8 #HTML[#UDGARRAY4,,3,4,,;$6216-$6235-1-32(block13)]
+b $6237 Block $14
+B $6237,1,1
+B $6238,128,8 #HTML[#UDGARRAY4,,3,4,,;$6238-$62B7-1-32(block14)]
+b $62C8 Block $15
+B $62C8,1,1
+B $62C9,96,8 #HTML[#UDGARRAY4,,3,4,,;$62C9-$6328-1-32(block15)]
+b $6339 Block $16
+B $6339,1,1
+B $633A,64,8 #HTML[#UDGARRAY4,,3,4,,;$633A-$6379-1-32(block16)]
+b $637B Block $17
+B $637B,1,1
+B $637C,128,8 #HTML[#UDGARRAY4,,3,4,,;$637C-$63FB-1-32(block17)]
+b $63FD Block $18
+B $63FD,1,1
+B $63FE,128,8 #HTML[#UDGARRAY4,,3,4,,;$63FE-$647D-1-32(block18)]
+b $647F Block $19
+B $647F,1,1
+B $6480,96,8 #HTML[#UDGARRAY4,,3,4,,;$6480-$64DF-1-32(block19)]
+b $64EC Block $1A
+B $64EC,1,1
+B $64ED,96,8 #HTML[#UDGARRAY4,,3,4,,;$64ED-$654C-1-32(block1A)]
+b $6559 Block $1B
+B $6559,1,1
+B $655A,64,8 #HTML[#UDGARRAY4,,3,4,,;$655A-$6599-1-32(block1B)]
+b $659B Block $1C
+B $659B,1,1
+B $659C,128,8 #HTML[#UDGARRAY4,,3,4,,;$659C-$661B-1-32(block1C)]
+b $662C Block $1D
+B $662C,1,1
+B $662D,128,8 #HTML[#UDGARRAY4,,3,4,,;$662D-$66AC-1-32(block1D)]
+b $66BD Block $1E
+B $66BD,1,1
+B $66BE,128,8 #HTML[#UDGARRAY4,,3,4,,;$66BE-$673D-1-32(block1E)]
+b $673F Block $1F
+B $673F,1,1
+B $6740,128,8 #HTML[#UDGARRAY4,,3,4,,;$6740-$67BF-1-32(block1F)]
+b $67C1 Block $20
+B $67C1,1,1
+B $67C2,128,8 #HTML[#UDGARRAY4,,3,4,,;$67C2-$6841-1-32(block20)]
+b $6852 Block $21
+B $6852,1,1
+B $6853,128,8 #HTML[#UDGARRAY4,,3,4,,;$6853-$68D2-1-32(block21)]
+b $68D4 Block $22
+B $68D4,1,1
+B $68D5,128,8 #HTML[#UDGARRAY4,,3,4,,;$68D5-$6954-1-32(block22)]
+b $6956 Block $23
+B $6956,1,1
+B $6957,128,8 #HTML[#UDGARRAY4,,3,4,,;$6957-$69D6-1-32(block23)]
+b $69D8 Block $24
+B $69D8,1,1
+B $69D9,128,8 #HTML[#UDGARRAY4,,3,4,,;$69D9-$6A58-1-32(block24)]
+b $6A5A Block $25
+B $6A5A,1,1
+B $6A5B,128,8 #HTML[#UDGARRAY4,,3,4,,;$6A5B-$6ADA-1-32(block25)]
+b $6ADC Block $26
+B $6ADC,1,1
+B $6ADD,128,8 #HTML[#UDGARRAY4,,3,4,,;$6ADD-$6B5C-1-32(block26)]
+b $6B6D Block $27
+B $6B6D,1,1
+B $6B6E,128,8 #HTML[#UDGARRAY4,,3,4,,;$6B6E-$6BED-1-32(block27)]
+b $6BFE Block $28
+B $6BFE,1,1
+B $6BFF,32,8 #HTML[#UDGARRAY4,,3,4,,;$6BFF-$6C1E-1-32(block28)]
+b $6C20 Block $29
+B $6C20,1,1
+B $6C21,32,8 #HTML[#UDGARRAY4,,3,4,,;$6C21-$6C40-1-32(block29)]
+b $6C42 Block $2A
+B $6C42,1,1
+B $6C43,128,8 #HTML[#UDGARRAY4,,3,4,,;$6C43-$6CC2-1-32(block2A)]
+b $6CC4 Block $2B
+B $6CC4,1,1
+B $6CC5,96,8 #HTML[#UDGARRAY4,,3,4,,;$6CC5-$6D24-1-32(block2B)]
+b $6D26 Block $2C
+B $6D26,1,1
+B $6D27,64,8 #HTML[#UDGARRAY4,,3,4,,;$6D27-$6D66-1-32(block2C)]
+b $6D68 Block $2D
+B $6D68,1,1
+B $6D69,64,8 #HTML[#UDGARRAY4,,3,4,,;$6D69-$6DA8-1-32(block2D)]
+b $6DAA Block $2E
+B $6DAA,1,1
+B $6DAB,32,8 #HTML[#UDGARRAY4,,3,4,,;$6DAB-$6DCA-1-32(block2E)]
+b $6DCC Block $2F
+B $6DCC,1,1
+B $6DCD,32,8 #HTML[#UDGARRAY4,,3,4,,;$6DCD-$6DEC-1-32(block2F)]
+b $6DEE Block $30
+B $6DEE,1,1
+B $6DEF,64,8 #HTML[#UDGARRAY4,,3,4,,;$6DEF-$6E2E-1-32(block30)]
+b $6E37 Block $31
+B $6E37,1,1
+B $6E38,64,8 #HTML[#UDGARRAY4,,3,4,,;$6E38-$6E77-1-32(block31)]
+b $6E80 Block $32
+B $6E80,1,1
+B $6E81,32,8 #HTML[#UDGARRAY4,,3,4,,;$6E81-$6EA0-1-32(block32)]
+b $6EA5 Block $33
+B $6EA5,1,1
+B $6EA6,32,8 #HTML[#UDGARRAY4,,3,4,,;$6EA6-$6EC5-1-32(block33)]
+b $6ECA Block $34
+B $6ECA,1,1
+B $6ECB,64,8 #HTML[#UDGARRAY4,,3,4,,;$6ECB-$6F0A-1-32(block34)]
+b $6F13 Block $35
+B $6F13,1,1
+B $6F14,64,8 #HTML[#UDGARRAY4,,3,4,,;$6F14-$6F53-1-32(block35)]
+b $6F5C Block $36
+B $6F5C,1,1
+B $6F5D,64,8 #HTML[#UDGARRAY4,,3,4,,;$6F5D-$6F9C-1-32(block36)]
+b $6FA5 Block $37
+B $6FA5,1,1
+B $6FA6,32,8 #HTML[#UDGARRAY4,,3,4,,;$6FA6-$6FC5-1-32(block37)]
+b $6FCA Block $38
+B $6FCA,1,1
+B $6FCB,64,8 #HTML[#UDGARRAY4,,3,4,,;$6FCB-$700A-1-32(block38)]
+b $7013 Block $39
+B $7013,1,1
+B $7014,128,8 #HTML[#UDGARRAY4,,3,4,,;$7014-$7093-1-32(block39)]
+b $70A4 Block $3A
+B $70A4,1,1
+B $70A5,96,8 #HTML[#UDGARRAY4,,3,4,,;$70A5-$7104-1-32(block3A)]
+b $7106 Block $3B
+B $7106,1,1
+B $7107,96,8 #HTML[#UDGARRAY4,,3,4,,;$7107-$7166-1-32(block3B)]
+b $7173 Block $3C
+B $7173,1,1
+B $7174,128,8 #HTML[#UDGARRAY4,,3,4,,;$7174-$71F3-1-32(block3C)]
+b $7204 Block $3D
+B $7204,1,1
+B $7205,64,8 #HTML[#UDGARRAY4,,3,4,,;$7205-$7244-1-32(block3D)]
+b $724D Block $3E
+B $724D,1,1
+B $724E,32,8 #HTML[#UDGARRAY4,,3,4,,;$724E-$726D-1-32(block3E)]
+b $726F Block $3F
+B $726F,1,1
+B $7270,64,8 #HTML[#UDGARRAY4,,3,4,,;$7270-$72AF-1-32(block3F)]
+b $72B1 Block $40
+B $72B1,1,1
+B $72B2,64,8 #HTML[#UDGARRAY4,,3,4,,;$72B2-$72F1-1-32(block40)]
+b $72F3 Block $41
+B $72F3,1,1
+B $72F4,64,8 #HTML[#UDGARRAY4,,3,4,,;$72F4-$7333-1-32(block41)]
+b $733C Block $42
+B $733C,1,1
+B $733D,64,8 #HTML[#UDGARRAY4,,3,4,,;$733D-$737C-1-32(block42)]
+b $7385 Block $43
+B $7385,1,1
+B $7386,96,8 #HTML[#UDGARRAY4,,3,4,,;$7386-$73E5-1-32(block43)]
+b $73F2 Block $44
+B $73F2,1,1
+B $73F3,64,8 #HTML[#UDGARRAY4,,3,4,,;$73F3-$7432-1-32(block44)]
+b $743B Block $45
+B $743B,1,1
+B $743C,64,8 #HTML[#UDGARRAY4,,3,4,,;$743C-$747B-1-32(block45)]
+b $7484 Block $46
+B $7484,1,1
+B $7485,64,8 #HTML[#UDGARRAY4,,3,4,,;$7485-$74C4-1-32(block46)]
+b $74CD Block $47
+B $74CD,1,1
+B $74CE,64,8 #HTML[#UDGARRAY4,,3,4,,;$74CE-$750D-1-32(block47)]
+b $7516 Block $48
+B $7516,1,1
+B $7517,96,8 #HTML[#UDGARRAY4,,3,4,,;$7517-$7576-1-32(block48)]
+b $759B Block $49
+B $759B,1,1
+B $759C,96,8 #HTML[#UDGARRAY4,,3,4,,;$759C-$75FB-1-32(block49)]
+b $7620 Block $4A
+B $7620,1,1
+B $7621,128,8 #HTML[#UDGARRAY4,,3,4,,;$7621-$76A0-1-32(block4A)]
+b $76D1 Block $4B
+B $76D1,1,1
+B $76D2,128,8 #HTML[#UDGARRAY4,,3,4,,;$76D2-$7751-1-32(block4B)]
+b $7782 Block $4C
+B $7782,1,1
+B $7783,128,8 #HTML[#UDGARRAY4,,3,4,,;$7783-$7802-1-32(block4C)]
+b $7813 Block $4D
+B $7813,1,1
+B $7814,64,8 #HTML[#UDGARRAY4,,3,4,,;$7814-$7853-1-32(block4D)]
+b $7855 Block $4E
+B $7855,1,1
+B $7856,32,8 #HTML[#UDGARRAY4,,3,4,,;$7856-$7875-1-32(block4E)]
+b $7877 Block $4F
+B $7877,1,1
+B $7878,128,8 #HTML[#UDGARRAY4,,3,4,,;$7878-$78F7-1-32(block4F)]
+b $78F9 Block $50
+B $78F9,1,1
+B $78FA,64,8 #HTML[#UDGARRAY4,,3,4,,;$78FA-$7939-1-32(block50)]
+b $7942 Block $51
+B $7942,1,1
+B $7943,64,8 #HTML[#UDGARRAY4,,3,4,,;$7943-$7982-1-32(block51)]
+b $798B Block $52
+B $798B,1,1
+B $798C,32,8 #HTML[#UDGARRAY4,,3,4,,;$798C-$79AB-1-32(block52)]
+b $79B0 Block $53
+B $79B0,1,1
+B $79B1,64,8 #HTML[#UDGARRAY4,,3,4,,;$79B1-$79F0-1-32(block53)]
+b $79F9 World map
+N $79F9 Every byte here is a room, describing a room type.
 B $79F9,,16
 b $7B39 Room type descriptors
 N $7B39 Room type $00
-B $7B3A
+B $7B39,1,1
+B $7B3A,48,8
 N $7B6A Room type $01
-B $7B6B
+B $7B6A,1,1
+B $7B6B,54,8
 N $7BA1 Room type $02
-B $7BA2
+B $7BA1,1,1
+B $7BA2,68,8
 N $7BE6 Room type $03
-B $7BE7
+B $7BE6,1,1
+B $7BE7,54,8
 N $7C1D Room type $04
-B $7C1E
+B $7C1D,1,1
+B $7C1E,50,8
 N $7C50 Room type $05
-B $7C51
+B $7C50,1,1
+B $7C51,58,8
 N $7C8B Room type $06
-B $7C8C
+B $7C8B,1,1
+B $7C8C,46,8
 N $7CBA Room type $07
-B $7CBB
+B $7CBA,1,1
+B $7CBB,44,8
 N $7CE7 Room type $08
-B $7CE8
+B $7CE7,1,1
+B $7CE8,52,8
 N $7D1C Room type $09
-B $7D1D
+B $7D1C,1,1
+B $7D1D,54,8
 N $7D53 Room type $0A
-B $7D54
+B $7D53,1,1
+B $7D54,46,8
 N $7D82 Room type $0B
-B $7D83
+B $7D82,1,1
+B $7D83,60,8
 N $7DBF Room type $0C
-B $7DC0
+B $7DBF,1,1
+B $7DC0,60,8
 N $7DFC Room type $0D
-B $7DFD
+B $7DFC,1,1
+B $7DFD,58,8
 N $7E37 Room type $0E
-B $7E38
+B $7E37,1,1
+B $7E38,56,8
 N $7E70 Room type $0F
-B $7E71
+B $7E70,1,1
+B $7E71,54,8
 N $7EA7 Room type $10
-B $7EA8
+B $7EA7,1,1
+B $7EA8,64,8
 N $7EE8 Room type $11
-B $7EE9
+B $7EE8,1,1
+B $7EE9,40,8
 N $7F11 Room type $12
-B $7F12
+B $7F11,1,1
+B $7F12,36,8
 N $7F36 Room type $13
-B $7F37
+B $7F36,1,1
+B $7F37,46,8
 N $7F65 Room type $14
-B $7F66
+B $7F65,1,1
+B $7F66,34,8
 N $7F88 Room type $15
-B $7F89
+B $7F88,1,1
+B $7F89,50,8
 N $7FBB Room type $16
-B $7FBC
+B $7FBB,1,1
+B $7FBC,52,8
 N $7FF0 Room type $17
-B $7FF1
+B $7FF0,1,1
+B $7FF1,48,8
 N $8021 Room type $18
+B $8021,1,1
 B $8022,42,8
 N $804C Room type $19
-B $804D
+B $804C,1,1
+B $804D,100,8
 N $80B1 Room type $1A
-B $80B2
+B $80B1,1,1
+B $80B2,94,8
 N $8110 Room type $1B
-B $8111
+B $8110,1,1
+B $8111,86,8
 N $8167 Room type $1C
-B $8168
+B $8167,1,1
+B $8168,78,8
 N $81B6 Room type $1D
-B $81B7
+B $81B6,1,1
+B $81B7,80,8
 N $8207 Room type $1E
-B $8207,1 Nothing
+B $8207,1,1 Nothing
 N $8208 Room type $1F
+B $8208,1,1
 B $8209,92,8
 N $8265 Room type $20
-B $8266
+B $8265,1,1
+B $8266,68,8
 N $82AA Room type $21
-B $82AB
+B $82AA,1,1
+B $82AB,62,8
 N $82E9 Room type $22
-B $82EA
+B $82E9,1,1
+B $82EA,82,8
 N $833C Room type $23
-B $833D
+B $833C,1,1
+B $833D,68,8
 N $8381 Room type $24
-B $8382
+B $8381,1,1
+B $8382,58,8
 N $83BC Room type $25
-B $83BD
+B $83BC,1,1
+B $83BD,56,8
 N $83F5 Room type $26
+B $83F5,1,1
 B $83F6,60,8
 b $8432
 b $8511 Additional room descriptors
@@ -831,57 +825,207 @@ B $8912,22,8
 N $8928 Room type $AD
 B $8928,1,1
 B $8929,12,8
-t $8936
-b $893A
-t $8943
-b $8947
-t $8953
-b $8956
-t $8957
-b $895A
-t $8969
-b $896D
-t $8974
-b $8977
-t $8978
-b $897B
-t $8989
-b $898E
-t $8997
-b $899A
-t $899F
-b $89A2
-t $89A4
-b $89A7
-t $89BB
-b $89C0 Room $8511 + $D3
-b $89C1 Room $8511 + $D4
-b $89C2
-t $89E0
-b $89E5
-t $89E8
-b $89EB Room $8511 + $E4
-B $89EC
-b $89FA Room $8511 + $E5
-B $89FB
-b $8A13 Room $8511 + $F4
-B $8A13,1 Nothing
-b $8A14 Room $8511 + $F5
-B $8A15
-b $8A19 Room $8511 + $F6
-B $8A1A
-b $8A1C Room $8511 + $F7
-B $8A1D
-b $8A21 Room $8511 + $F8
-B $8A22
-b $8A26 Room $8511 + $F9
-B $8A26,1 Nothing
-b $8A27 Room $8511 + $FA
-B $8A27,1 Nothing
-b $8A28 Room $8511 + $FB
-B $8A28,1 Nothing
-b $8A29 Room $8511 + $FC
-b $8A2E
+N $8935 Room type $AE
+B $8935,1,1
+B $8936,4,4
+N $893A Room type $AF
+B $893A,1,1 Nothing
+N $893B Room type $B0
+B $893B,1,1
+B $893C,6,6
+N $8942 Room type $B1
+B $8942,1,1
+B $8943,4,4
+N $8947 Room type $B2
+B $8947,1,1 Nothing
+N $8948 Room type $B3
+B $8948,1,1 Nothing
+N $8949 Room type $B4
+B $8949,1,1 Nothing
+N $894A Room type $B5
+B $894A,1,1 Nothing
+N $894B Room type $B6
+B $894B,1,1
+B $894C,2,2
+N $894E Room type $B7
+B $894E,1,1 Nothing
+N $894F Room type $B8
+B $894F,1,1 Nothing
+N $8950 Room type $B9
+B $8950,1,1
+B $8951,12,8
+N $895D Room type $BA
+B $895D,1,1
+B $895E,4,4
+N $8962 Room type $BB
+B $8962,1,1
+B $8963,14,8
+N $8971 Room type $BC
+B $8971,1,1 Nothing
+N $8972 Room type $BD
+B $8972,1,1 Nothing
+N $8973 Room type $BE
+B $8973,1,1
+B $8974,8,8
+N $897C Room type $BF
+B $897C,1,1
+B $897D,4,4
+N $8981 Room type $C0
+B $8981,1,1 Nothing
+N $8982 Room type $C1
+B $8982,1,1 Nothing
+N $8983 Room type $C2
+B $8983,1,1
+B $8984,4,4
+N $8988 Room type $C3
+B $8988,1,1
+B $8989,6,6
+N $898F Room type $C4
+B $898F,1,1 Nothing
+N $8990 Room type $C5
+B $8990,1,1 Nothing
+N $8991 Room type $C6
+B $8991,1,1 Nothing
+N $8992 Room type $C7
+B $8992,1,1
+B $8993,8,8
+N $899B Room type $C8
+B $899B,1,1
+B $899C,2,2
+N $899E Room type $C9
+B $899E,1,1
+B $899F,4,4
+N $89A3 Room type $CA
+B $89A3,1,1
+B $89A4,4,4
+N $89A8 Room type $CB
+B $89A8,1,1 Nothing
+N $89A9 Room type $CC
+B $89A9,1,1 Nothing
+N $89AA Room type $CD
+B $89AA,1,1 Nothing
+N $89AB Room type $CE
+B $89AB,1,1
+B $89AC,4,4
+N $89B0 Room type $CF
+B $89B0,1,1 Nothing
+N $89B1 Room type $D0
+B $89B1,1,1 Nothing
+N $89B2 Room type $D1
+B $89B2,1,1
+B $89B3,6,6
+N $89B9 Room type $D2
+B $89B9,1,1
+B $89BA,6,6
+N $89C0 Room type $D3
+B $89C0,1,1 Nothing
+N $89C1 Room type $D4
+B $89C1,1,1 Nothing
+N $89C2 Room type $D5
+B $89C2,1,1 Nothing
+N $89C3 Room type $D6
+B $89C3,1,1 Nothing
+N $89C4 Room type $D7
+B $89C4,1,1 Nothing
+N $89C5 Room type $D8
+B $89C5,1,1 Nothing
+N $89C6 Room type $D9
+B $89C6,1,1 Nothing
+N $89C7 Room type $DA
+B $89C7,1,1
+B $89C8,2,2
+N $89CA Room type $DB
+B $89CA,1,1
+B $89CB,2,2
+N $89CD Room type $DC
+B $89CD,1,1 Nothing
+N $89CE Room type $DD
+B $89CE,1,1
+B $89CF,4,4
+N $89D3 Room type $DE
+B $89D3,1,1
+B $89D4,4,4
+N $89D8 Room type $DF
+B $89D8,1,1
+B $89D9,4,4
+N $89DD Room type $E0
+B $89DD,1,1 Nothing
+N $89DE Room type $E1
+B $89DE,1,1 Nothing
+N $89DF Room type $E2
+B $89DF,1,1
+B $89E0,6,6
+N $89E6 Room type $E3
+B $89E6,1,1
+B $89E7,4,4
+N $89EB Room type $E4
+B $89EB,1,1
+B $89EC,14,8
+N $89FA Room type $E5
+B $89FA,1,1
+B $89FB,4,4
+N $89FF Room type $E6
+B $89FF,1,1 Nothing
+N $8A00 Room type $E7
+B $8A00,1,1 Nothing
+N $8A01 Room type $E8
+B $8A01,1,1 Nothing
+N $8A02 Room type $E9
+B $8A02,1,1
+B $8A03,2,2
+N $8A05 Room type $EA
+B $8A05,1,1 Nothing
+N $8A06 Room type $EB
+B $8A06,1,1
+B $8A07,2,2
+N $8A09 Room type $EC
+B $8A09,1,1 Nothing
+N $8A0A Room type $ED
+B $8A0A,1,1 Nothing
+N $8A0B Room type $EE
+B $8A0B,1,1 Nothing
+N $8A0C Room type $EF
+B $8A0C,1,1 Nothing
+N $8A0D Room type $F0
+B $8A0D,1,1 Nothing
+N $8A0E Room type $F1
+B $8A0E,1,1 Nothing
+N $8A0F Room type $F2
+B $8A0F,1,1
+B $8A10,2,2
+N $8A12 Room type $F3
+B $8A12,1,1 Nothing
+N $8A13 Room type $F4
+B $8A13,1,1 Nothing
+N $8A14 Room type $F5
+B $8A14,1,1
+B $8A15,4,4
+N $8A19 Room type $F6
+B $8A19,1,1
+B $8A1A,2,2
+N $8A1C Room type $F7
+B $8A1C,1,1
+B $8A1D,4,4
+N $8A21 Room type $F8
+B $8A21,1,1
+B $8A22,4,4
+N $8A26 Room type $F9
+B $8A26,1,1 Nothing
+N $8A27 Room type $FA
+B $8A27,1,1 Nothing
+N $8A28 Room type $FB
+B $8A28,1,1 Nothing
+N $8A29 Room type $FC
+B $8A29,1,1
+B $8A2A,4,4
+N $8A2E Room type $FD
+B $8A2E,1,1 Nothing
+N $8A2F Room type $FE
+B $8A2F,1,1
+B $8A30,6,6
+N $8A36 Room type $FF
+B $8A36,1,1 Nothing
+b $8A37
 c $8A79
 c $8A7E
 c $8A83
@@ -1124,51 +1268,31 @@ T $AD20
 B $AD28,1
 T $AD29
 b $AD31 Font
+N $AD53 #HTML[#UDGARRAY16;$AD53-$ADB2-8(font0.png)]
 B $AD53,8 "Enter" symbol
 B $AD5B,8 '%'
 B $AD63,8 '@'
+N $ADB3 #HTML[#UDGARRAY16;$ADB3-$AE32-8(font1.png)]
 B $ADB3,8 '0'
 B $ADBB,8 '1'
 B $ADC3,8 '2'
 B $ADCB,8 '3'
-t $ADE1
-b $ADE5
-t $ADF0
-b $ADF5
-t $ADFC
-b $AE00
-t $AE15
-b $AE19
-t $AE34
-b $AE37
-t $AE3C
-b $AE42
-t $AE44
-b $AE4A
-t $AE54
-b $AE5A
-t $AE5C
-b $AE62
-t $AE64
-b $AE68
-t $AE6A
-b $AE6D
-t $AE9C
-b $AEA2
-t $AEA4
-b $AEA9
-t $AEB1
-b $AEB4
-t $AEC4
-b $AECA
-t $AED9
-b $AEDD
-t $AFD2
-b $AFD5
-t $AFE3
-b $AFE6
-t $AFF5
-b $AFF8
+B $ADD3,8 '4'
+B $ADDB,8 '5'
+B $ADE3,8 '6'
+B $ADEB,8 '7'
+B $ADF3,8 '8'
+B $ADFB,8 '9'
+N $AE33 #HTML[#UDGARRAY16;$AE33-$AEB2-8(font2.png)]
+B $AE33,128,8
+N $AEB3 #HTML[#UDGARRAY11;$AEB3-$AF0A-8(font3.png)]
+B $AEB3,88,8
+N $AF0B #HTML[#UDGARRAY15;$AF0B-$AF82-8(font4.png)]
+B $AF0B
+N $AF83 #HTML[#UDGARRAY15;$AF83-$AFFA-8(font5.png)]
+B $AF83
+B $AFFB
+B $B073
 t $B00F
 b $B013
 t $B033
@@ -1293,6 +1417,7 @@ s $B866
 c $B867
 C $B8D4,3 Sound of evil laughter
 C $B8E3,3 Clear the shadow screen
+C $B8E6,3 Draw current room on the shadow screen
 b $B8FB
 c $B919
 c $BA85
@@ -1328,12 +1453,19 @@ C $BF77,2 Geme started =>
 c $BF79
 c $BF80
 C $C02A,3 Clear the shadow screen
+C $C02D,3 Draw current room on the shadow screen
 c $C055
-c $C072
-c $C0AF
+c $C072 Draw current room on the shadow screen
+C $C075,3 Set room types block base address
+C $C07B,3 World map address
+C $C07F,1 get room byte
+c $C0AF Draw given room type on the shadow screen
+C $C0AF,3 Calculate address for token sequence
+C $C0B2,1 get length
 C $C0B4,2 zero => end, return
 C $C0C8,3 Draw one object on the shadow screen
 c $C0D1
+C $C0E7,2 !!MUT-ARG!! current room byte
 c $C15E
 c $C18E
 b $C1AC
@@ -1349,12 +1481,13 @@ c $C462
 c $C4B6
 c $C4D2
 C $C4ED,3 Clear the shadow screen
+C $C4F0,3 Draw current room on the shadow screen
 c $C517
 c $C53B
 b $C547
-B $C547,1 Room number in the room block
+B $C547,1 Room type: $00..$26
 W $C548,2 Current room number ??
-W $C54A,2 Room block base address: $7B39
+W $C54A,2 Room block base address: $7B39 / $8511
 t $C550
 b $C558
 t $C559

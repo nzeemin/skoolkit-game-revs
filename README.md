@@ -78,4 +78,6 @@ Follow-up projects:
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
-Status: just started (16K .ctl file).
+Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
+
+Status: Work in progress (33K .ctl file).

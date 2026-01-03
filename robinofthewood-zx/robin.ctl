@@ -263,120 +263,120 @@ B $79F9,,16
 b $7B39 Room type descriptors
 N $7B39 Room type $00
 B $7B39,1,1
-B $7B3A,48,8
+B $7B3A,48,8 #HTML[<img src="images/roomtypes/roomt00.png" />]
 N $7B6A Room type $01
 B $7B6A,1,1
-B $7B6B,54,8
+B $7B6B,54,8 #HTML[<img src="images/roomtypes/roomt01.png" />]
 N $7BA1 Room type $02
 B $7BA1,1,1
-B $7BA2,68,8
+B $7BA2,68,8 #HTML[<img src="images/roomtypes/roomt02.png" />]
 N $7BE6 Room type $03
 B $7BE6,1,1
-B $7BE7,54,8
+B $7BE7,54,8 #HTML[<img src="images/roomtypes/roomt03.png" />]
 N $7C1D Room type $04
 B $7C1D,1,1
-B $7C1E,50,8
+B $7C1E,50,8 #HTML[<img src="images/roomtypes/roomt04.png" />]
 N $7C50 Room type $05
 B $7C50,1,1
-B $7C51,58,8
+B $7C51,58,8 #HTML[<img src="images/roomtypes/roomt05.png" />]
 N $7C8B Room type $06
 B $7C8B,1,1
-B $7C8C,46,8
+B $7C8C,46,8 #HTML[<img src="images/roomtypes/roomt06.png" />]
 N $7CBA Room type $07
 B $7CBA,1,1
-B $7CBB,44,8
+B $7CBB,44,8 #HTML[<img src="images/roomtypes/roomt07.png" />]
 N $7CE7 Room type $08
 B $7CE7,1,1
-B $7CE8,52,8
+B $7CE8,52,8 #HTML[<img src="images/roomtypes/roomt08.png" />]
 N $7D1C Room type $09
 B $7D1C,1,1
-B $7D1D,54,8
+B $7D1D,54,8 #HTML[<img src="images/roomtypes/roomt09.png" />]
 N $7D53 Room type $0A
 B $7D53,1,1
-B $7D54,46,8
+B $7D54,46,8 #HTML[<img src="images/roomtypes/roomt0A.png" />]
 N $7D82 Room type $0B
 B $7D82,1,1
-B $7D83,60,8
+B $7D83,60,8 #HTML[<img src="images/roomtypes/roomt0B.png" />]
 N $7DBF Room type $0C
 B $7DBF,1,1
-B $7DC0,60,8
+B $7DC0,60,8 #HTML[<img src="images/roomtypes/roomt0C.png" />]
 N $7DFC Room type $0D
 B $7DFC,1,1
-B $7DFD,58,8
+B $7DFD,58,8 #HTML[<img src="images/roomtypes/roomt0D.png" />]
 N $7E37 Room type $0E
 B $7E37,1,1
-B $7E38,56,8
+B $7E38,56,8 #HTML[<img src="images/roomtypes/roomt0E.png" />]
 N $7E70 Room type $0F
 B $7E70,1,1
-B $7E71,54,8
+B $7E71,54,8 #HTML[<img src="images/roomtypes/roomt0F.png" />]
 N $7EA7 Room type $10
 B $7EA7,1,1
-B $7EA8,64,8
+B $7EA8,64,8 #HTML[<img src="images/roomtypes/roomt10.png" />]
 N $7EE8 Room type $11
 B $7EE8,1,1
-B $7EE9,40,8
+B $7EE9,40,8 #HTML[<img src="images/roomtypes/roomt11.png" />]
 N $7F11 Room type $12
 B $7F11,1,1
-B $7F12,36,8
+B $7F12,36,8 #HTML[<img src="images/roomtypes/roomt12.png" />]
 N $7F36 Room type $13
 B $7F36,1,1
-B $7F37,46,8
+B $7F37,46,8 #HTML[<img src="images/roomtypes/roomt13.png" />]
 N $7F65 Room type $14
 B $7F65,1,1
-B $7F66,34,8
+B $7F66,34,8 #HTML[<img src="images/roomtypes/roomt14.png" />]
 N $7F88 Room type $15
 B $7F88,1,1
-B $7F89,50,8
+B $7F89,50,8 #HTML[<img src="images/roomtypes/roomt15.png" />]
 N $7FBB Room type $16
 B $7FBB,1,1
-B $7FBC,52,8
+B $7FBC,52,8 #HTML[<img src="images/roomtypes/roomt16.png" />]
 N $7FF0 Room type $17
 B $7FF0,1,1
-B $7FF1,48,8
+B $7FF1,48,8 #HTML[<img src="images/roomtypes/roomt17.png" />]
 N $8021 Room type $18
 B $8021,1,1
-B $8022,42,8
+B $8022,42,8 #HTML[<img src="images/roomtypes/roomt18.png" />]
 N $804C Room type $19
 B $804C,1,1
-B $804D,100,8
+B $804D,100,8 #HTML[<img src="images/roomtypes/roomt19.png" />]
 N $80B1 Room type $1A
 B $80B1,1,1
-B $80B2,94,8
+B $80B2,94,8 #HTML[<img src="images/roomtypes/roomt1A.png" />]
 N $8110 Room type $1B
 B $8110,1,1
-B $8111,86,8
+B $8111,86,8 #HTML[<img src="images/roomtypes/roomt1B.png" />]
 N $8167 Room type $1C
 B $8167,1,1
-B $8168,78,8
+B $8168,78,8 #HTML[<img src="images/roomtypes/roomt1C.png" />]
 N $81B6 Room type $1D
 B $81B6,1,1
-B $81B7,80,8
+B $81B7,80,8 #HTML[<img src="images/roomtypes/roomt1D.png" />]
 N $8207 Room type $1E
 B $8207,1,1 Nothing
 N $8208 Room type $1F
 B $8208,1,1
-B $8209,92,8
+B $8209,92,8 #HTML[<img src="images/roomtypes/roomt1F.png" />]
 N $8265 Room type $20
 B $8265,1,1
-B $8266,68,8
+B $8266,68,8 #HTML[<img src="images/roomtypes/roomt20.png" />]
 N $82AA Room type $21
 B $82AA,1,1
-B $82AB,62,8
+B $82AB,62,8 #HTML[<img src="images/roomtypes/roomt21.png" />]
 N $82E9 Room type $22
 B $82E9,1,1
-B $82EA,82,8
+B $82EA,82,8 #HTML[<img src="images/roomtypes/roomt22.png" />]
 N $833C Room type $23
 B $833C,1,1
-B $833D,68,8
+B $833D,68,8 #HTML[<img src="images/roomtypes/roomt23.png" />]
 N $8381 Room type $24
 B $8381,1,1
-B $8382,58,8
+B $8382,58,8 #HTML[<img src="images/roomtypes/roomt24.png" />]
 N $83BC Room type $25
 B $83BC,1,1
-B $83BD,56,8
+B $83BD,56,8 #HTML[<img src="images/roomtypes/roomt25.png" />]
 N $83F5 Room type $26
 B $83F5,1,1
-B $83F6,60,8
+B $83F6,60,8 #HTML[<img src="images/roomtypes/roomt26.png" />]
 b $8432
 b $8511 Additional room descriptors
 N $8511 Room type $00
@@ -1032,10 +1032,9 @@ c $8A83
 c $8A86
 c $8AAF
 c $8B57
+R $8B57 A $00.$1F
 b $8B60
-t $8B6E
-b $8B72
-t $8B73
+B $8B60,32,8
 b $8B82
 t $8BB4
 b $8BBA
@@ -1071,6 +1070,9 @@ c $8C8D Sound of evil laughter
 c $8CAA
 b $8CD4 Data for Sound of evil laughter
 B $8CD4,,12
+w $8D80
+w $8E12
+b $8E1C
 b $8E24 Robin sprites
 B $8E27,96,8 #HTML[#UDGARRAY3,,3,3,,;$8E27-$8E86-1-24(robin0)] Robin 0
 B $8E87,3
@@ -1135,90 +1137,44 @@ B $995E,96,8 #HTML[#UDGARRAY3,,3,3,,;$995E-$99BD-1-24(guardC)] Guard C
 B $99BE,3
 B $99C1,96,8 #HTML[#UDGARRAY3,,3,3,,;$99C1-$9A20-1-24(guardD)] Guard D
 B $9A21
-B $9A87
-s $9AAB
-t $9AAE
+b $9A36
+B $9A56
+B $9A76
+B $9A96
 b $9AB2
-t $9ACE
 b $9AD2
-t $9ADF
 b $9AE2
-t $9B43
 b $9B46
-t $9B56
 b $9B5C
-t $9BF8
 b $9BFB
-t $9D50
 b $9D53
-t $9DAB
 b $9DAE
-t $9DAF
 b $9DB2
-t $9DD5
 b $9DDA
-t $9DE0
 b $9DE3
-t $9ED6
 b $9ED9
-t $9EED
 b $9EF1
-t $9F0E
 b $9F11
-t $9F5E
 b $9F61
-t $9F87
 b $9F8B
-t $9FA3
 b $9FA6
-t $A0BB
-s $A0BE
-t $A0C0
-s $A0C4
-t $A0C6
-s $A0CA
-t $A0CC
-b $A0D0
-t $A0D4
-s $A0D7
-t $A0DA
-b $A0DD
-t $A11A
-s $A11E
-t $A120
-b $A124
-t $A13A
-s $A13D
-t $A140
-s $A144
-t $A147
-s $A14A
-t $A14C
-b $A14F
-t $A15A
-s $A15E
-t $A161
-s $A166
-t $A167
-b $A16F
-t $A178
-s $A17C
-t $A17F
-s $A184
-t $A185
-b $A18E
-t $A191
-s $A195
-t $A197
-b $A19A
-t $A1D8
-b $A1DB
-t $A1FD
-s $A200
-t $A203
-s $A206
-t $A209
-b $A20C
+b $A053
+b $A073
+b $A093
+b $A0B3
+b $A0D3
+b $A0F3
+b $A113
+b $A133
+b $A153
+b $A190
+b $A1B0
+b $A1D0
+b $A1F0
+b $A210
+b $A230
+b $A26D
+b $A2AA
 b $A2E7 Witch sprites
 B $A2E7,120,8 #HTML[#UDGARRAY3,,3,3,,;$A2E7-$A35E-1-24(witch0)] Witch 0
 B $A35F,120,8 #HTML[#UDGARRAY3,,3,3,,;$A35F-$A3D6-1-24(witch1)] Witch 1
@@ -1226,23 +1182,39 @@ B $A3D7,120,8 #HTML[#UDGARRAY3,,3,3,,;$A3D7-$A44E-1-24(witch2)] Witch 2
 b $A44F
 b $A45E Druid sprites
 B $A461,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A461-$A4C0-1-24(druid0)] Druid 0
-B $A4C1,3
+B $A4C1,3,3
 B $A4C4,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A4C4-$A523-1-24(druid1)] Druid 1
-B $A524,3
+B $A524,3,3
 B $A527,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A527-$A586-1-24(druid2)] Druid 2
-B $A587,3
+B $A587,3,3
 B $A58A,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A58A-$A5E9-1-24(druid3)] Druid 3
-B $A5EA,3
+B $A5EA,3,3
 B $A5ED,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A5ED-$A64C-1-24(druid4)] Druid 4
-B $A64D,3
+B $A64D,3,3
 B $A650,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A650-$A6AF-1-24(druid5)] Druid 5
-B $A6B0,3
+B $A6B0,3,3
 B $A6B3,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A6B3-$A712-1-24(druid6)] Druid 6
-B $A713,3
-t $A8BA
-b $A8BD
-t $A8D6
-b $A8D9
+B $A713,3,3
+B $A716,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A716-$A775-1-24(druid7)] Druid 7
+B $A776,3,3
+B $A779,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A779-$A7D8-1-24(druid8)] Druid 8
+B $A7D9,3,3
+B $A7DC,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A7DC-$A83B-1-24(druid8)] Druid 8
+b $A83C Bishop sprites
+B $A83F,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A83F-$A89E-1-24(bishop0)] Bishop 0
+B $A89F,3,3
+B $A8A2,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A8A2-$A901-1-24(bishop1)] Bishop 1
+B $A902,3,3
+B $A905,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A905-$A964-1-24(bishop2)] Bishop 2
+b $A965 Wild boar
+B $A965,3,3
+B $A968,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A968-$A997-1-24(boar0)] Boar 0
+B $A998,3,3
+B $A99B,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A99B-$A9CA-1-24(boar1)] Boar 1
+B $A9CB,3,3
+B $A9CE,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A9CE-$A9FD-1-24(boar2)] Boar 2
+B $A9FE,3,3
+B $AA01,48,8 #HTML[#UDGARRAY3,7,3,3,,;$AA01-$AA30-1-24(boar3)] Boar 3
 c $AA31
 b $AC13
 c $AC83

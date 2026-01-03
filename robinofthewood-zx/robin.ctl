@@ -389,12 +389,12 @@ N $8514 Room type $03
 B $8514,1,1 Nothing
 N $8515 Room type $04
 B $8515,1,1
-B $8516,2,2
+B $8516,2,2 #HTML[<img src="images/roomadds/roomadd04.png" />]
 N $8518 Room type $05
 B $8518,1,1 Nothing
 N $8519 Room type $06
 B $8519,1,1
-B $851A,2,2
+B $851A,2,2 #HTML[<img src="images/roomadds/roomadd06.png" />]
 N $851C Room type $07
 B $851C,1,1 Nothing
 N $851D Room type $08
@@ -409,10 +409,10 @@ N $8521 Room type $0C
 B $8521,1,1 Nothing
 N $8522 Room type $0D
 B $8522,1,1
-B $8523,2,2
+B $8523,2,2 #HTML[<img src="images/roomadds/roomadd0D.png" />]
 N $8525 Room type $0E
 B $8525,1,1
-B $8526,6,6
+B $8526,6,6 #HTML[<img src="images/roomadds/roomadd0E.png" />]
 N $852C Room type $0F
 B $852C,1,1 Nothing
 N $852D Room type $10
@@ -425,7 +425,7 @@ N $8530 Room type $13
 B $8530,1,1 Nothing
 N $8531 Room type $14
 B $8531,1,1
-B $8532,4,4
+B $8532,4,4 #HTML[<img src="images/roomadds/roomadd14.png" />]
 N $8536 Room type $15
 B $8536,1,1 Nothing
 N $8537 Room type $16
@@ -440,10 +440,10 @@ N $853B Room type $1A
 B $853B,1,1 Nothing
 N $853C Room type $1B
 B $853C,1,1
-B $853D,4,4
+B $853D,4,4 #HTML[<img src="images/roomadds/roomadd1B.png" />]
 N $8541 Room type $1C
 B $8541,1,1
-B $8542,4,4
+B $8542,4,4 #HTML[<img src="images/roomadds/roomadd1C.png" />]
 N $8546 Room type $1D
 B $8546,1,1 Nothing
 N $8547 Room type $1E
@@ -454,27 +454,27 @@ N $8549 Room type $20
 B $8549,1,1 Nothing
 N $854A Room type $21
 B $854A,1,1
-B $854B,2,2
+B $854B,2,2 #HTML[<img src="images/roomadds/roomadd21.png" />]
 N $854D Room type $22
 B $854D,1,1 Nothing
 N $854E Room type $23
 B $854E,1,1
-B $854F,4,4
+B $854F,4,4 #HTML[<img src="images/roomadds/roomadd23.png" />]
 N $8553 Room type $24
 B $8553,1,1 Nothing
 N $8554 Room type $25
 B $8554,1,1
-B $8555,4,4
+B $8555,4,4 #HTML[<img src="images/roomadds/roomadd25.png" />]
 N $8559 Room type $26
 B $8559,1,1 Nothing
 N $855A Room type $27
 B $855A,1,1 Nothing
 N $855B Room type $28
 B $855B,1,1
-B $855C,6,6
+B $855C,6,6 #HTML[<img src="images/roomadds/roomadd28.png" />]
 N $8562 Room type $29
 B $8562,1,1
-B $8563,4,4
+B $8563,4,4 #HTML[<img src="images/roomadds/roomadd29.png" />]
 N $8567 Room type $2A
 B $8567,1,1 Nothing
 N $8568 Room type $2B
@@ -485,7 +485,7 @@ N $856A Room type $2D
 B $856A,1,1 Nothing
 N $856B Room type $2E
 B $856B,1,1
-B $856C,2,2
+B $856C,2,2 #HTML[<img src="images/roomadds/roomadd2E.png" />]
 N $856E Room type $2F
 B $856E,1,1 Nothing
 N $856F Room type $30
@@ -500,36 +500,36 @@ N $8573 Room type $34
 B $8573,1,1 Nothing
 N $8574 Room type $35
 B $8574,1,1
-B $8575,4,4
+B $8575,4,4 #HTML[<img src="images/roomadds/roomadd35.png" />]
 N $8579 Room type $36
 B $8579,1,1
-B $857A,10,8
+B $857A,10,8 #HTML[<img src="images/roomadds/roomadd36.png" />]
 N $8584 Room type $37
 B $8584,1,1
-B $8585,4,4
+B $8585,4,4 #HTML[<img src="images/roomadds/roomadd37.png" />]
 N $8589 Room type $38
 B $8589,1,1
-B $858A,10,8
+B $858A,10,8 #HTML[<img src="images/roomadds/roomadd38.png" />]
 N $8594 Room type $39
 B $8594,1,1
-B $8595,4,4
+B $8595,4,4 #HTML[<img src="images/roomadds/roomadd39.png" />]
 N $8599 Room type $3A
 B $8599,1,1 Nothing
 N $859A Room type $3B
 B $859A,1,1
-B $859B,6,6
+B $859B,6,6 #HTML[<img src="images/roomadds/roomadd3B.png" />]
 N $85A1 Room type $3C
 B $85A1,1,1
-B $85A2,18,8
+B $85A2,18,8 #HTML[<img src="images/roomadds/roomadd3C.png" />]
 N $85B4 Room type $3D
 B $85B4,1,1
-B $85B5,34,8
+B $85B5,34,8 #HTML[<img src="images/roomadds/roomadd3D.png" />]
 N $85D7 Room type $3E
 B $85D7,1,1
-B $85D8,6,6
+B $85D8,6,6 #HTML[<img src="images/roomadds/roomadd3E.png" />]
 N $85DE Room type $3F
 B $85DE,1,1
-B $85DF,2,2
+B $85DF,2,2 #HTML[<img src="images/roomadds/roomadd3F.png" />]
 N $85E1 Room type $40
 B $85E1,1,1 Nothing
 N $85E2 Room type $41
@@ -542,41 +542,41 @@ N $85E5 Room type $44
 B $85E5,1,1 Nothing
 N $85E6 Room type $45
 B $85E6,1,1
-B $85E7,4,4
+B $85E7,4,4 #HTML[<img src="images/roomadds/roomadd45.png" />]
 N $85EB Room type $46
 B $85EB,1,1
-B $85EC,8,8
+B $85EC,8,8 #HTML[<img src="images/roomadds/roomadd46.png" />]
 N $85F4 Room type $47
 B $85F4,1,1
-B $85F5,8,8
+B $85F5,8,8 #HTML[<img src="images/roomadds/roomadd47.png" />]
 N $85FD Room type $48
 B $85FD,1,1
-B $85FE,6,6
+B $85FE,6,6 #HTML[<img src="images/roomadds/roomadd48.png" />]
 N $8604 Room type $49
 B $8604,1,1
-B $8605,8,8
+B $8605,8,8 #HTML[<img src="images/roomadds/roomadd49.png" />]
 N $860D Room type $4A
 B $860D,1,1
-B $860E,20,8
+B $860E,20,8 #HTML[<img src="images/roomadds/roomadd4A.png" />]
 N $8622 Room type $4B
 B $8622,1,1
-B $8623,12,8
+B $8623,12,8 #HTML[<img src="images/roomadds/roomadd4B.png" />]
 N $862F Room type $4C
 B $862F,1,1
-B $8630,20,8
+B $8630,20,8 #HTML[<img src="images/roomadds/roomadd4C.png" />]
 N $8644 Room type $4D
 B $8644,1,1
-B $8645,30,8
+B $8645,30,8 #HTML[<img src="images/roomadds/roomadd4D.png" />]
 N $8663 Room type $4E
 B $8663,1,1
-B $8664,4,4
+B $8664,4,4 #HTML[<img src="images/roomadds/roomadd4E.png" />]
 N $8668 Room type $4F
 B $8668,1,1 Nothing
 N $8669 Room type $50
 B $8669,1,1 Nothing
 N $866A Room type $51
 B $866A,1,1
-B $866B,4,4
+B $866B,4,4 #HTML[<img src="images/roomadds/roomadd51.png" />]
 N $866F Room type $52
 B $866F,1,1 Nothing
 N $8670 Room type $53
@@ -585,39 +585,39 @@ N $8671 Room type $54
 B $8671,1,1 Nothing
 N $8672 Room type $55
 B $8672,1,1
-B $8673,6,6
+B $8673,6,6 #HTML[<img src="images/roomadds/roomadd55.png" />]
 N $8679 Room type $56
 B $8679,1,1
-B $867A,16,8
+B $867A,16,8 #HTML[<img src="images/roomadds/roomadd56.png" />]
 N $868A Room type $57
 B $868A,1,1
-B $868B,6,6
+B $868B,6,6 #HTML[<img src="images/roomadds/roomadd57.png" />]
 N $8691 Room type $58
 B $8691,1,1
-B $8692,8,8
+B $8692,8,8 #HTML[<img src="images/roomadds/roomadd58.png" />]
 N $869A Room type $59
 B $869A,1,1 Nothing
 N $869B Room type $5A
 B $869B,1,1
-B $869C,20,8
+B $869C,20,8 #HTML[<img src="images/roomadds/roomadd5A.png" />]
 N $86B0 Room type $5B
 B $86B0,1,1
-B $86B1,14,8
+B $86B1,14,8 #HTML[<img src="images/roomadds/roomadd5B.png" />]
 N $86BF Room type $5C
 B $86BF,1,1
-B $86C0,26,8
+B $86C0,26,8 #HTML[<img src="images/roomadds/roomadd5C.png" />]
 N $86DA Room type $5D
 B $86DA,1,1
-B $86DB,16,8
+B $86DB,16,8 #HTML[<img src="images/roomadds/roomadd5D.png" />]
 N $86EB Room type $5E
 B $86EB,1,1
-B $86EC,4,4
+B $86EC,4,4 #HTML[<img src="images/roomadds/roomadd5E.png" />]
 N $86F0 Room type $5F
 B $86F0,1,1
-B $86F1,2,2
+B $86F1,2,2 #HTML[<img src="images/roomadds/roomadd5F.png" />]
 N $86F3 Room type $60
 B $86F3,1,1
-B $86F4,6,6
+B $86F4,6,6 #HTML[<img src="images/roomadds/roomadd60.png" />]
 N $86FA Room type $61
 B $86FA,1,1 Nothing
 N $86FB Room type $62
@@ -626,39 +626,39 @@ N $86FC Room type $63
 B $86FC,1,1 Nothing
 N $86FD Room type $64
 B $86FD,1,1
-B $86FE,2,2
+B $86FE,2,2 #HTML[<img src="images/roomadds/roomadd64.png" />]
 N $8700 Room type $65
 B $8700,1,1
-B $8701,14,8
+B $8701,14,8 #HTML[<img src="images/roomadds/roomadd65.png" />]
 N $870F Room type $66
 B $870F,1,1
-B $8710,4,4
+B $8710,4,4 #HTML[<img src="images/roomadds/roomadd66.png" />]
 N $8714 Room type $67
 B $8714,1,1
-B $8715,8,8
+B $8715,8,8 #HTML[<img src="images/roomadds/roomadd67.png" />]
 N $871D Room type $68
 B $871D,1,1
-B $871E,12,8
+B $871E,12,8 #HTML[<img src="images/roomadds/roomadd68.png" />]
 N $872A Room type $69
 B $872A,1,1 Nothing
 N $872B Room type $6A
 B $872B,1,1
-B $872C,6,6
+B $872C,6,6 #HTML[<img src="images/roomadds/roomadd6A.png" />]
 N $8732 Room type $6B
 B $8732,1,1
-B $8733,14,8
+B $8733,14,8 #HTML[<img src="images/roomadds/roomadd6B.png" />]
 N $8741 Room type $6C
 B $8741,1,1
-B $8742,14,8
+B $8742,14,8 #HTML[<img src="images/roomadds/roomadd6C.png" />]
 N $8750 Room type $6D
 B $8750,1,1
-B $8751,8,8
+B $8751,8,8 #HTML[<img src="images/roomadds/roomadd6D.png" />]
 N $8759 Room type $6E
 B $8759,1,1
-B $875A,8,8
+B $875A,8,8 #HTML[<img src="images/roomadds/roomadd6E.png" />]
 N $8762 Room type $6F
 B $8762,1,1
-B $8763,8,8
+B $8763,8,8 #HTML[<img src="images/roomadds/roomadd6F.png" />]
 N $876B Room type $70
 B $876B,1,1 Nothing
 N $876C Room type $71
@@ -667,44 +667,44 @@ N $876D Room type $72
 B $876D,1,1 Nothing
 N $876E Room type $73
 B $876E,1,1
-B $876F,8,8
+B $876F,8,8 #HTML[<img src="images/roomadds/roomadd73.png" />]
 N $8777 Room type $74
 B $8777,1,1 Nothing
 N $8778 Room type $75
 B $8778,1,1
-B $8779,4,4
+B $8779,4,4 #HTML[<img src="images/roomadds/roomadd75.png" />]
 N $877D Room type $76
 B $877D,1,1
-B $877E,16,8
+B $877E,16,8 #HTML[<img src="images/roomadds/roomadd76.png" />]
 N $878E Room type $77
 B $878E,1,1
-B $878F,6,6
+B $878F,6,6 #HTML[<img src="images/roomadds/roomadd77.png" />]
 N $8795 Room type $78
 B $8795,1,1 Nothing
 N $8796 Room type $79
 B $8796,1,1
-B $8797,2,2
+B $8797,2,2 #HTML[<img src="images/roomadds/roomadd79.png" />]
 N $8799 Room type $7A
 B $8799,1,1
-B $879A,18,8
+B $879A,18,8 #HTML[<img src="images/roomadds/roomadd7A.png" />]
 N $87AC Room type $7B
 B $87AC,1,1
-B $87AD,22,8
+B $87AD,22,8 #HTML[<img src="images/roomadds/roomadd7B.png" />]
 N $87C3 Room type $7C
 B $87C3,1,1
-B $87C4,10,8
+B $87C4,10,8 #HTML[<img src="images/roomadds/roomadd7C.png" />]
 N $87CE Room type $7D
 B $87CE,1,1
-B $87CF,10,8
+B $87CF,10,8 #HTML[<img src="images/roomadds/roomadd7D.png" />]
 N $87D9 Room type $7E
 B $87D9,1,1
-B $87DA,6,6
+B $87DA,6,6 #HTML[<img src="images/roomadds/roomadd7E.png" />]
 N $87E0 Room type $7F
 B $87E0,1,1
-B $87E1,2,2
+B $87E1,2,2 #HTML[<img src="images/roomadds/roomadd7F.png" />]
 N $87E3 Room type $80
 B $87E3,1,1
-B $87E4,4,4
+B $87E4,4,4 #HTML[<img src="images/roomadds/roomadd80.png" />]
 N $87E8 Room type $81
 B $87E8,1,1 Nothing
 N $87E9 Room type $82
@@ -715,79 +715,79 @@ N $87EB Room type $84
 B $87EB,1,1 Nothing
 N $87EC Room type $85
 B $87EC,1,1
-B $87ED,4,4
+B $87ED,4,4 #HTML[<img src="images/roomadds/roomadd85.png" />]
 N $87F1 Room type $86
 B $87F1,1,1
-B $87F2,8,8
+B $87F2,8,8 #HTML[<img src="images/roomadds/roomadd86.png" />]
 N $87FA Room type $87
 B $87FA,1,1
-B $87FB,4,4
+B $87FB,4,4 #HTML[<img src="images/roomadds/roomadd87.png" />]
 N $87FF Room type $88
 B $87FF,1,1
-B $8800,6,6
+B $8800,6,6 #HTML[<img src="images/roomadds/roomadd88.png" />]
 N $8806 Room type $89
 B $8806,1,1
-B $8807,6,6
+B $8807,6,6 #HTML[<img src="images/roomadds/roomadd89.png" />]
 N $880D Room type $8A
 B $880D,1,1
-B $880E,28,8
+B $880E,28,8 #HTML[<img src="images/roomadds/roomadd8A.png" />]
 N $882A Room type $8B
 B $882A,1,1
-B $882B,4,4
+B $882B,4,4 #HTML[<img src="images/roomadds/roomadd8B.png" />]
 N $882F Room type $8C
 B $882F,1,1
-B $8830,26,8
+B $8830,26,8 #HTML[<img src="images/roomadds/roomadd8C.png" />]
 N $884A Room type $8D
 B $884A,1,1
-B $884B,22,8
+B $884B,22,8 #HTML[<img src="images/roomadds/roomadd8D.png" />]
 N $8861 Room type $8E
 B $8861,1,1
-B $8862,4,4
+B $8862,4,4 #HTML[<img src="images/roomadds/roomadd8E.png" />]
 N $8866 Room type $8F
 B $8866,1,1 Nothing
 N $8867 Room type $90
 B $8867,1,1 Nothing
 N $8868 Room type $91
 B $8868,1,1
-B $8869,4,4
+B $8869,4,4 #HTML[<img src="images/roomadds/roomadd91.png" />]
 N $886D Room type $92
 B $886D,1,1
-B $886E,6,6
+B $886E,6,6 #HTML[<img src="images/roomadds/roomadd92.png" />]
 N $8874 Room type $93
 B $8874,1,1 Nothing
 N $8875 Room type $94
 B $8875,1,1 Nothing
 N $8876 Room type $95
 B $8876,1,1
-B $8877,4,4
+B $8877,4,4 #HTML[<img src="images/roomadds/roomadd95.png" />]
 N $887B Room type $96
 B $887B,1,1
-B $887C,8,8
+B $887C,8,8 #HTML[<img src="images/roomadds/roomadd96.png" />]
 N $8884 Room type $97
 B $8884,1,1 Nothing
 N $8885 Room type $98
 B $8885,1,1
-B $8886,4,4
+B $8886,4,4 #HTML[<img src="images/roomadds/roomadd98.png" />]
 N $888A Room type $99
 B $888A,1,1
-B $888B,4,4
+B $888B,4,4 #HTML[<img src="images/roomadds/roomadd99.png" />]
 N $888F Room type $9A
 B $888F,1,1 Nothing
 N $8890 Room type $9B
 B $8890,1,1
-B $8891,4,4
+B $8891,4,4 #HTML[<img src="images/roomadds/roomadd9B.png" />]
 N $8895 Room type $9C
 B $8895,1,1
-B $8896,14,8
+B $8896,14,8 #HTML[<img src="images/roomadds/roomadd9C.png" />]
 N $88A4 Room type $9D
 B $88A4,1,1
-B $88A5,34,8
+B $88A5,34,8 #HTML[<img src="images/roomadds/roomadd9D.png" />]
 N $88C7 Room type $9E
 B $88C7,1,1
-B $88C8,4,4
+B $88C8,4,4 #HTML[<img src="images/roomadds/roomadd9E.png" />]
 N $88CC Room type $9F
 B $88CC,1,1
-B $88CD,6,6
+B $88CD,6,6 #HTML[<img src="images/roomadds/roomadd9F.png" />]
 N $88D3 Room type $A0
 B $88D3,1,1 Nothing
 N $88D4 Room type $A1
@@ -796,46 +796,46 @@ N $88D5 Room type $A2
 B $88D5,1,1 Nothing
 N $88D6 Room type $A3
 B $88D6,1,1
-B $88D7,2,2
+B $88D7,2,2 #HTML[<img src="images/roomadds/roomaddA3.png" />]
 N $88D9 Room type $A4
 B $88D9,1,1 Nothing
 N $88DA Room type $A5
 B $88DA,1,1
-B $88DB,8,8
+B $88DB,8,8 #HTML[<img src="images/roomadds/roomaddA5.png" />]
 N $88E3 Room type $A6
 B $88E3,1,1
-B $88E4,12,8
+B $88E4,12,8 #HTML[<img src="images/roomadds/roomaddA6.png" />]
 N $88F0 Room type $A7
 B $88F0,1,1
-B $88F1,6,6
+B $88F1,6,6 #HTML[<img src="images/roomadds/roomaddA7.png" />]
 N $88F7 Room type $A8
 B $88F7,1,1
-B $88F8,12,8
+B $88F8,12,8 #HTML[<img src="images/roomadds/roomaddA8.png" />]
 N $8904 Room type $A9
 B $8904,1,1
-B $8905,4,4
+B $8905,4,4 #HTML[<img src="images/roomadds/roomaddA9.png" />]
 N $8909 Room type $AA
 B $8909,1,1 Nothing
 N $890A Room type $AB
 B $890A,1,1
-B $890B,6,6
+B $890B,6,6 #HTML[<img src="images/roomadds/roomaddAB.png" />]
 N $8911 Room type $AC
 B $8911,1,1
-B $8912,22,8
+B $8912,22,8 #HTML[<img src="images/roomadds/roomaddAC.png" />]
 N $8928 Room type $AD
 B $8928,1,1
-B $8929,12,8
+B $8929,12,8 #HTML[<img src="images/roomadds/roomaddAD.png" />]
 N $8935 Room type $AE
 B $8935,1,1
-B $8936,4,4
+B $8936,4,4 #HTML[<img src="images/roomadds/roomaddAE.png" />]
 N $893A Room type $AF
 B $893A,1,1 Nothing
 N $893B Room type $B0
 B $893B,1,1
-B $893C,6,6
+B $893C,6,6 #HTML[<img src="images/roomadds/roomaddB0.png" />]
 N $8942 Room type $B1
 B $8942,1,1
-B $8943,4,4
+B $8943,4,4 #HTML[<img src="images/roomadds/roomaddB1.png" />]
 N $8947 Room type $B2
 B $8947,1,1 Nothing
 N $8948 Room type $B3
@@ -846,40 +846,40 @@ N $894A Room type $B5
 B $894A,1,1 Nothing
 N $894B Room type $B6
 B $894B,1,1
-B $894C,2,2
+B $894C,2,2 #HTML[<img src="images/roomadds/roomaddB6.png" />]
 N $894E Room type $B7
 B $894E,1,1 Nothing
 N $894F Room type $B8
 B $894F,1,1 Nothing
 N $8950 Room type $B9
 B $8950,1,1
-B $8951,12,8
+B $8951,12,8 #HTML[<img src="images/roomadds/roomaddB9.png" />]
 N $895D Room type $BA
 B $895D,1,1
-B $895E,4,4
+B $895E,4,4 #HTML[<img src="images/roomadds/roomaddBA.png" />]
 N $8962 Room type $BB
 B $8962,1,1
-B $8963,14,8
+B $8963,14,8 #HTML[<img src="images/roomadds/roomaddBB.png" />]
 N $8971 Room type $BC
 B $8971,1,1 Nothing
 N $8972 Room type $BD
 B $8972,1,1 Nothing
 N $8973 Room type $BE
 B $8973,1,1
-B $8974,8,8
+B $8974,8,8 #HTML[<img src="images/roomadds/roomaddBE.png" />]
 N $897C Room type $BF
 B $897C,1,1
-B $897D,4,4
+B $897D,4,4 #HTML[<img src="images/roomadds/roomaddBF.png" />]
 N $8981 Room type $C0
 B $8981,1,1 Nothing
 N $8982 Room type $C1
 B $8982,1,1 Nothing
 N $8983 Room type $C2
 B $8983,1,1
-B $8984,4,4
+B $8984,4,4 #HTML[<img src="images/roomadds/roomaddC2.png" />]
 N $8988 Room type $C3
 B $8988,1,1
-B $8989,6,6
+B $8989,6,6 #HTML[<img src="images/roomadds/roomaddC3.png" />]
 N $898F Room type $C4
 B $898F,1,1 Nothing
 N $8990 Room type $C5
@@ -888,16 +888,16 @@ N $8991 Room type $C6
 B $8991,1,1 Nothing
 N $8992 Room type $C7
 B $8992,1,1
-B $8993,8,8
+B $8993,8,8 #HTML[<img src="images/roomadds/roomaddC7.png" />]
 N $899B Room type $C8
 B $899B,1,1
-B $899C,2,2
+B $899C,2,2 #HTML[<img src="images/roomadds/roomaddC8.png" />]
 N $899E Room type $C9
 B $899E,1,1
-B $899F,4,4
+B $899F,4,4 #HTML[<img src="images/roomadds/roomaddC9.png" />]
 N $89A3 Room type $CA
 B $89A3,1,1
-B $89A4,4,4
+B $89A4,4,4 #HTML[<img src="images/roomadds/roomaddCA.png" />]
 N $89A8 Room type $CB
 B $89A8,1,1 Nothing
 N $89A9 Room type $CC
@@ -906,17 +906,17 @@ N $89AA Room type $CD
 B $89AA,1,1 Nothing
 N $89AB Room type $CE
 B $89AB,1,1
-B $89AC,4,4
+B $89AC,4,4 #HTML[<img src="images/roomadds/roomaddCE.png" />]
 N $89B0 Room type $CF
 B $89B0,1,1 Nothing
 N $89B1 Room type $D0
 B $89B1,1,1 Nothing
 N $89B2 Room type $D1
 B $89B2,1,1
-B $89B3,6,6
+B $89B3,6,6 #HTML[<img src="images/roomadds/roomaddD1.png" />]
 N $89B9 Room type $D2
 B $89B9,1,1
-B $89BA,6,6
+B $89BA,6,6 #HTML[<img src="images/roomadds/roomaddD2.png" />]
 N $89C0 Room type $D3
 B $89C0,1,1 Nothing
 N $89C1 Room type $D4
@@ -933,37 +933,37 @@ N $89C6 Room type $D9
 B $89C6,1,1 Nothing
 N $89C7 Room type $DA
 B $89C7,1,1
-B $89C8,2,2
+B $89C8,2,2 #HTML[<img src="images/roomadds/roomaddDA.png" />]
 N $89CA Room type $DB
 B $89CA,1,1
-B $89CB,2,2
+B $89CB,2,2 #HTML[<img src="images/roomadds/roomaddDB.png" />]
 N $89CD Room type $DC
 B $89CD,1,1 Nothing
 N $89CE Room type $DD
 B $89CE,1,1
-B $89CF,4,4
+B $89CF,4,4 #HTML[<img src="images/roomadds/roomaddDD.png" />]
 N $89D3 Room type $DE
 B $89D3,1,1
-B $89D4,4,4
+B $89D4,4,4 #HTML[<img src="images/roomadds/roomaddDE.png" />]
 N $89D8 Room type $DF
 B $89D8,1,1
-B $89D9,4,4
+B $89D9,4,4 #HTML[<img src="images/roomadds/roomaddDF.png" />]
 N $89DD Room type $E0
 B $89DD,1,1 Nothing
 N $89DE Room type $E1
 B $89DE,1,1 Nothing
 N $89DF Room type $E2
 B $89DF,1,1
-B $89E0,6,6
+B $89E0,6,6 #HTML[<img src="images/roomadds/roomaddE2.png" />]
 N $89E6 Room type $E3
 B $89E6,1,1
-B $89E7,4,4
+B $89E7,4,4 #HTML[<img src="images/roomadds/roomaddE3.png" />]
 N $89EB Room type $E4
 B $89EB,1,1
-B $89EC,14,8
+B $89EC,14,8 #HTML[<img src="images/roomadds/roomaddE4.png" />]
 N $89FA Room type $E5
 B $89FA,1,1
-B $89FB,4,4
+B $89FB,4,4 #HTML[<img src="images/roomadds/roomaddE5.png" />]
 N $89FF Room type $E6
 B $89FF,1,1 Nothing
 N $8A00 Room type $E7
@@ -972,12 +972,12 @@ N $8A01 Room type $E8
 B $8A01,1,1 Nothing
 N $8A02 Room type $E9
 B $8A02,1,1
-B $8A03,2,2
+B $8A03,2,2 #HTML[<img src="images/roomadds/roomaddE9.png" />]
 N $8A05 Room type $EA
 B $8A05,1,1 Nothing
 N $8A06 Room type $EB
 B $8A06,1,1
-B $8A07,2,2
+B $8A07,2,2 #HTML[<img src="images/roomadds/roomaddEB.png" />]
 N $8A09 Room type $EC
 B $8A09,1,1 Nothing
 N $8A0A Room type $ED
@@ -992,23 +992,23 @@ N $8A0E Room type $F1
 B $8A0E,1,1 Nothing
 N $8A0F Room type $F2
 B $8A0F,1,1
-B $8A10,2,2
+B $8A10,2,2 #HTML[<img src="images/roomadds/roomaddF2.png" />]
 N $8A12 Room type $F3
 B $8A12,1,1 Nothing
 N $8A13 Room type $F4
 B $8A13,1,1 Nothing
 N $8A14 Room type $F5
 B $8A14,1,1
-B $8A15,4,4
+B $8A15,4,4 #HTML[<img src="images/roomadds/roomaddF5.png" />]
 N $8A19 Room type $F6
 B $8A19,1,1
-B $8A1A,2,2
+B $8A1A,2,2 #HTML[<img src="images/roomadds/roomaddF6.png" />]
 N $8A1C Room type $F7
 B $8A1C,1,1
-B $8A1D,4,4
+B $8A1D,4,4 #HTML[<img src="images/roomadds/roomaddF7.png" />]
 N $8A21 Room type $F8
 B $8A21,1,1
-B $8A22,4,4
+B $8A22,4,4 #HTML[<img src="images/roomadds/roomaddF8.png" />]
 N $8A26 Room type $F9
 B $8A26,1,1 Nothing
 N $8A27 Room type $FA
@@ -1017,12 +1017,12 @@ N $8A28 Room type $FB
 B $8A28,1,1 Nothing
 N $8A29 Room type $FC
 B $8A29,1,1
-B $8A2A,4,4
+B $8A2A,4,4 #HTML[<img src="images/roomadds/roomaddFC.png" />]
 N $8A2E Room type $FD
 B $8A2E,1,1 Nothing
 N $8A2F Room type $FE
 B $8A2F,1,1
-B $8A30,6,6
+B $8A30,6,6 #HTML[<img src="images/roomadds/roomaddFE.png" />]
 N $8A36 Room type $FF
 B $8A36,1,1 Nothing
 b $8A37

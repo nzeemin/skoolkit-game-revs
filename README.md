@@ -80,4 +80,4 @@ Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Work in progress (35K .ctl file).
+Status: Work in progress (41K .ctl file).

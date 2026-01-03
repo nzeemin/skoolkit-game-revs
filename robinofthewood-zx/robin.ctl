@@ -7,256 +7,256 @@ B $5800,768,32 Attributes
 w $5B00 Table for block addresses
 b $5BA8 Block $00
 B $5BA8,1,1
-B $5BA9,128,8 #HTML[#UDGARRAY4,,3,4,,;$5BA9-$5C28-1-32(block00)]
+B $5BA9,128,8 #HTML[<img src="images/blocks/block00.png" />]
 b $5C39 Block $01
 B $5C39,1,1
-B $5C3A,64,8 #HTML[#UDGARRAY4,,3,4,,;$5C3A-$5C79-1-32(block01)]
+B $5C3A,64,8 #HTML[<img src="images/blocks/block01.png" />]
 b $5C82 Block $02
 B $5C82,1,1
-B $5C83,32,8 #HTML[#UDGARRAY4,,3,4,,;$5C83-$5CA2-1-32(block02)]
+B $5C83,32,8 #HTML[<img src="images/blocks/block02.png" />]
 b $5CA4 Block $03
 B $5CA4,1,1
-B $5CA5,32,8 #HTML[#UDGARRAY4,,3,4,,;$5CA5-$5CC4-1-32(block03)]
+B $5CA5,32,8 #HTML[<img src="images/blocks/block03.png" />]
 b $5CC9 Block $04
 B $5CC9,1,1
-B $5CCA,64,8 #HTML[#UDGARRAY4,,3,4,,;$5CCA-$5D09-1-32(block04)]
+B $5CCA,64,8 #HTML[<img src="images/blocks/block04.png" />]
 b $5D12 Block $05
 B $5D12,1,1
-B $5D13,96,8 #HTML[#UDGARRAY4,,3,4,,;$5D13-$5D72-1-32(block05)]
+B $5D13,96,8 #HTML[<img src="images/blocks/block05.png" />]
 b $5D7F Block $06
 B $5D7F,1,1
-B $5D80,128,8 #HTML[#UDGARRAY4,,3,4,,;$5D80-$5DFF-1-32(block06)]
+B $5D80,128,8 #HTML[<img src="images/blocks/block06.png" />]
 b $5E10 Block $07
 B $5E10,1,1
-B $5E11,96,8 #HTML[#UDGARRAY4,,3,4,,;$5E11-$5E70-1-32(block07)]
+B $5E11,96,8 #HTML[<img src="images/blocks/block07.png" />]
 b $5E7D Block $08
 B $5E7D,1,1
-B $5E7E,128,8 #HTML[#UDGARRAY4,,3,4,,;$5E7E-$5EFD-1-32(block08)]
+B $5E7E,128,8 #HTML[<img src="images/blocks/block08.png" />]
 b $5F0E Block $09
 B $5F0E,1,1
-B $5F0F,64,8 #HTML[#UDGARRAY4,,3,4,,;$5F0F-$5F4E-1-32(block09)]
+B $5F0F,64,8 #HTML[<img src="images/blocks/block09.png" />]
 b $5F57 Block $0A
 B $5F57,1,1
-B $5F58,32,8 #HTML[#UDGARRAY4,,3,4,,;$5F58-$5F77-1-32(block0A)]
+B $5F58,32,8 #HTML[<img src="images/blocks/block0A.png" />]
 b $5F79 Block $0B
 B $5F79,1,1
-B $5F7A,32,8 #HTML[#UDGARRAY4,,3,4,,;$5F7A-$5F99-1-32(block0B)]
+B $5F7A,32,8 #HTML[<img src="images/blocks/block0B.png" />]
 b $5F9B Block $0C
 B $5F9B,1,1
-B $5F9C,64,8 #HTML[#UDGARRAY4,,3,4,,;$5F9C-$5FDB-1-32(block0C)]
+B $5F9C,64,8 #HTML[<img src="images/blocks/block0C.png" />]
 b $5FE4 Block $0D
 B $5FE4,1,1
-B $5FE5,96,8 #HTML[#UDGARRAY4,,3,4,,;$5FE5-$6044-1-32(block0D)]
+B $5FE5,96,8 #HTML[<img src="images/blocks/block0D.png" />]
 b $6051 Block $0E
 B $6051,1,1
-B $6052,128,8 #HTML[#UDGARRAY4,,3,4,,;$6052-$60D1-1-32(block0E)]
+B $6052,128,8 #HTML[<img src="images/blocks/block0E.png" />]
 b $60E2 Block $0F
 B $60E2,1,1
-B $60E3,96,8 #HTML[#UDGARRAY4,,3,4,,;$60E3-$6142-1-32(block0F)]
+B $60E3,96,8 #HTML[<img src="images/blocks/block0F.png" />]
 b $614F Block $10
 B $614F,1,1
-B $6150,96,8 #HTML[#UDGARRAY4,,3,4,,;$6150-$61AF-1-32(block10)]
+B $6150,96,8 #HTML[<img src="images/blocks/block10.png" />]
 b $61B1 Block $11
 B $61B1,1,1
-B $61B2,64,8 #HTML[#UDGARRAY4,,3,4,,;$61B2-$61F1-1-32(block11)]
+B $61B2,64,8 #HTML[<img src="images/blocks/block11.png" />]
 b $61F3 Block $12
 B $61F3,1,1
-B $61F4,32,8 #HTML[#UDGARRAY4,,3,4,,;$61F4-$6213-1-32(block12)]
+B $61F4,32,8 #HTML[<img src="images/blocks/block12.png" />]
 b $6215 Block $13
 B $6215,1,1
-B $6216,32,8 #HTML[#UDGARRAY4,,3,4,,;$6216-$6235-1-32(block13)]
+B $6216,32,8 #HTML[<img src="images/blocks/block13.png" />]
 b $6237 Block $14
 B $6237,1,1
-B $6238,128,8 #HTML[#UDGARRAY4,,3,4,,;$6238-$62B7-1-32(block14)]
+B $6238,128,8 #HTML[<img src="images/blocks/block14.png" />]
 b $62C8 Block $15
 B $62C8,1,1
-B $62C9,96,8 #HTML[#UDGARRAY4,,3,4,,;$62C9-$6328-1-32(block15)]
+B $62C9,96,8 #HTML[<img src="images/blocks/block15.png" />]
 b $6339 Block $16
 B $6339,1,1
-B $633A,64,8 #HTML[#UDGARRAY4,,3,4,,;$633A-$6379-1-32(block16)]
+B $633A,64,8 #HTML[<img src="images/blocks/block16.png" />]
 b $637B Block $17
 B $637B,1,1
-B $637C,128,8 #HTML[#UDGARRAY4,,3,4,,;$637C-$63FB-1-32(block17)]
+B $637C,128,8 #HTML[<img src="images/blocks/block17.png" />]
 b $63FD Block $18
 B $63FD,1,1
-B $63FE,128,8 #HTML[#UDGARRAY4,,3,4,,;$63FE-$647D-1-32(block18)]
+B $63FE,128,8 #HTML[<img src="images/blocks/block18.png" />]
 b $647F Block $19
 B $647F,1,1
-B $6480,96,8 #HTML[#UDGARRAY4,,3,4,,;$6480-$64DF-1-32(block19)]
+B $6480,96,8 #HTML[<img src="images/blocks/block19.png" />]
 b $64EC Block $1A
 B $64EC,1,1
-B $64ED,96,8 #HTML[#UDGARRAY4,,3,4,,;$64ED-$654C-1-32(block1A)]
+B $64ED,96,8 #HTML[<img src="images/blocks/block1A.png" />]
 b $6559 Block $1B
 B $6559,1,1
-B $655A,64,8 #HTML[#UDGARRAY4,,3,4,,;$655A-$6599-1-32(block1B)]
+B $655A,64,8 #HTML[<img src="images/blocks/block1B.png" />]
 b $659B Block $1C
 B $659B,1,1
-B $659C,128,8 #HTML[#UDGARRAY4,,3,4,,;$659C-$661B-1-32(block1C)]
+B $659C,128,8 #HTML[<img src="images/blocks/block1C.png" />]
 b $662C Block $1D
 B $662C,1,1
-B $662D,128,8 #HTML[#UDGARRAY4,,3,4,,;$662D-$66AC-1-32(block1D)]
+B $662D,128,8 #HTML[<img src="images/blocks/block1D.png" />]
 b $66BD Block $1E
 B $66BD,1,1
-B $66BE,128,8 #HTML[#UDGARRAY4,,3,4,,;$66BE-$673D-1-32(block1E)]
+B $66BE,128,8 #HTML[<img src="images/blocks/block1E.png" />]
 b $673F Block $1F
 B $673F,1,1
-B $6740,128,8 #HTML[#UDGARRAY4,,3,4,,;$6740-$67BF-1-32(block1F)]
+B $6740,128,8 #HTML[<img src="images/blocks/block1F.png" />]
 b $67C1 Block $20
 B $67C1,1,1
-B $67C2,128,8 #HTML[#UDGARRAY4,,3,4,,;$67C2-$6841-1-32(block20)]
+B $67C2,128,8 #HTML[<img src="images/blocks/block20.png" />]
 b $6852 Block $21
 B $6852,1,1
-B $6853,128,8 #HTML[#UDGARRAY4,,3,4,,;$6853-$68D2-1-32(block21)]
+B $6853,128,8 #HTML[<img src="images/blocks/block21.png" />]
 b $68D4 Block $22
 B $68D4,1,1
-B $68D5,128,8 #HTML[#UDGARRAY4,,3,4,,;$68D5-$6954-1-32(block22)]
+B $68D5,128,8 #HTML[<img src="images/blocks/block22.png" />]
 b $6956 Block $23
 B $6956,1,1
-B $6957,128,8 #HTML[#UDGARRAY4,,3,4,,;$6957-$69D6-1-32(block23)]
+B $6957,128,8 #HTML[<img src="images/blocks/block23.png" />]
 b $69D8 Block $24
 B $69D8,1,1
-B $69D9,128,8 #HTML[#UDGARRAY4,,3,4,,;$69D9-$6A58-1-32(block24)]
+B $69D9,128,8 #HTML[<img src="images/blocks/block24.png" />]
 b $6A5A Block $25
 B $6A5A,1,1
-B $6A5B,128,8 #HTML[#UDGARRAY4,,3,4,,;$6A5B-$6ADA-1-32(block25)]
+B $6A5B,128,8 #HTML[<img src="images/blocks/block25.png" />]
 b $6ADC Block $26
 B $6ADC,1,1
-B $6ADD,128,8 #HTML[#UDGARRAY4,,3,4,,;$6ADD-$6B5C-1-32(block26)]
+B $6ADD,128,8 #HTML[<img src="images/blocks/block26.png" />]
 b $6B6D Block $27
 B $6B6D,1,1
-B $6B6E,128,8 #HTML[#UDGARRAY4,,3,4,,;$6B6E-$6BED-1-32(block27)]
+B $6B6E,128,8 #HTML[<img src="images/blocks/block27.png" />]
 b $6BFE Block $28
 B $6BFE,1,1
-B $6BFF,32,8 #HTML[#UDGARRAY4,,3,4,,;$6BFF-$6C1E-1-32(block28)]
+B $6BFF,32,8 #HTML[<img src="images/blocks/block28.png" />]
 b $6C20 Block $29
 B $6C20,1,1
-B $6C21,32,8 #HTML[#UDGARRAY4,,3,4,,;$6C21-$6C40-1-32(block29)]
+B $6C21,32,8 #HTML[<img src="images/blocks/block29.png" />]
 b $6C42 Block $2A
 B $6C42,1,1
-B $6C43,128,8 #HTML[#UDGARRAY4,,3,4,,;$6C43-$6CC2-1-32(block2A)]
+B $6C43,128,8 #HTML[<img src="images/blocks/block2A.png" />]
 b $6CC4 Block $2B
 B $6CC4,1,1
-B $6CC5,96,8 #HTML[#UDGARRAY4,,3,4,,;$6CC5-$6D24-1-32(block2B)]
+B $6CC5,96,8 #HTML[<img src="images/blocks/block2B.png" />]
 b $6D26 Block $2C
 B $6D26,1,1
-B $6D27,64,8 #HTML[#UDGARRAY4,,3,4,,;$6D27-$6D66-1-32(block2C)]
+B $6D27,64,8 #HTML[<img src="images/blocks/block2C.png" />]
 b $6D68 Block $2D
 B $6D68,1,1
-B $6D69,64,8 #HTML[#UDGARRAY4,,3,4,,;$6D69-$6DA8-1-32(block2D)]
+B $6D69,64,8 #HTML[<img src="images/blocks/block2D.png" />]
 b $6DAA Block $2E
 B $6DAA,1,1
-B $6DAB,32,8 #HTML[#UDGARRAY4,,3,4,,;$6DAB-$6DCA-1-32(block2E)]
+B $6DAB,32,8 #HTML[<img src="images/blocks/block2E.png" />]
 b $6DCC Block $2F
 B $6DCC,1,1
-B $6DCD,32,8 #HTML[#UDGARRAY4,,3,4,,;$6DCD-$6DEC-1-32(block2F)]
+B $6DCD,32,8 #HTML[<img src="images/blocks/block2F.png" />]
 b $6DEE Block $30
 B $6DEE,1,1
-B $6DEF,64,8 #HTML[#UDGARRAY4,,3,4,,;$6DEF-$6E2E-1-32(block30)]
+B $6DEF,64,8 #HTML[<img src="images/blocks/block30.png" />]
 b $6E37 Block $31
 B $6E37,1,1
-B $6E38,64,8 #HTML[#UDGARRAY4,,3,4,,;$6E38-$6E77-1-32(block31)]
+B $6E38,64,8 #HTML[<img src="images/blocks/block31.png" />]
 b $6E80 Block $32
 B $6E80,1,1
-B $6E81,32,8 #HTML[#UDGARRAY4,,3,4,,;$6E81-$6EA0-1-32(block32)]
+B $6E81,32,8 #HTML[<img src="images/blocks/block32.png" />]
 b $6EA5 Block $33
 B $6EA5,1,1
-B $6EA6,32,8 #HTML[#UDGARRAY4,,3,4,,;$6EA6-$6EC5-1-32(block33)]
+B $6EA6,32,8 #HTML[<img src="images/blocks/block33.png" />]
 b $6ECA Block $34
 B $6ECA,1,1
-B $6ECB,64,8 #HTML[#UDGARRAY4,,3,4,,;$6ECB-$6F0A-1-32(block34)]
+B $6ECB,64,8 #HTML[<img src="images/blocks/block34.png" />]
 b $6F13 Block $35
 B $6F13,1,1
-B $6F14,64,8 #HTML[#UDGARRAY4,,3,4,,;$6F14-$6F53-1-32(block35)]
+B $6F14,64,8 #HTML[<img src="images/blocks/block35.png" />]
 b $6F5C Block $36
 B $6F5C,1,1
-B $6F5D,64,8 #HTML[#UDGARRAY4,,3,4,,;$6F5D-$6F9C-1-32(block36)]
+B $6F5D,64,8 #HTML[<img src="images/blocks/block36.png" />]
 b $6FA5 Block $37
 B $6FA5,1,1
-B $6FA6,32,8 #HTML[#UDGARRAY4,,3,4,,;$6FA6-$6FC5-1-32(block37)]
+B $6FA6,32,8 #HTML[<img src="images/blocks/block37.png" />]
 b $6FCA Block $38
 B $6FCA,1,1
-B $6FCB,64,8 #HTML[#UDGARRAY4,,3,4,,;$6FCB-$700A-1-32(block38)]
+B $6FCB,64,8 #HTML[<img src="images/blocks/block38.png" />]
 b $7013 Block $39
 B $7013,1,1
-B $7014,128,8 #HTML[#UDGARRAY4,,3,4,,;$7014-$7093-1-32(block39)]
+B $7014,128,8 #HTML[<img src="images/blocks/block39.png" />]
 b $70A4 Block $3A
 B $70A4,1,1
-B $70A5,96,8 #HTML[#UDGARRAY4,,3,4,,;$70A5-$7104-1-32(block3A)]
+B $70A5,96,8 #HTML[<img src="images/blocks/block3A.png" />]
 b $7106 Block $3B
 B $7106,1,1
-B $7107,96,8 #HTML[#UDGARRAY4,,3,4,,;$7107-$7166-1-32(block3B)]
+B $7107,96,8 #HTML[<img src="images/blocks/block3B.png" />]
 b $7173 Block $3C
 B $7173,1,1
-B $7174,128,8 #HTML[#UDGARRAY4,,3,4,,;$7174-$71F3-1-32(block3C)]
+B $7174,128,8 #HTML[<img src="images/blocks/block3C.png" />]
 b $7204 Block $3D
 B $7204,1,1
-B $7205,64,8 #HTML[#UDGARRAY4,,3,4,,;$7205-$7244-1-32(block3D)]
+B $7205,64,8 #HTML[<img src="images/blocks/block3D.png" />]
 b $724D Block $3E
 B $724D,1,1
-B $724E,32,8 #HTML[#UDGARRAY4,,3,4,,;$724E-$726D-1-32(block3E)]
+B $724E,32,8 #HTML[<img src="images/blocks/block3E.png" />]
 b $726F Block $3F
 B $726F,1,1
-B $7270,64,8 #HTML[#UDGARRAY4,,3,4,,;$7270-$72AF-1-32(block3F)]
+B $7270,64,8 #HTML[<img src="images/blocks/block3F.png" />]
 b $72B1 Block $40
 B $72B1,1,1
-B $72B2,64,8 #HTML[#UDGARRAY4,,3,4,,;$72B2-$72F1-1-32(block40)]
+B $72B2,64,8 #HTML[<img src="images/blocks/block40.png" />]
 b $72F3 Block $41
 B $72F3,1,1
-B $72F4,64,8 #HTML[#UDGARRAY4,,3,4,,;$72F4-$7333-1-32(block41)]
+B $72F4,64,8 #HTML[<img src="images/blocks/block41.png" />]
 b $733C Block $42
 B $733C,1,1
-B $733D,64,8 #HTML[#UDGARRAY4,,3,4,,;$733D-$737C-1-32(block42)]
+B $733D,64,8 #HTML[<img src="images/blocks/block42.png" />]
 b $7385 Block $43
 B $7385,1,1
-B $7386,96,8 #HTML[#UDGARRAY4,,3,4,,;$7386-$73E5-1-32(block43)]
+B $7386,96,8 #HTML[<img src="images/blocks/block43.png" />]
 b $73F2 Block $44
 B $73F2,1,1
-B $73F3,64,8 #HTML[#UDGARRAY4,,3,4,,;$73F3-$7432-1-32(block44)]
+B $73F3,64,8 #HTML[<img src="images/blocks/block44.png" />]
 b $743B Block $45
 B $743B,1,1
-B $743C,64,8 #HTML[#UDGARRAY4,,3,4,,;$743C-$747B-1-32(block45)]
+B $743C,64,8 #HTML[<img src="images/blocks/block45.png" />]
 b $7484 Block $46
 B $7484,1,1
-B $7485,64,8 #HTML[#UDGARRAY4,,3,4,,;$7485-$74C4-1-32(block46)]
+B $7485,64,8 #HTML[<img src="images/blocks/block46.png" />]
 b $74CD Block $47
 B $74CD,1,1
-B $74CE,64,8 #HTML[#UDGARRAY4,,3,4,,;$74CE-$750D-1-32(block47)]
+B $74CE,64,8 #HTML[<img src="images/blocks/block47.png" />]
 b $7516 Block $48
 B $7516,1,1
-B $7517,96,8 #HTML[#UDGARRAY4,,3,4,,;$7517-$7576-1-32(block48)]
+B $7517,96,8 #HTML[<img src="images/blocks/block48.png" />]
 b $759B Block $49
 B $759B,1,1
-B $759C,96,8 #HTML[#UDGARRAY4,,3,4,,;$759C-$75FB-1-32(block49)]
+B $759C,96,8 #HTML[<img src="images/blocks/block49.png" />]
 b $7620 Block $4A
 B $7620,1,1
-B $7621,128,8 #HTML[#UDGARRAY4,,3,4,,;$7621-$76A0-1-32(block4A)]
+B $7621,128,8 #HTML[<img src="images/blocks/block4A.png" />]
 b $76D1 Block $4B
 B $76D1,1,1
-B $76D2,128,8 #HTML[#UDGARRAY4,,3,4,,;$76D2-$7751-1-32(block4B)]
+B $76D2,128,8 #HTML[<img src="images/blocks/block4B.png" />]
 b $7782 Block $4C
 B $7782,1,1
-B $7783,128,8 #HTML[#UDGARRAY4,,3,4,,;$7783-$7802-1-32(block4C)]
+B $7783,128,8 #HTML[<img src="images/blocks/block4C.png" />]
 b $7813 Block $4D
 B $7813,1,1
-B $7814,64,8 #HTML[#UDGARRAY4,,3,4,,;$7814-$7853-1-32(block4D)]
+B $7814,64,8 #HTML[<img src="images/blocks/block4D.png" />]
 b $7855 Block $4E
 B $7855,1,1
-B $7856,32,8 #HTML[#UDGARRAY4,,3,4,,;$7856-$7875-1-32(block4E)]
+B $7856,32,8 #HTML[<img src="images/blocks/block4E.png" />]
 b $7877 Block $4F
 B $7877,1,1
-B $7878,128,8 #HTML[#UDGARRAY4,,3,4,,;$7878-$78F7-1-32(block4F)]
+B $7878,128,8 #HTML[<img src="images/blocks/block4F.png" />]
 b $78F9 Block $50
 B $78F9,1,1
-B $78FA,64,8 #HTML[#UDGARRAY4,,3,4,,;$78FA-$7939-1-32(block50)]
+B $78FA,64,8 #HTML[<img src="images/blocks/block50.png" />]
 b $7942 Block $51
 B $7942,1,1
-B $7943,64,8 #HTML[#UDGARRAY4,,3,4,,;$7943-$7982-1-32(block51)]
+B $7943,64,8 #HTML[<img src="images/blocks/block51.png" />]
 b $798B Block $52
 B $798B,1,1
-B $798C,32,8 #HTML[#UDGARRAY4,,3,4,,;$798C-$79AB-1-32(block52)]
+B $798C,32,8 #HTML[<img src="images/blocks/block52.png" />]
 b $79B0 Block $53
 B $79B0,1,1
-B $79B1,64,8 #HTML[#UDGARRAY4,,3,4,,;$79B1-$79F0-1-32(block53)]
+B $79B1,64,8 #HTML[<img src="images/blocks/block53.png" />]
 b $79F9 World map
 N $79F9 Every byte here is a room, describing a room type.
 B $79F9,,16

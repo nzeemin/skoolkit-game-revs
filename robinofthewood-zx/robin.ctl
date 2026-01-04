@@ -5,6 +5,7 @@ B $5800,768,32 Attributes
 @ $5B00 start
 @ $5B00 org
 w $5B00 Table for block addresses
+W $5B00,,8
 b $5BA8 Block $00
 B $5BA8,1,1
 B $5BA9,128,8 #HTML[<img src="images/blocks/block00.png" />]
@@ -1071,40 +1072,41 @@ c $8CAA
 b $8CD4 Data for Sound of evil laughter
 B $8CD4,,12
 w $8D80
+W $8D80,,8
 w $8E12
 b $8E1C
 b $8E24 Robin sprites
-B $8E27,96,8 #HTML[#UDGARRAY3,,3,3,,;$8E27-$8E86-1-24(robin0)] Robin 0
+B $8E27,96,8 #HTML[#UDGARRAY3,4,3,3,,;$8E27-$8E86-1-24(robin0)] Robin 0
 B $8E87,3
-B $8E8A,96,8 #HTML[#UDGARRAY3,,3,3,,;$8E8A-$8EE9-1-24(robin1)] Robin 1
+B $8E8A,96,8 #HTML[#UDGARRAY3,4,3,3,,;$8E8A-$8EE9-1-24(robin1)] Robin 1
 B $8EEA,3
-B $8EED,96,8 #HTML[#UDGARRAY3,,3,3,,;$8EED-$8F4C-1-24(robin2)] Robin 2
+B $8EED,96,8 #HTML[#UDGARRAY3,4,3,3,,;$8EED-$8F4C-1-24(robin2)] Robin 2
 B $8F4D,3
-B $8F50,96,8 #HTML[#UDGARRAY3,,3,3,,;$8F50-$8FAF-1-24(robin3)] Robin 3
+B $8F50,96,8 #HTML[#UDGARRAY3,4,3,3,,;$8F50-$8FAF-1-24(robin3)] Robin 3
 B $8FB0,3
-B $8FB3,96,8 #HTML[#UDGARRAY3,,3,3,,;$8FB3-$9012-1-24(robin4)] Robin 4
+B $8FB3,96,8 #HTML[#UDGARRAY3,4,3,3,,;$8FB3-$9012-1-24(robin4)] Robin 4
 B $9013,3
-B $9016,96,8 #HTML[#UDGARRAY3,,3,3,,;$9016-$9075-1-24(robin5)] Robin 5
+B $9016,96,8 #HTML[#UDGARRAY3,4,3,3,,;$9016-$9075-1-24(robin5)] Robin 5
 B $9076,3
-B $9079,96,8 #HTML[#UDGARRAY3,,3,3,,;$9079-$90D8-1-24(robin6)] Robin 6
+B $9079,96,8 #HTML[#UDGARRAY3,4,3,3,,;$9079-$90D8-1-24(robin6)] Robin 6
 B $90D9,3
-B $90DC,96,8 #HTML[#UDGARRAY3,,3,3,,;$90DC-$913B-1-24(robin7)] Robin 7
+B $90DC,96,8 #HTML[#UDGARRAY3,4,3,3,,;$90DC-$913B-1-24(robin7)] Robin 7
 B $913C,3
-B $913F,96,8 #HTML[#UDGARRAY3,,3,3,,;$913F-$919E-1-24(robin8)] Robin 8
+B $913F,96,8 #HTML[#UDGARRAY3,4,3,3,,;$913F-$919E-1-24(robin8)] Robin 8
 B $919F,3
-B $91A2,96,8 #HTML[#UDGARRAY3,,3,3,,;$91A2-$9201-1-24(robin9)] Robin 9
+B $91A2,96,8 #HTML[#UDGARRAY3,4,3,3,,;$91A2-$9201-1-24(robin9)] Robin 9
 B $9202,3
-B $9205,96,8 #HTML[#UDGARRAY3,,3,3,,;$9205-$9264-1-24(robinA)] Robin A
+B $9205,96,8 #HTML[#UDGARRAY3,4,3,3,,;$9205-$9264-1-24(robinA)] Robin A
 B $9265,3
-B $9268,96,8 #HTML[#UDGARRAY3,,3,3,,;$9268-$92C7-1-24(robinB)] Robin B
+B $9268,96,8 #HTML[#UDGARRAY3,4,3,3,,;$9268-$92C7-1-24(robinB)] Robin B
 B $92C8,3
-B $92CB,96,8 #HTML[#UDGARRAY3,,3,3,,;$92CB-$932A-1-24(robinC)] Robin C
+B $92CB,96,8 #HTML[#UDGARRAY3,4,3,3,,;$92CB-$932A-1-24(robinC)] Robin C
 B $932B,3
-B $932E,96,8 #HTML[#UDGARRAY3,,3,3,,;$932E-$938D-1-24(robinD)] Robin D
+B $932E,96,8 #HTML[#UDGARRAY3,4,3,3,,;$932E-$938D-1-24(robinD)] Robin D
 B $938E,3
-B $9391,96,8 #HTML[#UDGARRAY3,,3,3,,;$9391-$93F0-1-24(robinE)] Robin E
+B $9391,96,8 #HTML[#UDGARRAY3,4,3,3,,;$9391-$93F0-1-24(robinE)] Robin E
 B $93F1,3
-B $93F4,96,8 #HTML[#UDGARRAY3,,3,3,,;$93F4-$9453-1-24(robinF)] Robin F
+B $93F4,96,8 #HTML[#UDGARRAY3,4,3,3,,;$93F4-$9453-1-24(robinF)] Robin F
 b $9454 Guard sprites
 B $9454,3
 B $9457,96,8 #HTML[#UDGARRAY3,,3,3,,;$9457-$94B6-1-24(guard0)] Guard 0
@@ -1201,24 +1203,26 @@ B $A779,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A779-$A7D8-1-24(druid8)] Druid 8
 B $A7D9,3,3
 B $A7DC,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A7DC-$A83B-1-24(druid8)] Druid 8
 b $A83C Bishop sprites
-B $A83F,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A83F-$A89E-1-24(bishop0)] Bishop 0
+B $A83F,96,8 #HTML[#UDGARRAY3,3,3,3,,;$A83F-$A89E-1-24(bishop0)] Bishop 0
 B $A89F,3,3
-B $A8A2,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A8A2-$A901-1-24(bishop1)] Bishop 1
+B $A8A2,96,8 #HTML[#UDGARRAY3,3,3,3,,;$A8A2-$A901-1-24(bishop1)] Bishop 1
 B $A902,3,3
-B $A905,96,8 #HTML[#UDGARRAY3,7,3,3,,;$A905-$A964-1-24(bishop2)] Bishop 2
+B $A905,96,8 #HTML[#UDGARRAY3,3,3,3,,;$A905-$A964-1-24(bishop2)] Bishop 2
 b $A965 Wild boar
 B $A965,3,3
-B $A968,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A968-$A997-1-24(boar0)] Boar 0
+B $A968,48,8 #HTML[#UDGARRAY3,2,3,3,,;$A968-$A997-1-24(boar0)] Boar 0
 B $A998,3,3
-B $A99B,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A99B-$A9CA-1-24(boar1)] Boar 1
+B $A99B,48,8 #HTML[#UDGARRAY3,2,3,3,,;$A99B-$A9CA-1-24(boar1)] Boar 1
 B $A9CB,3,3
-B $A9CE,48,8 #HTML[#UDGARRAY3,7,3,3,,;$A9CE-$A9FD-1-24(boar2)] Boar 2
+B $A9CE,48,8 #HTML[#UDGARRAY3,2,3,3,,;$A9CE-$A9FD-1-24(boar2)] Boar 2
 B $A9FE,3,3
-B $AA01,48,8 #HTML[#UDGARRAY3,7,3,3,,;$AA01-$AA30-1-24(boar3)] Boar 3
+B $AA01,48,8 #HTML[#UDGARRAY3,2,3,3,,;$AA01-$AA30-1-24(boar3)] Boar 3
 c $AA31
 b $AC13
 c $AC83
 C $AC85,3 Clear the shadow screen
+C $AC98,3 Draw sword on the shadow screen
+C $ACA0,3 Draw "0 START" on the shadow screen
 t $ACC6 Menu messages
 T $ACC6
 B $ACCD,1
@@ -1245,45 +1249,36 @@ B $AD53,8 "Enter" symbol
 B $AD5B,8 '%'
 B $AD63,8 '@'
 N $ADB3 #HTML[#UDGARRAY16;$ADB3-$AE32-8(font1.png)]
-B $ADB3,8 '0'
-B $ADBB,8 '1'
-B $ADC3,8 '2'
-B $ADCB,8 '3'
-B $ADD3,8 '4'
-B $ADDB,8 '5'
-B $ADE3,8 '6'
-B $ADEB,8 '7'
-B $ADF3,8 '8'
-B $ADFB,8 '9'
+B $ADB3,8 $30 '0'
+B $ADBB,8 $31 '1'
+B $ADC3,8 $32 '2'
+B $ADCB,8 $33 '3'
+B $ADD3,8 $34 '4'
+B $ADDB,8 $35 '5'
+B $ADE3,8 $36 '6'
+B $ADEB,8 $37 '7'
+B $ADF3,8 $38 '8'
+B $ADFB,8 $39 '9'
 N $AE33 #HTML[#UDGARRAY16;$AE33-$AEB2-8(font2.png)]
-B $AE33,128,8
+B $AE33,8,8 $40
+B $AE3B,120,8
 N $AEB3 #HTML[#UDGARRAY11;$AEB3-$AF0A-8(font3.png)]
-B $AEB3,88,8
+B $AEB3,8,8 $50
+B $AEBB,80,8
 N $AF0B #HTML[#UDGARRAY15;$AF0B-$AF82-8(font4.png)]
-B $AF0B
+B $AF0B $5B
+B $AF13,112,8
 N $AF83 #HTML[#UDGARRAY15;$AF83-$AFFA-8(font5.png)]
-B $AF83
+B $AF83,8,8 $6A
+B $AF8B
 B $AFFB
-B $B073
-t $B00F
-b $B013
-t $B033
-b $B037
-t $B0BE
-b $B0C2
-t $B0EE
-b $B0F3
-t $B120
-b $B123
-t $B140
-b $B143
-t $B186
-b $B189
-t $B1AC
-b $B1B1
-t $B1BB
-b $B1C1
-t $B265
+N $B11B #HTML[#UDGARRAY3;$B11B-$B132-8(font9D.png)]
+B $B11B,8,8 $9D
+N $B133 #HTML[#UDGARRAY3;$B133-$B14A-8(fontA0.png)]
+B $B133,8,8 $A0
+B $B14B,8,8 $A3
+N $B1F3 #HTML[#UDGARRAY3;$B1F3-$B20A-8(fontB8.png)]
+B $B1F3,8,8 $B8
 s $B26A
 t $B26B
 b $B273
@@ -1299,26 +1294,24 @@ t $B3A3
 b $B3A7
 t $B41D
 b $B422
-t $B465
+b $B434
 b $B470
-t $B471
 b $B47C
 t $B489
 b $B494
 t $B4AA
 b $B4AE
 t $B4B2
-b $B4B6
-t $B4BD
+b $B4B8 Sword in Menu
+B $B4B8,1,1
+B $B4B9,3,3
+B $B4BC,1,1
+T $B4BD,3,3
 b $B4C0
-t $B4DB
 b $B4DF
-t $B4E1
 b $B4E4
-t $B4E9
 b $B4ED
-t $B50B
-b $B510
+b $B536
 t $B582
 b $B586
 b $B587 Ornament at the left side of the game screen
@@ -1620,8 +1613,17 @@ c $D5A7
 s $D617
 c $D619
 c $D631
+R $D631 A ??
+R $D631 DE ??
 C $D6B2,3 Font start address
-b $D7CE
+w $D7CE
+W $D7CE,2 $00 - sword in Menu
+W $D7DE,2 $08 - "0 START"
+W $D7E0,2 $09 - "1 KEYBOARD"
+W $D7E2,2 $0A - "2 KEMPSTON"
+W $D7E4,2 $0B - "3 INTERFACE II"
+W $D7E6,2 $0C - "4 CURSOR"
+b $D7F0
 c $D7F3
 c $D91A
 c $D944

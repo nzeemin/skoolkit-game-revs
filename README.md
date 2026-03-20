@@ -74,6 +74,7 @@ Follow-up projects:
 * [bk0011m-saboteur1](https://github.com/nzeemin/bk0011m-saboteur1)
 * [vector06c-saboteur1](https://github.com/nzeemin/vector06c-saboteur1)
 
+
 ## Robin of the Wood
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
@@ -81,3 +82,13 @@ Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
 Status: Work in progress (41K .ctl file).
+
+
+## Joe Blade
+
+Original: for ZX Spectrum, 1987, Players.
+
+Browse: TBD
+
+Status: just started (13K .ctl file).
+

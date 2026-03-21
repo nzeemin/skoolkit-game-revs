@@ -212,7 +212,9 @@ c $7AE5
 C $7AE8,3 Copy shadow screen to real screen
 C $7AEB,3 Draw Joe sprite
 b $7AF2
+B $7B08,1,1 $00 = allowed to reduce energy
 c $7B1E
+C $7B54,3 disallow to reduce energy
 b $7B73
 c $7B84
 b $7BA8
@@ -225,7 +227,8 @@ c $7CA4
 c $7CD4
 c $7CDA
 c $7CE1
-c $7CF7
+c $7CF7 Reduce energy, if allowed
+C $7CFC,3 => Reduce energy
 b $7CFF
 c $7D00
 C $7D0C,3 Address on the screen
@@ -238,6 +241,7 @@ C $7D31,3 Draw string IX
 C $7D37,3 Draw string IX
 C $7D3D,3 Draw string IX
 C $7D40,3 Set initial values
+C $7D45,3 allow to reduce energy
 c $7D64
 b $7D79
 c $7D82
@@ -466,18 +470,25 @@ c $8EB4
 C $8EBF,4 'GOOD SCORING'
 s $8EE7
 c $8F00 Game loop ??
+C $8F1E,3 Something with door ??
 C $8F2B,3 Running line of symbols
+C $8F34,3 Pause
 C $8F37,3 Running line of symbols
 C $8F3A,3 Copy shadow screen to real screen
-C $8F3E,3 Draw Joe sprite
+C $8F3E,3 Draw Joe
+C $8F41,3 Draw soldier
+C $8F44,3 Something with energy ??
 C $8F4C,2 read keyboard
 C $8F4E,2 check for '0' key
 b $8F59
 c $8F5A
 b $8F62
-c $8F78
+c $8F78 Pause
 b $8F82
-c $8F8C
+c $8F8C Draw soldier ??
+C $8F8C,3 !!MUT-ARG!! Soldier mask
+C $8F8F,3 !!MUT-ARG!! Soldier sprite
+C $8F92,3 !!MUT-ARG!! screen address
 b $8FB1
 c $8FB4
 b $8FC1
@@ -533,24 +544,32 @@ B $9390,1,1
 c $9396
 N $9396 DE = mask addr, HL = destination addr
 s $939E
-c $93A0
+c $93A0 Reduce energy
 b $93C2
-c $93DC
+c $93DC Something with energy ??
+C $93E3,3 B = D - 4
+C $93E6,1 now BC = Joe sprite addr, DE = mask addr, HL = screen addr
+C $93F0,3 => Reduce energy, if allowed
+C $93FC,3 => Reduce energy, if allowed
+C $9408,3 => Reduce energy, if allowed
+C $9414,3 => Reduce energy, if allowed
 s $9442
-c $9446
+c $9446 B = D - 4
 b $944C
 c $9456
+C $9456,3 Energy gauge initial fill
 s $945F
 c $9464
 b $9493
 c $9498 Set initial values
 C $94A1,2 set variables initial values
+C $94BD,3 Energy gauge initial fill
 b $9500
 c $9580
 s $95E1
 c $95E6
 s $9601
-c $9602
+c $9602 Something with door key ??
 s $964C
 c $9650
 C $968F,3 Draw black box
@@ -677,7 +696,8 @@ B $9EF6,10,10 ' 'x10
 b $9F00
 b $A000 "JOE BLADE" sign
 b $A200
-c $A23C
+B $A228,18,10 Energy gauge
+c $A23C Energy gauge initial fill
 s $A28B
 c $A28C
 s $A2BD

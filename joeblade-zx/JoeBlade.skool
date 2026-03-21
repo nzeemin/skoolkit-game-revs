@@ -1736,10 +1736,11 @@ c$7AE5 CALL $FDB0    ;
 ; Data block at 7AF2
 b$7AF2 DEFB $D7,$88,$25,$83,$8B,$EF,$FF,$FF
  $7AFA DEFB $FE,$BA,$2D,$65,$F7,$87,$02,$01
- $7B02 DEFB $02,$03,$04,$05,$00,$00,$00,$04
- $7B0A DEFB $02,$2E,$02,$02,$47,$08,$00,$00
- $7B12 DEFB $80,$AA,$8B,$C5,$BF,$8B,$A5,$BD
- $7B1A DEFB $8A,$25,$81,$88
+ $7B02 DEFB $02,$03,$04,$05,$00,$00
+ $7B08 DEFB $00                             ; $00 = allowed to reduce energy
+ $7B09 DEFB $04,$02,$2E,$02,$02,$47,$08,$00
+ $7B11 DEFB $00,$80,$AA,$8B,$C5,$BF,$8B,$A5
+ $7B19 DEFB $BD,$8A,$25,$81,$88
 
 ; Routine at 7B1E
 ;
@@ -1769,7 +1770,7 @@ c$7B1E LD HL,$9D2B   ;
  $7B4D LD A,$A8      ;
  $7B4F LD ($80CF),A  ;
  $7B52 LD A,$01      ;
- $7B54 LD ($7B08),A  ;
+ $7B54 LD ($7B08),A  ; disallow to reduce energy
  $7B57 CALL $923C    ;
  $7B5A LD IX,$7B73   ;
  $7B5E LD HL,$4868   ;
@@ -2027,13 +2028,13 @@ c$7CE1 LD A,($5900)  ;
  $7CF2 LDIR          ;
  $7CF4 JP $7BE8      ;
 
-; Routine at 7CF7
+; Reduce energy, if allowed
 ;
 ; Used by the routine at #R$93DC.
 c$7CF7 LD A,($7B08)  ;
  $7CFA OR A          ;
  $7CFB RET NZ        ;
- $7CFC JP $93A0      ;
+ $7CFC JP $93A0      ; => Reduce energy
 
 ; Data block at 7CFF
 b$7CFF DEFB $3E
@@ -2068,7 +2069,7 @@ c$7D00 CALL $A3CB    ;
  $7D3D CALL $9196    ; Draw string IX
  $7D40 CALL $9498    ; Set initial values
  $7D43 LD A,$00      ;
- $7D45 LD ($7B08),A  ;
+ $7D45 LD ($7B08),A  ; allow to reduce energy
  $7D48 LD HL,$0000   ;
  $7D4B LD HL,($7B06) ;
  $7D4E LD A,$D8      ;
@@ -4284,7 +4285,7 @@ c$8F00 CALL $8D3C    ;
  $8F15 CALL $A3BA    ;
  $8F18 CALL $7DCC    ;
  $8F1B CALL $8032    ;
- $8F1E CALL $9602    ;
+ $8F1E CALL $9602    ; Something with door ??
  $8F21 LD HL,$8206   ;
  $8F24 INC (HL)      ;
  $8F25 CALL $7E32    ;
@@ -4294,13 +4295,13 @@ c$8F00 CALL $8D3C    ;
  $8F2B CALL $905A    ; Running line of symbols
  $8F2E CALL $FF14    ;
  $8F31 CALL $8546    ;
- $8F34 CALL $8F78    ;
+ $8F34 CALL $8F78    ; Pause
  $8F37 CALL $905A    ; Running line of symbols
  $8F3A CALL $8C78    ; Copy shadow screen to real screen
  $8F3D NOP           ;
- $8F3E CALL $80A0    ; Draw Joe sprite
- $8F41 CALL $8F8C    ;
- $8F44 CALL $93DC    ;
+ $8F3E CALL $80A0    ; Draw Joe
+ $8F41 CALL $8F8C    ; Draw soldier
+ $8F44 CALL $93DC    ; Something with energy ??
  $8F47 NOP           ;
  $8F48 EI            ;
  $8F49 LD BC,$EFFE   ;
@@ -4326,7 +4327,7 @@ b$8F62 DEFB $00,$00,$22,$1D,$82,$21,$00,$82
  $8F6A DEFB $36,$01,$2A,$1D,$82,$ED,$4D,$00
  $8F72 DEFB $00,$00,$00,$00,$00,$00
 
-; Routine at 8F78
+; Pause
 ;
 ; Used by the routine at #R$8F00.
 c$8F78 DI            ;
@@ -4341,12 +4342,12 @@ c$8F78 DI            ;
 b$8F82 DEFB $C9,$00,$00,$00,$00,$00,$00,$00
  $8F8A DEFB $00,$00
 
-; Routine at 8F8C
+; Draw soldier ??
 ;
 ; Used by the routines at #R$7AE5 and #R$8F00.
-c$8F8C LD DE,$AF00   ;
- $8F8F LD BC,$AB00   ;
- $8F92 LD HL,$0000   ;
+c$8F8C LD DE,$AF00   ; !!MUT-ARG!! Soldier mask
+ $8F8F LD BC,$AB00   ; !!MUT-ARG!! Soldier sprite
+ $8F92 LD HL,$0000   ; !!MUT-ARG!! screen address
  $8F95 CALL $81AA    ;
  $8F98 NOP           ;
  $8F99 NOP           ;
@@ -4977,7 +4978,7 @@ c$9396 LD ($8221),HL ;
 ; Unused
 s$939E DEFS $02
 
-; Routine at 93A0
+; Reduce energy
 ;
 ; Used by the routine at #R$7CF7.
 c$93A0 LD HL,$A239   ;
@@ -5003,13 +5004,14 @@ b$93C2 DEFB $00,$00,$00,$00,$19,$19,$19,$19
  $93D2 DEFB $05,$82,$34,$7E,$FE,$40,$CA,$5E
  $93DA DEFB $93,$C9
 
-; Routine at 93DC
+; Something with energy ??
 ;
 ; Used by the routine at #R$8F00.
 c$93DC LD HL,($8221) ;
  $93DF LD DE,($8223) ;
- $93E3 CALL $9446    ;
- $93E6 LD C,E        ;
+ $93E3 CALL $9446    ; B = D - 4
+ $93E6 LD C,E        ; now BC = Joe sprite addr, DE = mask addr, HL = screen
+                     ; addr
  $93E7 LD A,$1D      ;
 *$93E9 EX AF,AF'     ;
  $93EA LD A,(DE)     ;
@@ -5018,7 +5020,7 @@ c$93DC LD HL,($8221) ;
  $93ED LD E,A        ;
  $93EE LD A,(BC)     ;
  $93EF CP E          ;
- $93F0 JP NZ,$7CF7   ;
+ $93F0 JP NZ,$7CF7   ; => Reduce energy, if allowed
  $93F3 INC BC        ;
  $93F4 LD E,C        ;
  $93F5 INC HL        ;
@@ -5028,7 +5030,7 @@ c$93DC LD HL,($8221) ;
  $93F9 LD E,A        ;
  $93FA LD A,(BC)     ;
  $93FB CP E          ;
- $93FC JP NZ,$7CF7   ;
+ $93FC JP NZ,$7CF7   ; => Reduce energy, if allowed
  $93FF INC BC        ;
  $9400 LD E,C        ;
  $9401 INC HL        ;
@@ -5038,7 +5040,7 @@ c$93DC LD HL,($8221) ;
  $9405 LD E,A        ;
  $9406 LD A,(BC)     ;
  $9407 CP E          ;
- $9408 JP NZ,$7CF7   ;
+ $9408 JP NZ,$7CF7   ; => Reduce energy, if allowed
  $940B INC BC        ;
  $940C LD E,C        ;
  $940D INC HL        ;
@@ -5048,7 +5050,7 @@ c$93DC LD HL,($8221) ;
  $9411 LD E,A        ;
  $9412 LD A,(BC)     ;
  $9413 CP E          ;
- $9414 JP NZ,$7CF7   ;
+ $9414 JP NZ,$7CF7   ; => Reduce energy, if allowed
  $9417 INC BC        ;
  $9418 LD E,C        ;
  $9419 INC HL        ;
@@ -5088,7 +5090,7 @@ c$93DC LD HL,($8221) ;
 ; Unused
 s$9442 DEFS $04
 
-; Routine at 9446
+; B = D - 4
 ;
 ; Used by the routine at #R$93DC.
 c$9446 LD B,D        ;
@@ -5105,7 +5107,7 @@ b$944C DEFB $06,$08,$1A,$77,$13,$23,$10,$FA
 ; Routine at 9456
 ;
 ; Used by the routine at #R$9328.
-c$9456 CALL $A23C    ;
+c$9456 CALL $A23C    ; Energy gauge initial fill
  $9459 LD A,$00      ;
  $945B LD ($8205),A  ;
  $945E RET           ;
@@ -5155,7 +5157,7 @@ c$9498 LD BC,$0028   ;
  $94B5 LD HL,$9D85   ;
  $94B8 LD BC,$0069   ;
  $94BB LDIR          ;
- $94BD CALL $A23C    ;
+ $94BD CALL $A23C    ; Energy gauge initial fill
  $94C0 LD BC,$0080   ;
  $94C3 LD HL,$9D80   ;
  $94C6 LD DE,$9D00   ;
@@ -5288,7 +5290,7 @@ c$95E6 LD A,($8206)  ;
 ; Unused
 s$9601 DEFS $01
 
-; Routine at 9602
+; Something with door key ??
 ;
 ; Used by the routine at #R$8F00.
 c$9602 LD A,($8202)  ;
@@ -6015,11 +6017,11 @@ b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $A210 DEFB $00,$FF,$FF,$FF,$FF,$00,$FF,$00
  $A218 DEFB $0F,$EF,$EF,$EF,$EF,$0F,$E0,$0F
  $A220 DEFB $78,$7B,$7B,$7B,$7B,$78,$03,$78
- $A228 DEFB $04,$04,$04,$04,$04,$04,$04,$04
- $A230 DEFB $04,$04,$04,$04,$04,$04,$04,$04
- $A238 DEFB $04,$04,$FF,$FF
+ $A228 DEFB $04,$04,$04,$04,$04,$04,$04,$04,$04,$04 ; {Energy gauge
+ $A232 DEFB $04,$04,$04,$04,$04,$04,$04,$04         ; }
+ $A23A DEFB $FF,$FF
 
-; Routine at A23C
+; Energy gauge initial fill
 ;
 ; Used by the routines at #R$9456 and #R$9498.
 c$A23C LD HL,$A228   ;

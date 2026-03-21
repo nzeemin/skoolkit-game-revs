@@ -953,63 +953,123 @@ N $DF80 Mask 32x32
 B $DF80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$DF80-$DFFF-1-32(mskDF80)]
 b $E000 Background sprites
 N $E000 Back 32x32 wall
+B $E000,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E000-$E07F-1-32(bckE000)]
 N $E080 Back 32x32 wall and floor
-N $E180 Back 32x32 cabinet lower part
-N $E200 Back 32x32 cabinet upper part
+B $E080,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E080-$E0FF-1-32(bckE080)]
+N $E100 Back 32x32 cabinet lower part
+B $E100,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E100-$E17F-1-32(bckE100)]
+N $E180 Back 32x32 cabinet upper part
+B $E180,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E180-$E1FF-1-32(bckE180)]
+N $E200 Back 32x32 wall left corner
+B $E200,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E200-$E27F-1-32(bckE200)]
 N $E280 Back 32x32 window with bars
+B $E280,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E280-$E2FF-1-32(bckE280)]
 N $E300 Back 32x32 window with broken bars
+B $E300,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E300-$E37F-1-32(bckE300)]
 N $E380 Back 32x32 wall and boxes
+B $E380,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E380-$E3FF-1-32(bckE380)]
 N $E400 Back 32x32 wall and boxes
+B $E400,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E400-$E47F-1-32(bckE400)]
 N $E480 Back 32x32 door upper part
+B $E480,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E480-$E4FF-1-32(bckE480)]
 N $E500 Back 32x32 door lower part
+B $E500,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E500-$E57F-1-32(bckE500)]
 N $E580 Back 32x32 toilet upper part
+B $E580,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E580-$E5FF-1-32(bckE580)]
 N $E600 Back 32x32 toilet lower part
+B $E600,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E600-$E67F-1-32(bckE600)]
 N $E680 Back 32x32 wall
+B $E680,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E680-$E6FF-1-32(bckE680)]
 N $E700 Back 32x32 wall and floor
+B $E700,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E700-$E77F-1-32(bckE700)]
 N $E780 Back 32x32 sink
+B $E780,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E780-$E7FF-1-32(bckE780)]
 N $E800 Back 32x32 mirror over sink
+B $E800,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E800-$E87F-1-32(bckE800)]
 N $E880 Back 32x32 wall and window
+B $E880,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E880-$E8FF-1-32(bckE880)]
 N $E900 Back 32x32 wall and table
+B $E900,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E900-$E97F-1-32(bckE900)]
 N $E980 Back 32x32 wall and chair
+B $E980,128,8 #HTML[#UDGARRAY4,7,4,4,,;$E980-$E9FF-1-32(bckE980)]
 N $EA00 Back 32x32 wall and picture
+B $EA00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EA00-$EA7F-1-32(bckEA00)]
 N $EA80 Back 32x32 window with bars
+B $EA80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EA80-$EAFF-1-32(bckEA80)]
 N $EB00 Back 32x32 brick wall
+B $EB00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EB00-$EB7F-1-32(bckEB00)]
 N $EB80 Back 32x32 wall with hole
+B $EB80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EB80-$EBFF-1-32(bckEB80)]
 N $EC00 Back 32x32 garden fence
+B $EC00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EC00-$EC7F-1-32(bckEC00)]
 N $EC80 Back 32x32 cell door upper part
+B $EC80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EC80-$ECFF-1-32(bckEC80)]
 N $ED00 Back 32x32 cell door lower part
+B $ED00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$ED00-$ED7F-1-32(bckED00)]
 N $ED80 Back 32x32 wall corner
+B $ED80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$ED80-$EDFF-1-32(bckED80)]
 N $EE00 Back 32x32 wall corner
+B $EE00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EE00-$EE7F-1-32(bckEE00)]
 N $EE80 Back 32x32 wall corner
+B $EE80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EE80-$EEFF-1-32(bckEE80)]
 N $EF00 Back 32x32 wall right corner and floor
+B $EF00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EF00-$EF7F-1-32(bckEF00)]
 N $EF80 Back 32x32 wall left cornet and floor
+B $EF80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$EF80-$EFFF-1-32(bckEF80)]
 N $F000 Back 32x32 tree
+B $F000,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F000-$F07F-1-32(bckF000)]
 N $F080 Back 32x32 tree
+B $F080,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F080-$F0FF-1-32(bckF080)]
 N $F100 Back 32x32 inmate behind bars upper part
+B $F100,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F100-$F17F-1-32(bckF100)]
 N $F180 Back 32x32 inmate behind bars lower part
+B $F180,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F180-$F1FF-1-32(bckF180)]
 N $F200 Back 32x32 wall right corner
+B $F200,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F200-$F27F-1-32(bckF200)]
 N $F280 Back 32x32 wall right corner and floor
+B $F280,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F280-$F2FF-1-32(bckF280)]
 N $F300 Back 32x32 wall left corner
+B $F300,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F300-$F37F-1-32(bckF300)]
 N $F380 Back 32x32 wall left corner and floor
+B $F380,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F380-$F3FF-1-32(bckF380)]
 N $F400 Back 32x32 wall upper part
+B $F400,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F400-$F47F-1-32(bckF400)]
 N $F480 Back 32x32 wall lower part
+B $F480,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F480-$F4FF-1-32(bckF480)]
 N $F500 Back 32x32 wall upper part
+B $F500,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F500-$F57F-1-32(bckF500)]
 N $F580 Back 32x32 wall lower part
+B $F580,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F580-$F5FF-1-32(bckF580)]
 N $F600 Back 32x32 empty
+B $F600,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F600-$F67F-1-32(bckF600)]
 N $F680 Back 32x32 tree upper part
+B $F680,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F680-$F6FF-1-32(bckF680)]
 N $F700 Back 32x32 tree lower part
+B $F700,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F700-$F77F-1-32(bckF700)]
 N $F780 Back 32x32
+B $F780,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F780-$F7FF-1-32(bckF780)]
 N $F800 Back 32x32 garden fence lower part
+B $F800,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F800-$F87F-1-32(bckF800)]
 N $F880 Back 32x32 tree
+B $F880,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F880-$F8FF-1-32(bckF880)]
 N $F900 Back 32x32 trash bin
+B $F900,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F900-$F97F-1-32(bckF900)]
 N $F980 Back 32x32 skull
+B $F980,128,8 #HTML[#UDGARRAY4,7,4,4,,;$F980-$F9FF-1-32(bckF980)]
 N $FA00 Back 32x32 box
+B $FA00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FA00-$FA7F-1-32(bckFA00)]
 N $FA80 Back 32x32 EXIT sign over door
+B $FA80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FA80-$FAFF-1-32(bckFA80)]
 N $FB00 Back 32x32 tree upper part
+B $FB00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FB00-$FB7F-1-32(bckFB00)]
 N $FB80 Back 32x32 tree lower part
+B $FB80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FB80-$FBFF-1-32(bckFB80)]
 N $FC00 Back 32x32 window with broken bars
+B $FC00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FC00-$FC7F-1-32(bckFC00)]
 N $FC80 Back 32x32 garden fence
+B $FC80,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FC80-$FCFF-1-32(bckFC80)]
 N $FD00 Back 32x32
+B $FD00,128,8 #HTML[#UDGARRAY4,7,4,4,,;$FD00-$FD7F-1-32(bckFD00)]
 c $FDB0
 s $FDBD
 t $FDC0

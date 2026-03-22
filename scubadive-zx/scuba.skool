@@ -234,35 +234,46 @@ b$5B00 DEFB $00                     ; ???
  $5B0A DEFB $00                     ; ???
  $5B0B DEFW $0000                   ; ???
  $5B0D DEFB $08                     ; Delay value: 7 / 5 / 3 / 1, depending on
-                                    ; Game level 1..4
+                                    ; #R$5B10
  $5B0E DEFB $08                     ; Delay value for Octopus: 10 / 8 / 6 / 4,
-                                    ; depending on Game level 1..4
+                                    ; depending on #R$5B10
  $5B0F DEFB $00                     ; ???
 @label=LEVEL
  $5B10 DEFB $04                     ; Game level selected: 1..4
  $5B11 DEFW $0000                   ; ???
- $5B13 DEFB $19                     ; Value 13 / 17 / 21 / 25, depending on
-                                    ; Game level 1..4
- $5B14 DEFB $1E                     ; Value 13 / 17 / 21 / 25, depending on
-                                    ; Game level 1..4
- $5B15 DEFB $38                     ; Value 27 / 35 / 43 / 51, depending on
-                                    ; Game level 1..4
- $5B16 DEFB $1E                     ; Value 18 / 22 / 26 / 31, depending on
-                                    ; Game level 1..4
- $5B17 DEFB $32                     ; Value 26 / 34 / 42 / 50, depending on
-                                    ; Game level 1..4
- $5B18 DEFB $14                     ; Value 5 / 10 / 15 / 20, depending on Game
-                                    ; level 1..4
- $5B19 DEFB $46                     ; Value 12 / 27 / 42 / 57, depending on
-                                    ; Game level 1..4
+ $5B13 DEFB $19                     ; Number of Meduza objects: 13 / 17 / 21 /
+                                    ; 25, depending on #R$5B10
+ $5B14 DEFB $1E                     ; Number of Round fishes: 13 / 17 / 21 /
+                                    ; 25, depending on #R$5B10
+@label=NumRecsI
+ $5B15 DEFB $38                     ; Number of 21-byte records (27 / 35 / 43 /
+                                    ; 51), group I; starts at #R$C4F0
+@label=NumRecsII
+ $5B16 DEFB $1E                     ; Number of 26-byte records (18 / 22 / 26 /
+                                    ; 31), group II; starts at (L5B1F)
+@label=NumRecsIII
+ $5B17 DEFB $32                     ; Number of 26-byte records (26 / 34 / 42 /
+                                    ; 50), group III; starts at (L5B21)
+@label=NumRecsIV
+ $5B18 DEFB $14                     ; Number of 26-byte records (5 / 10 / 15 /
+                                    ; 20), group IV; starts at (L5B23)
+@label=NumRecsV
+ $5B19 DEFB $46                     ; Number of 28-byte records (12 / 27 / 42 /
+                                    ; 57), group V
  $5B1A DEFB $02                     ; ???
  $5B1B DEFB $02                     ; ???
  $5B1C DEFB $02                     ; ???
  $5B1D DEFB $02                     ; ???
  $5B1E DEFB $05                     ; ???
- $5B1F DEFW $0000                   ; ???
- $5B21 DEFW $0000                   ; ???
- $5B23 DEFW $0000                   ; ???
+@label=RecsAddrII
+ $5B1F DEFW $0000                   ; Address of 26-byte records in block
+                                    ; #R$C4F0; NumRecsII is number of records
+@label=RecsAddrIII
+ $5B21 DEFW $0000                   ; Address of 26-byte records in block
+                                    ; #R$C4F0; NumRecsIII is number of records
+@label=RecsAddrIV
+ $5B23 DEFW $0000                   ; Address of 26-byte records in block
+                                    ; #R$C4F0; NumRecsIV is number of records
  $5B25 DEFW $0001                   ; Value 150 / 100 / 50 / 1, depending on
                                     ; Game level 1..4
  $5B27 DEFW $0000,$0000,$0000,$0000 ; {14 bytes copied from #R$DDF0 + ([Game
@@ -283,7 +294,7 @@ b$5B00 DEFB $00                     ; ???
  $5B46 DEFW $0000                   ; ??? $0000 at game start
  $5B48 DEFW $0000                   ; ??? $0000 at game start
  $5B4A DEFB $00                     ; Screen attribute, see routine #R$DA39
-@label=HSCORE
+@label=HISCORE
  $5B4B DEFW $0000                   ; High score value
 
 ; Data block at 5B4D
@@ -1154,6 +1165,7 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
  $8C7E DEFB $7F,$FC,$E0,$00,$00,$00,$00,$F0,$01,$80,$00,$00,$00,$00,$00,$02,$80,$00,$00,$00,$00             ;
  $8C93 DEFB $00,$04,$40,$00,$00,$00,$00                                                                     ; }
 ; Boat sprite; width 7 height 3 chars, 168 bytes
+@label=SprBoat
  $8C9A DEFB $02,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$02,$00,$04,$00,$00,$00,$00             ; {#HTML[#UDGARRAY7,,,7,,;$8C9A-$8D41-1-56(boat)]
  $8CAF DEFB $02,$00,$04,$00,$00,$00,$00,$02,$00,$04,$00,$00,$00,$00,$02,$00,$0F,$FF,$C0,$00,$00             ;
  $8CC4 DEFB $02,$00,$18,$87,$00,$00,$00,$02,$00,$30,$86,$00,$00,$00,$02,$00,$70,$84,$31,$8C,$00             ;
@@ -1172,6 +1184,7 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
  $8D6B DEFB $A5,$6A,$8A,$88,$08,$08,$08,$10                                                                 ; }
  $8D73 DEFB $FF
 ; Octopus phases 0..4, each phase 4*6*8 = 192 bytes
+@label=SprOctopus
  $8D74 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00                                 ; {#HTML[#UDGARRAY6,,,1,,;$8D74-$8E33-8(octopus0)]
  $8D84 DEFB $40,$40,$80,$80,$80,$C0,$40,$60,$00,$02,$02,$02,$06,$1C,$30,$E0                                 ; 0
  $8D94 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00                                 ;
@@ -1335,6 +1348,7 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
                                                                                                             ; $31
  $92C4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; Scuba diver sprites; width 2 height 2 chars
+@label=SprDiver0
  $92CC DEFB $01,$80,$03,$D0,$03,$D0,$01,$90,$07,$A0,$07,$C0,$07,$80,$07,$80                                 ; {#HTML[#UDGARRAY2,,,2,,;$92CC-$92EB-1-16(diver0a)]
  $92DC DEFB $06,$80,$03,$00,$01,$00,$01,$80,$02,$80,$02,$80,$04,$80,$04,$80                                 ; }
  $92EC DEFB $01,$80,$03,$D0,$03,$D0,$01,$90,$07,$A0,$07,$C0,$07,$80,$07,$80                                 ; {#HTML[#UDGARRAY2,,,2,,;$92EC-$930B-1-16(diver0b)]
@@ -1464,6 +1478,7 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
  $9AAC DEFB $0C,$00,$1E,$00,$1E,$00,$0E,$80,$03,$C0,$43,$C0,$27,$E0,$1B,$E0                                 ; {#HTML[#UDGARRAY2,,,2,,;$9AAC-$9ACB-1-16(diverFd)]
  $9ABC DEFB $01,$40,$00,$C0,$00,$40,$00,$60,$00,$30,$00,$38,$00,$18,$00,$10                                 ; }
 ; Scuba diver drowned, 4 sprites
+@label=SprDrowned
  $9ACC DEFB $00,$C0,$01,$E0,$01,$E0,$00,$C8,$07,$90,$07,$F8,$07,$C0,$07,$00                                 ; {#HTML[#UDGARRAY2,,,2,,;$9ACC-$9AEB-1-16(drowned0)]
  $9ADC DEFB $07,$00,$03,$80,$01,$80,$00,$C0,$00,$60,$00,$50,$00,$28,$00,$20                                 ; }
  $9AEC DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$F0,$03,$F0,$07,$F6                                 ; {#HTML[#UDGARRAY2,,,2,,;$9AEC-$9B0B-1-16(drowned1)]
@@ -1473,6 +1488,7 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
  $9B2C DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$0F,$80,$0F,$C0,$6F,$E0                                 ; {#HTML[#UDGARRAY2,,,2,,;$9B2C-$9B4B-1-16(drowned3)]
  $9B3C DEFB $FE,$70,$F6,$1C,$64,$0B,$0C,$04,$14,$02,$00,$00,$00,$00,$00,$00                                 ; }
 ; Explosion sprites
+@label=SprExplosion
  $9B4C DEFB $01,$00,$01,$00,$10,$10,$08,$20,$00,$00,$20,$08,$00,$00,$00,$00                                 ; {#HTML[#UDGARRAY2,,,2,,;$9B4C-$9B6B-1-16(explosion0)]
  $9B5C DEFB $38,$38,$00,$00,$20,$08,$00,$00,$08,$20,$10,$10,$01,$00,$01,$00                                 ; }
  $9B6C DEFB $00,$00,$00,$00,$05,$20,$21,$04,$11,$08,$00,$00,$00,$00,$C0,$03                                 ; {#HTML[#UDGARRAY2,,,2,,;$9B6C-$9B8B-1-16(explosion1)]
@@ -1646,6 +1662,7 @@ c$9C56 DI             ;
 ; Used by the routines at #R$9D56 and #R$9D79.
 ;
 ; I:HL H = row, L = column 0..31
+; O:HL address in #R$AC5D table
 @label=MiniMap_Addr
 c$9D40 LD A,L        ;
  $9D41 LD L,$00      ;
@@ -1658,7 +1675,7 @@ c$9D40 LD A,L        ;
  $9D4F OR L          ;
  $9D50 LD L,A        ; HL := H * 32 + L
  $9D51 LD DE,$AC5D   ;
- $9D54 ADD HL,DE     ; HL := $AC5D + H * 32 + L
+ $9D54 ADD HL,DE     ; HL := #R$AC5D + H * 32 + L
  $9D55 RET           ;
 
 ; Calculate address in the mini-map (#R$AC5D table) and Get
@@ -1754,7 +1771,7 @@ c$9D84 LD HL,($5B05) ;
  $9D9B ADD HL,DE     ; x1509
  $9D9C LD DE,$0029   ;
  $9D9F ADD HL,DE     ;
- $9DA0 LD ($5B05),HL ; ($5B05) := ($5B05) * 1509 + 41
+ $9DA0 LD ($5B05),HL ; (#R$5B05) := (#R$5B05) * 1509 + 41
  $9DA3 RET           ;
 
 ; Data block at 9DA4
@@ -2229,7 +2246,7 @@ c$A03B LD ($5B01),HL ;
  $A0F1 DEC H         ;
  $A0F2 JP $A03E      ;
 
-; Calculate address ???
+; Calculate address in relief block
 ;
 ; Used by the routine at #R$A129.
 ;
@@ -2268,11 +2285,12 @@ c$A0F5 PUSH HL       ; {HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
  $A127 ADD HL,DE     ;
  $A128 RET           ;
 
-; Calculate address and Get ???
+; Calculate address in relief block and Get tile nummber
 ;
 ; Used by the routines at #R$B885, #R$B972 and #R$BA64.
 ;
 ; I:HL Char coords H = row, L = column 0..31
+; O:A tile number
 @label=GetTileInBlock
 c$A129 PUSH HL       ;
  $A12A PUSH DE       ;
@@ -3285,6 +3303,7 @@ c$B317 LD A,($9C50)  ;
 ; Used by the routine at #R$B317.
 ;
 ; DE Octopus sprite address, 6x4 tiles 8x8 pixels, 192 bytes
+@label=DrawOctopusSprite
 c$B35D DI            ;
  $B35E PUSH IY       ;
  $B360 LD IY,($9C53) ;
@@ -3327,7 +3346,8 @@ b$B392 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; Used by the routine at #R$B470.
 ;
-; I:IX Object address = $E33B
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B3A0 BIT 4,(IX+$0D) ;
  $B3A4 JR Z,$B3AB     ;
 ; This entry point is used by the routine at #R$DFD5.
@@ -3442,7 +3462,8 @@ c$B3A0 BIT 4,(IX+$0D) ;
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
 ;
-; I:IX ???
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B470 BIT 0,(IX+$0D) ;
  $B474 JR Z,$B479     ;
  $B476 CALL $B3A0     ;
@@ -3579,7 +3600,7 @@ c$B470 BIT 0,(IX+$0D) ;
 ;
 ; I:HL source address
 ; I:DE destination address
-; I:IY ??? (IY+$0A) is record size
+; I:IY record address in #R$C092 area; (IY+$0A) is record size
 ; I:B number of records to copy
 @label=CopyRecordsFwd
 c$B572 PUSH BC       ;
@@ -3594,7 +3615,7 @@ c$B572 PUSH BC       ;
 ;
 ; Used by the routine at #R$B470.
 ;
-; I:IY ???
+; I:IY record address in #R$C092 area; (IY+$0A) is record size
 c$B57E LD E,(IY+$0A) ; get record size
  $B581 LD D,$00      ;
  $B583 LD B,(IY+$09) ;
@@ -3617,7 +3638,7 @@ c$B57E LD E,(IY+$0A) ; get record size
 ;
 ; I:HL source address
 ; I:DE destination address
-; I:IY ??? (IY+$0A) is record size
+; I:IY record address in LC092 area; (IY+$0A) is record size
 ; I:B number of records to copy
 @label=CopyRecordsBck
 c$B598 PUSH BC       ;
@@ -3632,8 +3653,9 @@ c$B598 PUSH BC       ;
 ;
 ; Used by the routine at #R$B470.
 ;
-; I:IX ???
-; I:IY ???
+; I:HL ???
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B5A4 BIT 7,(IX+$12) ;
  $B5A8 JR NZ,$B5C1    ;
  $B5AA PUSH HL        ;
@@ -3672,8 +3694,8 @@ c$B5A4 BIT 7,(IX+$12) ;
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
 ;
-; I:IX ???
-; I:IY ???
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B5E0 RES 1,(IX+$0D) ;
  $B5E4 BIT 0,(IX+$0D) ;
  $B5E8 JR Z,$B5EE     ;
@@ -3749,8 +3771,8 @@ s$B676 DEFS $10
 ;
 ; Used by the routines at #R$B737 and #R$B7BB.
 ;
-; I:IX ???
-; I:IY ???
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B686 BIT 5,(IX+$0D) ;
  $B68A JR Z,$B6D6     ;
  $B68C LD L,(IY+$00)  ;
@@ -3813,12 +3835,13 @@ c$B686 BIT 5,(IX+$0D) ;
  $B70A LD C,$06       ;
  $B70C JP $B875       ;
 
-; Routine at B70F
+; Screen attribute change for horizontally oriented object
 ;
 ; Used by the routines at #R$B686 and #R$B837.
 ;
-; I:IX ???
-; I:IY ???
+; I:IX record address in #R$C4F0 area
+; I:IY record address in #R$C092 area
+; I:HL (row, column)
 c$B70F LD A,H        ;
  $B710 AND $E0       ;
  $B712 RET NZ        ;
@@ -3850,7 +3873,7 @@ c$B70F LD A,H        ;
 ;
 ; Used by the routines at #R$BE40, #R$BE6D, #R$BE9A and #R$C431.
 ;
-; I:IX ??? $C4F0
+; I:IX record address in #R$C4F0 area
 c$B737 LD D,(IX+$14)  ;
  $B73A LD E,(IX+$13)  ;
  $B73D PUSH DE        ;
@@ -3904,20 +3927,20 @@ c$B737 LD D,(IX+$14)  ;
  $B7B8 RET            ;
 
 ; Unused
-s$B7B9 DEFS $02
+s$B7B9 DEFW $0000    ; buffer address ??
 
 ; Routine at B7BB
 ;
 ; Used by the routines at #R$BE58, #R$BE85, #R$BEB2 and #R$C45C.
 ;
-; I:IX ???
+; I:IX object address in #R$C4F0 area
 c$B7BB LD A,(IX+$0D)  ;
  $B7BE AND $9E        ;
  $B7C0 LD (IX+$0D),A  ;
  $B7C3 LD E,(IX+$13)  ;
  $B7C6 LD D,(IX+$14)  ;
  $B7C9 PUSH DE        ;
- $B7CA POP IY         ;
+ $B7CA POP IY         ; now IY = record address in block #R$C092
  $B7CC LD A,(IX+$02)  ;
  $B7CF ADD A,(IX+$11) ;
  $B7D2 AND $07        ;
@@ -3956,9 +3979,9 @@ c$B7BB LD A,(IX+$0D)  ;
  $B82A RET NZ         ;
  $B82B LD HL,$B836    ;
  $B82E PUSH HL        ;
- $B82F LD H,(IX+$06)  ;
+ $B82F LD H,(IX+$06)  ; get address of moving procedure
  $B832 LD L,(IX+$05)  ;
- $B835 JP (HL)        ;
+ $B835 JP (HL)        ; run the moving procedure
 
 ; Routine at B836
 c$B836 RET           ;
@@ -3966,6 +3989,9 @@ c$B836 RET           ;
 ; Routine at B837
 ;
 ; Used by the routines at #R$B7BB and #R$BA64.
+;
+; I:IX object address in #R$C4F0 area
+; I:IY record address in #R$C092 area
 c$B837 LD A,$06       ;
  $B839 BIT 0,(IX+$0D) ;
  $B83D JR NZ,$B842    ;
@@ -4002,7 +4028,11 @@ c$B837 LD A,$06       ;
  $B882 JR NZ,$B87B    ;
  $B884 RET            ;
 
-; Routine at B885
+; Moving procedure for fish object moving horizontal
+;
+; .
+;
+; I:IX object record
 c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B889 JP NZ,$B941     ;
  $B88C BIT 7,(IX+$11)  ;
@@ -4649,7 +4679,7 @@ c$BDEA LD A,($5B04)  ;
  $BE3C CALL $C4D5    ;
  $BE3F RET           ;
 
-; Routine at BE40
+; Process 26-byte records in group II
 ;
 ; Used by the routine at #R$BDEA.
 c$BE40 LD A,($5B16)  ;
@@ -4664,7 +4694,7 @@ c$BE40 LD A,($5B16)  ;
  $BE55 DJNZ $BE48    ;
  $BE57 RET           ;
 
-; Routine at BE58
+; Process 26-byte records in group II
 ;
 ; Used by the routine at #R$BDBA.
 c$BE58 LD A,($5B16)  ;
@@ -4678,7 +4708,7 @@ c$BE58 LD A,($5B16)  ;
  $BE6A DJNZ $BE60    ;
  $BE6C RET           ;
 
-; Routine at BE6D
+; Process 26-byte records in group III
 ;
 ; Used by the routine at #R$BDEA.
 c$BE6D LD A,($5B17)  ;
@@ -4693,7 +4723,7 @@ c$BE6D LD A,($5B17)  ;
  $BE82 DJNZ $BE75    ;
  $BE84 RET           ;
 
-; Routine at BE85
+; Process 26-byte records in group III
 ;
 ; Used by the routine at #R$BDBA.
 c$BE85 LD A,($5B17)  ;
@@ -4707,7 +4737,7 @@ c$BE85 LD A,($5B17)  ;
  $BE97 DJNZ $BE8D    ;
  $BE99 RET           ;
 
-; Routine at BE9A
+; Process 21-byte records in group I: Boat, meduzas, round fishes
 ;
 ; Used by the routine at #R$BDEA.
 c$BE9A LD A,($5B15)  ;
@@ -4722,7 +4752,7 @@ c$BE9A LD A,($5B15)  ;
  $BEAF DJNZ $BEA2    ;
  $BEB1 RET           ;
 
-; Routine at BEB2
+; Process 21-byte records in group I: Boat, meduzas, round fishes
 ;
 ; Used by the routine at #R$BDBA.
 c$BEB2 LD A,($5B15)  ;
@@ -4757,7 +4787,7 @@ c$BEC7 LD HL,$B676   ;
 c$BEDB CALL $BEC7      ;
  $BEDE LD HL,$BDAA     ;
  $BEE1 LD ($BD9C),HL   ;
- $BEE4 LD HL,$C20A     ; {Copy 21 byte from $C20A to $C4F0
+ $BEE4 LD HL,$C20A     ; {Copy 21 byte from $C20A to #R$C4F0
  $BEE7 LD DE,$C4F0     ;
  $BEEA LD BC,$0015     ;
  $BEED LDIR            ; }
@@ -4856,7 +4886,7 @@ c$BFB0 LD ($BFC4),IY ;
  $BFBE AND $0E       ;
  $BFC0 LD E,A        ;
  $BFC1 LD D,$00      ;
- $BFC3 LD HL,$0000   ; !!! mutable argument
+ $BFC3 LD HL,$0000   ; !!MUT-ARG!!
  $BFC6 ADD HL,DE     ;
  $BFC7 LD C,(HL)     ;
  $BFC8 INC HL        ;
@@ -4899,6 +4929,8 @@ b$C007 DEFW $0000    ; ???
 ; Routine at C009
 ;
 ; Used by the routine at #R$BEDB.
+;
+; I:A number of records
 c$C009 LD B,A        ;
  $C00A LD (IY+$05),E ;
  $C00D LD (IY+$06),D ;
@@ -4972,35 +5004,35 @@ c$C009 LD B,A        ;
  $C08E LD D,(IY+$06) ;
  $C091 RET           ;
 
-; Data block at C092
-b$C092 DEFW $0000,$0000,$0000,$0807,$0403,$1840,$C080,$0000
- $C0A2 DEFW $0000,$0000,$0000,$0201,$0302,$1010,$2030,$0000
- $C0B2 DEFW $0000,$0000,$C0CE,$0302,$0201,$0818,$1803,$0000
- $C0C2 DEFW $8285,$8254,$82B6,$82E6,$82C6,$82F6
- $C0CE DEFW $0000,$0000,$C0B2,$0201,$0302,$1010,$2003,$0000
- $C0DE DEFW $8347,$8316,$8378,$83A8,$8388,$83B8
- $C0EA DEFW $0000,$0000,$0000,$0706,$0302,$1038,$7005,$0000
- $C0FA DEFW $64E5,$6364,$6666,$6846
- $C102 DEFW $0000,$0000,$0000,$0807,$0403,$1840,$C006,$0000
- $C112 DEFW $70B7,$6A26,$6CC7,$7358
- $C11A DEFW $0000,$0000,$0000,$0504,$0201,$0828,$2804,$0000
- $C12A DEFW $7BCE,$7C4F,$7D50,$7CD0
- $C132 DEFW $0000,$0000,$0000,$0403,$0403,$1820,$6001,$0000
- $C142 DEFW $7748,$7869,$7942,$7821
- $C14A DEFW $0000,$0000,$C166,$0403,$0201,$0820,$2005,$0000
- $C15A DEFW $60D9,$6000,$6061,$613A,$6091,$616A
- $C166 DEFW $0000,$0000,$C14A,$0201,$0403,$1810,$3005,$0000
- $C176 DEFW $628B,$61B2,$6213,$62EC,$6243,$631C
- $C182 DEFW $0000,$0000,$C19E,$0403,$0201,$0820,$2003,$0000
- $C192 DEFW $7A1B,$798A,$79D3,$7A64,$79EB,$7A7C
- $C19E DEFW $0000,$0000,$C182,$0201,$0403,$1810,$3003,$0000
- $C1AE DEFW $7AF5,$7AAC,$7B3E,$7B86,$7B56,$7B9E
- $C1BA DEFW $0000,$0000,$C1D6,$0504,$0201,$0828,$2805,$0000
- $C1CA DEFW $7EF1,$7DD0,$7E51,$7F72,$7E91,$7FB2
- $C1D6 DEFW $0000,$0000,$C1BA,$0201,$0504,$2010,$4005,$0000
- $C1E6 DEFW $8133,$8012,$8093,$81B4,$80D3,$81F4
- $C1F2 DEFW $0000,$0000,$0000,$0807,$0302,$1040,$8006,$0000
- $C202 DEFW $8839,$83D8,$8599,$89FA
+; Object records
+b$C092 DEFW $0000,$0000,$0000,$0807,$0403,$1840,$C080,$0000 ; Boat
+ $C0A2 DEFW $0000,$0000,$0000,$0201,$0302,$1010,$2030,$0000 ; Meduza
+ $C0B2 DEFW $0000,$0000,$C0CE,$0302,$0201,$0818,$1803,$0000 ; {Round fish
+ $C0C2 DEFW $8285,$8254,$82B6,$82E6,$82C6,$82F6             ; }
+ $C0CE DEFW $0000,$0000,$C0B2,$0201,$0302,$1010,$2003,$0000 ; {Round fish
+ $C0DE DEFW $8347,$8316,$8378,$83A8,$8388,$83B8             ; vertical}
+ $C0EA DEFW $0000,$0000,$0000,$0706,$0302,$1038,$7005,$0000 ; {Fish
+ $C0FA DEFW $64E5,$6364,$6666,$6846                         ; }
+ $C102 DEFW $0000,$0000,$0000,$0807,$0403,$1840,$C006,$0000 ; {Shark
+ $C112 DEFW $70B7,$6A26,$6CC7,$7358                         ; }
+ $C11A DEFW $0000,$0000,$0000,$0504,$0201,$0828,$2804,$0000 ; {Long fish
+ $C12A DEFW $7BCE,$7C4F,$7D50,$7CD0                         ; }
+ $C132 DEFW $0000,$0000,$0000,$0403,$0403,$1820,$6001,$0000 ; {Fish cloud
+ $C142 DEFW $7748,$7869,$7942,$7821                         ; }
+ $C14A DEFW $0000,$0000,$C166,$0403,$0201,$0820,$2005,$0000 ; {Small squid
+ $C15A DEFW $60D9,$6000,$6061,$613A,$6091,$616A             ; horizontal}
+ $C166 DEFW $0000,$0000,$C14A,$0201,$0403,$1810,$3005,$0000 ; {Small squid
+ $C176 DEFW $628B,$61B2,$6213,$62EC,$6243,$631C             ; vertical}
+ $C182 DEFW $0000,$0000,$C19E,$0403,$0201,$0820,$2003,$0000 ; {Electric eel
+ $C192 DEFW $7A1B,$798A,$79D3,$7A64,$79EB,$7A7C             ; horizontal}
+ $C19E DEFW $0000,$0000,$C182,$0201,$0403,$1810,$3003,$0000 ; {Snake fish
+ $C1AE DEFW $7AF5,$7AAC,$7B3E,$7B86,$7B56,$7B9E             ; vertical}
+ $C1BA DEFW $0000,$0000,$C1D6,$0504,$0201,$0828,$2805,$0000 ; {Electric eel
+ $C1CA DEFW $7EF1,$7DD0,$7E51,$7F72,$7E91,$7FB2             ; vertical}
+ $C1D6 DEFW $0000,$0000,$C1BA,$0201,$0504,$2010,$4005,$0000 ; {Snake fish
+ $C1E6 DEFW $8133,$8012,$8093,$81B4,$80D3,$81F4             ; horizontal}
+ $C1F2 DEFW $0000,$0000,$0000,$0807,$0302,$1040,$8006,$0000 ; {Squid
+ $C202 DEFW $8839,$83D8,$8599,$89FA                         ; }
 
 ; Record templates
 ;
@@ -5012,72 +5044,72 @@ b$C092 DEFW $0000,$0000,$0000,$0807,$0403,$1840,$C080,$0000
 ; .
 ; Record template for 21-byte record - Boat
 b$C20A DEFB $F8,$06,$04,$01,$05
- $C20F DEFW $C481
+ $C20F DEFW $C481                           ; moving procedure
  $C211 DEFW $0000
- $C213 DEFW $8C9A,$8C9A                     ; Boat sprite
+ $C213 DEFW $8C9A,$8C9A                     ; sprite address
  $C217 DEFB $18,$28,$28,$01,$00,$00
- $C21D DEFW $C092
+ $C21D DEFW $C092                           ; object record
 ; Record template for 21-byte record - Meduza
  $C21F DEFB $00,$07,$04,$05,$00
- $C224 DEFW $BF9F                           ; -> RET
+ $C224 DEFW $BF9F                           ; moving procedure -> RET
  $C226 DEFW $0000
- $C228 DEFW $8D43,$8D43
+ $C228 DEFW $8D43,$8D43                     ; sprite address
  $C22C DEFB $18,$00,$00,$00,$01,$00
- $C232 DEFW $C0A2
+ $C232 DEFW $C0A2                           ; object record
 ; Record template for 21-byte record - Round fish
  $C234 DEFB $00,$09,$04,$02,$00
- $C239 DEFW $BF9F                           ; -> RET
+ $C239 DEFW $BF9F                           ; moving procedure -> RET
  $C23B DEFW $0000
- $C23D DEFW $8254,$8254
+ $C23D DEFW $8254,$8254                     ; sprite address
  $C241 DEFB $18,$00,$00,$00,$02,$00
- $C247 DEFW $C0B2
+ $C247 DEFW $C0B2                           ; object record
 ; Record template for 26-byte record - Fish
  $C249 DEFB $00,$00,$04,$02,$00
- $C24E DEFW $B885
+ $C24E DEFW $B885                           ; moving procedure
  $C250 DEFW $0000
- $C252 DEFW $6364,$6364
+ $C252 DEFW $6364,$6364                     ; sprite address
  $C256 DEFB $18,$00,$00,$00,$02,$00
- $C25C DEFW $C0EA
+ $C25C DEFW $C0EA                           ; object record
  $C25E DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Shark
  $C264 DEFB $00,$00,$04,$02,$00
- $C269 DEFW $B885
+ $C269 DEFW $B885                           ; moving procedure
  $C26B DEFW $0000
- $C26D DEFW $6A26,$6A26
+ $C26D DEFW $6A26,$6A26                     ; sprite address
  $C271 DEFB $18,$00,$00,$00,$02,$00
- $C277 DEFW $C102
+ $C277 DEFW $C102                           ; object record
  $C279 DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Small squid horizontal
  $C27F DEFB $00,$00,$04,$02,$00
- $C284 DEFW $B885
+ $C284 DEFW $B885                           ; moving procedure
  $C286 DEFW $0000
- $C288 DEFW $6000,$6000
+ $C288 DEFW $6000,$6000                     ; sprite address
  $C28C DEFB $18,$00,$00,$00,$02,$00
- $C292 DEFW $C14A
+ $C292 DEFW $C14A                           ; object record
  $C294 DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Long fish
  $C29A DEFB $00,$00,$04,$02,$00
- $C29F DEFW $B885
+ $C29F DEFW $B885                           ; moving procedure
  $C2A1 DEFW $0000
- $C2A3 DEFW $7C4F,$7C4F
+ $C2A3 DEFW $7C4F,$7C4F                     ; sprite address
  $C2A7 DEFB $18,$00,$00,$00,$02,$00
- $C2AD DEFW $C11A
+ $C2AD DEFW $C11A                           ; object record
  $C2AF DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Small fish cloud ??
  $C2B5 DEFB $00,$00,$04,$02,$00
- $C2BA DEFW $B885
+ $C2BA DEFW $B885                           ; moving procedure
  $C2BC DEFW $0000
- $C2BE DEFW $7869,$7869
+ $C2BE DEFW $7869,$7869                     ; sprite address
  $C2C2 DEFB $18,$00,$00,$00,$02,$00
- $C2C8 DEFW $C132
+ $C2C8 DEFW $C132                           ; object record
  $C2CA DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Small fish cloud ??
  $C2D0 DEFB $00,$00,$04,$02,$00
- $C2D5 DEFW $B885
+ $C2D5 DEFW $B885                           ; moving procedure
  $C2D7 DEFW $0000
- $C2D9 DEFW $798A,$798A
+ $C2D9 DEFW $798A,$798A                     ; sprite address
  $C2DD DEFB $18,$00,$00,$00,$02,$00
- $C2E3 DEFW $C182
+ $C2E3 DEFW $C182                           ; object record
  $C2E5 DEFB $00,$00,$02,$00,$00,$00
 ; Table of 8 record templates
  $C2EB DEFW $C249
@@ -5090,19 +5122,19 @@ b$C20A DEFB $F8,$06,$04,$01,$05
  $C2F9 DEFW $C249
 ; Record template for 26-byte record - Snake fish horizontal
  $C2FB DEFB $00,$00,$04,$02,$00
- $C300 DEFW $B885
+ $C300 DEFW $B885                           ; moving procedure
  $C302 DEFW $0000
- $C304 DEFW $7DD0,$7DD0
+ $C304 DEFW $7DD0,$7DD0                     ; sprite address
  $C308 DEFB $18,$00,$00,$00,$02,$00
- $C30E DEFW $C1BA
+ $C30E DEFW $C1BA                           ; object record
  $C310 DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Squid
  $C316 DEFB $00,$00,$04,$02,$00
- $C31B DEFW $B885
+ $C31B DEFW $B885                           ; moving procedure
  $C31D DEFW $0000
- $C31F DEFW $83D8,$83D8
+ $C31F DEFW $83D8,$83D8                     ; sprite address
  $C323 DEFB $18,$00,$00,$00,$02,$00
- $C329 DEFW $C1F2
+ $C329 DEFW $C1F2                           ; object record
  $C32B DEFB $00,$00,$02,$00,$00,$00
 ; Table of 8 record templates
  $C331 DEFW $C249
@@ -5115,35 +5147,35 @@ b$C20A DEFB $F8,$06,$04,$01,$05
  $C33F DEFW $C316
 ; Record template for 26-byte record - Round fish vertical
  $C341 DEFB $00,$00,$02,$04,$00
- $C346 DEFW $B972
+ $C346 DEFW $B972                           ; moving procedure
  $C348 DEFW $0000
- $C34A DEFW $8347,$8347
+ $C34A DEFW $8347,$8347                     ; sprite address
  $C34E DEFB $1C,$00,$00,$00,$00,$02
- $C354 DEFW $C0CE
+ $C354 DEFW $C0CE                           ; object record
  $C356 DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Small squid vertical
  $C35C DEFB $00,$00,$02,$04,$00
- $C361 DEFW $B972
+ $C361 DEFW $B972                           ; moving procedure
  $C363 DEFW $0000
- $C365 DEFW $628B,$628B
+ $C365 DEFW $628B,$628B                     ; sprite address
  $C369 DEFB $1C,$00,$00,$00,$00,$02
- $C36F DEFW $C166
+ $C36F DEFW $C166                           ; object record
  $C371 DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Snake fish vertical
  $C377 DEFB $00,$00,$02,$04,$00
- $C37C DEFW $B972
+ $C37C DEFW $B972                           ; moving procedure
  $C37E DEFW $0000
- $C380 DEFW $8133,$8133
+ $C380 DEFW $8133,$8133                     ; sprite address
  $C384 DEFB $1C,$00,$00,$00,$00,$02
- $C38A DEFW $C1D6
+ $C38A DEFW $C1D6                           ; object record
  $C38C DEFB $00,$00,$02,$00,$00,$00
 ; Record template for 26-byte record - Small fish cloud ??
  $C392 DEFB $00,$00,$02,$04,$00
- $C397 DEFW $B972
+ $C397 DEFW $B972                           ; moving procedure
  $C399 DEFW $0000
- $C39B DEFW $7AF5,$7AF5
+ $C39B DEFW $7AF5,$7AF5                     ; sprite address
  $C39F DEFB $1C,$00,$00,$00,$00,$02
- $C3A5 DEFW $C19E
+ $C3A5 DEFW $C19E                           ; object record
  $C3A7 DEFB $00,$00,$02,$00,$00,$00
 ; Table of 4 record templates
  $C3AD DEFW $C341
@@ -5152,35 +5184,35 @@ b$C20A DEFB $F8,$06,$04,$01,$05
  $C3B3 DEFW $C392
 ; Record template for 28-byte record - Round fish
  $C3B5 DEFB $00,$00,$04,$02,$00
- $C3BA DEFW $BA64
+ $C3BA DEFW $BA64                           ; moving procedure
  $C3BC DEFW $0000
- $C3BE DEFW $8254,$8254
+ $C3BE DEFW $8254,$8254                     ; sprite address
  $C3C2 DEFB $18,$00,$00,$00,$02,$00
- $C3C8 DEFW $C0B2
+ $C3C8 DEFW $C0B2                           ; object record
  $C3CA DEFB $03,$01,$02,$00,$00,$00,$00,$00
 ; Record template for 28-byte record - Small squid horizontal
  $C3D2 DEFB $00,$00,$04,$02,$00
- $C3D7 DEFW $BA64
+ $C3D7 DEFW $BA64                           ; moving procedure
  $C3D9 DEFW $0000
- $C3DB DEFW $6000,$6000
+ $C3DB DEFW $6000,$6000                     ; sprite address
  $C3DF DEFB $18,$00,$00,$00,$02,$00
- $C3E5 DEFW $C14A
+ $C3E5 DEFW $C14A                           ; object record
  $C3E7 DEFB $04,$02,$02,$00,$00,$00,$00,$00
 ; Record template for 28-byte record
  $C3EF DEFB $00,$00,$04,$02,$00
- $C3F4 DEFW $BA64
+ $C3F4 DEFW $BA64                           ; moving procedure
  $C3F6 DEFW $0000
- $C3F8 DEFW $798A,$798A
+ $C3F8 DEFW $798A,$798A                     ; sprite address
  $C3FC DEFB $18,$00,$00,$00,$02,$00
- $C402 DEFW $C182
+ $C402 DEFW $C182                           ; object record
  $C404 DEFB $03,$01,$02,$00,$00,$00,$00,$00
 ; Record template for 28-byte record - Snake fish horizontal
  $C40C DEFB $00,$00,$04,$02,$00
- $C411 DEFW $BA64
+ $C411 DEFW $BA64                           ; moving procedure
  $C413 DEFW $0000
- $C415 DEFW $7DD0,$7DD0
+ $C415 DEFW $7DD0,$7DD0                     ; sprite address
  $C419 DEFB $18,$00,$00,$00,$02,$00
- $C41F DEFW $C1BA
+ $C41F DEFW $C1BA                           ; object record
  $C421 DEFB $04,$02,$02,$00,$00,$00,$00,$00
 ; Table of 4 record templates
  $C429 DEFW $C3B5
@@ -5191,14 +5223,15 @@ b$C20A DEFB $F8,$06,$04,$01,$05
 ; Routine at C431
 ;
 ; Used by the routine at #R$BDEA.
-c$C431 LD A,($5B18)  ;
- $C434 LD B,A        ;
- $C435 LD IX,($5B23) ;
+c$C431 LD A,($5B18)  ; get Number of 26-byte records (5 / 10 / 15 / 20) in
+                     ; group IV
+ $C434 LD B,A        ; loop counter
+ $C435 LD IX,($5B23) ; now IX = record address in #R$C4F0 area
 *$C439 PUSH BC       ;
  $C43A DEC (IX+$0F)  ;
  $C43D CALL Z,$B737  ;
- $C440 LD BC,$001A   ;
- $C443 ADD IX,BC     ;
+ $C440 LD BC,$001A   ; 26 bytes - record size
+ $C443 ADD IX,BC     ; next record
  $C445 POP BC        ;
  $C446 DJNZ $C439    ;
  $C448 LD A,($5B19)  ;
@@ -5298,6 +5331,7 @@ s$C500 DEFS $1490
 ; Game
 ;
 ; Used by the routine at #R$EE1C.
+@label=Game
 c$D990 DI             ;
  $D991 PUSH IX        ;
  $D993 PUSH IY        ;
@@ -5373,6 +5407,7 @@ c$D990 DI             ;
 ; Clear screen, fill attributes with A
 ;
 ; Used by the routines at #R$DAAD and #R$EEAD.
+@label=ClearScreenFillAttr
 c$DA39 LD ($5B4A),A  ;
  $DA3C LD HL,$4000   ;
  $DA3F LD BC,$1800   ;
@@ -5396,17 +5431,20 @@ c$DA39 LD ($5B4A),A  ;
 ; Print char and shift current position right
 ;
 ; Used by the routine at #R$DA98.
+@label=PrintCharRt
 c$DA59 LD HL,($DC7E) ;
  $DA5C INC L         ;
  $DA5D LD ($DC7E),HL ;
  $DA60 DEC L         ;
  $DA61 JR $DA6B      ;
 ; Print char and shift current position down
+@label=PrintCharDn
  $DA63 LD HL,($DC7E) ;
  $DA66 INC H         ;
  $DA67 LD ($DC7E),HL ;
  $DA6A DEC H         ;
 ; Print char
+@label=PrintChar
 *$DA6B PUSH HL       ;
  $DA6C PUSH AF       ;
  $DA6D CALL $A164    ; Convert char coords HL to ZX screen address
@@ -5443,13 +5481,14 @@ c$DA59 LD HL,($DC7E) ;
 ; I:HL String address
 ; I:BC Row and column
 ; I:DE Print char procedure address
+@label=PrintStringEx
 c$DA98 LD ($DAA3),DE ;
 ; This entry point is used by the routines at #R$DAAD and #R$EEAD.
+@label=PrintString
 *$DA9C LD ($DC7E),BC ;
  $DAA0 LD A,(HL)     ;
 *$DAA1 PUSH HL       ;
- $DAA2 CALL $DA59    ; Print char and shift !!! mutable argument #R$DA59 /
-                     ; #R$DA63
+ $DAA2 CALL $DA59    ; Print char and shift !!MUT-ARG!! #R$DA59 / #R$DA63
  $DAA5 POP HL        ;
  $DAA6 INC HL        ;
  $DAA7 LD A,(HL)     ;
@@ -5530,14 +5569,14 @@ c$DAAD LD A,$30      ;
  $DB5F ADD HL,DE     ;
  $DB60 LD (HL),$4F   ;
  $DB62 LD A,($5B37)  ; get Number of lives
- $DB65 DEC A         ;
+ $DB65 DEC A         ; 0 / 1 / 2 / 3
  $DB66 RRCA          ;
  $DB67 RRCA          ;
  $DB68 LD E,A        ;
  $DB69 LD D,$00      ;
  $DB6B LD HL,$5A1D   ;
  $DB6E ADD HL,DE     ;
- $DB6F LD ($DE59),HL ;
+ $DB6F LD ($DE59),HL ; save address in attributes area
  $DB72 LD (HL),$4F   ;
  $DB74 LD IX,$E33B   ; Diver object record address
  $DB78 CALL $DED9    ; Print high score number
@@ -5731,7 +5770,7 @@ c$DE3E LD HL,($DE55) ;
 ; Data block at DE55
 b$DE55 DEFW $0000    ; ???
  $DE57 DEFW $0000    ; ???
- $DE59 DEFW $0000    ; ???
+ $DE59 DEFW $0000    ; Lives indicator, address in screen attributes
 @label=OXYGEN
  $DE5B DEFW $FFFF    ; ???
 
@@ -5858,6 +5897,7 @@ b$DEFD DEFB $00,$00
  $DF21 DEFB $00,$00,$00,$00
 
 ; Table: Angle 0..15 -> (DX, DY)
+@label=AngleToDXDY
 b$DF25 DEFB $00,$FE,$01,$FE,$02,$FE,$02,$FF,$02,$00,$02,$01,$02,$02,$01,$02
  $DF35 DEFB $00,$02,$FF,$02,$FE,$02,$FE,$01,$FE,$00,$FE,$FF,$FE,$FE,$FF,$FE
 
@@ -5885,7 +5925,7 @@ b$DF45 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; Used by the routines at #R$E2A8 and #R$E915.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 c$DFD5 LD HL,($B7B9)   ;
  $DFD8 LD DE,($5B35)   ;
  $DFDC LD ($5B35),HL   ;
@@ -6195,7 +6235,7 @@ c$E2A8 LD IX,$E33B     ; Diver object record address
 ;
 ; Used by the routine at #R$E2A8.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 @label=ReadKeyboard
 c$E2DB BIT 3,(IX+$10) ;
  $E2DF RET NZ         ;
@@ -6293,7 +6333,7 @@ b$E33B DEFB $0A      ; (IX+$00) Column 0..31
 ;
 ; Used by the routine at #R$E2A8.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 c$E364 BIT 5,(IX+$10)  ;
  $E368 RET NZ          ;
  $E369 BIT 7,(IX+$10)  ;
@@ -6401,7 +6441,7 @@ c$E41B INC (IX+$21)    ;
 ;
 ; Used by the routine at #R$E364.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 c$E43A BIT 3,(IX+$26) ;
  $E43E RET NZ         ;
  $E43F SET 5,(IX+$10) ;
@@ -6429,7 +6469,7 @@ c$E43A BIT 3,(IX+$26) ;
 ;
 ; Used by the routine at #R$E364.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 c$E476 LD IY,$B07D    ;
 *$E47A LD A,(IY+$01)  ;
  $E47D CP $FF         ;
@@ -7026,7 +7066,7 @@ c$E915 LD DE,($C4F0)   ;
 ;
 ; Used by the routine at #R$DFD5.
 ;
-; I:IX Object address = $E33B
+; I:IX Diver object address = #R$E33B
 c$E9B0 SET 5,(IX+$26) ;
  $E9B4 PUSH HL        ;
  $E9B5 PUSH DE        ;
@@ -7036,11 +7076,11 @@ c$E9B0 SET 5,(IX+$26) ;
  $E9BE ADD HL,DE      ;
  $E9BF LD ($DE59),HL  ;
  $E9C2 LD (HL),$4F    ;
- $E9C4 LD HL,$5B37    ; get Number of lives
- $E9C7 LD A,(HL)      ;
- $E9C8 INC (HL)       ;
+ $E9C4 LD HL,$5B37    ; address of Number of lives
+ $E9C7 LD A,(HL)      ; get Number of lives
+ $E9C8 INC (HL)       ; one more live
  $E9C9 PUSH BC        ;
- $E9CA CALL $E682     ;
+ $E9CA CALL $E682     ; Draw Divers on the Boat
  $E9CD POP BC         ;
  $E9CE POP DE         ;
  $E9CF POP HL         ;
@@ -7051,6 +7091,7 @@ b$E9D1 DEFB $00,$00,$00,$00,$00,$00,$00
  $E9D8 DEFB $00,$00
 
 ; Score table, 160 bytes
+@label=ScoreTable
 b$E9DA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
  $E9EA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
  $E9FA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00

@@ -13,27 +13,35 @@ W $5B07,2,2 ???
 B $5B09,1,1 ???
 B $5B0A,1,1 ???
 W $5B0B,2,2 ???
-B $5B0D,1,1 Delay value: 7 / 5 / 3 / 1, depending on Game level 1..4
-B $5B0E,1,1 Delay value for Octopus: 10 / 8 / 6 / 4, depending on Game level 1..4
+B $5B0D,1,1 Delay value: 7 / 5 / 3 / 1, depending on #R$5B10
+B $5B0E,1,1 Delay value for Octopus: 10 / 8 / 6 / 4, depending on #R$5B10
 B $5B0F,1,1 ???
 B $5B10,1,1 Game level selected: 1..4
 @ $5B10 label=LEVEL
 W $5B11,2,2 ???
-B $5B13,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
-B $5B14,1,1 Value 13 / 17 / 21 / 25, depending on Game level 1..4
-B $5B15,1,1 Value 27 / 35 / 43 / 51, depending on Game level 1..4
-B $5B16,1,1 Value 18 / 22 / 26 / 31, depending on Game level 1..4
-B $5B17,1,1 Value 26 / 34 / 42 / 50, depending on Game level 1..4
-B $5B18,1,1 Value 5 / 10 / 15 / 20, depending on Game level 1..4
-B $5B19,1,1 Value 12 / 27 / 42 / 57, depending on Game level 1..4
+B $5B13,1,1 Number of Meduza objects: 13 / 17 / 21 / 25, depending on #R$5B10
+B $5B14,1,1 Number of Round fishes: 13 / 17 / 21 / 25, depending on #R$5B10
+B $5B15,1,1 Number of 21-byte records (27 / 35 / 43 / 51), group I; starts at #R$C4F0
+@ $5B15 label=NumRecsI
+B $5B16,1,1 Number of 26-byte records (18 / 22 / 26 / 31), group II; starts at (L5B1F)
+@ $5B16 label=NumRecsII
+B $5B17,1,1 Number of 26-byte records (26 / 34 / 42 / 50), group III; starts at (L5B21)
+@ $5B17 label=NumRecsIII
+B $5B18,1,1 Number of 26-byte records (5 / 10 / 15 / 20), group IV; starts at (L5B23)
+@ $5B18 label=NumRecsIV
+B $5B19,1,1 Number of 28-byte records (12 / 27 / 42 / 57), group V
+@ $5B19 label=NumRecsV
 B $5B1A,1,1 ???
 B $5B1B,1,1 ???
 B $5B1C,1,1 ???
 B $5B1D,1,1 ???
 B $5B1E,1,1 ???
-W $5B1F,2,2 ???
-W $5B21,2,2 ???
-W $5B23,2,2 ???
+W $5B1F,2,2 Address of 26-byte records in block #R$C4F0; NumRecsII is number of records
+@ $5B1F label=RecsAddrII
+W $5B21,2,2 Address of 26-byte records in block #R$C4F0; NumRecsIII is number of records
+@ $5B21 label=RecsAddrIII
+W $5B23,2,2 Address of 26-byte records in block #R$C4F0; NumRecsIV is number of records
+@ $5B23 label=RecsAddrIV
 W $5B25,2,2 Value 150 / 100 / 50 / 1, depending on Game level 1..4
 W $5B27,14,8 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
 W $5B35,2,2 ???
@@ -53,7 +61,7 @@ W $5B46,2,2 ??? $0000 at game start
 W $5B48,2,2 ??? $0000 at game start
 B $5B4A,1,1 Screen attribute, see routine #R$DA39
 W $5B4B,2,2 High score value
-@ $5B4B label=HSCORE
+@ $5B4B label=HISCORE
 b $5B4D
 B $5B4D,,16
 B $5C05
@@ -298,6 +306,7 @@ B $8B4A,112,21 #HTML[#UDGARRAY7,,,7,,;$8B4A-$8BB9-1-56(squidH)]
 B $8BBA,112,21 #HTML[#UDGARRAY7,,,7,,;$8BBA-$8C29-1-56(squidI)]
 B $8C2A,112,21 #HTML[#UDGARRAY7,,,7,,;$8C2A-$8C99-1-56(squidJ)]
 N $8C9A Boat sprite; width 7 height 3 chars, 168 bytes
+@ $8C9A label=SprBoat
 B $8C9A,168,21 #HTML[#UDGARRAY7,,,7,,;$8C9A-$8D41-1-56(boat)]
 N $8D42 Meduza sprites; width 1
 B $8D42,1,1
@@ -306,6 +315,7 @@ B $8D53,16,8 #HTML[#UDGARRAY1,,,1,,;$8D53-$8D62-1-8(meduza1)]
 B $8D63,16,8 #HTML[#UDGARRAY1,,,1,,;$8D63-$8D72-1-8(meduza2)]
 B $8D73,1,1
 N $8D74 Octopus phases 0..4, each phase 4*6*8 = 192 bytes
+@ $8D74 label=SprOctopus
 B $8D74,192,16 #HTML[#UDGARRAY6,,,1,,;$8D74-$8E33-8(octopus0)] 0
 B $8E34,192,16 #HTML[#UDGARRAY6,,,1,,;$8E34-$8EF3-8(octopus1)] 1
 B $8EF4,192,16 #HTML[#UDGARRAY6,,,1,,;$8EF4-$8FB3-8(octopus2)] 2
@@ -362,8 +372,8 @@ B $92A4,8,8 #HTML[#UDGARRAY1,,,1,,;$92A4-$92AB-1-8(tile2E)] $2E
 B $92AC,8,8 #HTML[#UDGARRAY1,,,1,,;$92AC-$92B3-1-8(tile2F)] $2F
 B $92B4,8,8 #HTML[#UDGARRAY1,,,1,,;$92B4-$92BB-1-8(tile30)] $30
 B $92BC,8,8 #HTML[#UDGARRAY1,,,1,,;$92BC-$92C3-1-8(tile31)] $31
-
 N $92CC Scuba diver sprites; width 2 height 2 chars
+@ $92CC label=SprDiver0
 B $92CC,32,16 #HTML[#UDGARRAY2,,,2,,;$92CC-$92EB-1-16(diver0a)]
 B $92EC,32,16 #HTML[#UDGARRAY2,,,2,,;$92EC-$930B-1-16(diver0b)]
 B $930C,32,16 #HTML[#UDGARRAY2,,,2,,;$930C-$932B-1-16(diver0c)]
@@ -429,11 +439,13 @@ B $9A6C,32,16 #HTML[#UDGARRAY2,,,2,,;$9A6C-$9A8B-1-16(diverFb)]
 B $9A8C,32,16 #HTML[#UDGARRAY2,,,2,,;$9A8C-$9AAB-1-16(diverFc)]
 B $9AAC,32,16 #HTML[#UDGARRAY2,,,2,,;$9AAC-$9ACB-1-16(diverFd)]
 N $9ACC Scuba diver drowned, 4 sprites
+@ $9ACC label=SprDrowned
 B $9ACC,32,16 #HTML[#UDGARRAY2,,,2,,;$9ACC-$9AEB-1-16(drowned0)]
 B $9AEC,32,16 #HTML[#UDGARRAY2,,,2,,;$9AEC-$9B0B-1-16(drowned1)]
 B $9B0C,32,16 #HTML[#UDGARRAY2,,,2,,;$9B0C-$9B2B-1-16(drowned2)]
 B $9B2C,32,16 #HTML[#UDGARRAY2,,,2,,;$9B2C-$9B4B-1-16(drowned3)]
 N $9B4C Explosion sprites
+@ $9B4C label=SprExplosion
 B $9B4C,32,16 #HTML[#UDGARRAY2,,,2,,;$9B4C-$9B6B-1-16(explosion0)]
 B $9B6C,32,16 #HTML[#UDGARRAY2,,,2,,;$9B6C-$9B8B-1-16(explosion1)]
 N $9B8C Scuba diver various sprites
@@ -466,9 +478,10 @@ C $9D35,3 Draw Octopus
 c $9D40 Calculate address in the mini-map (#R$AC5D table)
 @ $9D40 label=MiniMap_Addr
 R $9D40 I:HL H = row, L = column 0..31
+R $9D40 O:HL address in #R$AC5D table
 C $9D4D,2 HL shifted right 3 bits
 C $9D50,1 HL := H * 32 + L
-C $9D54,1 HL := $AC5D + H * 32 + L
+C $9D54,1 HL := #R$AC5D + H * 32 + L
 c $9D56 Calculate address in the mini-map (#R$AC5D table) and Get
 @ $9D56 label=MiniMap_Get
 R $9D56 I:HL H = row, L = column 0..31
@@ -505,7 +518,7 @@ C $9D98,1 x377
 C $9D99,1 x754
 C $9D9A,1 x1508
 C $9D9B,1 x1509
-C $9DA0,3 ($5B05) := ($5B05) * 1509 + 41
+C $9DA0,3 (#R$5B05) := (#R$5B05) * 1509 + 41
 b $9DA4
 B $9DA4,1,1
 c $9DA5 Fill block at HL with A
@@ -612,15 +625,16 @@ C $A0D2,3 Check value in #R$AC5D table
 C $A0DC,3 Check value in #R$AC5D table
 C $A0E9,3 Calc address in #R$AC5D and Get
 C $A0EE,3 Calc address in #R$AC5D and Get
-c $A0F5 Calculate address ???
+c $A0F5 Calculate address in relief block
 R $A0F5 I:HL Char coords H = row, L = column 0..31
 C $A0F5,19
 . HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
 . as a result, we have HL[9:0] filled with significant bits;
 . 10 bits means 1024 addressed bytes
-c $A129 Calculate address and Get ???
+c $A129 Calculate address in relief block and Get tile nummber
 @ $A129 label=GetTileInBlock
 R $A129 I:HL Char coords H = row, L = column 0..31
+R $A129 O:A tile number
 b $A132
 c $A14C Get screen attribute address
 @ $A14C label=GetScrAttrAddr
@@ -785,58 +799,70 @@ c $B317 Process Octopus, draw if needed
 C $B349,3 Base address for Octopus phases
 C $B359,3 Draw Octopus sprite
 c $B35D Draw Octopus sprite
+@ $B35D label=DrawOctopusSprite
 R $B35D DE Octopus sprite address, 6x4 tiles 8x8 pixels, 192 bytes
 C $B368,3 get Octopus row/column
 b $B392 Unused?
 c $B3A0
-R $B3A0 I:IX Object address = $E33B
+R $B3A0 I:IX record address in #R$C4F0 area
+R $B3A0 I:IY record address in #R$C092 area
 c $B470
-R $B470 I:IX ???
+R $B470 I:IX record address in #R$C4F0 area
+R $B470 I:IY record address in #R$C092 area
 C $B4F6,3 Convert char coords HL to ZX screen address
 C $B55F,3 Copy records forward
 c $B572 Copy records forward
 @ $B572 label=CopyRecordsFwd
 R $B572 I:HL source address
 R $B572 I:DE destination address
-R $B572 I:IY ??? (IY+$0A) is record size
+R $B572 I:IY record address in #R$C092 area; (IY+$0A) is record size
 R $B572 I:B number of records to copy
 c $B57E
-R $B57E I:IY ???
+R $B57E I:IY record address in #R$C092 area; (IY+$0A) is record size
 C $B57E,3 get record size
 C $B590,3 Copy records backward
 c $B598 Copy records backward
 @ $B598 label=CopyRecordsBck
 R $B598 I:HL source address
 R $B598 I:DE destination address
-R $B598 I:IY ??? (IY+$0A) is record size
+R $B598 I:IY record address in LC092 area; (IY+$0A) is record size
 R $B598 I:B number of records to copy
 c $B5A4
-R $B5A4 I:IX ???
-R $B5A4 I:IY ???
+R $B5A4 I:HL ???
+R $B5A4 I:IX record address in #R$C4F0 area
+R $B5A4 I:IY record address in #R$C092 area
 C $B5B5,3 Copy records forward
 C $B5D4,3 Copy records backward
 c $B5E0
-R $B5E0 I:IX ???
-R $B5E0 I:IY ???
+R $B5E0 I:IX record address in #R$C4F0 area
+R $B5E0 I:IY record address in #R$C092 area
 s $B676
 c $B686
-R $B686 I:IX ???
-R $B686 I:IY ???
+R $B686 I:IX record address in #R$C4F0 area
+R $B686 I:IY record address in #R$C092 area
 C $B6C9,3 Get screen attribute address
-c $B70F
-R $B70F I:IX ???
-R $B70F I:IY ???
+c $B70F Screen attribute change for horizontally oriented object
+R $B70F I:IX record address in #R$C4F0 area
+R $B70F I:IY record address in #R$C092 area
+R $B70F I:HL (row, column)
 C $B726,3 Get screen attribute address
 c $B737
-R $B737 I:IX ??? $C4F0
+R $B737 I:IX record address in #R$C4F0 area
 C $B7AD,4 address of the return point - put on the stack
 N $B7B8 Point of return
 s $B7B9
+W $B7B9,2,2 buffer address ??
 c $B7BB
-R $B7BB I:IX ???
+R $B7BB I:IX object address in #R$C4F0 area
+C $B7CA,2 now IY = record address in block #R$C092
+C $B82F,3 get address of moving procedure
+C $B835,1 run the moving procedure
 c $B836
 c $B837
-c $B885
+R $B837 I:IX object address in #R$C4F0 area
+R $B837 I:IY record address in #R$C092 area
+c $B885 Moving procedure for fish object moving horizontal
+R $B885 I:IX object record
 C $B885,4 check "moving" bit
 C $B8CF,3 Get screen attribute address
 C $B932,4 set "moving" bit
@@ -866,15 +892,15 @@ C $BDBD,3 get screen position (row) on mini-map
 s $BDE9
 B $BDAA,8
 c $BDEA
-c $BE40
-c $BE58
-c $BE6D
-c $BE85
-c $BE9A
-c $BEB2
+c $BE40 Process 26-byte records in group II
+c $BE58 Process 26-byte records in group II
+c $BE6D Process 26-byte records in group III
+c $BE85 Process 26-byte records in group III
+c $BE9A Process 21-byte records in group I: Boat, meduzas, round fishes
+c $BEB2 Process 21-byte records in group I: Boat, meduzas, round fishes
 c $BEC7
 c $BEDB
-C $BEE4,11 Copy 21 byte from $C20A to $C4F0
+C $BEE4,11 Copy 21 byte from $C20A to #R$C4F0
 C $BF00,3 Random
 C $BF15,3 get current Random
 C $BF2A,3 Random
@@ -884,189 +910,195 @@ R $BFB0 I:HL ???
 R $BFB0 I:IY ???
 R $BFB0 I:A ???
 C $BFBA,3 Random
-C $BFC3,3 !!! mutable argument
+C $BFC3,3 !!MUT-ARG!!
 C $BFDE,3 get current Random
 C $BFFA,3 Random
 b $C007
 W $C007,2,2 ???
 c $C009
+R $C009 I:A number of records
 C $C03C,3 Random
-b $C092
-W $C092,,16
-W $C0A2,,16
-W $C0B2,,16
-W $C0CE,,16
-W $C0EA,,16
-W $C102,,16
-W $C11A,,16
-W $C132,,16
-W $C14A,,16
-W $C166,,16
-W $C182,,16
-W $C1BA,,16
-W $C1D6,,16
-W $C19E,,16
-W $C1F2,,16
+b $C092 Object records
+W $C092,,16 Boat
+W $C0A2,,16 Meduza
+W $C0B2,,16 Round fish
+W $C0CE,,16 Round fish vertical
+W $C0EA,,16 Fish
+W $C102,,16 Shark
+W $C11A,,16 Long fish
+W $C132,,16 Fish cloud
+W $C14A,,16 Small squid horizontal
+W $C166,,16 Small squid vertical
+W $C182,,16 Electric eel horizontal
+W $C1BA,,16 Electric eel vertical
+W $C1D6,,16 Snake fish horizontal
+W $C19E,,16 Snake fish vertical
+W $C1F2,,16 Squid
 b $C20A Record templates
 N $C20A These templates are used to create records in #R$C4F0 area.
 N $C20A Record template for 21-byte record - Boat
 B $C20A,5,5
-W $C20F,2,2
+W $C20F,2,2 moving procedure
 W $C211,2,2
-W $C213,4,4 Boat sprite
+W $C213,4,4 sprite address
 B $C217,6,6
-W $C21D,2,2
+W $C21D,2,2 object record
 N $C21F Record template for 21-byte record - Meduza
 B $C21F,5,5
-W $C224,2,2 -> RET
+W $C224,2,2 moving procedure -> RET
 W $C226,2,2
-W $C228,4,4
+W $C228,4,4 sprite address
 B $C22C,6,6
-W $C232,2,2
+W $C232,2,2 object record
 N $C234 Record template for 21-byte record - Round fish
 B $C234,5,5
-W $C239,2,2 -> RET
+W $C239,2,2 moving procedure -> RET
 W $C23B,2,2
-W $C23D,4,4
+W $C23D,4,4 sprite address
 B $C241,6,6
-W $C247,2,2
+W $C247,2,2 object record
 N $C249 Record template for 26-byte record - Fish
 B $C249,5,5
-W $C24E,2,2
+W $C24E,2,2 moving procedure
 W $C250,2,2
-W $C252,4,4
+W $C252,4,4 sprite address
 B $C256,6,6
-W $C25C,2,2
+W $C25C,2,2 object record
 B $C25E,6,6
 N $C264 Record template for 26-byte record - Shark
 B $C264,5,5
-W $C269,2,2
+W $C269,2,2 moving procedure
 W $C26B,2,2
-W $C26D,4,4
+W $C26D,4,4 sprite address
 B $C271,6,6
-W $C277,2,2
+W $C277,2,2 object record
 B $C279,6,6
 N $C27F Record template for 26-byte record - Small squid horizontal
 B $C27F,5,5
-W $C284,2,2
+W $C284,2,2 moving procedure
 W $C286,2,2
-W $C288,4,4
+W $C288,4,4 sprite address
 B $C28C,6,6
-W $C292,2,2
+W $C292,2,2 object record
 B $C294,6,6
 N $C29A Record template for 26-byte record - Long fish
 B $C29A,5,5
-W $C29F,2,2
+W $C29F,2,2 moving procedure
 W $C2A1,2,2
-W $C2A3,4,4
+W $C2A3,4,4 sprite address
 B $C2A7,6,6
-W $C2AD,2,2
+W $C2AD,2,2 object record
 B $C2AF,6,6
 N $C2B5 Record template for 26-byte record - Small fish cloud ??
 B $C2B5,5,5
-W $C2BA,2,2
+W $C2BA,2,2 moving procedure
 W $C2BC,2,2
-W $C2BE,4,4
+W $C2BE,4,4 sprite address
 B $C2C2,6,6
-W $C2C8,2,2
+W $C2C8,2,2 object record
 B $C2CA,6,6
 N $C2D0 Record template for 26-byte record - Small fish cloud ??
 B $C2D0,5,5
-W $C2D5,2,2
+W $C2D5,2,2 moving procedure
 W $C2D7,2,2
-W $C2D9,4,4
+W $C2D9,4,4 sprite address
 B $C2DD,6,6
-W $C2E3,2,2
+W $C2E3,2,2 object record
 B $C2E5,6,6
 N $C2EB Table of 8 record templates
 W $C2EB,16,2
 N $C2FB Record template for 26-byte record - Snake fish horizontal 
 B $C2FB,5,5
-W $C300,2,2
+W $C300,2,2 moving procedure
 W $C302,2,2
-W $C304,4,4
+W $C304,4,4 sprite address
 B $C308,6,6
-W $C30E,2,2
+W $C30E,2,2 object record
 B $C310,6,6
 N $C316 Record template for 26-byte record - Squid
 B $C316,5,5
-W $C31B,2,2
+W $C31B,2,2 moving procedure
 W $C31D,2,2
-W $C31F,4,4
+W $C31F,4,4 sprite address
 B $C323,6,6
-W $C329,2,2
+W $C329,2,2 object record
 B $C32B,6,6
 N $C331 Table of 8 record templates
 W $C331,16,2
 N $C341 Record template for 26-byte record - Round fish vertical
 B $C341,5,5
-W $C346,2,2
+W $C346,2,2 moving procedure
 W $C348,2,2
-W $C34A,4,4
+W $C34A,4,4 sprite address
 B $C34E,6,6
-W $C354,2,2
+W $C354,2,2 object record
 B $C356,6,6
 N $C35C Record template for 26-byte record - Small squid vertical
 B $C35C,5,5
-W $C361,2,2
+W $C361,2,2 moving procedure
 W $C363,2,2
-W $C365,4,4
+W $C365,4,4 sprite address
 B $C369,6,6
-W $C36F,2,2
+W $C36F,2,2 object record
 B $C371,6,6
 N $C377 Record template for 26-byte record - Snake fish vertical
 B $C377,5,5
-W $C37C,2,2
+W $C37C,2,2 moving procedure
 W $C37E,2,2
-W $C380,4,4
+W $C380,4,4 sprite address
 B $C384,6,6
-W $C38A,2,2
+W $C38A,2,2 object record
 B $C38C,6,6
 N $C392 Record template for 26-byte record - Small fish cloud ??
 B $C392,5,5
-W $C397,2,2
+W $C397,2,2 moving procedure
 W $C399,2,2
-W $C39B,4,4
+W $C39B,4,4 sprite address
 B $C39F,6,6
-W $C3A5,2,2
+W $C3A5,2,2 object record
 B $C3A7,6,6
 N $C3AD Table of 4 record templates
 W $C3AD,8,2
 N $C3B5 Record template for 28-byte record - Round fish
 B $C3B5,5,5
-W $C3BA,2,2
+W $C3BA,2,2 moving procedure
 W $C3BC,2,2
-W $C3BE,4,4
+W $C3BE,4,4 sprite address
 B $C3C2,6,6
-W $C3C8,2,2
+W $C3C8,2,2 object record
 B $C3CA,8,8
 N $C3D2 Record template for 28-byte record - Small squid horizontal
 B $C3D2,5,5
-W $C3D7,2,2
+W $C3D7,2,2 moving procedure
 W $C3D9,2,2
-W $C3DB,4,4
+W $C3DB,4,4 sprite address
 B $C3DF,6,6
-W $C3E5,2,2
+W $C3E5,2,2 object record
 B $C3E7,8,8
 N $C3EF Record template for 28-byte record
 B $C3EF,5,5
-W $C3F4,2,2
+W $C3F4,2,2 moving procedure
 W $C3F6,2,2
-W $C3F8,4,4
+W $C3F8,4,4 sprite address
 B $C3FC,6,6
-W $C402,2,2
+W $C402,2,2 object record
 B $C404,8,8
 N $C40C Record template for 28-byte record - Snake fish horizontal
 B $C40C,5,5
-W $C411,2,2
+W $C411,2,2 moving procedure
 W $C413,2,2
-W $C415,4,4
+W $C415,4,4 sprite address
 B $C419,6,6
-W $C41F,2,2
+W $C41F,2,2 object record
 B $C421,8,8
 N $C429 Table of 4 record templates
 W $C429,8,2
 c $C431
+C $C431,3 get Number of 26-byte records (5 / 10 / 15 / 20) in group IV
+C $C434,1 loop counter
+C $C435,4 now IX = record address in #R$C4F0 area
+C $C440,3 26 bytes - record size
+C $C443,2 next record
 c $C45C
 c $C481
 c $C4D5 Delay ??
@@ -1075,6 +1107,7 @@ b $C4E7
 b $C4F0
 s $C500
 c $D990 Game
+@ $D990 label=Game
 C $D998,3 reset Score value
 C $D99B,3 reset HELD value
 C $D99E,2 Number of lives
@@ -1097,9 +1130,13 @@ C $DA25,1 One live less
 C $DA26,3 set Number of lives
 C $DA33,2 Ending the Game routine, the game is over
 c $DA39 Clear screen, fill attributes with A
+@ $DA39 label=ClearScreenFillAttr
 c $DA59 Print char and shift current position right
+@ $DA59 label=PrintCharRt
+@ $DA63 label=PrintCharDn
 N $DA63 Print char and shift current position down
 N $DA6B Print char
+@ $DA6B label=PrintChar
 C $DA6D,3 Convert char coords HL to ZX screen address
 C $DA79,1 *8
 C $DA7E,3 ROM font address, for chars $20..$7F
@@ -1109,7 +1146,9 @@ c $DA98 Print string
 R $DA98 I:HL String address
 R $DA98 I:BC Row and column
 R $DA98 I:DE Print char procedure address
-C $DAA2,3 Print char and shift !!! mutable argument #R$DA59 / #R$DA63
+@ $DA98 label=PrintStringEx
+@ $DA9C label=PrintString
+C $DAA2,3 Print char and shift !!MUT-ARG!! #R$DA59 / #R$DA63
 c $DAAD Prepare game screen and some variables
 @ $DAAD label=PrepareGame
 C $DAAF,3 Clear screen with attribute A
@@ -1144,6 +1183,8 @@ C $DB3B,3 "1 2 3 4"
 C $DB41,3 Print string
 C $DB53,3 Game level 1..4
 C $DB62,3 get Number of lives
+C $DB65,1 0 / 1 / 2 / 3
+C $DB6F,3 save address in attributes area
 C $DB74,4 Diver object record address
 C $DB78,3 Print high score number
 C $DB7B,3 Print score number
@@ -1195,7 +1236,7 @@ b $DDF0 Blocks of 14 bytes to copy to #R$5B27, blocks aligned to 16 bytes
 W $DDF0,16,16 Level 1
 W $DE00,16,16 Level 2
 W $DE10,16,16 Level 3
-W $DE20,16,14 Level 4
+W $DE20,14,14 Level 4
 c $DE2E Update gauge indicator on the screen
 @ $DE2E label=UpdateGauge
 c $DE3E Update Depth indicator
@@ -1203,7 +1244,7 @@ c $DE3E Update Depth indicator
 b $DE55
 W $DE55,2,2 ???
 W $DE57,2,2 ???
-W $DE59,2,2 ???
+W $DE59,2,2 Lives indicator, address in screen attributes
 W $DE5B,2,2 ???
 @ $DE5B label=OXYGEN
 c $DE5D Update Oxygen indicator
@@ -1234,10 +1275,11 @@ W $DEFF,2,2 HELD value
 @ $DEFF label=HELD
 B $DF0F,2,2
 b $DF25 Table: Angle 0..15 -> (DX, DY)
+@ $DF25 label=AngleToDXDY
 B $DF25,,16
 b $DF45
 c $DFD5
-R $DFD5 I:IX Object address = $E33B
+R $DFD5 I:IX Diver object address = #R$E33B
 C $DFFF,3 get Angle 0..15
 C $E006,3 Table base address
 C $E00A,1 get DX value for the Angle
@@ -1277,7 +1319,7 @@ C $E2B1,3 get speed factor
 C $E2D4,3 Read keyboard input
 c $E2DB Read keyboard input
 @ $E2DB label=ReadKeyboard
-R $E2DB I:IX Object address = $E33B
+R $E2DB I:IX Diver object address = #R$E33B
 C $E2E0,3 get Angle
 C $E2E3,4 get port for Clockwise key
 C $E2E7,3 get bit mask for Clockwise key
@@ -1348,7 +1390,7 @@ B $E361,1,1 (IX+$26) ??? bits 0/1/2/3/4/5/6
 B $E362,1,1 (IX+$27) ???
 B $E363,1,1 (IX+$28) ???
 c $E364
-R $E364 I:IX Object address = $E33B
+R $E364 I:IX Diver object address = #R$E33B
 C $E373,3 Game level 1..4
 C $E38F,3 Explosion
 C $E3B6,3 Get screen attribute address
@@ -1371,7 +1413,7 @@ C $E422,2 rotate 180 degree
 C $E424,2 0..15
 C $E426,3 set Angle
 c $E43A Diver explosion ??
-R $E43A I:IX Object address = $E33B
+R $E43A I:IX Diver object address = #R$E33B
 C $E447,4 clear "moving" bit
 C $E44B,3 get Angle 0..15
 C $E44F,3 Explosion sprite address
@@ -1379,7 +1421,7 @@ C $E469,3 Play melody
 C $E46C,6 reset HELD value
 C $E472,3 Print HELD number
 c $E476 Process objects on the screen - like take Oxygen or pick up pearls
-R $E476 I:IX Object address = $E33B
+R $E476 I:IX Diver object address = #R$E33B
 C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
 C $E4FF,4 set HELD value
 C $E4FB,4 get value depending of game level
@@ -1495,11 +1537,15 @@ C $E97C,3 set Column value
 C $E98A,3 Sprite diver climbing on the boat
 C $E98D,6 set sprite address
 c $E9B0
-R $E9B0 I:IX Object address = $E33B
-C $E9C4,3 get Number of lives
+R $E9B0 I:IX Diver object address = #R$E33B
+C $E9C4,3 address of Number of lives
+C $E9C7,1 get Number of lives
+C $E9C8,1 one more live
+C $E9CA,3 Draw Divers on the Boat
 b $E9D1
 B $E9D8,2,2
 b $E9DA Score table, 160 bytes
+@ $E9DA label=ScoreTable
 B $E9DA,,16
 B $EA74,,16
 c $EA7A

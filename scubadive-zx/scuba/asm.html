@@ -1072,10 +1072,10 @@
 <td class="comment-1" rowspan="1">Address of 26-byte records in block <a href="asm.html#50416">C4F0</a>; NumRecsIV is number of records</td>
 </tr>
 <tr>
-<td class="asm-label"></td>
+<td class="asm-label">DelayVal</td>
 <td class="address-1"><span id="23333"></span>5B25</td>
 <td class="instruction">DEFW $0001</td>
-<td class="comment-1" rowspan="1">Value 150 / 100 / 50 / 1, depending on Game level 1..4</td>
+<td class="comment-1" rowspan="1">Delay value 150 / 100 / 50 / 1, depending on <a href="asm.html#23312">LEVEL</a>, see <a href="asm.html#50389">C4D5</a></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -5887,6 +5887,18 @@ Meduza sprites; width 1
 <div class="paragraph">
 Octopus phases 0..4, each phase 4*6*8 = 192 bytes
 </div>
+<div class="paragraph">
+<table class="">
+<tr>
+<td class="" colspan="1" rowspan="1"></td>
+<td class="" colspan="1" rowspan="1"></td>
+<td class="" colspan="1" rowspan="1"></td>
+<td class="" colspan="1" rowspan="1"></td>
+<td class="" colspan="1" rowspan="1"></td>
+<td class="" colspan="1" rowspan="1"><img alt="octopus_anim" src="images/udgs/octopus_anim.png" /></td>
+</tr>
+</table>
+</div>
 </div>
 </td>
 </tr>
@@ -8226,7 +8238,7 @@ Used by the routines at <a href="asm.html#55696">Game</a>, <a href="asm.html#573
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="40245"></span>9D35</td>
-<td class="instruction">CALL <a href="#45894">$B346</a></td>
+<td class="instruction">CALL <a href="#45894">ProcessOctopus_2</a></td>
 <td class="comment-1" rowspan="1">Draw Octopus</td>
 </tr>
 <tr>
@@ -8658,7 +8670,7 @@ Used by the routines at <a href="asm.html#40362">PrepareMiniMap</a>, <a href="as
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="40324" class="description">9D84: Random</div>
+<div id="40324" class="description">9D84: Generate next pseudo-random 16-bit value</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -8667,6 +8679,15 @@ Used by the routines at <a href="asm.html#40362">PrepareMiniMap</a>, <a href="as
 Used by the routines at <a href="asm.html#40362">PrepareMiniMap</a>, <a href="asm.html#40833">9F81</a>, <a href="asm.html#41019">A03B</a>, <a href="asm.html#41363">A193</a>, <a href="asm.html#45524">B1D4</a>, <a href="asm.html#45587">B213</a>, <a href="asm.html#48515">BD83</a>, <a href="asm.html#48859">BEDB</a>, <a href="asm.html#49072">BFB0</a> and <a href="asm.html#49161">C009</a>.
 </div>
 </div>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">new random value, also saved to <a href="asm.html#23301">RANDOM</a></td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -12089,7 +12110,7 @@ Used by the routine at <a href="asm.html#40362">PrepareMiniMap</a>.
 <tr>
 <td class="address-1"><span id="41366"></span>A196</td>
 <td class="instruction">LD DE,<a href="#41598">TableStatics</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Table of static objects on the map</td>
 </tr>
 <tr>
 <td class="address-1"><span id="41369"></span>A199</td>
@@ -12124,7 +12145,7 @@ Used by the routine at <a href="asm.html#40362">PrepareMiniMap</a>.
 <tr>
 <td class="address-1"><span id="41380"></span>A1A4</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">0..31</td>
 </tr>
 <tr>
 <td class="address-1"><span id="41382"></span>A1A6</td>
@@ -12149,7 +12170,7 @@ Used by the routine at <a href="asm.html#40362">PrepareMiniMap</a>.
 <tr>
 <td class="address-1"><span id="41388"></span>A1AC</td>
 <td class="instruction">LD A,$80</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">end of list marker</td>
 </tr>
 <tr>
 <td class="address-1"><span id="41390"></span>A1AE</td>
@@ -15946,7 +15967,7 @@ Used by the routine at <a href="asm.html#45587">B213</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="45769"></span>B2C9</td>
-<td class="instruction">CALL <a href="#45847">$B317</a></td>
+<td class="instruction">CALL <a href="#45847">ProcessOctopus</a></td>
 <td class="comment-1" rowspan="1">Process Octopus, draw if needed</td>
 </tr>
 <tr>
@@ -16221,136 +16242,163 @@ Used by the routine at <a href="asm.html#45760">B2C0</a>.
 </td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus</td>
 <td class="address-2"><span id="45847"></span>B317</td>
 <td class="instruction">LD A,(<a href="#40016">$9C50</a>)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45850"></span>B31A</td>
 <td class="instruction">OR A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45851"></span>B31B</td>
 <td class="instruction">RET Z</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45852"></span>B31C</td>
 <td class="instruction">LD HL,<a href="#45846">$B316</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45855"></span>B31F</td>
 <td class="instruction">DEC (HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45856"></span>B320</td>
 <td class="instruction">RET NZ</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45857"></span>B321</td>
 <td class="instruction">LD (HL),$10</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45859"></span>B323</td>
 <td class="instruction">LD A,(<a href="#40021">$9C55</a>)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45862"></span>B326</td>
 <td class="instruction">LD B,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45863"></span>B327</td>
 <td class="instruction">BIT 7,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45865"></span>B329</td>
-<td class="instruction">JR NZ,$B339</td>
+<td class="instruction">JR NZ,<a href="#45881">ProcessOctopus_0</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45867"></span>B32B</td>
 <td class="instruction">LD A,R</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45869"></span>B32D</td>
-<td class="instruction">JR Z,$B345</td>
+<td class="instruction">JR Z,<a href="#45893">ProcessOctopus_1</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45871"></span>B32F</td>
 <td class="instruction">INC B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45872"></span>B330</td>
 <td class="instruction">LD A,$05</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45874"></span>B332</td>
 <td class="instruction">CP B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45875"></span>B333</td>
-<td class="instruction">JR NZ,$B345</td>
+<td class="instruction">JR NZ,<a href="#45893">ProcessOctopus_1</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45877"></span>B335</td>
 <td class="instruction">LD B,$83</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45879"></span>B337</td>
-<td class="instruction">JR $B345</td>
+<td class="instruction">JR <a href="#45893">ProcessOctopus_1</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus_0</td>
 <td class="address-2"><span id="45881"></span>B339</td>
 <td class="instruction">LD A,R</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45883"></span>B33B</td>
-<td class="instruction">JR Z,$B345</td>
+<td class="instruction">JR Z,<a href="#45893">ProcessOctopus_1</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45885"></span>B33D</td>
 <td class="instruction">DEC B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45886"></span>B33E</td>
 <td class="instruction">LD A,$7F</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45888"></span>B340</td>
 <td class="instruction">CP B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45889"></span>B341</td>
-<td class="instruction">JR NZ,$B345</td>
+<td class="instruction">JR NZ,<a href="#45893">ProcessOctopus_1</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45891"></span>B343</td>
 <td class="instruction">LD B,$01</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus_1</td>
 <td class="address-2"><span id="45893"></span>B345</td>
 <td class="instruction">LD A,B</td>
 <td class="comment-1" rowspan="1"></td>
@@ -16366,61 +16414,73 @@ This entry point is used by the routine at <a href="asm.html#40022">DrawGameScr<
 </td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus_2</td>
 <td class="address-2"><span id="45894"></span>B346</td>
 <td class="instruction">LD (<a href="#40021">$9C55</a>),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45897"></span>B349</td>
 <td class="instruction">LD HL,<a href="#36212">SprOctopus</a></td>
 <td class="comment-1" rowspan="1">Base address for Octopus phases</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45900"></span>B34C</td>
 <td class="instruction">AND $07</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45902"></span>B34E</td>
 <td class="instruction">LD B,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45903"></span>B34F</td>
 <td class="instruction">OR A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45904"></span>B350</td>
-<td class="instruction">JR Z,$B358</td>
+<td class="instruction">JR Z,<a href="#45912">ProcessOctopus_4</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45906"></span>B352</td>
 <td class="instruction">LD DE,$00C0</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus_3</td>
 <td class="address-2"><span id="45909"></span>B355</td>
 <td class="instruction">ADD HL,DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45910"></span>B356</td>
-<td class="instruction">DJNZ $B355</td>
+<td class="instruction">DJNZ <a href="#45909">ProcessOctopus_3</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label">ProcessOctopus_4</td>
 <td class="address-2"><span id="45912"></span>B358</td>
 <td class="instruction">EX DE,HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45913"></span>B359</td>
 <td class="instruction">CALL <a href="#45917">DrawOctopusSprite</a></td>
 <td class="comment-1" rowspan="1">Draw Octopus sprite</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="45916"></span>B35C</td>
 <td class="instruction">RET</td>
 <td class="comment-1" rowspan="1"></td>
@@ -16432,7 +16492,7 @@ This entry point is used by the routine at <a href="asm.html#40022">DrawGameScr<
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
-Used by the routine at <a href="asm.html#45847">B317</a>.
+Used by the routine at <a href="asm.html#45847">ProcessOctopus</a>.
 </div>
 </div>
 <table class="input">
@@ -22734,8 +22794,16 @@ Used by the routines at <a href="asm.html#48859">BEDB</a>, <a href="asm.html#490
 <th colspan="2">Input</th>
 </tr>
 <tr>
-<td class="register">A</td>
+<td class="register">L</td>
 <td class="register-desc">???</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">???</td>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">record address in <a href="asm.html#50416">C4F0</a> area</td>
 </tr>
 </table>
 </td>
@@ -22813,7 +22881,7 @@ Used by the routines at <a href="asm.html#48859">BEDB</a>, <a href="asm.html#490
 <tr>
 <td class="address-1"><span id="48539"></span>BD9B</td>
 <td class="instruction">LD HL,<a href="#48554">$BDAA</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">!!MUT-ARG!! LBDAA or LBDB2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48542"></span>BD9E</td>
@@ -26313,7 +26381,7 @@ Used by the routine at <a href="asm.html#48618">BDEA</a>.
 </tr>
 <tr>
 <td class="address-2"><span id="50391"></span>C4D7</td>
-<td class="instruction">LD BC,(<a href="#23333">$5B25</a>)</td>
+<td class="instruction">LD BC,(<a href="#23333">DelayVal</a>)</td>
 <td class="comment-1" rowspan="1">get value 150 / 100 / 50 / 1, depending on Game level</td>
 </tr>
 <tr>
@@ -28200,7 +28268,7 @@ Used by the routines at <a href="asm.html#55696">Game</a> and <a href="asm.html#
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="56308"></span>DBF4</td>
-<td class="instruction">LD (<a href="#23333">$5B25</a>),HL</td>
+<td class="instruction">LD (<a href="#23333">DelayVal</a>),HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
@@ -28254,7 +28322,7 @@ Used by the routines at <a href="asm.html#55696">Game</a> and <a href="asm.html#
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="56325"></span>DC05</td>
-<td class="instruction">LD (<a href="#23333">$5B25</a>),A</td>
+<td class="instruction">LD (<a href="#23333">DelayVal</a>),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
@@ -28595,6 +28663,32 @@ Used by the routines at <a href="asm.html#55696">Game</a> and <a href="asm.html#
 Used by the routines at <a href="asm.html#56894">UpdateDepth</a> and <a href="asm.html#56925">UpdateOxygen</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">value 0..127</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">base address in screen area</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">old address for the indicator</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">new address for the indicator</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -28760,13 +28854,13 @@ Used by the routine at <a href="asm.html#57301">DFD5</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="56917"></span>DE55</td>
 <td class="instruction">DEFW $0000</td>
-<td class="comment-1" rowspan="1">???</td>
+<td class="comment-1" rowspan="1">Depth indicator, address in screen area</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="56919"></span>DE57</td>
 <td class="instruction">DEFW $0000</td>
-<td class="comment-1" rowspan="1">???</td>
+<td class="comment-1" rowspan="1">Oxygen indicator, address in screen area</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -28778,10 +28872,10 @@ Used by the routine at <a href="asm.html#57301">DFD5</a>.
 <td class="asm-label">OXYGEN</td>
 <td class="address-1"><span id="56923"></span>DE5B</td>
 <td class="instruction">DEFW $FFFF</td>
-<td class="comment-1" rowspan="1">???</td>
+<td class="comment-1" rowspan="1">Oxygen level, maximum is $FFFF</td>
 </tr>
 </table>
-<div id="56925" class="description">DE5D: Update Oxygen indicator</div>
+<div id="56925" class="description">DE5D: Update Oxygen indicator, maximum is $FFFF</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -29381,8 +29475,8 @@ Used by the routines at <a href="asm.html#55981">PrepareGame</a>, <a href="asm.h
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="57103"></span>DF0F</td>
-<td class="instruction">DEFB $00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFW $0000</td>
+<td class="comment-1" rowspan="1">???</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -31056,7 +31150,7 @@ Used by the routine at <a href="asm.html#55696">Game</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="58075" class="description">E2DB: Read keyboard input</div>
+<div id="58075" class="description">E2DB: Read and process keyboard input</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31477,7 +31571,7 @@ Decelerate key pressed
 <td class="asm-label"></td>
 <td class="address-1"><span id="58187"></span>E34B</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1">(IX+$10) ??? bits 0/1/2/3/4/5/6/7; bit0: 1 = diver moving, 0 = diver stopped</td>
+<td class="comment-1" rowspan="1">(IX+$10) flag bits; bit0: 1 = diver moving, 0 = stopped</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -32272,7 +32366,7 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="58486" class="description">E476: Process objects on the screen - like take Oxygen or pick up pearls</div>
+<div id="58486" class="description">E476: Interact with object, like take Oxygen or pick up pearls</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32289,63 +32383,67 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="register">IX</td>
 <td class="register-desc">Diver object address = <a href="asm.html#58171">DiverObj</a></td>
 </tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">column and row</td>
+</tr>
 </table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="58486"></span>E476</td>
 <td class="instruction">LD IY,<a href="#45181">$B07D</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Table of objects on the screen</td>
 </tr>
 <tr>
 <td class="address-2"><span id="58490"></span>E47A</td>
 <td class="instruction">LD A,(IY+$01)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get address high</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58493"></span>E47D</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">end of list marker?</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58495"></span>E47F</td>
 <td class="instruction">JP Z,<a href="#59669">$E915</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">yes =&gt; exit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58498"></span>E482</td>
 <td class="instruction">LD D,(IY+$03)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58501"></span>E485</td>
 <td class="instruction">LD E,(IY+$02)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58504"></span>E488</td>
 <td class="instruction">LD B,A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">record address hi (in <a href="asm.html#41598">TableStatics</a> table)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58505"></span>E489</td>
 <td class="instruction">LD C,(IY+$00)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">record address lo</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58508"></span>E48C</td>
 <td class="instruction">LD A,(BC)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get record flags</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58509"></span>E48D</td>
 <td class="instruction">BIT 5,A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">check "oxygen" bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58511"></span>E48F</td>
 <td class="instruction">JR Z,$E4B2</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">not oxygen =&gt; jump</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58513"></span>E491</td>
@@ -32376,6 +32474,16 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="address-1"><span id="58519"></span>E497</td>
 <td class="instruction">JR NZ,$E4AB</td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="58521"></span>
+<div class="comments">
+<div class="paragraph">
+We've got Oxygen object
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-1"><span id="58521"></span>E499</td>
@@ -32481,6 +32589,16 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="address-1"><span id="58561"></span>E4C1</td>
 <td class="instruction">JR NZ,$E4AB</td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="58563"></span>
+<div class="comments">
+<div class="paragraph">
+We've got Chest object
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-2"><span id="58563"></span>E4C3</td>
@@ -32866,6 +32984,16 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="address-1"><span id="58704"></span>E550</td>
 <td class="instruction">JP <a href="#58392">$E418</a></td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="58707"></span>
+<div class="comments">
+<div class="paragraph">
+We've got a shell, big or small
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-2"><span id="58707"></span>E553</td>
@@ -34645,6 +34773,16 @@ Used by the routine at <a href="asm.html#58212">E364</a>.
 <td class="address-1"><span id="59555"></span>E8A3</td>
 <td class="instruction">JR NZ,$E8FA</td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="59557"></span>
+<div class="comments">
+<div class="paragraph">
+HELD goes into SCORE, and resets
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59557"></span>E8A5</td>

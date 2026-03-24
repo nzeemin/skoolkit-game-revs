@@ -42,7 +42,8 @@ W $5B21,2,2 Address of 26-byte records in block #R$C4F0; NumRecsIII is number of
 @ $5B21 label=RecsAddrIII
 W $5B23,2,2 Address of 26-byte records in block #R$C4F0; NumRecsIV is number of records
 @ $5B23 label=RecsAddrIV
-W $5B25,2,2 Value 150 / 100 / 50 / 1, depending on Game level 1..4
+W $5B25,2,2 Delay value 150 / 100 / 50 / 1, depending on #R$5B10, see #R$C4D5
+@ $5B25 label=DelayVal
 W $5B27,14,8 14 bytes copied from #R$DDF0 + ([Game level] - 1) * 16
 W $5B35,2,2 ???
 B $5B37,1,1 Number of lives
@@ -315,6 +316,14 @@ B $8D53,16,8 #HTML[#UDGARRAY1,,,1,,;$8D53-$8D62-1-8(meduza1)]
 B $8D63,16,8 #HTML[#UDGARRAY1,,,1,,;$8D63-$8D72-1-8(meduza2)]
 B $8D73,1,1
 N $8D74 Octopus phases 0..4, each phase 4*6*8 = 192 bytes
+N $8D74 #HTML[#UDGTABLE {
+. #UDGARRAY6,,,1,,;$8D74-$8E33-8(*octopus0) |
+. #UDGARRAY6,,,1,,;$8E34-$8EF3-8(*octopus1) |
+. #UDGARRAY6,,,1,,;$8EF4-$8FB3-8(*octopus2) |
+. #UDGARRAY6,,,1,,;$8FB4-$9073-8(*octopus3) |
+. #UDGARRAY6,,,1,,;$9074-$9133-8(*octopus4) |
+. #FRAMES(octopus0;octopus1;octopus2;octopus3;octopus4;octopus3;octopus2;octopus1)(octopus_anim)
+. } TABLE#]
 @ $8D74 label=SprOctopus
 B $8D74,192,16 #HTML[#UDGARRAY6,,,1,,;$8D74-$8E33-8(octopus0)] 0
 B $8E34,192,16 #HTML[#UDGARRAY6,,,1,,;$8E34-$8EF3-8(octopus1)] 1
@@ -500,7 +509,8 @@ c $9D79 Calculate address in the mini-map (#R$AC5D table) and Set
 R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
 C $9D7C,3 Calculate address in the mini-map (#R$AC5D table)
-c $9D84 Random
+c $9D84 Generate next pseudo-random 16-bit value
+R $9D84 O:HL new random value, also saved to #R$5B05
 @ $9D84 label=NextRandom
 N $9D84 Calculate next number in pseudo-random sequence
 C $9D89,1 x2
@@ -654,6 +664,9 @@ R $A187 I:HL Char coords H = row 0..23, L = column 0..31
 R $A187 I:DE Tile address; 8 bytes
 C $A187,3 Convert char coords HL to ZX screen address
 c $A193
+C $A196,3 Table of static objects on the map
+C $A1A4,2 0..31
+C $A1AC,2 end of list marker
 C $A1B0,3 Calc address in #R$AC5D and Get
 C $A227,3 Random
 C $A26E,3 get current Random
@@ -796,6 +809,7 @@ B $B306,16,8 #HTML[#UDGARRAY2,,,2,,;$B306-$B315-1-16(sprB306)]
 b $B316
 B $B316,1,1
 c $B317 Process Octopus, draw if needed
+@ $B317 label=ProcessOctopus
 C $B349,3 Base address for Octopus phases
 C $B359,3 Draw Octopus sprite
 c $B35D Draw Octopus sprite
@@ -883,8 +897,11 @@ C $BCE4,3 set X value
 C $BCE7,3 set Y value
 C $BD62,4 clear "moving" bit
 c $BD83
-R $BD83 I:A ???
+R $BD83 I:L ???
+R $BD83 I:C ???
+R $BD83 I:IX record address in #R$C4F0 area
 C $BD95,3 Random
+C $BD9B,3 !!MUT-ARG!! LBDAA or LBDB2
 C $BDA4,3 set DX value
 b $BDA9
 c $BDBA
@@ -1239,15 +1256,19 @@ W $DE10,16,16 Level 3
 W $DE20,14,14 Level 4
 c $DE2E Update gauge indicator on the screen
 @ $DE2E label=UpdateGauge
+R $DE2E I:A value 0..127
+R $DE2E I:DE base address in screen area
+R $DE2E I:HL old address for the indicator
+R $DE2E O:HL new address for the indicator
 c $DE3E Update Depth indicator
 @ $DE3E label=UpdateDepth
 b $DE55
-W $DE55,2,2 ???
-W $DE57,2,2 ???
+W $DE55,2,2 Depth indicator, address in screen area
+W $DE57,2,2 Oxygen indicator, address in screen area
 W $DE59,2,2 Lives indicator, address in screen attributes
-W $DE5B,2,2 ???
+W $DE5B,2,2 Oxygen level, maximum is $FFFF
 @ $DE5B label=OXYGEN
-c $DE5D Update Oxygen indicator
+c $DE5D Update Oxygen indicator, maximum is $FFFF
 @ $DE5D label=UpdateOxygen
 R $DE5D I:HL New value for Oxygen
 C $DE79,3 Play melody $E629
@@ -1273,7 +1294,7 @@ C $DEF9,3 Print decimal number
 b $DEFD
 W $DEFF,2,2 HELD value
 @ $DEFF label=HELD
-B $DF0F,2,2
+W $DF0F,2,2 ???
 b $DF25 Table: Angle 0..15 -> (DX, DY)
 @ $DF25 label=AngleToDXDY
 B $DF25,,16
@@ -1317,7 +1338,7 @@ c $E2A8
 C $E2A8,4 Diver object record address
 C $E2B1,3 get speed factor
 C $E2D4,3 Read keyboard input
-c $E2DB Read keyboard input
+c $E2DB Read and process keyboard input
 @ $E2DB label=ReadKeyboard
 R $E2DB I:IX Diver object address = #R$E33B
 C $E2E0,3 get Angle
@@ -1366,8 +1387,8 @@ W $E346,2,2 (IX+$0B) Sprite address
 B $E348,1,1 (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
 B $E349,1,1 (IX+$0E) speed factor: 12 20 40 100; $08 max speed, $14 min speed
 B $E34A,1,1 (IX+$0F) speed counter
-B $E34B,1,1 (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
-. bit0: 1 = diver moving, 0 = diver stopped
+B $E34B,1,1 (IX+$10) flag bits;
+. bit0: 1 = diver moving, 0 = stopped
 B $E34C,1,1 (IX+$11) ??? $00 $FF
 B $E34D,1,1 (IX+$12) ??? $00
 B $E34E,1,1 (IX+$13) X value
@@ -1420,8 +1441,22 @@ C $E44F,3 Explosion sprite address
 C $E469,3 Play melody
 C $E46C,6 reset HELD value
 C $E472,3 Print HELD number
-c $E476 Process objects on the screen - like take Oxygen or pick up pearls
+c $E476 Interact with object, like take Oxygen or pick up pearls
 R $E476 I:IX Diver object address = #R$E33B
+R $E476 I:HL column and row
+C $E476,4 Table of objects on the screen
+C $E47A,3 get address high
+C $E47D,2 end of list marker?
+C $E47F,3 yes => exit
+C $E482,3 get row
+C $E485,3 get column
+C $E488,1 record address hi (in #R$A27E table)
+C $E489,3 record address lo
+C $E48C,1 get record flags
+C $E48D,2 check "oxygen" bit
+C $E48F,2 not oxygen => jump
+N $E499 We've got Oxygen object
+N $E4C3 We've got Chest object
 C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
 C $E4FF,4 set HELD value
 C $E4FB,4 get value depending of game level
@@ -1434,6 +1469,7 @@ C $E53E,3 get value depending of game level
 C $E541,3 set HELD value
 C $E54A,3 Print HELD number
 C $E54D,3 Play melody $E60B
+N $E553 We've got a shell, big or small
 C $E575,3 get value 2 / 4 / 6 / 8, depending on Game level
 C $E595,3 Print HELD number
 C $E598,3 Play melody $E60B
@@ -1516,6 +1552,7 @@ C $E867,4 clear DY value
 C $E873,4 clear "moving" bit
 C $E877,3 Game level 1..4
 C $E894,3 Play melody
+N $E8A5 HELD goes into SCORE, and resets
 C $E8A5,3 get HELD value
 C $E8A8,4 get Score value
 C $E8AD,3 set Score value

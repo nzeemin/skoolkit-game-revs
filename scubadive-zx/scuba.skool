@@ -274,8 +274,9 @@ b$5B00 DEFB $00                     ; ???
 @label=RecsAddrIV
  $5B23 DEFW $0000                   ; Address of 26-byte records in block
                                     ; #R$C4F0; NumRecsIV is number of records
- $5B25 DEFW $0001                   ; Value 150 / 100 / 50 / 1, depending on
-                                    ; Game level 1..4
+@label=DelayVal
+ $5B25 DEFW $0001                   ; Delay value 150 / 100 / 50 / 1, depending
+                                    ; on #R$5B10, see #R$C4D5
  $5B27 DEFW $0000,$0000,$0000,$0000 ; {14 bytes copied from #R$DDF0 + ([Game
  $5B2F DEFW $0000,$0000,$0000       ; level] - 1) * 16}
  $5B35 DEFW $DF45                   ; ???
@@ -1184,6 +1185,15 @@ b$6000 DEFB $0F,$00,$00,$50,$91,$C0,$2C,$6F,$E0,$73,$FF,$F8                     
  $8D6B DEFB $A5,$6A,$8A,$88,$08,$08,$08,$10                                                                 ; }
  $8D73 DEFB $FF
 ; Octopus phases 0..4, each phase 4*6*8 = 192 bytes
+; .
+; #HTML[#UDGTABLE {
+; #UDGARRAY6,,,1,,;$8D74-$8E33-8(*octopus0) |
+; #UDGARRAY6,,,1,,;$8E34-$8EF3-8(*octopus1) |
+; #UDGARRAY6,,,1,,;$8EF4-$8FB3-8(*octopus2) |
+; #UDGARRAY6,,,1,,;$8FB4-$9073-8(*octopus3) |
+; #UDGARRAY6,,,1,,;$9074-$9133-8(*octopus4) |
+; #FRAMES(octopus0;octopus1;octopus2;octopus3;octopus4;octopus3;octopus2;octopus1)(octopus_anim)
+; } TABLE#]
 @label=SprOctopus
  $8D74 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00                                 ; {#HTML[#UDGARRAY6,,,1,,;$8D74-$8E33-8(octopus0)]
  $8D84 DEFB $40,$40,$80,$80,$80,$C0,$40,$60,$00,$02,$02,$02,$06,$1C,$30,$E0                                 ; 0
@@ -1739,12 +1749,12 @@ c$9D79 PUSH HL       ;
  $9D82 POP HL        ;
  $9D83 RET           ;
 
-; Random
+; Generate next pseudo-random 16-bit value
 ;
 ; Used by the routines at #R$9DAA, #R$9F81, #R$A03B, #R$A193, #R$B1D4, #R$B213,
 ; #R$BD83, #R$BEDB, #R$BFB0 and #R$C009.
 ;
-; .
+; O:HL new random value, also saved to #R$5B05
 ;
 ; Calculate next number in pseudo-random sequence
 @label=NextRandom
@@ -2394,19 +2404,19 @@ c$A187 CALL $A164    ; Convert char coords HL to ZX screen address
 ;
 ; Used by the routine at #R$9DAA.
 c$A193 LD HL,$20FF   ;
- $A196 LD DE,$A27E   ;
+ $A196 LD DE,$A27E   ; Table of static objects on the map
  $A199 XOR A         ;
  $A19A LD ($5B00),A  ;
  $A19D LD A,$03      ;
  $A19F LD ($5B0F),A  ;
 *$A1A2 INC L         ;
  $A1A3 LD A,L        ;
- $A1A4 AND $1F       ;
+ $A1A4 AND $1F       ; 0..31
  $A1A6 JR NZ,$A1B0   ;
  $A1A8 LD L,A        ;
  $A1A9 DEC H         ;
  $A1AA JR NZ,$A1B0   ;
- $A1AC LD A,$80      ;
+ $A1AC LD A,$80      ; end of list marker
  $A1AE LD (DE),A     ;
  $A1AF RET           ;
 *$A1B0 CALL $9D56    ; Calc address in #R$AC5D and Get
@@ -3257,6 +3267,7 @@ b$B316 DEFB $09
 ; Process Octopus, draw if needed
 ;
 ; Used by the routine at #R$B2C0.
+@label=ProcessOctopus
 c$B317 LD A,($9C50)  ;
  $B31A OR A          ;
  $B31B RET Z         ;
@@ -4580,7 +4591,9 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 ;
 ; Used by the routines at #R$BEDB, #R$BFB0 and #R$C009.
 ;
-; I:A ???
+; I:L ???
+; I:C ???
+; I:IX record address in #R$C4F0 area
 c$BD83 LD A,L        ;
  $BD84 AND C         ;
  $BD85 ADD A,C       ;
@@ -4595,7 +4608,7 @@ c$BD83 LD A,L        ;
  $BD95 CALL $9D84    ; Random
  $BD98 LD A,H        ;
  $BD99 AND $07       ;
- $BD9B LD HL,$BDAA   ;
+ $BD9B LD HL,$BDAA   ; !!MUT-ARG!! LBDAA or LBDB2
  $BD9E ADD A,L       ;
  $BD9F LD L,A        ;
  $BDA0 JR NC,$BDA3   ;
@@ -5737,6 +5750,11 @@ b$DDF0 DEFW $0002,$0005,$004B,$0019,$0032,$00FA,$0019,$0000 ; Level 1
 ; Update gauge indicator on the screen
 ;
 ; Used by the routines at #R$DE3E and #R$DE5D.
+;
+; I:A value 0..127
+; I:DE base address in screen area
+; I:HL old address for the indicator
+; O:HL new address for the indicator
 @label=UpdateGauge
 c$DE2E LD (HL),$38   ;
  $DE30 RRCA          ;
@@ -5768,13 +5786,13 @@ c$DE3E LD HL,($DE55) ;
  $DE54 RET           ;
 
 ; Data block at DE55
-b$DE55 DEFW $0000    ; ???
- $DE57 DEFW $0000    ; ???
+b$DE55 DEFW $0000    ; Depth indicator, address in screen area
+ $DE57 DEFW $0000    ; Oxygen indicator, address in screen area
  $DE59 DEFW $0000    ; Lives indicator, address in screen attributes
 @label=OXYGEN
- $DE5B DEFW $FFFF    ; ???
+ $DE5B DEFW $FFFF    ; Oxygen level, maximum is $FFFF
 
-; Update Oxygen indicator
+; Update Oxygen indicator, maximum is $FFFF
 ;
 ; Used by the routines at #R$E364, #R$E476 and #R$E767.
 ;
@@ -5891,7 +5909,7 @@ b$DEFD DEFB $00,$00
  $DEFF DEFW $0000                           ; HELD value
  $DF01 DEFB $00,$00,$00,$00,$00,$00,$02,$03
  $DF09 DEFB $02,$03,$18,$10,$00,$30
- $DF0F DEFB $00,$00
+ $DF0F DEFW $0000                           ; ???
  $DF11 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF19 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DF21 DEFB $00,$00,$00,$00
@@ -6231,7 +6249,7 @@ c$E2A8 LD IX,$E33B     ; Diver object record address
  $E2D7 CALL $E364      ;
  $E2DA RET             ;
 
-; Read keyboard input
+; Read and process keyboard input
 ;
 ; Used by the routine at #R$E2A8.
 ;
@@ -6305,8 +6323,8 @@ b$E33B DEFB $0A      ; (IX+$00) Column 0..31
  $E349 DEFB $14      ; (IX+$0E) speed factor: 12 20 40 100; $08 max speed, $14
                      ; min speed
  $E34A DEFB $14      ; (IX+$0F) speed counter
- $E34B DEFB $00      ; (IX+$10) ??? bits 0/1/2/3/4/5/6/7;
-                     ; bit0: 1 = diver moving, 0 = diver stopped
+ $E34B DEFB $00      ; (IX+$10) flag bits;
+                     ; bit0: 1 = diver moving, 0 = stopped
  $E34C DEFB $00      ; (IX+$11) ??? $00 $FF
  $E34D DEFB $00      ; (IX+$12) ??? $00
  $E34E DEFB $08      ; (IX+$13) X value
@@ -6465,28 +6483,30 @@ c$E43A BIT 3,(IX+$26) ;
  $E472 CALL $DEF1     ; Print HELD number
  $E475 RET            ;
 
-; Process objects on the screen - like take Oxygen or pick up pearls
+; Interact with object, like take Oxygen or pick up pearls
 ;
 ; Used by the routine at #R$E364.
 ;
 ; I:IX Diver object address = #R$E33B
-c$E476 LD IY,$B07D    ;
-*$E47A LD A,(IY+$01)  ;
- $E47D CP $FF         ;
- $E47F JP Z,$E915     ;
- $E482 LD D,(IY+$03)  ;
- $E485 LD E,(IY+$02)  ;
- $E488 LD B,A         ;
- $E489 LD C,(IY+$00)  ;
- $E48C LD A,(BC)      ;
- $E48D BIT 5,A        ;
- $E48F JR Z,$E4B2     ;
+; I:HL column and row
+c$E476 LD IY,$B07D    ; Table of objects on the screen
+*$E47A LD A,(IY+$01)  ; get address high
+ $E47D CP $FF         ; end of list marker?
+ $E47F JP Z,$E915     ; yes => exit
+ $E482 LD D,(IY+$03)  ; get row
+ $E485 LD E,(IY+$02)  ; get column
+ $E488 LD B,A         ; record address hi (in #R$A27E table)
+ $E489 LD C,(IY+$00)  ; record address lo
+ $E48C LD A,(BC)      ; get record flags
+ $E48D BIT 5,A        ; check "oxygen" bit
+ $E48F JR Z,$E4B2     ; not oxygen => jump
  $E491 LD A,D         ;
  $E492 CP H           ;
  $E493 JR NZ,$E4AB    ;
  $E495 LD A,E         ;
  $E496 CP L           ;
  $E497 JR NZ,$E4AB    ;
+; We've got Oxygen object
  $E499 LD HL,($DE5B)  ;
  $E49C LD BC,$00C8    ;
  $E49F ADD HL,BC      ;
@@ -6508,6 +6528,7 @@ c$E476 LD IY,$B07D    ;
  $E4BF DEC A          ;
  $E4C0 CP E           ;
  $E4C1 JR NZ,$E4AB    ;
+; We've got Chest object
 *$E4C3 BIT 6,(IX+$10) ;
  $E4C7 JP NZ,$E418    ;
  $E4CA BIT 4,(IX+$10) ;
@@ -6585,6 +6606,7 @@ c$E476 LD IY,$B07D    ;
  $E54A CALL $DEF1     ; Print HELD number
  $E54D CALL $E615     ; Play melody $E60B
  $E550 JP $E418       ;
+; We've got a shell, big or small
 *$E553 BIT 1,A        ;
  $E555 JR Z,$E5A9     ;
  $E557 LD A,H         ;
@@ -6957,6 +6979,7 @@ c$E767 BIT 0,(IX+$26)  ;
  $E89E LD A,(IX+$03)   ;
  $E8A1 CP $07          ;
  $E8A3 JR NZ,$E8FA     ;
+; HELD goes into SCORE, and resets
  $E8A5 LD HL,($DEFF)   ; get HELD value
  $E8A8 LD DE,($5B44)   ; get Score value
  $E8AC ADD HL,DE       ;

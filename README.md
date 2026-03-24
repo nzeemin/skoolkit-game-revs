@@ -55,7 +55,7 @@ Original: for ZX Spectrum, 1983, Durell Software.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 
-Status: Work in progress (64K .ctl file).
+Status: Work in progress (66K .ctl file).
 
 Follow-up projects:
 * [vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive)

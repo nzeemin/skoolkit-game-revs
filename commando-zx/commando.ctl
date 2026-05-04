@@ -497,8 +497,8 @@ b $7BB6
 b $7BCA
 b $7DC4
 b $7EA0 Font
-D $7EA0 #HTML[#UDGARRAY16;$7EA0-$7F1F-8(font0.png)]
-. #HTML[#UDGARRAY28;$7F20-$7FFF-8(font1.png)]
+D $7EA0 #HTML[#UDGARRAY16($7EA0-$7F1F-8)(font0.png)]
+. #HTML[#UDGARRAY28($7F20-$7FFF-8)(font1.png)]
 b $8000
 c $8003 -> $9193
 c $8006 -> $91AA
@@ -1784,40 +1784,40 @@ W $C04E Sprite addr ???; width 2
 b $C050 Sprite ???; width 2
 b $C0A0 Sprite ???; width 2
 b $C0F0 Sprite Cliff bottom left; width 6
-B $C0F0,,12 #HTML[#UDGARRAY6,,,6;$C0F0-$C1DF-1-48(cliffbotlt)]
+B $C0F0,,12 #HTML[#UDGARRAY6,,,6($C0F0-$C1DF-1-48)(cliffbotlt)]
 b $C1E0 Sprite Cliff top left; width 6
-B $C1E0,,12 #HTML[#UDGARRAY6,,,6;$C1E0-$C26F-1-48(clifftoplt)]
+B $C1E0,,12 #HTML[#UDGARRAY6,,,6($C1E0-$C26F-1-48)(clifftoplt)]
 b $C270 Sprite ???; width 2
 b $C2C4 Sprite ???; width 2
 b $C318 Sprite Cliff edge left; width 2
-B $C318,,8 #HTML[#UDGARRAY2,,,2;$C318-$C34F-1-16(clifflt)]
+B $C318,,8 #HTML[#UDGARRAY2,,,2($C318-$C34F-1-16)(clifflt)]
 b $C350 Sprite Cliff edge right; width 2
-B $C350,,8 #HTML[#UDGARRAY2,,,2;$C350-$C387-1-16(cliffrt)]
+B $C350,,8 #HTML[#UDGARRAY2,,,2($C350-$C387-1-16)(cliffrt)]
 b $C388 Sprite Cliff bottom right; width 6
-B $C388,,12 #HTML[#UDGARRAY6,,,6;$C388-$C477-1-48(cliffbotrt)]
+B $C388,,12 #HTML[#UDGARRAY6,,,6($C388-$C477-1-48)(cliffbotrt)]
 b $C478 Sprite Cliff top right; width 6
-B $C478,,12 #HTML[#UDGARRAY6,,,6;$C478-$C507-1-48(clifftoprt)]
+B $C478,,12 #HTML[#UDGARRAY6,,,6($C478-$C507-1-48)(clifftoprt)]
 b $C508 Sprite Cave, exit to the right; width 6
-B $C508,,12 #HTML[#UDGARRAY6,,,6;$C508-$C5F7-1-48(cavert)]
+B $C508,,12 #HTML[#UDGARRAY6,,,6($C508-$C5F7-1-48)(cavert)]
 b $C5F8 Sprite Cave, exit to the left; width 6
-B $C5F8,,12 #HTML[#UDGARRAY6,,,6;$C5F8-$C6E7-1-48(cavelt)]
+B $C5F8,,12 #HTML[#UDGARRAY6,,,6($C5F8-$C6E7-1-48)(cavelt)]
 b $C6E8 Sprite Cave top edge; width 6
-B $C6E8,,12 #HTML[#UDGARRAY6,,,6;$C6E8-$C717-1-48(cavetop)]
+B $C6E8,,12 #HTML[#UDGARRAY6,,,6($C6E8-$C717-1-48)(cavetop)]
 b $C718 Sprite Cave bottom edge; width 6
-B $C718,,12 #HTML[#UDGARRAY6,,,6;$C718-$C747-1-48(cavebot)]
+B $C718,,12 #HTML[#UDGARRAY6,,,6($C718-$C747-1-48)(cavebot)]
 b $C748 Sprite Truck; width 8
 b $C848 Sprite ???; width 2?
 b $C890 Sprite Hut; width 6
-B $C890,,12 #HTML[#UDGARRAY6,,,6;$C890-$C97F-1-48(hut)]
+B $C890,,12 #HTML[#UDGARRAY6,,,6($C890-$C97F-1-48)(hut)]
 b $C980 Sprite Jeep; width 4
-B $C980,,8 #HTML[#UDGARRAY4,,,4;$C980-$C9FF-1-32(jeep)]
+B $C980,,8 #HTML[#UDGARRAY4,,,4($C980-$C9FF-1-32)(jeep)]
 b $CA00 Sprite Motorbike; width 6
-B $CA00,,12 #HTML[#UDGARRAY6,,,6;$CA00-$CA8F-1-48(motorbike)]
+B $CA00,,12 #HTML[#UDGARRAY6,,,6($CA00-$CA8F-1-48)(motorbike)]
 b $CA90 Sprite ???; width ?
 b $CAC0 Sprite ???; width ?
 b $CB20 Sprite ???; width ?
 b $CB50 Sprite Wall; width 4
-B $CB50,,8 #HTML[#UDGARRAY4,,,4;$CB50-$CC17-1-32(wall)]
+B $CB50,,8 #HTML[#UDGARRAY4,,,4($CB50-$CC17-1-32)(wall)]
 b $CC18 ???
 b $CD1D
 b $CD88

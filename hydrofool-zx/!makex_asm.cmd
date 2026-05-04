@@ -1,1 +1,1 @@
-C:\bin\skoolkit-9.6\skool2asm.py -H -c -E 49144 hydrofool.skool >hydrofool.asm
+C:\bin\skoolkit-10.0\skool2asm.py -H -c -E 49144 hydrofool.skool >hydrofool.asm

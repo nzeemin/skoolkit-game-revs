@@ -3419,28 +3419,28 @@ C $A783,2 continue the loop
 b $A787 Table used to translate Ninja tiles to Guard tiles, 19 records
 B $A787,38,8
 b $A7AD Pictures of NEAR/HELD items, 32x24px each
-B $A7AD,96,8 #HTML[#UDGARRAY4,,,4,,;$A7AD-$A80C-1-32(itemnoth)] Nothing
+B $A7AD,96,8 #HTML[#UDGARRAY4,,,4,,($A7AD-$A80C-1-32)(itemnoth)] Nothing
 B $A80D,12,8 attributes
-B $A819,96,8 #HTML[#UDGARRAY4,,,4,,;$A819-$A878-1-32(itemshur)] Shuriken
+B $A819,96,8 #HTML[#UDGARRAY4,,,4,,($A819-$A878-1-32)(itemshur)] Shuriken
 B $A879,12,8 attributes
-B $A885,96,8 #HTML[#UDGARRAY4,,,4,,;$A885-$A8E4-1-32(itemnife)] Knife
+B $A885,96,8 #HTML[#UDGARRAY4,,,4,,($A885-$A8E4-1-32)(itemnife)] Knife
 B $A8E5,12,8 attributes
-B $A8F1,96,8 #HTML[#UDGARRAY4,,,4,,;$A8F1-$A950-1-32(itemthre)] ??
+B $A8F1,96,8 #HTML[#UDGARRAY4,,,4,,($A8F1-$A950-1-32)(itemthre)] ??
 B $A951,12,8 attributes
-B $A95D,96,8 #HTML[#UDGARRAY4,,,4,,;$A95D-$A9BC-1-32(itembrik)] Brick
+B $A95D,96,8 #HTML[#UDGARRAY4,,,4,,($A95D-$A9BC-1-32)(itembrik)] Brick
 B $A9BD,12,8 attributes
-B $A9C9,96,8 #HTML[#UDGARRAY4,,,4,,;$A9C9-$AA28-1-32(itempipe)] Pipe
+B $A9C9,96,8 #HTML[#UDGARRAY4,,,4,,($A9C9-$AA28-1-32)(itempipe)] Pipe
 B $AA29,12,8 attributes
-B $AA35,96,8 #HTML[#UDGARRAY4,,,4,,;$AA35-$AA94-1-32(itemgran)] Granade
+B $AA35,96,8 #HTML[#UDGARRAY4,,,4,,($AA35-$AA94-1-32)(itemgran)] Granade
 B $AA95,12,8 attributes
-B $AAA1,96,8 #HTML[#UDGARRAY4,,,4,,;$AAA1-$AB00-1-32(itemdisk)] Disk
+B $AAA1,96,8 #HTML[#UDGARRAY4,,,4,,($AAA1-$AB00-1-32)(itemdisk)] Disk
 B $AB01,12,8 attributes
-B $AB0D,96,8 #HTML[#UDGARRAY4,,,4,,;$AB0D-$AB6C-1-32(itembomb)] Bomb
+B $AB0D,96,8 #HTML[#UDGARRAY4,,,4,,($AB0D-$AB6C-1-32)(itembomb)] Bomb
 B $AB6D,12,8 attributes
-B $AB79,96,8 #HTML[#UDGARRAY4,,,4,,;$AB79-$ABD8-1-32(itemcons)] Console
+B $AB79,96,8 #HTML[#UDGARRAY4,,,4,,($AB79-$ABD8-1-32)(itemcons)] Console
 B $ABD9,12,8 attributes
 b $ABE5 Explosion image, 3x3 tiles
-B $ABE5,72,8 #HTML[#UDGARRAY3,$42,,1,,;$ABE5-$AC2C-8-24(ade5)]
+B $ABE5,72,8 #HTML[#UDGARRAY3,$42,,1,,($ABE5-$AC2C-8-24)(ade5)]
 b $AC2D
 c $AC44 Reset Guard data and Dog data
 C $AC44,3 address for Table of Guard data addresses
@@ -5613,5 +5613,6 @@ c $FA31 Decrease Energy by B + Sound
 C $FA31,3 Decrease Energy by B
 C $FA36,3 Sound
 b $FA3A
+B $FA7B,,9
 b $FFF7 Background tile $FF
 B $FFF7,9,9

@@ -8,7 +8,7 @@ Original: for ZX Spectrum, 1985.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/highwayencounter-zx/highwayencounter/
 
-Status: Not finished (18K .ctl file).
+Status: Not finished (50K .ctl file).
 
 Follow-up projects:
 * [uknc-highwayencounter](https://github.com/nzeemin/uknc-highwayencounter)
@@ -33,7 +33,7 @@ Follow-up projects:
 
 ## Commando
 
-Original: for ZX Spectrum, 1985.
+Original: for ZX Spectrum, 1985, Elite Systems Ltd.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
@@ -42,7 +42,7 @@ Status: Not finished, but have a good progress (62K .ctl file).
 
 ## Hydrofool
 
-Original: for ZX Spectrum, 1987.
+Original: by Carter Follis Software Associates for ZX Spectrum, 1987.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
@@ -51,7 +51,7 @@ Status: just started (16K .ctl file).
 
 ## Scuba Dive
 
-Original: for ZX Spectrum, 1983, Durell Software.
+Original: by Mike Richardson for ZX Spectrum, 1983, Durell Software.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 
@@ -63,7 +63,7 @@ Follow-up projects:
 
 ## Saboteur
 
-Original: for ZX Spectrum, 1985, Durell Software.
+Original: by Clive Townsend for ZX Spectrum, 1985, Durell Software.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/saboteur1-zx/saboteur/
 

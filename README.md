@@ -78,6 +78,8 @@ Follow-up projects:
 * [uknc-saboteur1](https://github.com/nzeemin/uknc-saboteur1)
 * [bk0011m-saboteur1](https://github.com/nzeemin/bk0011m-saboteur1)
 * [vector06c-saboteur1](https://github.com/nzeemin/vector06c-saboteur1)
+* [specialist-saboteur1](https://github.com/nzeemin/specialist-saboteur1)
+* [pmd85-saboteur1](https://github.com/nzeemin/pmd85-saboteur1)
 
 
 ## Robin of the Wood (ZX Spectrum)
@@ -106,3 +108,13 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
 Status: just started (27K .ctl file).
 Based on great work done by Anatoly Vdovichev.
+
+
+## Nebulus (ZX Spectrum)
+
+Original: for ZX Spectrum, 1987, Hewson Consultants.
+
+Browse: https://nzeemin.github.io/skoolkit-game-revs/nebulus-zx/nebulus/
+
+Status: just started (69K .ctl file).
+Based on work done by Anatoly Vdovichev.

@@ -53,6 +53,7 @@ Status: just started (16K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)
+<img src="scubadive-zx\scuba\images\scr\loading.png" align="right" style="padding:8">
 
 Original: by Mike Richardson for ZX Spectrum, 1983, Durell Software.
 
@@ -66,6 +67,7 @@ Follow-up projects:
 
 
 ## Saboteur (ZX Spectrum)
+<img src="saboteur1-zx\saboteur\images\rooms\791E.png" align="right" width="256" style="padding:8">
 
 Original: by Clive Townsend for ZX Spectrum, 1985, Durell Software.
 
@@ -83,6 +85,7 @@ Follow-up projects:
 
 
 ## Robin of the Wood (ZX Spectrum)
+<img src="robinofthewood-zx/robin/images/scr/loading.png" align="right" style="padding:8">
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
@@ -101,6 +104,7 @@ Status: just started (27K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)
+<img src="brucelee-zx\brucelee\images\rooms\room00.png" align="right" style="padding:8">
 
 Original: for ZX Spectrum, 1984, US Gold.
 
@@ -111,6 +115,7 @@ Based on great work done by Anatoly Vdovichev.
 
 
 ## Nebulus (ZX Spectrum)
+<img src="nebulus-zx/nebulus/images/scr/loading.png" align="right" style="padding:8">
 
 Original: for ZX Spectrum, 1987, Hewson Consultants.
 

@@ -28,43 +28,413 @@ B $617B,5 missile descriptor +$22
 @ $6180 label=AdrDataShips
 B $6180,76
 @ $61CC label=d_ASP
-B $61CC,297 field_0 cargo hold
+B $61CC,1 cargo hold
+B $61CD,1 collision distance along X/Y/Z (0000.xx)
+B $61CE,1 laser hit chance for Elite rank (halved if not Elite)
+B $61CF,1 vertex count
+B $61D0,1 edge count
+B $61D1,1 normal count
+B $61D2,1 max speed
+B $61D3,1 max energy
+W $61D4,2 kill bounty
+B $61D6,1 what it can launch
+B $61D7,1 geometric size (distance beyond which shown as a dot)
+W $61D8,2 offset to vertex data
+W $61DA,2 offset to edge data
+W $61DC,2 offset to normal data
+B $61DE,1 flags
+B $61DF,1
+B $61E0,1
+W $61E1,2 rating points
+B $61E3,114 vertices (19 * 6 bytes: X,Y,Z coords)
+B $6255,112 edges (28 * 4 bytes)
+B $62C5,48 normals (12 * 4 bytes)
 @ $62F5 label=d_Asteroid1
-B $62F5,23 field_0 cargo hold, hermit
+B $62F5,1 cargo hold
+B $62F6,1 collision distance along X/Y/Z (0000.xx)
+B $62F7,1 laser hit chance for Elite rank (halved if not Elite)
+B $62F8,1 vertex count
+B $62F9,1 edge count
+B $62FA,1 normal count
+B $62FB,1 max speed
+B $62FC,1 max energy
+W $62FD,2 kill bounty
+B $62FF,1 what it can launch
+B $6300,1 geometric size (distance beyond which shown as a dot)
+W $6301,2 offset to vertex data (points into another ship's model, reused)
+W $6303,2 offset to edge data (points into another ship's model, reused)
+W $6305,2 offset to normal data (points into another ship's model, reused)
+B $6307,1 flags
+B $6308,1
+B $6309,1
+W $630A,2 rating points
 @ $630C label=d_Asteroid2
-B $630C,217 field_0 cargo hold
+B $630C,1 cargo hold
+B $630D,1 collision distance along X/Y/Z (0000.xx)
+B $630E,1 laser hit chance for Elite rank (halved if not Elite)
+B $630F,1 vertex count
+B $6310,1 edge count
+B $6311,1 normal count
+B $6312,1 max speed
+B $6313,1 max energy
+W $6314,2 kill bounty
+B $6316,1 what it can launch
+B $6317,1 geometric size (distance beyond which shown as a dot)
+W $6318,2 offset to vertex data
+W $631A,2 offset to edge data
+W $631C,2 offset to normal data
+B $631E,1 flags
+B $631F,1
+B $6320,1
+W $6321,2 rating points
+B $6323,54 vertices (9 * 6 bytes: X,Y,Z coords)
+B $6359,84 edges (21 * 4 bytes)
+B $63AD,56 normals (14 * 4 bytes)
 @ $63E5 label=d_Cargo
-B $63E5,171 field_0 cargo hold
+B $63E5,1 cargo hold
+B $63E6,1 collision distance along X/Y/Z (0000.xx)
+B $63E7,1 laser hit chance for Elite rank (halved if not Elite)
+B $63E8,1 vertex count
+B $63E9,1 edge count
+B $63EA,1 normal count
+B $63EB,1 max speed
+B $63EC,1 max energy
+W $63ED,2 kill bounty
+B $63EF,1 what it can launch
+B $63F0,1 geometric size (distance beyond which shown as a dot)
+W $63F1,2 offset to vertex data
+W $63F3,2 offset to edge data
+W $63F5,2 offset to normal data
+B $63F7,1 flags
+B $63F8,1
+B $63F9,1
+W $63FA,2 rating points
+B $63FC,60 vertices (10 * 6 bytes: X,Y,Z coords)
+B $6438,60 edges (15 * 4 bytes)
+B $6474,28 normals (7 * 4 bytes)
 @ $6490 label=d_Cobra1
-B $6490,23 field_0 cargo hold
+B $6490,1 cargo hold
+B $6491,1 collision distance along X/Y/Z (0000.xx)
+B $6492,1 laser hit chance for Elite rank (halved if not Elite)
+B $6493,1 vertex count
+B $6494,1 edge count
+B $6495,1 normal count
+B $6496,1 max speed
+B $6497,1 max energy
+W $6498,2 kill bounty
+B $649A,1 what it can launch
+B $649B,1 geometric size (distance beyond which shown as a dot)
+W $649C,2 offset to vertex data (points into another ship's model, reused)
+W $649E,2 offset to edge data (points into another ship's model, reused)
+W $64A0,2 offset to normal data (points into another ship's model, reused)
+B $64A2,1 flags
+B $64A3,1
+B $64A4,1
+W $64A5,2 rating points
 @ $64A7 label=d_Cobra2
-B $64A7,395 field_0 cargo hold, pirate
+B $64A7,1 cargo hold
+B $64A8,1 collision distance along X/Y/Z (0000.xx)
+B $64A9,1 laser hit chance for Elite rank (halved if not Elite)
+B $64AA,1 vertex count
+B $64AB,1 edge count
+B $64AC,1 normal count
+B $64AD,1 max speed
+B $64AE,1 max energy
+W $64AF,2 kill bounty
+B $64B1,1 what it can launch
+B $64B2,1 geometric size (distance beyond which shown as a dot)
+W $64B3,2 offset to vertex data
+W $64B5,2 offset to edge data
+W $64B7,2 offset to normal data
+B $64B9,1 flags
+B $64BA,1
+B $64BB,1
+W $64BC,2 rating points
+B $64BE,168 vertices (28 * 6 bytes: X,Y,Z coords)
+B $6566,152 edges (38 * 4 bytes)
+B $65FE,52 normals (13 * 4 bytes)
 @ $6632 label=d_EscapePod
-B $6632,87 field_0 cargo hold
+B $6632,1 cargo hold
+B $6633,1 collision distance along X/Y/Z (0000.xx)
+B $6634,1 laser hit chance for Elite rank (halved if not Elite)
+B $6635,1 vertex count
+B $6636,1 edge count
+B $6637,1 normal count
+B $6638,1 max speed
+B $6639,1 max energy
+W $663A,2 kill bounty
+B $663C,1 what it can launch
+B $663D,1 geometric size (distance beyond which shown as a dot)
+W $663E,2 offset to vertex data
+W $6640,2 offset to edge data
+W $6642,2 offset to normal data
+B $6644,1 flags
+B $6645,1
+B $6646,1
+W $6647,2 rating points
+B $6649,24 vertices (4 * 6 bytes: X,Y,Z coords)
+B $6661,24 edges (6 * 4 bytes)
+B $6679,16 normals (4 * 4 bytes)
 @ $6689 label=d_FerDeLance
-B $6689,285 field_0 cargo hold
+B $6689,1 cargo hold
+B $668A,1 collision distance along X/Y/Z (0000.xx)
+B $668B,1 laser hit chance for Elite rank (halved if not Elite)
+B $668C,1 vertex count
+B $668D,1 edge count
+B $668E,1 normal count
+B $668F,1 max speed
+B $6690,1 max energy
+W $6691,2 kill bounty
+B $6693,1 what it can launch
+B $6694,1 geometric size (distance beyond which shown as a dot)
+W $6695,2 offset to vertex data
+W $6697,2 offset to edge data
+W $6699,2 offset to normal data
+B $669B,1 flags
+B $669C,1
+B $669D,1
+W $669E,2 rating points
+B $66A0,114 vertices (19 * 6 bytes: X,Y,Z coords)
+B $6712,108 edges (27 * 4 bytes)
+B $677E,40 normals (10 * 4 bytes)
 @ $67A6 label=d_Missile
-B $67A6,257 field_0 cargo hold
+B $67A6,1 cargo hold
+B $67A7,1 collision distance along X/Y/Z (0000.xx)
+B $67A8,1 laser hit chance for Elite rank (halved if not Elite)
+B $67A9,1 vertex count
+B $67AA,1 edge count
+B $67AB,1 normal count
+B $67AC,1 max speed
+B $67AD,1 max energy
+W $67AE,2 kill bounty
+B $67B0,1 what it can launch
+B $67B1,1 geometric size (distance beyond which shown as a dot)
+W $67B2,2 offset to vertex data
+W $67B4,2 offset to edge data
+W $67B6,2 offset to normal data
+B $67B8,1 flags
+B $67B9,1
+B $67BA,1
+W $67BB,2 rating points
+B $67BD,102 vertices (17 * 6 bytes: X,Y,Z coords)
+B $6823,96 edges (24 * 4 bytes)
+B $6883,36 normals (9 * 4 bytes)
 @ $68A7 label=d_Alloys
-B $68A7,63 field_0 cargo hold +00
+B $68A7,1 cargo hold
+B $68A8,1 collision distance along X/Y/Z (0000.xx)
+B $68A9,1 laser hit chance for Elite rank (halved if not Elite)
+B $68AA,1 vertex count
+B $68AB,1 edge count
+B $68AC,1 normal count
+B $68AD,1 max speed
+B $68AE,1 max energy
+W $68AF,2 kill bounty
+B $68B1,1 what it can launch
+B $68B2,1 geometric size (distance beyond which shown as a dot)
+W $68B3,2 offset to vertex data
+W $68B5,2 offset to edge data
+W $68B7,2 offset to normal data
+B $68B9,1 flags
+B $68BA,1
+B $68BB,1
+W $68BC,2 rating points
+B $68BE,24 vertices (4 * 6 bytes: X,Y,Z coords)
+B $68D6,16 edges (4 * 4 bytes)
 @ $68E6 label=d_Python1
-B $68E6,23 field_0 cargo hold
+B $68E6,1 cargo hold
+B $68E7,1 collision distance along X/Y/Z (0000.xx)
+B $68E8,1 laser hit chance for Elite rank (halved if not Elite)
+B $68E9,1 vertex count
+B $68EA,1 edge count
+B $68EB,1 normal count
+B $68EC,1 max speed
+B $68ED,1 max energy
+W $68EE,2 kill bounty
+B $68F0,1 what it can launch
+B $68F1,1 geometric size (distance beyond which shown as a dot)
+W $68F2,2 offset to vertex data (points into another ship's model, reused)
+W $68F4,2 offset to edge data (points into another ship's model, reused)
+W $68F6,2 offset to normal data (points into another ship's model, reused)
+B $68F8,1 flags
+B $68F9,1
+B $68FA,1
+W $68FB,2 rating points
 @ $68FD label=d_Python2
-B $68FD,245 field_0 cargo hold, pirate
+B $68FD,1 cargo hold
+B $68FE,1 collision distance along X/Y/Z (0000.xx)
+B $68FF,1 laser hit chance for Elite rank (halved if not Elite)
+B $6900,1 vertex count
+B $6901,1 edge count
+B $6902,1 normal count
+B $6903,1 max speed
+B $6904,1 max energy
+W $6905,2 kill bounty
+B $6907,1 what it can launch
+B $6908,1 geometric size (distance beyond which shown as a dot)
+W $6909,2 offset to vertex data
+W $690B,2 offset to edge data
+W $690D,2 offset to normal data
+B $690F,1 flags
+B $6910,1
+B $6911,1
+W $6912,2 rating points
+B $6914,66 vertices (11 * 6 bytes: X,Y,Z coords)
+B $6956,104 edges (26 * 4 bytes)
+B $69BE,52 normals (13 * 4 bytes)
 @ $69F2 label=d_Sidewinder
-B $69F2,171 field_0 cargo hold
+B $69F2,1 cargo hold
+B $69F3,1 collision distance along X/Y/Z (0000.xx)
+B $69F4,1 laser hit chance for Elite rank (halved if not Elite)
+B $69F5,1 vertex count
+B $69F6,1 edge count
+B $69F7,1 normal count
+B $69F8,1 max speed
+B $69F9,1 max energy
+W $69FA,2 kill bounty
+B $69FC,1 what it can launch
+B $69FD,1 geometric size (distance beyond which shown as a dot)
+W $69FE,2 offset to vertex data
+W $6A00,2 offset to edge data
+W $6A02,2 offset to normal data
+B $6A04,1 flags
+B $6A05,1
+B $6A06,1
+W $6A07,2 rating points
+B $6A09,60 vertices (10 * 6 bytes: X,Y,Z coords)
+B $6A45,60 edges (15 * 4 bytes)
+B $6A81,28 normals (7 * 4 bytes)
 @ $6A9D label=d_Coriolis
-B $6A9D,287 field_0 cargo hold
+B $6A9D,1 cargo hold
+B $6A9E,1 collision distance along X/Y/Z (0000.xx)
+B $6A9F,1 laser hit chance for Elite rank (halved if not Elite)
+B $6AA0,1 vertex count
+B $6AA1,1 edge count
+B $6AA2,1 normal count
+B $6AA3,1 max speed
+B $6AA4,1 max energy
+W $6AA5,2 kill bounty
+B $6AA7,1 what it can launch
+B $6AA8,1 geometric size (distance beyond which shown as a dot)
+W $6AA9,2 offset to vertex data
+W $6AAB,2 offset to edge data
+W $6AAD,2 offset to normal data
+B $6AAF,1 flags
+B $6AB0,1
+B $6AB1,1
+W $6AB2,2 rating points
+B $6AB4,96 vertices (16 * 6 bytes: X,Y,Z coords)
+B $6B14,112 edges (28 * 4 bytes)
+B $6B84,56 normals (14 * 4 bytes)
 @ $6BBC label=d_Minerals
-B $6BBC,87 field_0 cargo hold
+B $6BBC,1 cargo hold
+B $6BBD,1 collision distance along X/Y/Z (0000.xx)
+B $6BBE,1 laser hit chance for Elite rank (halved if not Elite)
+B $6BBF,1 vertex count
+B $6BC0,1 edge count
+B $6BC1,1 normal count
+B $6BC2,1 max speed
+B $6BC3,1 max energy
+W $6BC4,2 kill bounty
+B $6BC6,1 what it can launch
+B $6BC7,1 geometric size (distance beyond which shown as a dot)
+W $6BC8,2 offset to vertex data
+W $6BCA,2 offset to edge data
+W $6BCC,2 offset to normal data
+B $6BCE,1 flags
+B $6BCF,1
+B $6BD0,1
+W $6BD1,2 rating points
+B $6BD3,24 vertices (4 * 6 bytes: X,Y,Z coords)
+B $6BEB,24 edges (6 * 4 bytes)
+B $6C03,16 normals (4 * 4 bytes)
 @ $6C13 label=d_Thargon
-B $6C13,287 field_0 cargo hold
+B $6C13,1 cargo hold
+B $6C14,1 collision distance along X/Y/Z (0000.xx)
+B $6C15,1 laser hit chance for Elite rank (halved if not Elite)
+B $6C16,1 vertex count
+B $6C17,1 edge count
+B $6C18,1 normal count
+B $6C19,1 max speed
+B $6C1A,1 max energy
+W $6C1B,2 kill bounty
+B $6C1D,1 what it can launch
+B $6C1E,1 geometric size (distance beyond which shown as a dot)
+W $6C1F,2 offset to vertex data
+W $6C21,2 offset to edge data
+W $6C23,2 offset to normal data
+B $6C25,1 flags
+B $6C26,1
+B $6C27,1
+W $6C28,2 rating points
+B $6C2A,120 vertices (20 * 6 bytes: X,Y,Z coords)
+B $6CA2,104 edges (26 * 4 bytes)
+B $6D0A,40 normals (10 * 4 bytes)
 @ $6D32 label=d_Krait
-B $6D32,233 field_0 cargo hold
+B $6D32,1 cargo hold
+B $6D33,1 collision distance along X/Y/Z (0000.xx)
+B $6D34,1 laser hit chance for Elite rank (halved if not Elite)
+B $6D35,1 vertex count
+B $6D36,1 edge count
+B $6D37,1 normal count
+B $6D38,1 max speed
+B $6D39,1 max energy
+W $6D3A,2 kill bounty
+B $6D3C,1 what it can launch
+B $6D3D,1 geometric size (distance beyond which shown as a dot)
+W $6D3E,2 offset to vertex data
+W $6D40,2 offset to edge data
+W $6D42,2 offset to normal data
+B $6D44,1 flags
+B $6D45,1
+B $6D46,1
+W $6D47,2 rating points
+B $6D49,102 vertices (17 * 6 bytes: X,Y,Z coords)
+B $6DAF,84 edges (21 * 4 bytes)
+B $6E03,24 normals (6 * 4 bytes)
 @ $6E1B label=d_Viper
-B $6E1B,221 field_0 cargo hold
+B $6E1B,1 cargo hold
+B $6E1C,1 collision distance along X/Y/Z (0000.xx)
+B $6E1D,1 laser hit chance for Elite rank (halved if not Elite)
+B $6E1E,1 vertex count
+B $6E1F,1 edge count
+B $6E20,1 normal count
+B $6E21,1 max speed
+B $6E22,1 max energy
+W $6E23,2 kill bounty
+B $6E25,1 what it can launch
+B $6E26,1 geometric size (distance beyond which shown as a dot)
+W $6E27,2 offset to vertex data
+W $6E29,2 offset to edge data
+W $6E2B,2 offset to normal data
+B $6E2D,1 flags
+B $6E2E,1
+B $6E2F,1
+W $6E30,2 rating points
+B $6E32,90 vertices (15 * 6 bytes: X,Y,Z coords)
+B $6E8C,80 edges (20 * 4 bytes)
+B $6EDC,28 normals (7 * 4 bytes)
 @ $6EF8 label=d_Tharglet
-B $6EF8,171 field_0 cargo hold
+B $6EF8,1 cargo hold
+B $6EF9,1 collision distance along X/Y/Z (0000.xx)
+B $6EFA,1 laser hit chance for Elite rank (halved if not Elite)
+B $6EFB,1 vertex count
+B $6EFC,1 edge count
+B $6EFD,1 normal count
+B $6EFE,1 max speed
+B $6EFF,1 max energy
+W $6F00,2 kill bounty
+B $6F02,1 what it can launch
+B $6F03,1 geometric size (distance beyond which shown as a dot)
+W $6F04,2 offset to vertex data
+W $6F06,2 offset to edge data
+W $6F08,2 offset to normal data
+B $6F0A,1 flags
+B $6F0B,1
+B $6F0C,1
+W $6F0D,2 rating points
+B $6F0F,60 vertices (10 * 6 bytes: X,Y,Z coords)
+B $6F4B,60 edges (15 * 4 bytes)
+B $6F87,28 normals (7 * 4 bytes)
 @ $6FA3 label=AdrProcMessage1
 W $6FA3,28 00h ret
 @ $6FBF label=AdrProcMessage2
@@ -367,6 +737,7 @@ C $7392,3 =$01 G or H pressed (jump)
 C $7395,3 NewGame
 c $7398 CopyBuf2Screen
 N $7398 Copy buffer to screen
+N $7398 Copies only the two screen thirds that make up the 3D viewport, deliberately leaving the third third (where the cockpit panel lives) untouched between frames.
 C $739E,3 fast interlaced transfer of the screen buffer to 1/3 of the screen
 C $73A7,3 fast interlaced transfer of the screen buffer to 1/3 of the screen
 C $73B0,3 fast interlaced transfer of the screen buffer to 1/3 of the screen
@@ -391,6 +762,7 @@ C $7459,3 print view-screen attributes
 C $745C,3 restore (if needed) and save the scanner to the buffer
 c $745F ClearScrBuffer
 N $745F Fast clear of the screen buffer
+N $745F This is not a plain clear: the repeating byte pattern it writes already contains the 3D viewport border (a full horizontal line at the top and bottom, and a single vertical pixel down each edge column for every row in between), so the border is regenerated as a side effect of "clearing" every single frame, with no separate border-preserving or redrawing code needed.
 C $7483,2 '~'
 @ $74B0 label=SaveSP5
 b $74B0
@@ -746,7 +1118,12 @@ B $7C3A,1 distance from the circle center to the screen center along Y
 @ $7C3B label=CircleCrdX
 B $7C3B,1 distance from the circle center to the screen center along X
 @ $7C3C label=CircleFlg
-B $7C3C,1 circle flags 0,=0 -x X coordinate negative =1 +x X coordinate positive 1,=0 -y Y coordinate negative =1 +y Y coordinate positive 2,=? inverted high bit of the X coordinate 3,=? inverted high bit of the Y coordinate
+N $7C3C Circle drawing flags:
+N $7C3C bit 0: 0 = X offset negative, 1 = X offset positive
+N $7C3C bit 1: 0 = Y offset negative, 1 = Y offset positive
+N $7C3C bit 2: whether the X extent needs clipping against the viewport edge
+N $7C3C bit 3: whether the Y extent needs clipping against the viewport edge
+B $7C3C,1 circle flags
 @ $7C3D label=CircleRadius
 B $7C3D,1 circle radius
 @ $7C3E label=CircleCrdY_temp
@@ -771,7 +1148,8 @@ B $7C48,1 =0 print upward =1 print downward
 B $7C49,1 =1 draw an unfilled circle =0 filled
 B $7C4A,1 number of bytes to modify in the circle-printing routine
 c $7C4B half_rClip_Down
-N $7C4B Print a half-circle by OR (circle extends past the right X boundary)
+N $7C4B Print a half-circle by OR (circle extends past the right X boundary).
+N $7C4B The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7C4B In: b - left byte to print
 N $7C4B c - right byte to print
 N $7C4B hl - address to print the right byte
@@ -784,7 +1162,8 @@ C $7C59,3 get FillCircle
 C $7C5D,3 print an unfilled half-circle by OR (circle extends past the right X boundary)
 C $7C60,3 print a filled half-circle by OR (circle extends past the right X boundary)
 c $7C63 half_rClip_Up
-N $7C63 Print a half-circle by OR (circle extends past the right X boundary)
+N $7C63 Print a half-circle by OR (circle extends past the right X boundary).
+N $7C63 The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7C63 In: b - left byte to print
 N $7C63 c - right byte to print
 N $7C63 hl - address to print the right byte
@@ -797,7 +1176,8 @@ C $7C70,3 get FillCircle
 C $7C74,3 print an unfilled half-circle by OR (circle extends past the right X boundary)
 C $7C77,3 print a filled half-circle by OR (circle extends past the right X boundary)
 c $7C7A half_lClip_Down
-N $7C7A Print a half-circle by OR (circle extends past the left X boundary)
+N $7C7A Print a half-circle by OR (circle extends past the left X boundary).
+N $7C7A The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7C7A In: b - left byte to print
 N $7C7A c - right byte to print
 N $7C7A hl - address to print the right byte
@@ -810,7 +1190,8 @@ C $7C88,3 get FillCircle
 C $7C8C,3 print an unfilled half-circle by OR (circle extends past the left X boundary)
 C $7C8F,3 print a filled half-circle by OR (circle extends past the left X boundary)
 c $7C92 half_lClip_Up
-N $7C92 Print a half-circle by OR (circle extends past the left X boundary)
+N $7C92 Print a half-circle by OR (circle extends past the left X boundary).
+N $7C92 The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7C92 In: b - left byte to print
 N $7C92 c - right byte to print
 N $7C92 hl - address to print the right byte
@@ -823,7 +1204,8 @@ C $7C9F,3 get FillCircle
 C $7CA3,3 print an unfilled half-circle by OR (circle extends past the left X boundary)
 C $7CA6,3 print a filled half-circle by OR (circle extends past the left X boundary)
 c $7CA9 half_NoClip_Down
-N $7CA9 Print a half-circle by OR (circle stays within X boundaries)
+N $7CA9 Print a half-circle by OR (circle stays within X boundaries).
+N $7CA9 The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7CA9 In: b - left byte to print
 N $7CA9 c - right byte to print
 N $7CA9 hl - address to print the right byte
@@ -836,7 +1218,8 @@ C $7CB7,3 get FillCircle
 C $7CBB,3 print an unfilled half-circle by OR (circle stays within X boundaries)
 C $7CBE,3 print a filled half-circle by OR (circle stays within X boundaries)
 c $7CC1 half_NoClip_Up
-N $7CC1 Print a half-circle by OR (circle stays within X boundaries)
+N $7CC1 Print a half-circle by OR (circle stays within X boundaries).
+N $7CC1 The midpoint/Bresenham error term and step deltas are kept in the alternate register set (hl', bc', e', reached via exx), freeing the primary registers for screen addressing.
 N $7CC1 In: b - left byte to print
 N $7CC1 c - right byte to print
 N $7CC1 hl - address to print the right byte
@@ -872,9 +1255,13 @@ N $7CF0 (CircleCrdY) - center coordinates
 N $7CF0 (FillCircle) =0 draw a filled circle
 N $7CF0 =1 draw an unfilled circle
 N $7CF0 Out: circle printed
+N $7CF0 Circles smaller than radius 9 are rejected outright (presumably drawn elsewhere as a fixed dot sprite).
+N $7CF0 Every circle is plotted with a plain OR into screen memory; there is no XOR/blend-mode switch.
 C $7CF0,3 get CircleRadius
 C $7CF8,3 set FillCircle
+@ $7CFE label=PrnCircle_NoFill
 C $7CFE,3 get CircleRadius
+@ $7D04 label=PrnCircle_NoFill_NoRadius
 C $7D06,3 set FillCircle
 C $7D09,3 print a circle on screen/in the buffer
 c $7D0E PrnCircle_Clip
@@ -1136,11 +1523,13 @@ N $8117 Out: hl,de,bc,hl',de',bc',a - ????
 C $811B,3 get DirPrnCircle
 C $8133,1 fill the line with $FF
 C $814C,3 fill texture
+N $8151 Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $8163,3 get DirPrnCircle
 C $8171,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $817A,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $8195,3 fill the line with $FF
 C $81F5,3 fill texture
+N $81FA Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $820C,3 get DirPrnCircle
 C $821A,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $8223,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
@@ -1158,10 +1547,12 @@ N $8228 (DirectionPrnCircle) =0 print upward / =1 print downward
 N $8228 Out: hl,de,bc,hl',de',bc',a - ????
 C $8228,3 get DirPrnCircle
 C $8254,3 fill texture
+N $8259 Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $826B,3 get DirPrnCircle
 C $8279,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $8282,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $82FE,3 fill texture
+N $8303 Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $8315,3 get DirPrnCircle
 C $8323,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $832C,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
@@ -1179,10 +1570,12 @@ N $8331 (DirectionPrnCircle) =0 print upward / =1 print downward
 N $8331 Out: hl,de,bc,hl',de',bc',a - ????
 C $8331,3 get DirPrnCircle
 C $835F,3 fill texture
+N $8364 Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $8376,3 get DirPrnCircle
 C $8384,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $838D,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $83FD,3 fill texture
+N $8402 Self-modifying PUSH AF cascade: the byte count for this scanline's span is turned into an offset and patched into the operand of a JR instruction just above, so it jumps into the middle of a run of 16 back-to-back PUSH AF instructions; SP is temporarily repointed at the destination screen address so each PUSH AF writes 2 bytes straight into screen memory instead of a real stack.
 C $8414,3 get DirPrnCircle
 C $8422,3 calculate the previous address in the buffer/screen and exit the drawing routine when the boundary is reached
 C $842B,3 calculate the next address in the buffer/screen and exit the drawing routine when the boundary is reached
@@ -1200,6 +1593,7 @@ N $8461 In: (PrnCrdXCursor) - circle center coordinates
 N $8461 (RadiusCircleMap) - circle radius
 N $8461 Out: a =$00
 N $8461 hl,de,bc - undefined
+N $8461 After drawing the map marker, it immediately re-runs the same 32-byte patch loop using Data4CircleEngine instead of Data4CircleMap, repointing the shared circle engine at the 3D flight-view viewport constants before returning, so the very next PrnCircle_Fill call (for the sun/planet disc) draws correctly sized/positioned for that screen.
 C $8463,3 get PrnCrdXCursor
 C $8472,3 set CircleCrdX
 C $8475,3 get PrnCrdYCursor
@@ -1215,9 +1609,11 @@ C $84B0,3 number of bytes to modify in the circle-printing routine
 C $84B3,3 revert the routine modification
 C $84B6,3 addresses in the circle-printing routine to modify
 @ $84C5 label=Data4CircleMap
+N $84C5 Viewport clipping-boundary/dimension constants for the Short Range Chart map circle; patched into 32 immediate operands scattered through the shared circle-drawing engine by PrintCircleMap.
 b $84C5
 B $84C5,32
 @ $84E5 label=Data4CircleEngine
+N $84E5 Viewport clipping-boundary/dimension constants for the 3D flight-view engine screen; patched into the same 32 operand locations as Data4CircleMap, but for the sun/planet circle instead of the map marker.
 B $84E5,32
 @ $8505 label=AdrProcCircle
 W $8505,64 addresses in the circle-printing routine to modify
@@ -3965,7 +4361,7 @@ C $BD18,3 print the built string
 C $BD1B,3 find the first space from the end of the line
 C $BD43,3 print the built string
 C $BD53,3 find the first space from the end of the line
-C $BD56,3 search for a zero starting from address ($BCF6)
+C $BD56,3 search for a zero starting from address (#R$BCF6)
 c $BD5D PrintMsgDescr
 N $BD5D Print the built string
 N $BD5D In: ---
@@ -4012,7 +4408,7 @@ S $C700,256
 @ $C800 label=BufCockpit
 S $C800,2048
 c $D000
-N $D000 Search for a zero starting from address ($BCF6)
+N $D000 Search for a zero starting from address (#R$BCF6)
 C $D000,2 ' '
 c $D00F PrintTypePopulation2
 N $D00F Used only in Cmd_P_PlanetInfo
@@ -5326,9 +5722,9 @@ C $E932,3 de offset to the normals
 C $E935,2 ix=start address of the normals
 C $E937,3 face visibility =0 not visible (normal points away from the player)
 C $E93D,3 set IY_dFactor
-C $E948,2 a - number of normals de =$E2AC ix start address of the normals iy =$E2BC
+C $E948,2 a - number of normals de =#R$E2AC ix start address of the normals iy =#R$E2BC
 C $E94C,2 exit
-C $E94E,1 a - number of normals de =$E2AC ix start address of the normals iy =$E2BC
+C $E94E,1 a - number of normals de =#R$E2AC ix start address of the normals iy =#R$E2BC
 C $E95A,3 get DistanceToObj
 C $E962,2 next face
 C $E966,3 get AdrSlotObj
@@ -5339,7 +5735,7 @@ C $E98C,4 normal vector after OCS rotation
 C $E990,3 dot product of vectors
 C $E99B,2 next face
 C $E99E,1 next face
-C $E9A7,2 a - number of normals de =$E2AC ix start address of the normals iy =$E2BC
+C $E9A7,2 a - number of normals de =#R$E2AC ix start address of the normals iy =#R$E2BC
 C $E9A9,2 exit
 c $E9AE ScalarMultVectors16_8
 N $E9AE Dot product of vectors
@@ -5545,12 +5941,13 @@ C $EDB8,3 set DamageEnergyUnit
 @ $EDBC label=TablQuadrant
 b $EDBC
 B $EDBC,80
+N $EDBC A 4-row lookup (rows: 0,4,2,3 / 0,4,6,5 / 0,8,2,1 / 0,8,6,7) mapping a point's raw 2-bit sign-quadrant code onto a clip-region code (0 = on-screen; 1/2/4/8 and combinations = off-screen in a specific direction). A second 16-row region of this same table (following the first 4 rows) is used to combine both points' codes (as b*8+c) to decide whether an off-screen/off-screen line can possibly still cross the screen.
 @ $EE0C label=VarForClipLine2
 W $EE0C,2
 @ $EE0E label=VarForClipLine1
 W $EE0E,2
 c $EE10 PrnLineInBuf_clip
-N $EE10 Print a line in the buffer???
+N $EE10 Entry point for every line drawn in the game (ship edges, compass needle, orbit circles, etc). After two cheap trivial-reject checks (endpoints equal to $FF mean "don't print this vertex"), builds a quadrant code per point via TablQuadrant and dispatches to one of three cases: both points on-screen (draw directly), one point off-screen (PrnLine_OneCrdClip clips against a single edge), or both off-screen (the two quadrant codes are combined and looked up a second time to see if the line can possibly cross the screen at all; if not, it's discarded with no pixels drawn, otherwise PrnLine_TwoCrdClip clips against two edges).
 N $EE10 0-1,c quadrant for printing the first point
 N $EE10 2-3,c quadrant for printing the second point
 N $EE10 hl - coordinates of the first point (x1y1)
@@ -5606,6 +6003,7 @@ C $EF37,2 ','
 C $EF4A,2 ','
 C $EF4C,3 print a line bottom-to-top, dY<dX
 C $EF58,1 both points are outside the boundaries, but the line may still cross the screen
+@ $EF58 label=PrnLine_TwoCrdClip
 C $EF6D,3 determine the coordinate difference and print direction
 C $EF77,3 determine the coordinate difference and print direction
 C $EF99,3 determine the coordinate difference and print direction
@@ -5653,8 +6051,10 @@ N $F0D6 hl' - print address on screen/in buffer
 N $F0D6 b' - number of points in the first character cell along Y
 N $F0D6 a,c' - undefined
 N $F0D6 other registers are unchanged
+N $F0D6 The whole routine runs in the alternate register set (push, exx in, compute, exx back), so the caller's own bc/de are left completely undisturbed; the real results only become visible to the caller after it also does an exx. It recovers actual X/Y from the sign-coded deltas via X = $7F +/- dX and Y = $3F +/- dY (add if the sign bit is clear, subtract if set), i.e. reconstructing bitmap coordinates from a 127/63-centred reference point rather than from 0.
 C $F0ED,2 '?'
 C $F0F2,2 '?'
+N $F115 Self-modified operand: patched elsewhere to $40 or $C0 depending on whether the destination address being computed is the real screen or the off-screen buffer (bit 7 of the buffer's high byte selects the buffer, matching the third/row/column layout of the real screen but relocated into high memory).
 C $F119,2 '8'
 c $F130 PrnLine_OneCrdClip
 N $F130 Print a line, clipped at the screen edge
@@ -5707,8 +6107,11 @@ N $F175 l - coordinate difference along Y
 C $F185,2 ' '
 C $F1FA,3 calculate the coordinate step coefficient when printing a line
 c $F201
+N $F211 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
+@ $F202 label=PrnLineDown2Up_vert
 C $F215,1 DownScrAdr_HL
 C $F21A,2 ' '
+N $F224 self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
 c $F228
 N $F228 Print a line bottom-to-top, dY<dX
 N $F228 In: hl - address in buffer/on screen
@@ -5718,15 +6121,21 @@ N $F228 b - number of points in the first character cell along Y
 N $F228 c - byte for setting the first point
 N $F228 Out: d =$00
 N $F228 hl,e,bc,a - undefined
+N $F228 self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
 C $F22E,2 print a line bottom-to-top, dY<dX
+N $F236 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
+@ $F230 label=PrnLineDown2Up_hor
 C $F244,2 ' '
 c $F250
 C $F251,1 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
+@ $F251 label=PrnLineUp2Down_vert
 C $F25C,2 shift the data bit
+N $F260 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
 C $F264,1 DownScrAdr_HL
 C $F269,2 ' '
 C $F26C,3 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
 C $F272,3 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
+N $F275 self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
 c $F279
 N $F279 Print a line top-to-bottom, dY<dX
 N $F279 In: hl - address in buffer/on screen
@@ -5736,11 +6145,14 @@ N $F279 b - number of points in the first character cell along Y
 N $F279 c - byte for setting the first point
 N $F279 Out: d =$00
 N $F279 hl,e,bc,a - undefined
+N $F283 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
+@ $F27D label=PrnLineUp2Down_hor
 C $F286,2 print a line top-to-bottom, dY<dX
 C $F289,2 print a line top-to-bottom, dY<dX
 C $F291,2 ' '
 C $F294,3 print a line top-to-bottom, dY<dX
 C $F29A,3 print a line top-to-bottom, dY<dX
+N $F29D self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
 @ $F2A1 label=PatternObject
 b $F2A1
 B $F2A1,31 +0 template of an object's slot in space
@@ -5850,7 +6262,7 @@ N $F402 Out: Z=1 success
 C $F404,2 =1 missile
 C $F406,4 length 27h
 C $F40A,3 =$27*7
-C $F40D,2 ix=$6159
+C $F40D,2 ix=#R$6159
 C $F413,2 =1 - missile
 C $F415,3 find a free slot to place an object
 C $F419,2 =1 - missile

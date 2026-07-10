@@ -22,7 +22,7 @@ Original: by Patrick Prendergast for TI-83 Plus calculator, circa 2014.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/desolate-ti83plus/desolate/
 
-Status: Not finished, but have a good progress (38K .ctl file).
+Status: Not finished, but have a good progress (37K .ctl file).
 
 Follow-up projects:
 * [spectrum-desolate](https://github.com/nzeemin/spectrum-desolate)
@@ -40,7 +40,7 @@ Original: for ZX Spectrum, 1985, Elite Systems Ltd.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
-Status: Not finished, but have a good progress (62K .ctl file).
+Status: Not finished, but have a good progress (61K .ctl file).
 
 
 ## Hydrofool (ZX Spectrum)
@@ -49,7 +49,7 @@ Original: by Carter Follis Software Associates for ZX Spectrum, 1987.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: just started (16K .ctl file).
+Status: just started (17K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)
@@ -91,7 +91,7 @@ Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Work in progress (41K .ctl file).
+Status: Work in progress (42K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)
@@ -100,7 +100,7 @@ Original: for ZX Spectrum, 1987, Players.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/joeblade-zx/joeblade/
 
-Status: just started (27K .ctl file).
+Status: just started (28K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)
@@ -110,7 +110,7 @@ Original: for ZX Spectrum, 1984, US Gold.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
-Status: just started (27K .ctl file).
+Status: just started (28K .ctl file).
 Based on great work done by Anatoly Vdovichev.
 
 
@@ -123,3 +123,13 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/nebulus-zx/nebulus/
 
 Status: just started (69K .ctl file).
 Based on work done by Anatoly Vdovichev.
+
+
+## Elite 128K (ZX Spectrum)
+
+Original: for ZX Spectrum 128K, 1985, Firebird, by Torus.
+
+Browse: https://nzeemin.github.io/skoolkit-game-revs/elite128-zx/elite/
+
+Status: Have pretty good progress (251K .ctl file).
+Based on colossal work done by LW.

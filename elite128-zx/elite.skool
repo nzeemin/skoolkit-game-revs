@@ -66,475 +66,838 @@ b$6048 DEFB $00                             ; length 27h
  $61C0 DEFB $C3,$F2,$69,$04,$C3,$32,$6D,$04
  $61C8 DEFB $C3,$F8,$6E,$04
 @label=d_ASP
- $61CC DEFB $00,$3C,$FA,$13,$1C,$0C,$28,$96 ; {field_0 cargo hold
- $61D4 DEFB $C8,$00,$01,$18,$17,$00,$89,$00 ;
- $61DC DEFB $F9,$00,$8C,$01,$08,$40,$03,$00 ;
- $61E4 DEFB $12,$00,$56,$01,$22,$00,$09,$2D ;
- $61EC DEFB $7F,$12,$BB,$2B,$00,$2D,$3F,$16 ;
- $61F4 DEFB $BB,$45,$03,$00,$5F,$16,$79,$2B ;
- $61FC DEFB $0E,$1C,$5F,$01,$77,$2B,$00,$2D ;
- $6204 DEFB $BF,$25,$BB,$45,$03,$00,$DF,$25 ;
- $620C DEFB $8A,$2B,$0E,$1C,$DF,$02,$88,$1A ;
- $6214 DEFB $07,$49,$5F,$04,$79,$1A,$07,$49 ;
- $621C DEFB $DF,$04,$8A,$2B,$0E,$1C,$1F,$34 ;
- $6224 DEFB $69,$2B,$0E,$1C,$9F,$34,$5A,$00 ;
- $622C DEFB $09,$2D,$3F,$35,$6B,$11,$00,$2D ;
- $6234 DEFB $AA,$BB,$BB,$11,$00,$2D,$29,$BB ;
- $623C DEFB $BB,$00,$04,$2D,$6A,$BB,$BB,$00 ;
- $6244 DEFB $04,$2D,$28,$BB,$BB,$00,$07,$49 ;
- $624C DEFB $4A,$04,$04,$00,$07,$53,$4A,$04 ;
- $6254 DEFB $04,$16,$00,$01,$12,$16,$00,$04 ;
- $625C DEFB $01,$16,$00,$07,$02,$1F,$01,$02 ;
- $6264 DEFB $1B,$1F,$02,$03,$16,$10,$03,$08 ;
- $626C DEFB $79,$1F,$08,$09,$04,$10,$06,$09 ;
- $6274 DEFB $8A,$1F,$05,$06,$25,$1F,$01,$05 ;
- $627C DEFB $2B,$1F,$03,$04,$17,$1F,$04,$08 ;
- $6284 DEFB $07,$1F,$06,$07,$28,$1F,$07,$09 ;
- $628C DEFB $08,$1F,$02,$0C,$6B,$1F,$05,$0C ;
- $6294 DEFB $5B,$16,$0A,$0C,$36,$16,$0B,$0C ;
- $629C DEFB $35,$16,$0A,$0B,$34,$1F,$06,$0B ;
- $62A4 DEFB $5A,$1F,$09,$0B,$4A,$1F,$03,$0A ;
- $62AC DEFB $69,$1F,$08,$0A,$49,$0A,$0D,$0F ;
- $62B4 DEFB $BB,$09,$0F,$0E,$BB,$08,$0E,$10 ;
- $62BC DEFB $BB,$08,$10,$0D,$BB,$0A,$12,$11 ;
- $62C4 DEFB $04,$00,$23,$05,$5F,$08,$26,$07 ;
- $62CC DEFB $7F,$08,$26,$07,$FF,$00,$18,$01 ;
- $62D4 DEFB $36,$00,$2B,$13,$1F,$06,$1C,$02 ;
- $62DC DEFB $BF,$06,$1C,$02,$3F,$3B,$40,$1F ;
- $62E4 DEFB $5F,$3B,$40,$1F,$DF,$50,$2E,$32 ;
- $62EC DEFB $1F,$50,$2E,$32,$9F,$00,$00,$5A ;
- $62F4 DEFB $3F                             ; }
+ $61CC DEFB $00                             ; cargo hold
+ $61CD DEFB $3C                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $61CE DEFB $FA                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $61CF DEFB $13                             ; vertex count
+ $61D0 DEFB $1C                             ; edge count
+ $61D1 DEFB $0C                             ; normal count
+ $61D2 DEFB $28                             ; max speed
+ $61D3 DEFB $96                             ; max energy
+ $61D4 DEFW $00C8                           ; kill bounty
+ $61D6 DEFB $01                             ; what it can launch
+ $61D7 DEFB $18                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $61D8 DEFW $0017                           ; offset to vertex data
+ $61DA DEFW $0089                           ; offset to edge data
+ $61DC DEFW $00F9                           ; offset to normal data
+ $61DE DEFB $8C                             ; flags
+ $61DF DEFB $01
+ $61E0 DEFB $08
+ $61E1 DEFW $0340                           ; rating points
+ $61E3 DEFB $00,$12,$00,$56,$01,$22,$00,$09 ; {vertices (19 * 6 bytes: X,Y,Z
+ $61EB DEFB $2D,$7F,$12,$BB,$2B,$00,$2D,$3F ; coords)
+ $61F3 DEFB $16,$BB,$45,$03,$00,$5F,$16,$79 ;
+ $61FB DEFB $2B,$0E,$1C,$5F,$01,$77,$2B,$00 ;
+ $6203 DEFB $2D,$BF,$25,$BB,$45,$03,$00,$DF ;
+ $620B DEFB $25,$8A,$2B,$0E,$1C,$DF,$02,$88 ;
+ $6213 DEFB $1A,$07,$49,$5F,$04,$79,$1A,$07 ;
+ $621B DEFB $49,$DF,$04,$8A,$2B,$0E,$1C,$1F ;
+ $6223 DEFB $34,$69,$2B,$0E,$1C,$9F,$34,$5A ;
+ $622B DEFB $00,$09,$2D,$3F,$35,$6B,$11,$00 ;
+ $6233 DEFB $2D,$AA,$BB,$BB,$11,$00,$2D,$29 ;
+ $623B DEFB $BB,$BB,$00,$04,$2D,$6A,$BB,$BB ;
+ $6243 DEFB $00,$04,$2D,$28,$BB,$BB,$00,$07 ;
+ $624B DEFB $49,$4A,$04,$04,$00,$07,$53,$4A ;
+ $6253 DEFB $04,$04                         ; }
+ $6255 DEFB $16,$00,$01,$12,$16,$00,$04,$01 ; {edges (28 * 4 bytes)
+ $625D DEFB $16,$00,$07,$02,$1F,$01,$02,$1B ;
+ $6265 DEFB $1F,$02,$03,$16,$10,$03,$08,$79 ;
+ $626D DEFB $1F,$08,$09,$04,$10,$06,$09,$8A ;
+ $6275 DEFB $1F,$05,$06,$25,$1F,$01,$05,$2B ;
+ $627D DEFB $1F,$03,$04,$17,$1F,$04,$08,$07 ;
+ $6285 DEFB $1F,$06,$07,$28,$1F,$07,$09,$08 ;
+ $628D DEFB $1F,$02,$0C,$6B,$1F,$05,$0C,$5B ;
+ $6295 DEFB $16,$0A,$0C,$36,$16,$0B,$0C,$35 ;
+ $629D DEFB $16,$0A,$0B,$34,$1F,$06,$0B,$5A ;
+ $62A5 DEFB $1F,$09,$0B,$4A,$1F,$03,$0A,$69 ;
+ $62AD DEFB $1F,$08,$0A,$49,$0A,$0D,$0F,$BB ;
+ $62B5 DEFB $09,$0F,$0E,$BB,$08,$0E,$10,$BB ;
+ $62BD DEFB $08,$10,$0D,$BB,$0A,$12,$11,$04 ; }
+ $62C5 DEFB $00,$23,$05,$5F,$08,$26,$07,$7F ; {normals (12 * 4 bytes)
+ $62CD DEFB $08,$26,$07,$FF,$00,$18,$01,$36 ;
+ $62D5 DEFB $00,$2B,$13,$1F,$06,$1C,$02,$BF ;
+ $62DD DEFB $06,$1C,$02,$3F,$3B,$40,$1F,$5F ;
+ $62E5 DEFB $3B,$40,$1F,$DF,$50,$2E,$32,$1F ;
+ $62ED DEFB $50,$2E,$32,$9F,$00,$00,$5A,$3F ; }
 @label=d_Asteroid1
- $62F5 DEFB $07,$50,$50,$09,$15,$0E,$1E,$B4 ; {field_0 cargo hold, hermit
- $62FD DEFB $00,$00,$52,$32,$2E,$00,$64,$00 ;
- $6305 DEFB $B8,$00,$A1,$01,$00,$00,$01     ; }
+ $62F5 DEFB $07                             ; cargo hold
+ $62F6 DEFB $50                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $62F7 DEFB $50                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $62F8 DEFB $09                             ; vertex count
+ $62F9 DEFB $15                             ; edge count
+ $62FA DEFB $0E                             ; normal count
+ $62FB DEFB $1E                             ; max speed
+ $62FC DEFB $B4                             ; max energy
+ $62FD DEFW $0000                           ; kill bounty
+ $62FF DEFB $52                             ; what it can launch
+ $6300 DEFB $32                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6301 DEFW $002E                           ; offset to vertex data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $6303 DEFW $0064                           ; offset to edge data (points into
+                                            ; another ship's model, reused)
+ $6305 DEFW $00B8                           ; offset to normal data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $6307 DEFB $A1                             ; flags
+ $6308 DEFB $01
+ $6309 DEFB $00
+ $630A DEFW $0100                           ; rating points
 @label=d_Asteroid2
- $630C DEFB $00,$50,$00,$09,$15,$0E,$1E,$3C ; {field_0 cargo hold
- $6314 DEFB $05,$00,$00,$32,$17,$00,$4D,$00 ;
- $631C DEFB $A1,$00,$00,$01,$00,$19,$00,$00 ;
- $6324 DEFB $50,$00,$1F,$FF,$FF,$50,$0A,$00 ;
- $632C DEFB $DF,$FF,$FF,$00,$50,$00,$5F,$FF ;
- $6334 DEFB $FF,$46,$28,$00,$5F,$FF,$FF,$3C ;
- $633C DEFB $32,$00,$1F,$65,$DC,$32,$00,$3C ;
- $6344 DEFB $1F,$FF,$FF,$28,$00,$46,$9F,$10 ;
- $634C DEFB $32,$00,$1E,$4B,$3F,$FF,$FF,$00 ;
- $6354 DEFB $32,$3C,$7F,$98,$BA,$1F,$00,$01 ;
- $635C DEFB $72,$1F,$00,$04,$D6,$1F,$03,$04 ;
- $6364 DEFB $C5,$1F,$02,$03,$B4,$1F,$01,$02 ;
- $636C DEFB $A3,$1F,$01,$06,$32,$1F,$02,$06 ;
- $6374 DEFB $31,$1F,$02,$05,$41,$1F,$05,$06 ;
- $637C DEFB $10,$1F,$00,$05,$60,$1F,$03,$05 ;
- $6384 DEFB $54,$1F,$00,$06,$20,$1F,$04,$05 ;
- $638C DEFB $65,$1F,$01,$08,$A8,$1F,$01,$07 ;
- $6394 DEFB $87,$1F,$00,$07,$D7,$1F,$04,$07 ;
- $639C DEFB $DC,$1F,$03,$07,$C9,$1F,$03,$08 ;
- $63A4 DEFB $B9,$1F,$02,$08,$BA,$1F,$07,$08 ;
- $63AC DEFB $98,$09,$42,$51,$1F,$09,$42,$51 ;
- $63B4 DEFB $5F,$48,$40,$1F,$9F,$40,$49,$2F ;
- $63BC DEFB $DF,$2D,$4F,$41,$5F,$87,$0F,$23 ;
- $63C4 DEFB $1F,$26,$4C,$46,$1F,$42,$3B,$27 ;
- $63CC DEFB $BF,$43,$0F,$50,$FF,$42,$0E,$4B ;
- $63D4 DEFB $7F,$46,$50,$28,$FF,$3A,$66,$33 ;
- $63DC DEFB $7F,$51,$09,$43,$3F,$2F,$5E,$3F ;
- $63E4 DEFB $3F                             ; }
+ $630C DEFB $00                             ; cargo hold
+ $630D DEFB $50                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $630E DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $630F DEFB $09                             ; vertex count
+ $6310 DEFB $15                             ; edge count
+ $6311 DEFB $0E                             ; normal count
+ $6312 DEFB $1E                             ; max speed
+ $6313 DEFB $3C                             ; max energy
+ $6314 DEFW $0005                           ; kill bounty
+ $6316 DEFB $00                             ; what it can launch
+ $6317 DEFB $32                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6318 DEFW $0017                           ; offset to vertex data
+ $631A DEFW $004D                           ; offset to edge data
+ $631C DEFW $00A1                           ; offset to normal data
+ $631E DEFB $00                             ; flags
+ $631F DEFB $01
+ $6320 DEFB $00
+ $6321 DEFW $0019                           ; rating points
+ $6323 DEFB $00,$50,$00,$1F,$FF,$FF,$50,$0A ; {vertices (9 * 6 bytes: X,Y,Z
+ $632B DEFB $00,$DF,$FF,$FF,$00,$50,$00,$5F ; coords)
+ $6333 DEFB $FF,$FF,$46,$28,$00,$5F,$FF,$FF ;
+ $633B DEFB $3C,$32,$00,$1F,$65,$DC,$32,$00 ;
+ $6343 DEFB $3C,$1F,$FF,$FF,$28,$00,$46,$9F ;
+ $634B DEFB $10,$32,$00,$1E,$4B,$3F,$FF,$FF ;
+ $6353 DEFB $00,$32,$3C,$7F,$98,$BA         ; }
+ $6359 DEFB $1F,$00,$01,$72,$1F,$00,$04,$D6 ; {edges (21 * 4 bytes)
+ $6361 DEFB $1F,$03,$04,$C5,$1F,$02,$03,$B4 ;
+ $6369 DEFB $1F,$01,$02,$A3,$1F,$01,$06,$32 ;
+ $6371 DEFB $1F,$02,$06,$31,$1F,$02,$05,$41 ;
+ $6379 DEFB $1F,$05,$06,$10,$1F,$00,$05,$60 ;
+ $6381 DEFB $1F,$03,$05,$54,$1F,$00,$06,$20 ;
+ $6389 DEFB $1F,$04,$05,$65,$1F,$01,$08,$A8 ;
+ $6391 DEFB $1F,$01,$07,$87,$1F,$00,$07,$D7 ;
+ $6399 DEFB $1F,$04,$07,$DC,$1F,$03,$07,$C9 ;
+ $63A1 DEFB $1F,$03,$08,$B9,$1F,$02,$08,$BA ;
+ $63A9 DEFB $1F,$07,$08,$98                 ; }
+ $63AD DEFB $09,$42,$51,$1F,$09,$42,$51,$5F ; {normals (14 * 4 bytes)
+ $63B5 DEFB $48,$40,$1F,$9F,$40,$49,$2F,$DF ;
+ $63BD DEFB $2D,$4F,$41,$5F,$87,$0F,$23,$1F ;
+ $63C5 DEFB $26,$4C,$46,$1F,$42,$3B,$27,$BF ;
+ $63CD DEFB $43,$0F,$50,$FF,$42,$0E,$4B,$7F ;
+ $63D5 DEFB $46,$50,$28,$FF,$3A,$66,$33,$7F ;
+ $63DD DEFB $51,$09,$43,$3F,$2F,$5E,$3F,$3F ; }
 @label=d_Cargo
- $63E5 DEFB $00,$14,$00,$0A,$0F,$07,$0F,$11 ; {field_0 cargo hold
- $63ED DEFB $00,$00,$00,$0C,$17,$00,$53,$00 ;
- $63F5 DEFB $8F,$00,$00,$02,$00,$1F,$00,$18 ;
- $63FD DEFB $10,$00,$1F,$10,$55,$18,$05,$0F ;
- $6405 DEFB $1F,$10,$22,$18,$0D,$09,$5F,$20 ;
- $640D DEFB $33,$18,$0D,$09,$7F,$30,$44,$18 ;
- $6415 DEFB $05,$0F,$3F,$40,$55,$18,$10,$00 ;
- $641D DEFB $9F,$51,$66,$18,$05,$0F,$9F,$21 ;
- $6425 DEFB $66,$18,$0D,$09,$DF,$32,$66,$18 ;
- $642D DEFB $0D,$09,$FF,$43,$66,$18,$05,$0F ;
- $6435 DEFB $BF,$54,$66,$1F,$00,$01,$10,$1F ;
- $643D DEFB $01,$02,$20,$1F,$02,$03,$30,$1F ;
- $6445 DEFB $03,$04,$40,$1F,$00,$04,$50,$1F ;
- $644D DEFB $00,$05,$51,$1F,$01,$06,$21,$1F ;
- $6455 DEFB $02,$07,$32,$1F,$03,$08,$43,$1F ;
- $645D DEFB $04,$09,$54,$1F,$05,$06,$61,$1F ;
- $6465 DEFB $06,$07,$62,$1F,$07,$08,$63,$1F ;
- $646D DEFB $08,$09,$64,$1F,$09,$05,$65,$60 ;
- $6475 DEFB $00,$00,$1F,$00,$29,$1E,$1F,$00 ;
- $647D DEFB $12,$30,$5F,$00,$33,$00,$5F,$00 ;
- $6485 DEFB $12,$30,$7F,$00,$29,$1E,$3F,$60 ;
- $648D DEFB $00,$00,$9F                     ; }
+ $63E5 DEFB $00                             ; cargo hold
+ $63E6 DEFB $14                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $63E7 DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $63E8 DEFB $0A                             ; vertex count
+ $63E9 DEFB $0F                             ; edge count
+ $63EA DEFB $07                             ; normal count
+ $63EB DEFB $0F                             ; max speed
+ $63EC DEFB $11                             ; max energy
+ $63ED DEFW $0000                           ; kill bounty
+ $63EF DEFB $00                             ; what it can launch
+ $63F0 DEFB $0C                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $63F1 DEFW $0017                           ; offset to vertex data
+ $63F3 DEFW $0053                           ; offset to edge data
+ $63F5 DEFW $008F                           ; offset to normal data
+ $63F7 DEFB $00                             ; flags
+ $63F8 DEFB $02
+ $63F9 DEFB $00
+ $63FA DEFW $001F                           ; rating points
+ $63FC DEFB $18,$10,$00,$1F,$10,$55,$18,$05 ; {vertices (10 * 6 bytes: X,Y,Z
+ $6404 DEFB $0F,$1F,$10,$22,$18,$0D,$09,$5F ; coords)
+ $640C DEFB $20,$33,$18,$0D,$09,$7F,$30,$44 ;
+ $6414 DEFB $18,$05,$0F,$3F,$40,$55,$18,$10 ;
+ $641C DEFB $00,$9F,$51,$66,$18,$05,$0F,$9F ;
+ $6424 DEFB $21,$66,$18,$0D,$09,$DF,$32,$66 ;
+ $642C DEFB $18,$0D,$09,$FF,$43,$66,$18,$05 ;
+ $6434 DEFB $0F,$BF,$54,$66                 ; }
+ $6438 DEFB $1F,$00,$01,$10,$1F,$01,$02,$20 ; {edges (15 * 4 bytes)
+ $6440 DEFB $1F,$02,$03,$30,$1F,$03,$04,$40 ;
+ $6448 DEFB $1F,$00,$04,$50,$1F,$00,$05,$51 ;
+ $6450 DEFB $1F,$01,$06,$21,$1F,$02,$07,$32 ;
+ $6458 DEFB $1F,$03,$08,$43,$1F,$04,$09,$54 ;
+ $6460 DEFB $1F,$05,$06,$61,$1F,$06,$07,$62 ;
+ $6468 DEFB $1F,$07,$08,$63,$1F,$08,$09,$64 ;
+ $6470 DEFB $1F,$09,$05,$65                 ; }
+ $6474 DEFB $60,$00,$00,$1F,$00,$29,$1E,$1F ; {normals (7 * 4 bytes)
+ $647C DEFB $00,$12,$30,$5F,$00,$33,$00,$5F ;
+ $6484 DEFB $00,$12,$30,$7F,$00,$29,$1E,$3F ;
+ $648C DEFB $60,$00,$00,$9F                 ; }
 @label=d_Cobra1
- $6490 DEFB $03,$5F,$8C,$1C,$26,$0D,$1C,$96 ; {field_0 cargo hold
- $6498 DEFB $00,$00,$04,$32,$2E,$00,$D6,$00 ;
- $64A0 DEFB $6E,$01,$A0,$01,$15,$00,$02     ; }
+ $6490 DEFB $03                             ; cargo hold
+ $6491 DEFB $5F                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6492 DEFB $8C                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6493 DEFB $1C                             ; vertex count
+ $6494 DEFB $26                             ; edge count
+ $6495 DEFB $0D                             ; normal count
+ $6496 DEFB $1C                             ; max speed
+ $6497 DEFB $96                             ; max energy
+ $6498 DEFW $0000                           ; kill bounty
+ $649A DEFB $04                             ; what it can launch
+ $649B DEFB $32                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $649C DEFW $002E                           ; offset to vertex data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $649E DEFW $00D6                           ; offset to edge data (points into
+                                            ; another ship's model, reused)
+ $64A0 DEFW $016E                           ; offset to normal data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $64A2 DEFB $A0                             ; flags
+ $64A3 DEFB $01
+ $64A4 DEFB $15
+ $64A5 DEFW $0200                           ; rating points
 @label=d_Cobra2
- $64A7 DEFB $01,$5F,$A0,$1C,$26,$0D,$1C,$96 ; {field_0 cargo hold, pirate
- $64AF DEFB $AF,$00,$02,$32,$17,$00,$BF,$00 ;
- $64B7 DEFB $57,$01,$8C,$0A,$15,$80,$03,$20 ;
- $64BF DEFB $00,$4C,$1F,$FF,$FF,$20,$00,$4C ;
- $64C7 DEFB $9F,$FF,$FF,$00,$1A,$18,$1F,$FF ;
- $64CF DEFB $FF,$78,$03,$08,$FF,$73,$AA,$78 ;
- $64D7 DEFB $03,$08,$7F,$84,$CC,$58,$10,$28 ;
- $64DF DEFB $BF,$FF,$FF,$58,$10,$28,$3F,$FF ;
- $64E7 DEFB $FF,$80,$08,$28,$7F,$98,$CC,$80 ;
- $64EF DEFB $08,$28,$FF,$97,$AA,$00,$1A,$28 ;
- $64F7 DEFB $3F,$65,$99,$20,$18,$28,$FF,$A9 ;
- $64FF DEFB $BB,$20,$18,$28,$7F,$B9,$CC,$24 ;
- $6507 DEFB $08,$28,$B4,$99,$99,$08,$0C,$28 ;
- $650F DEFB $B4,$99,$99,$08,$0C,$28,$34,$99 ;
- $6517 DEFB $99,$24,$08,$28,$34,$99,$99,$24 ;
- $651F DEFB $0C,$28,$74,$99,$99,$08,$10,$28 ;
- $6527 DEFB $74,$99,$99,$08,$10,$28,$F4,$99 ;
- $652F DEFB $99,$24,$0C,$28,$F4,$99,$99,$00 ;
- $6537 DEFB $00,$4C,$06,$B0,$BB,$00,$00,$5A ;
- $653F DEFB $1F,$B0,$BB,$50,$06,$28,$E8,$99 ;
- $6547 DEFB $99,$50,$06,$28,$A8,$99,$99,$58 ;
- $654F DEFB $00,$28,$A6,$99,$99,$50,$06,$28 ;
- $6557 DEFB $28,$99,$99,$58,$00,$28,$26,$99 ;
- $655F DEFB $99,$50,$06,$28,$68,$99,$99,$1F ;
- $6567 DEFB $00,$01,$B0,$1F,$00,$04,$C4,$1F ;
- $656F DEFB $01,$03,$A3,$1F,$03,$08,$A7,$1F ;
- $6577 DEFB $04,$07,$C8,$1F,$06,$07,$98,$1F ;
- $657F DEFB $06,$09,$96,$1F,$05,$09,$95,$1F ;
- $6587 DEFB $05,$08,$97,$1F,$02,$05,$51,$1F ;
- $658F DEFB $02,$06,$62,$1F,$03,$05,$73,$1F ;
- $6597 DEFB $04,$06,$84,$1F,$01,$02,$10,$1F ;
- $659F DEFB $00,$02,$20,$1F,$08,$0A,$A9,$1F ;
- $65A7 DEFB $0A,$0B,$B9,$1F,$07,$0B,$C9,$1F ;
- $65AF DEFB $01,$0A,$BA,$1F,$00,$0B,$CB,$1D ;
- $65B7 DEFB $01,$05,$31,$1D,$00,$06,$42,$06 ;
- $65BF DEFB $14,$15,$B0,$14,$0C,$0D,$99,$14 ;
- $65C7 DEFB $12,$13,$99,$14,$0E,$0F,$99,$14 ;
- $65CF DEFB $10,$11,$99,$13,$0F,$10,$99,$11 ;
- $65D7 DEFB $0E,$11,$99,$13,$0D,$12,$99,$13 ;
- $65DF DEFB $0C,$13,$99,$1E,$02,$09,$65,$06 ;
- $65E7 DEFB $16,$18,$99,$06,$17,$18,$99,$08 ;
- $65EF DEFB $16,$17,$99,$06,$19,$1A,$99,$06 ;
- $65F7 DEFB $1A,$1B,$99,$08,$19,$1B,$99,$00 ;
- $65FF DEFB $3E,$1F,$1F,$12,$37,$10,$9F,$12 ;
- $6607 DEFB $37,$10,$1F,$10,$34,$0E,$9F,$10 ;
- $660F DEFB $34,$0E,$1F,$0E,$2F,$00,$9F,$0E ;
- $6617 DEFB $2F,$00,$1F,$3D,$66,$00,$9F,$3D ;
- $661F DEFB $66,$00,$1F,$00,$00,$50,$3F,$07 ;
- $6627 DEFB $2A,$09,$DF,$00,$1E,$06,$5F,$07 ;
- $662F DEFB $2A,$09,$5F                     ; }
+ $64A7 DEFB $01                             ; cargo hold
+ $64A8 DEFB $5F                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $64A9 DEFB $A0                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $64AA DEFB $1C                             ; vertex count
+ $64AB DEFB $26                             ; edge count
+ $64AC DEFB $0D                             ; normal count
+ $64AD DEFB $1C                             ; max speed
+ $64AE DEFB $96                             ; max energy
+ $64AF DEFW $00AF                           ; kill bounty
+ $64B1 DEFB $02                             ; what it can launch
+ $64B2 DEFB $32                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $64B3 DEFW $0017                           ; offset to vertex data
+ $64B5 DEFW $00BF                           ; offset to edge data
+ $64B7 DEFW $0157                           ; offset to normal data
+ $64B9 DEFB $8C                             ; flags
+ $64BA DEFB $0A
+ $64BB DEFB $15
+ $64BC DEFW $0380                           ; rating points
+ $64BE DEFB $20,$00,$4C,$1F,$FF,$FF,$20,$00 ; {vertices (28 * 6 bytes: X,Y,Z
+ $64C6 DEFB $4C,$9F,$FF,$FF,$00,$1A,$18,$1F ; coords)
+ $64CE DEFB $FF,$FF,$78,$03,$08,$FF,$73,$AA ;
+ $64D6 DEFB $78,$03,$08,$7F,$84,$CC,$58,$10 ;
+ $64DE DEFB $28,$BF,$FF,$FF,$58,$10,$28,$3F ;
+ $64E6 DEFB $FF,$FF,$80,$08,$28,$7F,$98,$CC ;
+ $64EE DEFB $80,$08,$28,$FF,$97,$AA,$00,$1A ;
+ $64F6 DEFB $28,$3F,$65,$99,$20,$18,$28,$FF ;
+ $64FE DEFB $A9,$BB,$20,$18,$28,$7F,$B9,$CC ;
+ $6506 DEFB $24,$08,$28,$B4,$99,$99,$08,$0C ;
+ $650E DEFB $28,$B4,$99,$99,$08,$0C,$28,$34 ;
+ $6516 DEFB $99,$99,$24,$08,$28,$34,$99,$99 ;
+ $651E DEFB $24,$0C,$28,$74,$99,$99,$08,$10 ;
+ $6526 DEFB $28,$74,$99,$99,$08,$10,$28,$F4 ;
+ $652E DEFB $99,$99,$24,$0C,$28,$F4,$99,$99 ;
+ $6536 DEFB $00,$00,$4C,$06,$B0,$BB,$00,$00 ;
+ $653E DEFB $5A,$1F,$B0,$BB,$50,$06,$28,$E8 ;
+ $6546 DEFB $99,$99,$50,$06,$28,$A8,$99,$99 ;
+ $654E DEFB $58,$00,$28,$A6,$99,$99,$50,$06 ;
+ $6556 DEFB $28,$28,$99,$99,$58,$00,$28,$26 ;
+ $655E DEFB $99,$99,$50,$06,$28,$68,$99,$99 ; }
+ $6566 DEFB $1F,$00,$01,$B0,$1F,$00,$04,$C4 ; {edges (38 * 4 bytes)
+ $656E DEFB $1F,$01,$03,$A3,$1F,$03,$08,$A7 ;
+ $6576 DEFB $1F,$04,$07,$C8,$1F,$06,$07,$98 ;
+ $657E DEFB $1F,$06,$09,$96,$1F,$05,$09,$95 ;
+ $6586 DEFB $1F,$05,$08,$97,$1F,$02,$05,$51 ;
+ $658E DEFB $1F,$02,$06,$62,$1F,$03,$05,$73 ;
+ $6596 DEFB $1F,$04,$06,$84,$1F,$01,$02,$10 ;
+ $659E DEFB $1F,$00,$02,$20,$1F,$08,$0A,$A9 ;
+ $65A6 DEFB $1F,$0A,$0B,$B9,$1F,$07,$0B,$C9 ;
+ $65AE DEFB $1F,$01,$0A,$BA,$1F,$00,$0B,$CB ;
+ $65B6 DEFB $1D,$01,$05,$31,$1D,$00,$06,$42 ;
+ $65BE DEFB $06,$14,$15,$B0,$14,$0C,$0D,$99 ;
+ $65C6 DEFB $14,$12,$13,$99,$14,$0E,$0F,$99 ;
+ $65CE DEFB $14,$10,$11,$99,$13,$0F,$10,$99 ;
+ $65D6 DEFB $11,$0E,$11,$99,$13,$0D,$12,$99 ;
+ $65DE DEFB $13,$0C,$13,$99,$1E,$02,$09,$65 ;
+ $65E6 DEFB $06,$16,$18,$99,$06,$17,$18,$99 ;
+ $65EE DEFB $08,$16,$17,$99,$06,$19,$1A,$99 ;
+ $65F6 DEFB $06,$1A,$1B,$99,$08,$19,$1B,$99 ; }
+ $65FE DEFB $00,$3E,$1F,$1F,$12,$37,$10,$9F ; {normals (13 * 4 bytes)
+ $6606 DEFB $12,$37,$10,$1F,$10,$34,$0E,$9F ;
+ $660E DEFB $10,$34,$0E,$1F,$0E,$2F,$00,$9F ;
+ $6616 DEFB $0E,$2F,$00,$1F,$3D,$66,$00,$9F ;
+ $661E DEFB $3D,$66,$00,$1F,$00,$00,$50,$3F ;
+ $6626 DEFB $07,$2A,$09,$DF,$00,$1E,$06,$5F ;
+ $662E DEFB $07,$2A,$09,$5F                 ; }
 @label=d_EscapePod
- $6632 DEFB $20,$10,$FF,$04,$06,$04,$08,$11 ; {field_0 cargo hold
- $663A DEFB $00,$00,$00,$08,$17,$00,$2F,$00 ;
- $6642 DEFB $47,$00,$01,$04,$00,$32,$00,$07 ;
- $664A DEFB $00,$24,$9F,$12,$33,$07,$0E,$0C ;
- $6652 DEFB $FF,$02,$33,$07,$0E,$0C,$BF,$01 ;
- $665A DEFB $33,$15,$00,$00,$1F,$01,$22,$1F ;
- $6662 DEFB $00,$01,$23,$1F,$01,$02,$03,$1F ;
- $666A DEFB $02,$03,$01,$1F,$03,$00,$12,$1F ;
- $6672 DEFB $00,$02,$13,$1F,$03,$01,$02,$34 ;
- $667A DEFB $00,$7A,$3F,$27,$67,$1E,$1F,$27 ;
- $6682 DEFB $67,$1E,$5F,$70,$00,$00,$9F     ; }
+ $6632 DEFB $20                             ; cargo hold
+ $6633 DEFB $10                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6634 DEFB $FF                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6635 DEFB $04                             ; vertex count
+ $6636 DEFB $06                             ; edge count
+ $6637 DEFB $04                             ; normal count
+ $6638 DEFB $08                             ; max speed
+ $6639 DEFB $11                             ; max energy
+ $663A DEFW $0000                           ; kill bounty
+ $663C DEFB $00                             ; what it can launch
+ $663D DEFB $08                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $663E DEFW $0017                           ; offset to vertex data
+ $6640 DEFW $002F                           ; offset to edge data
+ $6642 DEFW $0047                           ; offset to normal data
+ $6644 DEFB $01                             ; flags
+ $6645 DEFB $04
+ $6646 DEFB $00
+ $6647 DEFW $0032                           ; rating points
+ $6649 DEFB $07,$00,$24,$9F,$12,$33,$07,$0E ; {vertices (4 * 6 bytes: X,Y,Z
+ $6651 DEFB $0C,$FF,$02,$33,$07,$0E,$0C,$BF ; coords)
+ $6659 DEFB $01,$33,$15,$00,$00,$1F,$01,$22 ; }
+ $6661 DEFB $1F,$00,$01,$23,$1F,$01,$02,$03 ; {edges (6 * 4 bytes)
+ $6669 DEFB $1F,$02,$03,$01,$1F,$03,$00,$12 ;
+ $6671 DEFB $1F,$00,$02,$13,$1F,$03,$01,$02 ; }
+ $6679 DEFB $34,$00,$7A,$3F,$27,$67,$1E,$1F ; {normals (4 * 4 bytes)
+ $6681 DEFB $27,$67,$1E,$5F,$70,$00,$00,$9F ; }
 @label=d_FerDeLance
- $6689 DEFB $00,$28,$FF,$13,$1B,$0A,$1E,$A0 ; {field_0 cargo hold
- $6691 DEFB $00,$00,$02,$1E,$17,$00,$89,$00 ;
- $6699 DEFB $F5,$00,$82,$01,$00,$00,$03,$00 ;
- $66A1 DEFB $0E,$6C,$5F,$01,$59,$28,$0E,$04 ;
- $66A9 DEFB $FF,$12,$99,$0C,$0E,$34,$FF,$23 ;
- $66B1 DEFB $99,$0C,$0E,$34,$7F,$34,$99,$28 ;
- $66B9 DEFB $0E,$04,$7F,$45,$99,$28,$0E,$04 ;
- $66C1 DEFB $BC,$01,$26,$0C,$02,$34,$BC,$23 ;
- $66C9 DEFB $67,$0C,$02,$34,$3C,$34,$78,$28 ;
- $66D1 DEFB $0E,$04,$3C,$04,$58,$00,$12,$14 ;
- $66D9 DEFB $2F,$06,$78,$03,$0B,$61,$CB,$00 ;
- $66E1 DEFB $00,$1A,$08,$12,$89,$00,$00,$10 ;
- $66E9 DEFB $0E,$04,$AB,$00,$00,$03,$0B,$61 ;
- $66F1 DEFB $4B,$00,$00,$1A,$08,$12,$09,$00 ;
- $66F9 DEFB $00,$10,$0E,$04,$2B,$00,$00,$00 ;
- $6701 DEFB $0E,$14,$6C,$99,$99,$0E,$0E,$2C ;
- $6709 DEFB $CC,$99,$99,$0E,$0E,$2C,$4C,$99 ;
- $6711 DEFB $99,$1F,$00,$01,$19,$1F,$01,$02 ;
- $6719 DEFB $29,$1F,$02,$03,$39,$1F,$03,$04 ;
- $6721 DEFB $49,$1F,$00,$04,$59,$1C,$00,$05 ;
- $6729 DEFB $01,$1C,$05,$06,$26,$1C,$06,$07 ;
- $6731 DEFB $37,$1C,$07,$08,$48,$1C,$00,$08 ;
- $6739 DEFB $05,$0F,$05,$09,$06,$0B,$06,$09 ;
- $6741 DEFB $67,$0B,$07,$09,$78,$0F,$08,$09 ;
- $6749 DEFB $08,$0E,$01,$05,$12,$0E,$02,$06 ;
- $6751 DEFB $23,$0E,$03,$07,$34,$0E,$04,$08 ;
- $6759 DEFB $45,$08,$0A,$0B,$00,$09,$0B,$0C ;
- $6761 DEFB $00,$0B,$0A,$0C,$00,$08,$0D,$0E ;
- $6769 DEFB $00,$09,$0E,$0F,$00,$0B,$0D,$0F ;
- $6771 DEFB $00,$0C,$10,$11,$99,$0C,$10,$12 ;
- $6779 DEFB $99,$08,$11,$12,$99,$00,$18,$06 ;
- $6781 DEFB $1C,$44,$00,$18,$9F,$3F,$00,$25 ;
- $6789 DEFB $BF,$00,$00,$68,$3F,$3F,$00,$25 ;
- $6791 DEFB $3F,$44,$00,$18,$1F,$0C,$2E,$13 ;
- $6799 DEFB $BC,$00,$2D,$16,$BC,$0C,$2E,$16 ;
- $67A1 DEFB $3C,$00,$1C,$00,$5F             ; }
+ $6689 DEFB $00                             ; cargo hold
+ $668A DEFB $28                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $668B DEFB $FF                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $668C DEFB $13                             ; vertex count
+ $668D DEFB $1B                             ; edge count
+ $668E DEFB $0A                             ; normal count
+ $668F DEFB $1E                             ; max speed
+ $6690 DEFB $A0                             ; max energy
+ $6691 DEFW $0000                           ; kill bounty
+ $6693 DEFB $02                             ; what it can launch
+ $6694 DEFB $1E                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6695 DEFW $0017                           ; offset to vertex data
+ $6697 DEFW $0089                           ; offset to edge data
+ $6699 DEFW $00F5                           ; offset to normal data
+ $669B DEFB $82                             ; flags
+ $669C DEFB $01
+ $669D DEFB $00
+ $669E DEFW $0300                           ; rating points
+ $66A0 DEFB $00,$0E,$6C,$5F,$01,$59,$28,$0E ; {vertices (19 * 6 bytes: X,Y,Z
+ $66A8 DEFB $04,$FF,$12,$99,$0C,$0E,$34,$FF ; coords)
+ $66B0 DEFB $23,$99,$0C,$0E,$34,$7F,$34,$99 ;
+ $66B8 DEFB $28,$0E,$04,$7F,$45,$99,$28,$0E ;
+ $66C0 DEFB $04,$BC,$01,$26,$0C,$02,$34,$BC ;
+ $66C8 DEFB $23,$67,$0C,$02,$34,$3C,$34,$78 ;
+ $66D0 DEFB $28,$0E,$04,$3C,$04,$58,$00,$12 ;
+ $66D8 DEFB $14,$2F,$06,$78,$03,$0B,$61,$CB ;
+ $66E0 DEFB $00,$00,$1A,$08,$12,$89,$00,$00 ;
+ $66E8 DEFB $10,$0E,$04,$AB,$00,$00,$03,$0B ;
+ $66F0 DEFB $61,$4B,$00,$00,$1A,$08,$12,$09 ;
+ $66F8 DEFB $00,$00,$10,$0E,$04,$2B,$00,$00 ;
+ $6700 DEFB $00,$0E,$14,$6C,$99,$99,$0E,$0E ;
+ $6708 DEFB $2C,$CC,$99,$99,$0E,$0E,$2C,$4C ;
+ $6710 DEFB $99,$99                         ; }
+ $6712 DEFB $1F,$00,$01,$19,$1F,$01,$02,$29 ; {edges (27 * 4 bytes)
+ $671A DEFB $1F,$02,$03,$39,$1F,$03,$04,$49 ;
+ $6722 DEFB $1F,$00,$04,$59,$1C,$00,$05,$01 ;
+ $672A DEFB $1C,$05,$06,$26,$1C,$06,$07,$37 ;
+ $6732 DEFB $1C,$07,$08,$48,$1C,$00,$08,$05 ;
+ $673A DEFB $0F,$05,$09,$06,$0B,$06,$09,$67 ;
+ $6742 DEFB $0B,$07,$09,$78,$0F,$08,$09,$08 ;
+ $674A DEFB $0E,$01,$05,$12,$0E,$02,$06,$23 ;
+ $6752 DEFB $0E,$03,$07,$34,$0E,$04,$08,$45 ;
+ $675A DEFB $08,$0A,$0B,$00,$09,$0B,$0C,$00 ;
+ $6762 DEFB $0B,$0A,$0C,$00,$08,$0D,$0E,$00 ;
+ $676A DEFB $09,$0E,$0F,$00,$0B,$0D,$0F,$00 ;
+ $6772 DEFB $0C,$10,$11,$99,$0C,$10,$12,$99 ;
+ $677A DEFB $08,$11,$12,$99                 ; }
+ $677E DEFB $00,$18,$06,$1C,$44,$00,$18,$9F ; {normals (10 * 4 bytes)
+ $6786 DEFB $3F,$00,$25,$BF,$00,$00,$68,$3F ;
+ $678E DEFB $3F,$00,$25,$3F,$44,$00,$18,$1F ;
+ $6796 DEFB $0C,$2E,$13,$BC,$00,$2D,$16,$BC ;
+ $679E DEFB $0C,$2E,$16,$3C,$00,$1C,$00,$5F ; }
 @label=d_Missile
- $67A6 DEFB $00,$28,$00,$11,$18,$09,$2C,$02 ; {field_0 cargo hold
- $67AE DEFB $00,$00,$00,$0E,$17,$00,$7D,$00 ;
- $67B6 DEFB $DD,$00,$00,$02,$00,$C0,$01,$00 ;
- $67BE DEFB $00,$44,$1F,$10,$32,$08,$08,$24 ;
- $67C6 DEFB $5F,$21,$54,$08,$08,$24,$1F,$32 ;
- $67CE DEFB $74,$08,$08,$24,$9F,$30,$76,$08 ;
- $67D6 DEFB $08,$24,$DF,$10,$65,$08,$08,$2C ;
- $67DE DEFB $3F,$74,$88,$08,$08,$2C,$7F,$54 ;
- $67E6 DEFB $88,$08,$08,$2C,$FF,$65,$88,$08 ;
- $67EE DEFB $08,$2C,$BF,$76,$88,$0C,$0C,$2C ;
- $67F6 DEFB $28,$74,$88,$0C,$0C,$2C,$68,$54 ;
- $67FE DEFB $88,$0C,$0C,$2C,$E8,$65,$88,$0C ;
- $6806 DEFB $0C,$2C,$A8,$76,$88,$08,$08,$0C ;
- $680E DEFB $A8,$76,$77,$08,$08,$0C,$E8,$65 ;
- $6816 DEFB $66,$08,$08,$0C,$28,$74,$77,$08 ;
- $681E DEFB $08,$0C,$68,$54,$55,$1F,$00,$01 ;
- $6826 DEFB $21,$1F,$00,$02,$32,$1F,$00,$03 ;
- $682E DEFB $30,$1F,$00,$04,$10,$1F,$01,$02 ;
- $6836 DEFB $24,$1F,$01,$04,$51,$1F,$03,$04 ;
- $683E DEFB $60,$1F,$02,$03,$73,$1F,$02,$05 ;
- $6846 DEFB $74,$1F,$01,$06,$54,$1F,$04,$07 ;
- $684E DEFB $65,$1F,$03,$08,$76,$1F,$07,$08 ;
- $6856 DEFB $86,$1F,$05,$08,$87,$1F,$05,$06 ;
- $685E DEFB $84,$1F,$06,$07,$85,$08,$06,$0A ;
- $6866 DEFB $85,$08,$05,$09,$87,$08,$08,$0C ;
- $686E DEFB $87,$08,$07,$0B,$85,$08,$09,$0F ;
- $6876 DEFB $74,$08,$0A,$10,$54,$08,$0C,$0D ;
- $687E DEFB $76,$08,$0B,$0E,$65,$40,$00,$10 ;
- $6886 DEFB $9F,$00,$40,$10,$5F,$40,$00,$10 ;
- $688E DEFB $1F,$00,$40,$10,$1F,$20,$00,$00 ;
- $6896 DEFB $1F,$00,$20,$00,$5F,$20,$00,$00 ;
- $689E DEFB $9F,$00,$20,$00,$1F,$00,$00,$B0 ;
- $68A6 DEFB $3F                             ; }
+ $67A6 DEFB $00                             ; cargo hold
+ $67A7 DEFB $28                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $67A8 DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $67A9 DEFB $11                             ; vertex count
+ $67AA DEFB $18                             ; edge count
+ $67AB DEFB $09                             ; normal count
+ $67AC DEFB $2C                             ; max speed
+ $67AD DEFB $02                             ; max energy
+ $67AE DEFW $0000                           ; kill bounty
+ $67B0 DEFB $00                             ; what it can launch
+ $67B1 DEFB $0E                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $67B2 DEFW $0017                           ; offset to vertex data
+ $67B4 DEFW $007D                           ; offset to edge data
+ $67B6 DEFW $00DD                           ; offset to normal data
+ $67B8 DEFB $00                             ; flags
+ $67B9 DEFB $02
+ $67BA DEFB $00
+ $67BB DEFW $01C0                           ; rating points
+ $67BD DEFB $00,$00,$44,$1F,$10,$32,$08,$08 ; {vertices (17 * 6 bytes: X,Y,Z
+ $67C5 DEFB $24,$5F,$21,$54,$08,$08,$24,$1F ; coords)
+ $67CD DEFB $32,$74,$08,$08,$24,$9F,$30,$76 ;
+ $67D5 DEFB $08,$08,$24,$DF,$10,$65,$08,$08 ;
+ $67DD DEFB $2C,$3F,$74,$88,$08,$08,$2C,$7F ;
+ $67E5 DEFB $54,$88,$08,$08,$2C,$FF,$65,$88 ;
+ $67ED DEFB $08,$08,$2C,$BF,$76,$88,$0C,$0C ;
+ $67F5 DEFB $2C,$28,$74,$88,$0C,$0C,$2C,$68 ;
+ $67FD DEFB $54,$88,$0C,$0C,$2C,$E8,$65,$88 ;
+ $6805 DEFB $0C,$0C,$2C,$A8,$76,$88,$08,$08 ;
+ $680D DEFB $0C,$A8,$76,$77,$08,$08,$0C,$E8 ;
+ $6815 DEFB $65,$66,$08,$08,$0C,$28,$74,$77 ;
+ $681D DEFB $08,$08,$0C,$68,$54,$55         ; }
+ $6823 DEFB $1F,$00,$01,$21,$1F,$00,$02,$32 ; {edges (24 * 4 bytes)
+ $682B DEFB $1F,$00,$03,$30,$1F,$00,$04,$10 ;
+ $6833 DEFB $1F,$01,$02,$24,$1F,$01,$04,$51 ;
+ $683B DEFB $1F,$03,$04,$60,$1F,$02,$03,$73 ;
+ $6843 DEFB $1F,$02,$05,$74,$1F,$01,$06,$54 ;
+ $684B DEFB $1F,$04,$07,$65,$1F,$03,$08,$76 ;
+ $6853 DEFB $1F,$07,$08,$86,$1F,$05,$08,$87 ;
+ $685B DEFB $1F,$05,$06,$84,$1F,$06,$07,$85 ;
+ $6863 DEFB $08,$06,$0A,$85,$08,$05,$09,$87 ;
+ $686B DEFB $08,$08,$0C,$87,$08,$07,$0B,$85 ;
+ $6873 DEFB $08,$09,$0F,$74,$08,$0A,$10,$54 ;
+ $687B DEFB $08,$0C,$0D,$76,$08,$0B,$0E,$65 ; }
+ $6883 DEFB $40,$00,$10,$9F,$00,$40,$10,$5F ; {normals (9 * 4 bytes)
+ $688B DEFB $40,$00,$10,$1F,$00,$40,$10,$1F ;
+ $6893 DEFB $20,$00,$00,$1F,$00,$20,$00,$5F ;
+ $689B DEFB $20,$00,$00,$9F,$00,$20,$00,$1F ;
+ $68A3 DEFB $00,$00,$B0,$3F                 ; }
 @label=d_Alloys
- $68A7 DEFB $80,$0A,$00,$04,$04,$00,$10,$10 ; {field_0 cargo hold +00
- $68AF DEFB $00,$00,$00,$0C,$17,$00,$2F,$00 ;
- $68B7 DEFB $00,$00,$00,$03,$00,$20,$00,$0F ;
- $68BF DEFB $16,$09,$FF,$FF,$FF,$0F,$26,$09 ;
- $68C7 DEFB $BF,$FF,$FF,$13,$20,$0B,$14,$FF ;
- $68CF DEFB $FF,$0A,$2E,$06,$54,$FF,$FF,$1F ;
- $68D7 DEFB $00,$01,$FF,$10,$01,$02,$FF,$14 ;
- $68DF DEFB $02,$03,$FF,$10,$03,$00,$FF     ; }
+ $68A7 DEFB $80                             ; cargo hold
+ $68A8 DEFB $0A                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $68A9 DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $68AA DEFB $04                             ; vertex count
+ $68AB DEFB $04                             ; edge count
+ $68AC DEFB $00                             ; normal count
+ $68AD DEFB $10                             ; max speed
+ $68AE DEFB $10                             ; max energy
+ $68AF DEFW $0000                           ; kill bounty
+ $68B1 DEFB $00                             ; what it can launch
+ $68B2 DEFB $0C                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $68B3 DEFW $0017                           ; offset to vertex data
+ $68B5 DEFW $002F                           ; offset to edge data
+ $68B7 DEFW $0000                           ; offset to normal data
+ $68B9 DEFB $00                             ; flags
+ $68BA DEFB $03
+ $68BB DEFB $00
+ $68BC DEFW $0020                           ; rating points
+ $68BE DEFB $0F,$16,$09,$FF,$FF,$FF,$0F,$26 ; {vertices (4 * 6 bytes: X,Y,Z
+ $68C6 DEFB $09,$BF,$FF,$FF,$13,$20,$0B,$14 ; coords)
+ $68CE DEFB $FF,$FF,$0A,$2E,$06,$54,$FF,$FF ; }
+ $68D6 DEFB $1F,$00,$01,$FF,$10,$01,$02,$FF ; {edges (4 * 4 bytes)
+ $68DE DEFB $14,$02,$03,$FF,$10,$03,$00,$FF ; }
 @label=d_Python1
- $68E6 DEFB $05,$50,$82,$0B,$1A,$0D,$14,$FA ; {field_0 cargo hold
- $68EE DEFB $00,$00,$00,$28,$2E,$00,$70,$00 ;
- $68F6 DEFB $D8,$00,$A0,$00,$00,$00,$02     ; }
+ $68E6 DEFB $05                             ; cargo hold
+ $68E7 DEFB $50                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $68E8 DEFB $82                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $68E9 DEFB $0B                             ; vertex count
+ $68EA DEFB $1A                             ; edge count
+ $68EB DEFB $0D                             ; normal count
+ $68EC DEFB $14                             ; max speed
+ $68ED DEFB $FA                             ; max energy
+ $68EE DEFW $0000                           ; kill bounty
+ $68F0 DEFB $00                             ; what it can launch
+ $68F1 DEFB $28                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $68F2 DEFW $002E                           ; offset to vertex data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $68F4 DEFW $0070                           ; offset to edge data (points into
+                                            ; another ship's model, reused)
+ $68F6 DEFW $00D8                           ; offset to normal data (points
+                                            ; into another ship's model,
+                                            ; reused)
+ $68F8 DEFB $A0                             ; flags
+ $68F9 DEFB $00
+ $68FA DEFB $00
+ $68FB DEFW $0200                           ; rating points
 @label=d_Python2
- $68FD DEFB $02,$50,$96,$0B,$1A,$0D,$14,$FA ; {field_0 cargo hold, pirate
- $6905 DEFB $C8,$00,$00,$28,$17,$00,$59,$00 ;
- $690D DEFB $C1,$00,$8C,$00,$00,$80,$03,$00 ;
- $6915 DEFB $00,$E0,$1F,$10,$32,$00,$30,$30 ;
- $691D DEFB $1F,$10,$54,$60,$00,$10,$3F,$FF ;
- $6925 DEFB $FF,$60,$00,$10,$BF,$FF,$FF,$00 ;
- $692D DEFB $30,$20,$3F,$54,$98,$00,$18,$70 ;
- $6935 DEFB $3F,$89,$CC,$30,$00,$70,$BF,$B8 ;
- $693D DEFB $CC,$30,$00,$70,$3F,$A9,$CC,$00 ;
- $6945 DEFB $30,$30,$5F,$32,$76,$00,$30,$20 ;
- $694D DEFB $7F,$76,$BA,$00,$18,$70,$7F,$BA ;
- $6955 DEFB $CC,$1F,$00,$08,$32,$1F,$00,$03 ;
- $695D DEFB $20,$1F,$00,$02,$31,$1F,$00,$01 ;
- $6965 DEFB $10,$1F,$02,$04,$59,$1F,$01,$02 ;
- $696D DEFB $51,$1F,$02,$08,$37,$1F,$01,$03 ;
- $6975 DEFB $40,$1F,$03,$08,$62,$1F,$02,$09 ;
- $697D DEFB $A7,$1F,$03,$04,$84,$1F,$03,$09 ;
- $6985 DEFB $B6,$09,$03,$05,$88,$09,$03,$0A ;
- $698D DEFB $BB,$09,$02,$05,$99,$09,$02,$0A ;
- $6995 DEFB $AA,$1F,$02,$07,$A9,$1F,$03,$06 ;
- $699D DEFB $B8,$1F,$05,$06,$C8,$1F,$05,$07 ;
- $69A5 DEFB $C9,$1F,$07,$0A,$AC,$1F,$06,$0A ;
- $69AD DEFB $CB,$1F,$04,$05,$98,$1F,$09,$0A ;
- $69B5 DEFB $BA,$1F,$01,$04,$54,$1F,$08,$09 ;
- $69BD DEFB $76,$1B,$28,$0B,$9F,$1B,$28,$0B ;
- $69C5 DEFB $1F,$1B,$28,$0B,$DF,$1B,$28,$0B ;
- $69CD DEFB $5F,$13,$26,$00,$9F,$13,$26,$00 ;
- $69D5 DEFB $1F,$13,$26,$00,$DF,$13,$26,$00 ;
- $69DD DEFB $5F,$19,$25,$0B,$BF,$19,$25,$0B ;
- $69E5 DEFB $3F,$19,$25,$0B,$7F,$19,$25,$0B ;
- $69ED DEFB $FF,$00,$00,$70,$3F             ; }
+ $68FD DEFB $02                             ; cargo hold
+ $68FE DEFB $50                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $68FF DEFB $96                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6900 DEFB $0B                             ; vertex count
+ $6901 DEFB $1A                             ; edge count
+ $6902 DEFB $0D                             ; normal count
+ $6903 DEFB $14                             ; max speed
+ $6904 DEFB $FA                             ; max energy
+ $6905 DEFW $00C8                           ; kill bounty
+ $6907 DEFB $00                             ; what it can launch
+ $6908 DEFB $28                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6909 DEFW $0017                           ; offset to vertex data
+ $690B DEFW $0059                           ; offset to edge data
+ $690D DEFW $00C1                           ; offset to normal data
+ $690F DEFB $8C                             ; flags
+ $6910 DEFB $00
+ $6911 DEFB $00
+ $6912 DEFW $0380                           ; rating points
+ $6914 DEFB $00,$00,$E0,$1F,$10,$32,$00,$30 ; {vertices (11 * 6 bytes: X,Y,Z
+ $691C DEFB $30,$1F,$10,$54,$60,$00,$10,$3F ; coords)
+ $6924 DEFB $FF,$FF,$60,$00,$10,$BF,$FF,$FF ;
+ $692C DEFB $00,$30,$20,$3F,$54,$98,$00,$18 ;
+ $6934 DEFB $70,$3F,$89,$CC,$30,$00,$70,$BF ;
+ $693C DEFB $B8,$CC,$30,$00,$70,$3F,$A9,$CC ;
+ $6944 DEFB $00,$30,$30,$5F,$32,$76,$00,$30 ;
+ $694C DEFB $20,$7F,$76,$BA,$00,$18,$70,$7F ;
+ $6954 DEFB $BA,$CC                         ; }
+ $6956 DEFB $1F,$00,$08,$32,$1F,$00,$03,$20 ; {edges (26 * 4 bytes)
+ $695E DEFB $1F,$00,$02,$31,$1F,$00,$01,$10 ;
+ $6966 DEFB $1F,$02,$04,$59,$1F,$01,$02,$51 ;
+ $696E DEFB $1F,$02,$08,$37,$1F,$01,$03,$40 ;
+ $6976 DEFB $1F,$03,$08,$62,$1F,$02,$09,$A7 ;
+ $697E DEFB $1F,$03,$04,$84,$1F,$03,$09,$B6 ;
+ $6986 DEFB $09,$03,$05,$88,$09,$03,$0A,$BB ;
+ $698E DEFB $09,$02,$05,$99,$09,$02,$0A,$AA ;
+ $6996 DEFB $1F,$02,$07,$A9,$1F,$03,$06,$B8 ;
+ $699E DEFB $1F,$05,$06,$C8,$1F,$05,$07,$C9 ;
+ $69A6 DEFB $1F,$07,$0A,$AC,$1F,$06,$0A,$CB ;
+ $69AE DEFB $1F,$04,$05,$98,$1F,$09,$0A,$BA ;
+ $69B6 DEFB $1F,$01,$04,$54,$1F,$08,$09,$76 ; }
+ $69BE DEFB $1B,$28,$0B,$9F,$1B,$28,$0B,$1F ; {normals (13 * 4 bytes)
+ $69C6 DEFB $1B,$28,$0B,$DF,$1B,$28,$0B,$5F ;
+ $69CE DEFB $13,$26,$00,$9F,$13,$26,$00,$1F ;
+ $69D6 DEFB $13,$26,$00,$DF,$13,$26,$00,$5F ;
+ $69DE DEFB $19,$25,$0B,$BF,$19,$25,$0B,$3F ;
+ $69E6 DEFB $19,$25,$0B,$7F,$19,$25,$0B,$FF ;
+ $69EE DEFB $00,$00,$70,$3F                 ; }
 @label=d_Sidewinder
- $69F2 DEFB $00,$41,$82,$0A,$0F,$07,$25,$46 ; {field_0 cargo hold
- $69FA DEFB $32,$00,$01,$14,$17,$00,$53,$00 ;
- $6A02 DEFB $8F,$00,$0C,$02,$00,$00,$01,$20 ;
- $6A0A DEFB $00,$24,$9F,$10,$54,$20,$00,$24 ;
- $6A12 DEFB $1F,$20,$65,$40,$00,$1C,$3F,$32 ;
- $6A1A DEFB $66,$40,$00,$1C,$BF,$31,$44,$00 ;
- $6A22 DEFB $10,$1C,$3F,$10,$32,$00,$10,$1C ;
- $6A2A DEFB $7F,$43,$65,$0C,$06,$1C,$AF,$33 ;
- $6A32 DEFB $33,$0C,$06,$1C,$2F,$33,$33,$0C ;
- $6A3A DEFB $06,$1C,$6C,$33,$33,$0C,$06,$1C ;
- $6A42 DEFB $EC,$33,$33,$1F,$00,$01,$50,$1F ;
- $6A4A DEFB $01,$02,$62,$1F,$01,$04,$20,$1F ;
- $6A52 DEFB $00,$04,$10,$1F,$00,$03,$41,$1F ;
- $6A5A DEFB $03,$04,$31,$1F,$02,$04,$32,$1F ;
- $6A62 DEFB $03,$05,$43,$1F,$02,$05,$63,$1F ;
- $6A6A DEFB $01,$05,$65,$1F,$00,$05,$54,$0F ;
- $6A72 DEFB $06,$07,$33,$0C,$07,$08,$33,$0C ;
- $6A7A DEFB $06,$09,$33,$0C,$08,$09,$33,$00 ;
- $6A82 DEFB $20,$08,$1F,$0C,$2F,$06,$9F,$0C ;
- $6A8A DEFB $2F,$06,$1F,$00,$00,$70,$3F,$0C ;
- $6A92 DEFB $2F,$06,$DF,$00,$20,$08,$5F,$0C ;
- $6A9A DEFB $2F,$06,$5F                     ; }
+ $69F2 DEFB $00                             ; cargo hold
+ $69F3 DEFB $41                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $69F4 DEFB $82                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $69F5 DEFB $0A                             ; vertex count
+ $69F6 DEFB $0F                             ; edge count
+ $69F7 DEFB $07                             ; normal count
+ $69F8 DEFB $25                             ; max speed
+ $69F9 DEFB $46                             ; max energy
+ $69FA DEFW $0032                           ; kill bounty
+ $69FC DEFB $01                             ; what it can launch
+ $69FD DEFB $14                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $69FE DEFW $0017                           ; offset to vertex data
+ $6A00 DEFW $0053                           ; offset to edge data
+ $6A02 DEFW $008F                           ; offset to normal data
+ $6A04 DEFB $0C                             ; flags
+ $6A05 DEFB $02
+ $6A06 DEFB $00
+ $6A07 DEFW $0100                           ; rating points
+ $6A09 DEFB $20,$00,$24,$9F,$10,$54,$20,$00 ; {vertices (10 * 6 bytes: X,Y,Z
+ $6A11 DEFB $24,$1F,$20,$65,$40,$00,$1C,$3F ; coords)
+ $6A19 DEFB $32,$66,$40,$00,$1C,$BF,$31,$44 ;
+ $6A21 DEFB $00,$10,$1C,$3F,$10,$32,$00,$10 ;
+ $6A29 DEFB $1C,$7F,$43,$65,$0C,$06,$1C,$AF ;
+ $6A31 DEFB $33,$33,$0C,$06,$1C,$2F,$33,$33 ;
+ $6A39 DEFB $0C,$06,$1C,$6C,$33,$33,$0C,$06 ;
+ $6A41 DEFB $1C,$EC,$33,$33                 ; }
+ $6A45 DEFB $1F,$00,$01,$50,$1F,$01,$02,$62 ; {edges (15 * 4 bytes)
+ $6A4D DEFB $1F,$01,$04,$20,$1F,$00,$04,$10 ;
+ $6A55 DEFB $1F,$00,$03,$41,$1F,$03,$04,$31 ;
+ $6A5D DEFB $1F,$02,$04,$32,$1F,$03,$05,$43 ;
+ $6A65 DEFB $1F,$02,$05,$63,$1F,$01,$05,$65 ;
+ $6A6D DEFB $1F,$00,$05,$54,$0F,$06,$07,$33 ;
+ $6A75 DEFB $0C,$07,$08,$33,$0C,$06,$09,$33 ;
+ $6A7D DEFB $0C,$08,$09,$33                 ; }
+ $6A81 DEFB $00,$20,$08,$1F,$0C,$2F,$06,$9F ; {normals (7 * 4 bytes)
+ $6A89 DEFB $0C,$2F,$06,$1F,$00,$00,$70,$3F ;
+ $6A91 DEFB $0C,$2F,$06,$DF,$00,$20,$08,$5F ;
+ $6A99 DEFB $0C,$2F,$06,$5F                 ; }
 @label=d_Coriolis
- $6A9D DEFB $00,$A0,$00,$10,$1C,$0E,$00,$F0 ; {field_0 cargo hold
- $6AA5 DEFB $00,$00,$06,$78,$17,$00,$77,$00 ;
- $6AAD DEFB $E7,$00,$00,$00,$00,$00,$00,$A0 ;
- $6AB5 DEFB $00,$A0,$1F,$10,$62,$00,$A0,$A0 ;
- $6ABD DEFB $1F,$20,$83,$A0,$00,$A0,$9F,$30 ;
- $6AC5 DEFB $74,$00,$A0,$A0,$5F,$10,$54,$A0 ;
- $6ACD DEFB $A0,$00,$5F,$51,$A6,$A0,$A0,$00 ;
- $6AD5 DEFB $1F,$62,$B8,$A0,$A0,$00,$9F,$73 ;
- $6ADD DEFB $C8,$A0,$A0,$00,$DF,$54,$97,$A0 ;
- $6AE5 DEFB $00,$A0,$3F,$A6,$DB,$00,$A0,$A0 ;
- $6AED DEFB $3F,$B8,$DC,$A0,$00,$A0,$BF,$97 ;
- $6AF5 DEFB $DC,$00,$A0,$A0,$7F,$95,$DA,$0A ;
- $6AFD DEFB $1E,$A0,$5E,$00,$00,$0A,$1E,$A0 ;
- $6B05 DEFB $1E,$00,$00,$0A,$1E,$A0,$9E,$00 ;
- $6B0D DEFB $00,$0A,$1E,$A0,$DE,$00,$00,$1F ;
- $6B15 DEFB $00,$03,$10,$1F,$00,$01,$20,$1F ;
- $6B1D DEFB $01,$02,$30,$1F,$02,$03,$40,$1F ;
- $6B25 DEFB $03,$04,$51,$1F,$00,$04,$61,$1F ;
- $6B2D DEFB $00,$05,$62,$1F,$05,$01,$82,$1F ;
- $6B35 DEFB $01,$06,$83,$1F,$02,$06,$73,$1F ;
- $6B3D DEFB $02,$07,$74,$1F,$03,$07,$54,$1F ;
- $6B45 DEFB $08,$0B,$DA,$1F,$08,$09,$DB,$1F ;
- $6B4D DEFB $09,$0A,$DC,$1F,$0A,$0B,$D9,$1F ;
- $6B55 DEFB $04,$0B,$A5,$1F,$04,$08,$A6,$1F ;
- $6B5D DEFB $05,$08,$B6,$1F,$05,$09,$B8,$1F ;
- $6B65 DEFB $06,$09,$C8,$1F,$06,$0A,$C7,$1F ;
- $6B6D DEFB $07,$0A,$97,$1F,$07,$0B,$95,$1E ;
- $6B75 DEFB $0C,$0D,$00,$1E,$0D,$0E,$00,$1E ;
- $6B7D DEFB $0E,$0F,$00,$1E,$0F,$0C,$00,$00 ;
- $6B85 DEFB $00,$A0,$1F,$6B,$6B,$6B,$5F,$6B ;
- $6B8D DEFB $6B,$6B,$1F,$6B,$6B,$6B,$9F,$6B ;
- $6B95 DEFB $6B,$6B,$DF,$00,$A0,$00,$5F,$A0 ;
- $6B9D DEFB $00,$00,$1F,$A0,$00,$00,$9F,$00 ;
- $6BA5 DEFB $A0,$00,$1F,$6B,$6B,$6B,$FF,$6B ;
- $6BAD DEFB $6B,$6B,$7F,$6B,$6B,$6B,$3F,$6B ;
- $6BB5 DEFB $6B,$6B,$BF,$00,$00,$A0,$3F     ; }
+ $6A9D DEFB $00                             ; cargo hold
+ $6A9E DEFB $A0                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6A9F DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6AA0 DEFB $10                             ; vertex count
+ $6AA1 DEFB $1C                             ; edge count
+ $6AA2 DEFB $0E                             ; normal count
+ $6AA3 DEFB $00                             ; max speed
+ $6AA4 DEFB $F0                             ; max energy
+ $6AA5 DEFW $0000                           ; kill bounty
+ $6AA7 DEFB $06                             ; what it can launch
+ $6AA8 DEFB $78                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6AA9 DEFW $0017                           ; offset to vertex data
+ $6AAB DEFW $0077                           ; offset to edge data
+ $6AAD DEFW $00E7                           ; offset to normal data
+ $6AAF DEFB $00                             ; flags
+ $6AB0 DEFB $00
+ $6AB1 DEFB $00
+ $6AB2 DEFW $0000                           ; rating points
+ $6AB4 DEFB $A0,$00,$A0,$1F,$10,$62,$00,$A0 ; {vertices (16 * 6 bytes: X,Y,Z
+ $6ABC DEFB $A0,$1F,$20,$83,$A0,$00,$A0,$9F ; coords)
+ $6AC4 DEFB $30,$74,$00,$A0,$A0,$5F,$10,$54 ;
+ $6ACC DEFB $A0,$A0,$00,$5F,$51,$A6,$A0,$A0 ;
+ $6AD4 DEFB $00,$1F,$62,$B8,$A0,$A0,$00,$9F ;
+ $6ADC DEFB $73,$C8,$A0,$A0,$00,$DF,$54,$97 ;
+ $6AE4 DEFB $A0,$00,$A0,$3F,$A6,$DB,$00,$A0 ;
+ $6AEC DEFB $A0,$3F,$B8,$DC,$A0,$00,$A0,$BF ;
+ $6AF4 DEFB $97,$DC,$00,$A0,$A0,$7F,$95,$DA ;
+ $6AFC DEFB $0A,$1E,$A0,$5E,$00,$00,$0A,$1E ;
+ $6B04 DEFB $A0,$1E,$00,$00,$0A,$1E,$A0,$9E ;
+ $6B0C DEFB $00,$00,$0A,$1E,$A0,$DE,$00,$00 ; }
+ $6B14 DEFB $1F,$00,$03,$10,$1F,$00,$01,$20 ; {edges (28 * 4 bytes)
+ $6B1C DEFB $1F,$01,$02,$30,$1F,$02,$03,$40 ;
+ $6B24 DEFB $1F,$03,$04,$51,$1F,$00,$04,$61 ;
+ $6B2C DEFB $1F,$00,$05,$62,$1F,$05,$01,$82 ;
+ $6B34 DEFB $1F,$01,$06,$83,$1F,$02,$06,$73 ;
+ $6B3C DEFB $1F,$02,$07,$74,$1F,$03,$07,$54 ;
+ $6B44 DEFB $1F,$08,$0B,$DA,$1F,$08,$09,$DB ;
+ $6B4C DEFB $1F,$09,$0A,$DC,$1F,$0A,$0B,$D9 ;
+ $6B54 DEFB $1F,$04,$0B,$A5,$1F,$04,$08,$A6 ;
+ $6B5C DEFB $1F,$05,$08,$B6,$1F,$05,$09,$B8 ;
+ $6B64 DEFB $1F,$06,$09,$C8,$1F,$06,$0A,$C7 ;
+ $6B6C DEFB $1F,$07,$0A,$97,$1F,$07,$0B,$95 ;
+ $6B74 DEFB $1E,$0C,$0D,$00,$1E,$0D,$0E,$00 ;
+ $6B7C DEFB $1E,$0E,$0F,$00,$1E,$0F,$0C,$00 ; }
+ $6B84 DEFB $00,$00,$A0,$1F,$6B,$6B,$6B,$5F ; {normals (14 * 4 bytes)
+ $6B8C DEFB $6B,$6B,$6B,$1F,$6B,$6B,$6B,$9F ;
+ $6B94 DEFB $6B,$6B,$6B,$DF,$00,$A0,$00,$5F ;
+ $6B9C DEFB $A0,$00,$00,$1F,$A0,$00,$00,$9F ;
+ $6BA4 DEFB $00,$A0,$00,$1F,$6B,$6B,$6B,$FF ;
+ $6BAC DEFB $6B,$6B,$6B,$7F,$6B,$6B,$6B,$3F ;
+ $6BB4 DEFB $6B,$6B,$6B,$BF,$00,$00,$A0,$3F ; }
 @label=d_Minerals
- $6BBC DEFB $B0,$10,$00,$04,$06,$04,$0A,$14 ; {field_0 cargo hold
- $6BC4 DEFB $00,$00,$00,$0A,$17,$00,$2F,$00 ;
- $6BCC DEFB $47,$00,$00,$05,$00,$1E,$00,$18 ;
- $6BD4 DEFB $19,$10,$DF,$12,$33,$00,$0C,$0A ;
- $6BDC DEFB $3F,$02,$33,$0B,$06,$02,$5F,$01 ;
- $6BE4 DEFB $33,$0C,$2A,$07,$1F,$01,$22,$1F ;
- $6BEC DEFB $00,$01,$23,$1F,$01,$02,$03,$1F ;
- $6BF4 DEFB $02,$03,$01,$1F,$03,$00,$12,$1F ;
- $6BFC DEFB $00,$02,$13,$1F,$03,$01,$02,$B1 ;
- $6C04 DEFB $0C,$94,$3F,$64,$19,$D5,$5F,$CA ;
- $6C0C DEFB $68,$22,$BF,$02,$33,$4A,$FF     ; }
+ $6BBC DEFB $B0                             ; cargo hold
+ $6BBD DEFB $10                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6BBE DEFB $00                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6BBF DEFB $04                             ; vertex count
+ $6BC0 DEFB $06                             ; edge count
+ $6BC1 DEFB $04                             ; normal count
+ $6BC2 DEFB $0A                             ; max speed
+ $6BC3 DEFB $14                             ; max energy
+ $6BC4 DEFW $0000                           ; kill bounty
+ $6BC6 DEFB $00                             ; what it can launch
+ $6BC7 DEFB $0A                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6BC8 DEFW $0017                           ; offset to vertex data
+ $6BCA DEFW $002F                           ; offset to edge data
+ $6BCC DEFW $0047                           ; offset to normal data
+ $6BCE DEFB $00                             ; flags
+ $6BCF DEFB $05
+ $6BD0 DEFB $00
+ $6BD1 DEFW $001E                           ; rating points
+ $6BD3 DEFB $18,$19,$10,$DF,$12,$33,$00,$0C ; {vertices (4 * 6 bytes: X,Y,Z
+ $6BDB DEFB $0A,$3F,$02,$33,$0B,$06,$02,$5F ; coords)
+ $6BE3 DEFB $01,$33,$0C,$2A,$07,$1F,$01,$22 ; }
+ $6BEB DEFB $1F,$00,$01,$23,$1F,$01,$02,$03 ; {edges (6 * 4 bytes)
+ $6BF3 DEFB $1F,$02,$03,$01,$1F,$03,$00,$12 ;
+ $6BFB DEFB $1F,$00,$02,$13,$1F,$03,$01,$02 ; }
+ $6C03 DEFB $B1,$0C,$94,$3F,$64,$19,$D5,$5F ; {normals (4 * 4 bytes)
+ $6C0B DEFB $CA,$68,$22,$BF,$02,$33,$4A,$FF ; }
 @label=d_Thargon
- $6C13 DEFB $00,$63,$FF,$14,$1A,$0A,$27,$F0 ; {field_0 cargo hold
- $6C1B DEFB $F4,$01,$36,$37,$17,$00,$8F,$00 ;
- $6C23 DEFB $F7,$00,$0C,$02,$0F,$00,$08,$20 ;
- $6C2B DEFB $30,$30,$5F,$40,$88,$20,$44,$00 ;
- $6C33 DEFB $5F,$10,$44,$20,$30,$30,$7F,$21 ;
- $6C3B DEFB $44,$20,$00,$44,$3F,$32,$44,$20 ;
- $6C43 DEFB $30,$30,$3F,$43,$55,$20,$44,$00 ;
- $6C4B DEFB $1F,$54,$66,$20,$30,$30,$1F,$64 ;
- $6C53 DEFB $77,$20,$00,$44,$1F,$74,$88,$18 ;
- $6C5B DEFB $74,$74,$DF,$80,$99,$18,$A4,$00 ;
- $6C63 DEFB $DF,$10,$99,$18,$74,$74,$FF,$21 ;
- $6C6B DEFB $99,$18,$00,$A4,$BF,$32,$99,$18 ;
- $6C73 DEFB $74,$74,$BF,$53,$99,$18,$A4,$00 ;
- $6C7B DEFB $9F,$65,$99,$18,$74,$74,$9F,$76 ;
- $6C83 DEFB $99,$18,$00,$A4,$9F,$87,$99,$18 ;
- $6C8B DEFB $40,$50,$9E,$99,$99,$18,$40,$50 ;
- $6C93 DEFB $BE,$99,$99,$18,$40,$50,$FE,$99 ;
- $6C9B DEFB $99,$18,$40,$50,$DE,$99,$99,$1F ;
- $6CA3 DEFB $00,$07,$84,$1F,$00,$01,$40,$1F ;
- $6CAB DEFB $01,$02,$41,$1F,$02,$03,$42,$1F ;
- $6CB3 DEFB $03,$04,$43,$1F,$04,$05,$54,$1F ;
- $6CBB DEFB $05,$06,$64,$1F,$06,$07,$74,$1F ;
- $6CC3 DEFB $00,$08,$80,$1F,$01,$09,$10,$1F ;
- $6CCB DEFB $02,$0A,$21,$1F,$03,$0B,$32,$1F ;
- $6CD3 DEFB $04,$0C,$53,$1F,$05,$0D,$65,$1F ;
- $6CDB DEFB $06,$0E,$76,$1F,$07,$0F,$87,$1F ;
- $6CE3 DEFB $08,$0F,$98,$1F,$08,$09,$90,$1F ;
- $6CEB DEFB $09,$0A,$91,$1F,$0A,$0B,$92,$1F ;
- $6CF3 DEFB $0B,$0C,$93,$1F,$0C,$0D,$95,$1F ;
- $6CFB DEFB $0D,$0E,$96,$1F,$0E,$0F,$97,$1E ;
- $6D03 DEFB $10,$11,$99,$1E,$12,$13,$99,$67 ;
- $6D0B DEFB $3C,$19,$5F,$67,$3C,$19,$7F,$67 ;
- $6D13 DEFB $19,$3C,$7F,$67,$19,$3C,$3F,$40 ;
- $6D1B DEFB $00,$00,$1F,$67,$3C,$19,$3F,$67 ;
- $6D23 DEFB $3C,$19,$1F,$67,$19,$3C,$1F,$67 ;
- $6D2B DEFB $19,$3C,$5F,$30,$00,$00,$9F     ; }
+ $6C13 DEFB $00                             ; cargo hold
+ $6C14 DEFB $63                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6C15 DEFB $FF                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6C16 DEFB $14                             ; vertex count
+ $6C17 DEFB $1A                             ; edge count
+ $6C18 DEFB $0A                             ; normal count
+ $6C19 DEFB $27                             ; max speed
+ $6C1A DEFB $F0                             ; max energy
+ $6C1B DEFW $01F4                           ; kill bounty
+ $6C1D DEFB $36                             ; what it can launch
+ $6C1E DEFB $37                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6C1F DEFW $0017                           ; offset to vertex data
+ $6C21 DEFW $008F                           ; offset to edge data
+ $6C23 DEFW $00F7                           ; offset to normal data
+ $6C25 DEFB $0C                             ; flags
+ $6C26 DEFB $02
+ $6C27 DEFB $0F
+ $6C28 DEFW $0800                           ; rating points
+ $6C2A DEFB $20,$30,$30,$5F,$40,$88,$20,$44 ; {vertices (20 * 6 bytes: X,Y,Z
+ $6C32 DEFB $00,$5F,$10,$44,$20,$30,$30,$7F ; coords)
+ $6C3A DEFB $21,$44,$20,$00,$44,$3F,$32,$44 ;
+ $6C42 DEFB $20,$30,$30,$3F,$43,$55,$20,$44 ;
+ $6C4A DEFB $00,$1F,$54,$66,$20,$30,$30,$1F ;
+ $6C52 DEFB $64,$77,$20,$00,$44,$1F,$74,$88 ;
+ $6C5A DEFB $18,$74,$74,$DF,$80,$99,$18,$A4 ;
+ $6C62 DEFB $00,$DF,$10,$99,$18,$74,$74,$FF ;
+ $6C6A DEFB $21,$99,$18,$00,$A4,$BF,$32,$99 ;
+ $6C72 DEFB $18,$74,$74,$BF,$53,$99,$18,$A4 ;
+ $6C7A DEFB $00,$9F,$65,$99,$18,$74,$74,$9F ;
+ $6C82 DEFB $76,$99,$18,$00,$A4,$9F,$87,$99 ;
+ $6C8A DEFB $18,$40,$50,$9E,$99,$99,$18,$40 ;
+ $6C92 DEFB $50,$BE,$99,$99,$18,$40,$50,$FE ;
+ $6C9A DEFB $99,$99,$18,$40,$50,$DE,$99,$99 ; }
+ $6CA2 DEFB $1F,$00,$07,$84,$1F,$00,$01,$40 ; {edges (26 * 4 bytes)
+ $6CAA DEFB $1F,$01,$02,$41,$1F,$02,$03,$42 ;
+ $6CB2 DEFB $1F,$03,$04,$43,$1F,$04,$05,$54 ;
+ $6CBA DEFB $1F,$05,$06,$64,$1F,$06,$07,$74 ;
+ $6CC2 DEFB $1F,$00,$08,$80,$1F,$01,$09,$10 ;
+ $6CCA DEFB $1F,$02,$0A,$21,$1F,$03,$0B,$32 ;
+ $6CD2 DEFB $1F,$04,$0C,$53,$1F,$05,$0D,$65 ;
+ $6CDA DEFB $1F,$06,$0E,$76,$1F,$07,$0F,$87 ;
+ $6CE2 DEFB $1F,$08,$0F,$98,$1F,$08,$09,$90 ;
+ $6CEA DEFB $1F,$09,$0A,$91,$1F,$0A,$0B,$92 ;
+ $6CF2 DEFB $1F,$0B,$0C,$93,$1F,$0C,$0D,$95 ;
+ $6CFA DEFB $1F,$0D,$0E,$96,$1F,$0E,$0F,$97 ;
+ $6D02 DEFB $1E,$10,$11,$99,$1E,$12,$13,$99 ; }
+ $6D0A DEFB $67,$3C,$19,$5F,$67,$3C,$19,$7F ; {normals (10 * 4 bytes)
+ $6D12 DEFB $67,$19,$3C,$7F,$67,$19,$3C,$3F ;
+ $6D1A DEFB $40,$00,$00,$1F,$67,$3C,$19,$3F ;
+ $6D22 DEFB $67,$3C,$19,$1F,$67,$19,$3C,$1F ;
+ $6D2A DEFB $67,$19,$3C,$5F,$30,$00,$00,$9F ; }
 @label=d_Krait
- $6D32 DEFB $01,$3C,$6E,$11,$15,$06,$1E,$50 ; {field_0 cargo hold
- $6D3A DEFB $64,$00,$00,$14,$17,$00,$7D,$00 ;
- $6D42 DEFB $D1,$00,$8C,$01,$00,$00,$01,$00 ;
- $6D4A DEFB $00,$60,$1F,$01,$23,$00,$12,$30 ;
- $6D52 DEFB $3F,$03,$45,$00,$12,$30,$7F,$12 ;
- $6D5A DEFB $45,$5A,$00,$03,$3F,$01,$44,$5A ;
- $6D62 DEFB $00,$03,$BF,$23,$55,$5A,$00,$57 ;
- $6D6A DEFB $1E,$01,$11,$5A,$00,$57,$9E,$23 ;
- $6D72 DEFB $33,$00,$05,$35,$09,$00,$33,$00 ;
- $6D7A DEFB $07,$26,$06,$00,$33,$12,$07,$13 ;
- $6D82 DEFB $89,$33,$33,$12,$07,$13,$09,$00 ;
- $6D8A DEFB $00,$12,$0B,$27,$28,$44,$44,$12 ;
- $6D92 DEFB $0B,$27,$68,$44,$44,$24,$00,$1E ;
- $6D9A DEFB $28,$44,$44,$12,$0B,$27,$A8,$55 ;
- $6DA2 DEFB $55,$12,$0B,$27,$E8,$55,$55,$24 ;
- $6DAA DEFB $00,$1E,$A8,$55,$55,$1F,$00,$01 ;
- $6DB2 DEFB $03,$1F,$00,$02,$12,$1F,$00,$03 ;
- $6DBA DEFB $01,$1F,$00,$04,$23,$1F,$01,$04 ;
- $6DC2 DEFB $35,$1F,$04,$02,$25,$1F,$02,$03 ;
- $6DCA DEFB $14,$1F,$03,$01,$04,$1E,$03,$05 ;
- $6DD2 DEFB $01,$1E,$04,$06,$23,$08,$01,$02 ;
- $6DDA DEFB $45,$09,$07,$0A,$00,$06,$08,$0A ;
- $6DE2 DEFB $00,$09,$07,$09,$33,$06,$08,$09 ;
- $6DEA DEFB $33,$08,$0B,$0D,$44,$08,$0D,$0C ;
- $6DF2 DEFB $44,$07,$0C,$0B,$44,$07,$0E,$0F ;
- $6DFA DEFB $55,$08,$0F,$10,$55,$08,$10,$0E ;
- $6E02 DEFB $55,$03,$18,$03,$1F,$03,$18,$03 ;
- $6E0A DEFB $5F,$03,$18,$03,$DF,$03,$18,$03 ;
- $6E12 DEFB $9F,$26,$00,$4D,$3F,$26,$00,$4D ;
- $6E1A DEFB $BF                             ; }
+ $6D32 DEFB $01                             ; cargo hold
+ $6D33 DEFB $3C                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6D34 DEFB $6E                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6D35 DEFB $11                             ; vertex count
+ $6D36 DEFB $15                             ; edge count
+ $6D37 DEFB $06                             ; normal count
+ $6D38 DEFB $1E                             ; max speed
+ $6D39 DEFB $50                             ; max energy
+ $6D3A DEFW $0064                           ; kill bounty
+ $6D3C DEFB $00                             ; what it can launch
+ $6D3D DEFB $14                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6D3E DEFW $0017                           ; offset to vertex data
+ $6D40 DEFW $007D                           ; offset to edge data
+ $6D42 DEFW $00D1                           ; offset to normal data
+ $6D44 DEFB $8C                             ; flags
+ $6D45 DEFB $01
+ $6D46 DEFB $00
+ $6D47 DEFW $0100                           ; rating points
+ $6D49 DEFB $00,$00,$60,$1F,$01,$23,$00,$12 ; {vertices (17 * 6 bytes: X,Y,Z
+ $6D51 DEFB $30,$3F,$03,$45,$00,$12,$30,$7F ; coords)
+ $6D59 DEFB $12,$45,$5A,$00,$03,$3F,$01,$44 ;
+ $6D61 DEFB $5A,$00,$03,$BF,$23,$55,$5A,$00 ;
+ $6D69 DEFB $57,$1E,$01,$11,$5A,$00,$57,$9E ;
+ $6D71 DEFB $23,$33,$00,$05,$35,$09,$00,$33 ;
+ $6D79 DEFB $00,$07,$26,$06,$00,$33,$12,$07 ;
+ $6D81 DEFB $13,$89,$33,$33,$12,$07,$13,$09 ;
+ $6D89 DEFB $00,$00,$12,$0B,$27,$28,$44,$44 ;
+ $6D91 DEFB $12,$0B,$27,$68,$44,$44,$24,$00 ;
+ $6D99 DEFB $1E,$28,$44,$44,$12,$0B,$27,$A8 ;
+ $6DA1 DEFB $55,$55,$12,$0B,$27,$E8,$55,$55 ;
+ $6DA9 DEFB $24,$00,$1E,$A8,$55,$55         ; }
+ $6DAF DEFB $1F,$00,$01,$03,$1F,$00,$02,$12 ; {edges (21 * 4 bytes)
+ $6DB7 DEFB $1F,$00,$03,$01,$1F,$00,$04,$23 ;
+ $6DBF DEFB $1F,$01,$04,$35,$1F,$04,$02,$25 ;
+ $6DC7 DEFB $1F,$02,$03,$14,$1F,$03,$01,$04 ;
+ $6DCF DEFB $1E,$03,$05,$01,$1E,$04,$06,$23 ;
+ $6DD7 DEFB $08,$01,$02,$45,$09,$07,$0A,$00 ;
+ $6DDF DEFB $06,$08,$0A,$00,$09,$07,$09,$33 ;
+ $6DE7 DEFB $06,$08,$09,$33,$08,$0B,$0D,$44 ;
+ $6DEF DEFB $08,$0D,$0C,$44,$07,$0C,$0B,$44 ;
+ $6DF7 DEFB $07,$0E,$0F,$55,$08,$0F,$10,$55 ;
+ $6DFF DEFB $08,$10,$0E,$55                 ; }
+ $6E03 DEFB $03,$18,$03,$1F,$03,$18,$03,$5F ; {normals (6 * 4 bytes)
+ $6E0B DEFB $03,$18,$03,$DF,$03,$18,$03,$9F ;
+ $6E13 DEFB $26,$00,$4D,$3F,$26,$00,$4D,$BF ; }
 @label=d_Viper
- $6E1B DEFB $00,$4B,$78,$0F,$14,$07,$20,$8C ; {field_0 cargo hold
- $6E23 DEFB $00,$00,$02,$17,$17,$00,$71,$00 ;
- $6E2B DEFB $C1,$00,$C2,$01,$00,$50,$00,$00 ;
- $6E33 DEFB $00,$48,$1F,$21,$43,$00,$10,$18 ;
- $6E3B DEFB $1E,$10,$22,$00,$10,$18,$5E,$43 ;
- $6E43 DEFB $55,$30,$00,$18,$3F,$42,$66,$30 ;
- $6E4B DEFB $00,$18,$BF,$31,$66,$18,$10,$18 ;
- $6E53 DEFB $7E,$54,$66,$18,$10,$18,$FE,$35 ;
- $6E5B DEFB $66,$18,$10,$18,$3F,$20,$66,$18 ;
- $6E63 DEFB $10,$18,$BF,$10,$66,$20,$00,$18 ;
- $6E6B DEFB $B3,$66,$66,$20,$00,$18,$33,$66 ;
- $6E73 DEFB $66,$08,$08,$18,$33,$66,$66,$08 ;
- $6E7B DEFB $08,$18,$B3,$66,$66,$08,$08,$18 ;
- $6E83 DEFB $F2,$66,$66,$08,$08,$18,$72,$66 ;
- $6E8B DEFB $66,$1F,$00,$03,$42,$1E,$00,$01 ;
- $6E93 DEFB $21,$1E,$00,$02,$43,$1F,$00,$04 ;
- $6E9B DEFB $31,$1E,$01,$07,$20,$1E,$01,$08 ;
- $6EA3 DEFB $10,$1E,$02,$05,$54,$1E,$02,$06 ;
- $6EAB DEFB $53,$1F,$07,$08,$60,$1E,$05,$06 ;
- $6EB3 DEFB $65,$1F,$04,$08,$61,$1E,$04,$06 ;
- $6EBB DEFB $63,$1F,$03,$07,$62,$1E,$03,$05 ;
- $6EC3 DEFB $46,$13,$09,$0C,$66,$12,$09,$0D ;
- $6ECB DEFB $66,$13,$0A,$0B,$66,$12,$0A,$0E ;
- $6ED3 DEFB $66,$10,$0B,$0E,$66,$10,$0C,$0D ;
- $6EDB DEFB $66,$00,$20,$00,$1F,$16,$21,$0B ;
- $6EE3 DEFB $9F,$16,$21,$0B,$1F,$16,$21,$0B ;
- $6EEB DEFB $DF,$16,$21,$0B,$5F,$00,$20,$00 ;
- $6EF3 DEFB $5F,$00,$00,$30,$3F             ; }
+ $6E1B DEFB $00                             ; cargo hold
+ $6E1C DEFB $4B                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6E1D DEFB $78                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6E1E DEFB $0F                             ; vertex count
+ $6E1F DEFB $14                             ; edge count
+ $6E20 DEFB $07                             ; normal count
+ $6E21 DEFB $20                             ; max speed
+ $6E22 DEFB $8C                             ; max energy
+ $6E23 DEFW $0000                           ; kill bounty
+ $6E25 DEFB $02                             ; what it can launch
+ $6E26 DEFB $17                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6E27 DEFW $0017                           ; offset to vertex data
+ $6E29 DEFW $0071                           ; offset to edge data
+ $6E2B DEFW $00C1                           ; offset to normal data
+ $6E2D DEFB $C2                             ; flags
+ $6E2E DEFB $01
+ $6E2F DEFB $00
+ $6E30 DEFW $0050                           ; rating points
+ $6E32 DEFB $00,$00,$48,$1F,$21,$43,$00,$10 ; {vertices (15 * 6 bytes: X,Y,Z
+ $6E3A DEFB $18,$1E,$10,$22,$00,$10,$18,$5E ; coords)
+ $6E42 DEFB $43,$55,$30,$00,$18,$3F,$42,$66 ;
+ $6E4A DEFB $30,$00,$18,$BF,$31,$66,$18,$10 ;
+ $6E52 DEFB $18,$7E,$54,$66,$18,$10,$18,$FE ;
+ $6E5A DEFB $35,$66,$18,$10,$18,$3F,$20,$66 ;
+ $6E62 DEFB $18,$10,$18,$BF,$10,$66,$20,$00 ;
+ $6E6A DEFB $18,$B3,$66,$66,$20,$00,$18,$33 ;
+ $6E72 DEFB $66,$66,$08,$08,$18,$33,$66,$66 ;
+ $6E7A DEFB $08,$08,$18,$B3,$66,$66,$08,$08 ;
+ $6E82 DEFB $18,$F2,$66,$66,$08,$08,$18,$72 ;
+ $6E8A DEFB $66,$66                         ; }
+ $6E8C DEFB $1F,$00,$03,$42,$1E,$00,$01,$21 ; {edges (20 * 4 bytes)
+ $6E94 DEFB $1E,$00,$02,$43,$1F,$00,$04,$31 ;
+ $6E9C DEFB $1E,$01,$07,$20,$1E,$01,$08,$10 ;
+ $6EA4 DEFB $1E,$02,$05,$54,$1E,$02,$06,$53 ;
+ $6EAC DEFB $1F,$07,$08,$60,$1E,$05,$06,$65 ;
+ $6EB4 DEFB $1F,$04,$08,$61,$1E,$04,$06,$63 ;
+ $6EBC DEFB $1F,$03,$07,$62,$1E,$03,$05,$46 ;
+ $6EC4 DEFB $13,$09,$0C,$66,$12,$09,$0D,$66 ;
+ $6ECC DEFB $13,$0A,$0B,$66,$12,$0A,$0E,$66 ;
+ $6ED4 DEFB $10,$0B,$0E,$66,$10,$0C,$0D,$66 ; }
+ $6EDC DEFB $00,$20,$00,$1F,$16,$21,$0B,$9F ; {normals (7 * 4 bytes)
+ $6EE4 DEFB $16,$21,$0B,$1F,$16,$21,$0B,$DF ;
+ $6EEC DEFB $16,$21,$0B,$5F,$00,$20,$00,$5F ;
+ $6EF4 DEFB $00,$00,$30,$3F                 ; }
 @label=d_Tharglet
- $6EF8 DEFB $F0,$28,$78,$0A,$0F,$07,$1E,$14 ; {field_0 cargo hold
- $6F00 DEFB $32,$00,$01,$14,$17,$00,$53,$00 ;
- $6F08 DEFB $8F,$00,$04,$02,$00,$64,$00,$09 ;
- $6F10 DEFB $00,$28,$9F,$01,$55,$09,$26,$0C ;
- $6F18 DEFB $DF,$01,$22,$09,$18,$20,$FF,$02 ;
- $6F20 DEFB $33,$09,$19,$20,$BF,$03,$44,$09 ;
- $6F28 DEFB $26,$0C,$9F,$04,$55,$09,$00,$08 ;
- $6F30 DEFB $3F,$15,$66,$09,$0A,$0F,$7F,$12 ;
- $6F38 DEFB $66,$09,$06,$1A,$7F,$23,$66,$09 ;
- $6F40 DEFB $06,$1A,$3F,$34,$66,$09,$0A,$0F ;
- $6F48 DEFB $3F,$45,$66,$1F,$00,$01,$01,$1F ;
- $6F50 DEFB $01,$02,$02,$1F,$02,$03,$03,$1F ;
- $6F58 DEFB $03,$04,$04,$1F,$04,$00,$05,$1F ;
- $6F60 DEFB $00,$05,$15,$1F,$01,$06,$12,$1F ;
- $6F68 DEFB $02,$07,$23,$1F,$03,$08,$43,$1F ;
- $6F70 DEFB $04,$09,$45,$1F,$05,$06,$61,$1F ;
- $6F78 DEFB $06,$07,$61,$1F,$07,$08,$63,$1F ;
- $6F80 DEFB $08,$09,$64,$1F,$09,$05,$65,$24 ;
- $6F88 DEFB $00,$00,$9F,$14,$05,$07,$5F,$2E ;
- $6F90 DEFB $2A,$0E,$7F,$24,$00,$68,$3F,$2E ;
- $6F98 DEFB $2A,$0E,$3F,$14,$05,$07,$1F,$24 ;
- $6FA0 DEFB $00,$00,$1F                     ; }
+ $6EF8 DEFB $F0                             ; cargo hold
+ $6EF9 DEFB $28                             ; collision distance along X/Y/Z
+                                            ; (0000.xx)
+ $6EFA DEFB $78                             ; laser hit chance for Elite rank
+                                            ; (halved if not Elite)
+ $6EFB DEFB $0A                             ; vertex count
+ $6EFC DEFB $0F                             ; edge count
+ $6EFD DEFB $07                             ; normal count
+ $6EFE DEFB $1E                             ; max speed
+ $6EFF DEFB $14                             ; max energy
+ $6F00 DEFW $0032                           ; kill bounty
+ $6F02 DEFB $01                             ; what it can launch
+ $6F03 DEFB $14                             ; geometric size (distance beyond
+                                            ; which shown as a dot)
+ $6F04 DEFW $0017                           ; offset to vertex data
+ $6F06 DEFW $0053                           ; offset to edge data
+ $6F08 DEFW $008F                           ; offset to normal data
+ $6F0A DEFB $04                             ; flags
+ $6F0B DEFB $02
+ $6F0C DEFB $00
+ $6F0D DEFW $0064                           ; rating points
+ $6F0F DEFB $09,$00,$28,$9F,$01,$55,$09,$26 ; {vertices (10 * 6 bytes: X,Y,Z
+ $6F17 DEFB $0C,$DF,$01,$22,$09,$18,$20,$FF ; coords)
+ $6F1F DEFB $02,$33,$09,$19,$20,$BF,$03,$44 ;
+ $6F27 DEFB $09,$26,$0C,$9F,$04,$55,$09,$00 ;
+ $6F2F DEFB $08,$3F,$15,$66,$09,$0A,$0F,$7F ;
+ $6F37 DEFB $12,$66,$09,$06,$1A,$7F,$23,$66 ;
+ $6F3F DEFB $09,$06,$1A,$3F,$34,$66,$09,$0A ;
+ $6F47 DEFB $0F,$3F,$45,$66                 ; }
+ $6F4B DEFB $1F,$00,$01,$01,$1F,$01,$02,$02 ; {edges (15 * 4 bytes)
+ $6F53 DEFB $1F,$02,$03,$03,$1F,$03,$04,$04 ;
+ $6F5B DEFB $1F,$04,$00,$05,$1F,$00,$05,$15 ;
+ $6F63 DEFB $1F,$01,$06,$12,$1F,$02,$07,$23 ;
+ $6F6B DEFB $1F,$03,$08,$43,$1F,$04,$09,$45 ;
+ $6F73 DEFB $1F,$05,$06,$61,$1F,$06,$07,$61 ;
+ $6F7B DEFB $1F,$07,$08,$63,$1F,$08,$09,$64 ;
+ $6F83 DEFB $1F,$09,$05,$65                 ; }
+ $6F87 DEFB $24,$00,$00,$9F,$14,$05,$07,$5F ; {normals (7 * 4 bytes)
+ $6F8F DEFB $2E,$2A,$0E,$7F,$24,$00,$68,$3F ;
+ $6F97 DEFB $2E,$2A,$0E,$3F,$14,$05,$07,$1F ;
+ $6F9F DEFB $24,$00,$00,$1F                 ; }
 @label=AdrProcMessage1
  $6FA3 DEFW $B916                           ; {00h ret
  $6FA5 DEFW $B8DD                           ;
@@ -1201,6 +1564,10 @@ c$7287 LD A,($707C)  ; get BlockControl
 ; .
 ;
 ; Copy buffer to screen
+; .
+; Copies only the two screen thirds that make up the 3D viewport, deliberately
+; leaving the third third (where the cockpit panel lives) untouched between
+; frames.
 c$7398 LD DE,$4000   ;
  $739B LD HL,$C000   ;
  $739E CALL $73BD    ; fast interlaced transfer of the screen buffer to 1/3 of
@@ -1342,6 +1709,12 @@ c$7425 CALL $BC9E    ; clear the screen with attribute $07, draw a border
 ; .
 ;
 ; Fast clear of the screen buffer
+; .
+; This is not a plain clear: the repeating byte pattern it writes already
+; contains the 3D viewport border (a full horizontal line at the top and
+; bottom, and a single vertical pixel down each edge column for every row in
+; between), so the border is regenerated as a side effect of "clearing" every
+; single frame, with no separate border-preserving or redrawing code needed.
 c$745F DI            ;
  $7460 LD ($74B0),SP ;
  $7464 LD SP,$D000   ;
@@ -2740,11 +3113,17 @@ b$7C39 DEFB $00      ; =$01 G or H pressed (jump)
 @label=CircleCrdX
  $7C3B DEFB $00      ; distance from the circle center to the screen center
                      ; along X
+; Circle drawing flags:
+; .
+; bit 0: 0 = X offset negative, 1 = X offset positive
+; .
+; bit 1: 0 = Y offset negative, 1 = Y offset positive
+; .
+; bit 2: whether the X extent needs clipping against the viewport edge
+; .
+; bit 3: whether the Y extent needs clipping against the viewport edge
 @label=CircleFlg
- $7C3C DEFB $0F      ; circle flags 0,=0 -x X coordinate negative =1 +x X
-                     ; coordinate positive 1,=0 -y Y coordinate negative =1 +y
-                     ; Y coordinate positive 2,=? inverted high bit of the X
-                     ; coordinate 3,=? inverted high bit of the Y coordinate
+ $7C3C DEFB $0F      ; circle flags
 @label=CircleRadius
  $7C3D DEFB $64      ; circle radius
 @label=CircleCrdY_temp
@@ -2776,7 +3155,11 @@ b$7C39 DEFB $00      ; =$01 G or H pressed (jump)
 ;
 ; .
 ;
-; Print a half-circle by OR (circle extends past the right X boundary)
+; Print a half-circle by OR (circle extends past the right X boundary).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -2812,7 +3195,11 @@ c$7C4B PUSH AF       ;
 ;
 ; .
 ;
-; Print a half-circle by OR (circle extends past the right X boundary)
+; Print a half-circle by OR (circle extends past the right X boundary).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -2848,7 +3235,11 @@ c$7C63 PUSH AF       ;
 ;
 ; .
 ;
-; Print a half-circle by OR (circle extends past the left X boundary)
+; Print a half-circle by OR (circle extends past the left X boundary).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -2884,7 +3275,11 @@ c$7C7A PUSH AF       ;
 ;
 ; .
 ;
-; Print a half-circle by OR (circle extends past the left X boundary)
+; Print a half-circle by OR (circle extends past the left X boundary).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -2920,7 +3315,11 @@ c$7C92 PUSH AF       ;
 ;
 ; .
 ;
-; Print a half-circle by OR (circle stays within X boundaries)
+; Print a half-circle by OR (circle stays within X boundaries).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -2956,7 +3355,11 @@ c$7CA9 PUSH AF       ;
 ;
 ; .
 ;
-; Print a half-circle by OR (circle stays within X boundaries)
+; Print a half-circle by OR (circle stays within X boundaries).
+; .
+; The midpoint/Bresenham error term and step deltas are kept in the alternate
+; register set (hl', bc', e', reached via exx), freeing the primary registers
+; for screen addressing.
 ; .
 ; In: b - left byte to print
 ; .
@@ -3049,6 +3452,12 @@ c$7CE4 LD C,A        ;
 ; =1 draw an unfilled circle
 ; .
 ; Out: circle printed
+; .
+; Circles smaller than radius 9 are rejected outright (presumably drawn
+; elsewhere as a fixed dot sprite).
+; .
+; Every circle is plotted with a plain OR into screen memory; there is no
+; XOR/blend-mode switch.
 c$7CF0 LD A,($7C3D)  ; get CircleRadius
  $7CF3 CP $09        ;
  $7CF5 RET C         ;
@@ -3057,10 +3466,12 @@ c$7CF0 LD A,($7C3D)  ; get CircleRadius
  $7CF8 LD ($7C49),A  ; set FillCircle
  $7CFB JP $7D09      ;
 ; This entry point is used by the routines at #R$74BE and #R$8461.
+@label=PrnCircle_NoFill
 *$7CFE LD A,($7C3D)  ; get CircleRadius
  $7D01 CP $09        ;
  $7D03 RET C         ;
 ; This entry point is used by the routine at #R$79A3.
+@label=PrnCircle_NoFill_NoRadius
 *$7D04 LD A,$01      ;
  $7D06 LD ($7C49),A  ; set FillCircle
 *$7D09 CALL $7D0E    ; print a circle on screen/in the buffer
@@ -3977,6 +4388,12 @@ c$8117 LD A,E        ;
  $814C LD SP,$85F2   ; fill texture
  $814F POP AF        ;
  $8150 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$8151 JR $8151      ;
  $8153 PUSH AF       ;
  $8154 PUSH AF       ;
@@ -4097,6 +4514,12 @@ c$8117 LD A,E        ;
  $81F5 LD SP,$85F2   ; fill texture
  $81F8 POP AF        ;
  $81F9 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$81FA JR $81FA      ;
  $81FC PUSH AF       ;
  $81FD PUSH AF       ;
@@ -4188,6 +4611,12 @@ c$8228 LD A,($7C48)  ; get DirPrnCircle
  $8254 LD SP,$85F2   ; fill texture
  $8257 POP AF        ;
  $8258 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$8259 JR $8259      ;
  $825B PUSH AF       ;
  $825C PUSH AF       ;
@@ -4308,6 +4737,12 @@ c$8228 LD A,($7C48)  ; get DirPrnCircle
  $82FE LD SP,$85F2   ; fill texture
  $8301 POP AF        ;
  $8302 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$8303 JR $8303      ;
  $8305 PUSH AF       ;
  $8306 PUSH AF       ;
@@ -4401,6 +4836,12 @@ c$8331 LD A,($7C48)  ; get DirPrnCircle
  $835F LD SP,$85F2   ; fill texture
  $8362 POP AF        ;
  $8363 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$8364 JR $8364      ;
  $8366 PUSH AF       ;
  $8367 PUSH AF       ;
@@ -4511,6 +4952,12 @@ c$8331 LD A,($7C48)  ; get DirPrnCircle
  $83FD LD SP,$85F2   ; fill texture
  $8400 POP AF        ;
  $8401 LD SP,HL      ;
+; Self-modifying PUSH AF cascade: the byte count for this scanline's span is
+; turned into an offset and patched into the operand of a JR instruction just
+; above, so it jumps into the middle of a run of 16 back-to-back PUSH AF
+; instructions; SP is temporarily repointed at the destination screen address
+; so each PUSH AF writes 2 bytes straight into screen memory instead of a real
+; stack.
 *$8402 JR $8402      ;
  $8404 PUSH AF       ;
  $8405 PUSH AF       ;
@@ -4610,6 +5057,12 @@ c$8430 LD A,E        ;
 ; Out: a =$00
 ; .
 ; hl,de,bc - undefined
+; .
+; After drawing the map marker, it immediately re-runs the same 32-byte patch
+; loop using Data4CircleEngine instead of Data4CircleMap, repointing the shared
+; circle engine at the 3D flight-view viewport constants before returning, so
+; the very next PrnCircle_Fill call (for the sun/planet disc) draws correctly
+; sized/positioned for that screen.
 c$8461 LD B,$0C      ;
  $8463 LD A,($A813)  ; get PrnCrdXCursor
  $8466 LD C,A        ;
@@ -4658,11 +5111,22 @@ c$8461 LD B,$0C      ;
  $84C4 RET           ;
 
 ; Data block at 84C5
+;
+; .
+;
+; .
+;
+; Viewport clipping-boundary/dimension constants for the Short Range Chart map
+; circle; patched into 32 immediate operands scattered through the shared
+; circle-drawing engine by PrintCircleMap.
 @label=Data4CircleMap
 b$84C5 DEFB $60,$60,$80,$80,$80,$80,$80,$7F
  $84CD DEFB $1F,$00,$00,$00,$00,$00,$80,$00
  $84D5 DEFB $FF,$00,$00,$28,$FF,$00,$00,$58
  $84DD DEFB $57,$3F,$3F,$57,$57,$3F,$58,$3F
+; Viewport clipping-boundary/dimension constants for the 3D flight-view engine
+; screen; patched into the same 32 operand locations as Data4CircleMap, but for
+; the sun/planet circle instead of the map marker.
 @label=Data4CircleEngine
  $84E5 DEFB $40,$40,$78,$78,$78,$88,$78,$77
  $84ED DEFB $1E,$01,$CB,$FC,$CB,$FC,$88,$01
@@ -14097,7 +14561,7 @@ c$BCFC LD HL,($BCF6) ;
  $BD4F LD A,($BCF8)  ;
 *$BD52 PUSH AF       ;
  $BD53 CALL $BDC6    ; find the first space from the end of the line
- $BD56 CALL $D000    ; search for a zero starting from address ($BCF6)
+ $BD56 CALL $D000    ; search for a zero starting from address (#R$BCF6)
  $BD59 POP AF        ;
  $BD5A DEC A         ;
  $BD5B JR NZ,$BD52   ;
@@ -14833,7 +15297,7 @@ s$BDF5 DEFS $0B
 ;
 ; .
 ;
-; Search for a zero starting from address ($BCF6)
+; Search for a zero starting from address (#R$BCF6)
 c$D000 LD B,$20      ; ' '
  $D002 LD HL,($BCF6) ;
 *$D005 LD A,(HL)     ;
@@ -19315,13 +19779,13 @@ c$E923 PUSH IX       ;
  $E940 LD A,(IY+$05) ;
  $E943 AND A         ;
  $E944 LD IY,$E2BC   ;
- $E948 JR NZ,$E94E   ; a - number of normals de =$E2AC ix start address of the
-                     ; normals iy =$E2BC
+ $E948 JR NZ,$E94E   ; a - number of normals de =#R$E2AC ix start address of
+                     ; the normals iy =#R$E2BC
  $E94A INC A         ;
  $E94B LD (DE),A     ;
  $E94C JR $E9A9      ; exit
-*$E94E PUSH AF       ; a - number of normals de =$E2AC ix start address of the
-                     ; normals iy =$E2BC
+*$E94E PUSH AF       ; a - number of normals de =#R$E2AC ix start address of
+                     ; the normals iy =#R$E2BC
  $E94F PUSH DE       ;
  $E950 LD A,(IX+$03) ;
  $E953 AND $1F       ;
@@ -19365,8 +19829,8 @@ c$E923 PUSH IX       ;
  $E9A3 ADD IX,BC     ;
  $E9A5 POP AF        ;
  $E9A6 DEC A         ;
- $E9A7 JR NZ,$E94E   ; a - number of normals de =$E2AC ix start address of the
-                     ; normals iy =$E2BC
+ $E9A7 JR NZ,$E94E   ; a - number of normals de =#R$E2AC ix start address of
+                     ; the normals iy =#R$E2BC
 *$E9A9 POP IY        ; exit
  $E9AB POP IX        ;
  $E9AD RET           ;
@@ -20062,6 +20526,17 @@ c$ED3F LD A,($707A)  ; get PlayerGameOver
  $EDBB RET           ;
 
 ; Data block at EDBC
+;
+; .
+;
+; .
+;
+; A 4-row lookup (rows: 0,4,2,3 / 0,4,6,5 / 0,8,2,1 / 0,8,6,7) mapping a
+; point's raw 2-bit sign-quadrant code onto a clip-region code (0 = on-screen;
+; 1/2/4/8 and combinations = off-screen in a specific direction). A second
+; 16-row region of this same table (following the first 4 rows) is used to
+; combine both points' codes (as b*8+c) to decide whether an
+; off-screen/off-screen line can possibly still cross the screen.
 @label=TablQuadrant
 b$EDBC DEFB $00,$04,$02,$03,$00,$04,$06,$05
  $EDC4 DEFB $00,$08,$02,$01,$00,$08,$06,$07
@@ -20084,7 +20559,15 @@ b$EDBC DEFB $00,$04,$02,$03,$00,$04,$06,$05
 ;
 ; .
 ;
-; Print a line in the buffer???
+; Entry point for every line drawn in the game (ship edges, compass needle,
+; orbit circles, etc). After two cheap trivial-reject checks (endpoints equal
+; to $FF mean "don't print this vertex"), builds a quadrant code per point via
+; TablQuadrant and dispatches to one of three cases: both points on-screen
+; (draw directly), one point off-screen (PrnLine_OneCrdClip clips against a
+; single edge), or both off-screen (the two quadrant codes are combined and
+; looked up a second time to see if the line can possibly cross the screen at
+; all; if not, it's discarded with no pixels drawn, otherwise
+; PrnLine_TwoCrdClip clips against two edges).
 ; .
 ; 0-1,c quadrant for printing the first point
 ; .
@@ -20296,6 +20779,7 @@ c$EE10 LD A,H        ;
  $EF51 EXX           ;
  $EF52 LD ($F237),A  ;
  $EF55 JP $F230      ;
+@label=PrnLine_TwoCrdClip
 *$EF58 POP HL        ; both points are outside the boundaries, but the line may
                      ; still cross the screen
  $EF59 PUSH HL       ;
@@ -20597,6 +21081,13 @@ c$F0CC LD C,$FE      ;
 ; a,c' - undefined
 ; .
 ; other registers are unchanged
+; .
+; The whole routine runs in the alternate register set (push, exx in, compute,
+; exx back), so the caller's own bc/de are left completely undisturbed; the
+; real results only become visible to the caller after it also does an exx. It
+; recovers actual X/Y from the sign-coded deltas via X = $7F +/- dX and Y = $3F
+; +/- dY (add if the sign bit is clear, subtract if set), i.e. reconstructing
+; bitmap coordinates from a 127/63-centred reference point rather than from 0.
 c$F0D6 PUSH BC       ;
  $F0D7 PUSH BC       ;
  $F0D8 PUSH DE       ;
@@ -20642,6 +21133,10 @@ c$F0D6 PUSH BC       ;
  $F111 LD A,B        ;
  $F112 AND $07       ;
  $F114 OR H          ;
+; Self-modified operand: patched elsewhere to $40 or $C0 depending on whether
+; the destination address being computed is the real screen or the off-screen
+; buffer (bit 7 of the buffer's high byte selects the buffer, matching the
+; third/row/column layout of the real screen but relocated into high memory).
  $F115 OR $C0        ;
  $F117 LD H,A        ;
  $F118 LD A,B        ;
@@ -20886,6 +21381,7 @@ c$F175 LD A,B        ;
 ; Routine at F201
 c$F201 DEC H         ;
 ; This entry point is used by the routine at #R$EE10.
+@label=PrnLineDown2Up_vert
 *$F202 LD A,(HL)     ;
  $F203 OR C          ;
  $F204 LD (HL),A     ;
@@ -20897,6 +21393,12 @@ c$F201 DEC H         ;
  $F20B JR NC,$F211   ;
  $F20D RRC C         ;
  $F20F JR C,$F224    ;
+; "boundary crossing" (every 8th row): because of the third-interleaved screen
+; layout, advancing one pixel row is not a uniform +1/-1 to a linear address.
+; Most of the time (within a character cell) it's just L +/- $20, but every 8th
+; row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by
+; -/+$20 instead, with a further carry-driven -b correction to the high byte if
+; that 8-row group also crosses a third boundary.
 *$F211 DJNZ $F201    ;
  $F213 LD B,$08      ;
  $F215 LD A,H        ; DownScrAdr_HL
@@ -20910,6 +21412,10 @@ c$F201 DEC H         ;
  $F220 SUB B         ;
  $F221 LD H,A        ;
  $F222 JR $F202      ;
+; self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l)
+; or $2D (dec l) into this exact spot before jumping in, choosing the stepping
+; direction once, before the loop starts, rather than branching on every pixel
+; of the hot per-pixel loop.
 *$F224 INC L         ;
  $F225 JP $F211      ;
 
@@ -20934,17 +21440,29 @@ c$F201 DEC H         ;
 ; Out: d =$00
 ; .
 ; hl,e,bc,a - undefined
+; .
+; self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l)
+; or $2D (dec l) into this exact spot before jumping in, choosing the stepping
+; direction once, before the loop starts, rather than branching on every pixel
+; of the hot per-pixel loop.
 c$F228 INC L         ;
  $F229 JP $F230      ;
 *$F22C RRC C         ;
  $F22E JR C,$F228    ; print a line bottom-to-top, dY<dX
 ; This entry point is used by the routine at #R$EE10.
+@label=PrnLineDown2Up_hor
 *$F230 LD A,(HL)     ;
  $F231 OR C          ;
  $F232 LD (HL),A     ;
  $F233 DEC D         ;
  $F234 RET Z         ;
  $F235 LD A,E        ;
+; "boundary crossing" (every 8th row): because of the third-interleaved screen
+; layout, advancing one pixel row is not a uniform +1/-1 to a linear address.
+; Most of the time (within a character cell) it's just L +/- $20, but every 8th
+; row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by
+; -/+$20 instead, with a further carry-driven -b correction to the high byte if
+; that 8-row group also crosses a third boundary.
  $F236 ADD A,$00     ;
  $F238 LD E,A        ;
  $F239 JR NC,$F22C   ;
@@ -20966,6 +21484,7 @@ c$F228 INC L         ;
 ; Routine at F250
 c$F250 INC H         ;
 ; This entry point is used by the routine at #R$EE10.
+@label=PrnLineUp2Down_vert
 *$F251 LD A,(HL)     ; hl - address in the buffer c - data byte d - height e -
                      ; X increment b - height of the first character cell
  $F252 OR C          ;
@@ -20978,6 +21497,12 @@ c$F250 INC H         ;
  $F25A JR NC,$F260   ;
  $F25C RRC C         ; shift the data bit
  $F25E JR C,$F275    ;
+; "boundary crossing" (every 8th row): because of the third-interleaved screen
+; layout, advancing one pixel row is not a uniform +1/-1 to a linear address.
+; Most of the time (within a character cell) it's just L +/- $20, but every 8th
+; row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by
+; -/+$20 instead, with a further carry-driven -b correction to the high byte if
+; that 8-row group also crosses a third boundary.
 *$F260 DJNZ $F250    ;
  $F262 LD B,$08      ;
  $F264 LD A,H        ; DownScrAdr_HL
@@ -20993,6 +21518,10 @@ c$F250 INC H         ;
  $F271 LD H,A        ;
  $F272 JP $F251      ; hl - address in the buffer c - data byte d - height e -
                      ; X increment b - height of the first character cell
+; self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l)
+; or $2D (dec l) into this exact spot before jumping in, choosing the stepping
+; direction once, before the loop starts, rather than branching on every pixel
+; of the hot per-pixel loop.
 *$F275 INC L         ;
  $F276 JP $F260      ;
 
@@ -21020,12 +21549,19 @@ c$F250 INC H         ;
 c$F279 RRC C         ;
  $F27B JR C,$F29D    ;
 ; This entry point is used by the routine at #R$EE10.
+@label=PrnLineUp2Down_hor
 *$F27D LD A,(HL)     ;
  $F27E OR C          ;
  $F27F LD (HL),A     ;
  $F280 DEC D         ;
  $F281 RET Z         ;
  $F282 LD A,E        ;
+; "boundary crossing" (every 8th row): because of the third-interleaved screen
+; layout, advancing one pixel row is not a uniform +1/-1 to a linear address.
+; Most of the time (within a character cell) it's just L +/- $20, but every 8th
+; row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by
+; -/+$20 instead, with a further carry-driven -b correction to the high byte if
+; that 8-row group also crosses a third boundary.
  $F283 ADD A,$00     ;
  $F285 LD E,A        ;
  $F286 JR NC,$F279   ; print a line top-to-bottom, dY<dX
@@ -21043,6 +21579,10 @@ c$F279 RRC C         ;
  $F298 ADD A,B       ;
  $F299 LD H,A        ;
  $F29A JP $F279      ; print a line top-to-bottom, dY<dX
+; self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l)
+; or $2D (dec l) into this exact spot before jumping in, choosing the stepping
+; direction once, before the loop starts, rather than branching on every pixel
+; of the hot per-pixel loop.
 *$F29D INC L         ;
  $F29E JP $F27D      ;
 
@@ -21379,7 +21919,7 @@ c$F402 LD A,C         ;
  $F404 JR Z,$F432     ; =1 missile
  $F406 LD IX,$6048    ; length 27h
  $F40A LD DE,$0111    ; =$27*7
- $F40D ADD IX,DE      ; ix=$6159
+ $F40D ADD IX,DE      ; ix=#R$6159
  $F40F LD A,(IX+$22)  ;
  $F412 AND A          ;
  $F413 JR Z,$F419     ; =1 - missile

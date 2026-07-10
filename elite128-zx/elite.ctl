@@ -2707,7 +2707,7 @@ C $A793,3 get InFreeSpace
 C $A7A0,3 speed $0000..$1FFF
 C $A7A4,3 pilot's legal status 0 - clean 1..31h offender 32h..FFh fugitive
 C $A7A7,3 set PilotEscapePod
-C $A7AA,3 23 ????
+C $A7AA,3 commander data offset +23 (PilotRnd)
 C $A7B3,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5,=1 - cannot buy goods (refugees in the hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3 completed 1 =1 - mission 2 completed 0 =1 - mission 1 completed
 C $A7BA,3 remaining ship cargo capacity
 C $A7BD,3 get PilotLargeCargo
@@ -2826,6 +2826,7 @@ B $A85F,1 ???
 @ $A860 label=PilotPlanetProduct
 B $A860,16 goods at the station +75
 @ $A870 label=PilotPlProdAlienIt
+N $A870 Alien Items are never actually for sale: at the end of every GenerateProductPrice run, the freshly generated quantity for this last slot is overwritten with zero. The player can only acquire them by scooping them in combat, and can only sell them here, never buy them.
 B $A870,1 +91 =0 the station was destroyed as part of the mission
 @ $A871 label=PilotMission3
 B $A871,1 +92 >0 - mission 3 given =1 mission 3 will be given on docking ( =1 time to give the mission, will become =2 after the jump) =2 mission 3 will be given on docking =3 mission 3 given (the station can be destroyed with a missile) (Thargons launch from the station) =4 mission 3 given, the ship is in the target system (the station can be destroyed with a missile) (Thargons launch from the station) =5 mission 3 completed, there will be congratulations on docking
@@ -2896,6 +2897,7 @@ C $A8C3,3 24 cargo present in the ship (17 bytes) +00 Food
 C $A8C8,2 message number
 C $A8CA,3 7,1 =1 cargo picked up in space
 C $A8D1,1 update legal status if needed
+@ $A8D4 label=SetLegalStatCargo
 C $A8E3,3 pilot's legal status 0 - clean 1..31h offender 32h..FFh fugitive
 c $A8EE IncBattleRating
 N $A8EE Increase combat rating
@@ -3253,24 +3255,31 @@ B $AE95,1
 c $AE96 GenerateProductPrice
 N $AE96 Generate quantities and prices of goods at the station
 N $AE96 In: ----
+N $AE96 Called on arrival after every hyperspace jump, so the market re-rolls once per jump and then stays fixed while docked. Per good, with economy = PlanetEconomy (0-7) and rnd = PilotRnd: gradient = (economyFactor & $1F) * economy; quantity = (baseQty + (rnd & mask)) +/- gradient (sign from bit 7 of the economy factor byte), clamped to 0 and masked to 0-63; price = (basePrice + (rnd & mask)) +/- gradient with the OPPOSITE sign convention from quantity, then multiplied by 4 and stored in 0.1 Cr units (so an internal price of $13 displays as 19*4/10 = 7.6 Cr). The same single random byte seasons every good on the station -- goods differ only via their own mask/base values/economy gradient.
+N $AE96 GenerateAnotherPrice is an alternate entry point that skips drawing a fresh random byte and reuses the saved PilotRnd instead, used by InitGame so a loaded commander rebuilds the exact same market it had when saved.
 C $AE96,3 get RndWord
-C $AE99,3 23 ????
-C $AE9C,3 ; the same but without setting a new rnd
-C $AE9F,3 goods prices at the station ($B0,$03=$03B0=944=94.4Cr) LLAF0E rept $11 db $00,$00 endr LLAF30
-C $AEA3,3 table for generating goods quantities and prices at the station ds $11,$00,$00,$00,$00
+C $AE99,3 commander data offset +23 (PilotRnd)
+@ $AE9C label=GenerateAnotherPrice
+C $AE9C,3 the same but without setting a new rnd
+C $AE9F,3 goods prices at the station, in 0.1 Cr units
+C $AEA3,3 table for generating goods quantities and prices at the station: 17 x 4-byte templates in TableBasePrice (byte 0 = base price, byte 1 = economy factor: bits 0-4 gradient multiplier, bit 7 gradient sign, byte 2 = base quantity, byte 3 = random mask)
 C $AEB2,3 Economy
-C $AEC2,3 23 ????
+C $AEC2,3 commander data offset +23 (PilotRnd)
 C $AED8,2 '?'
-C $AEDB,3 23 ????
+C $AEDB,3 commander data offset +23 (PilotRnd)
 C $AF07,3 +91 =0 the station was destroyed as part of the mission
 b $AF0C
 B $AF0C,2
 @ $AF0E label=ProductPrice
 B $AF0E,34
+@ $AF30 label=CurrentGoodIndex
 B $AF30,1 good number
-W $AF31,2 address in the goods quantity table
-W $AF33,2 address in the goods price table
-W $AF35,2 address in the goods quantity table
+@ $AF31 label=AdrPlayerHold
+W $AF31,2 address in the player's hold table (PilotCargo); starts one entry before the table and is pre-incremented by 1 per row
+@ $AF33 label=AdrStationPrice
+W $AF33,2 address in the station price table (ProductPrice); starts one entry before the table and is pre-incremented by 2 per row
+@ $AF35 label=AdrStationStock
+W $AF35,2 address in the station stock table (PilotPlanetProduct); starts one entry before the table and is pre-incremented by 1 per row
 @ $AF37 label=TempCrdPrn
 W $AF37,2 print coordinates
 c $AF39 FX_Beep
@@ -3293,6 +3302,7 @@ N $AF56 Out: b=$00
 N $AF56 hl - ????
 C $AF57,3 7,=1 - Y -- Cloaking Device 6,=1 - 0 -- ??? 5,=1 - I -- Global Map 4,=1 - O -- Local Map 3,=1 - P -- Planet Info 2,=1 - K -- Planet Price 1,=1 - L -- Commander Info 0,=1 - Enter -- Inventory
 c $AF63 PrnOneProduct
+N $AF63 One Market Prices / Buy row: name, unit, price (4-digit nnn.n field), then stock as nn+unit, or a literal - when the stock byte is 0 (returns carry set = not traded here). The good's name is printed via message code $D0+index. The 17 goods, in index order: $00 Food(t) $01 Textiles(t) $02 Radioactives(t) $03 Slaves(t) $04 Liquor & Wines(t) $05 Luxuries(t) $06 Narcotics(t) $07 Computers(t) $08 Machinery(t) $09 Alloys(t) $0A Firearms(t) $0B Furs(t) $0C Minerals(t) $0D Gold(kg) $0E Platinum(kg) $0F Gem-Stones(g) $10 Alien Items(t).
 N $AF63 Print the name, price and quantity of a good
 N $AF63 In: (LLAF30) - good number
 N $AF63 (LLAF33) - address in the goods price table
@@ -3331,7 +3341,8 @@ C $AFAA,3 address in the goods quantity table
 C $AFAE,3 Print a number
 C $AFB1,3 print in lowercase t/kg/g/km
 C $AFB4,3 set the print-register flag, reset X coordinate, increment Y coordinate
-c $AFB9
+c $AFB9 PrnInventoryRow
+N $AFB9 One Inventory/Sell row: prints the good's name and held quantity; prints nothing and returns carry if the player holds none of it.
 N $AFB9 Print the name and quantity of a good
 N $AFB9 In: (LLAF30) - good number
 N $AFB9 (LLAF31) - address in the goods quantity table
@@ -3425,7 +3436,8 @@ N $B062 hl - message end address
 N $B062 hl,de,bc - ????
 C $B069,3 print a message from group 1 in the buffer/on screen
 C $B06D,2 print a message
-c $B06F
+c $B06F GetProductUnitSuffix
+N $B06F Chooses the unit suffix for a good purely from its index: $00-$0C and $10 print t, $0D-$0E print kg, $0F prints g.
 N $B06F Print in lowercase t/kg/g/km
 N $B06F In: (LLAF30) - message number
 N $B06F $00-$0C,$10 - t
@@ -3445,7 +3457,8 @@ B $B097,1
 c $B098
 C $B098,2 'M'
 C $B09A,3 print a message from group 1 in the buffer/on screen
-c $B09D
+c $B09D IsCargoBayGood
+N $B09D Checks whether a good occupies cargo-bay space (only tonne-unit goods do; Gold/Platinum/Gem-Stones are kg/g and don't count against PilotFreeCargo).
 C $B09D,3 good number
 c $B0AB Pause_14Int
 N $B0AB Pause of the 14h interrupt
@@ -3607,6 +3620,7 @@ C $B270,3 set Pilot_CrdXTarget
 C $B273,3 get Pilot_CrdYSystem
 C $B276,3 set Pilot_CrdYTarget
 c $B27B Cmd_2_BuyCargo
+N $B27B While mission 1 is active, this screen is replaced by a special mission pitch (deliver contraband): accepting it (Y) wipes the hold, grants the Large Cargo Bay, and sets a "mission cargo aboard" flag in PilotExtWeapon bit 5, which subsequently locks the player out of the normal Buy screen until the mission resolves.
 N $B27B Goods purchase menu
 C $B27B,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5,=1 - cannot buy goods (refugees in the hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3 completed 1 =1 - mission 2 completed 0 =1 - mission 1 completed
 C $B282,3 get PilotMission1
@@ -3648,7 +3662,9 @@ C $B30F,3 good number
 C $B318,3 print the cargo hold contents
 c $B31B
 c $B324
-c $B333
+c $B333 EnterQuantity
+N $B333 The shared quantity-entry engine behind every "how many?" prompt in the game (Buy Cargo, Sell Cargo, Equip Ship). In: hl = a validation/transaction callback address (stored in word_B472). Out: carry clear and byte_B471 = the entered 1-2 digit number, or carry set = aborted (a=2 means Enter was pressed with nothing typed).
+N $B333 Flow: waits for a first digit, stores it, echoes it, then calls the callback immediately -- in this game the callback performs the actual transaction (cash deduction, stock/hold update), so typing 1 executes a purchase of 1 on the spot. Waits for a second key: Enter accepts the 1-digit value; another digit computes byte_B471 = old*10+digit, calls RollbackTradeState to undo the first-digit transaction, then calls the callback again with the 2-digit total; backspace ($FE) also rolls back and restarts entry from the first digit.
 C $B33A,3 wait for a keypress
 C $B341,2 '1'
 C $B349,2 ':'
@@ -3670,7 +3686,8 @@ B $B39C,1
 c $B39D
 C $B39D,3 sound beep and a pause of $24
 c $B3A0 Call_HL
-c $B3A1
+c $B3A1 BuyGoodCallback
+N $B3A1 Transaction callback for the Buy screen, called by EnterQuantity after every digit. Snapshots state, then: stock -= qty (fail $B0 = quantity unavailable), pays qty x price via DecCASH in a loop (fail $C5 = insufficient cash), checks cargo-bay space via IsCargoBayGood and debits PilotFreeCargo if needed (fail $CE = no room), then PilotCargo[good] += qty (8-bit overflow also fails $CE), and finally calls SetLegalStatCargo. Any failure jumps to loc_B3E8 which prints the message and rolls the whole attempt back.
 C $B3A8,3 address in the goods quantity table
 C $B3B0,3 address in the goods price table
 C $B3B6,3 decrease money (from 0 to 999.9)
@@ -3679,6 +3696,7 @@ C $B3CE,3 address in the goods quantity table
 C $B3D6,3 good number
 C $B3D9,3 duplicate this routine
 c $B3E2
+N $B3E8 Shared fail handler for both buy and sell: prints the message code left in A at print-column 3 followed by '?', then calls RollbackTradeState to undo the attempted transaction.
 C $B3E9,3 set the X print coordinate
 C $B3EE,3 print a message from group 1 in the buffer/on screen
 C $B3F1,3 print one character (print a message by number
@@ -3692,19 +3710,22 @@ N $B3F8 Out: cy=1
 N $B3F8 a=$01
 C $B3F8,3 sound beep
 C $B3FB,3 Pause of the 24h interrupt
-c $B402
+c $B402 SnapshotTradeState
+N $B402 Saves PilotCash1, PilotCash2, the current good's stock byte, its hold byte, and PilotFreeCargo into word_B46A/word_B46C/byte_B46E/byte_B46F/byte_B470. Called first by every buy/sell transaction callback, so a later digit (or an abort) can cleanly undo a transaction already committed by a previous digit.
 C $B402,3 get PilotCash2
 C $B408,3 get PilotCash1
 C $B40E,3 address in the goods quantity table
 C $B415,3 address in the goods quantity table
 C $B41C,3 get PilotFreeCargo
-c $B423
+c $B423 RollbackTradeState
+N $B423 Restores the five fields saved by SnapshotTradeState. Called by EnterQuantity between digits and on backspace, and by every transaction failure path.
 C $B426,3 set PilotCash2
 C $B42C,3 set PilotCash1
 C $B42F,3 address in the goods quantity table
 C $B436,3 address in the goods quantity table
 C $B440,3 set PilotFreeCargo
-c $B444
+c $B444 PrnQuantityPrompt
+N $B444 Prints the "QUANTITY OF <good>/<unit>?" prompt on the bottom two rows, shared by both the Buy and Sell screens.
 C $B444,3 clear two character-cell lines
 C $B449,3 set FlgPrnSym2
 C $B44C,3 print one character (print a message by number
@@ -3750,7 +3771,8 @@ C $B4A8,3 fill attribute row 3 from the bottom (row 21) with attribute =5
 c $B4AB PrintFrameMenu
 N $B4AB Print the menu frame
 C $B4AD,3 print a message from group 2 in the buffer/on screen
-c $B4B0
+c $B4B0 SellGoodLoop
+N $B4B0 Drives the Sell screen: loops over all 17 goods via PrnInventoryRow (which silently skips goods the player doesn't hold); for each held good, saves the print cursor, shows the quantity prompt, and runs EnterQuantity with SellGoodCallback. After the loop: two pauses, then tail-jumps to the Inventory screen.
 C $B4B3,3 print one character (print a message by number
 b $B4B6
 B $B4B6,1
@@ -3767,14 +3789,16 @@ C $B4E6,3 good number
 C $B4F0,3 Pause of the 14h interrupt
 C $B4F3,3 Pause of the 14h interrupt
 C $B4FE,3 print the cargo hold contents
-c $B501
+c $B501 SellGoodCallback
+N $B501 Transaction callback for the Sell screen. Snapshots state, then: PilotCargo[good] -= qty (fail $B0 = not enough held), frees cargo-bay space via IsCargoBayGood if this is a tonne-unit good, and pays out qty x station price via IncCASH in a loop. Unlike buying: does NOT add the sold quantity back to the station's stock (PilotPlanetProduct is untouched, so the station won't resell what you dumped on it), and has no legal -status consequence -- only acquiring contraband is a crime, not offloading it.
 C $B508,3 address in the goods quantity table
 C $B518,3 get PilotFreeCargo
 C $B51C,3 set PilotFreeCargo
 C $B520,3 address in the goods price table
 C $B526,3 add money
-c $B52E
-C $B52E,3 23 ????
+c $B52E ResetTradeWalkPointers
+N $B52E Resets the four walking pointers shared by all trade screens (byte_AF30 = 0, and word_AF31/AF33/AF35 each set one entry before their respective table so the same "advance, then use" loop body serves every row including the first).
+C $B52E,3 commander data offset +23 (PilotRnd)
 C $B531,3 address in the goods quantity table
 C $B537,3 address in the goods price table
 C $B53B,3 good number
@@ -3989,15 +4013,19 @@ N $B848 In: ----
 N $B848 Out: cy=1 - hl<de
 N $B848 cy=0 - hl>=de
 c $B84D IncCASH
+N $B84D Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
 N $B84D Add money
 N $B84D In: de - amount of money (from 0.1 to 6553.5)
 N $B84D Out: hl,de - undefined
 C $B84D,3 get PilotCash1
 C $B851,3 set PilotCash1
 C $B85B,3 set PilotCash1
+@ $B861 label=IncCASH_1K
+N $B861 Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
 C $B861,3 get PilotCash2
 C $B865,3 set PilotCash2
 c $B869 DecCASH_1000
+N $B869 Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
 N $B869 Decrease money (whole thousands)
 N $B869 In: de - amount of money (from 1000 to 65535000)
 N $B869 Out: cy=1 - not enough money
@@ -4005,6 +4033,7 @@ N $B869 hl,de - ????
 C $B869,3 get PilotCash2
 C $B870,3 set PilotCash2
 c $B877 DecCASH
+N $B877 Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
 N $B877 Decrease money (from 0 to 999.9)
 N $B877 In: de - amount of money (from 0.1 to 6553.5)
 N $B877 Out: cy=1 - not enough money
@@ -4626,7 +4655,7 @@ C $D2B1,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5
 C $D2BA,3 print a message from group 2 in the buffer/on screen
 C $D2BD,3 set the print-register flag, reset X coordinate, increment Y coordinate
 C $D2C1,3 good number
-C $D2C4,3 23 ????
+C $D2C4,3 commander data offset +23 (PilotRnd)
 C $D2C7,3 address in the goods quantity table
 C $D2CA,3 print the name and quantity of a good
 C $D2CD,3 set the print-register flag, reset X coordinate, increment Y coordinate

@@ -42432,7 +42432,7 @@ Use of the escape capsule
 <tr>
 <td class="address-1"><span id="42922"></span>A7AA</td>
 <td class="instruction">LD HL,$A82C</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="42925"></span>A7AD</td>
@@ -42920,6 +42920,16 @@ Use of the escape capsule
 <td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="43120"></span>
+<div class="comments">
+<div class="paragraph">
+Alien Items are never actually for sale: at the end of every GenerateProductPrice run, the freshly generated quantity for this last slot is overwritten with zero. The player can only acquire them by scooping them in combat, and can only sell them here, never buy them.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="asm-label">PilotPlProdAlienIt</td>
 <td class="address-1"><span id="43120"></span>A870</td>
 <td class="instruction">DEFB $00</td>
@@ -43218,56 +43228,67 @@ Out: hl,de,b,a - undefined
 </td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="43191"></span>A8B7</td>
 <td class="instruction">PUSH AF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43192"></span>A8B8</td>
 <td class="instruction">CP $FF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43194"></span>A8BA</td>
 <td class="instruction">JR Z,<a href="#43178">$A8AA</a></td>
 <td class="comment-1" rowspan="1">put on the Cloaking Device</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43196"></span>A8BC</td>
 <td class="instruction">LD HL,$A83E</td>
 <td class="comment-1" rowspan="1">remaining ship cargo capacity</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43199"></span>A8BF</td>
 <td class="instruction">DEC (HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43200"></span>A8C0</td>
 <td class="instruction">LD E,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43201"></span>A8C1</td>
 <td class="instruction">LD D,$00</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43203"></span>A8C3</td>
 <td class="instruction">LD HL,$A82D</td>
 <td class="comment-1" rowspan="1">24 cargo present in the ship (17 bytes) +00 Food</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43206"></span>A8C6</td>
 <td class="instruction">ADD HL,DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43207"></span>A8C7</td>
 <td class="instruction">INC (HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43208"></span>A8C8</td>
 <td class="instruction">ADD A,$D0</td>
 <td class="comment-1" rowspan="1">message number</td>
@@ -43283,31 +43304,37 @@ This entry point is used by the routine at <a href="asm.html#43178">A8AA</a>.
 </td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="43210"></span>A8CA</td>
 <td class="instruction">LD HL,$A889</td>
 <td class="comment-1" rowspan="1">7,1 =1 cargo picked up in space</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43213"></span>A8CD</td>
 <td class="instruction">SET 7,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43215"></span>A8CF</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43216"></span>A8D0</td>
 <td class="instruction">LD (HL),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43217"></span>A8D1</td>
 <td class="instruction">POP AF</td>
 <td class="comment-1" rowspan="1">update legal status if needed</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43218"></span>A8D2</td>
 <td class="instruction">LD B,$01</td>
 <td class="comment-1" rowspan="1"></td>
@@ -43323,76 +43350,91 @@ This entry point is used by the routine at <a href="asm.html#45985">B3A1</a>.
 </td>
 </tr>
 <tr>
+<td class="asm-label">SetLegalStatCargo</td>
 <td class="address-2"><span id="43220"></span>A8D4</td>
 <td class="instruction">CP $0A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43222"></span>A8D6</td>
 <td class="instruction">JR Z,$A8E1</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43224"></span>A8D8</td>
 <td class="instruction">CP $03</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43226"></span>A8DA</td>
 <td class="instruction">JR Z,$A8DF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43228"></span>A8DC</td>
 <td class="instruction">CP $06</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43230"></span>A8DE</td>
 <td class="instruction">RET NZ</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="43231"></span>A8DF</td>
 <td class="instruction">SLA B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="43233"></span>A8E1</td>
 <td class="instruction">SLA B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43235"></span>A8E3</td>
 <td class="instruction">LD HL,$A821</td>
 <td class="comment-1" rowspan="1">pilot's legal status 0 - clean 1..31h offender 32h..FFh fugitive</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43238"></span>A8E6</td>
 <td class="instruction">LD A,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43239"></span>A8E7</td>
 <td class="instruction">ADD A,B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43240"></span>A8E8</td>
 <td class="instruction">JR NC,$A8EC</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43242"></span>A8EA</td>
 <td class="instruction">LD A,$FF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="43244"></span>A8EC</td>
 <td class="instruction">LD (HL),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="43245"></span>A8ED</td>
 <td class="instruction">RET</td>
 <td class="comment-1" rowspan="1"></td>
@@ -43659,7 +43701,7 @@ Used by the routine at <a href="asm.html#29035">716B</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="43409"></span>A991</td>
-<td class="instruction">CALL <a href="#44700">$AE9C</a></td>
+<td class="instruction">CALL <a href="#44700">GenerateAnotherPrice</a></td>
 <td class="comment-1" rowspan="1">generate prices without quantities at the station</td>
 </tr>
 <tr>
@@ -47567,18 +47609,26 @@ Generate quantities and prices of goods at the station
 <div class="paragraph">
 In: ----
 </div>
+<div class="paragraph">
+Called on arrival after every hyperspace jump, so the market re-rolls once per jump and then stays fixed while docked. Per good, with economy = PlanetEconomy (0-7) and rnd = PilotRnd: gradient = (economyFactor &amp; $1F) * economy; quantity = (baseQty + (rnd &amp; mask)) +/- gradient (sign from bit 7 of the economy factor byte), clamped to 0 and masked to 0-63; price = (basePrice + (rnd &amp; mask)) +/- gradient with the OPPOSITE sign convention from quantity, then multiplied by 4 and stored in 0.1 Cr units (so an internal price of $13 displays as 19*4/10 = 7.6 Cr). The same single random byte seasons every good on the station -- goods differ only via their own mask/base values/economy gradient.
+</div>
+<div class="paragraph">
+GenerateAnotherPrice is an alternate entry point that skips drawing a fresh random byte and reuses the saved PilotRnd instead, used by InitGame so a loaded commander rebuilds the exact same market it had when saved.
+</div>
 </div>
 </td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44694"></span>AE96</td>
 <td class="instruction">LD A,($7063)</td>
 <td class="comment-1" rowspan="1">get RndWord</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44697"></span>AE99</td>
 <td class="instruction">LD ($A82C),A</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -47591,366 +47641,439 @@ This entry point is used by the routine at <a href="asm.html#43382">A976</a>.
 </td>
 </tr>
 <tr>
+<td class="asm-label">GenerateAnotherPrice</td>
 <td class="address-2"><span id="44700"></span>AE9C</td>
 <td class="instruction">LD HL,$A860</td>
-<td class="comment-1" rowspan="1">; the same but without setting a new rnd</td>
+<td class="comment-1" rowspan="1">the same but without setting a new rnd</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44703"></span>AE9F</td>
 <td class="instruction">LD DE,$AF0E</td>
-<td class="comment-1" rowspan="1">goods prices at the station ($B0,$03=$03B0=944=94.4Cr) LLAF0E rept $11 db $00,$00 endr LLAF30</td>
+<td class="comment-1" rowspan="1">goods prices at the station, in 0.1 Cr units</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44706"></span>AEA2</td>
 <td class="instruction">EXX</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44707"></span>AEA3</td>
 <td class="instruction">LD HL,$91F2</td>
-<td class="comment-1" rowspan="1">table for generating goods quantities and prices at the station ds $11,$00,$00,$00,$00</td>
+<td class="comment-1" rowspan="1">table for generating goods quantities and prices at the station: 17 x 4-byte templates in TableBasePrice (byte 0 = base price, byte 1 = economy factor: bits 0-4 gradient multiplier, bit 7 gradient sign, byte 2 = base quantity, byte 3 = random mask)</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44710"></span>AEA6</td>
 <td class="instruction">LD B,$11</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44712"></span>AEA8</td>
 <td class="instruction">PUSH BC</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44713"></span>AEA9</td>
 <td class="instruction">LD E,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44714"></span>AEAA</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44715"></span>AEAB</td>
 <td class="instruction">LD A,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44716"></span>AEAC</td>
 <td class="instruction">LD D,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44717"></span>AEAD</td>
 <td class="instruction">AND $1F</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44719"></span>AEAF</td>
 <td class="instruction">JR Z,$AEBA</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44721"></span>AEB1</td>
 <td class="instruction">LD B,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44722"></span>AEB2</td>
 <td class="instruction">LD A,($AC4B)</td>
 <td class="comment-1" rowspan="1">Economy</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44725"></span>AEB5</td>
 <td class="instruction">LD C,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44726"></span>AEB6</td>
 <td class="instruction">XOR A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44727"></span>AEB7</td>
 <td class="instruction">ADD A,C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44728"></span>AEB8</td>
 <td class="instruction">DJNZ $AEB7</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44730"></span>AEBA</td>
 <td class="instruction">LD ($AE95),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44733"></span>AEBD</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44734"></span>AEBE</td>
 <td class="instruction">LD B,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44735"></span>AEBF</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44736"></span>AEC0</td>
 <td class="instruction">LD C,(HL)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44737"></span>AEC1</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44738"></span>AEC2</td>
 <td class="instruction">LD A,($A82C)</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44741"></span>AEC5</td>
 <td class="instruction">AND C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44742"></span>AEC6</td>
 <td class="instruction">ADD A,B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44743"></span>AEC7</td>
 <td class="instruction">LD B,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44744"></span>AEC8</td>
 <td class="instruction">LD A,($AE95)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44747"></span>AECB</td>
 <td class="instruction">BIT 7,D</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44749"></span>AECD</td>
 <td class="instruction">JR NZ,$AED2</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44751"></span>AECF</td>
 <td class="instruction">INC A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44752"></span>AED0</td>
 <td class="instruction">NEG</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44754"></span>AED2</td>
 <td class="instruction">ADD A,B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44755"></span>AED3</td>
 <td class="instruction">BIT 7,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44757"></span>AED5</td>
 <td class="instruction">JR Z,$AED8</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44759"></span>AED7</td>
 <td class="instruction">XOR A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44760"></span>AED8</td>
 <td class="instruction">AND $3F</td>
 <td class="comment-1" rowspan="1">'?'</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44762"></span>AEDA</td>
 <td class="instruction">PUSH AF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44763"></span>AEDB</td>
 <td class="instruction">LD A,($A82C)</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44766"></span>AEDE</td>
 <td class="instruction">AND C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44767"></span>AEDF</td>
 <td class="instruction">ADD A,E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44768"></span>AEE0</td>
 <td class="instruction">LD B,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44769"></span>AEE1</td>
 <td class="instruction">LD A,($AE95)</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44772"></span>AEE4</td>
 <td class="instruction">BIT 7,D</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44774"></span>AEE6</td>
 <td class="instruction">JR Z,$AEEB</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44776"></span>AEE8</td>
 <td class="instruction">INC A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44777"></span>AEE9</td>
 <td class="instruction">NEG</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="44779"></span>AEEB</td>
 <td class="instruction">ADD A,B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44780"></span>AEEC</td>
 <td class="instruction">LD C,A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44781"></span>AEED</td>
 <td class="instruction">LD B,$00</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44783"></span>AEEF</td>
 <td class="instruction">SLA C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44785"></span>AEF1</td>
 <td class="instruction">RL B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44787"></span>AEF3</td>
 <td class="instruction">SLA C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44789"></span>AEF5</td>
 <td class="instruction">RL B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44791"></span>AEF7</td>
 <td class="instruction">PUSH BC</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44792"></span>AEF8</td>
 <td class="instruction">EXX</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44793"></span>AEF9</td>
 <td class="instruction">POP BC</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44794"></span>AEFA</td>
 <td class="instruction">LD A,C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44795"></span>AEFB</td>
 <td class="instruction">LD (DE),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44796"></span>AEFC</td>
 <td class="instruction">INC DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44797"></span>AEFD</td>
 <td class="instruction">LD A,B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44798"></span>AEFE</td>
 <td class="instruction">LD (DE),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44799"></span>AEFF</td>
 <td class="instruction">INC DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44800"></span>AF00</td>
 <td class="instruction">POP AF</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44801"></span>AF01</td>
 <td class="instruction">LD (HL),A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44802"></span>AF02</td>
 <td class="instruction">INC HL</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44803"></span>AF03</td>
 <td class="instruction">EXX</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44804"></span>AF04</td>
 <td class="instruction">POP BC</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44805"></span>AF05</td>
 <td class="instruction">DJNZ $AEA8</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44807"></span>AF07</td>
 <td class="instruction">LD HL,$A870</td>
 <td class="comment-1" rowspan="1">+91 =0 the station was destroyed as part of the mission</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44810"></span>AF0A</td>
 <td class="instruction">LD (HL),B</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="44811"></span>AF0B</td>
 <td class="instruction">RET</td>
 <td class="comment-1" rowspan="1"></td>
@@ -48001,28 +48124,28 @@ This entry point is used by the routine at <a href="asm.html#43382">A976</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="asm-label"></td>
+<td class="asm-label">CurrentGoodIndex</td>
 <td class="address-1"><span id="44848"></span>AF30</td>
 <td class="instruction">DEFB $00</td>
 <td class="comment-1" rowspan="1">good number</td>
 </tr>
 <tr>
-<td class="asm-label"></td>
+<td class="asm-label">AdrPlayerHold</td>
 <td class="address-1"><span id="44849"></span>AF31</td>
 <td class="instruction">DEFW $0000</td>
-<td class="comment-1" rowspan="1">address in the goods quantity table</td>
+<td class="comment-1" rowspan="1">address in the player's hold table (PilotCargo); starts one entry before the table and is pre-incremented by 1 per row</td>
 </tr>
 <tr>
-<td class="asm-label"></td>
+<td class="asm-label">AdrStationPrice</td>
 <td class="address-1"><span id="44851"></span>AF33</td>
 <td class="instruction">DEFW $0000</td>
-<td class="comment-1" rowspan="1">address in the goods price table</td>
+<td class="comment-1" rowspan="1">address in the station price table (ProductPrice); starts one entry before the table and is pre-incremented by 2 per row</td>
 </tr>
 <tr>
-<td class="asm-label"></td>
+<td class="asm-label">AdrStationStock</td>
 <td class="address-1"><span id="44853"></span>AF35</td>
 <td class="instruction">DEFW $0000</td>
-<td class="comment-1" rowspan="1">address in the goods quantity table</td>
+<td class="comment-1" rowspan="1">address in the station stock table (PilotPlanetProduct); starts one entry before the table and is pre-incremented by 1 per row</td>
 </tr>
 <tr>
 <td class="asm-label">TempCrdPrn</td>
@@ -48233,6 +48356,9 @@ Used by the routines at <a href="asm.html#45774">B2CE</a> and <a href="asm.html#
 <td class="routine-comment" colspan="5">
 <span id="44899"></span>
 <div class="comments">
+<div class="paragraph">
+One Market Prices / Buy row: name, unit, price (4-digit nnn.n field), then stock as nn+unit, or a literal - when the stock byte is 0 (returns carry set = not traded here). The good's name is printed via message code $D0+index. The 17 goods, in index order: $00 Food(t) $01 Textiles(t) $02 Radioactives(t) $03 Slaves(t) $04 Liquor &amp; Wines(t) $05 Luxuries(t) $06 Narcotics(t) $07 Computers(t) $08 Machinery(t) $09 Alloys(t) $0A Firearms(t) $0B Furs(t) $0C Minerals(t) $0D Gold(kg) $0E Platinum(kg) $0F Gem-Stones(g) $10 Alien Items(t).
+</div>
 <div class="paragraph">
 Print the name, price and quantity of a good
 </div>
@@ -48552,7 +48678,7 @@ This entry point is used by the routine at <a href="asm.html#44943">AF8F</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="44985" class="description">AFB9: Routine at AFB9</div>
+<div id="44985" class="description">AFB9: PrnInventoryRow</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -48567,6 +48693,9 @@ Used by the routines at <a href="asm.html#46263">B4B7</a> and <a href="asm.html#
 <td class="routine-comment" colspan="5">
 <span id="44985"></span>
 <div class="comments">
+<div class="paragraph">
+One Inventory/Sell row: prints the good's name and held quantity; prints nothing and returns carry if the player holds none of it.
+</div>
 <div class="paragraph">
 Print the name and quantity of a good
 </div>
@@ -49464,7 +49593,7 @@ hl,de,bc - ????
 <td class="comment-1" rowspan="1">print a message</td>
 </tr>
 </table>
-<div id="45167" class="description">B06F: Routine at B06F</div>
+<div id="45167" class="description">B06F: GetProductUnitSuffix</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -49479,6 +49608,9 @@ Used by the routines at <a href="asm.html#44911">AF6F</a>, <a href="asm.html#449
 <td class="routine-comment" colspan="5">
 <span id="45167"></span>
 <div class="comments">
+<div class="paragraph">
+Chooses the unit suffix for a good purely from its index: $00-$0C and $10 print t, $0D-$0E print kg, $0F prints g.
+</div>
 <div class="paragraph">
 Print in lowercase t/kg/g/km
 </div>
@@ -49637,13 +49769,23 @@ This entry point is used by the routine at <a href="asm.html#45167">B06F</a>.
 <td class="comment-1" rowspan="1">print a message from group 1 in the buffer/on screen</td>
 </tr>
 </table>
-<div id="45213" class="description">B09D: Routine at B09D</div>
+<div id="45213" class="description">B09D: IsCargoBayGood</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#45985">B3A1</a> and <a href="asm.html#46337">B501</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="45213"></span>
+<div class="comments">
+<div class="paragraph">
+Checks whether a good occupies cargo-bay space (only tonne-unit goods do; Gold/Platinum/Gem-Stones are kg/g and don't count against PilotFreeCargo).
 </div>
 </div>
 </td>
@@ -51379,6 +51521,9 @@ Used by the routine at <a href="asm.html#42875">A77B</a>.
 <span id="45691"></span>
 <div class="comments">
 <div class="paragraph">
+While mission 1 is active, this screen is replaced by a special mission pitch (deliver contraband): accepting it (Y) wipes the hold, grants the Large Cargo Bay, and sets a "mission cargo aboard" flag in PilotExtWeapon bit 5, which subsequently locks the player out of the normal Buy screen until the mission resolves.
+</div>
+<div class="paragraph">
 Goods purchase menu
 </div>
 </div>
@@ -51841,13 +51986,26 @@ This entry point is used by the routine at <a href="asm.html#45875">B333</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45875" class="description">B333: Routine at B333</div>
+<div id="45875" class="description">B333: EnterQuantity</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#45774">B2CE</a>, <a href="asm.html#46263">B4B7</a> and <a href="asm.html#46523">B5BB</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="45875"></span>
+<div class="comments">
+<div class="paragraph">
+The shared quantity-entry engine behind every "how many?" prompt in the game (Buy Cargo, Sell Cargo, Equip Ship). In: hl = a validation/transaction callback address (stored in word_B472). Out: carry clear and byte_B471 = the entered 1-2 digit number, or carry set = aborted (a=2 means Enter was pressed with nothing typed).
+</div>
+<div class="paragraph">
+Flow: waits for a first digit, stores it, echoes it, then calls the callback immediately -- in this game the callback performs the actual transaction (cash deduction, stock/hold update), so typing 1 executes a purchase of 1 on the spot. Waits for a second key: Enter accepts the 1-digit value; another digit computes byte_B471 = old*10+digit, calls RollbackTradeState to undo the first-digit transaction, then calls the callback again with the 2-digit total; backspace ($FE) also rolls back and restarts entry from the first digit.
 </div>
 </div>
 </td>
@@ -52213,11 +52371,21 @@ Used by the routine at <a href="asm.html#45875">B333</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45985" class="description">B3A1: Routine at B3A1</div>
+<div id="45985" class="description">B3A1: BuyGoodCallback</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="45985"></span>
+<div class="comments">
+<div class="paragraph">
+Transaction callback for the Buy screen, called by EnterQuantity after every digit. Snapshots state, then: stock -= qty (fail $B0 = quantity unavailable), pays qty x price via DecCASH in a loop (fail $C5 = insufficient cash), checks cargo-bay space via IsCargoBayGood and debits PilotFreeCargo if needed (fail $CE = no room), then PilotCargo[good] += qty (8-bit overflow also fails $CE), and finally calls SetLegalStatCargo. Any failure jumps to loc_B3E8 which prints the message and rolls the whole attempt back.
+</div>
 </div>
 </td>
 </tr>
@@ -52373,7 +52541,7 @@ Used by the routine at <a href="asm.html#45875">B333</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="46041"></span>B3D9</td>
-<td class="instruction">CALL <a href="#43220">$A8D4</a></td>
+<td class="instruction">CALL <a href="#43220">SetLegalStatCargo</a></td>
 <td class="comment-1" rowspan="1">duplicate this routine</td>
 </tr>
 <tr>
@@ -52448,7 +52616,7 @@ This entry point is used by the routine at <a href="asm.html#45985">B3A1</a>.
 <span id="46056"></span>
 <div class="comments">
 <div class="paragraph">
-This entry point is used by the routine at <a href="asm.html#45985">B3A1</a>.
+Shared fail handler for both buy and sell: prints the message code left in A at print-column 3 followed by '?', then calls RollbackTradeState to undo the attempted transaction.
 </div>
 </div>
 </td>
@@ -52568,13 +52736,23 @@ a=$01
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="46082" class="description">B402: Routine at B402</div>
+<div id="46082" class="description">B402: SnapshotTradeState</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#45985">B3A1</a>, <a href="asm.html#46337">B501</a> and <a href="asm.html#46523">B5BB</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="46082"></span>
+<div class="comments">
+<div class="paragraph">
+Saves PilotCash1, PilotCash2, the current good's stock byte, its hold byte, and PilotFreeCargo into word_B46A/word_B46C/byte_B46E/byte_B46F/byte_B470. Called first by every buy/sell transaction callback, so a later digit (or an abort) can cleanly undo a transaction already committed by a previous digit.
 </div>
 </div>
 </td>
@@ -52645,13 +52823,23 @@ Used by the routines at <a href="asm.html#45985">B3A1</a>, <a href="asm.html#463
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="46115" class="description">B423: Routine at B423</div>
+<div id="46115" class="description">B423: RollbackTradeState</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#45860">B324</a>, <a href="asm.html#45875">B333</a>, <a href="asm.html#46069">B3F5</a>, <a href="asm.html#46779">B6BB</a> and <a href="asm.html#46878">B71E</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="46115"></span>
+<div class="comments">
+<div class="paragraph">
+Restores the five fields saved by SnapshotTradeState. Called by EnterQuantity between digits and on backspace, and by every transaction failure path.
 </div>
 </div>
 </td>
@@ -52722,13 +52910,23 @@ Used by the routines at <a href="asm.html#45860">B324</a>, <a href="asm.html#458
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="46148" class="description">B444: Routine at B444</div>
+<div id="46148" class="description">B444: PrnQuantityPrompt</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#45774">B2CE</a> and <a href="asm.html#46263">B4B7</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="46148"></span>
+<div class="comments">
+<div class="paragraph">
+Prints the "QUANTITY OF &lt;good&gt;/&lt;unit&gt;?" prompt on the bottom two rows, shared by both the Buy and Sell screens.
 </div>
 </div>
 </td>
@@ -53107,13 +53305,23 @@ Print the menu frame
 <td class="comment-1" rowspan="1">print a message from group 2 in the buffer/on screen</td>
 </tr>
 </table>
-<div id="46256" class="description">B4B0: Routine at B4B0</div>
+<div id="46256" class="description">B4B0: SellGoodLoop</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#46196">B474</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="46256"></span>
+<div class="comments">
+<div class="paragraph">
+Drives the Sell screen: loops over all 17 goods via PrnInventoryRow (which silently skips goods the player doesn't hold); for each held good, saves the print cursor, shows the quantity prompt, and runs EnterQuantity with SellGoodCallback. After the loop: two pauses, then tail-jumps to the Inventory screen.
 </div>
 </div>
 </td>
@@ -53307,11 +53515,21 @@ Used by the routine at <a href="asm.html#46196">B474</a>.
 <td class="comment-1" rowspan="1">print the cargo hold contents</td>
 </tr>
 </table>
-<div id="46337" class="description">B501: Routine at B501</div>
+<div id="46337" class="description">B501: SellGoodCallback</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="46337"></span>
+<div class="comments">
+<div class="paragraph">
+Transaction callback for the Sell screen. Snapshots state, then: PilotCargo[good] -= qty (fail $B0 = not enough held), frees cargo-bay space via IsCargoBayGood if this is a tonne-unit good, and pays out qty x station price via IncCASH in a loop. Unlike buying: does NOT add the sold quantity back to the station's stock (PilotPlanetProduct is untouched, so the station won't resell what you dumped on it), and has no legal -status consequence -- only acquiring contraband is a crime, not offloading it.
+</div>
 </div>
 </td>
 </tr>
@@ -53441,7 +53659,7 @@ Used by the routine at <a href="asm.html#46196">B474</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="46382" class="description">B52E: Routine at B52E</div>
+<div id="46382" class="description">B52E: ResetTradeWalkPointers</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53453,9 +53671,19 @@ Used by the routines at <a href="asm.html#45774">B2CE</a> and <a href="asm.html#
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="46382"></span>
+<div class="comments">
+<div class="paragraph">
+Resets the four walking pointers shared by all trade screens (byte_AF30 = 0, and word_AF31/AF33/AF35 each set one entry before their respective table so the same "advance, then use" loop body serves every row including the first).
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="46382"></span>B52E</td>
 <td class="instruction">LD HL,$A82C</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="46385"></span>B531</td>
@@ -54712,7 +54940,7 @@ Used by the routine at <a href="asm.html#46523">B5BB</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="46828"></span>B6EC</td>
-<td class="instruction">CALL <a href="#47201">$B861</a></td>
+<td class="instruction">CALL <a href="#47201">IncCASH_1K</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
@@ -56085,6 +56313,9 @@ Used by the routines at <a href="asm.html#43264">A900</a>, <a href="asm.html#463
 <span id="47181"></span>
 <div class="comments">
 <div class="paragraph">
+Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
+</div>
+<div class="paragraph">
 Add money
 </div>
 <div class="paragraph">
@@ -56097,46 +56328,55 @@ Out: hl,de - undefined
 </td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-2"><span id="47181"></span>B84D</td>
 <td class="instruction">LD HL,($A82A)</td>
 <td class="comment-1" rowspan="1">get PilotCash1</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47184"></span>B850</td>
 <td class="instruction">ADD HL,DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47185"></span>B851</td>
 <td class="instruction">LD ($A82A),HL</td>
 <td class="comment-1" rowspan="1">set PilotCash1</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47188"></span>B854</td>
 <td class="instruction">AND A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47189"></span>B855</td>
 <td class="instruction">LD DE,$2710</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47192"></span>B858</td>
 <td class="instruction">SBC HL,DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47194"></span>B85A</td>
 <td class="instruction">RET C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47195"></span>B85B</td>
 <td class="instruction">LD ($A82A),HL</td>
 <td class="comment-1" rowspan="1">set PilotCash1</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47198"></span>B85E</td>
 <td class="instruction">LD DE,$0001</td>
 <td class="comment-1" rowspan="1"></td>
@@ -56146,27 +56386,31 @@ Out: hl,de - undefined
 <span id="47201"></span>
 <div class="comments">
 <div class="paragraph">
-This entry point is used by the routine at <a href="asm.html#46779">B6BB</a>.
+Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
 </div>
 </div>
 </td>
 </tr>
 <tr>
+<td class="asm-label">IncCASH_1K</td>
 <td class="address-2"><span id="47201"></span>B861</td>
 <td class="instruction">LD HL,($A828)</td>
 <td class="comment-1" rowspan="1">get PilotCash2</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47204"></span>B864</td>
 <td class="instruction">ADD HL,DE</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47205"></span>B865</td>
 <td class="instruction">LD ($A828),HL</td>
 <td class="comment-1" rowspan="1">set PilotCash2</td>
 </tr>
 <tr>
+<td class="asm-label"></td>
 <td class="address-1"><span id="47208"></span>B868</td>
 <td class="instruction">RET</td>
 <td class="comment-1" rowspan="1"></td>
@@ -56187,6 +56431,9 @@ Used by the routine at <a href="asm.html#46523">B5BB</a>.
 <td class="routine-comment" colspan="5">
 <span id="47209"></span>
 <div class="comments">
+<div class="paragraph">
+Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
+</div>
 <div class="paragraph">
 Decrease money (whole thousands)
 </div>
@@ -56258,6 +56505,9 @@ Used by the routines at <a href="asm.html#45985">B3A1</a> and <a href="asm.html#
 <td class="routine-comment" colspan="5">
 <span id="47223"></span>
 <div class="comments">
+<div class="paragraph">
+Trading code never computes price x quantity as a single multiplication -- it calls this once per unit inside a djnz loop instead, sidestepping 16-bit overflow entirely (the priciest good at maximum quantity would overflow a 16-bit product) at the cost of a few hundred cycles nobody notices.
+</div>
 <div class="paragraph">
 Decrease money (from 0 to 999.9)
 </div>
@@ -67015,7 +67265,7 @@ Used by the routine at <a href="asm.html#53911">D297</a>.
 <tr>
 <td class="address-1"><span id="53956"></span>D2C4</td>
 <td class="instruction">LD HL,$A82C</td>
-<td class="comment-1" rowspan="1">23 ????</td>
+<td class="comment-1" rowspan="1">commander data offset +23 (PilotRnd)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53959"></span>D2C7</td>

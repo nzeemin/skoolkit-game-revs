@@ -131,5 +131,5 @@ Original: for ZX Spectrum 128K, 1985, Firebird, by Torus.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/elite128-zx/elite/
 
-Status: Have pretty good progress (251K .ctl file).
+Status: Have pretty good progress (259K .ctl file).
 Based on colossal work done by LW.

@@ -25,9 +25,9 @@ B $617B,1
 B $6186,1
 B $618A,1
 W $618B,2 Free-list head pointer for the dynamic object pool (#R$A900), consumed/updated by #R$84AE. Its high byte (at $618C) is also read standalone as an empty/enabled check.
-W $618D,2
-B $618F,1
-B $6190
+W $618D,2 Current sprite: data address (copied from a #R$A5DC record by #R$84ED)
+B $618F,1 Current sprite: height, in 8px rows (copied from a #R$A5DC record by #R$84ED)
+B $6190 Current sprite: width, in 8px columns, bit 7 = flip-flop flag (copied from a #R$A5DC record by #R$84ED, unmasked)
 B $6193,1
 W $6194,2
 W $6196,2
@@ -100,6 +100,8 @@ C $6603,3 Print string: position cursor for message window line 2 (row $B4)
 C $6614,3 Print string: current clue/joke message, rotating through the #R$7441 table
 c $6622
 c $663B
+C $6646,3 print inline string, then resume after it
+T $6649,4 cursor position only, no visible text
 c $6653 Prepare room with color 0
 C $6654,3 Prepare the Room with color A
 c $6657 Get room color from room description and store to 6175
@@ -108,6 +110,8 @@ C $665C,1 get Byte 3: Room colour and Room Size
 C $665D,2 color only
 C $665F,3 Store room color
 c $6663
+C $6669,3 Dynamic object allocator
+W $666C,2 Dynamic object handler address
 c $6692
 c $66CE
 c $6728
@@ -126,16 +130,25 @@ C $67EE,3 Get room color from room description and store to 6175
 c $67F1 Attempt to move to an adjacent room (horizontal, via a door) in the direction given by ($8DC1)
 N $67F1 CONFIRMED live: definitively resolves the #R$612B exit-bit-to-direction mapping (an open question from earlier sessions). Reads a direction code from ($8DC1) -- 1, 2, 4, or else (fallback case) -- and for each, tests one bit of the door bitfield at #R$612B via HL (set to $612B just before this dispatch) before allowing the move: bit 0 (direction code 1) gates "room number - 6" (row-1, NORTH); bit 1 (direction code 4) gates "room number + 1" (col+1, EAST); bit 2 (direction code 2) gates "room number + 6" (row+1, SOUTH); bit 3 (the fallback case) gates "room number - 1" (col-1, WEST). Also does on-screen player-position bounds checks (against D/E, likely screen row/col) before allowing the move, presumably to require the player to be near the room edge on that side. #R$97FC is called with the new room number to actually perform the transition.
 C $6819,3 get room number
+C $6824,3 Change current room to A
 C $681C,2 change room number: -6 (row-1, move NORTH)
+C $683D,3 get room number
 C $6840,1 change room number: +1 (col+1, move EAST)
+C $685B,3 get room number
 C $685E,2 change room number: +6 (row+1, move SOUTH)
+C $6876,3 get room number
 C $6879,1 change room number: -1 (col-1, move WEST)
 c $6880
 c $6895
+C $68B1,3 print inline string, then resume after it
+T $68B4,4 cursor position only, no visible text
 c $68C1
+C $68CC,3 print inline string, then resume after it
+T $68CF,6 two spaces at cursor position
 b $68DE
 t $6997
 c $69AC Prepare the Room ??
+C $69CF,3 get room number
 R $69AC A Room color
 C $6A32,3 Screen attribute area start address
 c $6AAA
@@ -146,6 +159,7 @@ c $6AFB
 c $6AFC
 c $6B05
 c $6B71
+C $6B95,3 get room number
 b $6C06
 t $6C38
 b $6C45
@@ -169,9 +183,9 @@ N $6CCF byte 3 bits 0-5: CONFIRMED live across 7 sample rooms: a 6-bit index (by
 N $6CCF bytes 4+ (if record length > 4): extra (index,value) pairs specific to this room, laid out and consumed identically to a room-type template (see #R$72D1) -- appended on top of the shared type template when the room grid is built. CONFIRMED live (room $52 at #R$6ECF, 3 trailing bytes $37/$6A/$20): the loop counter B starts at (length-4), but a special-value pair (value in $66/$67/$68/$69/$6A/$6B) makes its spawn routine (e.g. #R$8EA7) decrement B as a side effect, ending the loop early -- room $52's single pair ($37,$6A) consumed only 2 of its 3 trailing bytes; the last byte ($20) was never read. This is why odd leftover-byte counts aren't a bug: special-value entries account for more than 2 bytes' worth of the counter.
 N $6CCF NOTE: room numbering in these block labels was off by one (each labeled one less than its true in-game room number, confirmed live e.g. the record at #R$6ECF is in-game room $52) -- FIXED throughout below, labels now match the in-game room number read from $6126.
 N $6CCF Level 1 of 6 (room numbers $01-$24, cube rows/cols 0-5 -- see x-docs/Room-Format.md) -- entry point 'C' lands in this level (room $1A)
-B $6CCF,4 Room $01 description, type $E -- CONFIRMED live: this is in-game room number $01 (off-by-one, see the NOTE above) -- the special ENDING/WINNING room. Forced live by breakpointing #R$97FC and overriding A=$01: shows a walless room (just floating rocks/seaweed/player) with a "DEATHBOWL DIVINED" stats screen (score %, Scans Scraped, Plugs Pulled, Goodies Gathered, Gnomes Gnabbed) overlaid, reached normally via the final whirlpool after solving the last puzzle. Not part of the normal 6x6x6 navigable cube (see x-docs/Room-Format.md) despite being in-range of the room number scheme.
+B $6CCF,4 Room $01 description, type $E -- the special ENDING/WINNING room
 B $6CD3,3
-B $6CD6,4 Room $02 description, type $E
+B $6CD6,4 Room $02 description, type $E -- the special MENU room
 B $6CDA,2
 B $6CDC,4 Room $03 description, type $0
 B $6CE0,4 Room $04 description, type $5
@@ -246,7 +260,7 @@ B $6DF1,4 Room $30 description, type $0
 B $6DF5,2
 B $6DF7,4 Room $31 description, type $7
 B $6DFB,4 Room $32 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 2, row 2, col 1
-B $6DFF,12
+B $6DFF,12 4 decor cubes at grid corners (2,2)/(2,6)/(6,2)/(6,6), values $0F/$0E/$0E/$0F; then Plug+Whirlpool co-located at grid cell $25 -- see #R$8F4C/#R$8F1E
 B $6E0B,4 Room $33 description, type $1
 B $6E0F,6
 B $6E15,4 Room $34 description, type $0
@@ -324,7 +338,7 @@ B $6F41,6
 B $6F47,4 Room $63 description, type $4
 B $6F4B,4 Room $64 description, type $2
 B $6F4F,4 Room $65 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 3, row 4, col 4
-B $6F53,12
+B $6F53,12 4 decor cubes at grid corners (2,2)/(2,6)/(6,2)/(6,6), values $0B/$0C/$0A/$0B; then Plug+Whirlpool co-located at grid cell $25 -- see #R$8F4C/#R$8F1E
 B $6F5F,4 Room $66 description, type $4
 B $6F63,2
 B $6F65,4 Room $67 description, type $8
@@ -406,7 +420,7 @@ B $70A5,8
 B $70AD,4 Room $9A description, type $5
 B $70B1,7
 B $70B8,4 Room $9B description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 5, row 1, col 4
-B $70BC,12
+B $70BC,12 4 decor cubes at grid corners (2,2)/(2,6)/(6,2)/(6,6), all value $10; then Plug+Whirlpool co-located at grid cell $25 -- see #R$8F4C/#R$8F1E
 B $70C8,4 Room $9C description, type $6
 B $70CC,2
 B $70CE,4 Room $9D description, type $1
@@ -500,7 +514,7 @@ B $726B,4 Room $D6 description, type $0
 B $726F,4 Room $D7 description, type $8
 B $7273,3
 B $7276,4 Room $D8 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 6, row 5, col 5
-B $727A,12
+B $727A,12 4 decor cubes at grid corners (2,2)/(2,6)/(6,2)/(6,6), values $0F/$0E/$0E/$0F; then Plug+Whirlpool co-located at grid cell $25 -- see #R$8F4C/#R$8F1E
 b $7286
 b $72AB
 b $72B1 Room-type template pointer table
@@ -631,9 +645,16 @@ c $7DC7
 b $7E4C Variables to use in routine 7E4F
 W $7E4C,2
 B $7E4E,1
-c $7E4F
+c $7E4F Flip sprite horizontally
+N $7E4F CONFIRMED live: looks up the #R$A5DC record for sprite L (L*4 -- see #R$A5DC), takes its data address (record[0..1]) and masked height (record[2]&$7F, in 8px rows) and width (record[3]&$7F, in 8px columns, toggling record[3] bit 7 in place each call so alternating calls flip between drawing the normal and mirrored image). For each of height*8 pixel rows, copies ceil(width/2) bytes from the front of the row to the back (and vice versa via HL/DE working inward from both ends), bit-reversing each byte with the RLA/RR chain at #R$7E83 -- the standard trick for mirroring a monochrome bitmap left-to-right. Used to derive a sprite's mirror-image facing from a single stored copy.
 R $7E4F L Sprite number
 C $7E53,3 Table of sprites address
+C $7E5B,3 record[2]: height (mask off bit 7)
+C $7E60,7 record[3]: width -- toggle bit 7 in place (flip-flop flag, self-modifying), then mask it off
+C $7E6C,4 halve the width, rounding up
+C $7E73,2 outer loop: once per 8px-row group (height)
+C $7E75,1 inner loop: 8 pixel rows per group
+C $7E80,1 innermost loop: ceil(width/2) byte pairs per row
 C $7E83,25 Flip the byte
 c $7EA9
 c $7EBE
@@ -649,6 +670,8 @@ b $8124
 B $8126 Sprite number??
 B $8127 Sprite number??
 c $8128
+C $814D,3 Flip sprite horizontally
+C $8166,3 Flip sprite horizontally
 b $8226
 c $8230
 b $829E
@@ -662,30 +685,86 @@ b $8397
 c $8445
 c $848E
 c $84AE Dynamic object allocator
-N $84AE CONFIRMED live (traced in full): allocates one entry from a free-list of dynamic object slots (creatures, items, doors -- anything not baked into the static room grid; see #R$612C). If $618C is 0, takes an early-exit dispatch path (pops the return address, skips 2 bytes, JP (HL) -- purpose not confirmed, likely "no free slots" or "objects disabled"). Otherwise: pops the next free slot's address from the free-list head at $618B (each free slot's first 2 bytes point to the next free slot, standard linked-list allocator), copies 2 bytes from the caller's template pointer (IX, e.g. $610E) into the new slot, switches IX to the slot's own address, stores the CURRENT ROOM NUMBER ($6126) at slot offset $02, copies 2 more bytes (from the caller, e.g. the special grid value + first extra byte -- see #R$8EA7) to slot offset $03/$04, then copies a fixed 19-byte block from $5C92 (ZX system-variable area, reused here as a default object state template) into the rest of the slot. Sets a flag bit and returns with IX = the new slot's address. Object pool confirmed live to start at #R$A900.
-c $84ED
+N $84AE CONFIRMED (re-derived from static trace, corrects an earlier live-tracing error -- see below): allocates one entry from a free-list of dynamic object slots (creatures, items, doors -- anything not baked into the static room grid; see #R$612C). Every caller has 2 dual-purpose bytes immediately after its CALL instruction, holding the little-endian address of that call site's per-object behaviour handler (marked with a W-line at each site, e.g. #R$666C). On the early-exit path ($618C is 0): pops the return address and skips exactly those 2 bytes (INC HL twice, then JP (HL)) -- no object is allocated, and the handler address is simply discarded unread. On the success path: pops the SAME return address into HL, then LDIs those same 2 bytes as literal data into the new slot's offset $03/$04 (the handler-pointer field), pushes the now-advanced HL (pointing just past the 2 bytes) back onto the stack, copies a fixed 19-byte block from $5C92 (ZX system-variable area, reused as a default object state template) into the rest of the slot, then RETs -- popping that pushed address, so execution resumes 2 bytes past the CALL either way. (An earlier note claimed these 2 bytes were "executed as code" on the success path at #R$8EB9 -- that was a misreading from an earlier live-tracing session; the stack trace above shows they are always consumed as data, on both paths.) Also: pops the next free slot's address from the free-list head at $618B (each free slot's first 2 bytes point to the next free slot, standard linked-list allocator), copies 2 bytes from the caller's template pointer (IX, e.g. $610E) into the freed slot (to keep the free-list intact), switches IX to the new slot's own address, and stores the CURRENT ROOM NUMBER ($6126) at slot offset $02. Sets a flag bit (A=1) and returns with IX = the new slot's address. Object pool confirmed live to start at #R$A900.
+C $84D7,3 get room number
+c $84ED Load a sprite's #R$A5DC record into the "current sprite" scratch variables at #R$618D, ready for #R$8128 to draw it
+N $84ED CONFIRMED live: looks up the #R$A5DC record for sprite L (L*4), then copies all 4 raw bytes (data address, height, and width -- the width byte copied unmasked, flip-flop bit 7 and all) into #R$618D/#R$618F/#R$6190. Called by #R$8128 before it draws a sprite by number.
 R $84ED L Sprite number
-c $8501
-c $850E
+C $84F1,3 sprite table base (#R$A5DC)
+C $84F5,3 destination: current-sprite scratch variables (#R$618D)
+C $84F8,6 copy data address (2 bytes) and height (1 byte)
+C $84FE,3 copy width byte as-is (unmasked, includes the flip-flop flag bit)
+c $8501 Print string at HL until terminator byte $5E or $2B
+N $8501 CONFIRMED: loops over bytes at HL, printing each one via #R$7CEC (the print engine, which also interprets embedded control codes like $14/$16 seen at #R$8623/#R$861A), until it reads a terminator byte ($5E or $2B) -- returns with HL pointing just past the terminator. Called directly with HL already pointing at a string (e.g. from #R$8513), and via #R$850E for inline strings embedded right after a CALL.
+R $8501 HL Address of the string to print (bytes are printed one at a time via #R$7CEC; the string ends at the first $5E or $2B byte, which is consumed but not printed)
+C $8503,2 terminator check: $5E
+C $8506,2 terminator check: $2B
+C $8509,3 print current character (and interpret control codes)
+c $850E Print an inline string embedded right after the caller's CALL instruction
+N $850E CONFIRMED: pops the return address off the stack into HL -- since the caller used CALL $850E, this is the address of the string bytes immediately following that CALL. Calls #R$8501 to print the string (advancing HL past it), then JP (HL) to resume execution right after the embedded string, i.e. normal code flow continues past the inline text.
+C $850F,3 print string: see #R$8501
+C $8512,1 resume execution after the inline string
 c $8513
 C $8516,3 Print string: position cursor for message window line 1 (row $A4)
 C $851F,3 Print string: inline message text embedded after the call to #R$8513
 c $8523
 c $854C
 c $854F
-b $8567
+b $8567 Entry-point room number table (menu keys A/B/C/D)
+N $8567 CONFIRMED live: 4 bytes, one per starting location, in order A/B/C/D: $52 (level 3, row 1, col 4), $C0 (level 6, row 2, col 0), $1A (level 1, row 4, col 2), $84 (level 4, row 4, col 0). See x-docs/Room-Format.md for the full cube-position table and cross-check against an external game map.
+B $8567,4
 t $856B Controls sub-menu text
 N $856B "1 KEYBOARD 2 KEMPSTON 3 SINCLAIR 4 CURSOR", printed by #R$8617 via the #R$7CEC print engine.
 b $8595
-c $85A1 NOTE: possible disassembly misalignment before $860F
-N $85A1 Disassembly from here to around #R$860F looks misaligned/garbled (likely wrong sub-block boundaries upstream); code resynchronizes at #R$860F.
+c $85A1
+C $85A1,3 print inline string, then resume after it
+T $85A4,15 main menu title
+T $85B3,12 sub-heading
+T $85BF,21 key A tune name (likely)
+T $85D4,20 key B tune name (likely)
+T $85E8,17 key C tune name (likely)
+T $85F9,22 key D tune name (likely); Elvis song titles, not room selection
 C $8617,3 load pointer to Controls menu text at #R$856B
 C $861A,5 control code $16: set print cursor row (selects the menu row to print into)
 C $8620,3 print the Controls menu text (via #R$7CEC print engine loop)
 C $8623,5 control code $14 + flag: set/clear inverse video for the currently selected control method
-C $8637,3 call #R$8501 (likely reads the current control method / input routine)
+C $8637,3 #R$8501 (likely reads the current control method / input routine)
 C $863A,6 control code $14 + $01: restore inverse video flag to normal
+C $864E,3 print inline string, then resume after it
+T $8651,6 stray "5" (control-code list index? unclear)
+C $865D,3 print inline string, then resume after it
+T $8660,14 "MUSIC" label, shown selected/inverse
+C $8670,3 print inline string, then resume after it
+T $8673,14 "SFX" label, shown selected/inverse
+C $86C1,3 load pointer to entry-point room number table (#R$8567) -- used to look up the starting room for the pressed menu key A/B/C/D
 c $86CC
+C $86CC,3 print inline string, then resume after it
+N $86CF End-game stats overlay labels (see #R$676D: called only when room==1)
+T $86CF,22 title
+T $86E5,16 stat label
+T $86F5,15 stat label
+T $8704,19 stat label
+T $8717,17 stat label
+T $8728,4 cursor position only, no visible text
+C $876A,3 print inline string, then resume after it
+T $876D,4 cursor position only, no visible text (positions for a stat value printed separately)
+C $877C,3 print inline string, then resume after it
+T $877F,4 cursor position only, no visible text
+C $8789,3 print inline string, then resume after it
+T $878C,4 cursor position only, no visible text
+C $8796,3 print inline string, then resume after it
+T $8799,4 cursor position only, no visible text
+C $87B0,3 print inline string, then resume after it
+N $87B3 End-game message, shown on an early/partial completion outcome
+T $87B3,30 line 1
+T $87D1,21 line 2
+T $87E6,22 line 3
+C $87FD,3 print inline string, then resume after it
+N $8800 End-game message, shown on full completion (all 4 plugs pulled)
+T $8800,25 line 1
+T $8819,24 line 2
+T $8831,20 line 3
+T $8845,20 line 4
 c $885A
 s $8874
 c $8879
@@ -697,14 +776,27 @@ c $88DD
 c $88E3
 b $88EF
 c $8968
+C $8987,3 get room number
+C $8A76,3 get room number
 c $8A87 Attempt to move to an adjacent room (vertical, via whirlpool/bubble)
 N $8A87 CONFIRMED live: computes the room number one level down ($6126 - $24, i.e. -36 -- a whirlpool) or one level up ($6126 + $24, i.e. +36 -- a bubble), matching the 6x6x6 cube level-stride confirmed independently via room-number/entry-point analysis (see x-docs/Room-Format.md). Has special-case handling when the current room number is exactly 1 (down) or 2 (up) -- overrides the computed value instead of using the generic +-36 arithmetic; not yet understood why. The upward case also bounds-checks the result against $D9 before allowing it (JP C,#R$97FC), falling back to a different path (through $8C83) if out of range. #R$97FC is called with the new room number to actually perform the transition, same as the horizontal case (#R$67F1).
 C $8A7D,2 change room number: -36 (one level DOWN, via whirlpool)
+C $8A7F,3 Change current room to A
+C $8A82,2 room==1 special case: force A=2 instead
+C $8A84,3 Change current room to A
+C $8A97,3 get room number
 C $8A9E,2 change room number: +36 (one level UP, via bubble)
+C $8AA0,2 bounds check: is the new room number in range?
+C $8AA2,3 Change current room to A (if in range)
+C $8AA5,8 out of range: fall back instead of changing room
+C $8AAD,3 room==2 special case: use $6125 instead
+C $8AB0,3 Change current room to A
 b $8AB3
 c $8ABB
 c $8AD9
 c $8AFB
+C $8BC7,3 get room number
+C $8BF1,3 get room number
 c $8C35
 b $8C48
 t $8CD9
@@ -718,15 +810,31 @@ B $8DD1,22
 B $8DF1,22
 t $8E37
 b $8E3B
-c $8E3F Special grid-value spawn routine (value $68) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
+c $8E3F Special grid-value spawn routine (value $68) -- CONFIRMED: rearing snake
+N $8E3F Same allocator mechanism as #R$8EA7; its handler is #R$9684 (see there for the full state machine).
+C $8E4D,3 Dynamic object allocator
+W $8E50,2 Dynamic object handler address (#R$9684)
 c $8E6E
 c $8EA7 Special grid-value spawn routine (values $66/$6A) -- spawns a dynamic object (a door/passage, most likely) instead of leaving a static grid entry
-N $8EA7 CONFIRMED live (traced in full): called from #R$62C8 with A=the special value ($66 or $6A) and HL pointing just past it in the template/extras stream. Self-modifies its own #R$8EC3 operand with A (so the spawned object's initial "kind" byte matches whichever of $66/$6A triggered it). Clears the grid cell to 0 (so the special value never appears in the finished grid -- see #R$612C). Reads 2 more bytes from the template beyond the normal (index,value) pair -- these are NOT accounted for by the outer #R$62C8 loop's own HL advancement; instead the routine forces two extra DEC B's (at $8EE8/$8EE9), ending that loop one iteration early to compensate (this is what explains the "odd leftover byte count" behaviour documented at #R$6CCF). Sets up IX=$610E as a template pointer, then CALLs #R$84AE to allocate a dynamic object slot, then populates further slot fields (offset $07=$18, $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning (screen position? direction?) is not yet confirmed -- #R$9A60 was observed to overwrite slot offsets $03/$04 (initially seeded with the trigger value and first extra byte) with what looks like a real code address (a per-object behaviour-handler function pointer, e.g. $9684), and to clear offset $09 back to 0 afterward.
-c $8EF2 Special grid-value spawn routine (value $67) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
-c $8F1E Special grid-value spawn routine (value $69) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
-c $8F4C Special grid-value spawn routine (value $6B) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
+N $8EA7 CONFIRMED live (traced in full): called from #R$62C8 with A=the special value ($66 or $6A) and HL pointing just past it in the template/extras stream. Self-modifies its own #R$8EC3 operand with A (so the spawned object's initial "kind" byte matches whichever of $66/$6A triggered it). Clears the grid cell to 0 (so the special value never appears in the finished grid -- see #R$612C). Reads 2 more bytes from the template beyond the normal (index,value) pair -- these are NOT accounted for by the outer #R$62C8 loop's own HL advancement; instead the routine forces two extra DEC B's (at $8EE8/$8EE9), ending that loop one iteration early to compensate (this is what explains the "odd leftover byte count" behaviour documented at #R$6CCF). Sets up IX=$610E as a template pointer, then CALLs #R$84AE to allocate a dynamic object slot -- its handler address (see #R$8EB9) is #R$957C, NOT #R$9684 (an earlier note misattributed #R$9684 to this routine; #R$9684 is actually #R$8E3F's handler -- see there). Populates further slot fields (offset $07=$18, $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning (screen position? direction?) is not yet confirmed. Offset $09 (the triggering value) reads back as $00 afterward, suggesting it's consumed during finalization.
+C $8EB6,3 Dynamic object allocator
+W $8EB9,2 Dynamic object handler address (#R$957C)
+c $8EF2 Special grid-value spawn routine (value $67) -- CONFIRMED: plant/coral
+N $8EF2 Same allocator mechanism as #R$8EA7; its handler is #R$94EE.
+N $8EF2 $67 is rare: only 2 occurrences game-wide (rooms $9C and $A3, per a full 216-room static scan), vs. $69's 23 or $66/$6A's combined 37. Checked whether these 2 rooms are directly adjacent (which would support "secret connecting passage"): room $9C decodes to level 5, row 1, col 5; room $A3 to level 5, row 3, col 0 -- same level, but not row/col-adjacent, so a simple two-way secret door between them is NOT supported by this data. Doesn't rule out "door/passage" as a general object type (each could lead somewhere off the normal 6x6x6 grid, or the two occurrences could be unrelated), but the adjacency evidence some might expect isn't there. Needs live confirmation.
+C $8EFE,3 Dynamic object allocator
+W $8F01,2 Dynamic object handler address (#R$94EE)
+c $8F1E Special grid-value spawn routine (value $69) -- CONFIRMED: whirlpool
+N $8F1E By static scan: every Plug Room's extras end with $25,$6B,$25,$69 -- a Plug and a $69 object co-located at the same grid cell -- and $69 also appears 23x game-wide (not plug-exclusive, unlike $6B). Same allocator mechanism as #R$8EA7; its handler is #R$952D.
+C $8F2A,3 Dynamic object allocator
+W $8F2D,2 Dynamic object handler address (#R$952D)
+c $8F4C Special grid-value spawn routine (value $6B) -- CONFIRMED: plug
+N $8F4C By static scan: $6B appears in exactly 4 rooms' extras game-wide, and they are precisely the 4 Plug Rooms (#R$73B3) -- never in any of the 11 shared room-type templates, only introduced per-room. Same allocator mechanism as #R$8EA7; its handler is #R$94F4.
+C $8F61,3 Dynamic object allocator
+W $8F64,2 Dynamic object handler address (#R$94F4)
 s $8F81
 c $8F82
+C $8FB6,3 get room number
 c $9021
 t $9077
 b $907B
@@ -736,6 +844,8 @@ c $9085
 t $908D
 b $9091
 c $90A8
+C $914C,3 Dynamic object allocator
+W $914F,2 Dynamic object handler address
 b $919A
 c $91A6
 b $91E2
@@ -755,30 +865,33 @@ t $9495
 b $9499
 c $949E
 c $94CA
-t $94E9
-b $94ED
-c $94EE
-b $94F4
-t $94FD
-b $9500
-t $9502
-b $9507
-t $9526
-b $952A
-c $952D
-t $9577
-b $957B
-c $957C
+b $94E9 #R$99D5 sprite-animation table for the Plant/coral object (#R$94EE)
+N $94E9 Sprites $4E,$4E,$50,$50 (see #R$A714/#R$A71C, both labeled "Plant/coral"), terminated by $FF -- a simple 2-frame swaying decoration.
+c $94EE Per-object behaviour handler for value-$67 objects -- CONFIRMED: plant/coral
+N $94EE Its #R$99D5 animation table (#R$94E9) is sprites $4E,$4E,$50,$50, both labeled "Plant/coral" from earlier visual sprite identification -- a simple 2-frame swaying decoration, not a door/passage.
+c $94F4 Per-object behaviour handler - PLUG
+b $9526 #R$99D5 sprite-animation table for the Whirlpool object (#R$952D)
+c $952D Per-object behaviour handler for value-$69 objects -- CONFIRMED: whirlpool
+N $952D Its #R$99D5 animation table (#R$9526) is sprites $4C,$4C,$4D,$4D, already independently labeled "Whirlpool, animation phase" from earlier visual sprite identification.
+b $9577 #R$99D5 sprite-animation table for the Source of bubbles object (#R$957C)
+N $9577 Sprites $68,$68,$69,$69 (see #R$C38E/#R$C39E, both relabeled "Bubble"), terminated by $FF.
+c $957C Per-object behaviour handler for value-$66/$6A objects -- CONFIRMED: source of bubbles
+N $957C Its #R$99D5 animation table (#R$9577) is sprites $68,$68,$69,$69 (both "Spark/debris"-shaped 16x8 sprites, see #R$C38E/#R$C39E) -- matches the earlier live observation of "sources of big bubbles" in a room, and retires the earlier door/passage guess for $66/$6A.
+C $9594,3 Dynamic object allocator
+W $9597,2 Dynamic object handler address
 b $95C1
 B $95FB
-c $9602
-c $9684 Per-object behaviour handler (CONFIRMED live: this is the handler address written into a $66/$6A-triggered door/passage object's slot offset $03/$04 by #R$9A60, and called from #R$983C's dispatcher). Not yet traced internally -- likely draws/updates the door using the object's remaining fields (offsets $0B/$0E/$14, populated by #R$8EA7 from the template's 2 "extra" bytes).
+c $9602 Per-frame handler for the individual rising-bubble particle spawned by #R$957C
+N $9602 CONFIRMED: at $9622-$962D, branches on the inherited trigger value at (IX+$0B) -- only if it's $6A does it SET bit 4 of (IX+$0D) and switch to movement table $95E2 (steps +0x07 by $04/frame) instead of the default #R$95C9 (steps by $02/frame): the $6A bubble rises at double the rate. That bit 4 flag is later tested at #R$97E6 (in the sprite-draw wrapper, right after #R$8128 draws it); only if set does it SET bit 6 of (IX+$0D). Back here at $961B, bit 6 being set causes immediate self-destruct ((IX+$02)=$FF). So only $6A-triggered bubbles can ever reach that clean completion state -- $66 bubbles never do. CONFIRMS a real functional difference between $66 and $6A (not just cosmetic): likely a "real" bubble stream that completes/reaches the top ($6A) vs. a "bogus"/weak one that never does ($66) -- matches a gameplay report of some bubble sources not lifting the player all the way. Whether bit 6 specifically means "reached the surface" isn't confirmed from static code alone.
+c $9684 Per-object behaviour handler for value-$68 objects -- CONFIRMED: rearing snake
+N $9684 Handler for #R$8E3F's objects (its dual-purpose bytes at #R$8E50 -- see #R$84AE), called from #R$983C's dispatcher. CORRECTION: an earlier note misattributed this routine to $66/$6A door objects; that handler is actually #R$957C (see #R$8EB9) -- this routine belongs to #R$8E3F instead.
+N $9684 CONFIRMED (full state machine traced, and matches already-identified sprites): rearing snake. Sprite starts at $23 (set by #R$8EA1 on spawn) and cycles through $23,$24,$25,$26 -- independently labeled "Snake, rearing phase" at #R$B56E/#R$B57E/#R$B59E/#R$B5CE, with INCREASING sprite height (16x8 -> 16x16 -> 16x24 -> 16x32) as it rises, i.e. more of the snake's body becomes visible each frame. Full cycle: phase 0 = idle countdown at (IX+$0E) (decrements while nonzero); phase 1 = seed position (IX+$16)/(IX+$17) at $FC/$FE then jump +8; phase 2 = each call, INC sprite number (IX+$08) and jump position +8 again, repeating until sprite reaches $26 (fully reared), then sets a long countdown ($24) and advances to phase 3+; phase 3+ (default case) = each call, if sprite isn't back down to $23 yet, DEC sprite and retract position by -8; once back at $23, reset position to 0, set bit 7 of (IX+$0D) (purpose not traced), set another countdown, and restart the cycle at phase 1. This is a full rise-pause-retract-pause loop, matching the "rising snakes, not on the grid" seen live earlier -- retires the earlier door/passage hypothesis for value $68 entirely.
 b $9723
 c $9745
 C $9795,3 Room grid address
 c $97BA
 R $97BA IX ??
-c $97FC Commit the room change: A = new room number
+c $97FC Change current room to A = new room number
 R $97FC A new room number
 w $9806
 c $9808
@@ -787,10 +900,14 @@ N $983C CONFIRMED live: for each object slot (IX), checks if its room number (of
 R $983C IX ???
 C $981B,3 Print string: position cursor for message window line 1 (row $A4)
 C $9821,3 Print string: restore room/creature title (saved at #R$65D9 by #R$65DB)
+C $986C,3 get room number
 C $987B,3 JP (HL)
+C $987E,3 get room number
 c $9900
 b $991A
 c $9923
+C $992D,3 Dynamic object allocator
+W $9930,2 Dynamic object handler address
 b $995E
 c $9963
 c $99A1
@@ -801,7 +918,8 @@ C $99B4,3 set instruction
 C $99BD,1 "NOP" instruction code
 C $99BE,3 set instruction
 c $99D1 NEG / not NEG
-c $99D5
+c $99D5 Sprite-animation stepper: read next entry from a per-object sprite-number table, advancing a phase counter
+N $99D5 CONFIRMED: called with HL = a small table of raw sprite numbers (see #R$9526/#R$9577/#R$94E9 for examples). Indexes the table by (IX+$0F) (a per-object phase counter), reads the byte there into A, then INCs (IX+$0F) for next time. $FF in the table means "wrap to start" (resets (IX+$0F) to 0 and re-reads from the table's first byte); $FD is a second special marker (purpose not yet traced past #R$9A01). Otherwise A is the next sprite number to display for this object -- this is how #R$957C/#R$952D/#R$94EE (and others) drive their objects' animation frames.
 C $99D5 "RET" instruction code
 C $99D7,3 set instruction
 C $9A01,3 NEG / not NEG
@@ -830,11 +948,410 @@ C $9D39,3 Prepare the Room with color A
 b $9D3C
 b $A400 Font 59 characters, 8 bytes each, 472 bytes
 w $A5D8
-w $A5DC Table of Sprites, 201 records, 4 bytes each
-N $A5DC record[0..1] = sprite data address;
-N $A5DC record[2] = height in 8px rows, bit 7 = ??;
-N $A5DC record[3] = width in 8px columns.
-W $A5DC,804,16
+b $A5DC Table of Sprites, 201 records, 4 bytes each
+N $A5DC CONFIRMED live (traced #R$7E4F, which reads a record by sprite number in L): record[0..1] = sprite data address (LE word); record[2] = height in 8px rows, top bit masked off before use ($7F) -- meaning of that bit not yet confirmed, may just be unused/reserved; record[3] = width in 8px columns, but bit 7 here is a live flip-flop flag: #R$7E4F XORs it in place (self-modifying table entry) on every call, toggling it between the two calls needed to draw a sprite's normal and mirrored/second-buffer image, then masks it off ($7F) to get the actual width.
+W $A5DC,2 Sprite $00
+B $A5DE,2
+W $A5E0,2 Sprite $01
+B $A5E2,2
+W $A5E4,2 Sprite $02
+B $A5E6,2
+W $A5E8,2 Sprite $03
+B $A5EA,2
+W $A5EC,2 Sprite $04
+B $A5EE,2
+W $A5F0,2 Sprite $05
+B $A5F2,2
+W $A5F4,2 Sprite $06
+B $A5F6,2
+W $A5F8,2 Sprite $07
+B $A5FA,2
+W $A5FC,2 Sprite $08
+B $A5FE,2
+W $A600,2 Sprite $09
+B $A602,2
+W $A604,2 Sprite $0A
+B $A606,2
+W $A608,2 Sprite $0B
+B $A60A,2
+W $A60C,2 Sprite $0C
+B $A60E,2
+W $A610,2 Sprite $0D
+B $A612,2
+W $A614,2 Sprite $0E
+B $A616,2
+W $A618,2 Sprite $0F
+B $A61A,2
+W $A61C,2 Sprite $10
+B $A61E,2
+W $A620,2 Sprite $11
+B $A622,2
+W $A624,2 Sprite $12
+B $A626,2
+W $A628,2 Sprite $13
+B $A62A,2
+W $A62C,2 Sprite $14
+B $A62E,2
+W $A630,2 Sprite $15
+B $A632,2
+W $A634,2 Sprite $16
+B $A636,2
+W $A638,2 Sprite $17
+B $A63A,2
+W $A63C,2 Sprite $18
+B $A63E,2
+W $A640,2 Sprite $19
+B $A642,2
+W $A644,2 Sprite $1A
+B $A646,2
+W $A648,2 Sprite $1B
+B $A64A,2
+W $A64C,2 Sprite $1C
+B $A64E,2
+W $A650,2 Sprite $1D
+B $A652,2
+W $A654,2 Sprite $1E
+B $A656,2
+W $A658,2 Sprite $1F
+B $A65A,2
+W $A65C,2 Sprite $20
+B $A65E,2
+W $A660,2 Sprite $21
+B $A662,2
+W $A664,2 Sprite $22
+B $A666,2
+W $A668,2 Sprite $23
+B $A66A,2
+W $A66C,2 Sprite $24
+B $A66E,2
+W $A670,2 Sprite $25
+B $A672,2
+W $A674,2 Sprite $26
+B $A676,2
+W $A678,2 Sprite $27
+B $A67A,2
+W $A67C,2 Sprite $28
+B $A67E,2
+W $A680,2 Sprite $29
+B $A682,2
+W $A684,2 Sprite $2A
+B $A686,2
+W $A688,2 Sprite $2B
+B $A68A,2
+W $A68C,2 Sprite $2C
+B $A68E,2
+W $A690,2 Sprite $2D
+B $A692,2
+W $A694,2 Sprite $2E
+B $A696,2
+W $A698,2 Sprite $2F
+B $A69A,2
+W $A69C,2 Sprite $30
+B $A69E,2
+W $A6A0,2 Sprite $31
+B $A6A2,2
+W $A6A4,2 Sprite $32
+B $A6A6,2
+W $A6A8,2 Sprite $33
+B $A6AA,2
+W $A6AC,2 Sprite $34
+B $A6AE,2
+W $A6B0,2 Sprite $35
+B $A6B2,2
+W $A6B4,2 Sprite $36
+B $A6B6,2
+W $A6B8,2 Sprite $37
+B $A6BA,2
+W $A6BC,2 Sprite $38
+B $A6BE,2
+W $A6C0,2 Sprite $39
+B $A6C2,2
+W $A6C4,2 Sprite $3A
+B $A6C6,2
+W $A6C8,2 Sprite $3B
+B $A6CA,2
+W $A6CC,2 Sprite $3C
+B $A6CE,2
+W $A6D0,2 Sprite $3D
+B $A6D2,2
+W $A6D4,2 Sprite $3E
+B $A6D6,2
+W $A6D8,2 Sprite $3F
+B $A6DA,2
+W $A6DC,2 Sprite $40
+B $A6DE,2
+W $A6E0,2 Sprite $41
+B $A6E2,2
+W $A6E4,2 Sprite $42
+B $A6E6,2
+W $A6E8,2 Sprite $43
+B $A6EA,2
+W $A6EC,2 Sprite $44
+B $A6EE,2
+W $A6F0,2 Sprite $45
+B $A6F2,2
+W $A6F4,2 Sprite $46
+B $A6F6,2
+W $A6F8,2 Sprite $47
+B $A6FA,2
+W $A6FC,2 Sprite $48
+B $A6FE,2
+W $A700,2 Sprite $49
+B $A702,2
+W $A704,2 Sprite $4A
+B $A706,2
+W $A708,2 Sprite $4B
+B $A70A,2
+W $A70C,2 Sprite $4C
+B $A70E,2
+W $A710,2 Sprite $4D
+B $A712,2
+W $A714,2 Sprite $4E
+B $A716,2
+W $A718,2 Sprite $4F
+B $A71A,2
+W $A71C,2 Sprite $50
+B $A71E,2
+W $A720,2 Sprite $51
+B $A722,2
+W $A724,2 Sprite $52
+B $A726,2
+W $A728,2 Sprite $53
+B $A72A,2
+W $A72C,2 Sprite $54
+B $A72E,2
+W $A730,2 Sprite $55
+B $A732,2
+W $A734,2 Sprite $56
+B $A736,2
+W $A738,2 Sprite $57
+B $A73A,2
+W $A73C,2 Sprite $58
+B $A73E,2
+W $A740,2 Sprite $59
+B $A742,2
+W $A744,2 Sprite $5A
+B $A746,2
+W $A748,2 Sprite $5B
+B $A74A,2
+W $A74C,2 Sprite $5C
+B $A74E,2
+W $A750,2 Sprite $5D
+B $A752,2
+W $A754,2 Sprite $5E
+B $A756,2
+W $A758,2 Sprite $5F
+B $A75A,2
+W $A75C,2 Sprite $60
+B $A75E,2
+W $A760,2 Sprite $61
+B $A762,2
+W $A764,2 Sprite $62
+B $A766,2
+W $A768,2 Sprite $63
+B $A76A,2
+W $A76C,2 Sprite $64
+B $A76E,2
+W $A770,2 Sprite $65
+B $A772,2
+W $A774,2 Sprite $66
+B $A776,2
+W $A778,2 Sprite $67
+B $A77A,2
+W $A77C,2 Sprite $68
+B $A77E,2
+W $A780,2 Sprite $69
+B $A782,2
+W $A784,2 Sprite $6A
+B $A786,2
+W $A788,2 Sprite $6B
+B $A78A,2
+W $A78C,2 Sprite $6C
+B $A78E,2
+W $A790,2 Sprite $6D
+B $A792,2
+W $A794,2 Sprite $6E
+B $A796,2
+W $A798,2 Sprite $6F
+B $A79A,2
+W $A79C,2 Sprite $70
+B $A79E,2
+W $A7A0,2 Sprite $71
+B $A7A2,2
+W $A7A4,2 Sprite $72
+B $A7A6,2
+W $A7A8,2 Sprite $73
+B $A7AA,2
+W $A7AC,2 Sprite $74
+B $A7AE,2
+W $A7B0,2 Sprite $75
+B $A7B2,2
+W $A7B4,2 Sprite $76
+B $A7B6,2
+W $A7B8,2 Sprite $77
+B $A7BA,2
+W $A7BC,2 Sprite $78
+B $A7BE,2
+W $A7C0,2 Sprite $79
+B $A7C2,2
+W $A7C4,2 Sprite $7A
+B $A7C6,2
+W $A7C8,2 Sprite $7B
+B $A7CA,2
+W $A7CC,2 Sprite $7C
+B $A7CE,2
+W $A7D0,2 Sprite $7D
+B $A7D2,2
+W $A7D4,2 Sprite $7E
+B $A7D6,2
+W $A7D8,2 Sprite $7F
+B $A7DA,2
+W $A7DC,2 Sprite $80
+B $A7DE,2
+W $A7E0,2 Sprite $81
+B $A7E2,2
+W $A7E4,2 Sprite $82
+B $A7E6,2
+W $A7E8,2 Sprite $83
+B $A7EA,2
+W $A7EC,2 Sprite $84
+B $A7EE,2
+W $A7F0,2 Sprite $85
+B $A7F2,2
+W $A7F4,2 Sprite $86
+B $A7F6,2
+W $A7F8,2 Sprite $87
+B $A7FA,2
+W $A7FC,2 Sprite $88
+B $A7FE,2
+W $A800,2 Sprite $89
+B $A802,2
+W $A804,2 Sprite $8A
+B $A806,2
+W $A808,2 Sprite $8B
+B $A80A,2
+W $A80C,2 Sprite $8C
+B $A80E,2
+W $A810,2 Sprite $8D
+B $A812,2
+W $A814,2 Sprite $8E
+B $A816,2
+W $A818,2 Sprite $8F
+B $A81A,2
+W $A81C,2 Sprite $90
+B $A81E,2
+W $A820,2 Sprite $91
+B $A822,2
+W $A824,2 Sprite $92
+B $A826,2
+W $A828,2 Sprite $93
+B $A82A,2
+W $A82C,2 Sprite $94
+B $A82E,2
+W $A830,2 Sprite $95
+B $A832,2
+W $A834,2 Sprite $96
+B $A836,2
+W $A838,2 Sprite $97
+B $A83A,2
+W $A83C,2 Sprite $98
+B $A83E,2
+W $A840,2 Sprite $99
+B $A842,2
+W $A844,2 Sprite $9A
+B $A846,2
+W $A848,2 Sprite $9B
+B $A84A,2
+W $A84C,2 Sprite $9C
+B $A84E,2
+W $A850,2 Sprite $9D
+B $A852,2
+W $A854,2 Sprite $9E
+B $A856,2
+W $A858,2 Sprite $9F
+B $A85A,2
+W $A85C,2 Sprite $A0
+B $A85E,2
+W $A860,2 Sprite $A1
+B $A862,2
+W $A864,2 Sprite $A2
+B $A866,2
+W $A868,2 Sprite $A3
+B $A86A,2
+W $A86C,2 Sprite $A4
+B $A86E,2
+W $A870,2 Sprite $A5
+B $A872,2
+W $A874,2 Sprite $A6
+B $A876,2
+W $A878,2 Sprite $A7
+B $A87A,2
+W $A87C,2 Sprite $A8
+B $A87E,2
+W $A880,2 Sprite $A9
+B $A882,2
+W $A884,2 Sprite $AA
+B $A886,2
+W $A888,2 Sprite $AB
+B $A88A,2
+W $A88C,2 Sprite $AC
+B $A88E,2
+W $A890,2 Sprite $AD
+B $A892,2
+W $A894,2 Sprite $AE
+B $A896,2
+W $A898,2 Sprite $AF
+B $A89A,2
+W $A89C,2 Sprite $B0
+B $A89E,2
+W $A8A0,2 Sprite $B1
+B $A8A2,2
+W $A8A4,2 Sprite $B2
+B $A8A6,2
+W $A8A8,2 Sprite $B3
+B $A8AA,2
+W $A8AC,2 Sprite $B4
+B $A8AE,2
+W $A8B0,2 Sprite $B5
+B $A8B2,2
+W $A8B4,2 Sprite $B6
+B $A8B6,2
+W $A8B8,2 Sprite $B7
+B $A8BA,2
+W $A8BC,2 Sprite $B8
+B $A8BE,2
+W $A8C0,2 Sprite $B9
+B $A8C2,2
+W $A8C4,2 Sprite $BA
+B $A8C6,2
+W $A8C8,2 Sprite $BB
+B $A8CA,2
+W $A8CC,2 Sprite $BC
+B $A8CE,2
+W $A8D0,2 Sprite $BD
+B $A8D2,2
+W $A8D4,2 Sprite $BE
+B $A8D6,2
+W $A8D8,2 Sprite $BF
+B $A8DA,2
+W $A8DC,2 Sprite $C0
+B $A8DE,2
+W $A8E0,2 Sprite $C1
+B $A8E2,2
+W $A8E4,2 Sprite $C2
+B $A8E6,2
+W $A8E8,2 Sprite $C3
+B $A8EA,2
+W $A8EC,2 Sprite $C4
+B $A8EE,2
+W $A8F0,2 Sprite $C5
+B $A8F2,2
+W $A8F4,2 Sprite $C6
+B $A8F6,2
+W $A8F8,2 Sprite $C7
+B $A8FA,2
+W $A8FC,2 Sprite $C8
+B $A8FE,2
 b $A900 Dynamic object pool (CONFIRMED live: creatures, items, doors/passages -- anything not baked into the static room grid; see #R$612C)
 N $A900 Slot allocated/freed via a linked list managed by #R$84AE (free-list head at $618B). Confirmed slot field layout (offsets from slot start): +0/+1 copied from the caller's template pointer (e.g. #R$610E); +2 = room number the object belongs to; +3/+4 = per-object behaviour-handler function pointer (see #R$9A60/#R$983C), initially seeded with the triggering value + first extra byte then overwritten with a real code address; +5..+23 = a fixed 19-byte default state block copied from $5C92; +7=$18 and +0xA=$06 (constants set by #R$8EA7-style spawn routines); +9 = triggering grid value (e.g. $66), cleared to 0 by #R$9A60; +0xB and +0xE = a duplicated "extra" byte from the template; +0x14 = a second "extra" byte. The exact meaning of the two "extra" bytes (position? direction?) is not yet confirmed.
 b $A92C
@@ -1021,9 +1538,9 @@ b $C34E Sprite, 16x16 pixels. Disc/wheel
 B $C34E,32,8 #HTML[#UDGARRAY2,,,2,,($C34E-$C36D-1-16)(sprite-c34e)]
 b $C36E Sprite, 16x16 pixels. Disc/wheel
 B $C36E,32,8 #HTML[#UDGARRAY2,,,2,,($C36E-$C38D-1-16)(sprite-c36e)]
-b $C38E Sprite, 16x8 pixels. Spark/debris
+b $C38E Sprite $68, 16x8 pixels. Bubble (source-of-bubbles object #R$957C, animation frame 1 -- previously guessed "Spark/debris" from shape/size alone)
 B $C38E,16,8 #HTML[#UDGARRAY2,,,2,,($C38E-$C39D-1-16)(sprite-c38e)]
-b $C39E Sprite, 16x8 pixels. Spark/debris
+b $C39E Sprite $69, 16x8 pixels. Bubble (source-of-bubbles object #R$957C, animation frame 2 -- previously guessed "Spark/debris" from shape/size alone)
 B $C39E,16,8 #HTML[#UDGARRAY2,,,2,,($C39E-$C3AD-1-16)(sprite-c39e)]
 b $C3AE Sprite, 32x32 pixels. Urn/well with seaweed
 B $C3AE,128,8 #HTML[#UDGARRAY4,,,4,,($C3AE-$C42D-1-32)(sprite-c3ae)]
@@ -1234,13 +1751,4 @@ b $FC9A Melody-index table (start)
 N $FC9A CONFIRMED live: each byte, +$0C then indexed into #R$FC64, gives the tone period for one note. Terminated by $40. #R$FBB4 stores the pointer as $FC99 but always increments before reading, so the first byte actually consumed is here at $FC9A ($29); +$0C=$35, and #R$FC64+$35=$FC99=$01, matching the D=$01 observed live at #R$FBD7's entry. This table also happens to be reachable as code via #R$FBF1 (JP C,$FC9A -- 12x ADD HL,HL, a rarely/never-taken branch that reuses these bytes as opcodes; not its primary purpose).
 b $FE34
 b $FFCE
-
-
-
-
-
-
-
-
-
 

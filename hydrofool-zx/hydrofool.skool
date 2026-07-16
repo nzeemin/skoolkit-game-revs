@@ -89,9 +89,16 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
                                             ; high byte (at $618C) is also read
                                             ; standalone as an empty/enabled
                                             ; check.
- $618D DEFW $BDAE
- $618F DEFB $10
- $6190 DEFB $04,$00,$00
+ $618D DEFW $BDAE                           ; Current sprite: data address
+                                            ; (copied from a #R$A5DC record by
+                                            ; #R$84ED)
+ $618F DEFB $10                             ; Current sprite: height, in 8px
+                                            ; rows (copied from a #R$A5DC
+                                            ; record by #R$84ED)
+ $6190 DEFB $04,$00,$00                     ; Current sprite: width, in 8px
+                                            ; columns, bit 7 = flip-flop flag
+                                            ; (copied from a #R$A5DC record by
+                                            ; #R$84ED, unmasked)
  $6193 DEFB $FF
  $6194 DEFW $0000
  $6196 DEFW $FFB9
@@ -319,7 +326,8 @@ c$6269 LD ($6126),A  ; set room number
 
 ; Routine at 62F9
 ;
-; Used by the routines at #R$630D, #R$8F1E, #R$8F4C, #R$9341 and #R$952D.
+; Used by the routines at #R$630D, #R$8F1E, #R$8F4C, #R$9341, #R$94F4 and
+; #R$952D.
 c$62F9 LD A,($6126)  ; get room number
  $62FC LD B,A        ;
  $62FD DEC A         ;
@@ -860,18 +868,16 @@ c$6622 LD A,$01      ;
 ; Routine at 663B
 ;
 ; Used by the routine at #R$676D.
-c$663B LD DE,$D408   ;
- $663E LD B,$6E      ;
- $6640 LD C,B        ;
- $6641 LD A,$05      ;
- $6643 CALL $8128    ;
+c$663B LD DE,$D408          ;
+ $663E LD B,$6E             ;
+ $6640 LD C,B               ;
+ $6641 LD A,$05             ;
+ $6643 CALL $8128           ;
 ; This entry point is used by the routine at #R$6622.
-*$6646 CALL $850E    ;
- $6649 LD D,$13      ;
- $664B INC BC        ;
- $664C LD E,(HL)     ;
- $664D LD A,($6198)  ;
- $6650 JP $854F      ;
+*$6646 CALL $850E           ; print inline string, then resume after it
+ $6649 DEFM $16,$13,$03,$5E ; cursor position only, no visible text
+ $664D LD A,($6198)         ;
+ $6650 JP $854F             ;
 
 ; Prepare room with color 0
 ;
@@ -896,9 +902,8 @@ c$6657 LD HL,($6127) ; get room description address
 c$6663 PUSH BC       ;
  $6664 PUSH HL       ;
  $6665 LD IX,$8DEF   ;
- $6669 CALL $84AE    ;
- $666C LD B,C        ;
- $666D SUB E         ;
+ $6669 CALL $84AE    ; Dynamic object allocator
+ $666C DEFW $9341    ; Dynamic object handler address
  $666E POP HL        ;
  $666F PUSH HL       ;
  $6670 LD (IX+$0E),L ;
@@ -1155,7 +1160,7 @@ c$67F1 LD A,($8DBD)  ;
  $681C SUB $06       ; change room number: -6 (row-1, move NORTH)
  $681E LD E,$3C      ;
 *$6820 LD ($8DBB),DE ;
- $6824 JP $97FC      ;
+ $6824 JP $97FC      ; Change current room to A
 *$6827 CP $04        ;
  $6829 JR NZ,$6845   ;
  $682B BIT 1,(HL)    ;
@@ -1168,7 +1173,7 @@ c$67F1 LD A,($8DBD)  ;
  $6837 JR C,$687E    ;
  $6839 CP $20        ;
  $683B JR NC,$687E   ;
- $683D LD A,($6126)  ;
+ $683D LD A,($6126)  ; get room number
  $6840 INC A         ; change room number: +1 (col+1, move EAST)
  $6841 LD D,$04      ;
  $6843 JR $6820      ;
@@ -1184,7 +1189,7 @@ c$67F1 LD A,($8DBD)  ;
  $6855 JR C,$687E    ;
  $6857 CP $20        ;
  $6859 JR NC,$687E   ;
- $685B LD A,($6126)  ;
+ $685B LD A,($6126)  ; get room number
  $685E ADD A,$06     ; change room number: +6 (row+1, move SOUTH)
  $6860 LD E,$04      ;
  $6862 JR $6820      ;
@@ -1198,7 +1203,7 @@ c$67F1 LD A,($8DBD)  ;
  $6870 JR C,$687E    ;
  $6872 CP $20        ;
  $6874 JR NC,$687E   ;
- $6876 LD A,($6126)  ;
+ $6876 LD A,($6126)  ; get room number
  $6879 DEC A         ; change room number: -1 (col-1, move WEST)
  $687A LD D,$3C      ;
  $687C JR $6820      ;
@@ -1223,49 +1228,44 @@ c$6880 LD HL,$788A   ;
 ; Routine at 6895
 ;
 ; Used by the routines at #R$676D, #R$68C1 and #R$8AFB.
-c$6895 LD HL,($6110) ;
- $6898 LD DE,$D4F8   ;
- $689B LD BC,$0003   ;
- $689E ADD HL,BC     ;
- $689F LD C,(HL)     ;
- $68A0 LD B,C        ;
- $68A1 LD A,B        ;
- $68A2 LD A,$05      ;
- $68A4 CALL $8128    ;
- $68A7 LD A,(HL)     ;
- $68A8 CALL $88E3    ;
- $68AB RET NZ        ;
- $68AC JP $68AF      ;
+c$6895 LD HL,($6110)        ;
+ $6898 LD DE,$D4F8          ;
+ $689B LD BC,$0003          ;
+ $689E ADD HL,BC            ;
+ $689F LD C,(HL)            ;
+ $68A0 LD B,C               ;
+ $68A1 LD A,B               ;
+ $68A2 LD A,$05             ;
+ $68A4 CALL $8128           ;
+ $68A7 LD A,(HL)            ;
+ $68A8 CALL $88E3           ;
+ $68AB RET NZ               ;
+ $68AC JP $68AF             ;
 ; This entry point is used by the routine at #R$68C1.
-*$68AF PUSH HL       ;
- $68B0 PUSH BC       ;
- $68B1 CALL $850E    ;
- $68B4 LD D,$13      ;
- $68B6 INC E         ;
- $68B7 LD E,(HL)     ;
- $68B8 LD A,($619E)  ;
- $68BB CALL $854F    ;
- $68BE POP BC        ;
- $68BF POP HL        ;
- $68C0 RET           ;
+*$68AF PUSH HL              ;
+ $68B0 PUSH BC              ;
+ $68B1 CALL $850E           ; print inline string, then resume after it
+ $68B4 DEFM $16,$13,$1C,$5E ; cursor position only, no visible text
+ $68B8 LD A,($619E)         ;
+ $68BB CALL $854F           ;
+ $68BE POP BC               ;
+ $68BF POP HL               ;
+ $68C0 RET                  ;
 
 ; Routine at 68C1
 ;
 ; Used by the routine at #R$8D8D.
-c$68C1 LD HL,$619E   ;
- $68C4 LD A,(HL)     ;
- $68C5 SUB $01       ;
- $68C7 DAA           ;
- $68C8 LD (HL),A     ;
- $68C9 JP NZ,$68AF   ;
- $68CC CALL $850E    ;
- $68CF LD D,$13      ;
- $68D1 INC E         ;
- $68D2 JR NZ,$68F4   ;
- $68D4 LD E,(HL)     ;
- $68D5 LD HL,$788A   ;
- $68D8 LD ($6110),HL ;
- $68DB JP $6895      ;
+c$68C1 LD HL,$619E               ;
+ $68C4 LD A,(HL)                 ;
+ $68C5 SUB $01                   ;
+ $68C7 DAA                       ;
+ $68C8 LD (HL),A                 ;
+ $68C9 JP NZ,$68AF               ;
+ $68CC CALL $850E                ; print inline string, then resume after it
+ $68CF DEFM $16,$13,$1C,"  ",$5E ; two spaces at cursor position
+ $68D5 LD HL,$788A               ;
+ $68D8 LD ($6110),HL             ;
+ $68DB JP $6895                  ;
 
 ; Data block at 68DE
 b$68DE DEFB $04,$58,$06,$1C,$01,$C0,$58,$0E
@@ -1321,7 +1321,7 @@ c$69AC AND $07       ;
  $69CB ADD HL,BC     ;
  $69CC AND A         ;
  $69CD JR Z,$69DF    ;
- $69CF LD A,($6126)  ;
+ $69CF LD A,($6126)  ; get room number
  $69D2 CP $01        ;
  $69D4 JP Z,$6A32    ;
  $69D7 CP $02        ;
@@ -1545,7 +1545,7 @@ c$6B71 LD HL,$0000   ;
  $6B8E LD (HL),A     ;
  $6B8F CALL $6503    ;
  $6B92 CALL $9C35    ;
- $6B95 LD A,($6126)  ;
+ $6B95 LD A,($6126)  ; get room number
  $6B98 CP $02        ;
  $6B9A JR Z,$6BA5    ;
  $6B9C LD A,($61A1)  ;
@@ -1707,27 +1707,10 @@ b$6C80 DEFB $7B,$00,$7C,$7D,$7E,$7F,$00,$00
 ; Level 1 of 6 (room numbers $01-$24, cube rows/cols 0-5 -- see
 ; x-docs/Room-Format.md) -- entry point 'C' lands in this level (room $1A)
 b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
-                                            ; CONFIRMED live: this is in-game
-                                            ; room number $01 (off-by-one, see
-                                            ; the NOTE above) -- the special
-                                            ; ENDING/WINNING room. Forced live
-                                            ; by breakpointing #R$97FC and
-                                            ; overriding A=$01: shows a walless
-                                            ; room (just floating
-                                            ; rocks/seaweed/player) with a
-                                            ; "DEATHBOWL DIVINED" stats screen
-                                            ; (score %, Scans Scraped, Plugs
-                                            ; Pulled, Goodies Gathered, Gnomes
-                                            ; Gnabbed) overlaid, reached
-                                            ; normally via the final whirlpool
-                                            ; after solving the last puzzle.
-                                            ; Not part of the normal 6x6x6
-                                            ; navigable cube (see
-                                            ; x-docs/Room-Format.md) despite
-                                            ; being in-range of the room number
-                                            ; scheme.
+                                            ; the special ENDING/WINNING room
  $6CD3 DEFB $34,$6A,$28
- $6CD6 DEFB $06,$00,$E3,$00                 ; Room $02 description, type $E
+ $6CD6 DEFB $06,$00,$E3,$00                 ; Room $02 description, type $E --
+                                            ; the special MENU room
  $6CDA DEFB $37,$69
  $6CDC DEFB $04,$04,$05,$00                 ; Room $03 description, type $0
  $6CE0 DEFB $04,$02,$51,$47                 ; Room $04 description, type $5
@@ -1806,8 +1789,11 @@ b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
                                             ; one of 4 PLUG ROOMs (see
                                             ; #R$73B3), cube position level 2,
                                             ; row 2, col 1
- $6DFF DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F
- $6E07 DEFB $25,$6B,$25,$69
+ $6DFF DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F ; {4 decor cubes at grid corners
+ $6E07 DEFB $25,$6B,$25,$69                 ; (2,2)/(2,6)/(6,2)/(6,6), values
+                                            ; $0F/$0E/$0E/$0F; then
+                                            ; Plug+Whirlpool co-located at grid
+                                            ; cell $25 -- see #R$8F4C/#R$8F1E}
  $6E0B DEFB $0A,$07,$12,$46                 ; Room $33 description, type $1
  $6E0F DEFB $1B,$03,$24,$68,$00,$61
  $6E15 DEFB $06,$0D,$06,$00                 ; Room $34 description, type $0
@@ -1892,8 +1878,11 @@ b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
                                             ; one of 4 PLUG ROOMs (see
                                             ; #R$73B3), cube position level 3,
                                             ; row 4, col 4
- $6F53 DEFB $13,$0B,$17,$0C,$33,$0A,$37,$0B
- $6F5B DEFB $25,$6B,$25,$69
+ $6F53 DEFB $13,$0B,$17,$0C,$33,$0A,$37,$0B ; {4 decor cubes at grid corners
+ $6F5B DEFB $25,$6B,$25,$69                 ; (2,2)/(2,6)/(6,2)/(6,6), values
+                                            ; $0B/$0C/$0A/$0B; then
+                                            ; Plug+Whirlpool co-located at grid
+                                            ; cell $25 -- see #R$8F4C/#R$8F1E}
  $6F5F DEFB $06,$05,$45,$00                 ; Room $66 description, type $4
  $6F63 DEFB $12,$69
  $6F65 DEFB $04,$02,$82,$00                 ; Room $67 description, type $8
@@ -1985,8 +1974,11 @@ b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
                                             ; one of 4 PLUG ROOMs (see
                                             ; #R$73B3), cube position level 5,
                                             ; row 1, col 4
- $70BC DEFB $13,$10,$17,$10,$33,$10,$37,$10
- $70C4 DEFB $25,$6B,$25,$69
+ $70BC DEFB $13,$10,$17,$10,$33,$10,$37,$10 ; {4 decor cubes at grid corners
+ $70C4 DEFB $25,$6B,$25,$69                 ; (2,2)/(2,6)/(6,2)/(6,6), all
+                                            ; value $10; then Plug+Whirlpool
+                                            ; co-located at grid cell $25 --
+                                            ; see #R$8F4C/#R$8F1E}
  $70C8 DEFB $06,$0D,$66,$00                 ; Room $9C description, type $6
  $70CC DEFB $13,$67
  $70CE DEFB $0A,$06,$17,$41                 ; Room $9D description, type $1
@@ -2093,8 +2085,11 @@ b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
                                             ; one of 4 PLUG ROOMs (see
                                             ; #R$73B3), cube position level 6,
                                             ; row 5, col 5
- $727A DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F
- $7282 DEFB $25,$6B,$25,$69
+ $727A DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F ; {4 decor cubes at grid corners
+ $7282 DEFB $25,$6B,$25,$69                 ; (2,2)/(2,6)/(6,2)/(6,6), values
+                                            ; $0F/$0E/$0E/$0F; then
+                                            ; Plug+Whirlpool co-located at grid
+                                            ; cell $25 -- see #R$8F4C/#R$8F1E}
 
 ; Data block at 7286
 b$7286 DEFB $01,$00,$00,$00,$00,$00,$00,$32
@@ -2781,11 +2776,22 @@ c$7DC7 PUSH HL       ;
 b$7E4C DEFW $0000
  $7E4E DEFB $00
 
-; Routine at 7E4F
+; Flip sprite horizontally
 ;
 ; Used by the routine at #R$8128.
 ;
 ; L Sprite number
+;
+; CONFIRMED live: looks up the #R$A5DC record for sprite L (L*4 -- see
+; #R$A5DC), takes its data address (record[0..1]) and masked height
+; (record[2]&$7F, in 8px rows) and width (record[3]&$7F, in 8px columns,
+; toggling record[3] bit 7 in place each call so alternating calls flip between
+; drawing the normal and mirrored image). For each of height*8 pixel rows,
+; copies ceil(width/2) bytes from the front of the row to the back (and vice
+; versa via HL/DE working inward from both ends), bit-reversing each byte with
+; the RLA/RR chain at #R$7E83 -- the standard trick for mirroring a monochrome
+; bitmap left-to-right. Used to derive a sprite's mirror-image facing from a
+; single stored copy.
 c$7E4F LD H,$00      ;
  $7E51 ADD HL,HL     ;
  $7E52 ADD HL,HL     ;
@@ -2795,29 +2801,29 @@ c$7E4F LD H,$00      ;
  $7E58 INC HL        ;
  $7E59 LD D,(HL)     ;
  $7E5A INC HL        ;
- $7E5B LD A,(HL)     ;
- $7E5C AND $7F       ;
+ $7E5B LD A,(HL)     ; {record[2]: height (mask off bit 7)
+ $7E5C AND $7F       ; }
  $7E5E LD C,A        ;
  $7E5F INC HL        ;
- $7E60 LD A,(HL)     ;
- $7E61 XOR $80       ;
+ $7E60 LD A,(HL)     ; {record[3]: width -- toggle bit 7 in place (flip-flop
+ $7E61 XOR $80       ; flag, self-modifying), then mask it off
  $7E63 LD (HL),A     ;
  $7E64 AND $7F       ;
- $7E66 LD L,A        ;
+ $7E66 LD L,A        ; }
  $7E67 LD H,$00      ;
  $7E69 LD ($7E4C),HL ;
- $7E6C SRL A         ;
- $7E6E ADC A,$00     ;
+ $7E6C SRL A         ; {halve the width, rounding up
+ $7E6E ADC A,$00     ; }
  $7E70 LD ($7E4E),A  ;
-*$7E73 LD B,$08      ;
-*$7E75 PUSH BC       ;
+*$7E73 LD B,$08      ; outer loop: once per 8px-row group (height)
+*$7E75 PUSH BC       ; inner loop: 8 pixel rows per group
  $7E76 LD HL,($7E4C) ;
  $7E79 ADD HL,DE     ;
  $7E7A PUSH HL       ;
  $7E7B LD A,($7E4E)  ;
  $7E7E LD B,A        ;
  $7E7F AND A         ;
-*$7E80 DEC HL        ;
+*$7E80 DEC HL        ; innermost loop: ceil(width/2) byte pairs per row
  $7E81 LD A,(DE)     ;
  $7E82 LD C,(HL)     ;
  $7E83 RLA           ; {Flip the byte
@@ -3268,7 +3274,7 @@ c$8128 PUSH IX       ;
  $8146 XOR (HL)      ;
  $8147 JP P,$8150    ;
  $814A LD HL,($8127) ;
- $814D CALL $7E4F    ;
+ $814D CALL $7E4F    ; Flip sprite horizontally
 *$8150 LD HL,($618D) ;
  $8153 LD ($A5D8),HL ;
  $8156 LD HL,($8126) ;
@@ -3277,7 +3283,7 @@ c$8128 PUSH IX       ;
  $815F XOR (HL)      ;
  $8160 JP P,$8169    ;
  $8163 LD HL,($8126) ;
- $8166 CALL $7E4F    ;
+ $8166 CALL $7E4F    ; Flip sprite horizontally
 *$8169 LD HL,$7FBD   ;
  $816C RES 7,(HL)    ;
  $816E LD HL,$6190   ;
@@ -3671,7 +3677,7 @@ c$8445 LD A,($61A0)  ;
 ; Routine at 848E
 ;
 ; Used by the routines at #R$6622, #R$8968, #R$8AFB, #R$90A8, #R$91A6, #R$925C,
-; #R$9341, #R$9401, #R$9602, #R$9923 and #R$9C35.
+; #R$9341, #R$9401, #R$94F4, #R$9602, #R$9923 and #R$9C35.
 c$848E PUSH BC       ;
  $848F PUSH HL       ;
  $8490 LD B,A        ;
@@ -3701,21 +3707,32 @@ c$848E PUSH BC       ;
 ;
 ; .
 ;
-; CONFIRMED live (traced in full): allocates one entry from a free-list of
-; dynamic object slots (creatures, items, doors -- anything not baked into the
-; static room grid; see #R$612C). If $618C is 0, takes an early-exit dispatch
-; path (pops the return address, skips 2 bytes, JP (HL) -- purpose not
-; confirmed, likely "no free slots" or "objects disabled"). Otherwise: pops the
-; next free slot's address from the free-list head at $618B (each free slot's
-; first 2 bytes point to the next free slot, standard linked-list allocator),
-; copies 2 bytes from the caller's template pointer (IX, e.g. $610E) into the
-; new slot, switches IX to the slot's own address, stores the CURRENT ROOM
-; NUMBER ($6126) at slot offset $02, copies 2 more bytes (from the caller, e.g.
-; the special grid value + first extra byte -- see #R$8EA7) to slot offset
-; $03/$04, then copies a fixed 19-byte block from $5C92 (ZX system-variable
-; area, reused here as a default object state template) into the rest of the
-; slot. Sets a flag bit and returns with IX = the new slot's address. Object
-; pool confirmed live to start at #R$A900.
+; CONFIRMED (re-derived from static trace, corrects an earlier live-tracing
+; error -- see below): allocates one entry from a free-list of dynamic object
+; slots (creatures, items, doors -- anything not baked into the static room
+; grid; see #R$612C). Every caller has 2 dual-purpose bytes immediately after
+; its CALL instruction, holding the little-endian address of that call site's
+; per-object behaviour handler (marked with a W-line at each site, e.g.
+; #R$666C). On the early-exit path ($618C is 0): pops the return address and
+; skips exactly those 2 bytes (INC HL twice, then JP (HL)) -- no object is
+; allocated, and the handler address is simply discarded unread. On the success
+; path: pops the SAME return address into HL, then LDIs those same 2 bytes as
+; literal data into the new slot's offset $03/$04 (the handler-pointer field),
+; pushes the now-advanced HL (pointing just past the 2 bytes) back onto the
+; stack, copies a fixed 19-byte block from $5C92 (ZX system-variable area,
+; reused as a default object state template) into the rest of the slot, then
+; RETs -- popping that pushed address, so execution resumes 2 bytes past the
+; CALL either way. (An earlier note claimed these 2 bytes were "executed as
+; code" on the success path at #R$8EB9 -- that was a misreading from an earlier
+; live-tracing session; the stack trace above shows they are always consumed as
+; data, on both paths.) Also: pops the next free slot's address from the
+; free-list head at $618B (each free slot's first 2 bytes point to the next
+; free slot, standard linked-list allocator), copies 2 bytes from the caller's
+; template pointer (IX, e.g. $610E) into the freed slot (to keep the free-list
+; intact), switches IX to the new slot's own address, and stores the CURRENT
+; ROOM NUMBER ($6126) at slot offset $02. Sets a flag bit (A=1) and returns
+; with IX = the new slot's address. Object pool confirmed live to start at
+; #R$A900.
 c$84AE LD A,($618C)  ;
  $84B1 AND A         ;
  $84B2 JR NZ,$84B8   ;
@@ -3740,7 +3757,7 @@ c$84AE LD A,($618C)  ;
  $84D4 EX DE,HL      ;
  $84D5 INC DE        ;
  $84D6 INC DE        ;
- $84D7 LD A,($6126)  ;
+ $84D7 LD A,($6126)  ; get room number
  $84DA LD (DE),A     ;
  $84DB INC DE        ;
  $84DC POP HL        ;
@@ -3753,42 +3770,67 @@ c$84AE LD A,($618C)  ;
  $84EA OR $01        ;
  $84EC RET           ;
 
-; Routine at 84ED
+; Load a sprite's #R$A5DC record into the "current sprite" scratch variables at
+; #R$618D, ready for #R$8128 to draw it
 ;
 ; Used by the routine at #R$8128.
 ;
 ; L Sprite number
+;
+; CONFIRMED live: looks up the #R$A5DC record for sprite L (L*4), then copies
+; all 4 raw bytes (data address, height, and width -- the width byte copied
+; unmasked, flip-flop bit 7 and all) into #R$618D/#R$618F/#R$6190. Called by
+; #R$8128 before it draws a sprite by number.
 c$84ED LD H,$00      ;
  $84EF ADD HL,HL     ;
  $84F0 ADD HL,HL     ;
- $84F1 LD DE,$A5DC   ;
+ $84F1 LD DE,$A5DC   ; sprite table base (#R$A5DC)
  $84F4 ADD HL,DE     ;
- $84F5 LD DE,$618D   ;
- $84F8 LDI           ;
+ $84F5 LD DE,$618D   ; destination: current-sprite scratch variables (#R$618D)
+ $84F8 LDI           ; {copy data address (2 bytes) and height (1 byte)
  $84FA LDI           ;
- $84FC LDI           ;
- $84FE LD A,(HL)     ;
- $84FF LD (DE),A     ;
- $8500 RET           ;
+ $84FC LDI           ; }
+ $84FE LD A,(HL)     ; {copy width byte as-is (unmasked, includes the flip-flop
+ $84FF LD (DE),A     ; flag bit)
+ $8500 RET           ; }
 
-; Routine at 8501
+; Print string at HL until terminator byte $5E or $2B
 ;
 ; Used by the routines at #R$850E and #R$85A1.
+;
+; HL Address of the string to print (bytes are printed one at a time via
+; .  #R$7CEC; the string ends at the first $5E or $2B byte, which is consumed
+; .  but not printed)
+;
+; CONFIRMED: loops over bytes at HL, printing each one via #R$7CEC (the print
+; engine, which also interprets embedded control codes like $14/$16 seen at
+; #R$8623/#R$861A), until it reads a terminator byte ($5E or $2B) -- returns
+; with HL pointing just past the terminator. Called directly with HL already
+; pointing at a string (e.g. from #R$8513), and via #R$850E for inline strings
+; embedded right after a CALL.
 c$8501 LD A,(HL)     ;
  $8502 INC HL        ;
- $8503 CP $5E        ;
+ $8503 CP $5E        ; terminator check: $5E
  $8505 RET Z         ;
- $8506 CP $2B        ;
+ $8506 CP $2B        ; terminator check: $2B
  $8508 RET Z         ;
- $8509 CALL $7CEC    ;
+ $8509 CALL $7CEC    ; print current character (and interpret control codes)
  $850C JR $8501      ;
 
-; Routine at 850E
+; Print an inline string embedded right after the caller's CALL instruction
 ;
 ; Used by the routines at #R$663B, #R$6895, #R$68C1, #R$85A1 and #R$86CC.
+;
+; .
+;
+; CONFIRMED: pops the return address off the stack into HL -- since the caller
+; used CALL $850E, this is the address of the string bytes immediately
+; following that CALL. Calls #R$8501 to print the string (advancing HL past
+; it), then JP (HL) to resume execution right after the embedded string, i.e.
+; normal code flow continues past the inline text.
 c$850E POP HL        ;
- $850F CALL $8501    ;
- $8512 JP (HL)       ;
+ $850F CALL $8501    ; print string: see #R$8501
+ $8512 JP (HL)       ; resume execution after the inline string
 
 ; Routine at 8513
 ;
@@ -3855,7 +3897,16 @@ c$854F PUSH AF       ;
  $8562 ADD A,$30     ;
  $8564 JP $7CEC      ;
 
-; Data block at 8567
+; Entry-point room number table (menu keys A/B/C/D)
+;
+; .
+;
+; .
+;
+; CONFIRMED live: 4 bytes, one per starting location, in order A/B/C/D: $52
+; (level 3, row 1, col 4), $C0 (level 6, row 2, col 0), $1A (level 1, row 4,
+; col 2), $84 (level 4, row 4, col 0). See x-docs/Room-Format.md for the full
+; cube-position table and cross-check against an external game map.
 b$8567 DEFB $52,$C0,$1A,$84
 
 ; Controls sub-menu text
@@ -3872,508 +3923,222 @@ t$856B DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+"
 b$8595 DEFB $5E,$FD,$2A,$A4,$61,$ED,$56,$FB
  $859D DEFB $AF,$32,$AA,$FB
 
-; NOTE: possible disassembly misalignment before $860F
-;
-; .
-;
-; .
-;
-; Disassembly from here to around #R$860F looks misaligned/garbled (likely
-; wrong sub-block boundaries upstream); code resynchronizes at #R$860F.
-c$85A1 CALL $850E      ;
- $85A4 INC D           ;
- $85A5 NOP             ;
- $85A6 LD D,$00        ;
- $85A8 NOP             ;
- $85A9 LD B,H          ;
- $85AA LD B,L          ;
- $85AB LD B,C          ;
- $85AC LD D,H          ;
- $85AD LD C,B          ;
- $85AE LD B,D          ;
- $85AF LD C,A          ;
- $85B0 LD D,A          ;
- $85B1 LD C,H          ;
- $85B2 LD L,$16        ;
- $85B4 NOP             ;
- $85B5 INC D           ;
- $85B6 LD B,E          ;
- $85B7 LD C,A          ;
- $85B8 LD C,(HL)       ;
- $85B9 LD D,H          ;
- $85BA LD D,D          ;
- $85BB LD C,A          ;
- $85BC LD C,H          ;
- $85BD LD D,E          ;
- $85BE LD L,$16        ;
- $85C0 LD (BC),A       ;
- $85C1 NOP             ;
- $85C2 LD B,C          ;
- $85C3 JR NZ,$8617     ;
- $85C5 LD B,L          ;
- $85C6 LD D,H          ;
- $85C7 LD D,L          ;
- $85C8 LD D,D          ;
- $85C9 LD C,(HL)       ;
- $85CA JR NZ,$8620     ;
- $85CC LD C,A          ;
- $85CD JR NZ,$8622     ;
- $85CF LD B,L          ;
- $85D0 LD C,(HL)       ;
- $85D1 LD B,H          ;
- $85D2 LD B,L          ;
- $85D3 LD D,D          ;
- $85D4 LD D,$04        ;
- $85D6 NOP             ;
- $85D7 LD B,D          ;
- $85D8 JR NZ,$8624     ;
- $85DA LD B,C          ;
- $85DB LD C,C          ;
- $85DC LD C,H          ;
- $85DD JR NZ,$8627     ;
- $85DF LD C,A          ;
- $85E0 LD D,L          ;
- $85E1 LD D,E          ;
- $85E2 LD B,L          ;
- $85E3 JR NZ,$8637     ;
- $85E5 LD C,A          ;
- $85E6 LD B,E          ;
- $85E7 LD C,E          ;
- $85E8 LD D,$06        ;
- $85EA NOP             ;
- $85EB LD B,E          ;
- $85EC JR NZ,$863D     ;
- $85EE JR NZ,$8643     ;
- $85F0 LD C,A          ;
- $85F1 LD C,H          ;
- $85F2 LD B,L          ;
- $85F3 JR NZ,$8644     ;
- $85F5 JR NZ,$8644     ;
- $85F7 LD C,C          ;
- $85F8 LD C,A          ;
- $85F9 LD D,$08        ;
- $85FB NOP             ;
- $85FC LD B,H          ;
- $85FD JR NZ,$8647     ;
- $85FF LD B,L          ;
- $8600 LD B,C          ;
- $8601 LD D,D          ;
- $8602 LD D,H          ;
- $8603 LD B,D          ;
- $8604 LD D,D          ;
- $8605 LD B,L          ;
- $8606 LD B,C          ;
- $8607 LD C,E          ;
- $8608 JR NZ,$8652     ;
- $860A LD C,A          ;
- $860B LD D,H          ;
- $860C LD B,L          ;
- $860D LD C,H          ;
- $860E LD E,(HL)       ;
- $860F LD A,($6185)    ;
- $8612 ADD A,$01       ;
- $8614 LD C,A          ;
- $8615 LD B,$02        ;
-*$8617 LD HL,$856B     ; load pointer to Controls menu text at #R$856B
-*$861A LD A,$16        ; {control code $16: set print cursor row (selects the
- $861C CALL $7CEC      ; menu row to print into)}
- $861F LD A,B          ;
-*$8620 CALL $7CEC      ; print the Controls menu text (via #R$7CEC print engine
-                       ; loop)
- $8623 LD A,$14        ; {control code $14 + flag: set/clear inverse video for
- $8625 CALL $7CEC      ; the currently selected control method}
- $8628 INC B           ;
- $8629 INC B           ;
- $862A DEC C           ;
- $862B JR NZ,$8637     ;
- $862D LD A,$14        ;
- $862F CALL $7CEC      ;
- $8632 LD A,$01        ;
- $8634 CALL $7CEC      ;
-*$8637 CALL $8501      ; call #R$8501 (likely reads the current control method
-                       ; / input routine)
- $863A LD A,$14        ; {control code $14 + $01: restore inverse video flag to
- $863C CALL $7CEC      ; normal
- $863F XOR A           ; }
- $8640 CALL $7CEC      ;
-*$8643 LD A,(HL)       ;
-*$8644 CP $5E          ;
- $8646 JR NZ,$861A     ;
- $8648 LD A,($61A0)    ;
- $864B AND A           ;
- $864C JR NZ,$8681     ;
- $864E CALL $850E      ;
- $8651 LD D,$0A        ;
- $8653 INC D           ;
- $8654 DEC (HL)        ;
- $8655 JR NZ,$86B5     ;
- $8657 LD A,($61A1)    ;
- $865A AND A           ;
- $865B JR NZ,$8670     ;
- $865D CALL $850E      ;
- $8660 INC D           ;
- $8661 LD BC,$554D     ;
- $8664 LD D,E          ;
- $8665 LD C,C          ;
- $8666 LD B,E          ;
- $8667 INC D           ;
- $8668 NOP             ;
- $8669 CPL             ;
- $866A LD D,E          ;
- $866B LD B,(HL)       ;
- $866C LD E,B          ;
- $866D LD E,(HL)       ;
- $866E JR $8681        ;
-*$8670 CALL $850E      ;
- $8673 LD C,L          ;
- $8674 LD D,L          ;
- $8675 LD D,E          ;
- $8676 LD C,C          ;
- $8677 LD B,E          ;
- $8678 CPL             ;
- $8679 INC D           ;
- $867A LD BC,$4653     ;
- $867D LD E,B          ;
- $867E INC D           ;
- $867F NOP             ;
- $8680 LD E,(HL)       ;
-*$8681 CALL $9C35      ;
-*$8684 LD (IY-$32),$00 ;
-*$8688 LD B,$32        ;
-*$868A HALT            ;
- $868B DJNZ $868A      ;
- $868D CALL $FB90      ;
- $8690 RST $38         ;
- $8691 LD A,(IY-$32)   ;
- $8694 AND A           ;
- $8695 JR Z,$8688      ;
- $8697 CP $31          ;
- $8699 JR C,$8684      ;
- $869B CP $35          ;
- $869D JR NZ,$86AA     ;
- $869F LD A,($61A1)    ;
- $86A2 XOR $01         ;
- $86A4 LD ($61A1),A    ;
- $86A7 JP $85A1        ;
-*$86AA JR NC,$86B4     ;
- $86AC SUB $31         ;
- $86AE LD ($6185),A    ;
- $86B1 JP $85A1        ;
-*$86B4 OR $20          ;
- $86B6 SUB $61         ;
- $86B8 JR C,$8684      ;
- $86BA CP $04          ;
- $86BC JR NC,$8684     ;
- $86BE LD L,A          ;
- $86BF LD H,$00        ;
- $86C1 LD BC,$8567     ;
- $86C4 ADD HL,BC       ;
- $86C5 LD A,(HL)       ;
- $86C6 LD ($6125),A    ;
- $86C9 IM 2            ;
- $86CB RET             ;
+; Routine at 85A1
+c$85A1 CALL $850E                                ; print inline string, then
+                                                 ; resume after it
+ $85A4 DEFM $14,$00,$16,$00,$00,"DEATHBOWL."     ; main menu title
+ $85B3 DEFM $16,$00,$14,"CONTROLS."              ; sub-heading
+ $85BF DEFM $16,$02,$00,"A RETURN TO SENDER"     ; key A tune name (likely)
+ $85D4 DEFM $16,$04,$00,"B JAIL HOUSE ROCK"      ; key B tune name (likely)
+ $85E8 DEFM $16,$06,$00,"C O SOLE O MIO"         ; key C tune name (likely)
+ $85F9 DEFM $16,$08,$00,"D HEARTBREAK HOTEL",$5E ; key D tune name (likely);
+                                                 ; Elvis song titles, not room
+                                                 ; selection
+ $860F LD A,($6185)                              ;
+ $8612 ADD A,$01                                 ;
+ $8614 LD C,A                                    ;
+ $8615 LD B,$02                                  ;
+ $8617 LD HL,$856B                               ; load pointer to Controls
+                                                 ; menu text at #R$856B
+*$861A LD A,$16                                  ; {control code $16: set print
+ $861C CALL $7CEC                                ; cursor row (selects the menu
+                                                 ; row to print into)}
+ $861F LD A,B                                    ;
+ $8620 CALL $7CEC                                ; print the Controls menu text
+                                                 ; (via #R$7CEC print engine
+                                                 ; loop)
+ $8623 LD A,$14                                  ; {control code $14 + flag:
+ $8625 CALL $7CEC                                ; set/clear inverse video for
+                                                 ; the currently selected
+                                                 ; control method}
+ $8628 INC B                                     ;
+ $8629 INC B                                     ;
+ $862A DEC C                                     ;
+ $862B JR NZ,$8637                               ;
+ $862D LD A,$14                                  ;
+ $862F CALL $7CEC                                ;
+ $8632 LD A,$01                                  ;
+ $8634 CALL $7CEC                                ;
+*$8637 CALL $8501                                ; #R$8501 (likely reads the
+                                                 ; current control method /
+                                                 ; input routine)
+ $863A LD A,$14                                  ; {control code $14 + $01:
+ $863C CALL $7CEC                                ; restore inverse video flag
+ $863F XOR A                                     ; to normal}
+ $8640 CALL $7CEC                                ;
+ $8643 LD A,(HL)                                 ;
+ $8644 CP $5E                                    ;
+ $8646 JR NZ,$861A                               ;
+ $8648 LD A,($61A0)                              ;
+ $864B AND A                                     ;
+ $864C JR NZ,$8681                               ;
+ $864E CALL $850E                                ; print inline string, then
+                                                 ; resume after it
+ $8651 DEFM $16,$0A,$14,"5 ",$5E                 ; stray "5" (control-code list
+                                                 ; index? unclear)
+ $8657 LD A,($61A1)                              ;
+ $865A AND A                                     ;
+ $865B JR NZ,$8670                               ;
+ $865D CALL $850E                                ; print inline string, then
+                                                 ; resume after it
+ $8660 DEFM $14,$01,"MUSIC",$14,$00,"/SFX",$5E   ; "MUSIC" label, shown
+                                                 ; selected/inverse
+ $866E JR $8681                                  ;
+*$8670 CALL $850E                                ; print inline string, then
+                                                 ; resume after it
+ $8673 DEFM "MUSIC/",$14,$01,"SFX",$14,$00,$5E   ; "SFX" label, shown
+                                                 ; selected/inverse
+*$8681 CALL $9C35                                ;
+*$8684 LD (IY-$32),$00                           ;
+*$8688 LD B,$32                                  ;
+*$868A HALT                                      ;
+ $868B DJNZ $868A                                ;
+ $868D CALL $FB90                                ;
+ $8690 RST $38                                   ;
+ $8691 LD A,(IY-$32)                             ;
+ $8694 AND A                                     ;
+ $8695 JR Z,$8688                                ;
+ $8697 CP $31                                    ;
+ $8699 JR C,$8684                                ;
+ $869B CP $35                                    ;
+ $869D JR NZ,$86AA                               ;
+ $869F LD A,($61A1)                              ;
+ $86A2 XOR $01                                   ;
+ $86A4 LD ($61A1),A                              ;
+ $86A7 JP $85A1                                  ;
+*$86AA JR NC,$86B4                               ;
+ $86AC SUB $31                                   ;
+ $86AE LD ($6185),A                              ;
+ $86B1 JP $85A1                                  ;
+*$86B4 OR $20                                    ;
+ $86B6 SUB $61                                   ;
+ $86B8 JR C,$8684                                ;
+ $86BA CP $04                                    ;
+ $86BC JR NC,$8684                               ;
+ $86BE LD L,A                                    ;
+ $86BF LD H,$00                                  ;
+ $86C1 LD BC,$8567                               ; load pointer to entry-point
+                                                 ; room number table (#R$8567)
+                                                 ; -- used to look up the
+                                                 ; starting room for the
+                                                 ; pressed menu key A/B/C/D
+ $86C4 ADD HL,BC                                 ;
+ $86C5 LD A,(HL)                                 ;
+ $86C6 LD ($6125),A                              ;
+ $86C9 IM 2                                      ;
+ $86CB RET                                       ;
 
 ; Routine at 86CC
 ;
 ; Used by the routine at #R$676D.
-c$86CC CALL $850E    ;
- $86CF INC D         ;
- $86D0 NOP           ;
- $86D1 LD D,$00      ;
- $86D3 DEC C         ;
- $86D4 LD B,H        ;
- $86D5 LD B,L        ;
- $86D6 LD B,C        ;
- $86D7 LD D,H        ;
- $86D8 LD C,B        ;
- $86D9 LD B,D        ;
- $86DA LD C,A        ;
- $86DB LD D,A        ;
- $86DC LD C,H        ;
- $86DD JR NZ,$8723   ;
- $86DF LD C,C        ;
- $86E0 LD D,(HL)     ;
- $86E1 LD C,C        ;
- $86E2 LD C,(HL)     ;
- $86E3 LD B,L        ;
- $86E4 LD B,H        ;
- $86E5 LD D,$02      ;
- $86E7 DEC C         ;
- $86E8 LD D,E        ;
- $86E9 LD B,E        ;
- $86EA LD C,A        ;
- $86EB LD D,D        ;
- $86EC LD B,L        ;
- $86ED JR NZ,$8742   ;
- $86EF LD B,E        ;
- $86F0 LD D,D        ;
- $86F1 LD B,C        ;
- $86F2 LD D,B        ;
- $86F3 LD B,L        ;
- $86F4 LD B,H        ;
- $86F5 LD D,$04      ;
- $86F7 DEC C         ;
- $86F8 LD D,B        ;
- $86F9 LD C,H        ;
- $86FA LD D,L        ;
- $86FB LD B,A        ;
- $86FC LD D,E        ;
- $86FD JR NZ,$874F   ;
- $86FF LD D,L        ;
- $8700 LD C,H        ;
- $8701 LD C,H        ;
- $8702 LD B,L        ;
- $8703 LD B,H        ;
- $8704 LD D,$06      ;
- $8706 DEC C         ;
- $8707 LD B,A        ;
- $8708 LD C,A        ;
- $8709 LD C,A        ;
- $870A LD B,H        ;
- $870B LD C,C        ;
- $870C LD B,L        ;
- $870D LD D,E        ;
- $870E JR NZ,$8757   ;
- $8710 LD B,C        ;
- $8711 LD D,H        ;
- $8712 LD C,B        ;
- $8713 LD B,L        ;
- $8714 LD D,D        ;
- $8715 LD B,L        ;
- $8716 LD B,H        ;
- $8717 LD D,$08      ;
- $8719 DEC C         ;
- $871A LD B,A        ;
- $871B LD C,(HL)     ;
- $871C LD C,A        ;
- $871D LD C,L        ;
- $871E LD B,L        ;
- $871F LD D,E        ;
- $8720 JR NZ,$8769   ;
- $8722 LD C,(HL)     ;
-*$8723 LD B,C        ;
- $8724 LD B,D        ;
- $8725 LD B,D        ;
- $8726 LD B,L        ;
- $8727 LD B,H        ;
- $8728 LD D,$00      ;
- $872A LD BC,$215E   ;
- $872D LD HL,$0E61   ;
- $8730 JR NZ,$87B0   ;
- $8732 RRCA          ;
- $8733 RRCA          ;
- $8734 RRCA          ;
- $8735 RRCA          ;
- $8736 AND $0F       ;
- $8738 JR Z,$873C    ;
- $873A LD C,$30      ;
-*$873C ADD A,C       ;
- $873D CALL $7CEC    ;
- $8740 LD A,(HL)     ;
- $8741 AND $0F       ;
- $8743 JR Z,$8747    ;
- $8745 LD C,$30      ;
-*$8747 ADD A,C       ;
- $8748 CALL $7CEC    ;
- $874B DEC HL        ;
- $874C LD A,(HL)     ;
- $874D RRCA          ;
- $874E RRCA          ;
-*$874F RRCA          ;
- $8750 RRCA          ;
- $8751 AND $0F       ;
- $8753 ADD A,$30     ;
- $8755 CALL $7CEC    ;
- $8758 LD A,$2E      ;
- $875A CALL $7CEC    ;
- $875D LD A,(HL)     ;
- $875E AND $0F       ;
- $8760 ADD A,$30     ;
- $8762 CALL $7CEC    ;
- $8765 LD A,$25      ;
- $8767 CALL $7CEC    ;
- $876A CALL $850E    ;
- $876D LD D,$02      ;
- $876F LD BC,$215E   ;
- $8772 DEC E         ;
- $8773 LD H,C        ;
- $8774 LD B,$03      ;
- $8776 LD DE,$7CEC   ;
- $8779 CALL $8523    ;
- $877C CALL $850E    ;
- $877F LD D,$04      ;
- $8781 DEC B         ;
- $8782 LD E,(HL)     ;
- $8783 LD A,($6124)  ;
- $8786 CALL $854F    ;
- $8789 CALL $850E    ;
- $878C LD D,$06      ;
- $878E DEC B         ;
- $878F LD E,(HL)     ;
- $8790 LD A,($6123)  ;
- $8793 CALL $854F    ;
- $8796 CALL $850E    ;
- $8799 LD D,$08      ;
- $879B DEC B         ;
- $879C LD E,(HL)     ;
- $879D LD A,($6122)  ;
- $87A0 CALL $854F    ;
- $87A3 LD A,($617A)  ;
- $87A6 CP $02        ;
- $87A8 RET NZ        ;
- $87A9 LD A,($6124)  ;
- $87AC CP $04        ;
- $87AE JR Z,$87FD    ;
-*$87B0 CALL $850E    ;
- $87B3 LD D,$15      ;
- $87B5 LD (BC),A     ;
- $87B6 LD C,B        ;
- $87B7 LD E,C        ;
- $87B8 LD B,H        ;
- $87B9 LD D,D        ;
- $87BA LD C,A        ;
- $87BB LD B,(HL)     ;
- $87BC LD C,A        ;
- $87BD LD C,A        ;
- $87BE LD C,H        ;
- $87BF JR NZ,$87EE   ;
- $87C1 JR NZ,$8807   ;
- $87C3 LD C,A        ;
- $87C4 LD C,(HL)     ;
- $87C5 LD D,H        ;
- $87C6 JR NZ,$880F   ;
- $87C8 LD C,A        ;
- $87C9 JR NZ,$881E   ;
- $87CB LD C,A        ;
- $87CC JR NZ,$8814   ;
- $87CE LD B,C        ;
- $87CF LD D,E        ;
- $87D0 LD D,H        ;
- $87D1 LD D,$16      ;
- $87D3 RLCA          ;
- $87D4 LD D,H        ;
- $87D5 LD C,B        ;
- $87D6 LD B,L        ;
- $87D7 JR NZ,$8830   ;
- $87D9 LD C,C        ;
- $87DA LD D,E        ;
- $87DB LD B,L        ;
- $87DC JR NZ,$882B   ;
- $87DE LD B,C        ;
- $87DF LD C,(HL)     ;
- $87E0 JR NZ,$8832   ;
- $87E2 LD D,L        ;
- $87E3 LD C,H        ;
- $87E4 LD C,H        ;
- $87E5 LD D,E        ;
- $87E6 LD D,$17      ;
- $87E8 RLCA          ;
- $87E9 LD D,H        ;
- $87EA LD C,B        ;
- $87EB LD B,L        ;
- $87EC JR NZ,$883A   ;
-*$87EE LD B,C        ;
- $87EF LD D,E        ;
- $87F0 LD D,H        ;
- $87F1 JR NZ,$8843   ;
- $87F3 LD C,H        ;
- $87F4 LD D,L        ;
- $87F5 LD B,A        ;
- $87F6 JR NZ,$8844   ;
- $87F8 LD B,C        ;
- $87F9 LD D,E        ;
- $87FA LD D,H        ;
- $87FB LD E,(HL)     ;
- $87FC RET           ;
-*$87FD CALL $850E    ;
- $8800 LD D,$14      ;
- $8802 DEC B         ;
- $8803 LD D,H        ;
- $8804 LD C,B        ;
- $8805 LD B,L        ;
- $8806 JR NZ,$884E   ;
- $8808 LD C,A        ;
- $8809 LD D,L        ;
- $880A LD D,D        ;
- $880B LD D,H        ;
- $880C LD C,B        ;
- $880D JR NZ,$885F   ;
-*$880F LD C,H        ;
- $8810 LD D,L        ;
- $8811 LD B,A        ;
- $8812 JR NZ,$8864   ;
-*$8814 LD D,L        ;
- $8815 LD C,H        ;
- $8816 LD C,H        ;
- $8817 LD B,L        ;
- $8818 LD B,H        ;
- $8819 LD D,$15      ;
- $881B DEC B         ;
- $881C LD C,D        ;
- $881D LD D,L        ;
-*$881E LD D,E        ;
- $881F LD D,H        ;
- $8820 JR NZ,$886E   ;
- $8822 LD C,C        ;
- $8823 LD C,E        ;
- $8824 LD B,L        ;
- $8825 JR NZ,$8880   ;
- $8827 LD C,A        ;
- $8828 LD D,L        ;
- $8829 JR NZ,$887B   ;
-*$882B LD C,H        ;
- $882C LD B,C        ;
- $882D LD C,(HL)     ;
- $882E LD C,(HL)     ;
- $882F LD B,L        ;
-*$8830 LD B,H        ;
- $8831 LD D,$16      ;
- $8833 RLCA          ;
- $8834 LD D,E        ;
- $8835 LD C,A        ;
- $8836 JR NZ,$8865   ;
- $8838 JR NZ,$888D   ;
-*$883A LD B,L        ;
- $883B LD B,L        ;
- $883C JR NZ,$8897   ;
- $883E LD C,A        ;
- $883F LD D,L        ;
- $8840 JR NZ,$8895   ;
- $8842 LD C,A        ;
-*$8843 LD C,A        ;
-*$8844 LD C,(HL)     ;
- $8845 LD D,$17      ;
- $8847 EX AF,AF'     ;
- $8848 DEC L         ;
- $8849 JR NZ,$8894   ;
- $884B LD C,(HL)     ;
- $884C JR NZ,$88A5   ;
-*$884E LD D,L        ;
- $884F LD C,(HL)     ;
- $8850 LD B,H        ;
- $8851 LD B,L        ;
- $8852 LD D,D        ;
- $8853 LD C,H        ;
- $8854 LD B,C        ;
- $8855 LD C,(HL)     ;
- $8856 LD B,H        ;
- $8857 LD HL,$C95E   ;
+c$86CC CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+; End-game stats overlay labels (see #R$676D: called only when room==1)
+ $86CF DEFM $14,$00,$16,$00,$0D,"DEATHBOWL DIVINED"   ; title
+ $86E5 DEFM $16,$02,$0D,"SCORE SCRAPED"               ; stat label
+ $86F5 DEFM $16,$04,$0D,"PLUGS PULLED"                ; stat label
+ $8704 DEFM $16,$06,$0D,"GOODIES GATHERED"            ; stat label
+ $8717 DEFM $16,$08,$0D,"GNOMES GNABBED"              ; stat label
+ $8728 DEFM $16,$00,$01,$5E                           ; cursor position only,
+                                                      ; no visible text
+ $872C LD HL,$6121                                    ;
+ $872F LD C,$20                                       ;
+ $8731 LD A,(HL)                                      ;
+ $8732 RRCA                                           ;
+ $8733 RRCA                                           ;
+ $8734 RRCA                                           ;
+ $8735 RRCA                                           ;
+ $8736 AND $0F                                        ;
+ $8738 JR Z,$873C                                     ;
+ $873A LD C,$30                                       ;
+*$873C ADD A,C                                        ;
+ $873D CALL $7CEC                                     ;
+ $8740 LD A,(HL)                                      ;
+ $8741 AND $0F                                        ;
+ $8743 JR Z,$8747                                     ;
+ $8745 LD C,$30                                       ;
+*$8747 ADD A,C                                        ;
+ $8748 CALL $7CEC                                     ;
+ $874B DEC HL                                         ;
+ $874C LD A,(HL)                                      ;
+ $874D RRCA                                           ;
+ $874E RRCA                                           ;
+ $874F RRCA                                           ;
+ $8750 RRCA                                           ;
+ $8751 AND $0F                                        ;
+ $8753 ADD A,$30                                      ;
+ $8755 CALL $7CEC                                     ;
+ $8758 LD A,$2E                                       ;
+ $875A CALL $7CEC                                     ;
+ $875D LD A,(HL)                                      ;
+ $875E AND $0F                                        ;
+ $8760 ADD A,$30                                      ;
+ $8762 CALL $7CEC                                     ;
+ $8765 LD A,$25                                       ;
+ $8767 CALL $7CEC                                     ;
+ $876A CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+ $876D DEFM $16,$02,$01,$5E                           ; cursor position only,
+                                                      ; no visible text
+                                                      ; (positions for a stat
+                                                      ; value printed
+                                                      ; separately)
+ $8771 LD HL,$611D                                    ;
+ $8774 LD B,$03                                       ;
+ $8776 LD DE,$7CEC                                    ;
+ $8779 CALL $8523                                     ;
+ $877C CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+ $877F DEFM $16,$04,$05,$5E                           ; cursor position only,
+                                                      ; no visible text
+ $8783 LD A,($6124)                                   ;
+ $8786 CALL $854F                                     ;
+ $8789 CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+ $878C DEFM $16,$06,$05,$5E                           ; cursor position only,
+                                                      ; no visible text
+ $8790 LD A,($6123)                                   ;
+ $8793 CALL $854F                                     ;
+ $8796 CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+ $8799 DEFM $16,$08,$05,$5E                           ; cursor position only,
+                                                      ; no visible text
+ $879D LD A,($6122)                                   ;
+ $87A0 CALL $854F                                     ;
+ $87A3 LD A,($617A)                                   ;
+ $87A6 CP $02                                         ;
+ $87A8 RET NZ                                         ;
+ $87A9 LD A,($6124)                                   ;
+ $87AC CP $04                                         ;
+ $87AE JR Z,$87FD                                     ;
+ $87B0 CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+; End-game message, shown on an early/partial completion outcome
+ $87B3 DEFM $16,$15,$02,"HYDROFOOL - DONT GO SO FAST" ; line 1
+ $87D1 DEFM $16,$16,$07,"THE WISE MAN PULLS"          ; line 2
+ $87E6 DEFM $16,$17,$07,"THE LAST PLUG LAST",$5E      ; line 3
+ $87FC RET                                            ;
+*$87FD CALL $850E                                     ; print inline string,
+                                                      ; then resume after it
+; End-game message, shown on full completion (all 4 plugs pulled)
+ $8800 DEFM $16,$14,$05,"THE FOURTH PLUG PULLED"      ; line 1
+ $8819 DEFM $16,$15,$05,"JUST LIKE YOU PLANNED"       ; line 2
+ $8831 DEFM $16,$16,$07,"SO - SEE YOU SOON"           ; line 3
+ $8845 DEFM $16,$17,$08,"- IN WUNDERLAND!",$5E        ; line 4
+ $8859 RET                                            ;
 
 ; Routine at 885A
 ;
 ; Used by the routines at #R$676D, #R$888E and #R$8894.
 c$885A LD A,$16      ;
  $885C CALL $7CEC    ;
-; This entry point is used by the routine at #R$86CC.
-*$885F LD A,$14      ;
+ $885F LD A,$14      ;
  $8861 CALL $7CEC    ;
-; This entry point is used by the routine at #R$86CC.
-*$8864 LD A,$18      ;
+ $8864 LD A,$18      ;
  $8866 CALL $7CEC    ;
  $8869 LD HL,$611C   ;
  $886C LD B,$04      ;
-; This entry point is used by the routine at #R$86CC.
-*$886E LD DE,$7CEC   ;
+ $886E LD DE,$7CEC   ;
  $8871 JP $8523      ;
 
 ; Unused
@@ -4394,8 +4159,7 @@ c$8879 LD ($8874),HL ;
  $8889 INC HL        ;
  $888A DEC DE        ;
  $888B DJNZ $8885    ;
-; This entry point is used by the routine at #R$86CC.
-*$888D RET           ;
+ $888D RET           ;
 
 ; Routine at 888E
 ;
@@ -4405,10 +4169,9 @@ c$888E CALL $8879    ;
 
 ; Routine at 8894
 ;
-; Used by the routines at #R$86CC and #R$88DD.
+; Used by the routine at #R$88DD.
 c$8894 LD ($8874),HL ;
-; This entry point is used by the routine at #R$86CC.
-*$8897 LD HL,$8874   ;
+ $8897 LD HL,$8874   ;
  $889A LD DE,$611F   ;
  $889D LD B,$05      ;
  $889F XOR A         ;
@@ -4417,8 +4180,7 @@ c$8894 LD ($8874),HL ;
  $88A2 DAA           ;
  $88A3 LD (DE),A     ;
  $88A4 INC HL        ;
-; This entry point is used by the routine at #R$86CC.
-*$88A5 DEC DE        ;
+ $88A5 DEC DE        ;
  $88A6 DJNZ $88A0    ;
  $88A8 JP NC,$885A   ;
  $88AB LD HL,$5C92   ;
@@ -4498,7 +4260,7 @@ c$8968 LD A,($6126)    ;
  $897F JP NZ,$89D6     ;
  $8982 BIT 0,A         ;
  $8984 JP NZ,$89D6     ;
- $8987 LD A,($6126)    ;
+ $8987 LD A,($6126)    ; get room number
  $898A CP $02          ;
  $898C JR NZ,$899B     ;
  $898E LD A,($6125)    ;
@@ -4594,14 +4356,14 @@ c$8968 LD A,($6126)    ;
 *$8A6B CALL $9A49      ;
  $8A6E RES 6,(IX+$0D)  ;
  $8A72 LD (IX+$07),$38 ;
- $8A76 LD A,($6126)    ;
+ $8A76 LD A,($6126)    ; get room number
  $8A79 CP $01          ;
  $8A7B JR Z,$8A82      ;
  $8A7D SUB $24         ; change room number: -36 (one level DOWN, via
                        ; whirlpool)
- $8A7F JP $97FC        ;
-*$8A82 LD A,$02        ;
- $8A84 JP $97FC        ;
+ $8A7F JP $97FC        ; Change current room to A
+*$8A82 LD A,$02        ; room==1 special case: force A=2 instead
+ $8A84 JP $97FC        ; Change current room to A
 
 ; Attempt to move to an adjacent room (vertical, via whirlpool/bubble)
 ;
@@ -4626,17 +4388,17 @@ c$8A87 LD A,$98       ;
  $8A8F ADD A,(IX+$06) ;
  $8A92 SUB $4C        ;
  $8A94 LD (IX+$07),A  ;
- $8A97 LD A,($6126)   ;
+ $8A97 LD A,($6126)   ; get room number
  $8A9A CP $02         ;
  $8A9C JR Z,$8AAD     ;
  $8A9E ADD A,$24      ; change room number: +36 (one level UP, via bubble)
- $8AA0 CP $D9         ;
- $8AA2 JP C,$97FC     ;
- $8AA5 LD A,$02       ;
+ $8AA0 CP $D9         ; bounds check: is the new room number in range?
+ $8AA2 JP C,$97FC     ; Change current room to A (if in range)
+ $8AA5 LD A,$02       ; {out of range: fall back instead of changing room
  $8AA7 LD ($617A),A   ;
- $8AAA JP $8C83       ;
-*$8AAD LD A,($6125)   ;
- $8AB0 JP $97FC       ;
+ $8AAA JP $8C83       ; }
+*$8AAD LD A,($6125)   ; room==2 special case: use $6125 instead
+ $8AB0 JP $97FC       ; Change current room to A
 
 ; Data block at 8AB3
 b$8AB3 DEFB $FE,$00,$02,$00,$00,$02,$00,$FE
@@ -4772,7 +4534,7 @@ c$8AFB LD A,($6186)    ;
  $8BBE LD ($8DBD),A    ;
  $8BC1 JP $9A60        ;
 *$8BC4 LD HL,($6110)   ;
- $8BC7 LD A,($6126)    ;
+ $8BC7 LD A,($6126)    ; get room number
  $8BCA LD (HL),A       ;
  $8BCB INC HL          ;
  $8BCC LD A,($8DBB)    ;
@@ -4795,7 +4557,7 @@ c$8AFB LD A,($6186)    ;
  $8BE9 CALL $6663      ;
  $8BEC CALL $9BF0      ;
  $8BEF JR C,$8C0F      ;
- $8BF1 LD A,($6126)    ;
+ $8BF1 LD A,($6126)    ; get room number
  $8BF4 CALL $6880      ;
  $8BF7 CP $04          ;
  $8BF9 JP NC,$8C15     ;
@@ -4989,10 +4751,14 @@ t$8E37 DEFM "3!4\""
 ; Data block at 8E3B
 b$8E3B DEFB $00,$01,$18,$18
 
-; Special grid-value spawn routine (value $68) -- see #R$8EA7 for the
-; fully-traced sibling routine; same mechanism.
+; Special grid-value spawn routine (value $68) -- CONFIRMED: rearing snake
 ;
 ; Used by the routine at #R$6269.
+;
+; .
+;
+; Same allocator mechanism as #R$8EA7; its handler is #R$9684 (see there for
+; the full state machine).
 c$8E3F INC HL        ;
  $8E40 DEC B         ;
  $8E41 PUSH AF       ;
@@ -5002,9 +4768,8 @@ c$8E3F INC HL        ;
  $8E45 LD A,(HL)     ;
  $8E46 LD (IX+$00),A ;
  $8E49 LD IX,$610E   ;
- $8E4D CALL $84AE    ;
- $8E50 ADD A,H       ;
- $8E51 SUB (HL)      ;
+ $8E4D CALL $84AE    ; Dynamic object allocator
+ $8E50 DEFW $9684    ; Dynamic object handler address (#R$9684)
  $8E52 POP DE        ;
  $8E53 LD A,E        ;
  $8E54 CALL $6254    ;
@@ -5081,14 +4846,14 @@ c$8E6E PUSH BC         ;
 ; $8EE8/$8EE9), ending that loop one iteration early to compensate (this is
 ; what explains the "odd leftover byte count" behaviour documented at #R$6CCF).
 ; Sets up IX=$610E as a template pointer, then CALLs #R$84AE to allocate a
-; dynamic object slot, then populates further slot fields (offset $07=$18,
-; $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra
-; byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning
-; (screen position? direction?) is not yet confirmed -- #R$9A60 was observed to
-; overwrite slot offsets $03/$04 (initially seeded with the trigger value and
-; first extra byte) with what looks like a real code address (a per-object
-; behaviour-handler function pointer, e.g. $9684), and to clear offset $09 back
-; to 0 afterward.
+; dynamic object slot -- its handler address (see #R$8EB9) is #R$957C, NOT
+; #R$9684 (an earlier note misattributed #R$9684 to this routine; #R$9684 is
+; actually #R$8E3F's handler -- see there). Populates further slot fields
+; (offset $07=$18, $0A=$06, $09=triggering value, $0B and $0E=first extra byte,
+; $14=second extra byte), then CALLs #R$9A60 to finalize. The two extra bytes'
+; exact meaning (screen position? direction?) is not yet confirmed. Offset $09
+; (the triggering value) reads back as $00 afterward, suggesting it's consumed
+; during finalization.
 c$8EA7 LD ($8EC6),A    ;
  $8EAA LD (IX+$00),$00 ;
  $8EAE PUSH HL         ;
@@ -5096,9 +4861,8 @@ c$8EA7 LD ($8EC6),A    ;
  $8EB0 DEC HL          ;
  $8EB1 PUSH HL         ;
  $8EB2 LD IX,$610E     ;
- $8EB6 CALL $84AE      ;
- $8EB9 LD A,H          ;
- $8EBA SUB L           ;
+ $8EB6 CALL $84AE      ; Dynamic object allocator
+ $8EB9 DEFW $957C      ; Dynamic object handler address (#R$957C)
  $8EBB LD (IX+$07),$18 ;
  $8EBF LD (IX+$0A),$06 ;
  $8EC3 LD (IX+$09),$66 ;
@@ -5128,18 +4892,31 @@ c$8EA7 LD ($8EC6),A    ;
 *$8EEC LD (IX+$14),$E0 ;
  $8EF0 JR $8EE9        ;
 
-; Special grid-value spawn routine (value $67) -- see #R$8EA7 for the
-; fully-traced sibling routine; same mechanism.
+; Special grid-value spawn routine (value $67) -- CONFIRMED: plant/coral
 ;
 ; Used by the routine at #R$6269.
+;
+; .
+;
+; Same allocator mechanism as #R$8EA7; its handler is #R$94EE.
+; .
+; $67 is rare: only 2 occurrences game-wide (rooms $9C and $A3, per a full
+; 216-room static scan), vs. $69's 23 or $66/$6A's combined 37. Checked whether
+; these 2 rooms are directly adjacent (which would support "secret connecting
+; passage"): room $9C decodes to level 5, row 1, col 5; room $A3 to level 5,
+; row 3, col 0 -- same level, but not row/col-adjacent, so a simple two-way
+; secret door between them is NOT supported by this data. Doesn't rule out
+; "door/passage" as a general object type (each could lead somewhere off the
+; normal 6x6x6 grid, or the two occurrences could be unrelated), but the
+; adjacency evidence some might expect isn't there. Needs live confirmation.
 c$8EF2 LD (IX+$00),$00 ;
  $8EF6 PUSH HL         ;
  $8EF7 PUSH BC         ;
  $8EF8 DEC HL          ;
  $8EF9 PUSH HL         ;
  $8EFA LD IX,$610E     ;
- $8EFE CALL $84AE      ;
- $8F01 XOR $94         ;
+ $8EFE CALL $84AE      ; Dynamic object allocator
+ $8F01 DEFW $94EE      ; Dynamic object handler address (#R$94EE)
  $8F03 LD (IX+$07),$18 ;
  $8F07 LD (IX+$0A),$19 ;
  $8F0B LD (IX+$0D),$08 ;
@@ -5155,19 +4932,24 @@ c$8EF2 LD (IX+$00),$00 ;
  $8F1C XOR A           ;
  $8F1D RET             ;
 
-; Special grid-value spawn routine (value $69) -- see #R$8EA7 for the
-; fully-traced sibling routine; same mechanism.
+; Special grid-value spawn routine (value $69) -- CONFIRMED: whirlpool
 ;
 ; Used by the routine at #R$6269.
+;
+; .
+;
+; By static scan: every Plug Room's extras end with $25,$6B,$25,$69 -- a Plug
+; and a $69 object co-located at the same grid cell -- and $69 also appears 23x
+; game-wide (not plug-exclusive, unlike $6B). Same allocator mechanism as
+; #R$8EA7; its handler is #R$952D.
 c$8F1E LD (IX+$00),$00 ;
  $8F22 PUSH HL         ;
  $8F23 PUSH BC         ;
  $8F24 DEC HL          ;
  $8F25 PUSH HL         ;
  $8F26 LD IX,$610E     ;
- $8F2A CALL $84AE      ;
- $8F2D DEC L           ;
- $8F2E SUB L           ;
+ $8F2A CALL $84AE      ; Dynamic object allocator
+ $8F2D DEFW $952D      ; Dynamic object handler address (#R$952D)
  $8F2F LD (IX+$07),$18 ;
  $8F33 LD (IX+$0A),$06 ;
  $8F37 POP HL          ;
@@ -5179,10 +4961,16 @@ c$8F1E LD (IX+$00),$00 ;
  $8F45 LD (IX+$06),$20 ;
  $8F49 JP $8F17        ;
 
-; Special grid-value spawn routine (value $6B) -- see #R$8EA7 for the
-; fully-traced sibling routine; same mechanism.
+; Special grid-value spawn routine (value $6B) -- CONFIRMED: plug
 ;
 ; Used by the routine at #R$6269.
+;
+; .
+;
+; By static scan: $6B appears in exactly 4 rooms' extras game-wide, and they
+; are precisely the 4 Plug Rooms (#R$73B3) -- never in any of the 11 shared
+; room-type templates, only introduced per-room. Same allocator mechanism as
+; #R$8EA7; its handler is #R$94F4.
 c$8F4C LD (IX+$00),$00 ;
  $8F50 PUSH HL         ;
  $8F51 PUSH BC         ;
@@ -5192,10 +4980,9 @@ c$8F4C LD (IX+$00),$00 ;
  $8F58 CP $0F          ;
  $8F5A JP Z,$8F1A      ;
  $8F5D LD IX,$610E     ;
- $8F61 CALL $84AE      ;
- $8F64 CALL P,$DD94    ;
- $8F67 LD (HL),$07     ;
- $8F69 ADD HL,DE       ;
+ $8F61 CALL $84AE      ; Dynamic object allocator
+ $8F64 DEFW $94F4      ; Dynamic object handler address (#R$94F4)
+ $8F66 LD (IX+$07),$19 ;
  $8F6A LD (IX+$05),$20 ;
  $8F6E LD (IX+$06),$20 ;
  $8F72 LD A,$48        ;
@@ -5236,7 +5023,7 @@ c$8F82 LD HL,$5C92     ;
  $8FB0 JR Z,$8FBD      ;
  $8FB2 LD HL,$0008     ;
  $8FB5 ADD HL,DE       ;
- $8FB6 LD A,($6126)    ;
+ $8FB6 LD A,($6126)    ; get room number
  $8FB9 CPIR            ;
  $8FBB JR Z,$8FC4      ;
 *$8FBD EX DE,HL        ;
@@ -5412,10 +5199,9 @@ c$90A8 LD A,$78        ;
  $9144 PUSH IX         ;
  $9146 POP IY          ;
  $9148 LD IX,$610E     ;
- $914C CALL $84AE      ;
- $914F JP Z,$DD94      ;
- $9152 LD (HL),$0B     ;
- $9154 DEC B           ;
+ $914C CALL $84AE      ; Dynamic object allocator
+ $914F DEFW $94CA      ; Dynamic object handler address
+ $9151 LD (IX+$0B),$05 ;
  $9155 LD A,(IY+$0B)   ;
  $9158 AND $06         ;
  $915A LD L,A          ;
@@ -5505,7 +5291,7 @@ c$9232 LD A,$74        ;
 ; Routine at 923E
 ;
 ; Used by the routines at #R$8968, #R$8AFB, #R$8D11, #R$8D8D, #R$9021, #R$90A8,
-; #R$91A6, #R$9341, #R$9401, #R$9602 and #R$9963.
+; #R$91A6, #R$9341, #R$9401, #R$94F4, #R$9602 and #R$9963.
 c$923E POP HL        ;
 ; This entry point is used by the routines at #R$9021 and #R$90A8.
 *$923F LD (IX+$03),L ;
@@ -5840,42 +5626,63 @@ c$94CA DEC (IX+$0B)    ;
  $94E5 LD (IX+$08),A   ;
  $94E8 RET             ;
 
-; Message at 94E9
-t$94E9 DEFM "NNPP"
+; #R$99D5 sprite-animation table for the Plant/coral object (#R$94EE)
+;
+; .
+;
+; .
+;
+; Sprites $4E,$4E,$50,$50 (see #R$A714/#R$A71C, both labeled "Plant/coral"),
+; terminated by $FF -- a simple 2-frame swaying decoration.
+b$94E9 DEFB $4E,$4E,$50,$50,$FF
 
-; Data block at 94ED
-b$94ED DEFB $FF
-
-; Routine at 94EE
+; Per-object behaviour handler for value-$67 objects -- CONFIRMED: plant/coral
+;
+; .
+;
+; .
+;
+; Its #R$99D5 animation table (#R$94E9) is sprites $4E,$4E,$50,$50, both
+; labeled "Plant/coral" from earlier visual sprite identification -- a simple
+; 2-frame swaying decoration, not a door/passage.
 c$94EE LD HL,$94E9   ;
  $94F1 JP $99D5      ;
 
-; Data block at 94F4
-b$94F4 DEFB $CD,$F9,$62,$7E,$E6,$0F,$FE,$0F
- $94FC DEFB $C0
+; Per-object behaviour handler - PLUG
+c$94F4 CALL $62F9      ;
+ $94F7 LD A,(HL)       ;
+ $94F8 AND $0F         ;
+ $94FA CP $0F          ;
+ $94FC RET NZ          ;
+ $94FD LD A,($6124)    ;
+ $9500 ADD A,$01       ;
+ $9502 DAA             ;
+ $9503 LD ($6124),A    ;
+ $9506 LD A,$09        ;
+ $9508 CALL $848E      ;
+ $950B CALL $923E      ;
+ $950E BIT 6,(IX+$0D)  ;
+ $9512 JR NZ,$9521     ;
+ $9514 SET 4,(IX+$0D)  ;
+ $9518 LD A,(IX+$07)   ;
+ $951B ADD A,$08       ;
+ $951D LD (IX+$07),A   ;
+ $9520 RET             ;
+*$9521 LD (IX+$02),$FF ;
+ $9525 RET             ;
 
-; Message at 94FD
-t$94FD DEFM ":$a"
+; #R$99D5 sprite-animation table for the Whirlpool object (#R$952D)
+b$9526 DEFB $4C,$4C,$4D,$4D,$FF,$00,$00
 
-; Data block at 9500
-b$9500 DEFB $C6,$01
-
-; Message at 9502
-t$9502 DEFM "'2$a>"
-
-; Data block at 9507
-b$9507 DEFB $09,$CD,$8E,$84,$CD,$3E,$92,$DD
- $950F DEFB $CB,$0D,$76,$20,$0D,$DD,$CB,$0D
- $9517 DEFB $E6,$DD,$7E,$07,$C6,$08,$DD,$77
- $951F DEFB $07,$C9,$DD,$36,$02,$FF,$C9
-
-; Message at 9526
-t$9526 DEFM "LLMM"
-
-; Data block at 952A
-b$952A DEFB $FF,$00,$00
-
-; Routine at 952D
+; Per-object behaviour handler for value-$69 objects -- CONFIRMED: whirlpool
+;
+; .
+;
+; .
+;
+; Its #R$99D5 animation table (#R$9526) is sprites $4C,$4C,$4D,$4D, already
+; independently labeled "Whirlpool, animation phase" from earlier visual sprite
+; identification.
 c$952D LD HL,$9526   ;
  $9530 CALL $99D5    ;
  $9533 CALL $62F9    ;
@@ -5910,13 +5717,27 @@ c$952D LD HL,$9526   ;
  $9573 LD ($952C),A  ;
  $9576 RET           ;
 
-; Message at 9577
-t$9577 DEFM "hhii"
+; #R$99D5 sprite-animation table for the Source of bubbles object (#R$957C)
+;
+; .
+;
+; .
+;
+; Sprites $68,$68,$69,$69 (see #R$C38E/#R$C39E, both relabeled "Bubble"),
+; terminated by $FF.
+b$9577 DEFB $68,$68,$69,$69,$FF
 
-; Data block at 957B
-b$957B DEFB $FF
-
-; Routine at 957C
+; Per-object behaviour handler for value-$66/$6A objects -- CONFIRMED: source
+; of bubbles
+;
+; .
+;
+; .
+;
+; Its #R$99D5 animation table (#R$9577) is sprites $68,$68,$69,$69 (both
+; "Spark/debris"-shaped 16x8 sprites, see #R$C38E/#R$C39E) -- matches the
+; earlier live observation of "sources of big bubbles" in a room, and retires
+; the earlier door/passage guess for $66/$6A.
 c$957C LD HL,$9577     ;
  $957F CALL $99D5      ;
  $9582 DEC (IX+$0E)    ;
@@ -5926,9 +5747,8 @@ c$957C LD HL,$9577     ;
  $958C PUSH IX         ;
  $958E POP IY          ;
  $9590 LD IX,$610E     ;
- $9594 CALL $84AE      ;
- $9597 LD (BC),A       ;
- $9598 SUB (HL)        ;
+ $9594 CALL $84AE      ; Dynamic object allocator
+ $9597 DEFW $9602      ; Dynamic object handler address
  $9599 LD A,(IY+$05)   ;
  $959C LD (IX+$05),A   ;
  $959F LD A,(IY+$06)   ;
@@ -5955,7 +5775,27 @@ b$95C1 DEFB $62,$62,$63,$63,$64,$64,$5E,$FF
  $95F9 DEFB $5E,$FF
  $95FB DEFB $65,$65,$66,$66,$67,$67,$FF
 
-; Routine at 9602
+; Per-frame handler for the individual rising-bubble particle spawned by
+; #R$957C
+;
+; .
+;
+; .
+;
+; CONFIRMED: at $9622-$962D, branches on the inherited trigger value at
+; (IX+$0B) -- only if it's $6A does it SET bit 4 of (IX+$0D) and switch to
+; movement table $95E2 (steps +0x07 by $04/frame) instead of the default
+; #R$95C9 (steps by $02/frame): the $6A bubble rises at double the rate. That
+; bit 4 flag is later tested at #R$97E6 (in the sprite-draw wrapper, right
+; after #R$8128 draws it); only if set does it SET bit 6 of (IX+$0D). Back here
+; at $961B, bit 6 being set causes immediate self-destruct ((IX+$02)=$FF). So
+; only $6A-triggered bubbles can ever reach that clean completion state -- $66
+; bubbles never do. CONFIRMS a real functional difference between $66 and $6A
+; (not just cosmetic): likely a "real" bubble stream that completes/reaches the
+; top ($6A) vs. a "bogus"/weak one that never does ($66) -- matches a gameplay
+; report of some bubble sources not lifting the player all the way. Whether bit
+; 6 specifically means "reached the surface" isn't confirmed from static code
+; alone.
 c$9602 LD A,$03        ;
  $9604 CALL $848E      ;
  $9607 CALL $923E      ;
@@ -6010,11 +5850,34 @@ c$9602 LD A,$03        ;
 *$967F LD (IX+$02),$FF ;
  $9683 RET             ;
 
-; Per-object behaviour handler (CONFIRMED live: this is the handler address
-; written into a $66/$6A-triggered door/passage object's slot offset $03/$04 by
-; #R$9A60, and called from #R$983C's dispatcher). Not yet traced internally --
-; likely draws/updates the door using the object's remaining fields (offsets
-; $0B/$0E/$14, populated by #R$8EA7 from the template's 2 "extra" bytes).
+; Per-object behaviour handler for value-$68 objects -- CONFIRMED: rearing
+; snake
+;
+; .
+;
+; .
+;
+; Handler for #R$8E3F's objects (its dual-purpose bytes at #R$8E50 -- see
+; #R$84AE), called from #R$983C's dispatcher. CORRECTION: an earlier note
+; misattributed this routine to $66/$6A door objects; that handler is actually
+; #R$957C (see #R$8EB9) -- this routine belongs to #R$8E3F instead.
+; .
+; CONFIRMED (full state machine traced, and matches already-identified
+; sprites): rearing snake. Sprite starts at $23 (set by #R$8EA1 on spawn) and
+; cycles through $23,$24,$25,$26 -- independently labeled "Snake, rearing
+; phase" at #R$B56E/#R$B57E/#R$B59E/#R$B5CE, with INCREASING sprite height
+; (16x8 -> 16x16 -> 16x24 -> 16x32) as it rises, i.e. more of the snake's body
+; becomes visible each frame. Full cycle: phase 0 = idle countdown at (IX+$0E)
+; (decrements while nonzero); phase 1 = seed position (IX+$16)/(IX+$17) at
+; $FC/$FE then jump +8; phase 2 = each call, INC sprite number (IX+$08) and
+; jump position +8 again, repeating until sprite reaches $26 (fully reared),
+; then sets a long countdown ($24) and advances to phase 3+; phase 3+ (default
+; case) = each call, if sprite isn't back down to $23 yet, DEC sprite and
+; retract position by -8; once back at $23, reset position to 0, set bit 7 of
+; (IX+$0D) (purpose not traced), set another countdown, and restart the cycle
+; at phase 1. This is a full rise-pause-retract-pause loop, matching the
+; "rising snakes, not on the grid" seen live earlier -- retires the earlier
+; door/passage hypothesis for value $68 entirely.
 c$9684 LD A,(IX+$0E)   ;
  $9687 AND A           ;
  $9688 JR Z,$968E      ;
@@ -6199,7 +6062,7 @@ c$97BA LD L,(IX+$05)  ;
 *$97F6 CALL $9745     ;
  $97F9 JP $8107       ;
 
-; Commit the room change: A = new room number
+; Change current room to A = new room number
 ;
 ; Used by the routines at #R$67F1, #R$8968 and #R$8A87.
 ;
@@ -6268,13 +6131,13 @@ c$983C LD L,(IX+$00)  ;
  $9864 LD (IX+$00),L  ;
  $9867 LD (IX+$01),H  ;
  $986A JR $9842       ;
-*$986C LD A,($6126)   ;
+*$986C LD A,($6126)   ; get room number
  $986F CP (IX+$02)    ;
  $9872 JP NZ,$98FC    ;
  $9875 LD L,(IX+$03)  ;
  $9878 LD H,(IX+$04)  ;
  $987B CALL $61A7     ; JP (HL)
- $987E LD A,($6126)   ;
+ $987E LD A,($6126)   ; get room number
  $9881 CP (IX+$02)    ;
  $9884 JR NZ,$98FC    ;
  $9886 BIT 7,(IX+$0D) ;
@@ -6381,9 +6244,8 @@ c$9923 PUSH AF         ;
  $9924 LD A,$08        ;
  $9926 CALL $848E      ;
  $9929 LD IX,$610E     ;
- $992D CALL $84AE      ;
- $9930 LD H,E          ;
- $9931 SBC A,C         ;
+ $992D CALL $84AE      ; Dynamic object allocator
+ $9930 DEFW $9963      ; Dynamic object handler address
  $9932 POP AF          ;
  $9933 LD (IX+$08),A   ;
  $9936 LD A,($8DBD)    ;
@@ -6472,10 +6334,22 @@ c$99D1 RET           ;
  $99D2 NEG           ;
  $99D4 RET           ;
 
-; Routine at 99D5
+; Sprite-animation stepper: read next entry from a per-object sprite-number
+; table, advancing a phase counter
 ;
 ; Used by the routines at #R$8968, #R$8D11, #R$91A6, #R$9341, #R$949E, #R$94EE,
 ; #R$952D, #R$957C, #R$9602 and #R$9963.
+;
+; .
+;
+; CONFIRMED: called with HL = a small table of raw sprite numbers (see
+; #R$9526/#R$9577/#R$94E9 for examples). Indexes the table by (IX+$0F) (a
+; per-object phase counter), reads the byte there into A, then INCs (IX+$0F)
+; for next time. $FF in the table means "wrap to start" (resets (IX+$0F) to 0
+; and re-reads from the table's first byte); $FD is a second special marker
+; (purpose not yet traced past #R$9A01). Otherwise A is the next sprite number
+; to display for this object -- this is how #R$957C/#R$952D/#R$94EE (and
+; others) drive their objects' animation frames.
 c$99D5 LD A,$C9        ; "RET" instruction code
  $99D7 LD ($99D1),A    ; set instruction
 ; This entry point is used by the routine at #R$99A1.
@@ -7299,62 +7173,416 @@ w$A5D8 DEFW $BDAE
 ;
 ; .
 ;
-; record[0..1] = sprite data address;
-; .
-; record[2] = height in 8px rows, bit 7 = ??;
-; .
-; record[3] = width in 8px columns.
-w$A5DC DEFW $A9DE,$0000,$A9DE,$0384,$AA3E,$0483,$AA9E,$0483
- $A5EC DEFW $AAFE,$0483,$AB5E,$0483,$ABBE,$0000,$ABBE,$0483
- $A5FC DEFW $AC1E,$0483,$AC7E,$0000,$AC7E,$0483,$ACDE,$0482
- $A60C DEFW $AD1E,$0482,$AD5E,$0482,$AD9E,$0482,$ADDE,$0383
- $A61C DEFW $AE26,$0383,$AE6E,$0384,$AECE,$0384,$AF2E,$0384
- $A62C DEFW $AF8E,$0383,$AFD6,$0384,$B036,$0483,$B096,$0483
- $A63C DEFW $B0F6,$0483,$B156,$0483,$B1B6,$0484,$B236,$0483
- $A64C DEFW $B296,$0283,$B2C6,$0383,$B30E,$0483,$B36E,$0484
- $A65C DEFW $B3EE,$0484,$B46E,$0484,$B4EE,$0484,$B56E,$0281
- $A66C DEFW $B57E,$0282,$B59E,$0283,$B5CE,$0284,$B60E,$0284
- $A67C DEFW $B64E,$0284,$B68E,$0484,$B70E,$0484,$B78E,$0484
- $A68C DEFW $B80E,$0484,$B88E,$0000,$B5FE,$0000,$B5FE,$0000
- $A69C DEFW $B5FE,$0000,$B5FE,$0000,$B5FE,$0000,$B5CE,$0000
- $A6AC DEFW $B5CE,$0000,$B5CE,$0000,$B88E,$0283,$B8BE,$0283
- $A6BC DEFW $B8EE,$0283,$B91E,$0283,$B94E,$0283,$B97E,$0283
- $A6CC DEFW $B9AE,$0283,$B9DE,$0283,$BA0E,$0283,$BA3E,$0283
- $A6DC DEFW $BA6E,$0283,$BA9E,$0283,$BACE,$0283,$BAFE,$0283
- $A6EC DEFW $BB2E,$0484,$BBAE,$0484,$BC2E,$0284,$BC6E,$0284
- $A6FC DEFW $BCAE,$0483,$BD0E,$0483,$BD6E,$0282,$BD8E,$0282
- $A70C DEFW $BDAE,$0482,$BDEE,$0482,$BE2E,$0384,$BE8E,$0384
- $A71C DEFW $BEEE,$0384,$BF4E,$0384,$BFAE,$0482,$BFEE,$0482
- $A72C DEFW $C02E,$0484,$C0AE,$0484,$C12E,$0285,$C17E,$0285
- $A73C DEFW $C1CE,$0282,$C1EE,$0282,$C20E,$0183,$C226,$0183
- $A74C DEFW $C23E,$0183,$C256,$0183,$C26E,$0282,$C28E,$0282
- $A75C DEFW $C2AE,$0282,$B796,$0000,$C2CE,$0282,$C2EE,$0282
- $A76C DEFW $C30E,$0282,$C32E,$0282,$C34E,$0282,$C36E,$0282
- $A77C DEFW $C38E,$0281,$C39E,$0281,$C3AE,$0484,$C42E,$0484
- $A78C DEFW $C4AE,$0484,$C52E,$0283,$C55E,$0283,$C58E,$0283
- $A79C DEFW $C5BE,$0283,$C5EE,$0283,$C61E,$0283,$C64E,$0283
- $A7AC DEFW $C67E,$0283,$C6AE,$0283,$C6DE,$0283,$C70E,$0283
- $A7BC DEFW $C73E,$0283,$C76E,$0283,$C79E,$0283,$C7CE,$0283
- $A7CC DEFW $C7FE,$0583,$C876,$058C,$CA56,$068C,$CC96,$058A
- $A7DC DEFW $CE26,$0194,$BE9E,$0000,$BE9E,$0000,$CEC6,$0384
- $A7EC DEFW $CF26,$0483,$CF86,$0483,$CFE6,$0483,$D046,$0483
- $A7FC DEFW $CBB6,$0000,$D0A6,$0483,$D106,$0483,$C4F6,$0000
- $A80C DEFW $D166,$0483,$D1C6,$0000,$CC76,$0000,$CC76,$0000
- $A81C DEFW $CC76,$0000,$D1C6,$0383,$D20E,$0383,$D256,$0384
- $A82C DEFW $D2B6,$0384,$D316,$0384,$D376,$0383,$D3BE,$0384
- $A83C DEFW $D41E,$0483,$D47E,$0483,$D4DE,$0483,$D53E,$0483
- $A84C DEFW $D59E,$0484,$D61E,$0483,$D67E,$0283,$D6AE,$0383
- $A85C DEFW $D6F6,$0483,$D756,$0484,$D7D6,$0484,$D856,$0484
- $A86C DEFW $D8D6,$0484,$D956,$0281,$D966,$0282,$D986,$0283
- $A87C DEFW $D9B6,$0284,$D9F6,$0284,$DA36,$0284,$DA76,$0484
- $A88C DEFW $DAF6,$0484,$DB76,$0484,$DBF6,$0484,$DCB6,$0000
- $A89C DEFW $CD76,$0000,$DC76,$0183,$DC8E,$0183,$DCA6,$0183
- $A8AC DEFW $DCBE,$0183,$DCD6,$0181,$DCDE,$0181,$DCE6,$0181
- $A8BC DEFW $DCEE,$0181,$DCF6,$0181,$DCFE,$0484,$DD7E,$0484
- $A8CC DEFW $DDFE,$0282,$DE1E,$0282,$DE3E,$0282,$DE5E,$0282
- $A8DC DEFW $DE7E,$0282,$DE9E,$0282,$DEBE,$0283,$DEEE,$0282
- $A8EC DEFW $DF0E,$0282,$DF2E,$0B82,$DFDE,$0000,$DFDE,$0484
- $A8FC DEFW $E05E,$0B84
+; CONFIRMED live (traced #R$7E4F, which reads a record by sprite number in L):
+; record[0..1] = sprite data address (LE word); record[2] = height in 8px rows,
+; top bit masked off before use ($7F) -- meaning of that bit not yet confirmed,
+; may just be unused/reserved; record[3] = width in 8px columns, but bit 7 here
+; is a live flip-flop flag: #R$7E4F XORs it in place (self-modifying table
+; entry) on every call, toggling it between the two calls needed to draw a
+; sprite's normal and mirrored/second-buffer image, then masks it off ($7F) to
+; get the actual width.
+b$A5DC DEFW $A9DE    ; Sprite $00
+ $A5DE DEFB $00,$00
+ $A5E0 DEFW $A9DE    ; Sprite $01
+ $A5E2 DEFB $84,$03
+ $A5E4 DEFW $AA3E    ; Sprite $02
+ $A5E6 DEFB $83,$04
+ $A5E8 DEFW $AA9E    ; Sprite $03
+ $A5EA DEFB $83,$04
+ $A5EC DEFW $AAFE    ; Sprite $04
+ $A5EE DEFB $83,$04
+ $A5F0 DEFW $AB5E    ; Sprite $05
+ $A5F2 DEFB $83,$04
+ $A5F4 DEFW $ABBE    ; Sprite $06
+ $A5F6 DEFB $00,$00
+ $A5F8 DEFW $ABBE    ; Sprite $07
+ $A5FA DEFB $83,$04
+ $A5FC DEFW $AC1E    ; Sprite $08
+ $A5FE DEFB $83,$04
+ $A600 DEFW $AC7E    ; Sprite $09
+ $A602 DEFB $00,$00
+ $A604 DEFW $AC7E    ; Sprite $0A
+ $A606 DEFB $83,$04
+ $A608 DEFW $ACDE    ; Sprite $0B
+ $A60A DEFB $82,$04
+ $A60C DEFW $AD1E    ; Sprite $0C
+ $A60E DEFB $82,$04
+ $A610 DEFW $AD5E    ; Sprite $0D
+ $A612 DEFB $82,$04
+ $A614 DEFW $AD9E    ; Sprite $0E
+ $A616 DEFB $82,$04
+ $A618 DEFW $ADDE    ; Sprite $0F
+ $A61A DEFB $83,$03
+ $A61C DEFW $AE26    ; Sprite $10
+ $A61E DEFB $83,$03
+ $A620 DEFW $AE6E    ; Sprite $11
+ $A622 DEFB $84,$03
+ $A624 DEFW $AECE    ; Sprite $12
+ $A626 DEFB $84,$03
+ $A628 DEFW $AF2E    ; Sprite $13
+ $A62A DEFB $84,$03
+ $A62C DEFW $AF8E    ; Sprite $14
+ $A62E DEFB $83,$03
+ $A630 DEFW $AFD6    ; Sprite $15
+ $A632 DEFB $84,$03
+ $A634 DEFW $B036    ; Sprite $16
+ $A636 DEFB $83,$04
+ $A638 DEFW $B096    ; Sprite $17
+ $A63A DEFB $83,$04
+ $A63C DEFW $B0F6    ; Sprite $18
+ $A63E DEFB $83,$04
+ $A640 DEFW $B156    ; Sprite $19
+ $A642 DEFB $83,$04
+ $A644 DEFW $B1B6    ; Sprite $1A
+ $A646 DEFB $84,$04
+ $A648 DEFW $B236    ; Sprite $1B
+ $A64A DEFB $83,$04
+ $A64C DEFW $B296    ; Sprite $1C
+ $A64E DEFB $83,$02
+ $A650 DEFW $B2C6    ; Sprite $1D
+ $A652 DEFB $83,$03
+ $A654 DEFW $B30E    ; Sprite $1E
+ $A656 DEFB $83,$04
+ $A658 DEFW $B36E    ; Sprite $1F
+ $A65A DEFB $84,$04
+ $A65C DEFW $B3EE    ; Sprite $20
+ $A65E DEFB $84,$04
+ $A660 DEFW $B46E    ; Sprite $21
+ $A662 DEFB $84,$04
+ $A664 DEFW $B4EE    ; Sprite $22
+ $A666 DEFB $84,$04
+ $A668 DEFW $B56E    ; Sprite $23
+ $A66A DEFB $81,$02
+ $A66C DEFW $B57E    ; Sprite $24
+ $A66E DEFB $82,$02
+ $A670 DEFW $B59E    ; Sprite $25
+ $A672 DEFB $83,$02
+ $A674 DEFW $B5CE    ; Sprite $26
+ $A676 DEFB $84,$02
+ $A678 DEFW $B60E    ; Sprite $27
+ $A67A DEFB $84,$02
+ $A67C DEFW $B64E    ; Sprite $28
+ $A67E DEFB $84,$02
+ $A680 DEFW $B68E    ; Sprite $29
+ $A682 DEFB $84,$04
+ $A684 DEFW $B70E    ; Sprite $2A
+ $A686 DEFB $84,$04
+ $A688 DEFW $B78E    ; Sprite $2B
+ $A68A DEFB $84,$04
+ $A68C DEFW $B80E    ; Sprite $2C
+ $A68E DEFB $84,$04
+ $A690 DEFW $B88E    ; Sprite $2D
+ $A692 DEFB $00,$00
+ $A694 DEFW $B5FE    ; Sprite $2E
+ $A696 DEFB $00,$00
+ $A698 DEFW $B5FE    ; Sprite $2F
+ $A69A DEFB $00,$00
+ $A69C DEFW $B5FE    ; Sprite $30
+ $A69E DEFB $00,$00
+ $A6A0 DEFW $B5FE    ; Sprite $31
+ $A6A2 DEFB $00,$00
+ $A6A4 DEFW $B5FE    ; Sprite $32
+ $A6A6 DEFB $00,$00
+ $A6A8 DEFW $B5CE    ; Sprite $33
+ $A6AA DEFB $00,$00
+ $A6AC DEFW $B5CE    ; Sprite $34
+ $A6AE DEFB $00,$00
+ $A6B0 DEFW $B5CE    ; Sprite $35
+ $A6B2 DEFB $00,$00
+ $A6B4 DEFW $B88E    ; Sprite $36
+ $A6B6 DEFB $83,$02
+ $A6B8 DEFW $B8BE    ; Sprite $37
+ $A6BA DEFB $83,$02
+ $A6BC DEFW $B8EE    ; Sprite $38
+ $A6BE DEFB $83,$02
+ $A6C0 DEFW $B91E    ; Sprite $39
+ $A6C2 DEFB $83,$02
+ $A6C4 DEFW $B94E    ; Sprite $3A
+ $A6C6 DEFB $83,$02
+ $A6C8 DEFW $B97E    ; Sprite $3B
+ $A6CA DEFB $83,$02
+ $A6CC DEFW $B9AE    ; Sprite $3C
+ $A6CE DEFB $83,$02
+ $A6D0 DEFW $B9DE    ; Sprite $3D
+ $A6D2 DEFB $83,$02
+ $A6D4 DEFW $BA0E    ; Sprite $3E
+ $A6D6 DEFB $83,$02
+ $A6D8 DEFW $BA3E    ; Sprite $3F
+ $A6DA DEFB $83,$02
+ $A6DC DEFW $BA6E    ; Sprite $40
+ $A6DE DEFB $83,$02
+ $A6E0 DEFW $BA9E    ; Sprite $41
+ $A6E2 DEFB $83,$02
+ $A6E4 DEFW $BACE    ; Sprite $42
+ $A6E6 DEFB $83,$02
+ $A6E8 DEFW $BAFE    ; Sprite $43
+ $A6EA DEFB $83,$02
+ $A6EC DEFW $BB2E    ; Sprite $44
+ $A6EE DEFB $84,$04
+ $A6F0 DEFW $BBAE    ; Sprite $45
+ $A6F2 DEFB $84,$04
+ $A6F4 DEFW $BC2E    ; Sprite $46
+ $A6F6 DEFB $84,$02
+ $A6F8 DEFW $BC6E    ; Sprite $47
+ $A6FA DEFB $84,$02
+ $A6FC DEFW $BCAE    ; Sprite $48
+ $A6FE DEFB $83,$04
+ $A700 DEFW $BD0E    ; Sprite $49
+ $A702 DEFB $83,$04
+ $A704 DEFW $BD6E    ; Sprite $4A
+ $A706 DEFB $82,$02
+ $A708 DEFW $BD8E    ; Sprite $4B
+ $A70A DEFB $82,$02
+ $A70C DEFW $BDAE    ; Sprite $4C
+ $A70E DEFB $82,$04
+ $A710 DEFW $BDEE    ; Sprite $4D
+ $A712 DEFB $82,$04
+ $A714 DEFW $BE2E    ; Sprite $4E
+ $A716 DEFB $84,$03
+ $A718 DEFW $BE8E    ; Sprite $4F
+ $A71A DEFB $84,$03
+ $A71C DEFW $BEEE    ; Sprite $50
+ $A71E DEFB $84,$03
+ $A720 DEFW $BF4E    ; Sprite $51
+ $A722 DEFB $84,$03
+ $A724 DEFW $BFAE    ; Sprite $52
+ $A726 DEFB $82,$04
+ $A728 DEFW $BFEE    ; Sprite $53
+ $A72A DEFB $82,$04
+ $A72C DEFW $C02E    ; Sprite $54
+ $A72E DEFB $84,$04
+ $A730 DEFW $C0AE    ; Sprite $55
+ $A732 DEFB $84,$04
+ $A734 DEFW $C12E    ; Sprite $56
+ $A736 DEFB $85,$02
+ $A738 DEFW $C17E    ; Sprite $57
+ $A73A DEFB $85,$02
+ $A73C DEFW $C1CE    ; Sprite $58
+ $A73E DEFB $82,$02
+ $A740 DEFW $C1EE    ; Sprite $59
+ $A742 DEFB $82,$02
+ $A744 DEFW $C20E    ; Sprite $5A
+ $A746 DEFB $83,$01
+ $A748 DEFW $C226    ; Sprite $5B
+ $A74A DEFB $83,$01
+ $A74C DEFW $C23E    ; Sprite $5C
+ $A74E DEFB $83,$01
+ $A750 DEFW $C256    ; Sprite $5D
+ $A752 DEFB $83,$01
+ $A754 DEFW $C26E    ; Sprite $5E
+ $A756 DEFB $82,$02
+ $A758 DEFW $C28E    ; Sprite $5F
+ $A75A DEFB $82,$02
+ $A75C DEFW $C2AE    ; Sprite $60
+ $A75E DEFB $82,$02
+ $A760 DEFW $B796    ; Sprite $61
+ $A762 DEFB $00,$00
+ $A764 DEFW $C2CE    ; Sprite $62
+ $A766 DEFB $82,$02
+ $A768 DEFW $C2EE    ; Sprite $63
+ $A76A DEFB $82,$02
+ $A76C DEFW $C30E    ; Sprite $64
+ $A76E DEFB $82,$02
+ $A770 DEFW $C32E    ; Sprite $65
+ $A772 DEFB $82,$02
+ $A774 DEFW $C34E    ; Sprite $66
+ $A776 DEFB $82,$02
+ $A778 DEFW $C36E    ; Sprite $67
+ $A77A DEFB $82,$02
+ $A77C DEFW $C38E    ; Sprite $68
+ $A77E DEFB $81,$02
+ $A780 DEFW $C39E    ; Sprite $69
+ $A782 DEFB $81,$02
+ $A784 DEFW $C3AE    ; Sprite $6A
+ $A786 DEFB $84,$04
+ $A788 DEFW $C42E    ; Sprite $6B
+ $A78A DEFB $84,$04
+ $A78C DEFW $C4AE    ; Sprite $6C
+ $A78E DEFB $84,$04
+ $A790 DEFW $C52E    ; Sprite $6D
+ $A792 DEFB $83,$02
+ $A794 DEFW $C55E    ; Sprite $6E
+ $A796 DEFB $83,$02
+ $A798 DEFW $C58E    ; Sprite $6F
+ $A79A DEFB $83,$02
+ $A79C DEFW $C5BE    ; Sprite $70
+ $A79E DEFB $83,$02
+ $A7A0 DEFW $C5EE    ; Sprite $71
+ $A7A2 DEFB $83,$02
+ $A7A4 DEFW $C61E    ; Sprite $72
+ $A7A6 DEFB $83,$02
+ $A7A8 DEFW $C64E    ; Sprite $73
+ $A7AA DEFB $83,$02
+ $A7AC DEFW $C67E    ; Sprite $74
+ $A7AE DEFB $83,$02
+ $A7B0 DEFW $C6AE    ; Sprite $75
+ $A7B2 DEFB $83,$02
+ $A7B4 DEFW $C6DE    ; Sprite $76
+ $A7B6 DEFB $83,$02
+ $A7B8 DEFW $C70E    ; Sprite $77
+ $A7BA DEFB $83,$02
+ $A7BC DEFW $C73E    ; Sprite $78
+ $A7BE DEFB $83,$02
+ $A7C0 DEFW $C76E    ; Sprite $79
+ $A7C2 DEFB $83,$02
+ $A7C4 DEFW $C79E    ; Sprite $7A
+ $A7C6 DEFB $83,$02
+ $A7C8 DEFW $C7CE    ; Sprite $7B
+ $A7CA DEFB $83,$02
+ $A7CC DEFW $C7FE    ; Sprite $7C
+ $A7CE DEFB $83,$05
+ $A7D0 DEFW $C876    ; Sprite $7D
+ $A7D2 DEFB $8C,$05
+ $A7D4 DEFW $CA56    ; Sprite $7E
+ $A7D6 DEFB $8C,$06
+ $A7D8 DEFW $CC96    ; Sprite $7F
+ $A7DA DEFB $8A,$05
+ $A7DC DEFW $CE26    ; Sprite $80
+ $A7DE DEFB $94,$01
+ $A7E0 DEFW $BE9E    ; Sprite $81
+ $A7E2 DEFB $00,$00
+ $A7E4 DEFW $BE9E    ; Sprite $82
+ $A7E6 DEFB $00,$00
+ $A7E8 DEFW $CEC6    ; Sprite $83
+ $A7EA DEFB $84,$03
+ $A7EC DEFW $CF26    ; Sprite $84
+ $A7EE DEFB $83,$04
+ $A7F0 DEFW $CF86    ; Sprite $85
+ $A7F2 DEFB $83,$04
+ $A7F4 DEFW $CFE6    ; Sprite $86
+ $A7F6 DEFB $83,$04
+ $A7F8 DEFW $D046    ; Sprite $87
+ $A7FA DEFB $83,$04
+ $A7FC DEFW $CBB6    ; Sprite $88
+ $A7FE DEFB $00,$00
+ $A800 DEFW $D0A6    ; Sprite $89
+ $A802 DEFB $83,$04
+ $A804 DEFW $D106    ; Sprite $8A
+ $A806 DEFB $83,$04
+ $A808 DEFW $C4F6    ; Sprite $8B
+ $A80A DEFB $00,$00
+ $A80C DEFW $D166    ; Sprite $8C
+ $A80E DEFB $83,$04
+ $A810 DEFW $D1C6    ; Sprite $8D
+ $A812 DEFB $00,$00
+ $A814 DEFW $CC76    ; Sprite $8E
+ $A816 DEFB $00,$00
+ $A818 DEFW $CC76    ; Sprite $8F
+ $A81A DEFB $00,$00
+ $A81C DEFW $CC76    ; Sprite $90
+ $A81E DEFB $00,$00
+ $A820 DEFW $D1C6    ; Sprite $91
+ $A822 DEFB $83,$03
+ $A824 DEFW $D20E    ; Sprite $92
+ $A826 DEFB $83,$03
+ $A828 DEFW $D256    ; Sprite $93
+ $A82A DEFB $84,$03
+ $A82C DEFW $D2B6    ; Sprite $94
+ $A82E DEFB $84,$03
+ $A830 DEFW $D316    ; Sprite $95
+ $A832 DEFB $84,$03
+ $A834 DEFW $D376    ; Sprite $96
+ $A836 DEFB $83,$03
+ $A838 DEFW $D3BE    ; Sprite $97
+ $A83A DEFB $84,$03
+ $A83C DEFW $D41E    ; Sprite $98
+ $A83E DEFB $83,$04
+ $A840 DEFW $D47E    ; Sprite $99
+ $A842 DEFB $83,$04
+ $A844 DEFW $D4DE    ; Sprite $9A
+ $A846 DEFB $83,$04
+ $A848 DEFW $D53E    ; Sprite $9B
+ $A84A DEFB $83,$04
+ $A84C DEFW $D59E    ; Sprite $9C
+ $A84E DEFB $84,$04
+ $A850 DEFW $D61E    ; Sprite $9D
+ $A852 DEFB $83,$04
+ $A854 DEFW $D67E    ; Sprite $9E
+ $A856 DEFB $83,$02
+ $A858 DEFW $D6AE    ; Sprite $9F
+ $A85A DEFB $83,$03
+ $A85C DEFW $D6F6    ; Sprite $A0
+ $A85E DEFB $83,$04
+ $A860 DEFW $D756    ; Sprite $A1
+ $A862 DEFB $84,$04
+ $A864 DEFW $D7D6    ; Sprite $A2
+ $A866 DEFB $84,$04
+ $A868 DEFW $D856    ; Sprite $A3
+ $A86A DEFB $84,$04
+ $A86C DEFW $D8D6    ; Sprite $A4
+ $A86E DEFB $84,$04
+ $A870 DEFW $D956    ; Sprite $A5
+ $A872 DEFB $81,$02
+ $A874 DEFW $D966    ; Sprite $A6
+ $A876 DEFB $82,$02
+ $A878 DEFW $D986    ; Sprite $A7
+ $A87A DEFB $83,$02
+ $A87C DEFW $D9B6    ; Sprite $A8
+ $A87E DEFB $84,$02
+ $A880 DEFW $D9F6    ; Sprite $A9
+ $A882 DEFB $84,$02
+ $A884 DEFW $DA36    ; Sprite $AA
+ $A886 DEFB $84,$02
+ $A888 DEFW $DA76    ; Sprite $AB
+ $A88A DEFB $84,$04
+ $A88C DEFW $DAF6    ; Sprite $AC
+ $A88E DEFB $84,$04
+ $A890 DEFW $DB76    ; Sprite $AD
+ $A892 DEFB $84,$04
+ $A894 DEFW $DBF6    ; Sprite $AE
+ $A896 DEFB $84,$04
+ $A898 DEFW $DCB6    ; Sprite $AF
+ $A89A DEFB $00,$00
+ $A89C DEFW $CD76    ; Sprite $B0
+ $A89E DEFB $00,$00
+ $A8A0 DEFW $DC76    ; Sprite $B1
+ $A8A2 DEFB $83,$01
+ $A8A4 DEFW $DC8E    ; Sprite $B2
+ $A8A6 DEFB $83,$01
+ $A8A8 DEFW $DCA6    ; Sprite $B3
+ $A8AA DEFB $83,$01
+ $A8AC DEFW $DCBE    ; Sprite $B4
+ $A8AE DEFB $83,$01
+ $A8B0 DEFW $DCD6    ; Sprite $B5
+ $A8B2 DEFB $81,$01
+ $A8B4 DEFW $DCDE    ; Sprite $B6
+ $A8B6 DEFB $81,$01
+ $A8B8 DEFW $DCE6    ; Sprite $B7
+ $A8BA DEFB $81,$01
+ $A8BC DEFW $DCEE    ; Sprite $B8
+ $A8BE DEFB $81,$01
+ $A8C0 DEFW $DCF6    ; Sprite $B9
+ $A8C2 DEFB $81,$01
+ $A8C4 DEFW $DCFE    ; Sprite $BA
+ $A8C6 DEFB $84,$04
+ $A8C8 DEFW $DD7E    ; Sprite $BB
+ $A8CA DEFB $84,$04
+ $A8CC DEFW $DDFE    ; Sprite $BC
+ $A8CE DEFB $82,$02
+ $A8D0 DEFW $DE1E    ; Sprite $BD
+ $A8D2 DEFB $82,$02
+ $A8D4 DEFW $DE3E    ; Sprite $BE
+ $A8D6 DEFB $82,$02
+ $A8D8 DEFW $DE5E    ; Sprite $BF
+ $A8DA DEFB $82,$02
+ $A8DC DEFW $DE7E    ; Sprite $C0
+ $A8DE DEFB $82,$02
+ $A8E0 DEFW $DE9E    ; Sprite $C1
+ $A8E2 DEFB $82,$02
+ $A8E4 DEFW $DEBE    ; Sprite $C2
+ $A8E6 DEFB $83,$02
+ $A8E8 DEFW $DEEE    ; Sprite $C3
+ $A8EA DEFB $82,$02
+ $A8EC DEFW $DF0E    ; Sprite $C4
+ $A8EE DEFB $82,$02
+ $A8F0 DEFW $DF2E    ; Sprite $C5
+ $A8F2 DEFB $82,$0B
+ $A8F4 DEFW $DFDE    ; Sprite $C6
+ $A8F6 DEFB $00,$00
+ $A8F8 DEFW $DFDE    ; Sprite $C7
+ $A8FA DEFB $84,$04
+ $A8FC DEFW $E05E    ; Sprite $C8
+ $A8FE DEFB $84,$0B
 
 ; Dynamic object pool (CONFIRMED live: creatures, items, doors/passages --
 ; anything not baked into the static room grid; see #R$612C)
@@ -8400,11 +8628,13 @@ b$C36E DEFB $00,$00,$00,$00,$04,$20,$00,$00 ; {#HTML[#UDGARRAY2,,,2,,($C36E-$C38
  $C37E DEFB $08,$00,$00,$08,$04,$80,$00,$10 ;
  $C386 DEFB $00,$80,$00,$00,$00,$00,$00,$00 ; }
 
-; Sprite, 16x8 pixels. Spark/debris
+; Sprite $68, 16x8 pixels. Bubble (source-of-bubbles object #R$957C, animation
+; frame 1 -- previously guessed "Spark/debris" from shape/size alone)
 b$C38E DEFB $01,$10,$40,$38,$E0,$7C,$44,$3A ; {#HTML[#UDGARRAY2,,,2,,($C38E-$C39D-1-16)(sprite-c38e)]
  $C396 DEFB $1A,$15,$11,$22,$4A,$70,$04,$20 ; }
 
-; Sprite, 16x8 pixels. Spark/debris
+; Sprite $69, 16x8 pixels. Bubble (source-of-bubbles object #R$957C, animation
+; frame 2 -- previously guessed "Spark/debris" from shape/size alone)
 b$C39E DEFB $04,$20,$0E,$50,$44,$88,$A8,$50 ; {#HTML[#UDGARRAY2,,,2,,($C39E-$C3AD-1-16)(sprite-c39e)]
  $C3A6 DEFB $5C,$20,$3E,$02,$1C,$07,$08,$82 ; }
 

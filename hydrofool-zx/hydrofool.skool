@@ -13,7 +13,11 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $6106 DEFB $00,$00,$00,$00
  $610A DEFW $70E0
  $610C DEFW $8FEF
- $610E DEFW $A918                           ; ?? Object?
+ $610E DEFW $A918                           ; Dynamic object template pointer,
+                                            ; used as IX going into #R$84AE
+                                            ; (its allocator copies the first 2
+                                            ; bytes from here into every
+                                            ; newly-allocated object slot)
  $6110 DEFW $788A
  $6112 DEFB $00,$00,$00,$00,$00,$00,$00,$04
  $611A DEFB $05,$00,$00,$00,$00,$00,$00,$00
@@ -23,12 +27,43 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $6125 DEFB $00
  $6126 DEFB $02                             ; Room number
  $6127 DEFW $6CD6                           ; Room description address
- $6129 DEFB $00                             ; Bit 6 from byte 3 of Room
-                                            ; description, shifted to bit 0
+ $6129 DEFB $00                             ; Room shape/layout selector (0 or
+                                            ; 1; bit 6 from byte 3 of Room
+                                            ; description, shifted to bit 0).
+                                            ; Selects one of 2 fixed
+                                            ; wall/decoration layouts drawn by
+                                            ; #R$642F.
  $612A DEFB $0E                             ; Bits 4-7 from byte 2 of Room
                                             ; description, shifted to bits 0-3
- $612B DEFB $00                             ; Byte 1 from Room description
- $612C DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Room grid 8x8 ??
+ $612B DEFB $00                             ; Room exit/door bitfield (from
+                                            ; room description byte1; see
+                                            ; #R$6329). Also reused throughout
+                                            ; the code as a numeric base
+                                            ; address for room-grid cell
+                                            ; addressing ($612B+index, grid
+                                            ; starting at $612C) -- these are
+                                            ; two unrelated uses of the same
+                                            ; address, not a conflict.
+; CONFIRMED via live debugging: 8x8 grid (row-major, offset = row*8+col),
+; cleared to 0 then populated by #R$62A2 from a shared room-type template
+; (#R$72D1 family, selected by $612A via the #R$72B1 pointer table), plus any
+; per-room extra pairs from the room description itself (see #R$6CCF). Each
+; entry's grid cell address is $612B+index (i.e. grid_offset = index-1); the
+; stored value is either a plain content code (see table below), or one of
+; $66/$67/$68/$69/$6A/$6B which additionally triggers a dedicated object-spawn
+; routine (#R$8EA7/#R$8EF2/#R$8F1E/#R$8F4C/#R$8E3F) -- these special values do
+; NOT persist in the finished grid (never observed live); they spawn a dynamic
+; object instead (see #R$84AE) and the grid cell they occupied stays part of
+; the static terrain layout only incidentally.
+; .
+; CONFIRMED static object codes (from visual correlation against live
+; screenshots, room grids $2E/$2F/$C0/$BF/$1A/$14/$84): $01=small seaweed,
+; $02=flat rock, $03=clam shell (no pearl), $04=small rock, $09=rock,
+; $0D=seaweed, $7F=solid wall (seen as a contiguous 3x3 corner block).
+; Creatures, pickups (spoon/ball/horseshoe/etc), and air-bubble sources are
+; NEVER on the grid -- they're separate dynamic objects (see #R$84AE), not
+; static terrain.
+ $612C DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Room grid 8x8
  $6134 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ;
  $613C DEFB $00,$00,$00,$00,$00,$01,$00,$00 ;
  $6144 DEFB $00,$00,$00,$00,$00,$00,$00,$01 ;
@@ -48,7 +83,12 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $6186 DEFB $00
  $6187 DEFB $00,$FF,$01
  $618A DEFB $00
- $618B DEFW $A930
+ $618B DEFW $A930                           ; Free-list head pointer for the
+                                            ; dynamic object pool (#R$A900),
+                                            ; consumed/updated by #R$84AE. Its
+                                            ; high byte (at $618C) is also read
+                                            ; standalone as an empty/enabled
+                                            ; check.
  $618D DEFW $BDAE
  $618F DEFB $10
  $6190 DEFB $04,$00,$00
@@ -69,7 +109,8 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $61A4 DEFB $3A,$5C
  $61A6 DEFB $00
 
-; Routine at 61A7
+; CONFIRMED live: JP (HL) trampoline, used by #R$983C to call a dynamic
+; object's per-frame behaviour handler
 ;
 ; Used by the routine at #R$983C.
 c$61A7 JP (HL)       ;
@@ -230,8 +271,8 @@ c$6269 LD ($6126),A  ; set room number
  $629B LD BC,$003F   ;
  $629E LD (HL),$00   ;
  $62A0 LDIR          ; }
- $62A2 LD HL,($612A) ;
- $62A5 LD H,$00      ;
+ $62A2 LD HL,($612A) ; {place the room-type template ($612A indexes the #R$72B1
+ $62A5 LD H,$00      ; pointer table) into the grid via #R$62C8
  $62A7 ADD HL,HL     ;
  $62A8 LD DE,$72B1   ;
  $62AB ADD HL,DE     ;
@@ -244,22 +285,22 @@ c$6269 LD ($6126),A  ; set room number
  $62B2 JR Z,$62BB    ;
  $62B4 JP M,$62BB    ;
  $62B7 INC HL        ;
- $62B8 CALL $62C8    ;
-*$62BB LD HL,($6127) ;
- $62BE LD A,(HL)     ;
- $62BF SUB $04       ;
+ $62B8 CALL $62C8    ; }
+*$62BB LD HL,($6127) ; {place this room's own extra (index,value) pairs (if its
+ $62BE LD A,(HL)     ; description is longer than 4 bytes) into the grid via
+ $62BF SUB $04       ; #R$62C8
  $62C1 JR Z,$62F8    ;
  $62C3 LD DE,$0004   ;
  $62C6 ADD HL,DE     ;
- $62C7 LD B,A        ;
-*$62C8 LD E,(HL)     ;
- $62C9 LD D,$00      ;
- $62CB LD IX,$612B   ;
- $62CF ADD IX,DE     ;
- $62D1 INC HL        ;
- $62D2 LD A,(HL)     ;
- $62D3 LD (IX+$00),A ;
- $62D6 CP $66        ;
+ $62C7 LD B,A        ; }
+*$62C8 LD E,(HL)     ; {CONFIRMED live: grid-entry writer. E=(HL)=index,
+ $62C9 LD D,$00      ; IX=$612B+E=target address, A=(HL+1)=value; stores A at
+ $62CB LD IX,$612B   ; (IX+0), then checks A against $66/$67/$68/$69/$6A/$6B to
+ $62CF ADD IX,DE     ; also trigger a dedicated object-spawn routine. Loops B
+ $62D1 INC HL        ; times (DJNZ), consuming 2 bytes/iteration; a
+ $62D2 LD A,(HL)     ; special-value spawn routine can decrement B as a side
+ $62D3 LD (IX+$00),A ; effect, ending the loop earlier than the byte count
+ $62D6 CP $66        ; alone would suggest (confirmed live for #R$8EA7).
  $62D8 CALL Z,$8EA7  ;
  $62DB CP $6A        ;
  $62DD CALL Z,$8EA7  ;
@@ -273,7 +314,7 @@ c$6269 LD ($6126),A  ; set room number
  $62F1 CALL Z,$8E3F  ;
  $62F4 INC HL        ;
  $62F5 DEC B         ;
- $62F6 DJNZ $62C8    ;
+ $62F6 DJNZ $62C8    ; }
 *$62F8 RET           ;
 
 ; Routine at 62F9
@@ -313,9 +354,23 @@ c$630D CALL $62F9    ;
 *$6326 INC HL        ;
  $6327 JR $6318      ;
 
-; Routine at 6329
+; Build the door/exit bitfield at $612B from the room description's byte1
 ;
 ; Used by the routine at #R$91A6.
+;
+; .
+;
+; CONFIRMED live (bit-count matches exits seen in 7/7 sample rooms): re-reads
+; room description byte1 (at room_base+1), merges bit4 into bit0 and bit7 into
+; bit3 (via AND $90, RRCA x4, OR), writes the result back into the room
+; description itself AND into $612B. Bits 0-3 of the result are then tested by
+; #R$6344/#R$6377 to conditionally draw door graphics at four fixed screen
+; positions -- very likely one bit per compass-ish exit direction (exact
+; bit-to-direction mapping not yet pinned down, but the *count* of set bits
+; matched the number of visible exits in every live sample: room $2E (3 bits,
+; exits SW/SE/NE), $2F (2 bits, NW/SE), $C0 (2 bits, SE/NE), $BF (3 bits,
+; NW/NE/SE), $1A (2 bits, SW/NE), $14 (4 bits, all four), $84 (3 bits,
+; SW/NW/NE).
 c$6329 PUSH BC       ;
  $632A PUSH DE       ;
  $632B PUSH HL       ;
@@ -337,9 +392,15 @@ c$6329 PUSH BC       ;
  $6342 POP BC        ;
  $6343 RET           ;
 
-; Routine at 6344
+; Draw door graphics for $612B bits 0 and 3 (single-piece doors)
 ;
 ; Used by the routines at #R$6329 and #R$6377.
+;
+; .
+;
+; CONFIRMED live: tests bit 0 of $612B, drawing one door-graphic piece via
+; #R$8128 at a fixed screen position if set; then bit 3, drawing a different
+; fixed-position piece if set.
 c$6344 LD BC,$C7C7   ;
  $6347 LD A,($612B)  ;
  $634A BIT 0,A       ;
@@ -363,9 +424,15 @@ c$6344 LD BC,$C7C7   ;
  $6372 LD E,$48      ;
  $6374 JP $8128      ;
 
-; Routine at 6377
+; Draw door graphics for $612B bits 1 and 2 (three-piece doors)
 ;
 ; Used by the routine at #R$676D.
+;
+; .
+;
+; CONFIRMED live: tests bit 1 of $612B, drawing three door-graphic pieces via
+; #R$8128 (three fixed screen positions) if set; then bit 2, drawing three
+; different fixed-position pieces if set. Calls #R$6344 first.
 c$6377 CALL $6344    ;
  $637A LD A,($612B)  ;
  $637D BIT 1,A       ;
@@ -428,9 +495,21 @@ b$63DE DEFB $E2,$63,$04,$64,$02,$7C,$14,$4C
  $6426 DEFB $02,$03,$09,$0A,$0B,$11,$12,$13
  $642E DEFB $FF
 
-; Routine at 642F
+; Draw the fixed wall/decoration layout selected by $6129
 ;
 ; Used by the routine at #R$676D.
+;
+; .
+;
+; CONFIRMED live: uses $6129 (0 or 1) to index a 2-entry pointer table at
+; $63DE, selecting one of two fixed layout lists. Each list has two parts: a
+; sequence of 4-byte records (count, screen Y, screen X -- drawn via #R$8128)
+; terminated by $FF, immediately followed by a sequence of single bytes (grid
+; indices) terminated by $FF, each poked into the room grid ($612B+index, i.e.
+; grid_offset=index-1) as solid wall ($7F). This is the source of the recurring
+; 3x3 solid-wall corner block seen in every room grid dump so far -- it's not
+; part of the room-type template at all, it's this fixed, $6129-selected
+; layout.
 c$642F LD A,($6129)  ;
  $6432 AND $01       ;
  $6434 ADD A,A       ;
@@ -718,11 +797,13 @@ b$65CF DEFB $16,$01,$A4,$5E
  $65D7 DEFW $7441
  $65D9 DEFW $0000
 
-; Routine at 65DB
+; Draw message window: room/creature title line + rotating clue/joke message
+; line
 ;
 ; Used by the routine at #R$676D.
 c$65DB LD HL,$65CF   ;
- $65DE CALL $7D68    ;
+ $65DE CALL $7D68    ; Print string: position cursor for message window line 1
+                     ; (row $A4)
  $65E1 LD HL,($6127) ;
  $65E4 LD DE,$0003   ;
  $65E7 ADD HL,DE     ;
@@ -741,16 +822,19 @@ c$65DB LD HL,$65CF   ;
  $65F6 LD DE,$73B5   ; "  DEATHBOWL  "
  $65F9 ADD HL,DE     ;
  $65FA LD ($65D9),HL ;
- $65FD CALL $7D68    ;
+ $65FD CALL $7D68    ; Print string: room/creature title, indexed by room type
+                     ; (#R$73B5 table)
  $6600 LD HL,$65D3   ;
- $6603 CALL $7D68    ;
+ $6603 CALL $7D68    ; Print string: position cursor for message window line 2
+                     ; (row $B4)
  $6606 LD HL,($65D7) ;
  $6609 LD A,$FF      ;
  $660B CP (HL)       ;
  $660C JR NZ,$6614   ;
  $660E LD HL,$7441   ;
  $6611 LD ($65D7),HL ;
-*$6614 CALL $7D68    ;
+*$6614 CALL $7D68    ; Print string: current clue/joke message, rotating
+                     ; through the #R$7441 table
  $6617 LD HL,($65D7) ;
  $661A LD DE,$0014   ;
  $661D ADD HL,DE     ;
@@ -963,9 +1047,26 @@ c$6743 LD HL,($6127) ;
  $6769 CALL $88DD    ;
  $676C RET           ;
 
-; Routine at 676D
+; Draw the full room (walls, doors, message window, creatures/objects) -- or
+; the reduced special-room variant for rooms $01/$02
 ;
 ; Used by the routines at #R$6B05 and #R$97FC.
+;
+; .
+;
+; CONFIRMED live: rooms $01 and $02 are the only two type $E rooms, and are
+; special "no walls" rooms (see #R$6CCF -- room $01 is the ending/winning
+; room). At #R$67AB, this routine checks if the current room ($6126) is 1 or 2
+; and, if so, skips straight to #R$67E0, bypassing: the wall/layout draw
+; (#R$642F), door-graphic draw (#R$6377), the message window (#R$65DB), and
+; several creature/object placement calls
+; (#R$6593/$655E/$663B/$6743/$8F82/$6895/$885A). The room's grid contents
+; (rocks/seaweed etc, from its type $E template) still get drawn via a
+; separate, non-skipped path -- consistent with the "just floating rocks and
+; seaweed, no walls" appearance of room $01. Room $01 additionally gets one
+; extra call, #R$86CC (CALL Z at #R$67E8, gated on room==1 specifically, not
+; room==2) -- almost certainly what draws the "DEATHBOWL DIVINED" end-game
+; stats overlay.
 c$676D LD ($8DB8),A  ;
  $6770 LD ($8E11),A  ;
  $6773 LD ($8E29),A  ;
@@ -987,11 +1088,11 @@ c$676D LD ($8DB8),A  ;
  $67A2 CALL $7FC0    ;
  $67A5 CALL $7F8E    ;
  $67A8 CALL $63D0    ; Clear shadow screen
- $67AB LD A,($6126)  ;
- $67AE CP $01        ;
+ $67AB LD A,($6126)  ; {CONFIRMED live: if room $6126 is 1 or 2, skip to
+ $67AE CP $01        ; #R$67E0 (special "no walls" room -- see #R$676D)
  $67B0 JR Z,$67E0    ;
  $67B2 CP $02        ;
- $67B4 JR Z,$67E0    ;
+ $67B4 JR Z,$67E0    ; }
  $67B6 CALL $642F    ;
  $67B9 CALL $64F3    ;
  $67BC CALL $6593    ;
@@ -1006,16 +1107,32 @@ c$676D LD ($8DB8),A  ;
  $67D7 CALL $6895    ;
  $67DA CALL $885A    ;
  $67DD JP $6728      ;
-*$67E0 CALL $64F3    ;
- $67E3 LD A,($6126)  ;
- $67E6 CP $01        ;
- $67E8 CALL Z,$86CC  ;
+*$67E0 CALL $64F3    ; {Special-room path for rooms $01/$02: skips
+ $67E3 LD A,($6126)  ; walls/doors/message-window/most creature calls; room $01
+ $67E6 CP $01        ; additionally calls #R$86CC (likely the end-game stats
+ $67E8 CALL Z,$86CC  ; overlay)}
  $67EB CALL $6653    ; Prepare room with color 0
  $67EE JP $6657      ; Get room color from room description and store to 6175
 
-; Routine at 67F1
+; Attempt to move to an adjacent room (horizontal, via a door) in the direction
+; given by ($8DC1)
 ;
 ; Used by the routine at #R$8AD9.
+;
+; .
+;
+; CONFIRMED live: definitively resolves the #R$612B exit-bit-to-direction
+; mapping (an open question from earlier sessions). Reads a direction code from
+; ($8DC1) -- 1, 2, 4, or else (fallback case) -- and for each, tests one bit of
+; the door bitfield at #R$612B via HL (set to $612B just before this dispatch)
+; before allowing the move: bit 0 (direction code 1) gates "room number - 6"
+; (row-1, NORTH); bit 1 (direction code 4) gates "room number + 1" (col+1,
+; EAST); bit 2 (direction code 2) gates "room number + 6" (row+1, SOUTH); bit 3
+; (the fallback case) gates "room number - 1" (col-1, WEST). Also does
+; on-screen player-position bounds checks (against D/E, likely screen row/col)
+; before allowing the move, presumably to require the player to be near the
+; room edge on that side. #R$97FC is called with the new room number to
+; actually perform the transition.
 c$67F1 LD A,($8DBD)  ;
  $67F4 CP $29        ;
  $67F6 JP NC,$687E   ;
@@ -1035,7 +1152,7 @@ c$67F1 LD A,($8DBD)  ;
  $6815 CP $20        ;
  $6817 JR NC,$687E   ;
  $6819 LD A,($6126)  ; get room number
- $681C SUB $06       ;
+ $681C SUB $06       ; change room number: -6 (row-1, move NORTH)
  $681E LD E,$3C      ;
 *$6820 LD ($8DBB),DE ;
  $6824 JP $97FC      ;
@@ -1052,7 +1169,7 @@ c$67F1 LD A,($8DBD)  ;
  $6839 CP $20        ;
  $683B JR NC,$687E   ;
  $683D LD A,($6126)  ;
- $6840 INC A         ;
+ $6840 INC A         ; change room number: +1 (col+1, move EAST)
  $6841 LD D,$04      ;
  $6843 JR $6820      ;
 *$6845 CP $02        ;
@@ -1068,7 +1185,7 @@ c$67F1 LD A,($8DBD)  ;
  $6857 CP $20        ;
  $6859 JR NC,$687E   ;
  $685B LD A,($6126)  ;
- $685E ADD A,$06     ;
+ $685E ADD A,$06     ; change room number: +6 (row+1, move SOUTH)
  $6860 LD E,$04      ;
  $6862 JR $6820      ;
 *$6864 BIT 3,(HL)    ;
@@ -1082,7 +1199,7 @@ c$67F1 LD A,($8DBD)  ;
  $6872 CP $20        ;
  $6874 JR NC,$687E   ;
  $6876 LD A,($6126)  ;
- $6879 DEC A         ;
+ $6879 DEC A         ; change room number: -1 (col-1, move WEST)
  $687A LD D,$3C      ;
  $687C JR $6820      ;
 *$687E AND A         ;
@@ -1536,282 +1653,448 @@ b$6C80 DEFB $7B,$00,$7C,$7D,$7E,$7F,$00,$00
 ;
 ; .
 ;
-; Room description format:
+; The world is a 6x6x6 cube of room slots (6 levels, each a 6x6 grid), per an
+; external game map. The highest room number in this table is $D7=215=6*6*6-1,
+; and the table has 216 records total ($00-$D7) -- one per cube slot, including
+; ~15 unused/vacant ones (no room actually there). Horizontal (same-level)
+; neighbours connect via doors (#R$612B); vertical neighbours connect via
+; whirlpools (down, #R$8A87) and bubbles (up, also #R$8A87).
 ; .
-; byte 0: length - offset to the next description;
+; CONFIRMED live (see x-docs/Room-Format.md): the room number decodes to its
+; cube position with the SAME off-by-one seen in this table's own labels -- use
+; n=room_number-1, then level=n/36, row=(n%36)/6, col=n%6 (0-based).
+; Cross-checked against the 4 menu entry points (A/B/C/D) and an external map:
+; 6 of 8 row/col/level values matched exactly using this (room_number-1)
+; formula (the raw, un-adjusted formula only matched on level, never on
+; row/col).
 ; .
-; byte 1: ??;
+; Room description format (CONFIRMED via live debugging, see #R$6269/#R$62BB):
 ; .
-; byte 2: room size/color.
-b$6CCF DEFB $07,$00,$E6,$00,$34,$6A,$28     ; Room $00 description
- $6CD6 DEFB $06,$00,$E3,$00,$37,$69         ; Room $01 description
- $6CDC DEFB $04,$04,$05,$00                 ; Room $02 description
- $6CE0 DEFB $04,$02,$51,$47                 ; Room $03 description
- $6CE4 DEFB $0A,$0E,$05,$07,$1D,$0D,$1D,$66 ; {Room $04 description
- $6CEC DEFB $14,$40                         ; }
- $6CEE DEFB $08,$0C,$12,$47,$1B,$03,$1F,$0D ; Room $05 description
- $6CF6 DEFB $08,$06,$46,$00,$14,$66,$28,$40 ; Room $06 description
- $6CFE DEFB $06,$0A,$64,$00,$2D,$03         ; Room $07 description
- $6D04 DEFB $04,$0A,$33,$44                 ; Room $08 description
- $6D08 DEFB $04,$0A,$77,$40                 ; Room $09 description
- $6D0C DEFB $04,$0D,$11,$07                 ; Room $0A description
- $6D10 DEFB $06,$05,$05,$47,$23,$0D         ; Room $0B description
- $6D16 DEFB $04,$03,$12,$09                 ; Room $0C description
- $6D1A DEFB $04,$0C,$06,$49                 ; Room $0D description
- $6D1E DEFB $0E,$02,$04,$40,$21,$11,$2E,$66 ; {Room $0E description
- $6D26 DEFB $2D,$60,$22,$68,$02,$53         ; }
- $6D2C DEFB $04,$0E,$03,$42                 ; Room $0F description
- $6D30 DEFB $0A,$09,$57,$00,$2D,$69,$0A,$68 ; {Room $10 description
- $6D38 DEFB $00,$14                         ; }
- $6D3A DEFB $0A,$05,$41,$00,$14,$66,$28,$40 ; {Room $11 description
- $6D42 DEFB $2E,$69                         ; }
- $6D44 DEFB $0C,$06,$75,$40,$2C,$66,$32,$68 ; {Room $12 description
- $6D4C DEFB $21,$11,$27,$09                 ; }
- $6D50 DEFB $06,$0F,$12,$49,$1C,$69         ; Room $13 description
- $6D56 DEFB $04,$0C,$36,$06                 ; Room $14 description
- $6D5A DEFB $06,$05,$24,$45,$2C,$0D         ; Room $15 description
- $6D60 DEFB $08,$06,$03,$00,$13,$66,$19,$2C ; Room $16 description
- $6D68 DEFB $04,$09,$77,$40                 ; Room $17 description
- $6D6C DEFB $04,$14,$01,$02                 ; Room $18 description
- $6D70 DEFB $04,$05,$05,$49                 ; Room $19 description
- $6D74 DEFB $04,$03,$22,$45                 ; Room $1A description
- $6D78 DEFB $06,$09,$36,$04,$1B,$69         ; Room $1B description
- $6D7E DEFB $06,$07,$04,$49,$2C,$0D         ; Room $1C description
- $6D84 DEFB $06,$0C,$13,$09,$1B,$03         ; Room $1D description
- $6D8A DEFB $0A,$03,$27,$45,$1E,$02,$22,$68 ; {Room $1E description
- $6D92 DEFB $00,$2E                         ; }
- $6D94 DEFB $06,$0B,$61,$00,$15,$0D         ; Room $1F description
- $6D9A DEFB $04,$08,$25,$45                 ; Room $20 description
- $6D9E DEFB $0A,$02,$12,$06,$2C,$03,$24,$66 ; {Room $21 description
- $6DA6 DEFB $35,$60                         ; }
- $6DA8 DEFB $08,$0B,$16,$09,$12,$09,$1A,$09 ; Room $22 description
- $6DB0 DEFB $04,$09,$54,$49                 ; Room $23 description
- $6DB4 DEFB $04,$0C,$05,$00                 ; Room $24 description
- $6DB8 DEFB $04,$08,$05,$40                 ; Room $25 description
- $6DBC DEFB $04,$05,$06,$00                 ; Room $26 description
- $6DC0 DEFB $04,$06,$77,$40                 ; Room $27 description
- $6DC4 DEFB $0A,$0A,$03,$40,$1D,$02,$1D,$68 ; {Room $28 description
- $6DCC DEFB $02,$10                         ; }
- $6DCE DEFB $08,$08,$11,$06,$1B,$12,$0A,$12 ; Room $29 description
- $6DD6 DEFB $09,$06,$65,$49,$33,$0D,$2A,$6A ; {Room $2A description
- $6DDE DEFB $28                             ; }
- $6DDF DEFB $04,$0A,$82,$09                 ; Room $2B description
- $6DE3 DEFB $06,$0C,$36,$44,$1A,$69         ; Room $2C description
- $6DE9 DEFB $04,$07,$24,$45                 ; Room $2D description
- $6DED DEFB $04,$0A,$53,$09                 ; Room $2E description
- $6DF1 DEFB $06,$0C,$07,$49,$2C,$69         ; Room $2F description
- $6DF7 DEFB $04,$05,$71,$40                 ; Room $30 description
- $6DFB DEFB $10,$04,$F5,$08,$13,$0F,$17,$0E ; {Room $31 description
- $6E03 DEFB $33,$0E,$37,$0F,$25,$6B,$25,$69 ; }
- $6E0B DEFB $0A,$07,$12,$46,$1B,$03,$24,$68 ; {Room $32 description
- $6E13 DEFB $00,$61                         ; }
- $6E15 DEFB $06,$0D,$06,$00,$0F,$0D         ; Room $33 description
- $6E1B DEFB $0A,$04,$34,$40,$21,$11,$1D,$66 ; {Room $34 description
- $6E23 DEFB $28,$48                         ; }
- $6E25 DEFB $06,$01,$03,$49,$36,$69         ; Room $35 description
- $6E2B DEFB $04,$07,$27,$05                 ; Room $36 description
- $6E2F DEFB $06,$18,$01,$07,$0A,$09         ; Room $37 description
- $6E35 DEFB $04,$14,$25,$05                 ; Room $38 description
- $6E39 DEFB $04,$05,$32,$44                 ; Room $39 description
- $6E3D DEFB $04,$03,$16,$06                 ; Room $3A description
- $6E41 DEFB $04,$0C,$34,$44                 ; Room $3B description
- $6E45 DEFB $04,$07,$73,$40                 ; Room $3C description
- $6E49 DEFB $0A,$0E,$57,$03,$37,$0D,$0A,$68 ; {Room $3D description
- $6E51 DEFB $00,$23                         ; }
- $6E53 DEFB $04,$09,$31,$43                 ; Room $3E description
- $6E57 DEFB $04,$05,$05,$00                 ; Room $3F description
- $6E5B DEFB $0A,$04,$12,$46,$2F,$12,$36,$12 ; {Room $40 description
- $6E63 DEFB $1E,$12                         ; }
- $6E65 DEFB $06,$05,$06,$00,$14,$0D         ; Room $41 description
- $6E6B DEFB $08,$03,$04,$40,$0C,$69,$34,$0D ; Room $42 description
- $6E73 DEFB $04,$0B,$83,$03                 ; Room $43 description
- $6E77 DEFB $08,$0A,$77,$40,$1A,$68,$00,$11 ; Room $44 description
- $6E7F DEFB $04,$0B,$31,$04                 ; Room $45 description
- $6E83 DEFB $06,$0B,$55,$00,$05,$02         ; Room $46 description
- $6E89 DEFB $12,$09,$42,$00,$1D,$00,$16,$00 ; {Room $47 description
- $6E91 DEFB $16,$68,$00,$44,$1D,$69,$2E,$68 ;
- $6E99 DEFB $00,$48                         ; }
- $6E9B DEFB $06,$04,$37,$06,$34,$69         ; Room $48 description
- $6EA1 DEFB $0E,$06,$63,$00,$21,$11,$2E,$66 ; {Room $49 description
- $6EA9 DEFB $30,$68,$2E,$68,$00,$5D         ; }
- $6EAF DEFB $04,$84,$04,$02                 ; Room $4A description
- $6EB3 DEFB $08,$06,$16,$46,$1B,$03,$2F,$03 ; Room $4B description
- $6EBB DEFB $04,$0A,$33,$04                 ; Room $4C description
- $6EBF DEFB $04,$0C,$05,$43                 ; Room $4D description
- $6EC3 DEFB $04,$07,$06,$43                 ; Room $4E description
- $6EC7 DEFB $04,$0D,$24,$45                 ; Room $4F description
- $6ECB DEFB $04,$07,$11,$46                 ; Room $50 description
- $6ECF DEFB $07,$0B,$02,$00,$37,$6A,$20     ; Room $51 description
- $6ED6 DEFB $04,$0C,$61,$00                 ; Room $52 description
- $6EDA DEFB $0A,$01,$52,$40,$21,$11,$2D,$66 ; {Room $53 description
- $6EE2 DEFB $2D,$68                         ; }
- $6EE4 DEFB $04,$05,$15,$06                 ; Room $54 description
- $6EE8 DEFB $04,$01,$52,$00                 ; Room $55 description
- $6EEC DEFB $04,$03,$24,$05                 ; Room $56 description
- $6EF0 DEFB $04,$0C,$35,$04                 ; Room $57 description
- $6EF4 DEFB $08,$07,$41,$40,$2E,$66,$28,$58 ; Room $58 description
- $6EFC DEFB $08,$0C,$05,$40,$25,$68,$00,$5D ; Room $59 description
- $6F04 DEFB $0C,$03,$44,$00,$13,$02,$13,$68 ; {Room $5A description
- $6F0C DEFB $02,$1C,$2A,$03                 ; }
- $6F10 DEFB $04,$0A,$65,$00                 ; Room $5B description
- $6F14 DEFB $08,$0E,$12,$03,$0D,$68,$02,$2F ; Room $5C description
- $6F1C DEFB $08,$09,$07,$43,$2D,$68,$02,$4B ; Room $5D description
- $6F24 DEFB $08,$05,$04,$00,$37,$66,$28,$58 ; Room $5E description
- $6F2C DEFB $0D,$05,$56,$00,$1A,$6A,$28,$33 ; {Room $5F description
- $6F34 DEFB $69,$3A,$09,$3D,$09             ; }
- $6F39 DEFB $04,$07,$04,$00                 ; Room $60 description
- $6F3D DEFB $0A,$06,$04,$03,$2D,$68,$02,$5D ; {Room $61 description
- $6F45 DEFB $37,$0D                         ; }
- $6F47 DEFB $04,$0F,$43,$03                 ; Room $62 description
- $6F4B DEFB $04,$0A,$21,$05                 ; Room $63 description
- $6F4F DEFB $10,$09,$F3,$08,$13,$0B,$17,$0C ; {Room $64 description
- $6F57 DEFB $33,$0A,$37,$0B,$25,$6B,$25,$69 ; }
- $6F5F DEFB $06,$05,$45,$00,$12,$69         ; Room $65 description
- $6F65 DEFB $04,$02,$82,$00                 ; Room $66 description
- $6F69 DEFB $04,$0B,$14,$03                 ; Room $67 description
- $6F6D DEFB $04,$0B,$07,$43                 ; Room $68 description
- $6F71 DEFB $08,$0A,$13,$03,$33,$68,$00,$40 ; Room $69 description
- $6F79 DEFB $06,$0A,$32,$04,$0A,$0D         ; Room $6A description
- $6F7F DEFB $04,$18,$05,$40                 ; Room $6B description
- $6F83 DEFB $04,$02,$85,$01                 ; Room $6C description
- $6F87 DEFB $04,$0E,$12,$09                 ; Room $6D description
- $6F8B DEFB $0D,$08,$36,$46,$1B,$6A,$2D,$16 ; {Room $6E description
- $6F93 DEFB $02,$16,$68,$02,$38             ; }
- $6F98 DEFB $04,$06,$24,$45                 ; Room $6F description
- $6F9C DEFB $04,$0A,$73,$40                 ; Room $70 description
- $6FA0 DEFB $06,$0C,$27,$05,$24,$07         ; Room $71 description
- $6FA6 DEFB $04,$02,$06,$00                 ; Room $72 description
- $6FAA DEFB $06,$03,$65,$40,$0C,$69         ; Room $73 description
- $6FB0 DEFB $04,$0E,$02,$02                 ; Room $74 description
- $6FB4 DEFB $0E,$09,$46,$02,$2E,$69,$0C,$66 ; {Room $75 description
- $6FBC DEFB $3C,$60,$37,$02,$16,$00         ; }
- $6FC2 DEFB $07,$02,$54,$40,$23,$6A,$32     ; Room $76 description
- $6FC9 DEFB $04,$0D,$63,$00                 ; Room $77 description
- $6FCD DEFB $04,$02,$07,$40                 ; Room $78 description
- $6FD1 DEFB $04,$02,$01,$40                 ; Room $79 description
- $6FD5 DEFB $04,$05,$55,$42                 ; Room $7A description
- $6FD9 DEFB $14,$02,$02,$00,$0B,$09,$12,$09 ; {Room $7B description
- $6FE1 DEFB $14,$09,$1B,$09,$13,$66,$37,$50 ;
- $6FE9 DEFB $36,$66,$2B,$60                 ; }
- $6FED DEFB $08,$0C,$86,$00,$0E,$68,$02,$41 ; Room $7C description
- $6FF5 DEFB $04,$05,$34,$04                 ; Room $7D description
- $6FF9 DEFB $16,$06,$73,$40,$27,$68,$00,$11 ; {Room $7E description
- $7001 DEFB $2E,$68,$00,$24,$2F,$68,$00,$3B ;
- $7009 DEFB $38,$0D,$0D,$0D,$22,$0D         ; }
- $700F DEFB $07,$0E,$37,$44,$2E,$6A,$40     ; Room $7F description
- $7016 DEFB $04,$0B,$81,$00                 ; Room $80 description
- $701A DEFB $06,$0C,$45,$00,$1D,$00         ; Room $81 description
- $7020 DEFB $04,$16,$02,$47                 ; Room $82 description
- $7024 DEFB $04,$0D,$76,$40                 ; Room $83 description
- $7028 DEFB $04,$05,$14,$43                 ; Room $84 description
- $702C DEFB $04,$07,$03,$01                 ; Room $85 description
- $7030 DEFB $04,$86,$67,$09                 ; Room $86 description
- $7034 DEFB $06,$0F,$31,$49,$2D,$69         ; Room $87 description
- $703A DEFB $04,$0F,$65,$00                 ; Room $88 description
- $703E DEFB $04,$0D,$32,$04                 ; Room $89 description
- $7042 DEFB $06,$03,$46,$03,$1A,$0D         ; Room $8A description
- $7048 DEFB $04,$09,$84,$03                 ; Room $8B description
- $704C DEFB $08,$03,$13,$49,$1B,$03,$2F,$03 ; Room $8C description
- $7054 DEFB $08,$09,$07,$09,$14,$68,$00,$50 ; Room $8D description
- $705C DEFB $09,$01,$01,$02,$21,$11,$1E,$6A ; {Room $8E description
- $7064 DEFB $32                             ; }
- $7065 DEFB $06,$01,$25,$45,$25,$69         ; Room $8F description
- $706B DEFB $0E,$02,$83,$05,$1A,$02,$1A,$68 ; {Room $90 description
- $7073 DEFB $00,$28,$1D,$68,$00,$21         ; }
- $7079 DEFB $06,$84,$05,$47,$23,$09         ; Room $91 description
- $707F DEFB $0C,$06,$14,$01,$21,$11,$14,$66 ; {Room $92 description
- $7087 DEFB $39,$5E,$1F,$03                 ; }
- $708B DEFB $04,$0E,$06,$43                 ; Room $93 description
- $708F DEFB $06,$0A,$17,$03,$12,$03         ; Room $94 description
- $7095 DEFB $04,$0C,$31,$43                 ; Room $95 description
- $7099 DEFB $04,$0D,$02,$00                 ; Room $96 description
- $709D DEFB $04,$07,$73,$40                 ; Room $97 description
- $70A1 DEFB $0C,$0D,$84,$05,$0C,$68,$00,$1A ; {Room $98 description
- $70A9 DEFB $2C,$68,$00,$27                 ; }
- $70AD DEFB $0B,$03,$55,$03,$0A,$03,$21,$11 ; {Room $99 description
- $70B5 DEFB $25,$6A,$38                     ; }
- $70B8 DEFB $10,$0A,$F3,$08,$13,$10,$17,$10 ; {Room $9A description
- $70C0 DEFB $33,$10,$37,$10,$25,$6B,$25,$69 ; }
- $70C8 DEFB $06,$0D,$66,$00,$13,$67         ; Room $9B description
- $70CE DEFB $0A,$06,$17,$41,$21,$11,$23,$66 ; {Room $9C description
- $70D6 DEFB $35,$58                         ; }
- $70D8 DEFB $08,$0B,$21,$45,$2F,$68,$00,$30 ; Room $9D description
- $70E0 DEFB $0B,$0F,$42,$09,$0C,$66,$35,$68 ; {Room $9E description
- $70E8 DEFB $1A,$6A,$30                     ; }
- $70EB DEFB $0E,$0C,$73,$09,$0A,$68,$00,$10 ; {Room $9F description
- $70F3 DEFB $0B,$09,$13,$68,$00,$4F         ; }
- $70F9 DEFB $0A,$04,$04,$01,$12,$0D,$13,$0D ; {Room $A0 description
- $7101 DEFB $0D,$0D                         ; }
- $7103 DEFB $0A,$05,$15,$06,$0B,$12,$12,$12 ; {Room $A1 description
- $710B DEFB $27,$12                         ; }
- $710D DEFB $06,$03,$56,$40,$1E,$67         ; Room $A2 description
- $7113 DEFB $18,$0A,$47,$40,$16,$00,$2B,$00 ; {Room $A3 description
- $711B DEFB $16,$68,$00,$0A,$0D,$68,$00,$2B ;
- $7123 DEFB $2B,$68,$00,$11,$34,$68,$00,$2B ; }
- $712B DEFB $06,$0D,$11,$49,$1C,$69         ; Room $A4 description
- $7131 DEFB $0A,$07,$32,$04,$12,$68,$00,$39 ; {Room $A5 description
- $7139 DEFB $26,$69                         ; }
- $713B DEFB $04,$1E,$63,$00                 ; Room $A6 description
- $713F DEFB $08,$85,$82,$09,$2E,$68,$00,$1B ; Room $A7 description
- $7147 DEFB $04,$06,$53,$02                 ; Room $A8 description
- $714B DEFB $04,$0E,$04,$47                 ; Room $A9 description
- $714F DEFB $04,$0F,$15,$07                 ; Room $AA description
- $7153 DEFB $04,$0A,$87,$07                 ; Room $AB description
- $7157 DEFB $12,$0D,$41,$45,$1D,$00,$1D,$68 ; {Room $AC description
- $715F DEFB $00,$13,$14,$68,$00,$0E,$26,$68 ;
- $7167 DEFB $00,$19                         ; }
- $7169 DEFB $07,$05,$32,$09,$12,$6A,$3C     ; Room $AD description
- $7170 DEFB $04,$03,$03,$47                 ; Room $AE description
- $7174 DEFB $04,$0B,$24,$07                 ; Room $AF description
- $7178 DEFB $04,$09,$25,$05                 ; Room $B0 description
- $717C DEFB $04,$08,$06,$00                 ; Room $B1 description
- $7180 DEFB $06,$03,$37,$44,$2C,$69         ; Room $B2 description
- $7186 DEFB $06,$09,$15,$46,$28,$09         ; Room $B3 description
- $718C DEFB $10,$06,$12,$45,$1F,$12,$27,$12 ; {Room $B4 description
- $7194 DEFB $1A,$12,$15,$12,$19,$04,$1E,$04 ; }
- $719C DEFB $0C,$0C,$43,$09,$0F,$00,$16,$00 ; {Room $B5 description
- $71A4 DEFB $16,$68,$00,$65                 ; }
- $71A8 DEFB $0A,$02,$04,$47,$36,$66,$2D,$68 ; {Room $B6 description
- $71B0 DEFB $21,$11                         ; }
- $71B2 DEFB $07,$0E,$85,$07,$2E,$6A,$3C     ; Room $B7 description
- $71B9 DEFB $04,$0E,$16,$07                 ; Room $B8 description
- $71BD DEFB $04,$08,$87,$02                 ; Room $B9 description
- $71C1 DEFB $04,$07,$71,$40                 ; Room $BA description
- $71C5 DEFB $04,$0B,$82,$09                 ; Room $BB description
- $71C9 DEFB $04,$0C,$33,$44                 ; Room $BC description
- $71CD DEFB $04,$03,$04,$47                 ; Room $BD description
- $71D1 DEFB $04,$0B,$05,$47                 ; Room $BE description
- $71D5 DEFB $12,$0C,$06,$00,$37,$66,$A0,$36 ; {Room $BF description
- $71DD DEFB $2F,$09,$36,$09,$38,$09,$3F,$09 ;
- $71E5 DEFB $0F,$0D                         ; }
- $71E7 DEFB $0D,$01,$67,$07,$21,$11,$21,$68 ; {Room $C0 description
- $71EF DEFB $11,$5D,$2E,$6A,$35             ; }
- $71F4 DEFB $04,$06,$51,$43                 ; Room $C1 description
- $71F8 DEFB $08,$0F,$12,$03,$1C,$68,$00,$11 ; Room $C2 description
- $7200 DEFB $04,$08,$63,$03                 ; Room $C3 description
- $7204 DEFB $08,$06,$14,$01,$13,$12,$0C,$0D ; Room $C4 description
- $720C DEFB $0E,$0D,$45,$01,$16,$00,$24,$00 ; {Room $C5 description
- $7214 DEFB $2B,$00,$2B,$68,$00,$4E         ; }
- $721A DEFB $04,$06,$56,$47                 ; Room $C6 description
- $721E DEFB $06,$1A,$17,$01,$34,$03         ; Room $C7 description
- $7224 DEFB $04,$96,$81,$02                 ; Room $C8 description
- $7228 DEFB $04,$0E,$12,$49                 ; Room $C9 description
- $722C DEFB $07,$0B,$53,$41,$2E,$6A,$3C     ; Room $CA description
- $7233 DEFB $07,$09,$04,$01,$37,$6A,$46     ; Room $CB description
- $723A DEFB $0D,$03,$45,$07,$1A,$6A,$2D,$27 ; {Room $CC description
- $7242 DEFB $66,$38,$58,$1D,$00             ; }
- $7247 DEFB $04,$0C,$36,$47                 ; Room $CD description
- $724B DEFB $08,$03,$07,$45,$2D,$68,$02,$46 ; Room $CE description
- $7253 DEFB $04,$09,$81,$09                 ; Room $CF description
- $7257 DEFB $04,$0C,$04,$40                 ; Room $D0 description
- $725B DEFB $04,$0C,$04,$40                 ; Room $D1 description
- $725F DEFB $04,$02,$84,$01                 ; Room $D2 description
- $7263 DEFB $04,$09,$25,$05                 ; Room $D3 description
- $7267 DEFB $04,$0A,$04,$00                 ; Room $D4 description
- $726B DEFB $04,$0B,$04,$00                 ; Room $D5 description
- $726F DEFB $07,$02,$81,$00,$37,$6A,$28     ; Room $D6 description
- $7276 DEFB $10,$08,$F2,$08,$13,$0F,$17,$0E ; {Room $D7 description
- $727E DEFB $33,$0E,$37,$0F,$25,$6B,$25,$69 ; }
+; byte 0: record length (offset to the next room's description);
+; .
+; byte 1: stored raw to $612B (purpose not yet confirmed);
+; .
+; byte 2 bits 4-7: room type index (0-15), stored to $612A -- selects the grid
+; template from the #R$72B1 pointer table AND the room's creature/inhabitant
+; (via the same value used again below);
+; .
+; byte 3 bit 6: stored to $6129 (purpose not yet confirmed);
+; .
+; byte 3 bits 0-5: CONFIRMED live across 7 sample rooms: a 6-bit index (byte3
+; AND $3F) into the #R$73B5 room/creature title table -- this is what selects
+; the message-window title text (DEATHBOWL/PIRANHA/SEAHORSE/etc), printed by
+; #R$65FD. NOT door/exit flags (an earlier theory, disproved live: two rooms
+; with byte3=$C9 had different exit counts, 2 vs 4). Exits/passages are placed
+; via special-value pairs in the grid template/extras (see #R$72D1 and
+; #R$84AE), not via header bits.
+; .
+; bytes 4+ (if record length > 4): extra (index,value) pairs specific to this
+; room, laid out and consumed identically to a room-type template (see #R$72D1)
+; -- appended on top of the shared type template when the room grid is built.
+; CONFIRMED live (room $52 at #R$6ECF, 3 trailing bytes $37/$6A/$20): the loop
+; counter B starts at (length-4), but a special-value pair (value in
+; $66/$67/$68/$69/$6A/$6B) makes its spawn routine (e.g. #R$8EA7) decrement B
+; as a side effect, ending the loop early -- room $52's single pair ($37,$6A)
+; consumed only 2 of its 3 trailing bytes; the last byte ($20) was never read.
+; This is why odd leftover-byte counts aren't a bug: special-value entries
+; account for more than 2 bytes' worth of the counter.
+; .
+; NOTE: room numbering in these block labels was off by one (each labeled one
+; less than its true in-game room number, confirmed live e.g. the record at
+; #R$6ECF is in-game room $52) -- FIXED throughout below, labels now match the
+; in-game room number read from $6126.
+; .
+; Level 1 of 6 (room numbers $01-$24, cube rows/cols 0-5 -- see
+; x-docs/Room-Format.md) -- entry point 'C' lands in this level (room $1A)
+b$6CCF DEFB $07,$00,$E6,$00                 ; Room $01 description, type $E --
+                                            ; CONFIRMED live: this is in-game
+                                            ; room number $01 (off-by-one, see
+                                            ; the NOTE above) -- the special
+                                            ; ENDING/WINNING room. Forced live
+                                            ; by breakpointing #R$97FC and
+                                            ; overriding A=$01: shows a walless
+                                            ; room (just floating
+                                            ; rocks/seaweed/player) with a
+                                            ; "DEATHBOWL DIVINED" stats screen
+                                            ; (score %, Scans Scraped, Plugs
+                                            ; Pulled, Goodies Gathered, Gnomes
+                                            ; Gnabbed) overlaid, reached
+                                            ; normally via the final whirlpool
+                                            ; after solving the last puzzle.
+                                            ; Not part of the normal 6x6x6
+                                            ; navigable cube (see
+                                            ; x-docs/Room-Format.md) despite
+                                            ; being in-range of the room number
+                                            ; scheme.
+ $6CD3 DEFB $34,$6A,$28
+ $6CD6 DEFB $06,$00,$E3,$00                 ; Room $02 description, type $E
+ $6CDA DEFB $37,$69
+ $6CDC DEFB $04,$04,$05,$00                 ; Room $03 description, type $0
+ $6CE0 DEFB $04,$02,$51,$47                 ; Room $04 description, type $5
+ $6CE4 DEFB $0A,$0E,$05,$07                 ; Room $05 description, type $0
+ $6CE8 DEFB $1D,$0D,$1D,$66,$14,$40
+ $6CEE DEFB $08,$0C,$12,$47                 ; Room $06 description, type $1
+ $6CF2 DEFB $1B,$03,$1F,$0D
+ $6CF6 DEFB $08,$06,$46,$00                 ; Room $07 description, type $4
+ $6CFA DEFB $14,$66,$28,$40
+ $6CFE DEFB $06,$0A,$64,$00                 ; Room $08 description, type $6
+ $6D02 DEFB $2D,$03
+ $6D04 DEFB $04,$0A,$33,$44                 ; Room $09 description, type $3
+ $6D08 DEFB $04,$0A,$77,$40                 ; Room $0A description, type $7
+ $6D0C DEFB $04,$0D,$11,$07                 ; Room $0B description, type $1
+ $6D10 DEFB $06,$05,$05,$47                 ; Room $0C description, type $0
+ $6D14 DEFB $23,$0D
+ $6D16 DEFB $04,$03,$12,$09                 ; Room $0D description, type $1
+ $6D1A DEFB $04,$0C,$06,$49                 ; Room $0E description, type $0
+ $6D1E DEFB $0E,$02,$04,$40                 ; Room $0F description, type $0
+ $6D22 DEFB $21,$11,$2E,$66,$2D,$60,$22,$68
+ $6D2A DEFB $02,$53
+ $6D2C DEFB $04,$0E,$03,$42                 ; Room $10 description, type $0
+ $6D30 DEFB $0A,$09,$57,$00                 ; Room $11 description, type $5
+ $6D34 DEFB $2D,$69,$0A,$68,$00,$14
+ $6D3A DEFB $0A,$05,$41,$00                 ; Room $12 description, type $4
+ $6D3E DEFB $14,$66,$28,$40,$2E,$69
+ $6D44 DEFB $0C,$06,$75,$40                 ; Room $13 description, type $7
+ $6D48 DEFB $2C,$66,$32,$68,$21,$11,$27,$09
+ $6D50 DEFB $06,$0F,$12,$49                 ; Room $14 description, type $1
+ $6D54 DEFB $1C,$69
+ $6D56 DEFB $04,$0C,$36,$06                 ; Room $15 description, type $3
+ $6D5A DEFB $06,$05,$24,$45                 ; Room $16 description, type $2
+ $6D5E DEFB $2C,$0D
+ $6D60 DEFB $08,$06,$03,$00                 ; Room $17 description, type $0
+ $6D64 DEFB $13,$66,$19,$2C
+ $6D68 DEFB $04,$09,$77,$40                 ; Room $18 description, type $7
+ $6D6C DEFB $04,$14,$01,$02                 ; Room $19 description, type $0
+ $6D70 DEFB $04,$05,$05,$49                 ; Room $1A description, type $0
+ $6D74 DEFB $04,$03,$22,$45                 ; Room $1B description, type $2
+ $6D78 DEFB $06,$09,$36,$04                 ; Room $1C description, type $3
+ $6D7C DEFB $1B,$69
+ $6D7E DEFB $06,$07,$04,$49                 ; Room $1D description, type $0
+ $6D82 DEFB $2C,$0D
+ $6D84 DEFB $06,$0C,$13,$09                 ; Room $1E description, type $1
+ $6D88 DEFB $1B,$03
+ $6D8A DEFB $0A,$03,$27,$45                 ; Room $1F description, type $2
+ $6D8E DEFB $1E,$02,$22,$68,$00,$2E
+ $6D94 DEFB $06,$0B,$61,$00                 ; Room $20 description, type $6
+ $6D98 DEFB $15,$0D
+ $6D9A DEFB $04,$08,$25,$45                 ; Room $21 description, type $2
+ $6D9E DEFB $0A,$02,$12,$06                 ; Room $22 description, type $1
+ $6DA2 DEFB $2C,$03,$24,$66,$35,$60
+ $6DA8 DEFB $08,$0B,$16,$09                 ; Room $23 description, type $1
+ $6DAC DEFB $12,$09,$1A,$09
+ $6DB0 DEFB $04,$09,$54,$49                 ; Room $24 description, type $5
+; Level 2 of 6 (room numbers $25-$48)
+ $6DB4 DEFB $04,$0C,$05,$00                 ; Room $25 description, type $0
+ $6DB8 DEFB $04,$08,$05,$40                 ; Room $26 description, type $0
+ $6DBC DEFB $04,$05,$06,$00                 ; Room $27 description, type $0
+ $6DC0 DEFB $04,$06,$77,$40                 ; Room $28 description, type $7
+ $6DC4 DEFB $0A,$0A,$03,$40                 ; Room $29 description, type $0
+ $6DC8 DEFB $1D,$02,$1D,$68,$02,$10
+ $6DCE DEFB $08,$08,$11,$06                 ; Room $2A description, type $1
+ $6DD2 DEFB $1B,$12,$0A,$12
+ $6DD6 DEFB $09,$06,$65,$49                 ; Room $2B description, type $6
+ $6DDA DEFB $33,$0D,$2A,$6A,$28
+ $6DDF DEFB $04,$0A,$82,$09                 ; Room $2C description, type $8
+ $6DE3 DEFB $06,$0C,$36,$44                 ; Room $2D description, type $3
+ $6DE7 DEFB $1A,$69
+ $6DE9 DEFB $04,$07,$24,$45                 ; Room $2E description, type $2
+ $6DED DEFB $04,$0A,$53,$09                 ; Room $2F description, type $5
+ $6DF1 DEFB $06,$0C,$07,$49                 ; Room $30 description, type $0
+ $6DF5 DEFB $2C,$69
+ $6DF7 DEFB $04,$05,$71,$40                 ; Room $31 description, type $7
+ $6DFB DEFB $10,$04,$F5,$08                 ; Room $32 description, type $F --
+                                            ; one of 4 PLUG ROOMs (see
+                                            ; #R$73B3), cube position level 2,
+                                            ; row 2, col 1
+ $6DFF DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F
+ $6E07 DEFB $25,$6B,$25,$69
+ $6E0B DEFB $0A,$07,$12,$46                 ; Room $33 description, type $1
+ $6E0F DEFB $1B,$03,$24,$68,$00,$61
+ $6E15 DEFB $06,$0D,$06,$00                 ; Room $34 description, type $0
+ $6E19 DEFB $0F,$0D
+ $6E1B DEFB $0A,$04,$34,$40                 ; Room $35 description, type $3
+ $6E1F DEFB $21,$11,$1D,$66,$28,$48
+ $6E25 DEFB $06,$01,$03,$49                 ; Room $36 description, type $0
+ $6E29 DEFB $36,$69
+ $6E2B DEFB $04,$07,$27,$05                 ; Room $37 description, type $2
+ $6E2F DEFB $06,$18,$01,$07                 ; Room $38 description, type $0
+ $6E33 DEFB $0A,$09
+ $6E35 DEFB $04,$14,$25,$05                 ; Room $39 description, type $2
+ $6E39 DEFB $04,$05,$32,$44                 ; Room $3A description, type $3
+ $6E3D DEFB $04,$03,$16,$06                 ; Room $3B description, type $1
+ $6E41 DEFB $04,$0C,$34,$44                 ; Room $3C description, type $3
+ $6E45 DEFB $04,$07,$73,$40                 ; Room $3D description, type $7
+ $6E49 DEFB $0A,$0E,$57,$03                 ; Room $3E description, type $5
+ $6E4D DEFB $37,$0D,$0A,$68,$00,$23
+ $6E53 DEFB $04,$09,$31,$43                 ; Room $3F description, type $3
+ $6E57 DEFB $04,$05,$05,$00                 ; Room $40 description, type $0
+ $6E5B DEFB $0A,$04,$12,$46                 ; Room $41 description, type $1
+ $6E5F DEFB $2F,$12,$36,$12,$1E,$12
+ $6E65 DEFB $06,$05,$06,$00                 ; Room $42 description, type $0
+ $6E69 DEFB $14,$0D
+ $6E6B DEFB $08,$03,$04,$40                 ; Room $43 description, type $0
+ $6E6F DEFB $0C,$69,$34,$0D
+ $6E73 DEFB $04,$0B,$83,$03                 ; Room $44 description, type $8
+ $6E77 DEFB $08,$0A,$77,$40                 ; Room $45 description, type $7
+ $6E7B DEFB $1A,$68,$00,$11
+ $6E7F DEFB $04,$0B,$31,$04                 ; Room $46 description, type $3
+ $6E83 DEFB $06,$0B,$55,$00                 ; Room $47 description, type $5
+ $6E87 DEFB $05,$02
+ $6E89 DEFB $12,$09,$42,$00                 ; Room $48 description, type $4
+ $6E8D DEFB $1D,$00,$16,$00,$16,$68,$00,$44
+ $6E95 DEFB $1D,$69,$2E,$68,$00,$48
+; Level 3 of 6 (room numbers $49-$6C) -- entry point 'A' lands in this level
+; (room $52)
+ $6E9B DEFB $06,$04,$37,$06                 ; Room $49 description, type $3
+ $6E9F DEFB $34,$69
+ $6EA1 DEFB $0E,$06,$63,$00                 ; Room $4A description, type $6
+ $6EA5 DEFB $21,$11,$2E,$66,$30,$68,$2E,$68
+ $6EAD DEFB $00,$5D
+ $6EAF DEFB $04,$84,$04,$02                 ; Room $4B description, type $0
+ $6EB3 DEFB $08,$06,$16,$46                 ; Room $4C description, type $1
+ $6EB7 DEFB $1B,$03,$2F,$03
+ $6EBB DEFB $04,$0A,$33,$04                 ; Room $4D description, type $3
+ $6EBF DEFB $04,$0C,$05,$43                 ; Room $4E description, type $0
+ $6EC3 DEFB $04,$07,$06,$43                 ; Room $4F description, type $0
+ $6EC7 DEFB $04,$0D,$24,$45                 ; Room $50 description, type $2
+ $6ECB DEFB $04,$07,$11,$46                 ; Room $51 description, type $1
+ $6ECF DEFB $07,$0B,$02,$00                 ; Room $52 description, type $0
+ $6ED3 DEFB $37,$6A,$20
+ $6ED6 DEFB $04,$0C,$61,$00                 ; Room $53 description, type $6
+ $6EDA DEFB $0A,$01,$52,$40                 ; Room $54 description, type $5
+ $6EDE DEFB $21,$11,$2D,$66,$2D,$68
+ $6EE4 DEFB $04,$05,$15,$06                 ; Room $55 description, type $1
+ $6EE8 DEFB $04,$01,$52,$00                 ; Room $56 description, type $5
+ $6EEC DEFB $04,$03,$24,$05                 ; Room $57 description, type $2
+ $6EF0 DEFB $04,$0C,$35,$04                 ; Room $58 description, type $3
+ $6EF4 DEFB $08,$07,$41,$40                 ; Room $59 description, type $4
+ $6EF8 DEFB $2E,$66,$28,$58
+ $6EFC DEFB $08,$0C,$05,$40                 ; Room $5A description, type $0
+ $6F00 DEFB $25,$68,$00,$5D
+ $6F04 DEFB $0C,$03,$44,$00                 ; Room $5B description, type $4
+ $6F08 DEFB $13,$02,$13,$68,$02,$1C,$2A,$03
+ $6F10 DEFB $04,$0A,$65,$00                 ; Room $5C description, type $6
+ $6F14 DEFB $08,$0E,$12,$03                 ; Room $5D description, type $1
+ $6F18 DEFB $0D,$68,$02,$2F
+ $6F1C DEFB $08,$09,$07,$43                 ; Room $5E description, type $0
+ $6F20 DEFB $2D,$68,$02,$4B
+ $6F24 DEFB $08,$05,$04,$00                 ; Room $5F description, type $0
+ $6F28 DEFB $37,$66,$28,$58
+ $6F2C DEFB $0D,$05,$56,$00                 ; Room $60 description, type $5
+ $6F30 DEFB $1A,$6A,$28,$33,$69,$3A,$09,$3D
+ $6F38 DEFB $09
+ $6F39 DEFB $04,$07,$04,$00                 ; Room $61 description, type $0
+ $6F3D DEFB $0A,$06,$04,$03                 ; Room $62 description, type $0
+ $6F41 DEFB $2D,$68,$02,$5D,$37,$0D
+ $6F47 DEFB $04,$0F,$43,$03                 ; Room $63 description, type $4
+ $6F4B DEFB $04,$0A,$21,$05                 ; Room $64 description, type $2
+ $6F4F DEFB $10,$09,$F3,$08                 ; Room $65 description, type $F --
+                                            ; one of 4 PLUG ROOMs (see
+                                            ; #R$73B3), cube position level 3,
+                                            ; row 4, col 4
+ $6F53 DEFB $13,$0B,$17,$0C,$33,$0A,$37,$0B
+ $6F5B DEFB $25,$6B,$25,$69
+ $6F5F DEFB $06,$05,$45,$00                 ; Room $66 description, type $4
+ $6F63 DEFB $12,$69
+ $6F65 DEFB $04,$02,$82,$00                 ; Room $67 description, type $8
+ $6F69 DEFB $04,$0B,$14,$03                 ; Room $68 description, type $1
+ $6F6D DEFB $04,$0B,$07,$43                 ; Room $69 description, type $0
+ $6F71 DEFB $08,$0A,$13,$03                 ; Room $6A description, type $1
+ $6F75 DEFB $33,$68,$00,$40
+ $6F79 DEFB $06,$0A,$32,$04                 ; Room $6B description, type $3
+ $6F7D DEFB $0A,$0D
+ $6F7F DEFB $04,$18,$05,$40                 ; Room $6C description, type $0
+; Level 4 of 6 (room numbers $6D-$90) -- entry point 'D' lands in this level
+; (room $84)
+ $6F83 DEFB $04,$02,$85,$01                 ; Room $6D description, type $8
+ $6F87 DEFB $04,$0E,$12,$09                 ; Room $6E description, type $1
+ $6F8B DEFB $0D,$08,$36,$46                 ; Room $6F description, type $3
+ $6F8F DEFB $1B,$6A,$2D,$16,$02,$16,$68,$02
+ $6F97 DEFB $38
+ $6F98 DEFB $04,$06,$24,$45                 ; Room $70 description, type $2
+ $6F9C DEFB $04,$0A,$73,$40                 ; Room $71 description, type $7
+ $6FA0 DEFB $06,$0C,$27,$05                 ; Room $72 description, type $2
+ $6FA4 DEFB $24,$07
+ $6FA6 DEFB $04,$02,$06,$00                 ; Room $73 description, type $0
+ $6FAA DEFB $06,$03,$65,$40                 ; Room $74 description, type $6
+ $6FAE DEFB $0C,$69
+ $6FB0 DEFB $04,$0E,$02,$02                 ; Room $75 description, type $0
+ $6FB4 DEFB $0E,$09,$46,$02                 ; Room $76 description, type $4
+ $6FB8 DEFB $2E,$69,$0C,$66,$3C,$60,$37,$02
+ $6FC0 DEFB $16,$00
+ $6FC2 DEFB $07,$02,$54,$40                 ; Room $77 description, type $5
+ $6FC6 DEFB $23,$6A,$32
+ $6FC9 DEFB $04,$0D,$63,$00                 ; Room $78 description, type $6
+ $6FCD DEFB $04,$02,$07,$40                 ; Room $79 description, type $0
+ $6FD1 DEFB $04,$02,$01,$40                 ; Room $7A description, type $0
+ $6FD5 DEFB $04,$05,$55,$42                 ; Room $7B description, type $5
+ $6FD9 DEFB $14,$02,$02,$00                 ; Room $7C description, type $0
+ $6FDD DEFB $0B,$09,$12,$09,$14,$09,$1B,$09
+ $6FE5 DEFB $13,$66,$37,$50,$36,$66,$2B,$60
+ $6FED DEFB $08,$0C,$86,$00                 ; Room $7D description, type $8
+ $6FF1 DEFB $0E,$68,$02,$41
+ $6FF5 DEFB $04,$05,$34,$04                 ; Room $7E description, type $3
+ $6FF9 DEFB $16,$06,$73,$40                 ; Room $7F description, type $7
+ $6FFD DEFB $27,$68,$00,$11,$2E,$68,$00,$24
+ $7005 DEFB $2F,$68,$00,$3B,$38,$0D,$0D,$0D
+ $700D DEFB $22,$0D
+ $700F DEFB $07,$0E,$37,$44                 ; Room $80 description, type $3
+ $7013 DEFB $2E,$6A,$40
+ $7016 DEFB $04,$0B,$81,$00                 ; Room $81 description, type $8
+ $701A DEFB $06,$0C,$45,$00                 ; Room $82 description, type $4
+ $701E DEFB $1D,$00
+ $7020 DEFB $04,$16,$02,$47                 ; Room $83 description, type $0
+ $7024 DEFB $04,$0D,$76,$40                 ; Room $84 description, type $7
+ $7028 DEFB $04,$05,$14,$43                 ; Room $85 description, type $1
+ $702C DEFB $04,$07,$03,$01                 ; Room $86 description, type $0
+ $7030 DEFB $04,$86,$67,$09                 ; Room $87 description, type $6
+ $7034 DEFB $06,$0F,$31,$49                 ; Room $88 description, type $3
+ $7038 DEFB $2D,$69
+ $703A DEFB $04,$0F,$65,$00                 ; Room $89 description, type $6
+ $703E DEFB $04,$0D,$32,$04                 ; Room $8A description, type $3
+ $7042 DEFB $06,$03,$46,$03                 ; Room $8B description, type $4
+ $7046 DEFB $1A,$0D
+ $7048 DEFB $04,$09,$84,$03                 ; Room $8C description, type $8
+ $704C DEFB $08,$03,$13,$49                 ; Room $8D description, type $1
+ $7050 DEFB $1B,$03,$2F,$03
+ $7054 DEFB $08,$09,$07,$09                 ; Room $8E description, type $0
+ $7058 DEFB $14,$68,$00,$50
+ $705C DEFB $09,$01,$01,$02                 ; Room $8F description, type $0
+ $7060 DEFB $21,$11,$1E,$6A,$32
+ $7065 DEFB $06,$01,$25,$45                 ; Room $90 description, type $2
+ $7069 DEFB $25,$69
+; Level 5 of 6 (room numbers $91-$B4)
+ $706B DEFB $0E,$02,$83,$05                 ; Room $91 description, type $8
+ $706F DEFB $1A,$02,$1A,$68,$00,$28,$1D,$68
+ $7077 DEFB $00,$21
+ $7079 DEFB $06,$84,$05,$47                 ; Room $92 description, type $0
+ $707D DEFB $23,$09
+ $707F DEFB $0C,$06,$14,$01                 ; Room $93 description, type $1
+ $7083 DEFB $21,$11,$14,$66,$39,$5E,$1F,$03
+ $708B DEFB $04,$0E,$06,$43                 ; Room $94 description, type $0
+ $708F DEFB $06,$0A,$17,$03                 ; Room $95 description, type $1
+ $7093 DEFB $12,$03
+ $7095 DEFB $04,$0C,$31,$43                 ; Room $96 description, type $3
+ $7099 DEFB $04,$0D,$02,$00                 ; Room $97 description, type $0
+ $709D DEFB $04,$07,$73,$40                 ; Room $98 description, type $7
+ $70A1 DEFB $0C,$0D,$84,$05                 ; Room $99 description, type $8
+ $70A5 DEFB $0C,$68,$00,$1A,$2C,$68,$00,$27
+ $70AD DEFB $0B,$03,$55,$03                 ; Room $9A description, type $5
+ $70B1 DEFB $0A,$03,$21,$11,$25,$6A,$38
+ $70B8 DEFB $10,$0A,$F3,$08                 ; Room $9B description, type $F --
+                                            ; one of 4 PLUG ROOMs (see
+                                            ; #R$73B3), cube position level 5,
+                                            ; row 1, col 4
+ $70BC DEFB $13,$10,$17,$10,$33,$10,$37,$10
+ $70C4 DEFB $25,$6B,$25,$69
+ $70C8 DEFB $06,$0D,$66,$00                 ; Room $9C description, type $6
+ $70CC DEFB $13,$67
+ $70CE DEFB $0A,$06,$17,$41                 ; Room $9D description, type $1
+ $70D2 DEFB $21,$11,$23,$66,$35,$58
+ $70D8 DEFB $08,$0B,$21,$45                 ; Room $9E description, type $2
+ $70DC DEFB $2F,$68,$00,$30
+ $70E0 DEFB $0B,$0F,$42,$09                 ; Room $9F description, type $4
+ $70E4 DEFB $0C,$66,$35,$68,$1A,$6A,$30
+ $70EB DEFB $0E,$0C,$73,$09                 ; Room $A0 description, type $7
+ $70EF DEFB $0A,$68,$00,$10,$0B,$09,$13,$68
+ $70F7 DEFB $00,$4F
+ $70F9 DEFB $0A,$04,$04,$01                 ; Room $A1 description, type $0
+ $70FD DEFB $12,$0D,$13,$0D,$0D,$0D
+ $7103 DEFB $0A,$05,$15,$06                 ; Room $A2 description, type $1
+ $7107 DEFB $0B,$12,$12,$12,$27,$12
+ $710D DEFB $06,$03,$56,$40                 ; Room $A3 description, type $5
+ $7111 DEFB $1E,$67
+ $7113 DEFB $18,$0A,$47,$40                 ; Room $A4 description, type $4
+ $7117 DEFB $16,$00,$2B,$00,$16,$68,$00,$0A
+ $711F DEFB $0D,$68,$00,$2B,$2B,$68,$00,$11
+ $7127 DEFB $34,$68,$00,$2B
+ $712B DEFB $06,$0D,$11,$49                 ; Room $A5 description, type $1
+ $712F DEFB $1C,$69
+ $7131 DEFB $0A,$07,$32,$04                 ; Room $A6 description, type $3
+ $7135 DEFB $12,$68,$00,$39,$26,$69
+ $713B DEFB $04,$1E,$63,$00                 ; Room $A7 description, type $6
+ $713F DEFB $08,$85,$82,$09                 ; Room $A8 description, type $8
+ $7143 DEFB $2E,$68,$00,$1B
+ $7147 DEFB $04,$06,$53,$02                 ; Room $A9 description, type $5
+ $714B DEFB $04,$0E,$04,$47                 ; Room $AA description, type $0
+ $714F DEFB $04,$0F,$15,$07                 ; Room $AB description, type $1
+ $7153 DEFB $04,$0A,$87,$07                 ; Room $AC description, type $8
+ $7157 DEFB $12,$0D,$41,$45                 ; Room $AD description, type $4
+ $715B DEFB $1D,$00,$1D,$68,$00,$13,$14,$68
+ $7163 DEFB $00,$0E,$26,$68,$00,$19
+ $7169 DEFB $07,$05,$32,$09                 ; Room $AE description, type $3
+ $716D DEFB $12,$6A,$3C
+ $7170 DEFB $04,$03,$03,$47                 ; Room $AF description, type $0
+ $7174 DEFB $04,$0B,$24,$07                 ; Room $B0 description, type $2
+ $7178 DEFB $04,$09,$25,$05                 ; Room $B1 description, type $2
+ $717C DEFB $04,$08,$06,$00                 ; Room $B2 description, type $0
+ $7180 DEFB $06,$03,$37,$44                 ; Room $B3 description, type $3
+ $7184 DEFB $2C,$69
+ $7186 DEFB $06,$09,$15,$46                 ; Room $B4 description, type $1
+ $718A DEFB $28,$09
+; Level 6 of 6 (room numbers $B5-$D8) -- entry point 'B' lands in this level
+; (room $C0)
+ $718C DEFB $10,$06,$12,$45                 ; Room $B5 description, type $1
+ $7190 DEFB $1F,$12,$27,$12,$1A,$12,$15,$12
+ $7198 DEFB $19,$04,$1E,$04
+ $719C DEFB $0C,$0C,$43,$09                 ; Room $B6 description, type $4
+ $71A0 DEFB $0F,$00,$16,$00,$16,$68,$00,$65
+ $71A8 DEFB $0A,$02,$04,$47                 ; Room $B7 description, type $0
+ $71AC DEFB $36,$66,$2D,$68,$21,$11
+ $71B2 DEFB $07,$0E,$85,$07                 ; Room $B8 description, type $8
+ $71B6 DEFB $2E,$6A,$3C
+ $71B9 DEFB $04,$0E,$16,$07                 ; Room $B9 description, type $1
+ $71BD DEFB $04,$08,$87,$02                 ; Room $BA description, type $8
+ $71C1 DEFB $04,$07,$71,$40                 ; Room $BB description, type $7
+ $71C5 DEFB $04,$0B,$82,$09                 ; Room $BC description, type $8
+ $71C9 DEFB $04,$0C,$33,$44                 ; Room $BD description, type $3
+ $71CD DEFB $04,$03,$04,$47                 ; Room $BE description, type $0
+ $71D1 DEFB $04,$0B,$05,$47                 ; Room $BF description, type $0
+ $71D5 DEFB $12,$0C,$06,$00                 ; Room $C0 description, type $0
+ $71D9 DEFB $37,$66,$A0,$36,$2F,$09,$36,$09
+ $71E1 DEFB $38,$09,$3F,$09,$0F,$0D
+ $71E7 DEFB $0D,$01,$67,$07                 ; Room $C1 description, type $6
+ $71EB DEFB $21,$11,$21,$68,$11,$5D,$2E,$6A
+ $71F3 DEFB $35
+ $71F4 DEFB $04,$06,$51,$43                 ; Room $C2 description, type $5
+ $71F8 DEFB $08,$0F,$12,$03                 ; Room $C3 description, type $1
+ $71FC DEFB $1C,$68,$00,$11
+ $7200 DEFB $04,$08,$63,$03                 ; Room $C4 description, type $6
+ $7204 DEFB $08,$06,$14,$01                 ; Room $C5 description, type $1
+ $7208 DEFB $13,$12,$0C,$0D
+ $720C DEFB $0E,$0D,$45,$01                 ; Room $C6 description, type $4
+ $7210 DEFB $16,$00,$24,$00,$2B,$00,$2B,$68
+ $7218 DEFB $00,$4E
+ $721A DEFB $04,$06,$56,$47                 ; Room $C7 description, type $5
+ $721E DEFB $06,$1A,$17,$01                 ; Room $C8 description, type $1
+ $7222 DEFB $34,$03
+ $7224 DEFB $04,$96,$81,$02                 ; Room $C9 description, type $8
+ $7228 DEFB $04,$0E,$12,$49                 ; Room $CA description, type $1
+ $722C DEFB $07,$0B,$53,$41                 ; Room $CB description, type $5
+ $7230 DEFB $2E,$6A,$3C
+ $7233 DEFB $07,$09,$04,$01                 ; Room $CC description, type $0
+ $7237 DEFB $37,$6A,$46
+ $723A DEFB $0D,$03,$45,$07                 ; Room $CD description, type $4
+ $723E DEFB $1A,$6A,$2D,$27,$66,$38,$58,$1D
+ $7246 DEFB $00
+ $7247 DEFB $04,$0C,$36,$47                 ; Room $CE description, type $3
+ $724B DEFB $08,$03,$07,$45                 ; Room $CF description, type $0
+ $724F DEFB $2D,$68,$02,$46
+ $7253 DEFB $04,$09,$81,$09                 ; Room $D0 description, type $8
+ $7257 DEFB $04,$0C,$04,$40                 ; Room $D1 description, type $0
+ $725B DEFB $04,$0C,$04,$40                 ; Room $D2 description, type $0
+ $725F DEFB $04,$02,$84,$01                 ; Room $D3 description, type $8
+ $7263 DEFB $04,$09,$25,$05                 ; Room $D4 description, type $2
+ $7267 DEFB $04,$0A,$04,$00                 ; Room $D5 description, type $0
+ $726B DEFB $04,$0B,$04,$00                 ; Room $D6 description, type $0
+ $726F DEFB $07,$02,$81,$00                 ; Room $D7 description, type $8
+ $7273 DEFB $37,$6A,$28
+ $7276 DEFB $10,$08,$F2,$08                 ; Room $D8 description, type $F --
+                                            ; one of 4 PLUG ROOMs (see
+                                            ; #R$73B3), cube position level 6,
+                                            ; row 5, col 5
+ $727A DEFB $13,$0F,$17,$0E,$33,$0E,$37,$0F
+ $7282 DEFB $25,$6B,$25,$69
 
 ; Data block at 7286
 b$7286 DEFB $01,$00,$00,$00,$00,$00,$00,$32
@@ -1823,67 +2106,134 @@ b$7286 DEFB $01,$00,$00,$00,$00,$00,$00,$32
 ; Data block at 72AB
 b$72AB DEFB $06,$13,$17,$33,$37,$25
 
-; Room types??
+; Room-type template pointer table
+;
+; .
+;
+; .
+;
+; CONFIRMED live: 16 words, indexed by $612A (room type 0-15, from room
+; description byte2 bits 4-7); each points to a template block below. Types
+; 9-14 all share the same template ($73A0).
 b$72B1 DEFW $72D1,$72E4,$72F3,$731A
  $72B9 DEFW $7329,$733E,$734F,$7362
  $72C1 DEFW $7389,$73A0,$73A0,$73A0
  $72C9 DEFW $73A0,$73A0,$73A0,$73B3
 
-; Room types ??
-b$72D1 DEFB $13,$16,$01,$20,$01,$22,$02,$26 ; {Room type $0
- $72D9 DEFB $01,$2D,$02,$32,$04,$33,$04,$1C ;
- $72E1 DEFB $66,$37,$40                     ; }
- $72E4 DEFB $0F,$0D,$02,$0E,$04,$2B,$03,$25 ; {Room type $1
- $72EC DEFB $03,$32,$01,$35,$66,$37,$40     ; }
- $72F3 DEFB $27,$0C,$68,$00,$11,$17,$68,$00 ; {Room type $2
- $72FB DEFB $18,$1A,$68,$00,$27,$1C,$68,$00 ;
- $7303 DEFB $0A,$1F,$68,$00,$5C,$2E,$68,$00 ;
- $730B DEFB $35,$33,$68,$00,$1F,$36,$68,$00 ;
- $7313 DEFB $49,$06,$09,$24,$09,$3A,$09     ; }
- $731A DEFB $0F,$0F,$07,$14,$07,$22,$08,$2F ; {Room type $3
- $7322 DEFB $08,$33,$07,$1C,$67,$36,$0D     ; }
- $7329 DEFB $15,$08,$09,$0F,$09,$16,$09,$1D ; {Room type $4
- $7331 DEFB $09,$24,$09,$2B,$09,$32,$09,$39 ;
- $7339 DEFB $09,$2C,$02,$1F,$04             ; }
- $733E DEFB $11,$0E,$09,$1C,$09,$2B,$09,$26 ; {Room type $5
- $7346 DEFB $09,$28,$09,$2B,$09,$35,$09,$0E ;
- $734E DEFB $0D                             ; }
- $734F DEFB $13,$0D,$0D,$10,$01,$17,$0D,$1C ; {Room type $6
- $7357 DEFB $0D,$23,$01,$27,$01,$32,$0D,$36 ;
- $735F DEFB $0D,$3D,$0D                     ; }
- $7362 DEFB $27,$0D,$68,$00,$0F,$10,$0D,$17 ; {Room type $7
- $736A DEFB $0D,$1C,$09,$1E,$09,$1F,$68,$00 ;
- $7372 DEFB $28,$22,$68,$00,$3F,$25,$68,$00 ;
- $737A DEFB $39,$26,$0D,$28,$09,$2B,$03,$2D ;
- $7382 DEFB $09,$34,$68,$00,$21,$37,$09     ; }
- $7389 DEFB $17,$0B,$0D,$0E,$02,$0F,$01,$13 ; {Room type $8
- $7391 DEFB $03,$1E,$03,$24,$0D,$2A,$03,$2F ;
- $7399 DEFB $0D,$34,$01,$25,$66,$3C,$54     ; }
- $73A0 DEFB $13,$16,$01,$20,$01,$22,$02,$26 ; {Room type $9..$E
- $73A8 DEFB $01,$2D,$02,$32,$04,$33,$04,$13 ;
- $73B0 DEFB $66,$23,$58                     ; }
- $73B3 DEFB $01,$01                         ; Room type $F
+; Room-type templates
+;
+; .
+;
+; .
+;
+; CONFIRMED live: each template starts with a byte0 giving the total byte count
+; of that template block (not a pair count -- matches the gap to the next
+; template's pointer exactly), followed by (index,value) pairs consumed by
+; #R$62C8 to populate the room grid (see #R$612C). First pair of type $0
+; (index=$16,value=$01) verified live.
+; .
+; Room type $0 (19 bytes)
+b$72D1 DEFB $13                             ; byte count for this template (19)
+ $72D2 DEFB $16,$01,$20,$01,$22,$02,$26,$01
+ $72DA DEFB $2D,$02,$32,$04,$33,$04,$1C,$66
+ $72E2 DEFB $37,$40
+; Room type $1 (15 bytes)
+ $72E4 DEFB $0F                             ; byte count for this template (15)
+ $72E5 DEFB $0D,$02,$0E,$04,$2B,$03,$25,$03
+ $72ED DEFB $32,$01,$35,$66,$37,$40
+; Room type $2 (39 bytes)
+ $72F3 DEFB $27                             ; byte count for this template (39)
+ $72F4 DEFB $0C,$68,$00,$11,$17,$68,$00,$18
+ $72FC DEFB $1A,$68,$00,$27,$1C,$68,$00,$0A
+ $7304 DEFB $1F,$68,$00,$5C,$2E,$68,$00,$35
+ $730C DEFB $33,$68,$00,$1F,$36,$68,$00,$49
+ $7314 DEFB $06,$09,$24,$09,$3A,$09
+; Room type $3 (15 bytes)
+ $731A DEFB $0F                             ; byte count for this template (15)
+ $731B DEFB $0F,$07,$14,$07,$22,$08,$2F,$08
+ $7323 DEFB $33,$07,$1C,$67,$36,$0D
+; Room type $4 (21 bytes)
+ $7329 DEFB $15                             ; byte count for this template (21)
+ $732A DEFB $08,$09,$0F,$09,$16,$09,$1D,$09
+ $7332 DEFB $24,$09,$2B,$09,$32,$09,$39,$09
+ $733A DEFB $2C,$02,$1F,$04
+; Room type $5 (17 bytes)
+ $733E DEFB $11                             ; byte count for this template (17)
+ $733F DEFB $0E,$09,$1C,$09,$2B,$09,$26,$09
+ $7347 DEFB $28,$09,$2B,$09,$35,$09,$0E,$0D
+; Room type $6 (19 bytes)
+ $734F DEFB $13                             ; byte count for this template (19)
+ $7350 DEFB $0D,$0D,$10,$01,$17,$0D,$1C,$0D
+ $7358 DEFB $23,$01,$27,$01,$32,$0D,$36,$0D
+ $7360 DEFB $3D,$0D
+; Room type $7 (39 bytes)
+ $7362 DEFB $27                             ; byte count for this template (39)
+ $7363 DEFB $0D,$68,$00,$0F,$10,$0D,$17,$0D
+ $736B DEFB $1C,$09,$1E,$09,$1F,$68,$00,$28
+ $7373 DEFB $22,$68,$00,$3F,$25,$68,$00,$39
+ $737B DEFB $26,$0D,$28,$09,$2B,$03,$2D,$09
+ $7383 DEFB $34,$68,$00,$21,$37,$09
+; Room type $8 (23 bytes)
+ $7389 DEFB $17                             ; byte count for this template (23)
+ $738A DEFB $0B,$0D,$0E,$02,$0F,$01,$13,$03
+ $7392 DEFB $1E,$03,$24,$0D,$2A,$03,$2F,$0D
+ $739A DEFB $34,$01,$25,$66,$3C,$54
+; Room type $9..$E (19 bytes)
+ $73A0 DEFB $13                             ; byte count for this template (19)
+ $73A1 DEFB $16,$01,$20,$01,$22,$02,$26,$01
+ $73A9 DEFB $2D,$02,$32,$04,$33,$04,$13,$66
+ $73B1 DEFB $23,$58
+; Room type $F (2 bytes) -- CONFIRMED live/external: type $F is used by exactly
+; 4 rooms in the whole table -- $32, $65, $9B, $D8 (cube positions
+; level2/row2/col1, level3/row4/col4, level5/row1/col4, level6/row5/col5
+; respectively) -- all four "PLUG ROOM" (title index 8). Per the game's own
+; instructions text (x-docs/Instructions.txt): "the gigantic planetary
+; aquarium... is now so polluted that the only remedy is to completely empty it
+; of water by pulling each of the four main plugs" -- these 4 rooms are very
+; likely the win-condition rooms; pulling/activating all four is expected to
+; complete the game. The template itself (2 bytes: length + 1 more) is too
+; short to hold any real (index,value) pair, consistent with Plug Rooms being a
+; distinct, mostly-static-content-free category built around the plug-placement
+; mechanic rather than normal terrain.
+ $73B3 DEFB $01                             ; byte count for this template (2)
+ $73B4 DEFB $01
 
-; Message at 73B5
-t$73B5 DEFM "  DEATHBOWL  ",$5E
- $73C3 DEFM "   PIRANHA   ",$5E
- $73D1 DEFM "  SEAHORSE   ",$5E
- $73DF DEFM "  WOLF FISH  ",$5E
- $73ED DEFM "   ANEMONE   ",$5E
- $73FB DEFM "  SEA SLUG   ",$5E
- $7409 DEFM "   OYSTER    ",$5E
- $7417 DEFM "  JELLYFISH  ",$5E
- $7425 DEFM "  PLUG ROOM  ",$5E
- $7433 DEFM " BABY WHALE  ",$5E
+; Room/creature title table
+;
+; .
+;
+; .
+;
+; 10 entries, 14 bytes each, terminated by $5E. Indexed by room type (see
+; #R$72D1); printed as the message window's title line by #R$65DB and restored
+; by #R$9808. Entries $A onward (from #R$7441) are reused as the rotating
+; clue/joke message table printed by #R$65DB via #R$65D7.
+t$73B5 DEFM "  DEATHBOWL  ",$5E ; "  DEATHBOWL  "
+ $73C3 DEFM "   PIRANHA   ",$5E ; "   PIRANHA   "
+ $73D1 DEFM "  SEAHORSE   ",$5E ; "  SEAHORSE   "
+ $73DF DEFM "  WOLF FISH  ",$5E ; "  WOLF FISH  "
+ $73ED DEFM "   ANEMONE   ",$5E ; "   ANEMONE   "
+ $73FB DEFM "  SEA SLUG   ",$5E ; "  SEA SLUG   "
+ $7409 DEFM "   OYSTER    ",$5E ; "   OYSTER    "
+ $7417 DEFM "  JELLYFISH  ",$5E ; "  JELLYFISH  "
+ $7425 DEFM "  PLUG ROOM  ",$5E ; "  PLUG ROOM  "
+ $7433 DEFM " BABY WHALE  ",$5E ; " BABY WHALE  "
 
-; Message at 7441
-t$7441 DEFM "FEEDING PROHIBITED ",$5E
- $7455 DEFM "BATHING NOT ALLOWED",$5E
- $7469 DEFM "DONT TAP THE GLASS ",$5E
- $747D DEFM "NOW WASH YOUR HANDS",$5E
- $7491 DEFM "NOT DRINKING WATER ",$5E
- $74A5 DEFM "DONT BITE THE FISH ",$5E
- $74B9 DEFM " PLEASE GO QUIETLY ",$5E,$FF
+; Warning-sign / clue message table
+;
+; .
+;
+; .
+;
+; 7 entries, 20 bytes each, terminated by $FF; alias into the tail of the
+; #R$73B5 table.
+t$7441 DEFM "FEEDING PROHIBITED ",$5E     ; "FEEDING PROHIBITED "
+ $7455 DEFM "BATHING NOT ALLOWED",$5E     ; "BATHING NOT ALLOWED"
+ $7469 DEFM "DONT TAP THE GLASS ",$5E     ; "DONT TAP THE GLASS "
+ $747D DEFM "NOW WASH YOUR HANDS",$5E     ; "NOW WASH YOUR HANDS"
+ $7491 DEFM "NOT DRINKING WATER ",$5E     ; "NOT DRINKING WATER "
+ $74A5 DEFM "DONT BITE THE FISH ",$5E     ; "DONT BITE THE FISH "
+ $74B9 DEFM " PLEASE GO QUIETLY ",$5E,$FF ; " PLEASE GO QUIETLY "
 
 ; Data block at 74CE
 b$74CE DEFB $00,$0C,$6A,$0E,$38,$0D,$3A,$0D
@@ -2162,35 +2512,51 @@ b$75B5 DEFB $07,$0D,$01,$32,$92,$34,$34,$07
  $7CDC DEFB $70,$05
  $7CDE DEFB $88,$06,$32,$23,$33,$02,$23,$00
  $7CE6 DEFB $00,$00
- $7CE8 DEFW $7CF9                           ; Print char routine address
- $7CEA DEFW $EBAC                           ; ??
+ $7CE8 DEFW $7CF9                           ; Print char routine vector
+                                            ; (current print-engine mode;
+                                            ; self-modified by #R$7D2D)
+ $7CEA DEFW $EBAC                           ; Print cursor: current shadow
+                                            ; screen print address
 
-; Routine at 7CEC
+; Print engine entry point
 ;
 ; Used by the routines at #R$8501, #R$854C, #R$854F, #R$85A1, #R$86CC and
 ; #R$885A.
-c$7CEC PUSH HL       ;
+;
+; A char to print, or a control code ($14/$16)
+;
+; Prints the char/control code in A by jumping through the vector at (#R$7CE8).
+c$7CEC PUSH HL       ; {save registers
  $7CED PUSH DE       ;
  $7CEE PUSH BC       ;
- $7CEF PUSH AF       ;
- $7CF0 LD HL,$61A6   ;
+ $7CEF PUSH AF       ; }
+ $7CF0 LD HL,$61A6   ; disable interrupt-driven redraw flag at #R$61A6 while
+                     ; printing
  $7CF3 LD (HL),$01   ;
  $7CF5 LD HL,($7CE8) ; get Print char routine address
- $7CF8 JP (HL)       ;
+ $7CF8 JP (HL)       ; jump to current print-engine mode handler
 
-; Print char routine
-c$7CF9 CP $20        ;
+; Print char routine (default mode)
+;
+; .
+;
+; A char to print, or a control code ($14/$16)
+;
+; Prints char A as a font glyph at (#R$7CEA), or switches mode for control
+; codes $14/$16.
+c$7CF9 CP $20        ; control codes (<$20) are handled separately; printable
+                     ; chars fall through
  $7CFB JR C,$7D26    ;
- $7CFD LD L,A        ;
- $7CFE LD H,$00      ;
+ $7CFD LD L,A        ; {convert char code to font glyph offset (glyph =
+ $7CFE LD H,$00      ; (A-$20)*8, using codes starting at font base -$20*8)
  $7D00 ADD HL,HL     ;
  $7D01 ADD HL,HL     ;
- $7D02 ADD HL,HL     ;
+ $7D02 ADD HL,HL     ; }
  $7D03 LD DE,$A300   ; Font base address
  $7D06 ADD HL,DE     ;
  $7D07 EX DE,HL      ;
- $7D08 LD HL,($7CEA) ;
- $7D0B LD BC,$0020   ;
+ $7D08 LD HL,($7CEA) ; {copy 8 rows of the glyph to the shadow screen at
+ $7D0B LD BC,$0020   ; (#R$7CEA), stepping by 32 bytes/row}
  $7D0E LD A,$08      ;
 *$7D10 PUSH AF       ;
  $7D11 LD A,(DE)     ;
@@ -2201,23 +2567,29 @@ c$7CF9 CP $20        ;
  $7D16 POP AF        ;
  $7D17 DEC A         ;
  $7D18 JR NZ,$7D10   ;
- $7D1A LD HL,($7CEA) ;
- $7D1D INC HL        ;
- $7D1E LD ($7CEA),HL ;
+ $7D1A LD HL,($7CEA) ; {advance print cursor (#R$7CEA) to the next character
+ $7D1D INC HL        ; column
+ $7D1E LD ($7CEA),HL ; }
 ; This entry point is used by the routine at #R$7D3F.
 *$7D21 POP AF        ;
  $7D22 POP BC        ;
  $7D23 POP DE        ;
  $7D24 POP HL        ;
  $7D25 RET           ;
-*$7D26 CP $14        ;
- $7D28 JR NZ,$7D3F   ;
- $7D2A LD HL,$7D32   ;
+*$7D26 CP $14        ; {control code $14: switch mode to #R$7D32 (set
+ $7D28 JR NZ,$7D3F   ; inverse/highlight flag)
+ $7D2A LD HL,$7D32   ; }
 ; This entry point is used by the routines at #R$7D32, #R$7D3F and #R$7D48.
 *$7D2D LD ($7CE8),HL ;
  $7D30 JR $7D21      ;
 
-; Routine at 7D32
+; Print engine mode: set inverse video flag
+;
+; .
+;
+; A flag: zero sets inverse video (CPL), non-zero sets normal video (NOP)
+;
+; Self-modifies the LD A at #R$7D12 to CPL/NOP for subsequent chars.
 c$7D32 AND A         ;
  $7D33 JR Z,$7D37    ;
  $7D35 LD A,$2F      ;
@@ -2226,15 +2598,25 @@ c$7D32 AND A         ;
 *$7D3A LD HL,$7CF9   ;
  $7D3D JR $7D2D      ;
 
-; Routine at 7D3F
+; Print engine mode: dispatch control code $16
 ;
 ; Used by the routine at #R$7CF9.
+;
+; A char to test against control code $16
+;
+; Control code $16 switches mode to #R$7D48 (set cursor row); else return.
 c$7D3F CP $16        ;
  $7D41 JR NZ,$7D21   ;
  $7D43 LD HL,$7D48   ;
  $7D46 JR $7D2D      ;
 
-; Routine at 7D48
+; Print engine mode: set cursor row
+;
+; .
+;
+; A cursor row
+;
+; Sets print cursor row from A (row*256 + shadow screen base).
 c$7D48 LD H,A        ;
  $7D49 LD L,$00      ;
  $7D4B LD DE,$E390   ; Shadow screen address
@@ -2243,7 +2625,14 @@ c$7D48 LD H,A        ;
  $7D52 LD HL,$7D57   ;
  $7D55 JR $7D2D      ;
 
-; Routine at 7D57
+; Print engine mode: set cursor column
+;
+; .
+;
+; A cursor column offset
+;
+; Sets print cursor column from A, then switches back to default char-printing
+; mode.
 c$7D57 LD HL,($7CEA) ;
  $7D5A LD E,A        ;
  $7D5B LD D,$00      ;
@@ -2252,15 +2641,19 @@ c$7D57 LD HL,($7CEA) ;
  $7D61 JR $7D3A      ;
 
 ; Data block at 7D63
-b$7D63 DEFW $0000
+b$7D63 DEFW $0000    ; Print string cursor: current shadow screen address for
+                     ; #R$7D68 string printer
  $7D65 DEFB $00
  $7D66 DEFB $00,$00
 
-; Routine at 7D68
+; Print string routine
 ;
 ; Used by the routines at #R$65DB, #R$8513 and #R$9808.
 ;
-; HL ??
+; HL string address (terminated by $5E)
+;
+; Prints the string at (HL) to the shadow screen until terminator $5E; handles
+; control codes $16 (set row+col) and $2B (newline, +8 rows).
 c$7D68 LD A,$01      ;
  $7D6A LD ($61A6),A  ;
 *$7D6D LD A,(HL)     ;
@@ -3301,10 +3694,28 @@ c$848E PUSH BC       ;
  $84AC POP BC        ;
  $84AD RET           ;
 
-; Routine at 84AE
+; Dynamic object allocator
 ;
 ; Used by the routines at #R$6663, #R$8E3F, #R$8EA7, #R$8EF2, #R$8F1E, #R$8F4C,
 ; #R$90A8, #R$957C and #R$9923.
+;
+; .
+;
+; CONFIRMED live (traced in full): allocates one entry from a free-list of
+; dynamic object slots (creatures, items, doors -- anything not baked into the
+; static room grid; see #R$612C). If $618C is 0, takes an early-exit dispatch
+; path (pops the return address, skips 2 bytes, JP (HL) -- purpose not
+; confirmed, likely "no free slots" or "objects disabled"). Otherwise: pops the
+; next free slot's address from the free-list head at $618B (each free slot's
+; first 2 bytes point to the next free slot, standard linked-list allocator),
+; copies 2 bytes from the caller's template pointer (IX, e.g. $610E) into the
+; new slot, switches IX to the slot's own address, stores the CURRENT ROOM
+; NUMBER ($6126) at slot offset $02, copies 2 more bytes (from the caller, e.g.
+; the special grid value + first extra byte -- see #R$8EA7) to slot offset
+; $03/$04, then copies a fixed 19-byte block from $5C92 (ZX system-variable
+; area, reused here as a default object state template) into the rest of the
+; slot. Sets a flag bit and returns with IX = the new slot's address. Object
+; pool confirmed live to start at #R$A900.
 c$84AE LD A,($618C)  ;
  $84B1 AND A         ;
  $84B2 JR NZ,$84B8   ;
@@ -3383,12 +3794,14 @@ c$850E POP HL        ;
 ;
 ; Used by the routines at #R$8968, #R$8AFB, #R$8C35 and #R$925C.
 c$8513 LD HL,$65CF   ;
- $8516 CALL $7D68    ;
+ $8516 CALL $7D68    ; Print string: position cursor for message window line 1
+                     ; (row $A4)
  $8519 POP HL        ;
  $851A LD A,(HL)     ;
  $851B LD ($618A),A  ;
  $851E INC HL        ;
- $851F CALL $7D68    ;
+ $851F CALL $7D68    ; Print string: inline message text embedded after the
+                     ; call to #R$8513
  $8522 JP (HL)       ;
 
 ; Routine at 8523
@@ -3445,14 +3858,28 @@ c$854F PUSH AF       ;
 ; Data block at 8567
 b$8567 DEFB $52,$C0,$1A,$84
 
-; Message at 856B
+; Controls sub-menu text
+;
+; .
+;
+; .
+;
+; "1 KEYBOARD 2 KEMPSTON 3 SINCLAIR 4 CURSOR", printed by #R$8617 via the
+; #R$7CEC print engine.
 t$856B DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+"
 
 ; Data block at 8595
 b$8595 DEFB $5E,$FD,$2A,$A4,$61,$ED,$56,$FB
  $859D DEFB $AF,$32,$AA,$FB
 
-; Routine at 85A1
+; NOTE: possible disassembly misalignment before $860F
+;
+; .
+;
+; .
+;
+; Disassembly from here to around #R$860F looks misaligned/garbled (likely
+; wrong sub-block boundaries upstream); code resynchronizes at #R$860F.
 c$85A1 CALL $850E      ;
  $85A4 INC D           ;
  $85A5 NOP             ;
@@ -3547,13 +3974,14 @@ c$85A1 CALL $850E      ;
  $8612 ADD A,$01       ;
  $8614 LD C,A          ;
  $8615 LD B,$02        ;
-*$8617 LD HL,$856B     ;
-*$861A LD A,$16        ;
- $861C CALL $7CEC      ;
+*$8617 LD HL,$856B     ; load pointer to Controls menu text at #R$856B
+*$861A LD A,$16        ; {control code $16: set print cursor row (selects the
+ $861C CALL $7CEC      ; menu row to print into)}
  $861F LD A,B          ;
-*$8620 CALL $7CEC      ;
- $8623 LD A,$14        ;
- $8625 CALL $7CEC      ;
+*$8620 CALL $7CEC      ; print the Controls menu text (via #R$7CEC print engine
+                       ; loop)
+ $8623 LD A,$14        ; {control code $14 + flag: set/clear inverse video for
+ $8625 CALL $7CEC      ; the currently selected control method}
  $8628 INC B           ;
  $8629 INC B           ;
  $862A DEC C           ;
@@ -3562,10 +3990,11 @@ c$85A1 CALL $850E      ;
  $862F CALL $7CEC      ;
  $8632 LD A,$01        ;
  $8634 CALL $7CEC      ;
-*$8637 CALL $8501      ;
- $863A LD A,$14        ;
- $863C CALL $7CEC      ;
- $863F XOR A           ;
+*$8637 CALL $8501      ; call #R$8501 (likely reads the current control method
+                       ; / input routine)
+ $863A LD A,$14        ; {control code $14 + $01: restore inverse video flag to
+ $863C CALL $7CEC      ; normal
+ $863F XOR A           ; }
  $8640 CALL $7CEC      ;
 *$8643 LD A,(HL)       ;
 *$8644 CP $5E          ;
@@ -4168,14 +4597,29 @@ c$8968 LD A,($6126)    ;
  $8A76 LD A,($6126)    ;
  $8A79 CP $01          ;
  $8A7B JR Z,$8A82      ;
- $8A7D SUB $24         ;
+ $8A7D SUB $24         ; change room number: -36 (one level DOWN, via
+                       ; whirlpool)
  $8A7F JP $97FC        ;
 *$8A82 LD A,$02        ;
  $8A84 JP $97FC        ;
 
-; Routine at 8A87
+; Attempt to move to an adjacent room (vertical, via whirlpool/bubble)
 ;
 ; Used by the routine at #R$8D11.
+;
+; .
+;
+; CONFIRMED live: computes the room number one level down ($6126 - $24, i.e.
+; -36 -- a whirlpool) or one level up ($6126 + $24, i.e. +36 -- a bubble),
+; matching the 6x6x6 cube level-stride confirmed independently via
+; room-number/entry-point analysis (see x-docs/Room-Format.md). Has
+; special-case handling when the current room number is exactly 1 (down) or 2
+; (up) -- overrides the computed value instead of using the generic +-36
+; arithmetic; not yet understood why. The upward case also bounds-checks the
+; result against $D9 before allowing it (JP C,#R$97FC), falling back to a
+; different path (through $8C83) if out of range. #R$97FC is called with the
+; new room number to actually perform the transition, same as the horizontal
+; case (#R$67F1).
 c$8A87 LD A,$98       ;
  $8A89 SUB (IX+$17)   ;
  $8A8C ADD A,(IX+$05) ;
@@ -4185,7 +4629,7 @@ c$8A87 LD A,$98       ;
  $8A97 LD A,($6126)   ;
  $8A9A CP $02         ;
  $8A9C JR Z,$8AAD     ;
- $8A9E ADD A,$24      ;
+ $8A9E ADD A,$24      ; change room number: +36 (one level UP, via bubble)
  $8AA0 CP $D9         ;
  $8AA2 JP C,$97FC     ;
  $8AA5 LD A,$02       ;
@@ -4545,7 +4989,8 @@ t$8E37 DEFM "3!4\""
 ; Data block at 8E3B
 b$8E3B DEFB $00,$01,$18,$18
 
-; Routine at 8E3F
+; Special grid-value spawn routine (value $68) -- see #R$8EA7 for the
+; fully-traced sibling routine; same mechanism.
 ;
 ; Used by the routine at #R$6269.
 c$8E3F INC HL        ;
@@ -4618,9 +5063,32 @@ c$8E6E PUSH BC         ;
  $8EA5 XOR A           ;
  $8EA6 RET             ;
 
-; Routine at 8EA7
+; Special grid-value spawn routine (values $66/$6A) -- spawns a dynamic object
+; (a door/passage, most likely) instead of leaving a static grid entry
 ;
 ; Used by the routine at #R$6269.
+;
+; .
+;
+; CONFIRMED live (traced in full): called from #R$62C8 with A=the special value
+; ($66 or $6A) and HL pointing just past it in the template/extras stream.
+; Self-modifies its own #R$8EC3 operand with A (so the spawned object's initial
+; "kind" byte matches whichever of $66/$6A triggered it). Clears the grid cell
+; to 0 (so the special value never appears in the finished grid -- see
+; #R$612C). Reads 2 more bytes from the template beyond the normal
+; (index,value) pair -- these are NOT accounted for by the outer #R$62C8 loop's
+; own HL advancement; instead the routine forces two extra DEC B's (at
+; $8EE8/$8EE9), ending that loop one iteration early to compensate (this is
+; what explains the "odd leftover byte count" behaviour documented at #R$6CCF).
+; Sets up IX=$610E as a template pointer, then CALLs #R$84AE to allocate a
+; dynamic object slot, then populates further slot fields (offset $07=$18,
+; $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra
+; byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning
+; (screen position? direction?) is not yet confirmed -- #R$9A60 was observed to
+; overwrite slot offsets $03/$04 (initially seeded with the trigger value and
+; first extra byte) with what looks like a real code address (a per-object
+; behaviour-handler function pointer, e.g. $9684), and to clear offset $09 back
+; to 0 afterward.
 c$8EA7 LD ($8EC6),A    ;
  $8EAA LD (IX+$00),$00 ;
  $8EAE PUSH HL         ;
@@ -4660,7 +5128,8 @@ c$8EA7 LD ($8EC6),A    ;
 *$8EEC LD (IX+$14),$E0 ;
  $8EF0 JR $8EE9        ;
 
-; Routine at 8EF2
+; Special grid-value spawn routine (value $67) -- see #R$8EA7 for the
+; fully-traced sibling routine; same mechanism.
 ;
 ; Used by the routine at #R$6269.
 c$8EF2 LD (IX+$00),$00 ;
@@ -4686,7 +5155,8 @@ c$8EF2 LD (IX+$00),$00 ;
  $8F1C XOR A           ;
  $8F1D RET             ;
 
-; Routine at 8F1E
+; Special grid-value spawn routine (value $69) -- see #R$8EA7 for the
+; fully-traced sibling routine; same mechanism.
 ;
 ; Used by the routine at #R$6269.
 c$8F1E LD (IX+$00),$00 ;
@@ -4709,7 +5179,8 @@ c$8F1E LD (IX+$00),$00 ;
  $8F45 LD (IX+$06),$20 ;
  $8F49 JP $8F17        ;
 
-; Routine at 8F4C
+; Special grid-value spawn routine (value $6B) -- see #R$8EA7 for the
+; fully-traced sibling routine; same mechanism.
 ;
 ; Used by the routine at #R$6269.
 c$8F4C LD (IX+$00),$00 ;
@@ -5539,7 +6010,11 @@ c$9602 LD A,$03        ;
 *$967F LD (IX+$02),$FF ;
  $9683 RET             ;
 
-; Routine at 9684
+; Per-object behaviour handler (CONFIRMED live: this is the handler address
+; written into a $66/$6A-triggered door/passage object's slot offset $03/$04 by
+; #R$9A60, and called from #R$983C's dispatcher). Not yet traced internally --
+; likely draws/updates the door using the object's remaining fields (offsets
+; $0B/$0E/$14, populated by #R$8EA7 from the template's 2 "extra" bytes).
 c$9684 LD A,(IX+$0E)   ;
  $9687 AND A           ;
  $9688 JR Z,$968E      ;
@@ -5724,9 +6199,11 @@ c$97BA LD L,(IX+$05)  ;
 *$97F6 CALL $9745     ;
  $97F9 JP $8107       ;
 
-; Routine at 97FC
+; Commit the room change: A = new room number
 ;
 ; Used by the routines at #R$67F1, #R$8968 and #R$8A87.
+;
+; A new room number
 c$97FC CALL $676D    ;
  $97FF LD SP,($60E9) ;
  $9803 JP $9808      ;
@@ -5745,9 +6222,11 @@ c$9808 LD ($60E9),SP ;
  $9813 LD ($618A),A  ;
  $9816 JR NZ,$9824   ;
  $9818 LD HL,$65CF   ;
- $981B CALL $7D68    ;
+ $981B CALL $7D68    ; Print string: position cursor for message window line 1
+                     ; (row $A4)
  $981E LD HL,($65D9) ;
- $9821 CALL $7D68    ;
+ $9821 CALL $7D68    ; Print string: restore room/creature title (saved at
+                     ; #R$65D9 by #R$65DB)
 *$9824 CALL $7FC0    ;
  $9827 XOR A         ;
  $9828 LD ($60EB),A  ;
@@ -5757,11 +6236,18 @@ c$9808 LD ($60E9),SP ;
  $9836 CALL $983C    ;
  $9839 JP $9900      ;
 
-; Routine at 983C
+; Per-frame dynamic object dispatcher (walks the object pool, see #R$A900)
 ;
 ; Used by the routine at #R$9808.
 ;
 ; IX ???
+;
+; CONFIRMED live: for each object slot (IX), checks if its room number (offset
+; $02) matches the current room ($6126); if so, loads a function pointer from
+; offset $03/$04 and CALLs #R$61A7 (a JP (HL) trampoline) to invoke the
+; object's own per-frame behaviour handler (e.g. #R$9684 for the door/passage
+; object we traced). Also checks bit 7 of offset $0D and computes into offset
+; $0C from offsets $10/$11 -- purpose not yet confirmed.
 c$983C LD L,(IX+$00)  ;
  $983F LD H,(IX+$01)  ;
 *$9842 LD A,L         ;
@@ -6060,11 +6546,21 @@ c$9A49 LD A,(IX+$05) ;
  $9A5A LD (IX+$06),A ;
  $9A5D JP $9A60      ;
 
-; Routine at 9A60
+; Dynamic object finalizer, called at the end of #R$8EA7's object setup
 ;
 ; Used by the routines at #R$6663, #R$8968, #R$8AFB, #R$8E6E, #R$8EA7, #R$8EF2,
 ; #R$8F82, #R$9021, #R$90A8, #R$925C, #R$9401, #R$949E, #R$957C, #R$9923,
 ; #R$9A49 and #R$9BF0.
+;
+; .
+;
+; CONFIRMED live (observed effect, internals not traced): overwrites the new
+; object's slot offset $03/$04 (initially seeded with the triggering grid value
+; and first extra byte by #R$84AE) with what appears to be a genuine code
+; address (e.g. $9684 for a $66/$6A-triggered object) -- almost certainly a
+; per-object behaviour-handler function pointer, looked up from the object's
+; "kind" (offset $09, which reads as 0 after this call, suggesting it's
+; consumed/cleared here).
 c$9A60 PUSH IX       ;
  $9A62 POP HL        ;
  $9A63 LD DE,$0015   ;
@@ -6860,7 +7356,24 @@ w$A5DC DEFW $A9DE,$0000,$A9DE,$0384,$AA3E,$0483,$AA9E,$0483
  $A8EC DEFW $DF0E,$0282,$DF2E,$0B82,$DFDE,$0000,$DFDE,$0484
  $A8FC DEFW $E05E,$0B84
 
-; Data block at A900
+; Dynamic object pool (CONFIRMED live: creatures, items, doors/passages --
+; anything not baked into the static room grid; see #R$612C)
+;
+; .
+;
+; .
+;
+; Slot allocated/freed via a linked list managed by #R$84AE (free-list head at
+; $618B). Confirmed slot field layout (offsets from slot start): +0/+1 copied
+; from the caller's template pointer (e.g. #R$610E); +2 = room number the
+; object belongs to; +3/+4 = per-object behaviour-handler function pointer (see
+; #R$9A60/#R$983C), initially seeded with the triggering value + first extra
+; byte then overwritten with a real code address; +5..+23 = a fixed 19-byte
+; default state block copied from $5C92; +7=$18 and +0xA=$06 (constants set by
+; #R$8EA7-style spawn routines); +9 = triggering grid value (e.g. $66), cleared
+; to 0 by #R$9A60; +0xB and +0xE = a duplicated "extra" byte from the template;
+; +0x14 = a second "extra" byte. The exact meaning of the two "extra" bytes
+; (position? direction?) is not yet confirmed.
 b$A900 DEFB $B6,$8D,$02,$7C,$95,$14,$14,$18
  $A908 DEFB $68,$66,$06,$23,$80,$00,$22,$01
  $A910 DEFB $11,$11,$16,$16,$58,$03,$00,$08
@@ -9287,20 +9800,56 @@ b$E390 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,
  $FB50 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $FB70 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
-; Data block at FB90
+; Menu tune + key-wait driver
 ;
 ; Used by the routine at #R$85A1.
-b$FB90 DEFB $21,$99,$FC,$22,$AB,$FB,$21,$33
- $FB98 DEFB $FE,$22,$AF,$FB,$F3,$CD,$D7,$FB
- $FBA0 DEFB $CD,$8E,$02,$1C,$28,$F7,$FB,$C9
+;
+; .
+;
+; NOTE: was mislabeled as data; confirmed as code via live debugging. Sets up
+; the melody-table pointers ($FBAB=$FC99, $FBAF=$FE33), then loops: disable
+; interrupts, play one note via #R$FBD7 (which reads/advances through the
+; melody-index table and produces the tone), scan the keyboard via the ROM
+; KEY-SCAN routine at $028E, and repeat until a key is pressed; then re-enable
+; interrupts and return.
+c$FB90 LD HL,$FC99   ; {point $FBAB at the start of the melody-index table
+ $FB93 LD ($FBAB),HL ; (#R$FC9A, aliased as code for a rare branch -- see its
+                     ; note)}
+ $FB96 LD HL,$FE33   ; {point $FBAF at $FE33 (a second/loop-restart table
+ $FB99 LD ($FBAF),HL ; pointer, not yet explored)}
+ $FB9C DI            ; disable interrupts while bit-banging the tone (precise
+                     ; timing)
+*$FB9D CALL $FBD7    ; play one note (advances the melody-index pointer
+                     ; internally via #R$FBB4/#R$FBC1)
+ $FBA0 CALL $028E    ; ROM KEY-SCAN: scans the keyboard, returns no-key-found
+                     ; as E=$FF
+ $FBA3 INC E         ; {if no key was found (E wraps to 0), loop back and play
+ $FBA4 JR Z,$FB9D    ; the next note}
+ $FBA6 EI            ; {re-enable interrupts and return (a key was pressed)
+ $FBA7 RET           ; }
 
 ; Data block at FBA8
-b$FBA8 DEFB $00,$00,$00,$60,$EA,$9A,$FC,$48
- $FBB0 DEFB $EE,$34,$FE,$EE
+b$FBA8 DEFB $00,$00,$00
+ $FBAB DEFW $EA60
+ $FBAD DEFW $FC9A
+ $FBAF DEFW $EE48
+ $FBB1 DEFW $FE34
+ $FBB3 DEFB $EE
 
-; Menu??
+; Melody-index table reader/advancer, used by #R$FBD7
 ;
 ; Used by the routine at #R$FBD7.
+;
+; .
+;
+; CONFIRMED by live debugging: reads the next byte of the melody-index table
+; (via the pointer at (HL)), advances the pointer, and returns it in A. If the
+; byte is $40 (end-of-tune marker), jumps to #R$FBCF to reload the pointer from
+; a loop-restart address instead.
+; .
+; Reads a word from (HL), then reads a byte from that address+1; if it's $40,
+; falls through to #R$FBCF, else writes the word back to (HL) and returns.
+; Exact purpose (keyboard state table? screen probe?) not yet confirmed.
 c$FBB4 LD E,(HL)     ;
  $FBB5 INC HL        ;
  $FBB6 LD D,(HL)     ;
@@ -9314,9 +9863,17 @@ c$FBB4 LD E,(HL)     ;
  $FBBF LD (HL),E     ;
  $FBC0 RET           ;
 
-; Menu??
+; Melody-index to period lookup, used by #R$FBD7
 ;
 ; Used by the routine at #R$FBD7.
+;
+; .
+;
+; CONFIRMED by live debugging: converts a melody-index byte (from #R$FBB4, at
+; (HL)) into an actual tone period by adding $0C and indexing into the period
+; table at #R$FC64; returns the period in H, with L fixed at $01. E.g. index
+; $29 (+$0C=$35) -> #R$FC64+$35 = $FC99 = $01, matching the D=$01 observed live
+; at #R$FBD7's entry.
 c$FBC1 LD A,(HL)     ;
  $FBC2 ADD A,$0C     ;
  $FBC4 LD E,A        ;
@@ -9327,7 +9884,7 @@ c$FBC1 LD A,(HL)     ;
  $FBCC LD L,$01      ;
  $FBCE RET           ;
 
-; Menu??
+; Continuation of #R$FBB4
 ;
 ; Used by the routine at #R$FBB4.
 c$FBCF INC HL        ;
@@ -9338,7 +9895,18 @@ c$FBCF INC HL        ;
  $FBD4 DEC HL        ;
  $FBD5 JR $FBB8      ;
 
-; Menu??
+; Play one note / check key selection
+;
+; Used by the routine at #R$FB90.
+;
+; .
+;
+; Calls #R$FBB4 twice (storing results at $FBA8/$FBA9), then #R$FBC1 twice to
+; check them; if neither matches, falls into the tone-generator loop at $FC04,
+; continuing through $FC15/$FC17/$FC25 into #R$FC34, which toggles the
+; speaker/border via OUT ($FE),A (bit 4 = speaker) in a tight DJNZ-timed
+; square-wave loop -- this is the music heard while the menu waits for input.
+; If both checks match, jumps to the plain delay loop at #R$FC46 instead.
 c$FBD7 LD HL,$FBAB   ;
  $FBDA CALL $FBB4    ;
  $FBDD LD ($FBA8),A  ;
@@ -9359,21 +9927,21 @@ c$FBD7 LD HL,$FBAB   ;
  $FC00 LD A,D        ;
  $FC01 DEC A         ;
  $FC02 JR Z,$FC46    ;
-*$FC04 LD A,($FBB3)  ;
- $FC07 LD C,A        ;
- $FC08 LD B,$00      ;
+*$FC04 LD A,($FBB3)  ; {setup: C=note duration count (from $FBB3), B=0, load
+ $FC07 LD C,A        ; key-state twice into both AF register banks, D=$10
+ $FC08 LD B,$00      ; (initial half-period)
  $FC0A LD A,($FBAA)  ;
  $FC0D EX AF,AF'     ;
  $FC0E LD A,($FBAA)  ;
  $FC11 LD IXh,D      ;
- $FC13 LD D,$10      ;
+ $FC13 LD D,$10      ; }
 ; This entry point is used by the routine at #R$FC34.
 *$FC15 NOP           ;
  $FC16 NOP           ;
 ; This entry point is used by the routine at #R$FC34.
 *$FC17 EX AF,AF'     ;
  $FC18 DEC E         ;
- $FC19 OUT ($FE),A   ;
+ $FC19 OUT ($FE),A   ; toggle speaker/border bit 4 -- produces the audible tone
  $FC1B JR NZ,$FC34   ;
  $FC1D LD E,IXh      ;
  $FC1F XOR D         ;
@@ -9381,7 +9949,7 @@ c$FBD7 LD HL,$FBAB   ;
  $FC21 DEC L         ;
  $FC22 JP NZ,$FC3B   ;
 ; This entry point is used by the routine at #R$FC34.
-*$FC25 OUT ($FE),A   ;
+*$FC25 OUT ($FE),A   ; toggle speaker/border bit 4 -- produces the audible tone
  $FC27 LD L,H        ;
  $FC28 XOR D         ;
  $FC29 DJNZ $FC15    ;
@@ -9389,18 +9957,29 @@ c$FBD7 LD HL,$FBAB   ;
  $FC2C JP NZ,$FC17   ;
  $FC2F RET           ;
 
-; Message at FC30
+; NOTE: not a real string
+;
+; .
+;
+; .
+;
+; Literal ASCII "adam" embedded as data/padding between code paths; possibly a
+; programmer's signature.
 t$FC30 DEFM "adam"
 
-; Menu??
+; Tone generator loop (continued)
 ;
 ; Used by the routine at #R$FBD7.
+;
+; .
+;
+; Toggles the speaker bit via OUT ($FE),A, timed by DJNZ.
 c$FC34 JR Z,$FC34    ;
  $FC36 EX AF,AF'     ;
  $FC37 DEC L         ;
  $FC38 JP Z,$FC25    ;
 ; This entry point is used by the routine at #R$FBD7.
-*$FC3B OUT ($FE),A   ;
+*$FC3B OUT ($FE),A   ; toggle speaker/border bit 4 -- produces the audible tone
  $FC3D NOP           ;
  $FC3E NOP           ;
  $FC3F DJNZ $FC15    ;
@@ -9408,9 +9987,13 @@ c$FC34 JR Z,$FC34    ;
  $FC42 JP NZ,$FC17   ;
  $FC45 RET           ;
 
-; Menu??
+; Plain delay loop (no sound)
 ;
 ; Used by the routine at #R$FBD7.
+;
+; .
+;
+; Decrements a counter via $FBB3, with no OUT ($FE) calls.
 c$FC46 LD A,($FBB3)  ;
  $FC49 CPL           ;
  $FC4A LD C,A        ;
@@ -9419,9 +10002,9 @@ c$FC46 LD A,($FBB3)  ;
  $FC4D LD B,$00      ;
 *$FC4F PUSH HL       ;
  $FC50 LD HL,$0000   ;
- $FC53 SRA (HL)      ;
- $FC55 SRA (HL)      ;
- $FC57 SRA (HL)      ;
+ $FC53 SRA (HL)      ; {shift a (self-modified) pointer's byte right 3 times
+ $FC55 SRA (HL)      ; (divide by 8) -- pure delay, no sound
+ $FC57 SRA (HL)      ; }
  $FC59 NOP           ;
  $FC5A POP HL        ;
  $FC5B DJNZ $FC4F    ;
@@ -9431,178 +10014,144 @@ c$FC46 LD A,($FBB3)  ;
  $FC62 POP BC        ;
  $FC63 RET           ;
 
-; Data block at FC64
-b$FC64 DEFB $FF,$F0,$E3,$D7,$CB,$C0,$B4,$AB
- $FC6C DEFB $A1,$97,$90,$88,$80
+; Note/period table for the #R$FC04 tone generator
+;
+; .
+;
+; .
+;
+; 54 bytes: 53 descending values (= ascending pitch), indexed by #R$FBC1 as
+; (melody-index byte + $0C), plus a trailing byte at $FC99 that is never
+; actually read as a melody index (see #R$FC9A).
+b$FC64 DEFB $FF,$F0,$E3,$D7,$CB,$C0,$B4,$AB,$A1,$97,$90,$88,$80,$79,$72,$6C,$66,$60
+ $FC76 DEFB $5B,$56,$51,$4C,$48,$44,$40,$3D,$39,$36,$33,$30,$2D,$2B,$28,$26,$24,$22
+ $FC88 DEFB $20,$1E,$1C,$1B,$19,$18,$17,$15,$14,$13,$12,$11,$10,$0F,$0E,$0D,$0C,$01
 
-; Data block at FC71
-b$FC71 DEFB $79,$72,$6C,$66
-
-; Data block at FC75
-b$FC75 DEFB $60
-
-; Data block at FC76
-b$FC76 DEFB $5B,$56,$51,$4C,$48,$44
-
-; Data block at FC7C
-b$FC7C DEFB $40
-
-; Data block at FC7D
-b$FC7D DEFB $3D,$39,$36,$33,$30,$2D,$2B,$28
- $FC85 DEFB $26,$24,$22,$20
-
-; Data block at FC89
-b$FC89 DEFB $1E,$1C,$1B,$19,$18,$17,$15,$14
- $FC91 DEFB $13,$12,$11,$10,$0F,$0E,$0D,$0C
- $FC99 DEFB $01
-
-; Data block at FC9A
+; Melody-index table (start)
 ;
 ; Used by the routine at #R$FBD7.
+;
+; .
+;
+; CONFIRMED live: each byte, +$0C then indexed into #R$FC64, gives the tone
+; period for one note. Terminated by $40. #R$FBB4 stores the pointer as $FC99
+; but always increments before reading, so the first byte actually consumed is
+; here at $FC9A ($29); +$0C=$35, and #R$FC64+$35=$FC99=$01, matching the D=$01
+; observed live at #R$FBD7's entry. This table also happens to be reachable as
+; code via #R$FBF1 (JP C,$FC9A -- 12x ADD HL,HL, a rarely/never-taken branch
+; that reuses these bytes as opcodes; not its primary purpose).
 b$FC9A DEFB $29,$29,$29,$29,$29,$29,$29,$29
- $FCA2 DEFB $29,$29,$29,$29
+ $FCA2 DEFB $29,$29,$29,$29,$18,$29,$18,$1A
+ $FCAA DEFB $29,$1B,$1C,$1C,$1C,$0C,$29,$29
+ $FCB2 DEFB $F9,$0B,$0E,$F9,$0A,$29,$F9,$07
+ $FCBA DEFB $0A,$F9,$07,$05,$F4,$04,$03,$F4
+ $FCC2 DEFB $04,$03,$F4,$F4,$F6,$F8,$F8,$F6
+ $FCCA DEFB $0E,$0D,$10,$F4,$0C,$0A,$F4,$09
+ $FCD2 DEFB $0C,$F4,$07,$04,$F9,$05,$04,$F9
+ $FCDA DEFB $05,$04,$F9,$F9,$FB,$FD,$FD,$FB
+ $FCE2 DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
+ $FCEA DEFB $29,$F9,$29,$29,$F4,$29,$29,$F4
+ $FCF2 DEFB $29,$29,$F4,$F4,$F6,$F8,$F8,$F6
+ $FCFA DEFB $FB,$29,$29,$FB,$29,$29,$FB,$29
+ $FD02 DEFB $29,$FB,$29,$29,$FB,$29,$29,$F8
+ $FD0A DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
+ $FD12 DEFB $F4,$29,$29,$F4,$29,$29,$F4,$29
+ $FD1A DEFB $29,$F4,$29,$29,$F9,$0E,$0E,$F9
+ $FD22 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FD2A DEFB $FB,$29,$29,$F4,$29,$29,$FB,$29
+ $FD32 DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FD3A DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FD42 DEFB $F4,$29,$29,$F4,$29,$29,$F4,$29
+ $FD4A DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FD52 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FD5A DEFB $F9,$29,$05,$29,$29,$29,$FE,$29
+ $FD62 DEFB $29,$29,$29,$29,$FD,$29,$29,$FB
+ $FD6A DEFB $29,$29,$F9,$29,$0C,$0C,$0B,$0C
+ $FD72 DEFB $FB,$29,$29,$FB,$29,$29,$F4,$29
+ $FD7A DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FD82 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FD8A DEFB $F4,$29,$29,$F4,$29,$29,$F4,$29
+ $FD92 DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FD9A DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FDA2 DEFB $FB,$29,$29,$FB,$29,$29,$F4,$29
+ $FDAA DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FDB2 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FDBA DEFB $1C,$29,$29,$29,$29,$29,$07,$29
+ $FDC2 DEFB $29,$29,$29,$29,$00,$29,$29,$00
+ $FDCA DEFB $29,$29,$00,$29,$29,$00,$29,$29
+ $FDD2 DEFB $00,$29,$29,$00,$29,$29,$00,$29
+ $FDDA DEFB $29,$00,$29,$29,$05,$29,$29,$05
+ $FDE2 DEFB $29,$29,$05,$29,$29,$05,$29,$29
+ $FDEA DEFB $07,$29,$29,$07,$29,$29,$00,$29
+ $FDF2 DEFB $29,$00,$29,$29,$05,$29,$29,$05
+ $FDFA DEFB $29,$29,$00,$29,$29,$00,$29,$29
+ $FE02 DEFB $F4,$29,$29,$F4,$29,$29,$F4,$29
+ $FE0A DEFB $29,$F4,$29,$29,$F9,$29,$29,$F9
+ $FE12 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
+ $FE1A DEFB $F9,$29,$1D,$1D,$1F,$21,$22,$29
+ $FE22 DEFB $16,$16,$1A,$18,$FD,$29,$29,$FB
+ $FE2A DEFB $29,$29,$F9,$29,$29,$29,$29,$29
+ $FE32 DEFB $40,$00
 
-; Data block at FCA6
-b$FCA6 DEFB $18,$29,$18,$1A,$29,$1B,$1C,$1C
- $FCAE DEFB $1C,$0C,$29,$29,$F9,$0B,$0E,$F9
- $FCB6 DEFB $0A,$29,$F9,$07,$0A,$F9,$07,$05
- $FCBE DEFB $F4,$04,$03,$F4,$04,$03,$F4,$F4
- $FCC6 DEFB $F6,$F8,$F8,$F6,$0E,$0D,$10,$F4
- $FCCE DEFB $0C,$0A,$F4,$09,$0C,$F4,$07,$04
- $FCD6 DEFB $F9,$05,$04,$F9,$05,$04,$F9,$F9
- $FCDE DEFB $FB,$FD,$FD,$FB,$F9,$29,$29,$F9
- $FCE6 DEFB $29,$29,$F9,$29,$29,$F9,$29,$29
- $FCEE DEFB $F4,$29,$29,$F4,$29,$29,$F4,$F4
- $FCF6 DEFB $F6,$F8,$F8,$F6,$FB,$29,$29,$FB
- $FCFE DEFB $29,$29,$FB,$29,$29,$FB,$29,$29
- $FD06 DEFB $FB,$29,$29,$F8,$29,$29,$F4,$29
- $FD0E DEFB $29,$F4,$29,$29,$F4,$29,$29,$F4
- $FD16 DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FD1E DEFB $F9,$0E,$0E,$F9,$29,$29,$F9,$29
- $FD26 DEFB $29,$F9,$29,$29,$FB,$29,$29,$F4
- $FD2E DEFB $29,$29,$FB,$29,$29,$F4,$29,$29
- $FD36 DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FD3E DEFB $29,$F9,$29,$29,$F4,$29,$29,$F4
- $FD46 DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FD4E DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FD56 DEFB $29,$F9,$29,$29,$F9,$29,$05
+; Data block at FE34
+b$FE34 DEFB $18,$17,$1A,$18,$29,$29,$0C,$0B
+ $FE3C DEFB $0E,$0C,$29,$29,$18,$29,$18,$1A
+ $FE44 DEFB $1A,$1B,$1C,$1C,$1C,$00,$29,$29
+ $FE4C DEFB $0C,$0B,$0E,$0C,$0A,$09,$09,$07
+ $FE54 DEFB $0A,$09,$07,$05,$04,$04,$03,$04
+ $FE5C DEFB $04,$03,$04,$F4,$F6,$F8,$F8,$F6
+ $FE64 DEFB $F4,$0D,$10,$0E,$0C,$0A,$16,$15
+ $FE6C DEFB $18,$16,$13,$10,$05,$05,$04,$05
+ $FE74 DEFB $05,$0E,$0C,$0C,$0C,$F6,$F6,$F4
+ $FE7C DEFB $0C,$0B,$0E,$0C,$0A,$09,$09,$07
+ $FE84 DEFB $0A,$09,$07,$05,$04,$04,$03,$04
+ $FE8C DEFB $04,$03,$04,$F4,$F6,$F8,$F8,$F6
+ $FE94 DEFB $07,$07,$09,$0B,$0B,$09,$07,$07
+ $FE9C DEFB $09,$0B,$0B,$09,$07,$07,$11,$10
+ $FEA4 DEFB $10,$0E,$0C,$29,$29,$0C,$29,$29
+ $FEAC DEFB $00,$00,$00,$04,$04,$07,$0E,$0E
+ $FEB4 DEFB $29,$0E,$0E,$29,$0E,$0E,$0E,$0E
+ $FEBC DEFB $0E,$0E,$0E,$0C,$0C,$0C,$09,$0C
+ $FEC4 DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0E,$0C
+ $FECC DEFB $0C,$0C,$09,$0C,$0E,$0E,$0E,$0E
+ $FED4 DEFB $0E,$0E,$0E,$0E,$0C,$09,$09,$05
+ $FEDC DEFB $00,$00,$00,$04,$04,$07,$0E,$0E
+ $FEE4 DEFB $29,$0E,$0E,$29,$0E,$0E,$0E,$0E
+ $FEEC DEFB $0E,$0E,$0E,$0E,$0C,$0C,$09,$0C
+ $FEF4 DEFB $11,$29,$05,$05,$07,$09,$0A,$29
+ $FEFC DEFB $0A,$0A,$0E,$0C,$09,$09,$09,$07
+ $FF04 DEFB $07,$07,$05,$29,$0C,$0C,$0B,$0C
+ $FF0C DEFB $0E,$29,$29,$0E,$0E,$0E,$10,$29
+ $FF14 DEFB $29,$10,$10,$10,$13,$29,$29,$11
+ $FF1C DEFB $11,$11,$11,$29,$11,$11,$10,$0E
+ $FF24 DEFB $0C,$0C,$0D,$0E,$0E,$0D,$0C,$29
+ $FF2C DEFB $11,$11,$10,$0E,$0C,$0C,$0D,$0E
+ $FF34 DEFB $0E,$0D,$0C,$29,$0C,$0C,$0B,$0C
+ $FF3C DEFB $0E,$29,$29,$0E,$0E,$0E,$10,$29
+ $FF44 DEFB $29,$10,$10,$10,$13,$29,$29,$11
+ $FF4C DEFB $11,$11,$11,$29,$11,$11,$10,$11
+ $FF54 DEFB $10,$29,$10,$10,$11,$12,$13,$29
+ $FF5C DEFB $13,$13,$15,$17,$18,$1C,$1A,$18
+ $FF64 DEFB $1C,$1A,$18,$29,$29,$18,$29,$29
+ $FF6C DEFB $0C,$0C,$0C,$10,$10,$13,$1A,$1A
+ $FF74 DEFB $29,$1A,$1A,$29,$1A,$1A,$1A,$1A
+ $FF7C DEFB $1A,$1A,$1A,$18,$18,$18,$15,$18
+ $FF84 DEFB $1A,$1A,$1A,$1A,$1A,$1A,$1A,$1A
+ $FF8C DEFB $18,$18,$15,$18,$1A,$1A,$1A,$1A
+ $FF94 DEFB $1A,$1A,$1A,$1A,$18,$15,$15,$11
+ $FF9C DEFB $0C,$0C,$0C,$10,$10,$13,$1A,$1A
+ $FFA4 DEFB $29,$1A,$1A,$29,$1A,$1A,$1A,$1A
+ $FFAC DEFB $1A,$1A,$1A,$1A,$18,$18,$15,$18
+ $FFB4 DEFB $1D,$29,$11,$11,$13,$15,$16,$29
+ $FFBC DEFB $16,$16,$1A,$18,$15,$15,$15,$13
+ $FFC4 DEFB $13,$13,$11,$29,$29,$29,$29,$29
+ $FFCC DEFB $40,$00
 
-; Data block at FD5D
-b$FD5D DEFB $29,$29,$29
-
-; Data block at FD60
-b$FD60 DEFB $FE
-
-; Data block at FD61
-b$FD61 DEFB $29,$29,$29,$29,$29
-
-; Data block at FD66
-b$FD66 DEFB $FD,$29,$29,$FB,$29,$29,$F9,$29
- $FD6E DEFB $0C,$0C,$0B,$0C,$FB,$29,$29,$FB
- $FD76 DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FD7E DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FD86 DEFB $29,$F9,$29,$29,$F4,$29,$29,$F4
- $FD8E DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FD96 DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FD9E DEFB $29,$F9,$29,$29,$FB,$29,$29,$FB
- $FDA6 DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FDAE DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FDB6 DEFB $29,$F9,$29,$29,$1C
-
-; Data block at FDBB
-b$FDBB DEFB $29,$29,$29,$29,$29
-
-; Data block at FDC0
-b$FDC0 DEFB $07
-
-; Data block at FDC1
-b$FDC1 DEFB $29,$29,$29,$29,$29
-
-; Data block at FDC6
-b$FDC6 DEFB $00,$29,$29,$00,$29,$29,$00,$29
- $FDCE DEFB $29,$00,$29,$29,$00,$29,$29,$00
- $FDD6 DEFB $29,$29,$00,$29,$29,$00,$29,$29
- $FDDE DEFB $05,$29,$29,$05,$29,$29,$05,$29
- $FDE6 DEFB $29,$05,$29,$29,$07,$29,$29,$07
- $FDEE DEFB $29,$29,$00,$29,$29,$00,$29,$29
- $FDF6 DEFB $05,$29,$29,$05,$29,$29,$00,$29
- $FDFE DEFB $29,$00,$29,$29,$F4,$29,$29,$F4
- $FE06 DEFB $29,$29,$F4,$29,$29,$F4,$29,$29
- $FE0E DEFB $F9,$29,$29,$F9,$29,$29,$F9,$29
- $FE16 DEFB $29,$F9,$29,$29,$F9,$29,$1D,$1D
- $FE1E DEFB $1F
-
-; Data block at FE1F
-b$FE1F DEFB $21,$22,$29
-
-; Data block at FE22
-b$FE22 DEFB $16,$16,$1A,$18,$FD,$29,$29,$FB
- $FE2A DEFB $29,$29,$F9
-
-; Data block at FE2D
-b$FE2D DEFB $29,$29,$29,$29,$29
-
-; Data block at FE32
-b$FE32 DEFB $40,$00,$18,$17,$1A,$18,$29,$29
- $FE3A DEFB $0C,$0B,$0E,$0C,$29,$29,$18,$29
- $FE42 DEFB $18,$1A,$1A,$1B,$1C,$1C,$1C,$00
- $FE4A DEFB $29,$29,$0C,$0B,$0E,$0C,$0A,$09
- $FE52 DEFB $09,$07,$0A,$09,$07,$05,$04,$04
- $FE5A DEFB $03,$04,$04,$03,$04,$F4,$F6,$F8
- $FE62 DEFB $F8,$F6,$F4,$0D,$10,$0E,$0C,$0A
- $FE6A DEFB $16,$15,$18,$16,$13,$10,$05,$05
- $FE72 DEFB $04,$05,$05,$0E,$0C,$0C,$0C,$F6
- $FE7A DEFB $F6,$F4,$0C,$0B,$0E,$0C,$0A,$09
- $FE82 DEFB $09,$07,$0A,$09,$07,$05,$04,$04
- $FE8A DEFB $03,$04,$04,$03,$04,$F4,$F6,$F8
- $FE92 DEFB $F8,$F6,$07,$07,$09,$0B,$0B,$09
- $FE9A DEFB $07,$07,$09,$0B,$0B,$09,$07,$07
- $FEA2 DEFB $11,$10,$10,$0E,$0C,$29,$29,$0C
- $FEAA DEFB $29,$29,$00,$00,$00,$04,$04,$07
- $FEB2 DEFB $0E,$0E,$29,$0E,$0E,$29,$0E,$0E
- $FEBA DEFB $0E,$0E,$0E,$0E,$0E,$0C,$0C,$0C
- $FEC2 DEFB $09,$0C,$0E,$0E,$0E,$0E,$0E,$0E
- $FECA DEFB $0E,$0C,$0C,$0C,$09,$0C,$0E,$0E
- $FED2 DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0C,$09
- $FEDA DEFB $09,$05,$00,$00,$00,$04,$04,$07
- $FEE2 DEFB $0E,$0E,$29,$0E,$0E,$29,$0E,$0E
- $FEEA DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0C,$0C
- $FEF2 DEFB $09,$0C,$11,$29,$05,$05,$07,$09
- $FEFA DEFB $0A,$29,$0A,$0A,$0E,$0C,$09,$09
- $FF02 DEFB $09,$07,$07,$07,$05,$29,$0C,$0C
- $FF0A DEFB $0B,$0C,$0E,$29,$29,$0E,$0E,$0E
- $FF12 DEFB $10,$29,$29,$10,$10,$10,$13,$29
- $FF1A DEFB $29,$11,$11,$11,$11,$29,$11,$11
- $FF22 DEFB $10,$0E,$0C,$0C,$0D,$0E,$0E,$0D
- $FF2A DEFB $0C,$29,$11,$11,$10,$0E,$0C,$0C
- $FF32 DEFB $0D,$0E,$0E,$0D,$0C,$29,$0C,$0C
- $FF3A DEFB $0B,$0C,$0E,$29,$29,$0E,$0E,$0E
- $FF42 DEFB $10,$29,$29,$10,$10,$10,$13,$29
- $FF4A DEFB $29,$11,$11,$11,$11,$29,$11,$11
- $FF52 DEFB $10,$11,$10,$29,$10,$10,$11,$12
- $FF5A DEFB $13,$29,$13,$13,$15,$17,$18,$1C
- $FF62 DEFB $1A,$18,$1C,$1A,$18,$29,$29,$18
- $FF6A DEFB $29,$29,$0C,$0C,$0C,$10,$10,$13
- $FF72 DEFB $1A,$1A,$29,$1A,$1A,$29,$1A,$1A
- $FF7A DEFB $1A,$1A,$1A,$1A,$1A,$18,$18,$18
- $FF82 DEFB $15,$18,$1A,$1A,$1A,$1A,$1A,$1A
- $FF8A DEFB $1A,$1A,$18,$18,$15,$18,$1A,$1A
- $FF92 DEFB $1A,$1A,$1A,$1A,$1A,$1A,$18,$15
- $FF9A DEFB $15,$11,$0C,$0C,$0C,$10,$10,$13
- $FFA2 DEFB $1A,$1A,$29,$1A,$1A,$29,$1A,$1A
- $FFAA DEFB $1A,$1A,$1A,$1A,$1A,$1A,$18,$18
- $FFB2 DEFB $15,$18,$1D,$29,$11,$11,$13,$15
- $FFBA DEFB $16,$29,$16,$16,$1A,$18,$15,$15
- $FFC2 DEFB $15,$13,$13,$13,$11
-
-; Data block at FFC7
-b$FFC7 DEFB $29,$29,$29,$29,$29
-
-; Data block at FFCC
-b$FFCC DEFB $40,$00,$00,$00,$00,$00,$00,$00
- $FFD4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FFDC DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FFE4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FFEC DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FFF4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FFFC DEFB $00,$00,$00,$03
+; Data block at FFCE
+b$FFCE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFD6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFDE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFE6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFEE DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFF6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $FFFE DEFB $00,$03

@@ -4,17 +4,19 @@ B $60EB,1
 W $60EC,10,8
 W $610A,2
 W $610C,2
-W $610E,2 ?? Object?
+W $610E,2 Dynamic object template pointer, used as IX going into #R$84AE (its allocator copies the first 2 bytes from here into every newly-allocated object slot)
 W $6110,2
 B $6122,1
 B $6124,1
 B $6125,1
 B $6126,1 Room number
 W $6127,2 Room description address
-B $6129,1 Bit 6 from byte 3 of Room description, shifted to bit 0
+B $6129,1 Room shape/layout selector (0 or 1; bit 6 from byte 3 of Room description, shifted to bit 0). Selects one of 2 fixed wall/decoration layouts drawn by #R$642F.
 B $612A,1 Bits 4-7 from byte 2 of Room description, shifted to bits 0-3
-B $612B,1 Byte 1 from Room description
-B $612C,64,8 Room grid 8x8 ??
+B $612B,1 Room exit/door bitfield (from room description byte1; see #R$6329). Also reused throughout the code as a numeric base address for room-grid cell addressing ($612B+index, grid starting at $612C) -- these are two unrelated uses of the same address, not a conflict.
+B $612C,64,8 Room grid 8x8
+N $612C CONFIRMED via live debugging: 8x8 grid (row-major, offset = row*8+col), cleared to 0 then populated by #R$62A2 from a shared room-type template (#R$72D1 family, selected by $612A via the #R$72B1 pointer table), plus any per-room extra pairs from the room description itself (see #R$6CCF). Each entry's grid cell address is $612B+index (i.e. grid_offset = index-1); the stored value is either a plain content code (see table below), or one of $66/$67/$68/$69/$6A/$6B which additionally triggers a dedicated object-spawn routine (#R$8EA7/#R$8EF2/#R$8F1E/#R$8F4C/#R$8E3F) -- these special values do NOT persist in the finished grid (never observed live); they spawn a dynamic object instead (see #R$84AE) and the grid cell they occupied stays part of the static terrain layout only incidentally.
+N $612C CONFIRMED static object codes (from visual correlation against live screenshots, room grids $2E/$2F/$C0/$BF/$1A/$14/$84): $01=small seaweed, $02=flat rock, $03=clam shell (no pearl), $04=small rock, $09=rock, $0D=seaweed, $7F=solid wall (seen as a contiguous 3x3 corner block). Creatures, pickups (spoon/ball/horseshoe/etc), and air-bubble sources are NEVER on the grid -- they're separate dynamic objects (see #R$84AE), not static terrain.
 B $6174,1
 B $6175,1 Room color 0..15
 B $6179,1
@@ -22,7 +24,7 @@ B $617A,1
 B $617B,1
 B $6186,1
 B $618A,1
-W $618B,2
+W $618B,2 Free-list head pointer for the dynamic object pool (#R$A900), consumed/updated by #R$84AE. Its high byte (at $618C) is also read standalone as an empty/enabled check.
 W $618D,2
 B $618F,1
 B $6190
@@ -41,7 +43,7 @@ B $61A1,1
 B $61A2,1
 B $61A3,1
 B $61A6,1
-c $61A7
+c $61A7 CONFIRMED live: JP (HL) trampoline, used by #R$983C to call a dynamic object's per-frame behaviour handler
 c $61A8
 c $61C1
 c $61E3
@@ -53,16 +55,23 @@ C $626D,3 Room descriptions start address
 C $6275,1 get offset to the next room description
 C $6279,3 Store room description address
 C $6295,13 Clear room grid - 64 bytes at 612C
+C $62A2,25 place the room-type template ($612A indexes the #R$72B1 pointer table) into the grid via #R$62C8
+C $62BB,13 place this room's own extra (index,value) pairs (if its description is longer than 4 bytes) into the grid via #R$62C8
+C $62C8,48 CONFIRMED live: grid-entry writer. E=(HL)=index, IX=$612B+E=target address, A=(HL+1)=value; stores A at (IX+0), then checks A against $66/$67/$68/$69/$6A/$6B to also trigger a dedicated object-spawn routine. Loops B times (DJNZ), consuming 2 bytes/iteration; a special-value spawn routine can decrement B as a side effect, ending the loop earlier than the byte count alone would suggest (confirmed live for #R$8EA7).
 c $62F9
 C $62F9,3 get room number
 c $630D
-c $6329
-c $6344
-c $6377
+c $6329 Build the door/exit bitfield at $612B from the room description's byte1
+N $6329 CONFIRMED live (bit-count matches exits seen in 7/7 sample rooms): re-reads room description byte1 (at room_base+1), merges bit4 into bit0 and bit7 into bit3 (via AND $90, RRCA x4, OR), writes the result back into the room description itself AND into $612B. Bits 0-3 of the result are then tested by #R$6344/#R$6377 to conditionally draw door graphics at four fixed screen positions -- very likely one bit per compass-ish exit direction (exact bit-to-direction mapping not yet pinned down, but the *count* of set bits matched the number of visible exits in every live sample: room $2E (3 bits, exits SW/SE/NE), $2F (2 bits, NW/SE), $C0 (2 bits, SE/NE), $BF (3 bits, NW/NE/SE), $1A (2 bits, SW/NE), $14 (4 bits, all four), $84 (3 bits, SW/NW/NE).
+c $6344 Draw door graphics for $612B bits 0 and 3 (single-piece doors)
+N $6344 CONFIRMED live: tests bit 0 of $612B, drawing one door-graphic piece via #R$8128 at a fixed screen position if set; then bit 3, drawing a different fixed-position piece if set.
+c $6377 Draw door graphics for $612B bits 1 and 2 (three-piece doors)
+N $6377 CONFIRMED live: tests bit 1 of $612B, drawing three door-graphic pieces via #R$8128 (three fixed screen positions) if set; then bit 2, drawing three different fixed-position pieces if set. Calls #R$6344 first.
 c $63D0 Clear shadow screen
 C $63D0,3 Shadow screen address
 b $63DE
-c $642F
+c $642F Draw the fixed wall/decoration layout selected by $6129
+N $642F CONFIRMED live: uses $6129 (0 or 1) to index a 2-entry pointer table at $63DE, selecting one of two fixed layout lists. Each list has two parts: a sequence of 4-byte records (count, screen Y, screen X -- drawn via #R$8128) terminated by $FF, immediately followed by a sequence of single bytes (grid indices) terminated by $FF, each poked into the room grid ($612B+index, i.e. grid_offset=index-1) as solid wall ($7F). This is the source of the recurring 3x3 solid-wall corner block seen in every room grid dump so far -- it's not part of the room-type template at all, it's this fixed, $6129-selected layout.
 c $6470
 C $6478,3 Room grid address
 c $64BB
@@ -83,8 +92,12 @@ b $65CF
 B $65D3
 W $65D7
 W $65D9
-c $65DB
+c $65DB Draw message window: room/creature title line + rotating clue/joke message line
+C $65DE,3 Print string: position cursor for message window line 1 (row $A4)
 C $65F6,3 "  DEATHBOWL  "
+C $65FD,3 Print string: room/creature title, indexed by room type (#R$73B5 table)
+C $6603,3 Print string: position cursor for message window line 2 (row $B4)
+C $6614,3 Print string: current clue/joke message, rotating through the #R$7441 table
 c $6622
 c $663B
 c $6653 Prepare room with color 0
@@ -101,14 +114,22 @@ c $6728
 C $6733,3 get room number
 c $6743
 C $67A8,3 Clear shadow screen
-c $676D
+c $676D Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02
+N $676D CONFIRMED live: rooms $01 and $02 are the only two type $E rooms, and are special "no walls" rooms (see #R$6CCF -- room $01 is the ending/winning room). At #R$67AB, this routine checks if the current room ($6126) is 1 or 2 and, if so, skips straight to #R$67E0, bypassing: the wall/layout draw (#R$642F), door-graphic draw (#R$6377), the message window (#R$65DB), and several creature/object placement calls (#R$6593/$655E/$663B/$6743/$8F82/$6895/$885A). The room's grid contents (rocks/seaweed etc, from its type $E template) still get drawn via a separate, non-skipped path -- consistent with the "just floating rocks and seaweed, no walls" appearance of room $01. Room $01 additionally gets one extra call, #R$86CC (CALL Z at #R$67E8, gated on room==1 specifically, not room==2) -- almost certainly what draws the "DEATHBOWL DIVINED" end-game stats overlay.
 C $6776,3 get room number
+C $67AB,11 CONFIRMED live: if room $6126 is 1 or 2, skip to #R$67E0 (special "no walls" room -- see #R$676D)
 C $67CE,3 Prepare room with color 0
 C $67D1,3 Get room color from room description and store to 6175
+C $67E0,11 Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls #R$86CC (likely the end-game stats overlay)
 C $67EB,3 Prepare room with color 0
 C $67EE,3 Get room color from room description and store to 6175
-c $67F1
+c $67F1 Attempt to move to an adjacent room (horizontal, via a door) in the direction given by ($8DC1)
+N $67F1 CONFIRMED live: definitively resolves the #R$612B exit-bit-to-direction mapping (an open question from earlier sessions). Reads a direction code from ($8DC1) -- 1, 2, 4, or else (fallback case) -- and for each, tests one bit of the door bitfield at #R$612B via HL (set to $612B just before this dispatch) before allowing the move: bit 0 (direction code 1) gates "room number - 6" (row-1, NORTH); bit 1 (direction code 4) gates "room number + 1" (col+1, EAST); bit 2 (direction code 2) gates "room number + 6" (row+1, SOUTH); bit 3 (the fallback case) gates "room number - 1" (col-1, WEST). Also does on-screen player-position bounds checks (against D/E, likely screen row/col) before allowing the move, presumably to require the player to be near the room edge on that side. #R$97FC is called with the new room number to actually perform the transition.
 C $6819,3 get room number
+C $681C,2 change room number: -6 (row-1, move NORTH)
+C $6840,1 change room number: +1 (col+1, move EAST)
+C $685E,2 change room number: +6 (row+1, move SOUTH)
+C $6879,1 change room number: -1 (col-1, move WEST)
 c $6880
 c $6895
 c $68C1
@@ -137,259 +158,410 @@ b $6C71
 t $6C74
 b $6C80
 b $6CCF Room descriptions.
-N $6CCF Room description format:
-N $6CCF byte 0: length - offset to the next description;
-N $6CCF byte 1: ??;
-N $6CCF byte 2: room size/color.
-B $6CCF,7 Room $00 description
-B $6CD6,6 Room $01 description
-B $6CDC,4 Room $02 description
-B $6CE0,4 Room $03 description
-B $6CE4,10 Room $04 description
-B $6CEE,8 Room $05 description
-B $6CF6,8 Room $06 description
-B $6CFE,6 Room $07 description
-B $6D04,4 Room $08 description
-B $6D08,4 Room $09 description
-B $6D0C,4 Room $0A description
-B $6D10,6 Room $0B description
-B $6D16,4 Room $0C description
-B $6D1A,4 Room $0D description
-B $6D1E,14 Room $0E description
-B $6D2C,4 Room $0F description
-B $6D30,10 Room $10 description
-B $6D3A,10 Room $11 description
-B $6D44,12 Room $12 description
-B $6D50,6 Room $13 description
-B $6D56,4 Room $14 description
-B $6D5A,6 Room $15 description
-B $6D60,8 Room $16 description
-B $6D68,4 Room $17 description
-B $6D6C,4 Room $18 description
-B $6D70,4 Room $19 description
-B $6D74,4 Room $1A description
-B $6D78,6 Room $1B description
-B $6D7E,6 Room $1C description
-B $6D84,6 Room $1D description
-B $6D8A,10 Room $1E description
-B $6D94,6 Room $1F description
-B $6D9A,4 Room $20 description
-B $6D9E,10 Room $21 description
-B $6DA8,8 Room $22 description
-B $6DB0,4 Room $23 description
-B $6DB4,4 Room $24 description
-B $6DB8,4 Room $25 description
-B $6DBC,4 Room $26 description
-B $6DC0,4 Room $27 description
-B $6DC4,10 Room $28 description
-B $6DCE,8 Room $29 description
-B $6DD6,9 Room $2A description
-B $6DDF,4 Room $2B description
-B $6DE3,6 Room $2C description
-B $6DE9,4 Room $2D description
-B $6DED,4 Room $2E description
-B $6DF1,6 Room $2F description
-B $6DF7,4 Room $30 description
-B $6DFB,16 Room $31 description
-B $6E0B,10 Room $32 description
-B $6E15,6 Room $33 description
-B $6E1B,10 Room $34 description
-B $6E25,6 Room $35 description
-B $6E2B,4 Room $36 description
-B $6E2F,6 Room $37 description
-B $6E35,4 Room $38 description
-B $6E39,4 Room $39 description
-B $6E3D,4 Room $3A description
-B $6E41,4 Room $3B description
-B $6E45,4 Room $3C description
-B $6E49,10 Room $3D description
-B $6E53,4 Room $3E description
-B $6E57,4 Room $3F description
-B $6E5B,10 Room $40 description
-B $6E65,6 Room $41 description
-B $6E6B,8 Room $42 description
-B $6E73,4 Room $43 description
-B $6E77,8 Room $44 description
-B $6E7F,4 Room $45 description
-B $6E83,6 Room $46 description
-B $6E89,18 Room $47 description
-B $6E9B,6 Room $48 description
-B $6EA1,14 Room $49 description
-B $6EAF,4 Room $4A description
-B $6EB3,8 Room $4B description
-B $6EBB,4 Room $4C description
-B $6EBF,4 Room $4D description
-B $6EC3,4 Room $4E description
-B $6EC7,4 Room $4F description
-B $6ECB,4 Room $50 description
-B $6ECF,7 Room $51 description
-B $6ED6,4 Room $52 description
-B $6EDA,10 Room $53 description
-B $6EE4,4 Room $54 description
-B $6EE8,4 Room $55 description
-B $6EEC,4 Room $56 description
-B $6EF0,4 Room $57 description
-B $6EF4,8 Room $58 description
-B $6EFC,8 Room $59 description
-B $6F04,12 Room $5A description
-B $6F10,4 Room $5B description
-B $6F14,8 Room $5C description
-B $6F1C,8 Room $5D description
-B $6F24,8 Room $5E description
-B $6F2C,13 Room $5F description
-B $6F39,4 Room $60 description
-B $6F3D,10 Room $61 description
-B $6F47,4 Room $62 description
-B $6F4B,4 Room $63 description
-B $6F4F,16 Room $64 description
-B $6F5F,6 Room $65 description
-B $6F65,4 Room $66 description
-B $6F69,4 Room $67 description
-B $6F6D,4 Room $68 description
-B $6F71,8 Room $69 description
-B $6F79,6 Room $6A description
-B $6F7F,4 Room $6B description
-B $6F83,4 Room $6C description
-B $6F87,4 Room $6D description
-B $6F8B,13 Room $6E description
-B $6F98,4 Room $6F description
-B $6F9C,4 Room $70 description
-B $6FA0,6 Room $71 description
-B $6FA6,4 Room $72 description
-B $6FAA,6 Room $73 description
-B $6FB0,4 Room $74 description
-B $6FB4,14 Room $75 description
-B $6FC2,7 Room $76 description
-B $6FC9,4 Room $77 description
-B $6FCD,4 Room $78 description
-B $6FD1,4 Room $79 description
-B $6FD5,4 Room $7A description
-B $6FD9,20 Room $7B description
-B $6FED,8 Room $7C description
-B $6FF5,4 Room $7D description
-B $6FF9,22 Room $7E description
-B $700F,7 Room $7F description
-B $7016,4 Room $80 description
-B $701A,6 Room $81 description
-B $7020,4 Room $82 description
-B $7024,4 Room $83 description
-B $7028,4 Room $84 description
-B $702C,4 Room $85 description
-B $7030,4 Room $86 description
-B $7034,6 Room $87 description
-B $703A,4 Room $88 description
-B $703E,4 Room $89 description
-B $7042,6 Room $8A description
-B $7048,4 Room $8B description
-B $704C,8 Room $8C description
-B $7054,8 Room $8D description
-B $705C,9 Room $8E description
-B $7065,6 Room $8F description
-B $706B,14 Room $90 description
-B $7079,6 Room $91 description
-B $707F,12 Room $92 description
-B $708B,4 Room $93 description
-B $708F,6 Room $94 description
-B $7095,4 Room $95 description
-B $7099,4 Room $96 description
-B $709D,4 Room $97 description
-B $70A1,12 Room $98 description
-B $70AD,11 Room $99 description
-B $70B8,16 Room $9A description
-B $70C8,6 Room $9B description
-B $70CE,10 Room $9C description
-B $70D8,8 Room $9D description
-B $70E0,11 Room $9E description
-B $70EB,14 Room $9F description
-B $70F9,10 Room $A0 description
-B $7103,10 Room $A1 description
-B $710D,6 Room $A2 description
-B $7113,24 Room $A3 description
-B $712B,6 Room $A4 description
-B $7131,10 Room $A5 description
-B $713B,4 Room $A6 description
-B $713F,8 Room $A7 description
-B $7147,4 Room $A8 description
-B $714B,4 Room $A9 description
-B $714F,4 Room $AA description
-B $7153,4 Room $AB description
-B $7157,18 Room $AC description
-B $7169,7 Room $AD description
-B $7170,4 Room $AE description
-B $7174,4 Room $AF description
-B $7178,4 Room $B0 description
-B $717C,4 Room $B1 description
-B $7180,6 Room $B2 description
-B $7186,6 Room $B3 description
-B $718C,16 Room $B4 description
-B $719C,12 Room $B5 description
-B $71A8,10 Room $B6 description
-B $71B2,7 Room $B7 description
-B $71B9,4 Room $B8 description
-B $71BD,4 Room $B9 description
-B $71C1,4 Room $BA description
-B $71C5,4 Room $BB description
-B $71C9,4 Room $BC description
-B $71CD,4 Room $BD description
-B $71D1,4 Room $BE description
-B $71D5,18 Room $BF description
-B $71E7,13 Room $C0 description
-B $71F4,4 Room $C1 description
-B $71F8,8 Room $C2 description
-B $7200,4 Room $C3 description
-B $7204,8 Room $C4 description
-B $720C,14 Room $C5 description
-B $721A,4 Room $C6 description
-B $721E,6 Room $C7 description
-B $7224,4 Room $C8 description
-B $7228,4 Room $C9 description
-B $722C,7 Room $CA description
-B $7233,7 Room $CB description
-B $723A,13 Room $CC description
-B $7247,4 Room $CD description
-B $724B,8 Room $CE description
-B $7253,4 Room $CF description
-B $7257,4 Room $D0 description
-B $725B,4 Room $D1 description
-B $725F,4 Room $D2 description
-B $7263,4 Room $D3 description
-B $7267,4 Room $D4 description
-B $726B,4 Room $D5 description
-B $726F,7 Room $D6 description
-B $7276,16 Room $D7 description
+N $6CCF The world is a 6x6x6 cube of room slots (6 levels, each a 6x6 grid), per an external game map. The highest room number in this table is $D7=215=6*6*6-1, and the table has 216 records total ($00-$D7) -- one per cube slot, including ~15 unused/vacant ones (no room actually there). Horizontal (same-level) neighbours connect via doors (#R$612B); vertical neighbours connect via whirlpools (down, #R$8A87) and bubbles (up, also #R$8A87).
+N $6CCF CONFIRMED live (see x-docs/Room-Format.md): the room number decodes to its cube position with the SAME off-by-one seen in this table's own labels -- use n=room_number-1, then level=n/36, row=(n%36)/6, col=n%6 (0-based). Cross-checked against the 4 menu entry points (A/B/C/D) and an external map: 6 of 8 row/col/level values matched exactly using this (room_number-1) formula (the raw, un-adjusted formula only matched on level, never on row/col).
+N $6CCF Room description format (CONFIRMED via live debugging, see #R$6269/#R$62BB):
+N $6CCF byte 0: record length (offset to the next room's description);
+N $6CCF byte 1: stored raw to $612B (purpose not yet confirmed);
+N $6CCF byte 2 bits 4-7: room type index (0-15), stored to $612A -- selects the grid template from the #R$72B1 pointer table AND the room's creature/inhabitant (via the same value used again below);
+N $6CCF byte 3 bit 6: stored to $6129 (purpose not yet confirmed);
+N $6CCF byte 3 bits 0-5: CONFIRMED live across 7 sample rooms: a 6-bit index (byte3 AND $3F) into the #R$73B5 room/creature title table -- this is what selects the message-window title text (DEATHBOWL/PIRANHA/SEAHORSE/etc), printed by #R$65FD. NOT door/exit flags (an earlier theory, disproved live: two rooms with byte3=$C9 had different exit counts, 2 vs 4). Exits/passages are placed via special-value pairs in the grid template/extras (see #R$72D1 and #R$84AE), not via header bits.
+N $6CCF bytes 4+ (if record length > 4): extra (index,value) pairs specific to this room, laid out and consumed identically to a room-type template (see #R$72D1) -- appended on top of the shared type template when the room grid is built. CONFIRMED live (room $52 at #R$6ECF, 3 trailing bytes $37/$6A/$20): the loop counter B starts at (length-4), but a special-value pair (value in $66/$67/$68/$69/$6A/$6B) makes its spawn routine (e.g. #R$8EA7) decrement B as a side effect, ending the loop early -- room $52's single pair ($37,$6A) consumed only 2 of its 3 trailing bytes; the last byte ($20) was never read. This is why odd leftover-byte counts aren't a bug: special-value entries account for more than 2 bytes' worth of the counter.
+N $6CCF NOTE: room numbering in these block labels was off by one (each labeled one less than its true in-game room number, confirmed live e.g. the record at #R$6ECF is in-game room $52) -- FIXED throughout below, labels now match the in-game room number read from $6126.
+N $6CCF Level 1 of 6 (room numbers $01-$24, cube rows/cols 0-5 -- see x-docs/Room-Format.md) -- entry point 'C' lands in this level (room $1A)
+B $6CCF,4 Room $01 description, type $E -- CONFIRMED live: this is in-game room number $01 (off-by-one, see the NOTE above) -- the special ENDING/WINNING room. Forced live by breakpointing #R$97FC and overriding A=$01: shows a walless room (just floating rocks/seaweed/player) with a "DEATHBOWL DIVINED" stats screen (score %, Scans Scraped, Plugs Pulled, Goodies Gathered, Gnomes Gnabbed) overlaid, reached normally via the final whirlpool after solving the last puzzle. Not part of the normal 6x6x6 navigable cube (see x-docs/Room-Format.md) despite being in-range of the room number scheme.
+B $6CD3,3
+B $6CD6,4 Room $02 description, type $E
+B $6CDA,2
+B $6CDC,4 Room $03 description, type $0
+B $6CE0,4 Room $04 description, type $5
+B $6CE4,4 Room $05 description, type $0
+B $6CE8,6
+B $6CEE,4 Room $06 description, type $1
+B $6CF2,4
+B $6CF6,4 Room $07 description, type $4
+B $6CFA,4
+B $6CFE,4 Room $08 description, type $6
+B $6D02,2
+B $6D04,4 Room $09 description, type $3
+B $6D08,4 Room $0A description, type $7
+B $6D0C,4 Room $0B description, type $1
+B $6D10,4 Room $0C description, type $0
+B $6D14,2
+B $6D16,4 Room $0D description, type $1
+B $6D1A,4 Room $0E description, type $0
+B $6D1E,4 Room $0F description, type $0
+B $6D22,10
+B $6D2C,4 Room $10 description, type $0
+B $6D30,4 Room $11 description, type $5
+B $6D34,6
+B $6D3A,4 Room $12 description, type $4
+B $6D3E,6
+B $6D44,4 Room $13 description, type $7
+B $6D48,8
+B $6D50,4 Room $14 description, type $1
+B $6D54,2
+B $6D56,4 Room $15 description, type $3
+B $6D5A,4 Room $16 description, type $2
+B $6D5E,2
+B $6D60,4 Room $17 description, type $0
+B $6D64,4
+B $6D68,4 Room $18 description, type $7
+B $6D6C,4 Room $19 description, type $0
+B $6D70,4 Room $1A description, type $0
+B $6D74,4 Room $1B description, type $2
+B $6D78,4 Room $1C description, type $3
+B $6D7C,2
+B $6D7E,4 Room $1D description, type $0
+B $6D82,2
+B $6D84,4 Room $1E description, type $1
+B $6D88,2
+B $6D8A,4 Room $1F description, type $2
+B $6D8E,6
+B $6D94,4 Room $20 description, type $6
+B $6D98,2
+B $6D9A,4 Room $21 description, type $2
+B $6D9E,4 Room $22 description, type $1
+B $6DA2,6
+B $6DA8,4 Room $23 description, type $1
+B $6DAC,4
+B $6DB0,4 Room $24 description, type $5
+N $6DB4 Level 2 of 6 (room numbers $25-$48)
+B $6DB4,4 Room $25 description, type $0
+B $6DB8,4 Room $26 description, type $0
+B $6DBC,4 Room $27 description, type $0
+B $6DC0,4 Room $28 description, type $7
+B $6DC4,4 Room $29 description, type $0
+B $6DC8,6
+B $6DCE,4 Room $2A description, type $1
+B $6DD2,4
+B $6DD6,4 Room $2B description, type $6
+B $6DDA,5
+B $6DDF,4 Room $2C description, type $8
+B $6DE3,4 Room $2D description, type $3
+B $6DE7,2
+B $6DE9,4 Room $2E description, type $2
+B $6DED,4 Room $2F description, type $5
+B $6DF1,4 Room $30 description, type $0
+B $6DF5,2
+B $6DF7,4 Room $31 description, type $7
+B $6DFB,4 Room $32 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 2, row 2, col 1
+B $6DFF,12
+B $6E0B,4 Room $33 description, type $1
+B $6E0F,6
+B $6E15,4 Room $34 description, type $0
+B $6E19,2
+B $6E1B,4 Room $35 description, type $3
+B $6E1F,6
+B $6E25,4 Room $36 description, type $0
+B $6E29,2
+B $6E2B,4 Room $37 description, type $2
+B $6E2F,4 Room $38 description, type $0
+B $6E33,2
+B $6E35,4 Room $39 description, type $2
+B $6E39,4 Room $3A description, type $3
+B $6E3D,4 Room $3B description, type $1
+B $6E41,4 Room $3C description, type $3
+B $6E45,4 Room $3D description, type $7
+B $6E49,4 Room $3E description, type $5
+B $6E4D,6
+B $6E53,4 Room $3F description, type $3
+B $6E57,4 Room $40 description, type $0
+B $6E5B,4 Room $41 description, type $1
+B $6E5F,6
+B $6E65,4 Room $42 description, type $0
+B $6E69,2
+B $6E6B,4 Room $43 description, type $0
+B $6E6F,4
+B $6E73,4 Room $44 description, type $8
+B $6E77,4 Room $45 description, type $7
+B $6E7B,4
+B $6E7F,4 Room $46 description, type $3
+B $6E83,4 Room $47 description, type $5
+B $6E87,2
+B $6E89,4 Room $48 description, type $4
+B $6E8D,14
+N $6E9B Level 3 of 6 (room numbers $49-$6C) -- entry point 'A' lands in this level (room $52)
+B $6E9B,4 Room $49 description, type $3
+B $6E9F,2
+B $6EA1,4 Room $4A description, type $6
+B $6EA5,10
+B $6EAF,4 Room $4B description, type $0
+B $6EB3,4 Room $4C description, type $1
+B $6EB7,4
+B $6EBB,4 Room $4D description, type $3
+B $6EBF,4 Room $4E description, type $0
+B $6EC3,4 Room $4F description, type $0
+B $6EC7,4 Room $50 description, type $2
+B $6ECB,4 Room $51 description, type $1
+B $6ECF,4 Room $52 description, type $0
+B $6ED3,3
+B $6ED6,4 Room $53 description, type $6
+B $6EDA,4 Room $54 description, type $5
+B $6EDE,6
+B $6EE4,4 Room $55 description, type $1
+B $6EE8,4 Room $56 description, type $5
+B $6EEC,4 Room $57 description, type $2
+B $6EF0,4 Room $58 description, type $3
+B $6EF4,4 Room $59 description, type $4
+B $6EF8,4
+B $6EFC,4 Room $5A description, type $0
+B $6F00,4
+B $6F04,4 Room $5B description, type $4
+B $6F08,8
+B $6F10,4 Room $5C description, type $6
+B $6F14,4 Room $5D description, type $1
+B $6F18,4
+B $6F1C,4 Room $5E description, type $0
+B $6F20,4
+B $6F24,4 Room $5F description, type $0
+B $6F28,4
+B $6F2C,4 Room $60 description, type $5
+B $6F30,9
+B $6F39,4 Room $61 description, type $0
+B $6F3D,4 Room $62 description, type $0
+B $6F41,6
+B $6F47,4 Room $63 description, type $4
+B $6F4B,4 Room $64 description, type $2
+B $6F4F,4 Room $65 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 3, row 4, col 4
+B $6F53,12
+B $6F5F,4 Room $66 description, type $4
+B $6F63,2
+B $6F65,4 Room $67 description, type $8
+B $6F69,4 Room $68 description, type $1
+B $6F6D,4 Room $69 description, type $0
+B $6F71,4 Room $6A description, type $1
+B $6F75,4
+B $6F79,4 Room $6B description, type $3
+B $6F7D,2
+B $6F7F,4 Room $6C description, type $0
+N $6F83 Level 4 of 6 (room numbers $6D-$90) -- entry point 'D' lands in this level (room $84)
+B $6F83,4 Room $6D description, type $8
+B $6F87,4 Room $6E description, type $1
+B $6F8B,4 Room $6F description, type $3
+B $6F8F,9
+B $6F98,4 Room $70 description, type $2
+B $6F9C,4 Room $71 description, type $7
+B $6FA0,4 Room $72 description, type $2
+B $6FA4,2
+B $6FA6,4 Room $73 description, type $0
+B $6FAA,4 Room $74 description, type $6
+B $6FAE,2
+B $6FB0,4 Room $75 description, type $0
+B $6FB4,4 Room $76 description, type $4
+B $6FB8,10
+B $6FC2,4 Room $77 description, type $5
+B $6FC6,3
+B $6FC9,4 Room $78 description, type $6
+B $6FCD,4 Room $79 description, type $0
+B $6FD1,4 Room $7A description, type $0
+B $6FD5,4 Room $7B description, type $5
+B $6FD9,4 Room $7C description, type $0
+B $6FDD,16
+B $6FED,4 Room $7D description, type $8
+B $6FF1,4
+B $6FF5,4 Room $7E description, type $3
+B $6FF9,4 Room $7F description, type $7
+B $6FFD,18
+B $700F,4 Room $80 description, type $3
+B $7013,3
+B $7016,4 Room $81 description, type $8
+B $701A,4 Room $82 description, type $4
+B $701E,2
+B $7020,4 Room $83 description, type $0
+B $7024,4 Room $84 description, type $7
+B $7028,4 Room $85 description, type $1
+B $702C,4 Room $86 description, type $0
+B $7030,4 Room $87 description, type $6
+B $7034,4 Room $88 description, type $3
+B $7038,2
+B $703A,4 Room $89 description, type $6
+B $703E,4 Room $8A description, type $3
+B $7042,4 Room $8B description, type $4
+B $7046,2
+B $7048,4 Room $8C description, type $8
+B $704C,4 Room $8D description, type $1
+B $7050,4
+B $7054,4 Room $8E description, type $0
+B $7058,4
+B $705C,4 Room $8F description, type $0
+B $7060,5
+B $7065,4 Room $90 description, type $2
+B $7069,2
+N $706B Level 5 of 6 (room numbers $91-$B4)
+B $706B,4 Room $91 description, type $8
+B $706F,10
+B $7079,4 Room $92 description, type $0
+B $707D,2
+B $707F,4 Room $93 description, type $1
+B $7083,8
+B $708B,4 Room $94 description, type $0
+B $708F,4 Room $95 description, type $1
+B $7093,2
+B $7095,4 Room $96 description, type $3
+B $7099,4 Room $97 description, type $0
+B $709D,4 Room $98 description, type $7
+B $70A1,4 Room $99 description, type $8
+B $70A5,8
+B $70AD,4 Room $9A description, type $5
+B $70B1,7
+B $70B8,4 Room $9B description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 5, row 1, col 4
+B $70BC,12
+B $70C8,4 Room $9C description, type $6
+B $70CC,2
+B $70CE,4 Room $9D description, type $1
+B $70D2,6
+B $70D8,4 Room $9E description, type $2
+B $70DC,4
+B $70E0,4 Room $9F description, type $4
+B $70E4,7
+B $70EB,4 Room $A0 description, type $7
+B $70EF,10
+B $70F9,4 Room $A1 description, type $0
+B $70FD,6
+B $7103,4 Room $A2 description, type $1
+B $7107,6
+B $710D,4 Room $A3 description, type $5
+B $7111,2
+B $7113,4 Room $A4 description, type $4
+B $7117,20
+B $712B,4 Room $A5 description, type $1
+B $712F,2
+B $7131,4 Room $A6 description, type $3
+B $7135,6
+B $713B,4 Room $A7 description, type $6
+B $713F,4 Room $A8 description, type $8
+B $7143,4
+B $7147,4 Room $A9 description, type $5
+B $714B,4 Room $AA description, type $0
+B $714F,4 Room $AB description, type $1
+B $7153,4 Room $AC description, type $8
+B $7157,4 Room $AD description, type $4
+B $715B,14
+B $7169,4 Room $AE description, type $3
+B $716D,3
+B $7170,4 Room $AF description, type $0
+B $7174,4 Room $B0 description, type $2
+B $7178,4 Room $B1 description, type $2
+B $717C,4 Room $B2 description, type $0
+B $7180,4 Room $B3 description, type $3
+B $7184,2
+B $7186,4 Room $B4 description, type $1
+B $718A,2
+N $718C Level 6 of 6 (room numbers $B5-$D8) -- entry point 'B' lands in this level (room $C0)
+B $718C,4 Room $B5 description, type $1
+B $7190,12
+B $719C,4 Room $B6 description, type $4
+B $71A0,8
+B $71A8,4 Room $B7 description, type $0
+B $71AC,6
+B $71B2,4 Room $B8 description, type $8
+B $71B6,3
+B $71B9,4 Room $B9 description, type $1
+B $71BD,4 Room $BA description, type $8
+B $71C1,4 Room $BB description, type $7
+B $71C5,4 Room $BC description, type $8
+B $71C9,4 Room $BD description, type $3
+B $71CD,4 Room $BE description, type $0
+B $71D1,4 Room $BF description, type $0
+B $71D5,4 Room $C0 description, type $0
+B $71D9,14
+B $71E7,4 Room $C1 description, type $6
+B $71EB,9
+B $71F4,4 Room $C2 description, type $5
+B $71F8,4 Room $C3 description, type $1
+B $71FC,4
+B $7200,4 Room $C4 description, type $6
+B $7204,4 Room $C5 description, type $1
+B $7208,4
+B $720C,4 Room $C6 description, type $4
+B $7210,10
+B $721A,4 Room $C7 description, type $5
+B $721E,4 Room $C8 description, type $1
+B $7222,2
+B $7224,4 Room $C9 description, type $8
+B $7228,4 Room $CA description, type $1
+B $722C,4 Room $CB description, type $5
+B $7230,3
+B $7233,4 Room $CC description, type $0
+B $7237,3
+B $723A,4 Room $CD description, type $4
+B $723E,9
+B $7247,4 Room $CE description, type $3
+B $724B,4 Room $CF description, type $0
+B $724F,4
+B $7253,4 Room $D0 description, type $8
+B $7257,4 Room $D1 description, type $0
+B $725B,4 Room $D2 description, type $0
+B $725F,4 Room $D3 description, type $8
+B $7263,4 Room $D4 description, type $2
+B $7267,4 Room $D5 description, type $0
+B $726B,4 Room $D6 description, type $0
+B $726F,4 Room $D7 description, type $8
+B $7273,3
+B $7276,4 Room $D8 description, type $F -- one of 4 PLUG ROOMs (see #R$73B3), cube position level 6, row 5, col 5
+B $727A,12
 b $7286
 b $72AB
-b $72B1 Room types??
+b $72B1 Room-type template pointer table
+N $72B1 CONFIRMED live: 16 words, indexed by $612A (room type 0-15, from room description byte2 bits 4-7); each points to a template block below. Types 9-14 all share the same template ($73A0).
 W $72B1,32,8
-b $72D1 Room types ??
-B $72D1 Room type $0
-B $72E4 Room type $1
-B $72F3 Room type $2
-B $731A Room type $3
-B $7329 Room type $4
-B $733E Room type $5
-B $734F Room type $6
-B $7362 Room type $7
-B $7389 Room type $8
-B $73A0 Room type $9..$E
-B $73B3 Room type $F
-t $73B5
-T $73C3
-T $73D1
-T $73DF
-T $73ED
-T $73FB
-T $7409
-T $7417
-T $7425
-T $7433
-t $7441
-T $7455
-T $7469
-T $747D
-T $7491
-T $74A5
-T $74B9
+b $72D1 Room-type templates
+N $72D1 CONFIRMED live: each template starts with a byte0 giving the total byte count of that template block (not a pair count -- matches the gap to the next template's pointer exactly), followed by (index,value) pairs consumed by #R$62C8 to populate the room grid (see #R$612C). First pair of type $0 (index=$16,value=$01) verified live.
+N $72D1 Room type $0 (19 bytes)
+B $72D1,1 byte count for this template (19)
+B $72D2,18
+N $72E4 Room type $1 (15 bytes)
+B $72E4,1 byte count for this template (15)
+B $72E5,14
+N $72F3 Room type $2 (39 bytes)
+B $72F3,1 byte count for this template (39)
+B $72F4,38
+N $731A Room type $3 (15 bytes)
+B $731A,1 byte count for this template (15)
+B $731B,14
+N $7329 Room type $4 (21 bytes)
+B $7329,1 byte count for this template (21)
+B $732A,20
+N $733E Room type $5 (17 bytes)
+B $733E,1 byte count for this template (17)
+B $733F,16
+N $734F Room type $6 (19 bytes)
+B $734F,1 byte count for this template (19)
+B $7350,18
+N $7362 Room type $7 (39 bytes)
+B $7362,1 byte count for this template (39)
+B $7363,38
+N $7389 Room type $8 (23 bytes)
+B $7389,1 byte count for this template (23)
+B $738A,22
+N $73A0 Room type $9..$E (19 bytes)
+B $73A0,1 byte count for this template (19)
+B $73A1,18
+N $73B3 Room type $F (2 bytes) -- CONFIRMED live/external: type $F is used by exactly 4 rooms in the whole table -- $32, $65, $9B, $D8 (cube positions level2/row2/col1, level3/row4/col4, level5/row1/col4, level6/row5/col5 respectively) -- all four "PLUG ROOM" (title index 8). Per the game's own instructions text (x-docs/Instructions.txt): "the gigantic planetary aquarium... is now so polluted that the only remedy is to completely empty it of water by pulling each of the four main plugs" -- these 4 rooms are very likely the win-condition rooms; pulling/activating all four is expected to complete the game. The template itself (2 bytes: length + 1 more) is too short to hold any real (index,value) pair, consistent with Plug Rooms being a distinct, mostly-static-content-free category built around the plug-placement mechanic rather than normal terrain.
+B $73B3,1 byte count for this template (2)
+B $73B4,1
+t $73B5 Room/creature title table
+N $73B5 10 entries, 14 bytes each, terminated by $5E. Indexed by room type (see #R$72D1); printed as the message window's title line by #R$65DB and restored by #R$9808. Entries $A onward (from #R$7441) are reused as the rotating clue/joke message table printed by #R$65DB via #R$65D7.
+T $73B5 "  DEATHBOWL  "
+T $73C3 "   PIRANHA   "
+T $73D1 "  SEAHORSE   "
+T $73DF "  WOLF FISH  "
+T $73ED "   ANEMONE   "
+T $73FB "  SEA SLUG   "
+T $7409 "   OYSTER    "
+T $7417 "  JELLYFISH  "
+T $7425 "  PLUG ROOM  "
+T $7433 " BABY WHALE  "
+t $7441 Warning-sign / clue message table
+N $7441 7 entries, 20 bytes each, terminated by $FF; alias into the tail of the #R$73B5 table.
+T $7441 "FEEDING PROHIBITED "
+T $7455 "BATHING NOT ALLOWED"
+T $7469 "DONT TAP THE GLASS "
+T $747D "NOW WASH YOUR HANDS"
+T $7491 "NOT DRINKING WATER "
+T $74A5 "DONT BITE THE FISH "
+T $74B9 " PLEASE GO QUIETLY "
 b $74CE
 B $750B
 t $75AE
@@ -411,24 +583,45 @@ B $7CD0
 W $7CD8,4,4
 B $7CDC
 B $7CDE
-W $7CE8,2 Print char routine address
-W $7CEA,2 ??
-c $7CEC
+W $7CE8,2 Print char routine vector (current print-engine mode; self-modified by #R$7D2D)
+W $7CEA,2 Print cursor: current shadow screen print address
+c $7CEC Print engine entry point
+N $7CEC Prints the char/control code in A by jumping through the vector at (#R$7CE8).
+R $7CEC A char to print, or a control code ($14/$16)
+C $7CEC,4 save registers
+C $7CF0,3 disable interrupt-driven redraw flag at #R$61A6 while printing
 C $7CF5,3 get Print char routine address
-c $7CF9 Print char routine
+C $7CF8,1 jump to current print-engine mode handler
+c $7CF9 Print char routine (default mode)
+N $7CF9 Prints char A as a font glyph at (#R$7CEA), or switches mode for control codes $14/$16.
+R $7CF9 A char to print, or a control code ($14/$16)
+C $7CF9,2 control codes (<$20) are handled separately; printable chars fall through
+C $7CFD,6 convert char code to font glyph offset (glyph = (A-$20)*8, using codes starting at font base -$20*8)
 C $7D03,3 Font base address
+C $7D08,6 copy 8 rows of the glyph to the shadow screen at (#R$7CEA), stepping by 32 bytes/row
 C $7D15,1 next line
-c $7D32
-c $7D3F
-c $7D48
+C $7D1A,7 advance print cursor (#R$7CEA) to the next character column
+C $7D26,7 control code $14: switch mode to #R$7D32 (set inverse/highlight flag)
+c $7D32 Print engine mode: set inverse video flag
+N $7D32 Self-modifies the LD A at #R$7D12 to CPL/NOP for subsequent chars.
+R $7D32 A flag: zero sets inverse video (CPL), non-zero sets normal video (NOP)
+c $7D3F Print engine mode: dispatch control code $16
+N $7D3F Control code $16 switches mode to #R$7D48 (set cursor row); else return.
+R $7D3F A char to test against control code $16
+c $7D48 Print engine mode: set cursor row
+N $7D48 Sets print cursor row from A (row*256 + shadow screen base).
+R $7D48 A cursor row
 C $7D4B,3 Shadow screen address
-c $7D57
+c $7D57 Print engine mode: set cursor column
+N $7D57 Sets print cursor column from A, then switches back to default char-printing mode.
+R $7D57 A cursor column offset
 b $7D63
-W $7D63,2
+W $7D63,2 Print string cursor: current shadow screen address for #R$7D68 string printer
 B $7D65,1
 B $7D66,2
-c $7D68
-R $7D68 HL ??
+c $7D68 Print string routine
+N $7D68 Prints the string at (HL) to the shadow screen until terminator $5E; handles control codes $16 (set row+col) and $2B (newline, +8 rows).
+R $7D68 HL string address (terminated by $5E)
 C $7D8C,3 Shadow screen address
 C $7D94
 C $7D9F
@@ -468,19 +661,30 @@ c $835E
 b $8397
 c $8445
 c $848E
-c $84AE
+c $84AE Dynamic object allocator
+N $84AE CONFIRMED live (traced in full): allocates one entry from a free-list of dynamic object slots (creatures, items, doors -- anything not baked into the static room grid; see #R$612C). If $618C is 0, takes an early-exit dispatch path (pops the return address, skips 2 bytes, JP (HL) -- purpose not confirmed, likely "no free slots" or "objects disabled"). Otherwise: pops the next free slot's address from the free-list head at $618B (each free slot's first 2 bytes point to the next free slot, standard linked-list allocator), copies 2 bytes from the caller's template pointer (IX, e.g. $610E) into the new slot, switches IX to the slot's own address, stores the CURRENT ROOM NUMBER ($6126) at slot offset $02, copies 2 more bytes (from the caller, e.g. the special grid value + first extra byte -- see #R$8EA7) to slot offset $03/$04, then copies a fixed 19-byte block from $5C92 (ZX system-variable area, reused here as a default object state template) into the rest of the slot. Sets a flag bit and returns with IX = the new slot's address. Object pool confirmed live to start at #R$A900.
 c $84ED
 R $84ED L Sprite number
 c $8501
 c $850E
 c $8513
+C $8516,3 Print string: position cursor for message window line 1 (row $A4)
+C $851F,3 Print string: inline message text embedded after the call to #R$8513
 c $8523
 c $854C
 c $854F
 b $8567
-t $856B
+t $856B Controls sub-menu text
+N $856B "1 KEYBOARD 2 KEMPSTON 3 SINCLAIR 4 CURSOR", printed by #R$8617 via the #R$7CEC print engine.
 b $8595
-c $85A1
+c $85A1 NOTE: possible disassembly misalignment before $860F
+N $85A1 Disassembly from here to around #R$860F looks misaligned/garbled (likely wrong sub-block boundaries upstream); code resynchronizes at #R$860F.
+C $8617,3 load pointer to Controls menu text at #R$856B
+C $861A,5 control code $16: set print cursor row (selects the menu row to print into)
+C $8620,3 print the Controls menu text (via #R$7CEC print engine loop)
+C $8623,5 control code $14 + flag: set/clear inverse video for the currently selected control method
+C $8637,3 call #R$8501 (likely reads the current control method / input routine)
+C $863A,6 control code $14 + $01: restore inverse video flag to normal
 c $86CC
 c $885A
 s $8874
@@ -493,7 +697,10 @@ c $88DD
 c $88E3
 b $88EF
 c $8968
-c $8A87
+c $8A87 Attempt to move to an adjacent room (vertical, via whirlpool/bubble)
+N $8A87 CONFIRMED live: computes the room number one level down ($6126 - $24, i.e. -36 -- a whirlpool) or one level up ($6126 + $24, i.e. +36 -- a bubble), matching the 6x6x6 cube level-stride confirmed independently via room-number/entry-point analysis (see x-docs/Room-Format.md). Has special-case handling when the current room number is exactly 1 (down) or 2 (up) -- overrides the computed value instead of using the generic +-36 arithmetic; not yet understood why. The upward case also bounds-checks the result against $D9 before allowing it (JP C,#R$97FC), falling back to a different path (through $8C83) if out of range. #R$97FC is called with the new room number to actually perform the transition, same as the horizontal case (#R$67F1).
+C $8A7D,2 change room number: -36 (one level DOWN, via whirlpool)
+C $8A9E,2 change room number: +36 (one level UP, via bubble)
 b $8AB3
 c $8ABB
 c $8AD9
@@ -511,12 +718,13 @@ B $8DD1,22
 B $8DF1,22
 t $8E37
 b $8E3B
-c $8E3F
+c $8E3F Special grid-value spawn routine (value $68) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
 c $8E6E
-c $8EA7
-c $8EF2
-c $8F1E
-c $8F4C
+c $8EA7 Special grid-value spawn routine (values $66/$6A) -- spawns a dynamic object (a door/passage, most likely) instead of leaving a static grid entry
+N $8EA7 CONFIRMED live (traced in full): called from #R$62C8 with A=the special value ($66 or $6A) and HL pointing just past it in the template/extras stream. Self-modifies its own #R$8EC3 operand with A (so the spawned object's initial "kind" byte matches whichever of $66/$6A triggered it). Clears the grid cell to 0 (so the special value never appears in the finished grid -- see #R$612C). Reads 2 more bytes from the template beyond the normal (index,value) pair -- these are NOT accounted for by the outer #R$62C8 loop's own HL advancement; instead the routine forces two extra DEC B's (at $8EE8/$8EE9), ending that loop one iteration early to compensate (this is what explains the "odd leftover byte count" behaviour documented at #R$6CCF). Sets up IX=$610E as a template pointer, then CALLs #R$84AE to allocate a dynamic object slot, then populates further slot fields (offset $07=$18, $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning (screen position? direction?) is not yet confirmed -- #R$9A60 was observed to overwrite slot offsets $03/$04 (initially seeded with the trigger value and first extra byte) with what looks like a real code address (a per-object behaviour-handler function pointer, e.g. $9684), and to clear offset $09 back to 0 afterward.
+c $8EF2 Special grid-value spawn routine (value $67) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
+c $8F1E Special grid-value spawn routine (value $69) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
+c $8F4C Special grid-value spawn routine (value $6B) -- see #R$8EA7 for the fully-traced sibling routine; same mechanism.
 s $8F81
 c $8F82
 c $9021
@@ -564,17 +772,21 @@ c $957C
 b $95C1
 B $95FB
 c $9602
-c $9684
+c $9684 Per-object behaviour handler (CONFIRMED live: this is the handler address written into a $66/$6A-triggered door/passage object's slot offset $03/$04 by #R$9A60, and called from #R$983C's dispatcher). Not yet traced internally -- likely draws/updates the door using the object's remaining fields (offsets $0B/$0E/$14, populated by #R$8EA7 from the template's 2 "extra" bytes).
 b $9723
 c $9745
 C $9795,3 Room grid address
 c $97BA
 R $97BA IX ??
-c $97FC
+c $97FC Commit the room change: A = new room number
+R $97FC A new room number
 w $9806
 c $9808
-c $983C
+c $983C Per-frame dynamic object dispatcher (walks the object pool, see #R$A900)
+N $983C CONFIRMED live: for each object slot (IX), checks if its room number (offset $02) matches the current room ($6126); if so, loads a function pointer from offset $03/$04 and CALLs #R$61A7 (a JP (HL) trampoline) to invoke the object's own per-frame behaviour handler (e.g. #R$9684 for the door/passage object we traced). Also checks bit 7 of offset $0D and computes into offset $0C from offsets $10/$11 -- purpose not yet confirmed.
 R $983C IX ???
+C $981B,3 Print string: position cursor for message window line 1 (row $A4)
+C $9821,3 Print string: restore room/creature title (saved at #R$65D9 by #R$65DB)
 C $987B,3 JP (HL)
 c $9900
 b $991A
@@ -596,7 +808,8 @@ C $9A01,3 NEG / not NEG
 C $9A15,3 NEG / not NEG
 C $9A3A,3 get instruction code
 c $9A49
-c $9A60
+c $9A60 Dynamic object finalizer, called at the end of #R$8EA7's object setup
+N $9A60 CONFIRMED live (observed effect, internals not traced): overwrites the new object's slot offset $03/$04 (initially seeded with the triggering grid value and first extra byte by #R$84AE) with what appears to be a genuine code address (e.g. $9684 for a $66/$6A-triggered object) -- almost certainly a per-object behaviour-handler function pointer, looked up from the object's "kind" (offset $09, which reads as 0 after this call, suggesting it's consumed/cleared here).
 c $9AAB
 b $9ABA
 c $9ABC
@@ -622,7 +835,8 @@ N $A5DC record[0..1] = sprite data address;
 N $A5DC record[2] = height in 8px rows, bit 7 = ??;
 N $A5DC record[3] = width in 8px columns.
 W $A5DC,804,16
-b $A900
+b $A900 Dynamic object pool (CONFIRMED live: creatures, items, doors/passages -- anything not baked into the static room grid; see #R$612C)
+N $A900 Slot allocated/freed via a linked list managed by #R$84AE (free-list head at $618B). Confirmed slot field layout (offsets from slot start): +0/+1 copied from the caller's template pointer (e.g. #R$610E); +2 = room number the object belongs to; +3/+4 = per-object behaviour-handler function pointer (see #R$9A60/#R$983C), initially seeded with the triggering value + first extra byte then overwritten with a real code address; +5..+23 = a fixed 19-byte default state block copied from $5C92; +7=$18 and +0xA=$06 (constants set by #R$8EA7-style spawn routines); +9 = triggering grid value (e.g. $66), cleared to 0 by #R$9A60; +0xB and +0xE = a duplicated "extra" byte from the template; +0x14 = a second "extra" byte. The exact meaning of the two "extra" bytes (position? direction?) is not yet confirmed.
 b $A92C
 W $A92C,,16
 b $A9DE Sprite, 24x32 pixels. Player sitting
@@ -983,38 +1197,49 @@ b $E1BE
 b $E390 Shadow screen 256x192, 32*192=6144 bytes
 N $E390 #HTML[#UDGARRAY32,,,32,,($E390-$FB8F-1-256)(screen-e390)]
 B $E390,6144,32
-b $FB90
+c $FB90 Menu tune + key-wait driver
+N $FB90 NOTE: was mislabeled as data; confirmed as code via live debugging. Sets up the melody-table pointers ($FBAB=$FC99, $FBAF=$FE33), then loops: disable interrupts, play one note via #R$FBD7 (which reads/advances through the melody-index table and produces the tone), scan the keyboard via the ROM KEY-SCAN routine at $028E, and repeat until a key is pressed; then re-enable interrupts and return.
+C $FB90,6 point $FBAB at the start of the melody-index table (#R$FC9A, aliased as code for a rare branch -- see its note)
+C $FB96,6 point $FBAF at $FE33 (a second/loop-restart table pointer, not yet explored)
+C $FB9C,1 disable interrupts while bit-banging the tone (precise timing)
+C $FB9D,3 play one note (advances the melody-index pointer internally via #R$FBB4/#R$FBC1)
+C $FBA0,3 ROM KEY-SCAN: scans the keyboard, returns no-key-found as E=$FF
+C $FBA3,3 if no key was found (E wraps to 0), loop back and play the next note
+C $FBA6,2 re-enable interrupts and return (a key was pressed)
 b $FBA8
-c $FBB4 Menu??
-c $FBC1 Menu??
-c $FBCF Menu??
-c $FBD7 Menu??
-t $FC30
-c $FC34 Menu??
-c $FC46 Menu??
-b $FC64
-b $FC71
-b $FC75
-b $FC76
-b $FC7C
-b $FC7D
-b $FC89
-b $FC9A
-b $FCA6
-b $FD5D
-b $FD60
-b $FD61
-b $FD66
-b $FDBB
-b $FDC0
-b $FDC1
-b $FDC6
-b $FE1F
-b $FE22
-b $FE2D
-b $FE32
-b $FFC7
-b $FFCC
+W $FBAB,8,2
+c $FBB4 Melody-index table reader/advancer, used by #R$FBD7
+N $FBB4 CONFIRMED by live debugging: reads the next byte of the melody-index table (via the pointer at (HL)), advances the pointer, and returns it in A. If the byte is $40 (end-of-tune marker), jumps to #R$FBCF to reload the pointer from a loop-restart address instead.
+N $FBB4 Reads a word from (HL), then reads a byte from that address+1; if it's $40, falls through to #R$FBCF, else writes the word back to (HL) and returns. Exact purpose (keyboard state table? screen probe?) not yet confirmed.
+c $FBC1 Melody-index to period lookup, used by #R$FBD7
+N $FBC1 CONFIRMED by live debugging: converts a melody-index byte (from #R$FBB4, at (HL)) into an actual tone period by adding $0C and indexing into the period table at #R$FC64; returns the period in H, with L fixed at $01. E.g. index $29 (+$0C=$35) -> #R$FC64+$35 = $FC99 = $01, matching the D=$01 observed live at #R$FBD7's entry.
+c $FBCF Continuation of #R$FBB4
+c $FBD7 Play one note / check key selection
+N $FBD7 Calls #R$FBB4 twice (storing results at $FBA8/$FBA9), then #R$FBC1 twice to check them; if neither matches, falls into the tone-generator loop at $FC04, continuing through $FC15/$FC17/$FC25 into #R$FC34, which toggles the speaker/border via OUT ($FE),A (bit 4 = speaker) in a tight DJNZ-timed square-wave loop -- this is the music heard while the menu waits for input. If both checks match, jumps to the plain delay loop at #R$FC46 instead.
+C $FC04,17 setup: C=note duration count (from $FBB3), B=0, load key-state twice into both AF register banks, D=$10 (initial half-period)
+C $FC19,2 toggle speaker/border bit 4 -- produces the audible tone
+C $FC25,2 toggle speaker/border bit 4 -- produces the audible tone
+C $FC3B,2 toggle speaker/border bit 4 -- produces the audible tone
+t $FC30 NOTE: not a real string
+N $FC30 Literal ASCII "adam" embedded as data/padding between code paths; possibly a programmer's signature.
+c $FC34 Tone generator loop (continued)
+N $FC34 Toggles the speaker bit via OUT ($FE),A, timed by DJNZ.
+c $FC46 Plain delay loop (no sound)
+N $FC46 Decrements a counter via $FBB3, with no OUT ($FE) calls.
+C $FC53,6 shift a (self-modified) pointer's byte right 3 times (divide by 8) -- pure delay, no sound
+b $FC64 Note/period table for the #R$FC04 tone generator
+N $FC64 54 bytes: 53 descending values (= ascending pitch), indexed by #R$FBC1 as (melody-index byte + $0C), plus a trailing byte at $FC99 that is never actually read as a melody index (see #R$FC9A).
+B $FC64,54,18
+b $FC9A Melody-index table (start)
+N $FC9A CONFIRMED live: each byte, +$0C then indexed into #R$FC64, gives the tone period for one note. Terminated by $40. #R$FBB4 stores the pointer as $FC99 but always increments before reading, so the first byte actually consumed is here at $FC9A ($29); +$0C=$35, and #R$FC64+$35=$FC99=$01, matching the D=$01 observed live at #R$FBD7's entry. This table also happens to be reachable as code via #R$FBF1 (JP C,$FC9A -- 12x ADD HL,HL, a rarely/never-taken branch that reuses these bytes as opcodes; not its primary purpose).
+b $FE34
+b $FFCE
+
+
+
+
+
+
 
 
 

@@ -25,9 +25,69 @@ B $6132,39
 B $6159,9 slot for the missile +00
 B $6162,25
 B $617B,5 missile descriptor +$22
+b $6180
 @ $6180 label=AdrDataShips
-B $6180,76
+N $6180 List of every 3D object: 19 (jp opcode byte, blueprint address, class byte) triples. The jp opcode byte ($C3) is a leftover of an older calling convention and is never executed, only the address and class byte are read. The class byte groups objects into five tiers ($00-$04: stations/missiles, small drops, common ships, top-tier ships, escorts), used elsewhere to decide which ships are eligible to spawn as random traffic or pirates at a given point in the game, separate from anything in the object's own header.
+B $6180,1 jp opcode (unused)
+W $6181,2 #R$6A9D
+B $6183,1 class 0
+B $6184,1 jp opcode (unused)
+W $6185,2 #R$67A6
+B $6187,1 class 0
+B $6188,1 jp opcode (unused)
+W $6189,2 #R$6632
+B $618B,1 class 1
+B $618C,1 jp opcode (unused)
+W $618D,2 #R$68A7
+B $618F,1 class 1
+B $6190,1 jp opcode (unused)
+W $6191,2 #R$63E5
+B $6193,1 class 1
+B $6194,1 jp opcode (unused)
+W $6195,2 #R$6BBC
+B $6197,1 class 1
+B $6198,1 jp opcode (unused)
+W $6199,2 #R$630C
+B $619B,1 class 1
+B $619C,1 jp opcode (unused)
+W $619D,2 #R$62F5
+B $619F,1 class 2
+B $61A0,1 jp opcode (unused)
+W $61A1,2 #R$6E1B
+B $61A3,1 class 2
+B $61A4,1 jp opcode (unused)
+W $61A5,2 #R$6490
+B $61A7,1 class 2
+B $61A8,1 jp opcode (unused)
+W $61A9,2 #R$68E6
+B $61AB,1 class 2
+B $61AC,1 jp opcode (unused)
+W $61AD,2 #R$68FD
+B $61AF,1 class 3
+B $61B0,1 jp opcode (unused)
+W $61B1,2 #R$64A7
+B $61B3,1 class 3
+B $61B4,1 jp opcode (unused)
+W $61B5,2 #R$61CC
+B $61B7,1 class 3
+B $61B8,1 jp opcode (unused)
+W $61B9,2 #R$6689
+B $61BB,1 class 3
+B $61BC,1 jp opcode (unused)
+W $61BD,2 #R$6C13
+B $61BF,1 class 3
+B $61C0,1 jp opcode (unused)
+W $61C1,2 #R$69F2
+B $61C3,1 class 4
+B $61C4,1 jp opcode (unused)
+W $61C5,2 #R$6D32
+B $61C7,1 class 4
+B $61C8,1 jp opcode (unused)
+W $61C9,2 #R$6EF8
+B $61CB,1 class 4
+b $61CC
 @ $61CC label=d_ASP
+N $61CC Every 3D object (ships, station, missiles, cargo canisters, escape pods, asteroids) begins with this same 23-byte header. Compared to the BBC Micro original's 20-byte header, the concepts largely line up (vertex/edge/face counts, bounty, a visibility-distance-for-dot-rendering field, launchable-craft bits), but this header is 3 bytes longer - it carries an explicit, separate combat-rating-score field (see rating points below) in addition to the monetary bounty, where the BBC version has only the one bounty value doing both jobs. Each table offset is also stored as a full 16-bit byte offset (from the object's own base address) rather than the BBC's packed single-byte-plus-shared-high-byte scheme - there's no equivalent here of the BBC trick where one ship's blueprint references another ship's geometry tables directly; every object has its own independent vertex/edge/normal tables immediately following its header (the reused-geometry blueprints in this table, e.g. #R$62F5 and #R$6490, instead duplicate the header and just point their offsets at another object's tables).
 B $61CC,1 cargo hold
 B $61CD,1 collision distance along X/Y/Z (0000.xx)
 B $61CE,1 laser hit chance for Elite rank (halved if not Elite)
@@ -46,8 +106,11 @@ B $61DE,1 flags
 B $61DF,1
 B $61E0,1
 W $61E1,2 rating points
+N $61E3 Vertex format, 6 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2 |Z| magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull threshold ($1F = always compute), +4 low nibble face 1 index/high nibble face 2 index, +5 low nibble face 3 index/high nibble face 4 index - so each vertex can reference up to four different faces; #R$E338 tests the low nibble first, falling back to the high nibble only if the low nibble's face turns out to be invisible.
 B $61E3,114 vertices (19 * 6 bytes: X,Y,Z coords)
+N $6255 Edge format, 4 bytes each: +0 distance-cull threshold (same $1F bypass convention as vertices), +1 start vertex index, +2 end vertex index, +3 low nibble face 1 index/high nibble face 2 index.
 B $6255,112 edges (28 * 4 bytes)
+N $62C5 Normal (face) format, 4 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2 |Z| magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull threshold - same magnitude/sign/cull-threshold shape as a vertex, used for backface culling in #R$E923/#R$E338.
 B $62C5,48 normals (12 * 4 bytes)
 @ $62F5 label=d_Asteroid1
 B $62F5,1 cargo hold
@@ -240,6 +303,7 @@ B $68BB,1
 W $68BC,2 rating points
 B $68BE,24 vertices (4 * 6 bytes: X,Y,Z coords)
 B $68D6,16 edges (4 * 4 bytes)
+N $68D6 The Alloys canister is the only object with zero normals (field_5=0, and there is no normals table after the edges) - a flat, four-vertex/four-edge shape with backface culling switched off entirely: #R$E923 treats a zero normal count as "every face always visible" and skips the culling test for it, consistent with it being a small tumbling piece of debris rather than a solid hull, where culling wouldn't meaningfully change its appearance.
 @ $68E6 label=d_Python1
 B $68E6,1 cargo hold
 B $68E7,1 collision distance along X/Y/Z (0000.xx)
@@ -849,7 +913,7 @@ C $76AD,3 Right view
 C $76BC,3 get CircleCrdXlow
 C $76C0,3 get CircleCrdZlow
 C $76D0,3 set CircleRadius
-c $76D6
+c $76D6 CalcPrnCrdSunAxis
 N $76D6 Calculate one on-screen coordinate of the planet/sun projection
 N $76D6 In: c' =3 for X/Z coordinates
 N $76D6 =2 for Y/Z coordinates
@@ -953,7 +1017,7 @@ N $7999 In: (JumpDocking) =1
 N $7999 (FlgJumpDocking) = $01 takeoff/docking
 N $7999 Out: hl,de,bc,a - undefined
 C $799C,3 get JumpDocking
-c $79A3
+c $79A3 FinishJumpDocking
 N $79A3 Jump completion??
 C $79A3,3 get FlgJumpDocking
 C $79A8,3 initialize ship movement parameters
@@ -996,7 +1060,7 @@ C $7A9D,3 data for 16 stars
 C $7AA3,3 rework the call parameters
 c $7AB9 Stars_Div_C_A0_B
 N $7AB9 Division c=a.0/0.b
-c $7ACD
+c $7ACD PrnNovaSunSetup
 C $7ACD,3 get PilotMission1
 C $7AD1,2 paper 0, ink 7
 C $7AD3,3 print view-screen attributes
@@ -1985,7 +2049,7 @@ C $8E4E,2 inc d
 C $8E51,2 ex de,hl
 C $8E57,1 nop
 C $8E8C,3 ' '
-c $8E95
+c $8E95 ScanMainFlightKeys
 N $8E95 Check for keypress (and branch accordingly) for keys 1, 2, 3, 4, I, O, P, K, L, enter
 C $8E95,3 get FlgJumpDocking
 C $8E9A,3 get ControlKey2
@@ -2019,7 +2083,7 @@ N $8F02 Call a function by number from any page, returning to this page
 N $8F02 In: a - function number in the kernel
 N $8F02 Out: depends on the function
 C $8F1E,3 clear the keyboard buffer
-c $8F21
+c $8F21 SwitchViewScreen
 N $8F21 Switch the view screen
 C $8F21,3 get WhatOnScreen
 C $8F30,3 get JumpDocking
@@ -2081,9 +2145,9 @@ N $8FE7 Turn on sound
 C $8FEC,3 set nBeepFX
 c $8FF0 InvertUpDown
 N $8FF0 Invert up/down
-c $8FF6
+c $8FF6 SwitchControlScheme
 N $8FF6 Switch controls
-c $9009
+c $9009 SoundBeep
 N $9009 Sound beep
 N $9009 In: ----
 N $9009 Out: ----
@@ -2096,14 +2160,14 @@ c $9030 FX_Launch
 N $9030 Takeoff/docking sound
 C $9030,3 get FlagsSetUp
 C $9035,1 exit if sound is off
-c $903B
+c $903B SFX_EnergyBomb
 N $903B Sound
 C $903B,3 get FlagsSetUp
-c $9046
+c $9046 SFX_Hyperjump
 N $9046 Hyperjump sound
 C $9046,3 get FlagsSetUp
 C $904C,3 play the sound
-c $9051
+c $9051 SFX_PlayerDestroyed
 N $9051 Player-destroyed sound
 C $9051,3 get FlagsSetUp
 C $9065,3 set nBeepFX
@@ -2113,7 +2177,7 @@ C $9070,3 sound
 C $9076,3 sound
 C $907C,3 sound
 C $907F,3 sound
-c $9082
+c $9082 SFX_Dispatch
 N $9082 Sound output
 C $9082,3 get FlagsSetUp
 C $908E,3 get nBeepFX
@@ -2128,21 +2192,21 @@ N $90F0 Sound
 C $90F7,2 'd'
 C $9101,2 '0'
 C $9127,3 which sound to play =$00 no sound (silent) 0,=1 energy bomb exploded 1,=1 missile launched 2,=1 colliding with an object/object destroyed 3,=1 laser fired 4,=1 laser fired 5,=1 ECM working 6,=1 hit by laser on the player/docking damage 7,=1
-c $912D
+c $912D SFX_Missile
 N $912D Sound
 C $9138,2 '0'
-c $914A
+c $914A SFX_Collision
 N $914A Sound
-c $9160
+c $9160 SFX_LaserFired
 N $9160 Sound
-c $917D
+c $917D SFX_ECMWorking
 N $917D Sound
 C $9188,2 '@'
-c $919B
+c $919B SFX_HitByLaser
 N $919B Sound
 c $91A4
 c $91B2
-c $91C0
+c $91C0 SFX_Play
 N $91C0 Play the sound
 s $91C8
 S $91C8,10
@@ -2205,7 +2269,7 @@ C $99A7,3 fast move away from/toward the sun/planet/station, only crd z changes
 C $99AA,4 planet coordinates in space
 C $99AE,3 fast move away from/toward the sun/planet/station, only crd z changes
 C $99B1,4 length 27h
-c $99B5
+c $99B5 MoveObjZOnly
 N $99B5 Fast move away from/toward the sun/planet/station
 N $99B5 only crd z changes
 C $99B5,3 ' '
@@ -2868,20 +2932,20 @@ B $A892,1 print flag =1 there was a line feed
 B $A893,1 print flag =1 - capitalize first letter
 @ $A894 label=FlgPrnDescr
 B $A894,3 =1 generate the planet description line
-c $A897
+c $A897 ResetFuelAfterEscape
 C $A897,3 zero out fuel
 @ $A89A label=nObjMissile
 b $A89A
 B $A89A,1 =0 missile targeting was on <>0 reverse index of the object the missile is targeting (8 - slot 0)
-c $A89B
+c $A89B CollectFoundCanister
 C $A89B,3 add a found canister to the cargo
 C $A89E,3 increase the money amount
 C $A8A1,3 increase combat rating
 b $A8A4
 B $A8A4,3
-c $A8A7
+c $A8A7 DestroyCargoFromDamage
 C $A8A7,3 heavy damage. destruction of something (fuel/cargo, etc.)
-c $A8AA
+c $A8AA ActivateCloakingDevice
 N $A8AA Put on the Cloaking Device
 C $A8AA,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5,=1 - cannot buy goods (refugees in the hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3 completed 1 =1 - mission 2 completed 0 =1 - mission 1 completed
 C $A8B3,2 '}' ; message number
@@ -3482,7 +3546,7 @@ c $B0CB
 c $B0CE ClearZnkLine
 N $B0CE Clear a line of 8x8 character cells, 30 long
 N $B0CE In: hl - address in the screen area
-c $B0DE
+c $B0DE RestorePrnCrd
 N $B0DE Restore print coordinates
 N $B0DE In: ----
 N $B0DE Out: hl - coordinates
@@ -3517,7 +3581,7 @@ C $B110,3 clear the pressed-key bits
 C $B113,3 print one character (print a message by number
 b $B116
 B $B116,1
-c $B117
+c $B117 PrnPlanetNameDistance
 C $B117,3 print the planet name and the distance to it
 @ $B11A label=SaveA2
 b $B11A
@@ -3642,12 +3706,12 @@ C $B2C2,3 print the cargo hold contents
 @ $B2C5 label=data_B2C5
 b $B2C5
 B $B2C5,2
-c $B2C7
+c $B2C7 BuyCargoScreenInit
 C $B2C7,3 clear the screen with attribute $07, draw a border around the whole screen, set the initial text-print coordinates
 C $B2CA,3 set the X print coordinate
 b $B2CD
 B $B2CD,1
-c $B2CE
+c $B2CE BuyCargoScreenHeader
 C $B2D0,3 print a message, with LF/CR at the end
 C $B2D6,3 Set screen attributes
 C $B2D9,3 Fill attribute row 3 from the bottom (row 21) with attribute =5
@@ -3695,7 +3759,7 @@ C $B3C6,3 remaining ship cargo capacity
 C $B3CE,3 address in the goods quantity table
 C $B3D6,3 good number
 C $B3D9,3 duplicate this routine
-c $B3E2
+c $B3E2 TradeFailHandler
 N $B3E8 Shared fail handler for both buy and sell: prints the message code left in A at print-column 3 followed by '?', then calls RollbackTradeState to undo the attempted transaction.
 C $B3E9,3 set the X print coordinate
 C $B3EE,3 print a message from group 1 in the buffer/on screen
@@ -3731,18 +3795,18 @@ C $B449,3 set FlgPrnSym2
 C $B44C,3 print one character (print a message by number
 b $B44F
 B $B44F,1
-c $B450
+c $B450 PrnQuantityPromptGoodName
 C $B453,3 good number
 C $B457,3 print a message from group 1 in the buffer/on screen
 C $B45A,3 print one character (print a message by number
 b $B45D
 B $B45D,1
-c $B45E
+c $B45E PrnQuantityPromptUnit
 C $B45E,3 print in lowercase t/kg/g/km
 C $B461,3 print one character (print a message by number
 b $B464
 B $B464,1
-c $B465
+c $B465 PrnQuantityPromptProceed
 C $B465,2 '?'
 C $B467,3 print a message, with LF/CR at the end
 b $B46A
@@ -3776,7 +3840,7 @@ N $B4B0 Drives the Sell screen: loops over all 17 goods via PrnInventoryRow (whi
 C $B4B3,3 print one character (print a message by number
 b $B4B6
 B $B4B6,1
-c $B4B7
+c $B4B7 PrnSellGoodHeader
 C $B4B9,3 Print a message, the danger indicator (if in space), and 3 CrLf
 C $B4BC,3 Fill attribute row 3 from the bottom (row 21) with attribute =5
 C $B4C2,3 address in the goods price table
@@ -3807,16 +3871,16 @@ N $B53F Equipment purchase menu
 C $B542,3 print one character (print a message by number
 b $B545
 B $B545,1 print everything in uppercase
-c $B546
+c $B546 EquipMenu_PrintHeader
 C $B548,3 'EQUIP'
 C $B54B,3 print one character (print a message by number
 b $B54E
 B $B54E,1 SHIP
-c $B54F
+c $B54F EquipMenu_PrintPrices
 C $B54F,3 print one character (print a message by number
 b $B552
 B $B552,1 set flags for printing in lowercase
-c $B553
+c $B553 EquipMenu_Loop
 C $B556,3 base prices for ship equipment
 C $B55C,3 73 ???
 C $B567,3 number of items in the Equip menu
@@ -3829,14 +3893,14 @@ C $B580,3 Print a number
 C $B583,3 set the X print coordinate
 b $B586
 B $B586,1
-c $B587
+c $B587 EquipMenu_PrintName
 C $B587,2 'i'
 C $B589,3 current good's number
 C $B58D,3 print the equipment name
 C $B590,3 set the X print coordinate
 b $B593
 B $B593,1
-c $B594
+c $B594 EquipMenu_PrintRow
 C $B5A3,3 Print a number
 C $B5A6,3 set the print-register flag, reset X coordinate, increment Y coordinate
 C $B5A9,3 next good
@@ -3845,7 +3909,7 @@ C $B5B4,3 clear two character-cell lines
 C $B5B7,3 print one character (print a message by number
 b $B5BA
 B $B5BA,1
-c $B5BB
+c $B5BB EquipMenu_HandleKey
 C $B5BB,2 '?'
 C $B5BD,3 Item?
 C $B5CB,3 set the print-register flag, reset X coordinate, increment Y coordinate
@@ -3859,7 +3923,7 @@ C $B608,3 current galaxy number? fractional part of the fuel price
 C $B60E,2 'F'
 C $B610,3 set fuel
 C $B613,3 equipment purchase menu
-c $B616
+c $B616 EquipMenu_Buy
 C $B61A,3 number of missiles
 C $B62B,3 get PilotLargeCargo
 C $B670,3 clear the screen with attribute $07, draw a border around the whole screen, set the initial text-print coordinates
@@ -4120,11 +4184,11 @@ C $B94C,3 print a message
 b $B96E
 B $B96E,4
 B $B972,5
-c $B977
+c $B977 SetPrintRoutineMode1
 N $B977 Set the print routine to LLBAE7
 N $B977 In: ----
 N $B977 Out: a,(LLBA98)=$01
-c $B97B
+c $B97B SetPrintRoutineMode0
 N $B97B Set the print routine to LLBA9D
 N $B97B In: ----
 N $B97B Out: a,(LLBA98)=$00
@@ -4162,12 +4226,12 @@ C $B9E0,3 planet info: population ... billion
 C $B9E3,3 planet info: (
 b $B9E6
 B $B9E6,1
-c $B9E7
+c $B9E7 PrnPlanetStation
 C $B9E7,3 planet info: ................
 C $B9EA,3 print the letter 'S'
 b $B9ED
 B $B9ED,1
-c $B9EE
+c $B9EE PrnPlanetProductivity
 C $B9EE,2 ')'
 C $B9F0,3 planet info: )
 C $B9F3,2 'o'
@@ -4178,18 +4242,18 @@ C $BA01,3 planet info: Gross productivity nnnnn
 C $BA04,3 print a space
 b $BA07
 B $BA07,1
-c $BA08
+c $BA08 PrnPlanetGovernment
 C $BA08,3 print the letter 'M'
 b $BA0B
 B $BA0B,1
-c $BA0C
+c $BA0C PrnPlanetRadius
 C $BA0E,3 print: CR
 C $BA16,3 print: Average radius
 C $BA19,3 print: radius
 C $BA1C,3 print a space
 b $BA1F
 B $BA1F,1
-c $BA20
+c $BA20 PrnPlanetDistanceInfo
 C $BA22,3 good number
 C $BA25,3 print: km
 C $BA28,3 CrLf twice
@@ -4204,7 +4268,7 @@ C $BA46,3 print the message about the planet being captured by the Thargons
 C $BA49,3 print the planet description
 C $BA55,2 generate and print a short planet summary (at the very bottom) (excluded)
 C $BA57,3 print a message from group 2 in the buffer/on screen
-c $BA5A
+c $BA5A PrnPlanetInfoFooter
 C $BA5A,3 print a message, with LF/CR at the end
 C $BA5F,3 set the print-register flag, reset X coordinate, increment Y coordinate
 C $BA62,3 set the print-register flag, reset X coordinate, increment Y coordinate
@@ -4218,13 +4282,13 @@ C $BA71,2 Message: RICH
 C $BA75,3 Message: RICH
 b $BA78
 B $BA78,1
-c $BA79
+c $BA79 PrnEconomyKind
 C $BA79,3 Economy
 C $BA80,2 Message, one of: INDUSTRIAL AGRICULTURAL
 C $BA84,3 message: MAINLY
 b $BA87
 B $BA87,1
-c $BA88
+c $BA88 PrnEconomyDetail
 c $BA8A PrintTypePopulation
 N $BA8A Print the planet's population type
 C $BA90,3 used only in Cmd_P_PlanetInfo
@@ -4269,7 +4333,7 @@ C $BAF7,2 print a character honoring the case flags
 C $BAFB,3 for printing messages $5B..$80
 C $BB00,2 print a message from group 2 in the buffer/on screen
 C $BB02,3 print a two-character syllable
-c $BB05
+c $BB05 PrnPlanetDescription
 N $BB05 Hl=9314 print the planet description
 C $BB0E,2 hl=9314 print the planet description
 c $BB10 PrintSymbol_A
@@ -4327,7 +4391,7 @@ N $BBDF bit 7-3 - number of character cells horizontally, attribute =5
 N $BBDF bit 2-1 - number of line feeds without setting attributes
 N $BBDF =0 print two attributes =7 at 5822 and 5823, then exit
 C $BBF8,2 ' '
-c $BC0C
+c $BC0C PrnSyllable
 N $BC0C Print a two-character syllable
 N $BC0C In: a - syllable code
 N $BC0C (LLA80D),(LLA80E) - print coordinates
@@ -4436,7 +4500,7 @@ S $C2D8,1064
 S $C700,256
 @ $C800 label=BufCockpit
 S $C800,2048
-c $D000
+c $D000 FindZeroByte
 N $D000 Search for a zero starting from address (#R$BCF6)
 C $D000,2 ' '
 c $D00F PrintTypePopulation2
@@ -4487,7 +4551,7 @@ c $D0D0
 C $D0D0,3 print one character (print a message by number
 b $D0D3
 B $D0D3,1
-c $D0D4
+c $D0D4 PrnHyperjumpTarget
 C $D0D6,3 set the Y coordinate, checking for going off-screen
 C $D0D9,2 print the current planet's name
 C $D0DB,3 Print the message ':message'
@@ -4497,17 +4561,17 @@ C $D0E5,3 set the Y coordinate, checking for going off-screen
 C $D0E8,3 print the remaining fuel
 b $D0EB
 B $D0EB,1
-c $D0EC
+c $D0EC PrnRemainingMoney
 C $D0EC,3 print the remaining money
 b $D0EF
 B $D0EF,1
-c $D0F0
+c $D0F0 PrnLegalStatusHeader
 C $D0F0,2 'q'
 C $D0F2,3 print 'Legal Status'
 C $D0F5,3 print one character (print a message by number
 b $D0F8
 B $D0F8,1
-c $D0F9
+c $D0F9 PrnLegalStatus
 C $D0FB,3 pilot's legal status 0 - clean 1..31h offender 32h..FFh fugitive
 C $D101,2 '2'
 C $D108,3 print the legal status
@@ -4516,21 +4580,21 @@ C $D10D,3 print 'Rating'
 C $D110,3 print one character (print a message by number
 b $D113
 B $D113,1
-c $D114
+c $D114 PrnCombatRating
 C $D131,3 print the rating
 b $D137
 B $D137,1
-c $D138
+c $D138 PrnEquipLargeCargo
 C $D13B,3 get PilotLargeCargo
 C $D13E,3 print one character (print a message by number
 b $D141
 B $D141,1
-c $D142
+c $D142 PrnEquipFuelScoops
 C $D142,3 get PilotFuelScoops
 C $D145,3 print one character (print a message by number
 b $D148
 B $D148,1
-c $D149
+c $D149 PrnEquipECMJammer
 C $D149,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5,=1 - cannot buy goods (refugees in the hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3 completed 1 =1 - mission 2 completed 0 =1 - mission 1 completed
 C $D150,2 ECM Jammer
 C $D152,3 print a message from group 2 in the buffer/on screen
@@ -4538,27 +4602,27 @@ C $D15A,3 get PilotECMSystem
 C $D15D,3 print one character (print a message by number
 b $D160
 B $D160,1
-c $D161
+c $D161 PrnEquipEnergyBomb
 C $D161,3 get PilotEnergyBomb
 C $D164,3 print one character (print a message by number
 b $D167
 B $D167,1
-c $D168
+c $D168 PrnEquipEnergyUnit
 C $D168,3 get PilotEnergyUnit
 C $D16B,3 print one character (print a message by number
 b $D16E
 B $D16E,1
-c $D16F
+c $D16F PrnEquipDockingComputer
 C $D16F,3 57 docking computer
 C $D172,3 print one character (print a message by number
 b $D175
 B $D175,1
-c $D176
+c $D176 PrnEquipHyperdrive
 C $D176,3 58 hyperdrive
 C $D179,3 print one character (print a message by number
 b $D17C
 B $D17C,1
-c $D17D
+c $D17D PrnLaserName
 C $D182,3 42 FrontLaser
 C $D188,3 Print the laser name
 C $D18E,3 +93 extra equipment present 7,=1 - ECM Jammer 6,=1 - Cloaking device 5,=1 - cannot buy goods (refugees in the hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3 completed 1 =1 - mission 2 completed 0 =1 - mission 1 completed
@@ -4714,17 +4778,17 @@ C $D3DF,3 print a number
 C $D3E2,3 1..11 pilot name
 C $D3E5,3 for keeping the last loaded game in memory
 c $D3F0
-c $D3FF
+c $D3FF LoadMenu_RestorePilot
 C $D400,3 get PressKeyPrnSymbol
 C $D403,2 ' '
 C $D407,3 clear two character-cell lines
 C $D416,3 restore pilot data from memory
-c $D41B
+c $D41B LoadMenu_ShowName
 C $D41B,4 1..11 pilot name
 C $D41F,3 'h'
-c $D425
+c $D425 LoadMenu_InputName
 C $D429,3 input a text string
-c $D42C
+c $D42C LoadMenu_ConfirmSave
 C $D42E,3 set FlgPrnSym1
 C $D434,3 set CrdXPrnSymbol
 C $D43B,3 print a message from group 2 in the buffer/on screen
@@ -4879,7 +4943,7 @@ N $D64F In: ---
 N $D64F Out: b =$00
 N $D64F a - galaxy number
 N $D64F hl - undefined
-c $D65A
+c $D65A Cmd_IntergalacticJump
 N $D65A Jump to another planet
 C $D65A,3 get PilotMission1
 C $D65E,2 intergalactic jump
@@ -4901,7 +4965,7 @@ C $D69D,3 +103 (last byte to save) Y coordinate of the small cursor on the large
 C $D6A7,3 set CoriolisNear
 C $D6AA,3 name of the active planet
 C $D6AD,3 name of the planet the ship is set to
-c $D6B3
+c $D6B3 DoHyperjump
 N $D6B3 Hyperjump
 C $D6B4,3 set InFreeSpace
 C $D6B7,3 6 bytes for generating planet data
@@ -5466,7 +5530,7 @@ B $E2ED,1
 @ $E2EE label=VertexSignCrdZ
 B $E2EE,1
 @ $E2EF label=VertexIncFactor
-B $E2EF,1 maximum possible vertex coordinate scaling factor
+B $E2EF,1 the number of left-shifts a close vertex's raw (unrotated) coordinates can tolerate before a bit would be shifted out of a byte, computed by #R$E5CB when (DistanceToObj) < 4 so near objects retain precision instead of drawing as a tiny cluster of nearly-identical rotated coordinates; consumed by #R$E353 (RotateCrdN_Vertex) and #R$E447.
 @ $E2F0 label=VisiblePrevVertex
 B $E2F0,1 visibility of the previous vertex <>0 the previous vertex is not visible
 c $E2F1 MakeTablPrnCrdVertex
@@ -5476,6 +5540,7 @@ N $E2F1 iy - address of the object data
 N $E2F1 Out: bc=$0006
 N $E2F1 a=$00
 N $E2F1 hl,de - undefined
+N $E2F1 For each vertex, first checks #R$E338 (TestVergesVisible) against the vertex's two adjacent-face indices - a vertex is skipped entirely (no rotation/projection done) unless at least one of its two faces is currently visible, so the expensive per-vertex rotation math only ever runs for vertices that actually matter this frame. A visible vertex is then rotated (#R$E49C) and projected (#R$E5CB) and its result cached into #R$E222 (TablCrdPrnVertex), indexed by vertex number.
 C $E2F5,3 a number of vertices
 C $E300,2 ix start address of the vertices
 C $E307,3 get PointTablCrdPrn
@@ -5545,7 +5610,12 @@ N $E478 bh.l - object's crdX
 N $E478 de - X coordinate of the rotated vertex
 N $E478 Out: ah.l = CrdNobject + CrdNvertex * 2
 c $E49C RotateCrdVertex
-N $E49C Distance greater than 4
+N $E49C Rotate a vertex's three coordinates through the OCS matrix (distance to object > 4; see #R$E2EF for the near-object variant).
+N $E49C In: ix - vertex address
+N $E49C (VisiblePrevVertex) - <>0 if the previous vertex processed is not visible
+N $E49C Out: (VertexCrdX/Y/Z) - rotated vertex coordinates
+N $E49C hl,de,bc,a - undefined
+N $E49C If the previous vertex was visible and this vertex's raw |X|,|Y|,|Z| magnitude bytes are byte-for-byte identical to the previous vertex's (some ships share duplicate vertex positions across different parts of their geometry), the full per-axis rotation (#R$E52A, three calls) is skipped in favour of #R$E4E9, which reuses the previous vertex's already-computed matrix products and just re-applies any sign difference between the two vertices on each axis - cheaper than recomputing three matrix-row multiplications from scratch.
 C $E49C,3 get VisiblePrevVertex
 C $E4B7,3 set VertexCrdX
 C $E4CA,3 rotate one vector coordinate
@@ -5554,6 +5624,12 @@ C $E4D0,3 rotate one vector coordinate
 C $E4D6,3 rotate one vector coordinate
 C $E4DD,3 set VertexCrdXlow
 c $E4E9 RotateCrdN_equ_Prev
+N $E4E9 Reuse the previous vertex's rotated coordinate on one axis, for a vertex whose raw magnitude bytes are identical to the previous one (see #R$E49C). Rather than recomputing the three matrix-row products from scratch, it takes the previous vertex's already-stashed per-term products from (MatrixRotate+$12), re-signs each one to account for any sign difference between this vertex's and the previous vertex's coordinate on this axis (via XOR of the sign bits), and re-sums them via #R$E424.
+N $E4E9 In: ix - address of this vertex's coordinate (and its sign byte at ix+3)
+N $E4E9 iy - address of the previous vertex's stashed per-term products
+N $E4E9 Out: hl - new vertex coordinate
+N $E4E9 iy=iy+6
+N $E4E9 de,bc,a - undefined
 C $E50D,3 signed addition
 C $E520,3 signed addition
 c $E52A RotateCrdN
@@ -5648,6 +5724,7 @@ N $E729 iy - address of the object descriptor
 N $E729 Out: de=$0004
 N $E729 b=$00
 N $E729 iy,hl,c,a - undefined
+N $E729 Walks the edge table four bytes at a time, skipping an edge whose distance-cull value says it is too far away to bother with, then skipping it again unless #R$E338 says at least one of its two bordering faces is currently visible. Because visibility is tested per-edge against the same face-visibility flags computed once per frame by #R$E923, an edge between two faces where at least one is front-facing gets drawn even if the other is back-facing - wireframe rendering shows silhouette and near-side edges, not a strict hidden-line-removed result.
 C $E72C,3 de - offset to the edges
 C $E72F,3 b number of edges
 C $E736,2 start address of the edges
@@ -5692,6 +5769,7 @@ N $E7F3 Build the OCS rotation matrix
 N $E7F3 In: ix - address of the object descriptor slot
 N $E7F3 Out: iy=MatrixRotate
 N $E7F3 hl,de,bc,a - undefined
+N $E7F3 Each of the 9 matrix elements is a cross-multiplication of two pairs of the object's stored orientation vector components (e.g. one element is (ix+$0C)*(ix+$14) - (ix+$0E)*(ix+$12)-style), computed via #R$E45D with sign tracked separately via XOR of the two operands' sign bits rather than relying on two's-complement arithmetic. The orientation itself is stored as three vectors (nine bytes: three 2-byte sign-magnitude values per vector) in the object slot rather than as Euler angles - effectively two rows of a 3x3 rotation matrix plus redundancy used for renormalization (see #R$E791/#R$DCA3).
 C $E862,3 Approximate table-based multiplication HL=B*C
 C $E867,3 Approximate table-based multiplication HL=B*C
 c $E88B
@@ -5939,6 +6017,7 @@ C $ED21,3 print a line in the buffer???
 c $ED24 IntRnd_A2
 N $ED24 Random number
 N $ED24 A - result
+N $ED24 The entire state is a single 16-bit word held in (word_ED35), seeded at assembly time to a fixed non-zero value. Each call doubles it with carry propagating from the low byte into the high byte and back around (a=h; adc a,a; b=a; a=adc(a,l); h=a; l=b) - a simple additive/shift-based generator, not a table lookup or anything hardware-derived. Its output at any point in the game depends entirely on the exact sequence of PRNG-consuming calls that happened before it, with no direct tie to elapsed real time or frame count. This one shared generator feeds every "roll a random byte" need in the game: spawn-position jitter (#R$F2FB), laser-fire timing, enemy AI decisions, and more.
 b $ED35
 W $ED35,2
 c $ED37 Process_LaserECM2
@@ -6135,13 +6214,13 @@ N $F175 h - coordinate difference along X
 N $F175 l - coordinate difference along Y
 C $F185,2 ' '
 C $F1FA,3 calculate the coordinate step coefficient when printing a line
-c $F201
+c $F201 PrnLineDown2Up_vert_Entry
 N $F211 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
 @ $F202 label=PrnLineDown2Up_vert
 C $F215,1 DownScrAdr_HL
 C $F21A,2 ' '
 N $F224 self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
-c $F228
+c $F228 PrnLineDown2Up_hor_Entry
 N $F228 Print a line bottom-to-top, dY<dX
 N $F228 In: hl - address in buffer/on screen
 N $F228 d - line length
@@ -6155,7 +6234,7 @@ C $F22E,2 print a line bottom-to-top, dY<dX
 N $F236 "boundary crossing" (every 8th row): because of the third-interleaved screen layout, advancing one pixel row is not a uniform +1/-1 to a linear address. Most of the time (within a character cell) it's just L +/- $20, but every 8th row this reloads b=8 and adjusts the high byte by +/-7 and the low byte by -/+$20 instead, with a further carry-driven -b correction to the high byte if that 8-row group also crosses a third boundary.
 @ $F230 label=PrnLineDown2Up_hor
 C $F244,2 ' '
-c $F250
+c $F250 PrnLineUp2Down_vert_Entry
 C $F251,1 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
 @ $F251 label=PrnLineUp2Down_vert
 C $F25C,2 shift the data bit
@@ -6165,7 +6244,7 @@ C $F269,2 ' '
 C $F26C,3 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
 C $F272,3 hl - address in the buffer c - data byte d - height e - X increment b - height of the first character cell
 N $F275 self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
-c $F279
+c $F279 PrnLineUp2Down_hor_Entry
 N $F279 Print a line top-to-bottom, dY<dX
 N $F279 In: hl - address in buffer/on screen
 N $F279 d - line length
@@ -6184,7 +6263,8 @@ C $F29A,3 print a line top-to-bottom, dY<dX
 N $F29D self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $2D (dec l) into this exact spot before jumping in, choosing the stepping direction once, before the loop starts, rather than branching on every pixel of the hot per-pixel loop.
 @ $F2A1 label=PatternObject
 b $F2A1
-B $F2A1,31 +0 template of an object's slot in space
+B $F2A1,9 position: X/Y/Z, each a 2-byte magnitude plus a 1-byte sign, preset to the fixed placeholder ($3200,0, $3200,0, $3200,0) - far from the origin, immediately overwritten by whatever spawn logic actually places the object.
+B $F2AA,22 remaining status/state bytes reset to a known baseline before any ship-specific or randomised data is layered on top: mostly zero, except offsets +$D,+$E,+$11,+$15,+$16 preset to $FF (the conventional "none"/"no target" sentinel used elsewhere in the object-slot format, e.g. "no parent object", "no active target"), and offset +$12 preset to $7F (a maximum/full value for whichever status field that byte represents).
 @ $F2C0 label=SKO4Intro
 B $F2C0,9
 B $F2C9,1 alternation
@@ -6232,16 +6312,17 @@ N $F2FB Place an object into a slot
 N $F2FB In: a - object number
 N $F2FB ix address of the object slot
 N $F2FB Out: a=$00
-C $F2FF,2 '?'
+N $F2FB Instantiates a live object in the given slot from a ship-type number: (1) looks up the type in #R$6180 (AdrDataShips) and stores the resulting blueprint address into the slot (+$23/+$24) - the only link between a slot and its static geometry/stats, nothing else about the blueprint is copied in; (2) copies the full 31-byte #R$F2A1 (PatternObject) template into the slot; (3) seeds the instance's current state from the blueprint's maximums: max energy (field_7) becomes current energy (+$22), some flag bits (field_12) are copied into status byte +$21, the launch-capability bits (field_A) are packed together with three bits of the flags byte into status byte +$20, and max speed (field_6), halved, becomes the initial current speed (+$1B); (4) sets status bit 6 of +$20 unconditionally; (5) randomises the starting X/Y position (never Z): the low bytes of X and Y are always re-rolled to a fresh 8-bit random value, while the high bytes are only re-rolled (to a 0-7 range) if status bit 2 of +$21 is clear - so some ship types spawn scattered across a wider area than others, controlled by a flag baked into that ship type's own static data; (6) one further PRNG call has its result bit-rotated into the sign bits of the X and Y position, via two rra/rr pairs sharing a single random byte across both fields.
+C $F2FF,2 mask to bits 0-5: a ship-type index 0-63, into #R$6180's 19 valid entries
 C $F30D,2 iy address of the object data
 C $F31B,3 +0 template of an object's slot in space
-C $F32A,2 'o'
-C $F343,2 '~'
-C $F356,3 Random number
-C $F35E,3 Random number
-C $F366,3 Random number
-C $F36C,3 Random number
-C $F372,3 Random number
+C $F32A,2 mask blueprint flags (field_12) down to the bits kept in slot status byte +$21
+C $F343,2 immediate $7E stored at slot +$25 (not ship-data-derived; unrelated to any doc field)
+C $F356,3 roll a 0-7 high byte for the X position (only reached if status bit 2 of +$21 is clear)
+C $F35E,3 roll a 0-7 high byte for the Y position
+C $F366,3 roll the X position's low byte (always re-rolled)
+C $F36C,3 roll the Y position's low byte (always re-rolled)
+C $F372,3 roll one byte whose bits are rotated into the X and Y position sign bits via a shared rra/rr pair
 c $F381 ShipSetObject
 N $F381 Place an object into a slot at another object's coordinates (a ship
 N $F381 launching an enemy object, which inherits coordinates, OCS and speed from the parent)
@@ -6420,6 +6501,7 @@ c $F5D8 SetShip4Intro
 N $F5D8 Place an object into the missile slot for the intro screen
 N $F5D8 In: c - object number
 N $F5D8 Out: ix,hl,de,bc,a - undefined
+N $F5D8 Always targets the one fixed slot otherwise used for the player's own missile (#R$6159), reused here since it's never needed for both purposes at once. Calls #R$F2FB (SetObjInSlot) exactly as any other spawn - so the PRNG-driven X/Y jitter it performs does happen - then immediately overwrites the position anyway: X and Y are explicitly zeroed and Z is set to a fixed $0200, undoing the randomisation a few instructions later and putting the intro ship at a fixed, repeatable distance directly ahead. Also clears status bit 6 of +$20 that SetObjInSlot had just set, then copies the fixed 9-byte orientation seed #R$F2C0 (SKO4Intro) into the slot's OCS fields, giving the title-screen ship a consistent, non-randomised starting attitude every boot.
 C $F5D8,4 slot for the missile +00
 C $F5DF,3 place an object into a slot
 C $F5EE,3 crd X =0

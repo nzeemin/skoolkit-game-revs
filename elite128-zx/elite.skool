@@ -54,19 +54,103 @@ b$6048 DEFB $00                             ; length 27h
  $6172 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $617A DEFB $00
  $617B DEFB $00,$00,$00,$00,$00             ; missile descriptor +$22
+
+; Data block at 6180
+;
+; .
+;
+; .
+;
+; List of every 3D object: 19 (jp opcode byte, blueprint address, class byte)
+; triples. The jp opcode byte ($C3) is a leftover of an older calling
+; convention and is never executed, only the address and class byte are read.
+; The class byte groups objects into five tiers ($00-$04: stations/missiles,
+; small drops, common ships, top-tier ships, escorts), used elsewhere to decide
+; which ships are eligible to spawn as random traffic or pirates at a given
+; point in the game, separate from anything in the object's own header.
 @label=AdrDataShips
- $6180 DEFB $C3,$9D,$6A,$00,$C3,$A6,$67,$00
- $6188 DEFB $C3,$32,$66,$01,$C3,$A7,$68,$01
- $6190 DEFB $C3,$E5,$63,$01,$C3,$BC,$6B,$01
- $6198 DEFB $C3,$0C,$63,$01,$C3,$F5,$62,$02
- $61A0 DEFB $C3,$1B,$6E,$02,$C3,$90,$64,$02
- $61A8 DEFB $C3,$E6,$68,$02,$C3,$FD,$68,$03
- $61B0 DEFB $C3,$A7,$64,$03,$C3,$CC,$61,$03
- $61B8 DEFB $C3,$89,$66,$03,$C3,$13,$6C,$03
- $61C0 DEFB $C3,$F2,$69,$04,$C3,$32,$6D,$04
- $61C8 DEFB $C3,$F8,$6E,$04
+b$6180 DEFB $C3      ; jp opcode (unused)
+ $6181 DEFW $6A9D    ; #R$6A9D
+ $6183 DEFB $00      ; class 0
+ $6184 DEFB $C3      ; jp opcode (unused)
+ $6185 DEFW $67A6    ; #R$67A6
+ $6187 DEFB $00      ; class 0
+ $6188 DEFB $C3      ; jp opcode (unused)
+ $6189 DEFW $6632    ; #R$6632
+ $618B DEFB $01      ; class 1
+ $618C DEFB $C3      ; jp opcode (unused)
+ $618D DEFW $68A7    ; #R$68A7
+ $618F DEFB $01      ; class 1
+ $6190 DEFB $C3      ; jp opcode (unused)
+ $6191 DEFW $63E5    ; #R$63E5
+ $6193 DEFB $01      ; class 1
+ $6194 DEFB $C3      ; jp opcode (unused)
+ $6195 DEFW $6BBC    ; #R$6BBC
+ $6197 DEFB $01      ; class 1
+ $6198 DEFB $C3      ; jp opcode (unused)
+ $6199 DEFW $630C    ; #R$630C
+ $619B DEFB $01      ; class 1
+ $619C DEFB $C3      ; jp opcode (unused)
+ $619D DEFW $62F5    ; #R$62F5
+ $619F DEFB $02      ; class 2
+ $61A0 DEFB $C3      ; jp opcode (unused)
+ $61A1 DEFW $6E1B    ; #R$6E1B
+ $61A3 DEFB $02      ; class 2
+ $61A4 DEFB $C3      ; jp opcode (unused)
+ $61A5 DEFW $6490    ; #R$6490
+ $61A7 DEFB $02      ; class 2
+ $61A8 DEFB $C3      ; jp opcode (unused)
+ $61A9 DEFW $68E6    ; #R$68E6
+ $61AB DEFB $02      ; class 2
+ $61AC DEFB $C3      ; jp opcode (unused)
+ $61AD DEFW $68FD    ; #R$68FD
+ $61AF DEFB $03      ; class 3
+ $61B0 DEFB $C3      ; jp opcode (unused)
+ $61B1 DEFW $64A7    ; #R$64A7
+ $61B3 DEFB $03      ; class 3
+ $61B4 DEFB $C3      ; jp opcode (unused)
+ $61B5 DEFW $61CC    ; #R$61CC
+ $61B7 DEFB $03      ; class 3
+ $61B8 DEFB $C3      ; jp opcode (unused)
+ $61B9 DEFW $6689    ; #R$6689
+ $61BB DEFB $03      ; class 3
+ $61BC DEFB $C3      ; jp opcode (unused)
+ $61BD DEFW $6C13    ; #R$6C13
+ $61BF DEFB $03      ; class 3
+ $61C0 DEFB $C3      ; jp opcode (unused)
+ $61C1 DEFW $69F2    ; #R$69F2
+ $61C3 DEFB $04      ; class 4
+ $61C4 DEFB $C3      ; jp opcode (unused)
+ $61C5 DEFW $6D32    ; #R$6D32
+ $61C7 DEFB $04      ; class 4
+ $61C8 DEFB $C3      ; jp opcode (unused)
+ $61C9 DEFW $6EF8    ; #R$6EF8
+ $61CB DEFB $04      ; class 4
+
+; Data block at 61CC
+;
+; .
+;
+; .
+;
+; Every 3D object (ships, station, missiles, cargo canisters, escape pods,
+; asteroids) begins with this same 23-byte header. Compared to the BBC Micro
+; original's 20-byte header, the concepts largely line up (vertex/edge/face
+; counts, bounty, a visibility-distance-for-dot-rendering field,
+; launchable-craft bits), but this header is 3 bytes longer - it carries an
+; explicit, separate combat-rating-score field (see rating points below) in
+; addition to the monetary bounty, where the BBC version has only the one
+; bounty value doing both jobs. Each table offset is also stored as a full
+; 16-bit byte offset (from the object's own base address) rather than the BBC's
+; packed single-byte-plus-shared-high-byte scheme - there's no equivalent here
+; of the BBC trick where one ship's blueprint references another ship's
+; geometry tables directly; every object has its own independent
+; vertex/edge/normal tables immediately following its header (the
+; reused-geometry blueprints in this table, e.g. #R$62F5 and #R$6490, instead
+; duplicate the header and just point their offsets at another object's
+; tables).
 @label=d_ASP
- $61CC DEFB $00                             ; cargo hold
+b$61CC DEFB $00                             ; cargo hold
  $61CD DEFB $3C                             ; collision distance along X/Y/Z
                                             ; (0000.xx)
  $61CE DEFB $FA                             ; laser hit chance for Elite rank
@@ -87,6 +171,13 @@ b$6048 DEFB $00                             ; length 27h
  $61DF DEFB $01
  $61E0 DEFB $08
  $61E1 DEFW $0340                           ; rating points
+; Vertex format, 6 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2 |Z|
+; magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull threshold
+; ($1F = always compute), +4 low nibble face 1 index/high nibble face 2 index,
+; +5 low nibble face 3 index/high nibble face 4 index - so each vertex can
+; reference up to four different faces; #R$E338 tests the low nibble first,
+; falling back to the high nibble only if the low nibble's face turns out to be
+; invisible.
  $61E3 DEFB $00,$12,$00,$56,$01,$22,$00,$09 ; {vertices (19 * 6 bytes: X,Y,Z
  $61EB DEFB $2D,$7F,$12,$BB,$2B,$00,$2D,$3F ; coords)
  $61F3 DEFB $16,$BB,$45,$03,$00,$5F,$16,$79 ;
@@ -102,6 +193,9 @@ b$6048 DEFB $00                             ; length 27h
  $6243 DEFB $00,$04,$2D,$28,$BB,$BB,$00,$07 ;
  $624B DEFB $49,$4A,$04,$04,$00,$07,$53,$4A ;
  $6253 DEFB $04,$04                         ; }
+; Edge format, 4 bytes each: +0 distance-cull threshold (same $1F bypass
+; convention as vertices), +1 start vertex index, +2 end vertex index, +3 low
+; nibble face 1 index/high nibble face 2 index.
  $6255 DEFB $16,$00,$01,$12,$16,$00,$04,$01 ; {edges (28 * 4 bytes)
  $625D DEFB $16,$00,$07,$02,$1F,$01,$02,$1B ;
  $6265 DEFB $1F,$02,$03,$16,$10,$03,$08,$79 ;
@@ -116,6 +210,10 @@ b$6048 DEFB $00                             ; length 27h
  $62AD DEFB $1F,$08,$0A,$49,$0A,$0D,$0F,$BB ;
  $62B5 DEFB $09,$0F,$0E,$BB,$08,$0E,$10,$BB ;
  $62BD DEFB $08,$10,$0D,$BB,$0A,$12,$11,$04 ; }
+; Normal (face) format, 4 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2
+; |Z| magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull
+; threshold - same magnitude/sign/cull-threshold shape as a vertex, used for
+; backface culling in #R$E923/#R$E338.
  $62C5 DEFB $00,$23,$05,$5F,$08,$26,$07,$7F ; {normals (12 * 4 bytes)
  $62CD DEFB $08,$26,$07,$FF,$00,$18,$01,$36 ;
  $62D5 DEFB $00,$2B,$13,$1F,$06,$1C,$02,$BF ;
@@ -497,6 +595,12 @@ b$6048 DEFB $00                             ; length 27h
  $68BE DEFB $0F,$16,$09,$FF,$FF,$FF,$0F,$26 ; {vertices (4 * 6 bytes: X,Y,Z
  $68C6 DEFB $09,$BF,$FF,$FF,$13,$20,$0B,$14 ; coords)
  $68CE DEFB $FF,$FF,$0A,$2E,$06,$54,$FF,$FF ; }
+; The Alloys canister is the only object with zero normals (field_5=0, and
+; there is no normals table after the edges) - a flat, four-vertex/four-edge
+; shape with backface culling switched off entirely: #R$E923 treats a zero
+; normal count as "every face always visible" and skips the culling test for
+; it, consistent with it being a small tumbling piece of debris rather than a
+; solid hull, where culling wouldn't meaningfully change its appearance.
  $68D6 DEFB $1F,$00,$01,$FF,$10,$01,$02,$FF ; {edges (4 * 4 bytes)
  $68DE DEFB $14,$02,$03,$FF,$10,$03,$00,$FF ; }
 @label=d_Python1
@@ -2088,7 +2192,7 @@ c$751F EXX           ;
  $76D3 LD A,$01      ;
  $76D5 RET           ;
 
-; Routine at 76D6
+; CalcPrnCrdSunAxis
 ;
 ; .
 ;
@@ -2697,7 +2801,7 @@ c$7999 CALL $D44C    ;
  $79A0 RET Z         ;
  $79A1 JR $79E3      ;
 
-; Routine at 79A3
+; FinishJumpDocking
 ;
 ; Used by the routine at #R$7287.
 ;
@@ -2869,7 +2973,7 @@ c$7AB9 LD C,$FE      ;
  $7ACA RET NC        ;
  $7ACB JR $7ABB      ;
 
-; Routine at 7ACD
+; PrnNovaSunSetup
 ;
 ; Used by the routine at #R$79A3.
 c$7ACD LD A,($A843)  ; get PilotMission1
@@ -6968,7 +7072,7 @@ c$8E1D LD A,($8C14)  ; get FlgSaveScaner
  $8E92 JR NZ,$8E65   ;
  $8E94 RET           ;
 
-; Routine at 8E95
+; ScanMainFlightKeys
 ;
 ; Used by the routine at #R$7287.
 ;
@@ -7064,7 +7168,7 @@ c$8F02 LD ($8F00),SP ;
  $8F1A LD SP,($8F00) ;
  $8F1E JP $7C09      ; clear the keyboard buffer
 
-; Routine at 8F21
+; SwitchViewScreen
 ;
 ; Used by the routine at #R$8E95.
 ;
@@ -7303,7 +7407,7 @@ c$8FF0 LD A,(HL)     ;
  $8FF4 XOR A         ;
  $8FF5 RET           ;
 
-; Routine at 8FF6
+; SwitchControlScheme
 ;
 ; Used by the routine at #R$8F68.
 ;
@@ -7323,7 +7427,7 @@ c$8FF6 LD A,(HL)     ;
 *$9007 XOR A         ;
  $9008 RET           ;
 
-; Routine at 9009
+; SoundBeep
 ;
 ; Used by the routine at #R$8F68.
 ;
@@ -7376,7 +7480,7 @@ c$9030 LD A,($FC14)  ; get FlagsSetUp
  $9036 CALL $91A4    ;
  $9039 JR $905A      ;
 
-; Routine at 903B
+; SFX_EnergyBomb
 ;
 ; Used by the routine at #R$7ACD.
 ;
@@ -7389,7 +7493,7 @@ c$903B LD A,($FC14)  ; get FlagsSetUp
  $9041 CALL $91B2    ;
  $9044 JR $905A      ;
 
-; Routine at 9046
+; SFX_Hyperjump
 ;
 ; Used by the routine at #R$79A3.
 ;
@@ -7402,7 +7506,7 @@ c$9046 LD A,($FC14)  ; get FlagsSetUp
  $904C CALL $91C0    ; play the sound
  $904F JR $905A      ;
 
-; Routine at 9051
+; SFX_PlayerDestroyed
 ;
 ; Used by the routine at #R$7287.
 ;
@@ -7431,7 +7535,7 @@ c$9051 LD A,($FC14)  ; get FlagsSetUp
  $907C JP $9160      ; sound
  $907F JP $9160      ; sound
 
-; Routine at 9082
+; SFX_Dispatch
 ;
 ; Used by the routine at #R$FF25.
 ;
@@ -7554,7 +7658,7 @@ c$90F0 LD HL,($902E) ;
  $912B LD (HL),A     ;
  $912C RET           ;
 
-; Routine at 912D
+; SFX_Missile
 ;
 ; Used by the routine at #R$9082.
 ;
@@ -7580,7 +7684,7 @@ c$912D LD DE,($902C) ;
  $9146 JR NZ,$9138   ;
  $9148 JR $9110      ;
 
-; Routine at 914A
+; SFX_Collision
 ;
 ; Used by the routine at #R$9051.
 ;
@@ -7598,7 +7702,7 @@ c$914A LD A,$FD      ;
  $915B LD ($902B),A  ;
  $915E JR $9131      ;
 
-; Routine at 9160
+; SFX_LaserFired
 ;
 ; Used by the routine at #R$9051.
 ;
@@ -7619,7 +7723,7 @@ c$9160 LD A,$1A      ;
  $9177 LD ($902B),A  ;
  $917A JP $90F7      ;
 
-; Routine at 917D
+; SFX_ECMWorking
 ;
 ; Used by the routine at #R$9051.
 ;
@@ -7643,7 +7747,7 @@ c$917D LD C,$E4      ;
  $9195 LD ($90B7),A  ;
  $9198 JP $90B6      ;
 
-; Routine at 919B
+; SFX_HitByLaser
 ;
 ; Used by the routine at #R$9051.
 ;
@@ -7676,7 +7780,7 @@ c$91B2 LD BC,$C0F0   ;
  $91BB LD ($902B),A  ;
  $91BE JR $918D      ;
 
-; Routine at 91C0
+; SFX_Play
 ;
 ; Used by the routine at #R$9046.
 ;
@@ -8067,7 +8171,7 @@ c$9966 LD A,($FC10)  ; get ControlKey2
                      ; crd z changes
  $99B1 LD IX,$6048   ; length 27h
 
-; Routine at 99B5
+; MoveObjZOnly
 ;
 ; Used by the routine at #R$9966.
 ;
@@ -10149,7 +10253,7 @@ b$A80A DEFB $00                             ; =1 interplanetary jump/docking =2
  $A894 DEFB $00,$00,$00                     ; =1 generate the planet
                                             ; description line
 
-; Routine at A897
+; ResetFuelAfterEscape
 c$A897 JP $D862      ; zero out fuel
 
 ; Data block at A89A
@@ -10157,7 +10261,7 @@ c$A897 JP $D862      ; zero out fuel
 b$A89A DEFB $00      ; =0 missile targeting was on <>0 reverse index of the
                      ; object the missile is targeting (8 - slot 0)
 
-; Routine at A89B
+; CollectFoundCanister
 c$A89B JP $A8B7      ; add a found canister to the cargo
  $A89E JP $A900      ; increase the money amount
  $A8A1 JP $A8EE      ; increase combat rating
@@ -10165,11 +10269,11 @@ c$A89B JP $A8B7      ; add a found canister to the cargo
 ; Data block at A8A4
 b$A8A4 DEFB $A7,$CD,$E4
 
-; Routine at A8A7
+; DestroyCargoFromDamage
 c$A8A7 JP $A5F0      ; heavy damage. destruction of something (fuel/cargo,
                      ; etc.)
 
-; Routine at A8AA
+; ActivateCloakingDevice
 ;
 ; Used by the routine at #R$A8B7.
 ;
@@ -12011,7 +12115,7 @@ c$B0CE LD B,$08      ;
  $B0DB DJNZ $B0D0    ;
  $B0DD RET           ;
 
-; Routine at B0DE
+; RestorePrnCrd
 ;
 ; Used by the routines at #R$B2CE and #R$B4B7.
 ;
@@ -12074,7 +12178,7 @@ c$B10D CALL $AF39    ; sound beep
 ; Data block at B116
 b$B116 DEFB $08
 
-; Routine at B117
+; PrnPlanetNameDistance
 c$B117 JP $B1AF      ; print the planet name and the distance to it
 
 ; Data block at B11A
@@ -12420,7 +12524,7 @@ c$B27B LD A,($A872)  ; +93 extra equipment present 7,=1 - ECM Jammer 6,=1 -
 @label=data_B2C5
 b$B2C5 DEFB $F1,$F0
 
-; Routine at B2C7
+; BuyCargoScreenInit
 ;
 ; Used by the routine at #R$B27B.
 c$B2C7 CALL $BC9E    ; clear the screen with attribute $07, draw a border
@@ -12431,7 +12535,7 @@ c$B2C7 CALL $BC9E    ; clear the screen with attribute $07, draw a border
 ; Data block at B2CD
 b$B2CD DEFB $10
 
-; Routine at B2CE
+; BuyCargoScreenHeader
 c$B2CE LD A,$FF      ;
  $B2D0 CALL $AFF7    ; print a message, with LF/CR at the end
  $B2D3 LD DE,$B2C5   ;
@@ -12629,7 +12733,7 @@ c$B3A1 CALL $B402    ;
 *$B3DE LD A,$B0      ;
  $B3E0 JR $B3E8      ;
 
-; Routine at B3E2
+; TradeFailHandler
 ;
 ; Used by the routines at #R$B3A1 and #R$B702.
 c$B3E2 LD A,$C5      ;
@@ -12733,7 +12837,7 @@ c$B444 CALL $B0BC    ; clear two character-cell lines
 ; Data block at B44F
 b$B44F DEFB $CC
 
-; Routine at B450
+; PrnQuantityPromptGoodName
 c$B450 LD A,$D0      ;
  $B452 LD B,A        ;
  $B453 LD A,($AF30)  ; good number
@@ -12744,14 +12848,14 @@ c$B450 LD A,$D0      ;
 ; Data block at B45D
 b$B45D DEFB $2F
 
-; Routine at B45E
+; PrnQuantityPromptUnit
 c$B45E CALL $B06F    ; print in lowercase t/kg/g/km
  $B461 CALL $BA99    ; print one character (print a message by number
 
 ; Data block at B464
 b$B464 DEFB $20
 
-; Routine at B465
+; PrnQuantityPromptProceed
 c$B465 LD A,$3F      ; '?'
  $B467 JP $AFF7      ; print a message, with LF/CR at the end
 
@@ -12833,7 +12937,7 @@ c$B4B0 CALL $B49F    ;
 ; Data block at B4B6
 b$B4B6 DEFB $CD
 
-; Routine at B4B7
+; PrnSellGoodHeader
 c$B4B7 LD A,$CE      ;
  $B4B9 CALL $B057    ; Print a message, the danger indicator (if in space), and
                      ; 3 CrLf
@@ -12938,7 +13042,7 @@ c$B53F CALL $B49F    ;
 ; Data block at B545
 b$B545 DEFB $06      ; print everything in uppercase
 
-; Routine at B546
+; EquipMenu_PrintHeader
 c$B546 LD A,$CF      ;
  $B548 CALL $AFEF    ; 'EQUIP'
  $B54B CALL $BA99    ; print one character (print a message by number
@@ -12946,13 +13050,13 @@ c$B546 LD A,$CF      ;
 ; Data block at B54E
 b$B54E DEFB $B9      ; SHIP
 
-; Routine at B54F
+; EquipMenu_PrintPrices
 c$B54F CALL $BA99    ; print one character (print a message by number
 
 ; Data block at B552
 b$B552 DEFB $08      ; set flags for printing in lowercase
 
-; Routine at B553
+; EquipMenu_Loop
 c$B553 CALL $BA5F    ;
  $B556 LD HL,$9236   ; base prices for ship equipment
  $B559 LD ($B73B),HL ;
@@ -12981,7 +13085,7 @@ c$B553 CALL $BA5F    ;
 ; Data block at B586
 b$B586 DEFB $04
 
-; Routine at B587
+; EquipMenu_PrintName
 c$B587 LD B,$69      ; 'i'
  $B589 LD A,($B73A)  ; current good's number
  $B58C ADD A,B       ;
@@ -12991,7 +13095,7 @@ c$B587 LD B,$69      ; 'i'
 ; Data block at B593
 b$B593 DEFB $16
 
-; Routine at B594
+; EquipMenu_PrintRow
 c$B594 LD HL,($B73B) ;
  $B597 LD A,(HL)     ;
  $B598 INC HL        ;
@@ -13019,7 +13123,7 @@ c$B594 LD HL,($B73B) ;
 ; Data block at B5BA
 b$B5BA DEFB $7F
 
-; Routine at B5BB
+; EquipMenu_HandleKey
 c$B5BB LD A,$3F      ; '?'
  $B5BD CALL $AFEF    ; Item?
  $B5C0 CALL $B402    ;
@@ -13063,7 +13167,7 @@ c$B5BB LD A,$3F      ; '?'
  $B610 CALL $D86D    ; set fuel
  $B613 JP $B53F      ; equipment purchase menu
 
-; Routine at B616
+; EquipMenu_Buy
 ;
 ; Used by the routine at #R$B5BB.
 c$B616 CP $02        ;
@@ -13886,7 +13990,7 @@ c$B946 CALL $B911    ; Set the print-register flag (capitalize first letter)
 b$B96E DEFB $49,$41,$4E,$00
  $B972 DEFB $41,$45,$49,$4F,$55
 
-; Routine at B977
+; SetPrintRoutineMode1
 ;
 ; .
 ;
@@ -13900,7 +14004,7 @@ b$B96E DEFB $49,$41,$4E,$00
 c$B977 LD A,$01      ;
  $B979 JR $B97D      ;
 
-; Routine at B97B
+; SetPrintRoutineMode0
 ;
 ; .
 ;
@@ -13993,14 +14097,14 @@ c$B991 CALL $ACB3    ; find the planet nearest the cursor, build its data, set
 ; Data block at B9E6
 b$B9E6 DEFB $28
 
-; Routine at B9E7
+; PrnPlanetStation
 c$B9E7 CALL $BA8A    ; planet info: ................
  $B9EA CALL $BA99    ; print the letter 'S'
 
 ; Data block at B9ED
 b$B9ED DEFB $53
 
-; Routine at B9EE
+; PrnPlanetProductivity
 c$B9EE LD A,$29      ; ')'
  $B9F0 CALL $BA5A    ; planet info: )
  $B9F3 LD A,$6F      ; 'o'
@@ -14016,13 +14120,13 @@ c$B9EE LD A,$29      ; ')'
 ; Data block at BA07
 b$BA07 DEFB $20
 
-; Routine at BA08
+; PrnPlanetGovernment
 c$BA08 CALL $BA99    ; print the letter 'M'
 
 ; Data block at BA0B
 b$BA0B DEFB $4D
 
-; Routine at BA0C
+; PrnPlanetRadius
 c$BA0C LD A,$E2      ;
  $BA0E CALL $B049    ; print: CR
  $BA11 CALL $BA5F    ;
@@ -14034,7 +14138,7 @@ c$BA0C LD A,$E2      ;
 ; Data block at BA1F
 b$BA1F DEFB $20
 
-; Routine at BA20
+; PrnPlanetDistanceInfo
 c$BA20 LD A,$11      ;
  $BA22 LD ($AF30),A  ; good number
  $BA25 CALL $B06F    ; print: km
@@ -14060,7 +14164,7 @@ c$BA20 LD A,$11      ;
                      ; bottom) (excluded)
  $BA57 JP $BAD7      ; print a message from group 2 in the buffer/on screen
 
-; Routine at BA5A
+; PrnPlanetInfoFooter
 ;
 ; Used by the routines at #R$B991, #R$B9EE, #R$BA79 and #R$D114.
 c$BA5A CALL $AFF7    ; print a message, with LF/CR at the end
@@ -14091,7 +14195,7 @@ c$BA65 LD A,$70      ; 'p'
 ; Data block at BA78
 b$BA78 DEFB $AA
 
-; Routine at BA79
+; PrnEconomyKind
 ;
 ; Used by the routine at #R$BA88.
 c$BA79 LD A,($AC4B)  ; Economy
@@ -14105,7 +14209,7 @@ c$BA79 LD A,($AC4B)  ; Economy
 ; Data block at BA87
 b$BA87 DEFB $AD
 
-; Routine at BA88
+; PrnEconomyDetail
 c$BA88 JR $BA79      ;
 
 ; PrintTypePopulation
@@ -14234,7 +14338,7 @@ c$BAE7 LD B,A        ;
  $BB00 JR C,$BAD7    ; print a message from group 2 in the buffer/on screen
  $BB02 JP $BC0C      ; print a two-character syllable
 
-; Routine at BB05
+; PrnPlanetDescription
 ;
 ; Used by the routine at #R$BAD7.
 ;
@@ -14465,7 +14569,7 @@ c$BBDF LD HL,$5821   ;
  $BC0A LD (HL),A     ;
  $BC0B RET           ;
 
-; Routine at BC0C
+; PrnSyllable
 ;
 ; Used by the routine at #R$BAE7.
 ;
@@ -15445,7 +15549,7 @@ s$BDF5 DEFS $0B
  $CFF0 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
  $CFF8 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
 
-; Routine at D000
+; FindZeroByte
 ;
 ; Used by the routine at #R$BCFC.
 ;
@@ -15620,7 +15724,7 @@ c$D0D0 CALL $BA99    ; print one character (print a message by number
 ; Data block at D0D3
 b$D0D3 DEFB $7E
 
-; Routine at D0D4
+; PrnHyperjumpTarget
 c$D0D4 LD A,$04      ;
  $D0D6 CALL $B019    ; set the Y coordinate, checking for going off-screen
  $D0D9 LD A,$02      ; print the current planet's name
@@ -15634,13 +15738,13 @@ c$D0D4 LD A,$04      ;
 ; Data block at D0EB
 b$D0EB DEFB $05
 
-; Routine at D0EC
+; PrnRemainingMoney
 c$D0EC CALL $BA99    ; print the remaining money
 
 ; Data block at D0EF
 b$D0EF DEFB $07
 
-; Routine at D0F0
+; PrnLegalStatusHeader
 c$D0F0 LD A,$71      ; 'q'
  $D0F2 CALL $AFE3    ; print 'Legal Status'
  $D0F5 CALL $BA99    ; print one character (print a message by number
@@ -15648,7 +15752,7 @@ c$D0F0 LD A,$71      ; 'q'
 ; Data block at D0F8
 b$D0F8 DEFB $20
 
-; Routine at D0F9
+; PrnLegalStatus
 c$D0F9 LD B,$12      ;
  $D0FB LD A,($A821)  ; pilot's legal status 0 - clean 1..31h offender 32h..FFh
                      ; fugitive
@@ -15667,7 +15771,7 @@ c$D0F9 LD B,$12      ;
 ; Data block at D113
 b$D113 DEFB $20
 
-; Routine at D114
+; PrnCombatRating
 c$D114 LD HL,$A824   ;
  $D117 LD A,(HL)     ;
  $D118 AND A         ;
@@ -15691,7 +15795,7 @@ c$D114 LD HL,$A824   ;
 ; Data block at D137
 b$D137 DEFB $11
 
-; Routine at D138
+; PrnEquipLargeCargo
 c$D138 CALL $D1A6    ;
  $D13B LD A,($A846)  ; get PilotLargeCargo
  $D13E CALL $D19C    ; print one character (print a message by number
@@ -15699,14 +15803,14 @@ c$D138 CALL $D1A6    ;
 ; Data block at D141
 b$D141 DEFB $6B
 
-; Routine at D142
+; PrnEquipFuelScoops
 c$D142 LD A,($A84A)  ; get PilotFuelScoops
  $D145 CALL $D19C    ; print one character (print a message by number
 
 ; Data block at D148
 b$D148 DEFB $6F
 
-; Routine at D149
+; PrnEquipECMJammer
 c$D149 LD A,($A872)  ; +93 extra equipment present 7,=1 - ECM Jammer 6,=1 -
                      ; Cloaking device 5,=1 - cannot buy goods (refugees in the
                      ; hold) 4 3 =1 mission 3 was completed 2 =1 - mission 3
@@ -15724,7 +15828,7 @@ c$D149 LD A,($A872)  ; +93 extra equipment present 7,=1 - ECM Jammer 6,=1 -
 ; Data block at D160
 b$D160 DEFB $6C
 
-; Routine at D161
+; PrnEquipEnergyBomb
 ;
 ; Used by the routine at #R$D149.
 c$D161 LD A,($A84C)  ; get PilotEnergyBomb
@@ -15733,28 +15837,28 @@ c$D161 LD A,($A84C)  ; get PilotEnergyBomb
 ; Data block at D167
 b$D167 DEFB $71
 
-; Routine at D168
+; PrnEquipEnergyUnit
 c$D168 LD A,($A84D)  ; get PilotEnergyUnit
  $D16B CALL $D19C    ; print one character (print a message by number
 
 ; Data block at D16E
 b$D16E DEFB $72
 
-; Routine at D16F
+; PrnEquipDockingComputer
 c$D16F LD A,($A84E)  ; 57 docking computer
  $D172 CALL $D19C    ; print one character (print a message by number
 
 ; Data block at D175
 b$D175 DEFB $73
 
-; Routine at D176
+; PrnEquipHyperdrive
 c$D176 LD A,($A84F)  ; 58 hyperdrive
  $D179 CALL $D19C    ; print one character (print a message by number
 
 ; Data block at D17C
 b$D17C DEFB $74
 
-; Routine at D17D
+; PrnLaserName
 c$D17D LD A,$FF      ;
  $D17F LD ($D0B8),A  ;
  $D182 LD HL,$A83F   ; 42 FrontLaser
@@ -16226,7 +16330,7 @@ c$D3F0 LD B,$08      ;
  $D3FC RR D          ;
  $D3FE RET           ;
 
-; Routine at D3FF
+; LoadMenu_RestorePilot
 ;
 ; Used by the routine at #R$D2E4.
 c$D3FF HALT          ;
@@ -16243,7 +16347,7 @@ c$D3FF HALT          ;
  $D416 CALL $7C2D    ; restore pilot data from memory
  $D419 JR $D3ED      ;
 
-; Routine at D41B
+; LoadMenu_ShowName
 ;
 ; Used by the routine at #R$D2E4.
 c$D41B LD IX,$A816   ; 1..11 pilot name
@@ -16251,14 +16355,14 @@ c$D41B LD IX,$A816   ; 1..11 pilot name
  $D422 LD A,$FF      ;
  $D424 RET           ;
 
-; Routine at D425
+; LoadMenu_InputName
 ;
 ; Used by the routine at #R$D2E4.
 c$D425 LD B,$0A      ;
  $D427 LD A,$08      ;
  $D429 JP $B11D      ; input a text string
 
-; Routine at D42C
+; LoadMenu_ConfirmSave
 ;
 ; Used by the routines at #R$D2E4 and #R$D3FF.
 c$D42C PUSH AF       ;
@@ -16636,7 +16740,7 @@ c$D64F LD E,(HL)     ;
  $D658 INC HL        ;
  $D659 RET           ;
 
-; Routine at D65A
+; Cmd_IntergalacticJump
 ;
 ; Used by the routine at #R$D5F5.
 ;
@@ -16691,7 +16795,7 @@ c$D65A LD A,($A843)  ; get PilotMission1
  $D6AD LD ($AC40),A  ; name of the planet the ship is set to
  $D6B0 JP $D814      ;
 
-; Routine at D6B3
+; DoHyperjump
 ;
 ; Used by the routines at #R$D5F5 and #R$D65A.
 ;
@@ -18680,8 +18784,17 @@ b$E222 DEFB $E2,$28,$02,$EE,$02,$4F,$18,$8A
 @label=VertexSignCrdZ
  $E2EE DEFB $00
 @label=VertexIncFactor
- $E2EF DEFB $00                             ; maximum possible vertex
-                                            ; coordinate scaling factor
+ $E2EF DEFB $00                             ; the number of left-shifts a close
+                                            ; vertex's raw (unrotated)
+                                            ; coordinates can tolerate before a
+                                            ; bit would be shifted out of a
+                                            ; byte, computed by #R$E5CB when
+                                            ; (DistanceToObj) < 4 so near
+                                            ; objects retain precision instead
+                                            ; of drawing as a tiny cluster of
+                                            ; nearly-identical rotated
+                                            ; coordinates; consumed by #R$E353
+                                            ; (RotateCrdN_Vertex) and #R$E447.
 @label=VisiblePrevVertex
  $E2F0 DEFB $00                             ; visibility of the previous vertex
                                             ; <>0 the previous vertex is not
@@ -18704,6 +18817,14 @@ b$E222 DEFB $E2,$28,$02,$EE,$02,$4F,$18,$8A
 ; a=$00
 ; .
 ; hl,de - undefined
+; .
+; For each vertex, first checks #R$E338 (TestVergesVisible) against the
+; vertex's two adjacent-face indices - a vertex is skipped entirely (no
+; rotation/projection done) unless at least one of its two faces is currently
+; visible, so the expensive per-vertex rotation math only ever runs for
+; vertices that actually matter this frame. A visible vertex is then rotated
+; (#R$E49C) and projected (#R$E5CB) and its result cached into #R$E222
+; (TablCrdPrnVertex), indexed by vertex number.
 c$E2F1 PUSH IY       ;
  $E2F3 PUSH IY       ;
  $E2F5 LD A,(IY+$03) ; a number of vertices
@@ -19074,7 +19195,25 @@ c$E478 LD C,D        ;
 ;
 ; .
 ;
-; Distance greater than 4
+; Rotate a vertex's three coordinates through the OCS matrix (distance to
+; object > 4; see #R$E2EF for the near-object variant).
+; .
+; In: ix - vertex address
+; .
+; (VisiblePrevVertex) - <>0 if the previous vertex processed is not visible
+; .
+; Out: (VertexCrdX/Y/Z) - rotated vertex coordinates
+; .
+; hl,de,bc,a - undefined
+; .
+; If the previous vertex was visible and this vertex's raw |X|,|Y|,|Z|
+; magnitude bytes are byte-for-byte identical to the previous vertex's (some
+; ships share duplicate vertex positions across different parts of their
+; geometry), the full per-axis rotation (#R$E52A, three calls) is skipped in
+; favour of #R$E4E9, which reuses the previous vertex's already-computed matrix
+; products and just re-applies any sign difference between the two vertices on
+; each axis - cheaper than recomputing three matrix-row multiplications from
+; scratch.
 c$E49C LD A,($E2F0)  ; get VisiblePrevVertex
  $E49F AND A         ;
  $E4A0 PUSH IX       ;
@@ -19109,6 +19248,26 @@ c$E49C LD A,($E2F0)  ; get VisiblePrevVertex
 ; RotateCrdN_equ_Prev
 ;
 ; Used by the routine at #R$E49C.
+;
+; .
+;
+; Reuse the previous vertex's rotated coordinate on one axis, for a vertex
+; whose raw magnitude bytes are identical to the previous one (see #R$E49C).
+; Rather than recomputing the three matrix-row products from scratch, it takes
+; the previous vertex's already-stashed per-term products from
+; (MatrixRotate+$12), re-signs each one to account for any sign difference
+; between this vertex's and the previous vertex's coordinate on this axis (via
+; XOR of the sign bits), and re-sums them via #R$E424.
+; .
+; In: ix - address of this vertex's coordinate (and its sign byte at ix+3)
+; .
+; iy - address of the previous vertex's stashed per-term products
+; .
+; Out: hl - new vertex coordinate
+; .
+; iy=iy+6
+; .
+; de,bc,a - undefined
 c$E4E9 LD A,(IX+$03) ;
  $E4EC XOR (IX-$03)  ;
  $E4EF LD B,A        ;
@@ -19483,6 +19642,15 @@ c$E5CB PUSH IY       ;
 ; b=$00
 ; .
 ; iy,hl,c,a - undefined
+; .
+; Walks the edge table four bytes at a time, skipping an edge whose
+; distance-cull value says it is too far away to bother with, then skipping it
+; again unless #R$E338 says at least one of its two bordering faces is
+; currently visible. Because visibility is tested per-edge against the same
+; face-visibility flags computed once per frame by #R$E923, an edge between two
+; faces where at least one is front-facing gets drawn even if the other is
+; back-facing - wireframe rendering shows silhouette and near-side edges, not a
+; strict hidden-line-removed result.
 c$E729 LD E,(IY+$0E) ;
  $E72C LD D,(IY+$0F) ; de - offset to the edges
  $E72F LD B,(IY+$04) ; b number of edges
@@ -19662,6 +19830,16 @@ c$E7B2 LD C,(IX+$01) ;
 ; Out: iy=MatrixRotate
 ; .
 ; hl,de,bc,a - undefined
+; .
+; Each of the 9 matrix elements is a cross-multiplication of two pairs of the
+; object's stored orientation vector components (e.g. one element is
+; (ix+$0C)*(ix+$14) - (ix+$0E)*(ix+$12)-style), computed via #R$E45D with sign
+; tracked separately via XOR of the two operands' sign bits rather than relying
+; on two's-complement arithmetic. The orientation itself is stored as three
+; vectors (nine bytes: three 2-byte sign-magnitude values per vector) in the
+; object slot rather than as Euler angles - effectively two rows of a 3x3
+; rotation matrix plus redundancy used for renormalization (see
+; #R$E791/#R$DCA3).
 c$E7F3 LD IY,$E2BC   ;
  $E7F7 LD B,(IX+$0C) ;
  $E7FA LD C,(IX+$14) ;
@@ -20573,6 +20751,17 @@ c$EBC7 LD A,($EA50)   ; =1 flag: laser was fired in the previous cycle
 ; Random number
 ; .
 ; A - result
+; .
+; The entire state is a single 16-bit word held in (word_ED35), seeded at
+; assembly time to a fixed non-zero value. Each call doubles it with carry
+; propagating from the low byte into the high byte and back around (a=h; adc
+; a,a; b=a; a=adc(a,l); h=a; l=b) - a simple additive/shift-based generator,
+; not a table lookup or anything hardware-derived. Its output at any point in
+; the game depends entirely on the exact sequence of PRNG-consuming calls that
+; happened before it, with no direct tie to elapsed real time or frame count.
+; This one shared generator feeds every "roll a random byte" need in the game:
+; spawn-position jitter (#R$F2FB), laser-fire timing, enemy AI decisions, and
+; more.
 c$ED24 PUSH HL       ;
  $ED25 PUSH BC       ;
  $ED26 LD HL,($ED35) ;
@@ -21532,7 +21721,7 @@ c$F175 LD A,B        ;
  $F1FF LD C,A        ;
  $F200 RET           ;
 
-; Routine at F201
+; PrnLineDown2Up_vert_Entry
 c$F201 DEC H         ;
 ; This entry point is used by the routine at #R$EE10.
 @label=PrnLineDown2Up_vert
@@ -21573,7 +21762,7 @@ c$F201 DEC H         ;
 *$F224 INC L         ;
  $F225 JP $F211      ;
 
-; Routine at F228
+; PrnLineDown2Up_hor_Entry
 ;
 ; .
 ;
@@ -21635,7 +21824,7 @@ c$F228 INC L         ;
  $F24C LD H,A        ;
  $F24D JP $F22C      ;
 
-; Routine at F250
+; PrnLineUp2Down_vert_Entry
 c$F250 INC H         ;
 ; This entry point is used by the routine at #R$EE10.
 @label=PrnLineUp2Down_vert
@@ -21679,7 +21868,7 @@ c$F250 INC H         ;
 *$F275 INC L         ;
  $F276 JP $F260      ;
 
-; Routine at F279
+; PrnLineUp2Down_hor_Entry
 ;
 ; .
 ;
@@ -21742,10 +21931,28 @@ c$F279 RRC C         ;
 
 ; Data block at F2A1
 @label=PatternObject
-b$F2A1 DEFB $00,$32,$00,$00,$32,$00,$00,$32 ; {+0 template of an object's slot
- $F2A9 DEFB $00,$00,$00,$00,$00,$FF,$FF,$00 ; in space
- $F2B1 DEFB $00,$FF,$7F,$00,$00,$FF,$FF,$00 ;
- $F2B9 DEFB $00,$00,$00,$00,$00,$00,$00     ; }
+b$F2A1 DEFB $00,$32,$00,$00,$32,$00,$00,$32 ; {position: X/Y/Z, each a 2-byte
+ $F2A9 DEFB $00                             ; magnitude plus a 1-byte sign,
+                                            ; preset to the fixed placeholder
+                                            ; ($3200,0, $3200,0, $3200,0) - far
+                                            ; from the origin, immediately
+                                            ; overwritten by whatever spawn
+                                            ; logic actually places the object.
+                                            ; }
+ $F2AA DEFB $00,$00,$00,$00,$FF,$FF,$00,$00 ; {remaining status/state bytes
+ $F2B2 DEFB $FF,$7F,$00,$00,$FF,$FF,$00,$00 ; reset to a known baseline before
+ $F2BA DEFB $00,$00,$00,$00,$00,$00         ; any ship-specific or randomised
+                                            ; data is layered on top: mostly
+                                            ; zero, except offsets
+                                            ; +$D,+$E,+$11,+$15,+$16 preset to
+                                            ; $FF (the conventional "none"/"no
+                                            ; target" sentinel used elsewhere
+                                            ; in the object-slot format, e.g.
+                                            ; "no parent object", "no active
+                                            ; target"), and offset +$12 preset
+                                            ; to $7F (a maximum/full value for
+                                            ; whichever status field that byte
+                                            ; represents).}
 @label=SKO4Intro
  $F2C0 DEFB $58,$44,$41,$98,$64,$CB,$5A,$A7
  $F2C8 DEFB $D1
@@ -21852,9 +22059,29 @@ c$F2CA LD C,A        ;
 ; ix address of the object slot
 ; .
 ; Out: a=$00
+; .
+; Instantiates a live object in the given slot from a ship-type number: (1)
+; looks up the type in #R$6180 (AdrDataShips) and stores the resulting
+; blueprint address into the slot (+$23/+$24) - the only link between a slot
+; and its static geometry/stats, nothing else about the blueprint is copied in;
+; (2) copies the full 31-byte #R$F2A1 (PatternObject) template into the slot;
+; (3) seeds the instance's current state from the blueprint's maximums: max
+; energy (field_7) becomes current energy (+$22), some flag bits (field_12) are
+; copied into status byte +$21, the launch-capability bits (field_A) are packed
+; together with three bits of the flags byte into status byte +$20, and max
+; speed (field_6), halved, becomes the initial current speed (+$1B); (4) sets
+; status bit 6 of +$20 unconditionally; (5) randomises the starting X/Y
+; position (never Z): the low bytes of X and Y are always re-rolled to a fresh
+; 8-bit random value, while the high bytes are only re-rolled (to a 0-7 range)
+; if status bit 2 of +$21 is clear - so some ship types spawn scattered across
+; a wider area than others, controlled by a flag baked into that ship type's
+; own static data; (6) one further PRNG call has its result bit-rotated into
+; the sign bits of the X and Y position, via two rra/rr pairs sharing a single
+; random byte across both fields.
 c$F2FB LD HL,$6180    ;
  $F2FE LD B,A         ;
- $F2FF AND $3F        ; '?'
+ $F2FF AND $3F        ; mask to bits 0-5: a ship-type index 0-63, into
+                      ; #R$6180's 19 valid entries
  $F301 ADD A,A        ;
  $F302 ADD A,A        ;
  $F303 ADD A,L        ;
@@ -21878,7 +22105,8 @@ c$F2FB LD HL,$6180    ;
  $F323 LD (IX+$22),A  ;
  $F326 LD A,(IY+$12)  ;
  $F329 LD C,A         ;
- $F32A AND $6F        ; 'o'
+ $F32A AND $6F        ; mask blueprint flags (field_12) down to the bits kept
+                      ; in slot status byte +$21
  $F32C LD (IX+$21),A  ;
  $F32F LD A,(IY+$0A)  ;
  $F332 AND $07        ;
@@ -21889,24 +22117,27 @@ c$F2FB LD HL,$6180    ;
  $F33B LD A,(IY+$06)  ;
  $F33E SRL A          ;
  $F340 LD (IX+$1B),A  ;
- $F343 LD A,$7E       ; '~'
+ $F343 LD A,$7E       ; immediate $7E stored at slot +$25 (not
+                      ; ship-data-derived; unrelated to any doc field)
  $F345 LD (IX+$25),A  ;
  $F348 XOR A          ;
  $F349 LD (IX+$26),A  ;
  $F34C SET 6,(IX+$20) ;
  $F350 BIT 2,(IX+$21) ;
  $F354 JR NZ,$F366    ;
- $F356 CALL $ED24     ; Random number
+ $F356 CALL $ED24     ; roll a 0-7 high byte for the X position (only reached
+                      ; if status bit 2 of +$21 is clear)
  $F359 AND $07        ;
  $F35B LD (IX+$01),A  ;
- $F35E CALL $ED24     ; Random number
+ $F35E CALL $ED24     ; roll a 0-7 high byte for the Y position
  $F361 AND $07        ;
  $F363 LD (IX+$04),A  ;
-*$F366 CALL $ED24     ; Random number
+*$F366 CALL $ED24     ; roll the X position's low byte (always re-rolled)
  $F369 LD (IX+$00),A  ;
- $F36C CALL $ED24     ; Random number
+ $F36C CALL $ED24     ; roll the Y position's low byte (always re-rolled)
  $F36F LD (IX+$03),A  ;
- $F372 CALL $ED24     ; Random number
+ $F372 CALL $ED24     ; roll one byte whose bits are rotated into the X and Y
+                      ; position sign bits via a shared rra/rr pair
  $F375 RRA            ;
  $F376 RR (IX+$02)    ;
  $F37A RRA            ;
@@ -22493,6 +22724,17 @@ c$F5B8 PUSH IX        ;
 ; In: c - object number
 ; .
 ; Out: ix,hl,de,bc,a - undefined
+; .
+; Always targets the one fixed slot otherwise used for the player's own missile
+; (#R$6159), reused here since it's never needed for both purposes at once.
+; Calls #R$F2FB (SetObjInSlot) exactly as any other spawn - so the PRNG-driven
+; X/Y jitter it performs does happen - then immediately overwrites the position
+; anyway: X and Y are explicitly zeroed and Z is set to a fixed $0200, undoing
+; the randomisation a few instructions later and putting the intro ship at a
+; fixed, repeatable distance directly ahead. Also clears status bit 6 of +$20
+; that SetObjInSlot had just set, then copies the fixed 9-byte orientation seed
+; #R$F2C0 (SKO4Intro) into the slot's OCS fields, giving the title-screen ship
+; a consistent, non-randomised starting attitude every boot.
 c$F5D8 LD IX,$6159    ; slot for the missile +00
  $F5DC LD A,C         ;
  $F5DD ADD A,$02      ;

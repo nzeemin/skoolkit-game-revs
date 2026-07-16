@@ -308,65 +308,385 @@
 <td class="instruction">DEFB $00,$00,$00,$00,$00</td>
 <td class="comment-1" rowspan="1">missile descriptor +$22</td>
 </tr>
+</table>
+<div id="24960" class="description">6180: Data block at 6180</div>
+<table class="disassembly">
+<tr>
+<td class="routine-comment" colspan="5">
+<div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="24960"></span>
+<div class="comments">
+<div class="paragraph">
+List of every 3D object: 19 (jp opcode byte, blueprint address, class byte) triples. The jp opcode byte ($C3) is a leftover of an older calling convention and is never executed, only the address and class byte are read. The class byte groups objects into five tiers ($00-$04: stations/missiles, small drops, common ships, top-tier ships, escorts), used elsewhere to decide which ships are eligible to spawn as random traffic or pirates at a given point in the game, separate from anything in the object's own header.
+</div>
+</div>
+</td>
+</tr>
 <tr>
 <td class="asm-label">AdrDataShips</td>
 <td class="address-1"><span id="24960"></span>6180</td>
-<td class="instruction">DEFB $C3,$9D,$6A,$00,$C3,$A6,$67,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24961"></span>6181</td>
+<td class="instruction">DEFW <a href="#27293">d_Coriolis</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#27293">d_Coriolis</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24963"></span>6183</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1">class 0</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24964"></span>6184</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24965"></span>6185</td>
+<td class="instruction">DEFW <a href="#26534">d_Missile</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26534">d_Missile</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24967"></span>6187</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1">class 0</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="24968"></span>6188</td>
-<td class="instruction">DEFB $C3,$32,$66,$01,$C3,$A7,$68,$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24969"></span>6189</td>
+<td class="instruction">DEFW <a href="#26162">d_EscapePod</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26162">d_EscapePod</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24971"></span>618B</td>
+<td class="instruction">DEFB $01</td>
+<td class="comment-1" rowspan="1">class 1</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24972"></span>618C</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24973"></span>618D</td>
+<td class="instruction">DEFW <a href="#26791">d_Alloys</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26791">d_Alloys</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24975"></span>618F</td>
+<td class="instruction">DEFB $01</td>
+<td class="comment-1" rowspan="1">class 1</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="24976"></span>6190</td>
-<td class="instruction">DEFB $C3,$E5,$63,$01,$C3,$BC,$6B,$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24977"></span>6191</td>
+<td class="instruction">DEFW <a href="#25573">d_Cargo</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25573">d_Cargo</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24979"></span>6193</td>
+<td class="instruction">DEFB $01</td>
+<td class="comment-1" rowspan="1">class 1</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24980"></span>6194</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24981"></span>6195</td>
+<td class="instruction">DEFW <a href="#27580">d_Minerals</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#27580">d_Minerals</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24983"></span>6197</td>
+<td class="instruction">DEFB $01</td>
+<td class="comment-1" rowspan="1">class 1</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="24984"></span>6198</td>
-<td class="instruction">DEFB $C3,$0C,$63,$01,$C3,$F5,$62,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24985"></span>6199</td>
+<td class="instruction">DEFW <a href="#25356">d_Asteroid2</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25356">d_Asteroid2</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24987"></span>619B</td>
+<td class="instruction">DEFB $01</td>
+<td class="comment-1" rowspan="1">class 1</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24988"></span>619C</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24989"></span>619D</td>
+<td class="instruction">DEFW <a href="#25333">d_Asteroid1</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25333">d_Asteroid1</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24991"></span>619F</td>
+<td class="instruction">DEFB $02</td>
+<td class="comment-1" rowspan="1">class 2</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="24992"></span>61A0</td>
-<td class="instruction">DEFB $C3,$1B,$6E,$02,$C3,$90,$64,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24993"></span>61A1</td>
+<td class="instruction">DEFW <a href="#28187">d_Viper</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#28187">d_Viper</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24995"></span>61A3</td>
+<td class="instruction">DEFB $02</td>
+<td class="comment-1" rowspan="1">class 2</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24996"></span>61A4</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24997"></span>61A5</td>
+<td class="instruction">DEFW <a href="#25744">d_Cobra1</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25744">d_Cobra1</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="24999"></span>61A7</td>
+<td class="instruction">DEFB $02</td>
+<td class="comment-1" rowspan="1">class 2</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25000"></span>61A8</td>
-<td class="instruction">DEFB $C3,$E6,$68,$02,$C3,$FD,$68,$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25001"></span>61A9</td>
+<td class="instruction">DEFW <a href="#26854">d_Python1</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26854">d_Python1</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25003"></span>61AB</td>
+<td class="instruction">DEFB $02</td>
+<td class="comment-1" rowspan="1">class 2</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25004"></span>61AC</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25005"></span>61AD</td>
+<td class="instruction">DEFW <a href="#26877">d_Python2</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26877">d_Python2</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25007"></span>61AF</td>
+<td class="instruction">DEFB $03</td>
+<td class="comment-1" rowspan="1">class 3</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25008"></span>61B0</td>
-<td class="instruction">DEFB $C3,$A7,$64,$03,$C3,$CC,$61,$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25009"></span>61B1</td>
+<td class="instruction">DEFW <a href="#25767">d_Cobra2</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25767">d_Cobra2</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25011"></span>61B3</td>
+<td class="instruction">DEFB $03</td>
+<td class="comment-1" rowspan="1">class 3</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25012"></span>61B4</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25013"></span>61B5</td>
+<td class="instruction">DEFW <a href="#25036">d_ASP</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#25036">d_ASP</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25015"></span>61B7</td>
+<td class="instruction">DEFB $03</td>
+<td class="comment-1" rowspan="1">class 3</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25016"></span>61B8</td>
-<td class="instruction">DEFB $C3,$89,$66,$03,$C3,$13,$6C,$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25017"></span>61B9</td>
+<td class="instruction">DEFW <a href="#26249">d_FerDeLance</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#26249">d_FerDeLance</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25019"></span>61BB</td>
+<td class="instruction">DEFB $03</td>
+<td class="comment-1" rowspan="1">class 3</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25020"></span>61BC</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25021"></span>61BD</td>
+<td class="instruction">DEFW <a href="#27667">d_Thargon</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#27667">d_Thargon</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25023"></span>61BF</td>
+<td class="instruction">DEFB $03</td>
+<td class="comment-1" rowspan="1">class 3</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25024"></span>61C0</td>
-<td class="instruction">DEFB $C3,$F2,$69,$04,$C3,$32,$6D,$04</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25025"></span>61C1</td>
+<td class="instruction">DEFW <a href="#27122">d_Sidewinder</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#27122">d_Sidewinder</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25027"></span>61C3</td>
+<td class="instruction">DEFB $04</td>
+<td class="comment-1" rowspan="1">class 4</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25028"></span>61C4</td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25029"></span>61C5</td>
+<td class="instruction">DEFW <a href="#27954">d_Krait</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#27954">d_Krait</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25031"></span>61C7</td>
+<td class="instruction">DEFB $04</td>
+<td class="comment-1" rowspan="1">class 4</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25032"></span>61C8</td>
-<td class="instruction">DEFB $C3,$F8,$6E,$04</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $C3</td>
+<td class="comment-1" rowspan="1">jp opcode (unused)</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25033"></span>61C9</td>
+<td class="instruction">DEFW <a href="#28408">d_Tharglet</a></td>
+<td class="comment-1" rowspan="1"><a href="asm.html#28408">d_Tharglet</a></td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="25035"></span>61CB</td>
+<td class="instruction">DEFB $04</td>
+<td class="comment-1" rowspan="1">class 4</td>
+</tr>
+</table>
+<div id="25036" class="description">61CC: Data block at 61CC</div>
+<table class="disassembly">
+<tr>
+<td class="routine-comment" colspan="5">
+<div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="25036"></span>
+<div class="comments">
+<div class="paragraph">
+Every 3D object (ships, station, missiles, cargo canisters, escape pods, asteroids) begins with this same 23-byte header. Compared to the BBC Micro original's 20-byte header, the concepts largely line up (vertex/edge/face counts, bounty, a visibility-distance-for-dot-rendering field, launchable-craft bits), but this header is 3 bytes longer - it carries an explicit, separate combat-rating-score field (see rating points below) in addition to the monetary bounty, where the BBC version has only the one bounty value doing both jobs. Each table offset is also stored as a full 16-bit byte offset (from the object's own base address) rather than the BBC's packed single-byte-plus-shared-high-byte scheme - there's no equivalent here of the BBC trick where one ship's blueprint references another ship's geometry tables directly; every object has its own independent vertex/edge/normal tables immediately following its header (the reused-geometry blueprints in this table, e.g. <a href="asm.html#25333">d_Asteroid1</a> and <a href="asm.html#25744">d_Cobra1</a>, instead duplicate the header and just point their offsets at another object's tables).
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="asm-label">d_ASP</td>
@@ -477,6 +797,16 @@
 <td class="comment-1" rowspan="1">rating points</td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="25059"></span>
+<div class="comments">
+<div class="paragraph">
+Vertex format, 6 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2 |Z| magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull threshold ($1F = always compute), +4 low nibble face 1 index/high nibble face 2 index, +5 low nibble face 3 index/high nibble face 4 index - so each vertex can reference up to four different faces; <a href="asm.html#58168">E338</a> tests the low nibble first, falling back to the high nibble only if the low nibble's face turns out to be invisible.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25059"></span>61E3</td>
 <td class="instruction">DEFB $00,$12,$00,$56,$01,$22,$00,$09</td>
@@ -553,6 +883,16 @@
 <td class="instruction">DEFB $04,$04</td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="25173"></span>
+<div class="comments">
+<div class="paragraph">
+Edge format, 4 bytes each: +0 distance-cull threshold (same $1F bypass convention as vertices), +1 start vertex index, +2 end vertex index, +3 low nibble face 1 index/high nibble face 2 index.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="25173"></span>6255</td>
 <td class="instruction">DEFB $16,$00,$01,$12,$16,$00,$04,$01</td>
@@ -622,6 +962,16 @@
 <td class="asm-label"></td>
 <td class="address-1"><span id="25277"></span>62BD</td>
 <td class="instruction">DEFB $08,$10,$0D,$BB,$0A,$12,$11,$04</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="25285"></span>
+<div class="comments">
+<div class="paragraph">
+Normal (face) format, 4 bytes each: +0 |X| magnitude, +1 |Y| magnitude, +2 |Z| magnitude, +3 bits 7-5 sign of X/Y/Z and bits 4-0 a distance-cull threshold - same magnitude/sign/cull-threshold shape as a vertex, used for backface culling in <a href="asm.html#59683">E923</a>/<a href="asm.html#58168">E338</a>.
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -2479,6 +2829,16 @@
 <td class="asm-label"></td>
 <td class="address-1"><span id="26830"></span>68CE</td>
 <td class="instruction">DEFB $FF,$FF,$0A,$2E,$06,$54,$FF,$FF</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="26838"></span>
+<div class="comments">
+<div class="paragraph">
+The Alloys canister is the only object with zero normals (field_5=0, and there is no normals table after the edges) - a flat, four-vertex/four-edge shape with backface culling switched off entirely: <a href="asm.html#59683">E923</a> treats a zero normal count as "every face always visible" and skips the culling test for it, consistent with it being a small tumbling piece of debris rather than a solid hull, where culling wouldn't meaningfully change its appearance.
+</div>
+</div>
+</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -9322,7 +9682,7 @@ a =1 can be printed, variables set
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="30422" class="description">76D6: Routine at 76D6</div>
+<div id="30422" class="description">76D6: CalcPrnCrdSunAxis</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -11963,7 +12323,7 @@ Out: hl,de,bc,a - undefined
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="31139" class="description">79A3: Routine at 79A3</div>
+<div id="31139" class="description">79A3: FinishJumpDocking</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -12745,7 +13105,7 @@ Division c=a.0/0.b
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="31437" class="description">7ACD: Routine at 7ACD</div>
+<div id="31437" class="description">7ACD: PrnNovaSunSetup</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -29407,7 +29767,7 @@ This entry point is used by the routine at <a href="asm.html#36338">8DF2</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="36501" class="description">8E95: Routine at 8E95</div>
+<div id="36501" class="description">8E95: ScanMainFlightKeys</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -29822,7 +30182,7 @@ Out: depends on the function
 <td class="comment-1" rowspan="1">clear the keyboard buffer</td>
 </tr>
 </table>
-<div id="36641" class="description">8F21: Routine at 8F21</div>
+<div id="36641" class="description">8F21: SwitchViewScreen</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -30743,7 +31103,7 @@ Invert up/down
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="36854" class="description">8FF6: Routine at 8FF6</div>
+<div id="36854" class="description">8FF6: SwitchControlScheme</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -30825,7 +31185,7 @@ Switch controls
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="36873" class="description">9009: Routine at 9009</div>
+<div id="36873" class="description">9009: SoundBeep</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31039,7 +31399,7 @@ Takeoff/docking sound
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="36923" class="description">903B: Routine at 903B</div>
+<div id="36923" class="description">903B: SFX_EnergyBomb</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31086,7 +31446,7 @@ Sound
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="36934" class="description">9046: Routine at 9046</div>
+<div id="36934" class="description">9046: SFX_Hyperjump</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31133,7 +31493,7 @@ Hyperjump sound
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="36945" class="description">9051: Routine at 9051</div>
+<div id="36945" class="description">9051: SFX_PlayerDestroyed</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31265,7 +31625,7 @@ This entry point is used by the routines at <a href="asm.html#36912">9030</a>, <
 <td class="comment-1" rowspan="1">sound</td>
 </tr>
 </table>
-<div id="36994" class="description">9082: Routine at 9082</div>
+<div id="36994" class="description">9082: SFX_Dispatch</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31828,7 +32188,7 @@ This entry point is used by the routine at <a href="asm.html#37039">90AF</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="37165" class="description">912D: Routine at 912D</div>
+<div id="37165" class="description">912D: SFX_Missile</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31945,7 +32305,7 @@ This entry point is used by the routine at <a href="asm.html#37194">914A</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="37194" class="description">914A: Routine at 914A</div>
+<div id="37194" class="description">914A: SFX_Collision</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32022,7 +32382,7 @@ This entry point is used by the routine at <a href="asm.html#36945">9051</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="37216" class="description">9160: Routine at 9160</div>
+<div id="37216" class="description">9160: SFX_LaserFired</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32114,7 +32474,7 @@ This entry point is used by the routine at <a href="asm.html#36945">9051</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="37245" class="description">917D: Routine at 917D</div>
+<div id="37245" class="description">917D: SFX_ECMWorking</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32231,7 +32591,7 @@ This entry point is used by the routines at <a href="asm.html#37284">91A4</a> an
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="37275" class="description">919B: Routine at 919B</div>
+<div id="37275" class="description">919B: SFX_HitByLaser</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32367,7 +32727,7 @@ This entry point is used by the routine at <a href="asm.html#37312">91C0</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="37312" class="description">91C0: Routine at 91C0</div>
+<div id="37312" class="description">91C0: SFX_Play</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -34363,7 +34723,7 @@ Movement on the J-drive
 <td class="comment-1" rowspan="1">length 27h</td>
 </tr>
 </table>
-<div id="39349" class="description">99B5: Routine at 99B5</div>
+<div id="39349" class="description">99B5: MoveObjZOnly</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -43061,7 +43421,7 @@ Alien Items are never actually for sale: at the end of every GenerateProductPric
 <td class="comment-1" rowspan="1">=1 generate the planet description line</td>
 </tr>
 </table>
-<div id="43159" class="description">A897: Routine at A897</div>
+<div id="43159" class="description">A897: ResetFuelAfterEscape</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -43090,7 +43450,7 @@ Alien Items are never actually for sale: at the end of every GenerateProductPric
 <td class="comment-1" rowspan="1">=0 missile targeting was on &lt;&gt;0 reverse index of the object the missile is targeting (8 - slot 0)</td>
 </tr>
 </table>
-<div id="43163" class="description">A89B: Routine at A89B</div>
+<div id="43163" class="description">A89B: CollectFoundCanister</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -43128,7 +43488,7 @@ Alien Items are never actually for sale: at the end of every GenerateProductPric
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="43175" class="description">A8A7: Routine at A8A7</div>
+<div id="43175" class="description">A8A7: DestroyCargoFromDamage</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -43142,7 +43502,7 @@ Alien Items are never actually for sale: at the end of every GenerateProductPric
 <td class="comment-1" rowspan="1">heavy damage. destruction of something (fuel/cargo, etc.)</td>
 </tr>
 </table>
-<div id="43178" class="description">A8AA: Routine at A8AA</div>
+<div id="43178" class="description">A8AA: ActivateCloakingDevice</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -50123,7 +50483,7 @@ In: hl - address in the screen area
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45278" class="description">B0DE: Routine at B0DE</div>
+<div id="45278" class="description">B0DE: RestorePrnCrd</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -50365,7 +50725,7 @@ This entry point is used by the routine at <a href="asm.html#45289">B0E9</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45335" class="description">B117: Routine at B117</div>
+<div id="45335" class="description">B117: PrnPlanetNameDistance</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -51700,7 +52060,7 @@ Goods purchase menu
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45767" class="description">B2C7: Routine at B2C7</div>
+<div id="45767" class="description">B2C7: BuyCargoScreenInit</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -51736,7 +52096,7 @@ Used by the routine at <a href="asm.html#45691">B27B</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="45774" class="description">B2CE: Routine at B2CE</div>
+<div id="45774" class="description">B2CE: BuyCargoScreenHeader</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -52575,7 +52935,7 @@ This entry point is used by the routine at <a href="asm.html#46337">B501</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="46050" class="description">B3E2: Routine at B3E2</div>
+<div id="46050" class="description">B3E2: TradeFailHandler</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -52966,7 +53326,7 @@ Prints the "QUANTITY OF &lt;good&gt;/&lt;unit&gt;?" prompt on the bottom two row
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46160" class="description">B450: Routine at B450</div>
+<div id="46160" class="description">B450: PrnQuantityPromptGoodName</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53019,7 +53379,7 @@ Prints the "QUANTITY OF &lt;good&gt;/&lt;unit&gt;?" prompt on the bottom two row
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46174" class="description">B45E: Routine at B45E</div>
+<div id="46174" class="description">B45E: PrnQuantityPromptUnit</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53052,7 +53412,7 @@ Prints the "QUANTITY OF &lt;good&gt;/&lt;unit&gt;?" prompt on the bottom two row
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46181" class="description">B465: Routine at B465</div>
+<div id="46181" class="description">B465: PrnQuantityPromptProceed</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53351,7 +53711,7 @@ Drives the Sell screen: loops over all 17 goods via PrnInventoryRow (which silen
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46263" class="description">B4B7: Routine at B4B7</div>
+<div id="46263" class="description">B4B7: PrnSellGoodHeader</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53762,7 +54122,7 @@ Equipment purchase menu
 <td class="comment-1" rowspan="1">print everything in uppercase</td>
 </tr>
 </table>
-<div id="46406" class="description">B546: Routine at B546</div>
+<div id="46406" class="description">B546: EquipMenu_PrintHeader</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53800,7 +54160,7 @@ Equipment purchase menu
 <td class="comment-1" rowspan="1">SHIP</td>
 </tr>
 </table>
-<div id="46415" class="description">B54F: Routine at B54F</div>
+<div id="46415" class="description">B54F: EquipMenu_PrintPrices</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53828,7 +54188,7 @@ Equipment purchase menu
 <td class="comment-1" rowspan="1">set flags for printing in lowercase</td>
 </tr>
 </table>
-<div id="46419" class="description">B553: Routine at B553</div>
+<div id="46419" class="description">B553: EquipMenu_Loop</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -53971,7 +54331,7 @@ This entry point is used by the routine at <a href="asm.html#46484">B594</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46471" class="description">B587: Routine at B587</div>
+<div id="46471" class="description">B587: EquipMenu_PrintName</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -54019,7 +54379,7 @@ This entry point is used by the routine at <a href="asm.html#46484">B594</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46484" class="description">B594: Routine at B594</div>
+<div id="46484" class="description">B594: EquipMenu_PrintRow</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -54162,7 +54522,7 @@ This entry point is used by the routines at <a href="asm.html#46523">B5BB</a>, <
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="46523" class="description">B5BB: Routine at B5BB</div>
+<div id="46523" class="description">B5BB: EquipMenu_HandleKey</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -54376,7 +54736,7 @@ This entry point is used by the routines at <a href="asm.html#46523">B5BB</a>, <
 <td class="comment-1" rowspan="1">equipment purchase menu</td>
 </tr>
 </table>
-<div id="46614" class="description">B616: Routine at B616</div>
+<div id="46614" class="description">B616: EquipMenu_Buy</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -57519,7 +57879,7 @@ Out: hl,de,bc,a - undefined
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47479" class="description">B977: Routine at B977</div>
+<div id="47479" class="description">B977: SetPrintRoutineMode1</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -57554,7 +57914,7 @@ Out: a,(LLBA98)=$01
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47483" class="description">B97B: Routine at B97B</div>
+<div id="47483" class="description">B97B: SetPrintRoutineMode0</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -57905,7 +58265,7 @@ Print planet info
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47591" class="description">B9E7: Routine at B9E7</div>
+<div id="47591" class="description">B9E7: PrnPlanetStation</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -57938,7 +58298,7 @@ Print planet info
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47598" class="description">B9EE: Routine at B9EE</div>
+<div id="47598" class="description">B9EE: PrnPlanetProductivity</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58011,7 +58371,7 @@ Print planet info
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47624" class="description">BA08: Routine at BA08</div>
+<div id="47624" class="description">BA08: PrnPlanetGovernment</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58039,7 +58399,7 @@ Print planet info
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47628" class="description">BA0C: Routine at BA0C</div>
+<div id="47628" class="description">BA0C: PrnPlanetRadius</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58097,7 +58457,7 @@ Print planet info
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47648" class="description">BA20: Routine at BA20</div>
+<div id="47648" class="description">BA20: PrnPlanetDistanceInfo</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58216,7 +58576,7 @@ Print planet info
 <td class="comment-1" rowspan="1">print a message from group 2 in the buffer/on screen</td>
 </tr>
 </table>
-<div id="47706" class="description">BA5A: Routine at BA5A</div>
+<div id="47706" class="description">BA5A: PrnPlanetInfoFooter</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58334,7 +58694,7 @@ Print the economy type with two CRLFs
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47737" class="description">BA79: Routine at BA79</div>
+<div id="47737" class="description">BA79: PrnEconomyKind</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58400,7 +58760,7 @@ This entry point is used by the routine at <a href="asm.html#47717">BA65</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="47752" class="description">BA88: Routine at BA88</div>
+<div id="47752" class="description">BA88: PrnEconomyDetail</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58860,7 +59220,7 @@ Used by the routine at <a href="asm.html#47877">BB05</a>.
 <td class="comment-1" rowspan="1">print a two-character syllable</td>
 </tr>
 </table>
-<div id="47877" class="description">BB05: Routine at BB05</div>
+<div id="47877" class="description">BB05: PrnPlanetDescription</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -59803,7 +60163,7 @@ bit 2-1 - number of line feeds without setting attributes
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="48140" class="description">BC0C: Routine at BC0C</div>
+<div id="48140" class="description">BC0C: PrnSyllable</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -64837,7 +65197,7 @@ Turn on the ECM system, if available
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53248" class="description">D000: Routine at D000</div>
+<div id="53248" class="description">D000: FindZeroByte</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65569,7 +65929,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53460" class="description">D0D4: Routine at D0D4</div>
+<div id="53460" class="description">D0D4: PrnHyperjumpTarget</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65637,7 +65997,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53484" class="description">D0EC: Routine at D0EC</div>
+<div id="53484" class="description">D0EC: PrnRemainingMoney</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65665,7 +66025,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53488" class="description">D0F0: Routine at D0F0</div>
+<div id="53488" class="description">D0F0: PrnLegalStatusHeader</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65703,7 +66063,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53497" class="description">D0F9: Routine at D0F9</div>
+<div id="53497" class="description">D0F9: PrnLegalStatus</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65791,7 +66151,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53524" class="description">D114: Routine at D114</div>
+<div id="53524" class="description">D114: PrnCombatRating</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65909,7 +66269,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53560" class="description">D138: Routine at D138</div>
+<div id="53560" class="description">D138: PrnEquipLargeCargo</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65947,7 +66307,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53570" class="description">D142: Routine at D142</div>
+<div id="53570" class="description">D142: PrnEquipFuelScoops</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -65980,7 +66340,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53577" class="description">D149: Routine at D149</div>
+<div id="53577" class="description">D149: PrnEquipECMJammer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -66048,7 +66408,7 @@ Print info for key 'L'
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53601" class="description">D161: Routine at D161</div>
+<div id="53601" class="description">D161: PrnEquipEnergyBomb</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -66084,7 +66444,7 @@ Used by the routine at <a href="asm.html#53577">D149</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53608" class="description">D168: Routine at D168</div>
+<div id="53608" class="description">D168: PrnEquipEnergyUnit</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -66117,7 +66477,7 @@ Used by the routine at <a href="asm.html#53577">D149</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53615" class="description">D16F: Routine at D16F</div>
+<div id="53615" class="description">D16F: PrnEquipDockingComputer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -66150,7 +66510,7 @@ Used by the routine at <a href="asm.html#53577">D149</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53622" class="description">D176: Routine at D176</div>
+<div id="53622" class="description">D176: PrnEquipHyperdrive</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -66183,7 +66543,7 @@ Used by the routine at <a href="asm.html#53577">D149</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53629" class="description">D17D: Routine at D17D</div>
+<div id="53629" class="description">D17D: PrnLaserName</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -68090,7 +68450,7 @@ Used by the routine at <a href="asm.html#53988">D2E4</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54271" class="description">D3FF: Routine at D3FF</div>
+<div id="54271" class="description">D3FF: LoadMenu_RestorePilot</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -68172,7 +68532,7 @@ This entry point is used by the routine at <a href="asm.html#53988">D2E4</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54299" class="description">D41B: Routine at D41B</div>
+<div id="54299" class="description">D41B: LoadMenu_ShowName</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -68204,7 +68564,7 @@ Used by the routine at <a href="asm.html#53988">D2E4</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54309" class="description">D425: Routine at D425</div>
+<div id="54309" class="description">D425: LoadMenu_InputName</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -68231,7 +68591,7 @@ Used by the routine at <a href="asm.html#53988">D2E4</a>.
 <td class="comment-1" rowspan="1">input a text string</td>
 </tr>
 </table>
-<div id="54316" class="description">D42C: Routine at D42C</div>
+<div id="54316" class="description">D42C: LoadMenu_ConfirmSave</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -69827,7 +70187,7 @@ hl - undefined
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54874" class="description">D65A: Routine at D65A</div>
+<div id="54874" class="description">D65A: Cmd_IntergalacticJump</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -70074,7 +70434,7 @@ Jump to another planet
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54963" class="description">D6B3: Routine at D6B3</div>
+<div id="54963" class="description">D6B3: DoHyperjump</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -78584,7 +78944,7 @@ Out: hl,de,bc,a - undefined
 <td class="asm-label">VertexIncFactor</td>
 <td class="address-1"><span id="58095"></span>E2EF</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1">maximum possible vertex coordinate scaling factor</td>
+<td class="comment-1" rowspan="1">the number of left-shifts a close vertex's raw (unrotated) coordinates can tolerate before a bit would be shifted out of a byte, computed by <a href="asm.html#58827">E5CB</a> when (DistanceToObj) &lt; 4 so near objects retain precision instead of drawing as a tiny cluster of nearly-identical rotated coordinates; consumed by <a href="asm.html#58195">E353</a> (RotateCrdN_Vertex) and <a href="asm.html#58439">E447</a>.</td>
 </tr>
 <tr>
 <td class="asm-label">VisiblePrevVertex</td>
@@ -78625,6 +78985,9 @@ a=$00
 </div>
 <div class="paragraph">
 hl,de - undefined
+</div>
+<div class="paragraph">
+For each vertex, first checks <a href="asm.html#58168">E338</a> (TestVergesVisible) against the vertex's two adjacent-face indices - a vertex is skipped entirely (no rotation/projection done) unless at least one of its two faces is currently visible, so the expensive per-vertex rotation math only ever runs for vertices that actually matter this frame. A visible vertex is then rotated (<a href="asm.html#58524">E49C</a>) and projected (<a href="asm.html#58827">E5CB</a>) and its result cached into <a href="asm.html#57890">TablCrdPrnVertex</a> (TablCrdPrnVertex), indexed by vertex number.
 </div>
 </div>
 </td>
@@ -80088,7 +80451,22 @@ Used by the routine at <a href="asm.html#58827">E5CB</a>.
 <span id="58524"></span>
 <div class="comments">
 <div class="paragraph">
-Distance greater than 4
+Rotate a vertex's three coordinates through the OCS matrix (distance to object &gt; 4; see <a href="asm.html#58095">VertexIncFactor</a> for the near-object variant).
+</div>
+<div class="paragraph">
+In: ix - vertex address
+</div>
+<div class="paragraph">
+(VisiblePrevVertex) - &lt;&gt;0 if the previous vertex processed is not visible
+</div>
+<div class="paragraph">
+Out: (VertexCrdX/Y/Z) - rotated vertex coordinates
+</div>
+<div class="paragraph">
+hl,de,bc,a - undefined
+</div>
+<div class="paragraph">
+If the previous vertex was visible and this vertex's raw |X|,|Y|,|Z| magnitude bytes are byte-for-byte identical to the previous vertex's (some ships share duplicate vertex positions across different parts of their geometry), the full per-axis rotation (<a href="asm.html#58666">E52A</a>, three calls) is skipped in favour of <a href="asm.html#58601">E4E9</a>, which reuses the previous vertex's already-computed matrix products and just re-applies any sign difference between the two vertices on each axis - cheaper than recomputing three matrix-row multiplications from scratch.
 </div>
 </div>
 </td>
@@ -80251,6 +80629,31 @@ Distance greater than 4
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#58524">E49C</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="58601"></span>
+<div class="comments">
+<div class="paragraph">
+Reuse the previous vertex's rotated coordinate on one axis, for a vertex whose raw magnitude bytes are identical to the previous one (see <a href="asm.html#58524">E49C</a>). Rather than recomputing the three matrix-row products from scratch, it takes the previous vertex's already-stashed per-term products from (MatrixRotate+$12), re-signs each one to account for any sign difference between this vertex's and the previous vertex's coordinate on this axis (via XOR of the sign bits), and re-sums them via <a href="asm.html#58404">E424</a>.
+</div>
+<div class="paragraph">
+In: ix - address of this vertex's coordinate (and its sign byte at ix+3)
+</div>
+<div class="paragraph">
+iy - address of the previous vertex's stashed per-term products
+</div>
+<div class="paragraph">
+Out: hl - new vertex coordinate
+</div>
+<div class="paragraph">
+iy=iy+6
+</div>
+<div class="paragraph">
+de,bc,a - undefined
 </div>
 </div>
 </td>
@@ -81834,6 +82237,9 @@ b=$00
 <div class="paragraph">
 iy,hl,c,a - undefined
 </div>
+<div class="paragraph">
+Walks the edge table four bytes at a time, skipping an edge whose distance-cull value says it is too far away to bother with, then skipping it again unless <a href="asm.html#58168">E338</a> says at least one of its two bordering faces is currently visible. Because visibility is tested per-edge against the same face-visibility flags computed once per frame by <a href="asm.html#59683">E923</a>, an edge between two faces where at least one is front-facing gets drawn even if the other is back-facing - wireframe rendering shows silhouette and near-side edges, not a strict hidden-line-removed result.
+</div>
 </div>
 </td>
 </tr>
@@ -82517,6 +82923,9 @@ Out: iy=MatrixRotate
 </div>
 <div class="paragraph">
 hl,de,bc,a - undefined
+</div>
+<div class="paragraph">
+Each of the 9 matrix elements is a cross-multiplication of two pairs of the object's stored orientation vector components (e.g. one element is (ix+$0C)*(ix+$14) - (ix+$0E)*(ix+$12)-style), computed via <a href="asm.html#58461">E45D</a> with sign tracked separately via XOR of the two operands' sign bits rather than relying on two's-complement arithmetic. The orientation itself is stored as three vectors (nine bytes: three 2-byte sign-magnitude values per vector) in the object slot rather than as Euler angles - effectively two rows of a 3x3 rotation matrix plus redundancy used for renormalization (see <a href="asm.html#59281">E791</a>/<a href="asm.html#56483">DCA3</a>).
 </div>
 </div>
 </td>
@@ -86328,6 +86737,9 @@ Random number
 </div>
 <div class="paragraph">
 A - result
+</div>
+<div class="paragraph">
+The entire state is a single 16-bit word held in (word_ED35), seeded at assembly time to a fixed non-zero value. Each call doubles it with carry propagating from the low byte into the high byte and back around (a=h; adc a,a; b=a; a=adc(a,l); h=a; l=b) - a simple additive/shift-based generator, not a table lookup or anything hardware-derived. Its output at any point in the game depends entirely on the exact sequence of PRNG-consuming calls that happened before it, with no direct tie to elapsed real time or frame count. This one shared generator feeds every "roll a random byte" need in the game: spawn-position jitter (<a href="asm.html#62203">F2FB</a>), laser-fire timing, enemy AI decisions, and more.
 </div>
 </div>
 </td>
@@ -90657,7 +91069,7 @@ l - coordinate difference along Y
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="61953" class="description">F201: Routine at F201</div>
+<div id="61953" class="description">F201: PrnLineDown2Up_vert_Entry</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -90858,7 +91270,7 @@ self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="61992" class="description">F228: Routine at F228</div>
+<div id="61992" class="description">F228: PrnLineDown2Up_hor_Entry</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -91083,7 +91495,7 @@ This entry point is used by the routine at <a href="asm.html#60944">EE10</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="62032" class="description">F250: Routine at F250</div>
+<div id="62032" class="description">F250: PrnLineUp2Down_vert_Entry</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -91284,7 +91696,7 @@ self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="62073" class="description">F279: Routine at F279</div>
+<div id="62073" class="description">F279: PrnLineUp2Down_hor_Entry</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -91528,22 +91940,28 @@ self-modified operand: PrnLineInBuf_clip pokes the literal byte $2C (inc l) or $
 <td class="asm-label">PatternObject</td>
 <td class="address-1"><span id="62113"></span>F2A1</td>
 <td class="instruction">DEFB $00,$32,$00,$00,$32,$00,$00,$32</td>
-<td class="comment-1" rowspan="4">+0 template of an object's slot in space</td>
+<td class="comment-1" rowspan="2">position: X/Y/Z, each a 2-byte magnitude plus a 1-byte sign, preset to the fixed placeholder ($3200,0, $3200,0, $3200,0) - far from the origin, immediately overwritten by whatever spawn logic actually places the object.</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="62121"></span>F2A9</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$FF,$FF,$00</td>
+<td class="instruction">DEFB $00</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
-<td class="address-1"><span id="62129"></span>F2B1</td>
-<td class="instruction">DEFB $00,$FF,$7F,$00,$00,$FF,$FF,$00</td>
+<td class="address-1"><span id="62122"></span>F2AA</td>
+<td class="instruction">DEFB $00,$00,$00,$00,$FF,$FF,$00,$00</td>
+<td class="comment-1" rowspan="3">remaining status/state bytes reset to a known baseline before any ship-specific or randomised data is layered on top: mostly zero, except offsets +$D,+$E,+$11,+$15,+$16 preset to $FF (the conventional "none"/"no target" sentinel used elsewhere in the object-slot format, e.g. "no parent object", "no active target"), and offset +$12 preset to $7F (a maximum/full value for whichever status field that byte represents).</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
-<td class="address-1"><span id="62137"></span>F2B9</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00</td>
+<td class="address-1"><span id="62130"></span>F2B2</td>
+<td class="instruction">DEFB $FF,$7F,$00,$00,$FF,$FF,$00,$00</td>
+</tr>
+<tr>
+<td class="asm-label"></td>
+<td class="address-1"><span id="62138"></span>F2BA</td>
+<td class="instruction">DEFB $00,$00,$00,$00,$00,$00</td>
 </tr>
 <tr>
 <td class="asm-label">SKO4Intro</td>
@@ -91821,6 +92239,9 @@ ix address of the object slot
 <div class="paragraph">
 Out: a=$00
 </div>
+<div class="paragraph">
+Instantiates a live object in the given slot from a ship-type number: (1) looks up the type in <a href="asm.html#24960">AdrDataShips</a> (AdrDataShips) and stores the resulting blueprint address into the slot (+$23/+$24) - the only link between a slot and its static geometry/stats, nothing else about the blueprint is copied in; (2) copies the full 31-byte <a href="asm.html#62113">PatternObject</a> (PatternObject) template into the slot; (3) seeds the instance's current state from the blueprint's maximums: max energy (field_7) becomes current energy (+$22), some flag bits (field_12) are copied into status byte +$21, the launch-capability bits (field_A) are packed together with three bits of the flags byte into status byte +$20, and max speed (field_6), halved, becomes the initial current speed (+$1B); (4) sets status bit 6 of +$20 unconditionally; (5) randomises the starting X/Y position (never Z): the low bytes of X and Y are always re-rolled to a fresh 8-bit random value, while the high bytes are only re-rolled (to a 0-7 range) if status bit 2 of +$21 is clear - so some ship types spawn scattered across a wider area than others, controlled by a flag baked into that ship type's own static data; (6) one further PRNG call has its result bit-rotated into the sign bits of the X and Y position, via two rra/rr pairs sharing a single random byte across both fields.
+</div>
 </div>
 </td>
 </tr>
@@ -91837,7 +92258,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62207"></span>F2FF</td>
 <td class="instruction">AND $3F</td>
-<td class="comment-1" rowspan="1">'?'</td>
+<td class="comment-1" rowspan="1">mask to bits 0-5: a ship-type index 0-63, into <a href="asm.html#24960">AdrDataShips</a>'s 19 valid entries</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62209"></span>F301</td>
@@ -91957,7 +92378,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62250"></span>F32A</td>
 <td class="instruction">AND $6F</td>
-<td class="comment-1" rowspan="1">'o'</td>
+<td class="comment-1" rowspan="1">mask blueprint flags (field_12) down to the bits kept in slot status byte +$21</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62252"></span>F32C</td>
@@ -92012,7 +92433,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62275"></span>F343</td>
 <td class="instruction">LD A,$7E</td>
-<td class="comment-1" rowspan="1">'~'</td>
+<td class="comment-1" rowspan="1">immediate $7E stored at slot +$25 (not ship-data-derived; unrelated to any doc field)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62277"></span>F345</td>
@@ -92047,7 +92468,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62294"></span>F356</td>
 <td class="instruction">CALL <a href="#60708">$ED24</a></td>
-<td class="comment-1" rowspan="1">Random number</td>
+<td class="comment-1" rowspan="1">roll a 0-7 high byte for the X position (only reached if status bit 2 of +$21 is clear)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62297"></span>F359</td>
@@ -92062,7 +92483,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62302"></span>F35E</td>
 <td class="instruction">CALL <a href="#60708">$ED24</a></td>
-<td class="comment-1" rowspan="1">Random number</td>
+<td class="comment-1" rowspan="1">roll a 0-7 high byte for the Y position</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62305"></span>F361</td>
@@ -92077,7 +92498,7 @@ Out: a=$00
 <tr>
 <td class="address-2"><span id="62310"></span>F366</td>
 <td class="instruction">CALL <a href="#60708">$ED24</a></td>
-<td class="comment-1" rowspan="1">Random number</td>
+<td class="comment-1" rowspan="1">roll the X position's low byte (always re-rolled)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62313"></span>F369</td>
@@ -92087,7 +92508,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62316"></span>F36C</td>
 <td class="instruction">CALL <a href="#60708">$ED24</a></td>
-<td class="comment-1" rowspan="1">Random number</td>
+<td class="comment-1" rowspan="1">roll the Y position's low byte (always re-rolled)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62319"></span>F36F</td>
@@ -92097,7 +92518,7 @@ Out: a=$00
 <tr>
 <td class="address-1"><span id="62322"></span>F372</td>
 <td class="instruction">CALL <a href="#60708">$ED24</a></td>
-<td class="comment-1" rowspan="1">Random number</td>
+<td class="comment-1" rowspan="1">roll one byte whose bits are rotated into the X and Y position sign bits via a shared rra/rr pair</td>
 </tr>
 <tr>
 <td class="address-1"><span id="62325"></span>F375</td>
@@ -94093,6 +94514,9 @@ In: c - object number
 </div>
 <div class="paragraph">
 Out: ix,hl,de,bc,a - undefined
+</div>
+<div class="paragraph">
+Always targets the one fixed slot otherwise used for the player's own missile (<a href="asm.html#24921">objMissile</a>), reused here since it's never needed for both purposes at once. Calls <a href="asm.html#62203">F2FB</a> (SetObjInSlot) exactly as any other spawn - so the PRNG-driven X/Y jitter it performs does happen - then immediately overwrites the position anyway: X and Y are explicitly zeroed and Z is set to a fixed $0200, undoing the randomisation a few instructions later and putting the intro ship at a fixed, repeatable distance directly ahead. Also clears status bit 6 of +$20 that SetObjInSlot had just set, then copies the fixed 9-byte orientation seed <a href="asm.html#62144">SKO4Intro</a> (SKO4Intro) into the slot's OCS fields, giving the title-screen ship a consistent, non-randomised starting attitude every boot.
 </div>
 </div>
 </td>

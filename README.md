@@ -49,7 +49,7 @@ Original: by Carter Follis Software Associates for ZX Spectrum, 1987.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: just started (17K .ctl file).
+Status: Have some progress (32K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)

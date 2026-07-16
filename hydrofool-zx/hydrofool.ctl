@@ -34,7 +34,6 @@ B $6199,1
 B $619A,1 Room number copy
 W $619B,2
 B $619D,1
-B $619C,1
 B $619E,1
 B $619F,1
 B $61A0,1
@@ -626,190 +625,363 @@ W $A5DC,804,16
 b $A900
 b $A92C
 W $A92C,,16
-b $A9DE
-b $AA17
-b $AA1B
-b $AA3E Sprites: 7 sprites of Player 32x24, 96 bytes each
-b $AA9E Sprite
-b $AAFE Sprite
-b $AB5E Sprite
-b $ABBE Sprite
-b $AC1E Sprite
-b $AC7E Sprite
-b $ACDE Sprites: 4 sprites of Player shadow 32x16, 64 bytes each
-b $AD1E Sprite
-b $AD5E Sprite
-b $AD9E Sprite
-b $ADDE Sprite
-b $AE26 Sprite
-b $AE6E Sprite
-b $AECE Sprite
-b $AF2E Sprite
-b $AF8E Sprite
-b $AFD6 Sprite
-b $B036 Sprites: 4 sprites of Player 32x24, 96 bytes each
-b $B096 Sprite
-b $B0F6 Sprite
-b $B156 Sprite
-b $B1B6 Sprites: explosion??
-b $B236 Sprite
-b $B296 Sprite
-b $B2C6 Sprite
-b $B30E Sprite: player 32x24, 96 bytes
-b $B36E Sprites: 4 Fish sprites 32x32, 128 bytes each
-b $B3EE Sprite
-b $B46E Sprite
-b $B4EE Sprite
-b $B56E Sprites: Snake phases; Sea Horse sprites
-b $B57E Sprite
-b $B59E Sprite
-b $B5CE Sprite
-b $B60E Sprite
-b $B64E Sprite
-b $B68E Sprites: 4 Fish sprites 32x32, 128 bytes each
-b $B70E Sprite
-b $B78E Sprite
-b $B80E Sprite
-b $B88E Sprite
-b $B8BE Sprite
-b $B8EE Sprite
-b $B91E Sprite
-b $B94E Sprite
-b $B97E Sprite
-b $B9AE Sprite
-b $B9DE Sprite
-b $BA0E Sprite
-b $BA3E Sprite
-b $BA6E Sprite
-b $BA9E Sprite
-b $BACE Sprite
-b $BAFE Sprite
-b $BB2E Sprites
-b $BBAE Sprite
-b $BC2E Sprite
-b $BC6E Sprite
-b $BCAE Sprite
-b $BD0E Sprite
-b $BD6E Sprite
-b $BD8E Sprite
-b $BDAE Sprite
-b $BDEE Sprite
-b $BE2E Sprite
-b $BE8E Sprite
-b $BEEE Sprite
-b $BF4E Sprite
-b $BFAE Sprite
-b $BFEE Sprite
-b $C02E Sprite
-b $C0AE Sprite
-b $C12E Sprite
-b $C17E Sprite
-b $C1CE Sprite
-b $C1EE Sprite
-b $C20E Sprite
-b $C226 Sprite
-b $C23E Sprite
-b $C256 Sprite
-b $C26E Sprite
-b $C28E Sprite
-b $C2AE Sprite
-b $B796 Sprite
-b $C2EE Sprite
-b $C30E Sprite
-b $C32E Sprite
-b $C34E Sprite
-b $C36E Sprite
-b $C38E Sprite
-b $C39E Sprite
-b $C3AE Sprite
-b $C42E Sprite
-b $C4AE Sprite
-b $C52E Sprite
-b $C55E Sprite
-b $C58E Sprite
-b $C5BE Sprite
-b $C5EE Sprite
-b $C61E Sprite
-b $C64E Sprite
-b $C67E Sprite
-b $C6AE Sprite
-b $C6DE Sprite
-b $C70E Sprite
-b $C73E Sprite
-b $C76E Sprite
-b $C79E Sprite
-b $C7CE Sprite
-b $C7FE Sprite
-b $C876 Sprite
-b $CA56 Sprite
-b $CC96 Sprite
-b $CE26 Sprite
-b $BE9E Sprite
-b $CF26 Sprite masks: 7 masks 32x24, 92 bytes each
-b $CF86 Sprite
-b $CFE6 Sprite
-b $D046 Sprite
-b $CBB6 Sprite
-b $D106 Sprite
-b $C4F6 Sprite
-b $D1C6 Sprite
-b $D20E Sprite
-b $D256 Sprite
-b $D2B6 Sprite
-b $D316 Sprite
-b $D376 Sprite
-b $D3BE Sprite
-b $D41E Sprite masks: 4 masks 32x24, 92 bytes each
-b $D47E Sprite
-b $D4DE Sprite
-b $D53E Sprite
-b $D59E Sprite masks for explosion
-b $D61E Sprite
-b $D67E Sprite
-b $D6AE Sprite
-b $D6F6 Sprite
-b $D756 Sprite
-b $D7D6 Sprite
-b $D856 Sprite
-b $D8D6 Sprite
-b $D956 Sprite
-b $D966 Sprite
-b $D986 Sprite
-b $D9B6 Sprite
-b $D9F6 Sprite
-b $DA36 Sprite
-b $DA76 Sprite
-b $DAF6 Sprite
-b $DB76 Sprite
-b $DBF6 Sprite
-b $DCB6 Sprite
-b $DC8E Sprite
-b $DCA6 Sprite
-b $DCBE Sprite
-b $DCD6 Sprite
-b $DCDE Sprite
-b $DCE6 Sprite
-b $DCEE Sprite
-b $DCF6 Sprite
-b $DCFE Sprite
-b $DD7E Sprite
-b $DDFE Sprite
-b $DE1E Sprite
-b $DE3E Sprite
-b $DE5E Sprite
-b $DE7E Sprite
-b $DE9E Sprite
-b $DEBE Sprite
-b $DEEE Sprite
-b $DF0E Sprite
-b $DF2E Sprite
-b $DFDE Sprite
-b $E14F
-b $E16B
-b $E170
-t $E200
-b $E301
+b $A9DE Sprite, 24x32 pixels. Player sitting
+B $A9DE,96,8 #HTML[#UDGARRAY3,,,3,,($A9DE-$AA3D-1-24)(sprite-a9de)]
+b $AA3E Sprite, 32x24 pixels. Player
+B $AA3E,96,8 #HTML[#UDGARRAY4,,,4,,($AA3E-$AA9D-1-32)(sprite-aa3e)]
+b $AA9E Sprite, 32x24 pixels. Player
+B $AA9E,96,8 #HTML[#UDGARRAY4,,,4,,($AA9E-$AAFD-1-32)(sprite-aa9e)]
+b $AAFE Sprite, 32x24 pixels. Player
+B $AAFE,96,8 #HTML[#UDGARRAY4,,,4,,($AAFE-$AB5D-1-32)(sprite-aafe)]
+b $AB5E Sprite, 32x24 pixels. Player
+B $AB5E,96,8 #HTML[#UDGARRAY4,,,4,,($AB5E-$ABBD-1-32)(sprite-ab5e)]
+b $ABBE Sprite, 32x24 pixels. Player laying on back, hands up
+B $ABBE,96,8 #HTML[#UDGARRAY4,,,4,,($ABBE-$AC1D-1-32)(sprite-abbe)]
+b $AC1E Sprite, 32x24 pixels. Player laying on back, dead
+B $AC1E,96,8 #HTML[#UDGARRAY4,,,4,,($AC1E-$AC7D-1-32)(sprite-ac1e)]
+b $AC7E Sprite, 32x24 pixels. Player
+B $AC7E,96,8 #HTML[#UDGARRAY4,,,4,,($AC7E-$ACDD-1-32)(sprite-ac7e)]
+b $ACDE Sprite, 32x16 pixels. Player shadow
+B $ACDE,64,8 #HTML[#UDGARRAY4,,,4,,($ACDE-$AD1D-1-32)(sprite-acde)]
+b $AD1E Sprite, 32x16 pixels. Player shadow
+B $AD1E,64,8 #HTML[#UDGARRAY4,,,4,,($AD1E-$AD5D-1-32)(sprite-ad1e)]
+b $AD5E Sprite, 32x16 pixels. Player shadow
+B $AD5E,64,8 #HTML[#UDGARRAY4,,,4,,($AD5E-$AD9D-1-32)(sprite-ad5e)]
+b $AD9E Sprite, 32x16 pixels. Player shadow
+B $AD9E,64,8 #HTML[#UDGARRAY4,,,4,,($AD9E-$ADDD-1-32)(sprite-ad9e)]
+b $ADDE Sprite, 24x24 pixels. Fish cloud
+B $ADDE,72,8 #HTML[#UDGARRAY3,,,3,,($ADDE-$AE25-1-24)(sprite-adde)]
+b $AE26 Sprite, 24x24 pixels. Fish cloud
+B $AE26,72,8 #HTML[#UDGARRAY3,,,3,,($AE26-$AE6D-1-24)(sprite-ae26)]
+b $AE6E Sprite, 24x32 pixels. Jellyfish
+B $AE6E,96,8 #HTML[#UDGARRAY3,,,3,,($AE6E-$AECD-1-24)(sprite-ae6e)]
+b $AECE Sprite, 24x32 pixels. Jellyfish
+B $AECE,96,8 #HTML[#UDGARRAY3,,,3,,($AECE-$AF2D-1-24)(sprite-aece)]
+b $AF2E Sprite, 24x32 pixels. Jellyfish
+B $AF2E,96,8 #HTML[#UDGARRAY3,,,3,,($AF2E-$AF8D-1-24)(sprite-af2e)]
+b $AF8E Sprite, 24x24 pixels. Fish cloud
+B $AF8E,72,8 #HTML[#UDGARRAY3,,,3,,($AF8E-$AFD5-1-24)(sprite-af8e)]
+b $AFD6 Sprite, 24x32 pixels. Jellyfish
+B $AFD6,96,8 #HTML[#UDGARRAY3,,,3,,($AFD6-$B035-1-24)(sprite-afd6)]
+b $B036 Sprite, 32x24 pixels. Player
+B $B036,96,8 #HTML[#UDGARRAY4,,,4,,($B036-$B095-1-32)(sprite-b036)]
+b $B096 Sprite, 32x24 pixels. Player
+B $B096,96,8 #HTML[#UDGARRAY4,,,4,,($B096-$B0F5-1-32)(sprite-b096)]
+b $B0F6 Sprite, 32x24 pixels. Player
+B $B0F6,96,8 #HTML[#UDGARRAY4,,,4,,($B0F6-$B155-1-32)(sprite-b0f6)]
+b $B156 Sprite, 32x24 pixels. Player
+B $B156,96,8 #HTML[#UDGARRAY4,,,4,,($B156-$B1B5-1-32)(sprite-b156)]
+b $B1B6 Sprite, 32x32 pixels. Explosion
+B $B1B6,128,8 #HTML[#UDGARRAY4,,,4,,($B1B6-$B235-1-32)(sprite-b1b6)]
+b $B236 Sprite, 32x24 pixels. Explosion
+B $B236,96,8 #HTML[#UDGARRAY4,,,4,,($B236-$B295-1-32)(sprite-b236)]
+b $B296 Sprite, 16x24 pixels. Gnome, unidentified (small humanoid figure; collectible object per instructions text)
+B $B296,48,8 #HTML[#UDGARRAY2,,,2,,($B296-$B2C5-1-16)(sprite-b296)]
+b $B2C6 Sprite, 24x24 pixels. Fish cloud
+B $B2C6,72,8 #HTML[#UDGARRAY3,,,3,,($B2C6-$B30D-1-24)(sprite-b2c6)]
+b $B30E Sprite, 32x24 pixels. Player
+B $B30E,96,8 #HTML[#UDGARRAY4,,,4,,($B30E-$B36D-1-32)(sprite-b30e)]
+b $B36E Sprite, 32x32 pixels. Fish
+B $B36E,128,8 #HTML[#UDGARRAY4,,,4,,($B36E-$B3ED-1-32)(sprite-b36e)]
+b $B3EE Sprite, 32x32 pixels. Fish
+B $B3EE,128,8 #HTML[#UDGARRAY4,,,4,,($B3EE-$B46D-1-32)(sprite-b3ee)]
+b $B46E Sprite, 32x32 pixels. Fish
+B $B46E,128,8 #HTML[#UDGARRAY4,,,4,,($B46E-$B4ED-1-32)(sprite-b46e)]
+b $B4EE Sprite, 32x32 pixels. Fish
+B $B4EE,128,8 #HTML[#UDGARRAY4,,,4,,($B4EE-$B56D-1-32)(sprite-b4ee)]
+b $B56E Sprite, 16x8 pixels. Snake, rearing phase
+B $B56E,16,8 #HTML[#UDGARRAY2,,,2,,($B56E-$B57D-1-16)(sprite-b56e)]
+b $B57E Sprite, 16x16 pixels. Snake, rearing phase
+B $B57E,32,8 #HTML[#UDGARRAY2,,,2,,($B57E-$B59D-1-16)(sprite-b57e)]
+b $B59E Sprite, 16x24 pixels. Snake, rearing phase
+B $B59E,48,8 #HTML[#UDGARRAY2,,,2,,($B59E-$B5CD-1-16)(sprite-b59e)]
+b $B5CE Sprite, 16x32 pixels. Snake, rearing phase
+B $B5CE,64,8 #HTML[#UDGARRAY2,,,2,,($B5CE-$B60D-1-16)(sprite-b5ce)]
+b $B60E Sprite, 16x32 pixels. Sea Horse
+B $B60E,64,8 #HTML[#UDGARRAY2,,,2,,($B60E-$B64D-1-16)(sprite-b60e)]
+b $B64E Sprite, 16x32 pixels. Sea Horse
+B $B64E,64,8 #HTML[#UDGARRAY2,,,2,,($B64E-$B68D-1-16)(sprite-b64e)]
+b $B68E Sprite, 32x32 pixels. Fish
+B $B68E,128,8 #HTML[#UDGARRAY4,,,4,,($B68E-$B70D-1-32)(sprite-b68e)]
+b $B70E Sprite, 32x32 pixels. Fish
+B $B70E,128,8 #HTML[#UDGARRAY4,,,4,,($B70E-$B78D-1-32)(sprite-b70e)]
+b $B78E Sprite, 32x32 pixels. Fish
+B $B78E,128,8 #HTML[#UDGARRAY4,,,4,,($B78E-$B80D-1-32)(sprite-b78e)]
+b $B80E Sprite, 32x32 pixels. Fish
+B $B80E,128,8 #HTML[#UDGARRAY4,,,4,,($B80E-$B88D-1-32)(sprite-b80e)]
+b $B88E Sprite, 16x24 pixels. Idol, unidentified
+B $B88E,48,8 #HTML[#UDGARRAY2,,,2,,($B88E-$B8BD-1-16)(sprite-b88e)]
+b $B8BE Mask, 16x24 pixels. Idol
+B $B8BE,48,8 #HTML[#UDGARRAY2,,,2,,($B8BE-$B8ED-1-16)(sprite-b8be)]
+b $B8EE Sprite, 16x24 pixels. Can
+B $B8EE,48,8 #HTML[#UDGARRAY2,,,2,,($B8EE-$B91D-1-16)(sprite-b8ee)]
+b $B91E Mask, 16x24 pixels. Can
+B $B91E,48,8 #HTML[#UDGARRAY2,,,2,,($B91E-$B94D-1-16)(sprite-b91e)]
+b $B94E Sprite, 16x24 pixels. Tin can
+B $B94E,48,8 #HTML[#UDGARRAY2,,,2,,($B94E-$B97D-1-16)(sprite-b94e)]
+b $B97E Mask, 16x24 pixels. Tin can
+B $B97E,48,8 #HTML[#UDGARRAY2,,,2,,($B97E-$B9AD-1-16)(sprite-b97e)]
+b $B9AE Sprite, 16x24 pixels. Item icon: key
+B $B9AE,48,8 #HTML[#UDGARRAY2,,,2,,($B9AE-$B9DD-1-16)(sprite-b9ae)]
+b $B9DE Mask, 16x24 pixels. Key
+B $B9DE,48,8 #HTML[#UDGARRAY2,,,2,,($B9DE-$BA0D-1-16)(sprite-b9de)]
+b $BA0E Sprite, 16x24 pixels. Item icon: Horseshoe (weapon; kills Sea Horses)
+B $BA0E,48,8 #HTML[#UDGARRAY2,,,2,,($BA0E-$BA3D-1-16)(sprite-ba0e)]
+b $BA3E Mask, 16x24 pixels. Horseshoe
+B $BA3E,48,8 #HTML[#UDGARRAY2,,,2,,($BA3E-$BA6D-1-16)(sprite-ba3e)]
+b $BA6E Sprite, 16x24 pixels. Item icon: Bone (lures fish shoals away)
+B $BA6E,48,8 #HTML[#UDGARRAY2,,,2,,($BA6E-$BA9D-1-16)(sprite-ba6e)]
+b $BA9E Mask, 16x24 pixels. Bone
+B $BA9E,48,8 #HTML[#UDGARRAY2,,,2,,($BA9E-$BACD-1-16)(sprite-ba9e)]
+b $BACE Sprite, 16x24 pixels. Boot
+B $BACE,48,8 #HTML[#UDGARRAY2,,,2,,($BACE-$BAFD-1-16)(sprite-bace)]
+b $BAFE Mask, 16x24 pixels. Boot
+B $BAFE,48,8 #HTML[#UDGARRAY2,,,2,,($BAFE-$BB2D-1-16)(sprite-bafe)]
+b $BB2E Sprite, 32x32 pixels. Treasure chest
+B $BB2E,128,8 #HTML[#UDGARRAY4,,,4,,($BB2E-$BBAD-1-32)(sprite-bb2e)]
+b $BBAE Mask, 32x32 pixels. Treasure chest
+B $BBAE,128,8 #HTML[#UDGARRAY4,,,4,,($BBAE-$BC2D-1-32)(sprite-bbae)]
+b $BC2E Sprite, 16x32 pixels. Rock
+B $BC2E,64,8 #HTML[#UDGARRAY2,,,2,,($BC2E-$BC6D-1-16)(sprite-bc2e)]
+b $BC6E Mask, 16x32 pixels. Rock
+B $BC6E,64,8 #HTML[#UDGARRAY2,,,2,,($BC6E-$BCAD-1-16)(sprite-bc6e)]
+b $BCAE Sprite, 32x24 pixels. Plug
+B $BCAE,96,8 #HTML[#UDGARRAY4,,,4,,($BCAE-$BD0D-1-32)(sprite-bcae)]
+b $BD0E Mask, 32x24 pixels. Plug
+B $BD0E,96,8 #HTML[#UDGARRAY4,,,4,,($BD0E-$BD6D-1-32)(sprite-bd0e)]
+b $BD6E Sprite, 16x16 pixels. Seaweed sprig
+B $BD6E,32,8 #HTML[#UDGARRAY2,,,2,,($BD6E-$BD8D-1-16)(sprite-bd6e)]
+b $BD8E Mask, 16x16 pixels. Seaweed sprig
+B $BD8E,32,8 #HTML[#UDGARRAY2,,,2,,($BD8E-$BDAD-1-16)(sprite-bd8e)]
+b $BDAE Sprite, 32x16 pixels. Whirlpool, animation phase
+B $BDAE,64,8 #HTML[#UDGARRAY4,,,4,,($BDAE-$BDED-1-32)(sprite-bdae)]
+b $BDEE Sprite, 32x16 pixels. Whirlpool, animation phase
+B $BDEE,64,8 #HTML[#UDGARRAY4,,,4,,($BDEE-$BE2D-1-32)(sprite-bdee)]
+b $BE2E Sprite, 24x32 pixels. Plant/coral
+B $BE2E,96,8 #HTML[#UDGARRAY3,,,3,,($BE2E-$BE8D-1-24)(sprite-be2e)]
+b $BE8E Mask, 24x32 pixels. Plant/coral
+B $BE8E,96,8 #HTML[#UDGARRAY3,,,3,,($BE8E-$BEED-1-24)(sprite-be8e)]
+b $BEEE Sprite, 24x32 pixels. Plant/coral
+B $BEEE,96,8 #HTML[#UDGARRAY3,,,3,,($BEEE-$BF4D-1-24)(sprite-beee)]
+b $BF4E Mask, 24x32 pixels. Plant/coral
+B $BF4E,96,8 #HTML[#UDGARRAY3,,,3,,($BF4E-$BFAD-1-24)(sprite-bf4e)]
+b $BFAE Sprite, 32x16 pixels. Rock
+B $BFAE,64,8 #HTML[#UDGARRAY4,,,4,,($BFAE-$BFED-1-32)(sprite-bfae)]
+b $BFEE Mask, 32x16 pixels. Rock
+B $BFEE,64,8 #HTML[#UDGARRAY4,,,4,,($BFEE-$C02D-1-32)(sprite-bfee)]
+b $C02E Sprite, 32x32 pixels. Open shell
+B $C02E,128,8 #HTML[#UDGARRAY4,,,4,,($C02E-$C0AD-1-32)(sprite-c02e)]
+b $C0AE Mask, 32x32 pixels. Open shell
+B $C0AE,128,8 #HTML[#UDGARRAY4,,,4,,($C0AE-$C12D-1-32)(sprite-c0ae)]
+b $C12E Sprite, 16x40 pixels. Seaweed
+B $C12E,80,8 #HTML[#UDGARRAY2,,,2,,($C12E-$C17D-1-16)(sprite-c12e)]
+b $C17E Mask, 16x40 pixels. Seaweed
+B $C17E,80,8 #HTML[#UDGARRAY2,,,2,,($C17E-$C1CD-1-16)(sprite-c17e)]
+b $C1CE Sprite, 16x16 pixels. Small rock
+B $C1CE,32,8 #HTML[#UDGARRAY2,,,2,,($C1CE-$C1ED-1-16)(sprite-c1ce)]
+b $C1EE Mask, 16x16 pixels. Small rock
+B $C1EE,32,8 #HTML[#UDGARRAY2,,,2,,($C1EE-$C20D-1-16)(sprite-c1ee)]
+b $C20E Sprite, 8x24 pixels. Small debris/particle
+B $C20E,24,8 #HTML[#UDGARRAY1,,,1,,($C20E-$C225-1-8)(sprite-c20e)]
+b $C226 Sprite, 8x24 pixels. Small debris/particle
+B $C226,24,8 #HTML[#UDGARRAY1,,,1,,($C226-$C23D-1-8)(sprite-c226)]
+b $C23E Sprite, 8x24 pixels. Small debris/particle
+B $C23E,24,8 #HTML[#UDGARRAY1,,,1,,($C23E-$C255-1-8)(sprite-c23e)]
+b $C256 Sprite, 8x24 pixels. Small debris/particle
+B $C256,24,8 #HTML[#UDGARRAY1,,,1,,($C256-$C26D-1-8)(sprite-c256)]
+b $C26E Sprite, 16x16 pixels. Disc/wheel
+B $C26E,32,8 #HTML[#UDGARRAY2,,,2,,($C26E-$C28D-1-16)(sprite-c26e)]
+b $C28E Sprite, 16x16 pixels. Disc/wheel
+B $C28E,32,8 #HTML[#UDGARRAY2,,,2,,($C28E-$C2AD-1-16)(sprite-c28e)]
+b $C2AE Sprite, 16x16 pixels. Disc/wheel
+B $C2AE,32,8 #HTML[#UDGARRAY2,,,2,,($C2AE-$C2CD-1-16)(sprite-c2ae)]
+b $C2CE Sprite, 16x16 pixels. Disc/wheel
+B $C2CE,32,8 #HTML[#UDGARRAY2,,,2,,($C2CE-$C2ED-1-16)(sprite-c2ce)]
+b $C2EE Sprite, 16x16 pixels. Disc/wheel
+B $C2EE,32,8 #HTML[#UDGARRAY2,,,2,,($C2EE-$C30D-1-16)(sprite-c2ee)]
+b $C30E Sprite, 16x16 pixels. Disc/wheel
+B $C30E,32,8 #HTML[#UDGARRAY2,,,2,,($C30E-$C32D-1-16)(sprite-c30e)]
+b $C32E Sprite, 16x16 pixels. Disc/wheel
+B $C32E,32,8 #HTML[#UDGARRAY2,,,2,,($C32E-$C34D-1-16)(sprite-c32e)]
+b $C34E Sprite, 16x16 pixels. Disc/wheel
+B $C34E,32,8 #HTML[#UDGARRAY2,,,2,,($C34E-$C36D-1-16)(sprite-c34e)]
+b $C36E Sprite, 16x16 pixels. Disc/wheel
+B $C36E,32,8 #HTML[#UDGARRAY2,,,2,,($C36E-$C38D-1-16)(sprite-c36e)]
+b $C38E Sprite, 16x8 pixels. Spark/debris
+B $C38E,16,8 #HTML[#UDGARRAY2,,,2,,($C38E-$C39D-1-16)(sprite-c38e)]
+b $C39E Sprite, 16x8 pixels. Spark/debris
+B $C39E,16,8 #HTML[#UDGARRAY2,,,2,,($C39E-$C3AD-1-16)(sprite-c39e)]
+b $C3AE Sprite, 32x32 pixels. Urn/well with seaweed
+B $C3AE,128,8 #HTML[#UDGARRAY4,,,4,,($C3AE-$C42D-1-32)(sprite-c3ae)]
+b $C42E Mask, 32x32 pixels. Urn/well with seaweed
+B $C42E,128,8 #HTML[#UDGARRAY4,,,4,,($C42E-$C4AD-1-32)(sprite-c42e)]
+b $C4AE Sprite, 32x32 pixels. Urn/well with seaweed
+B $C4AE,128,8 #HTML[#UDGARRAY4,,,4,,($C4AE-$C52D-1-32)(sprite-c4ae)]
+b $C52E Sprite, 16x24 pixels. Empty/unused frame
+B $C52E,48,8 #HTML[#UDGARRAY2,,,2,,($C52E-$C55D-1-16)(sprite-c52e)]
+b $C55E Sprite, 16x24 pixels. Oil can (anti-rust oil, refills Sweevo's suit)
+B $C55E,48,8 #HTML[#UDGARRAY2,,,2,,($C55E-$C58D-1-16)(sprite-c55e)]
+b $C58E Mask, 16x24 pixels. Oil can
+B $C58E,48,8 #HTML[#UDGARRAY2,,,2,,($C58E-$C5BD-1-16)(sprite-c58e)]
+b $C5BE Sprite, 16x24 pixels. Item icon, unidentified
+B $C5BE,48,8 #HTML[#UDGARRAY2,,,2,,($C5BE-$C5ED-1-16)(sprite-c5be)]
+b $C5EE Mask, 16x24 pixels. Item icon, unidentified
+B $C5EE,48,8 #HTML[#UDGARRAY2,,,2,,($C5EE-$C61D-1-16)(sprite-c5ee)]
+b $C61E Sprite, 16x24 pixels. Item icon, unidentified
+B $C61E,48,8 #HTML[#UDGARRAY2,,,2,,($C61E-$C64D-1-16)(sprite-c61e)]
+b $C64E Mask, 16x24 pixels. Item icon, unidentified
+B $C64E,48,8 #HTML[#UDGARRAY2,,,2,,($C64E-$C67D-1-16)(sprite-c64e)]
+b $C67E Sprite, 16x24 pixels. Spoon (weapon; kills Jellyfish)
+B $C67E,48,8 #HTML[#UDGARRAY2,,,2,,($C67E-$C6AD-1-16)(sprite-c67e)]
+b $C6AE Mask, 16x24 pixels. Spoon
+B $C6AE,48,8 #HTML[#UDGARRAY2,,,2,,($C6AE-$C6DD-1-16)(sprite-c6ae)]
+b $C6DE Sprite, 16x24 pixels. Ball or pearl
+B $C6DE,48,8 #HTML[#UDGARRAY2,,,2,,($C6DE-$C70D-1-16)(sprite-c6de)]
+b $C70E Mask, 16x24 pixels. Ball or pearl
+B $C70E,48,8 #HTML[#UDGARRAY2,,,2,,($C70E-$C73D-1-16)(sprite-c70e)]
+b $C73E Sprite, 16x24 pixels. Item icon, unidentified
+B $C73E,48,8 #HTML[#UDGARRAY2,,,2,,($C73E-$C76D-1-16)(sprite-c73e)]
+b $C76E Mask, 16x24 pixels. Item icon, unidentified
+B $C76E,48,8 #HTML[#UDGARRAY2,,,2,,($C76E-$C79D-1-16)(sprite-c76e)]
+b $C79E Sprite, 16x24 pixels. Item icon, unidentified
+B $C79E,48,8 #HTML[#UDGARRAY2,,,2,,($C79E-$C7CD-1-16)(sprite-c79e)]
+b $C7CE Mask, 16x24 pixels. Item icon, unidentified
+B $C7CE,48,8 #HTML[#UDGARRAY2,,,2,,($C7CE-$C7FD-1-16)(sprite-c7ce)]
+b $C7FE Sprite, 40x24 pixels. Wall
+B $C7FE,120,8 #HTML[#UDGARRAY5,,,5,,($C7FE-$C875-1-40)(sprite-c7fe)]
+b $C876 Sprite, 40x96 pixels. Wall
+B $C876,480,8 #HTML[#UDGARRAY5,,,5,,($C876-$CA55-1-40)(sprite-c876)]
+b $CA56 Sprite, 48x96 pixels. Wall
+B $CA56,576,8 #HTML[#UDGARRAY6,,,6,,($CA56-$CC95-1-48)(sprite-ca56)]
+b $CC96 Sprite, 40x80 pixels. Wall
+B $CC96,400,8 #HTML[#UDGARRAY5,,,5,,($CC96-$CE25-1-40)(sprite-cc96)]
+b $CE26 Sprite, 8x160 pixels. Font: alphanumeric character set, used for HUD/score text (not a game sprite)
+B $CE26,160,8 #HTML[#UDGARRAY1,,,1,,($CE26-$CEC5-1-8)(sprite-ce26)]
+b $CEC6 Mask, 24x32 pixels. Diver silhouette
+B $CEC6,96,8 #HTML[#UDGARRAY3,,,3,,($CEC6-$CF25-1-24)(sprite-cec6)]
+b $CF26 Mask, 32x24 pixels.
+B $CF26,96,8 #HTML[#UDGARRAY4,,,4,,($CF26-$CF85-1-32)(sprite-cf26)]
+b $CF86 Mask, 32x24 pixels.
+B $CF86,96,8 #HTML[#UDGARRAY4,,,4,,($CF86-$CFE5-1-32)(sprite-cf86)]
+b $CFE6 Mask, 32x24 pixels.
+B $CFE6,96,8 #HTML[#UDGARRAY4,,,4,,($CFE6-$D045-1-32)(sprite-cfe6)]
+b $D046 Mask, 32x24 pixels.
+B $D046,96,8 #HTML[#UDGARRAY4,,,4,,($D046-$D0A5-1-32)(sprite-d046)]
+b $D0A6 Mask, 32x24 pixels.
+B $D0A6,96,8 #HTML[#UDGARRAY4,,,4,,($D0A6-$D105-1-32)(sprite-d0a6)]
+b $D106 Mask, 32x24 pixels.
+B $D106,96,8 #HTML[#UDGARRAY4,,,4,,($D106-$D165-1-32)(sprite-d106)]
+b $D166 Mask, 32x24 pixels.
+B $D166,96,8 #HTML[#UDGARRAY4,,,4,,($D166-$D1C5-1-32)(sprite-d166)]
+b $D1C6 Mask, 24x24 pixels. Fish cloud
+B $D1C6,72,8 #HTML[#UDGARRAY3,,,3,,($D1C6-$D20D-1-24)(sprite-d1c6)]
+b $D20E Mask, 24x24 pixels. Fish cloud
+B $D20E,72,8 #HTML[#UDGARRAY3,,,3,,($D20E-$D255-1-24)(sprite-d20e)]
+b $D256 Mask, 24x32 pixels. Jellyfish
+B $D256,96,8 #HTML[#UDGARRAY3,,,3,,($D256-$D2B5-1-24)(sprite-d256)]
+b $D2B6 Mask, 24x32 pixels. Jellyfish
+B $D2B6,96,8 #HTML[#UDGARRAY3,,,3,,($D2B6-$D315-1-24)(sprite-d2b6)]
+b $D316 Mask, 24x32 pixels. Jellyfish
+B $D316,96,8 #HTML[#UDGARRAY3,,,3,,($D316-$D375-1-24)(sprite-d316)]
+b $D376 Mask, 24x24 pixels. Fish cloud
+B $D376,72,8 #HTML[#UDGARRAY3,,,3,,($D376-$D3BD-1-24)(sprite-d376)]
+b $D3BE Mask, 24x32 pixels. Jellyfish
+B $D3BE,96,8 #HTML[#UDGARRAY3,,,3,,($D3BE-$D41D-1-24)(sprite-d3be)]
+b $D41E Mask, 32x24 pixels.
+B $D41E,96,8 #HTML[#UDGARRAY4,,,4,,($D41E-$D47D-1-32)(sprite-d41e)]
+b $D47E Mask, 32x24 pixels.
+B $D47E,96,8 #HTML[#UDGARRAY4,,,4,,($D47E-$D4DD-1-32)(sprite-d47e)]
+b $D4DE Mask, 32x24 pixels.
+B $D4DE,96,8 #HTML[#UDGARRAY4,,,4,,($D4DE-$D53D-1-32)(sprite-d4de)]
+b $D53E Mask, 32x24 pixels.
+B $D53E,96,8 #HTML[#UDGARRAY4,,,4,,($D53E-$D59D-1-32)(sprite-d53e)]
+b $D59E Mask, 32x32 pixels. Round
+B $D59E,128,8 #HTML[#UDGARRAY4,,,4,,($D59E-$D61D-1-32)(sprite-d59e)]
+b $D61E Mask, 32x24 pixels.
+B $D61E,96,8 #HTML[#UDGARRAY4,,,4,,($D61E-$D67D-1-32)(sprite-d61e)]
+b $D67E Mask, 16x24 pixels.
+B $D67E,48,8 #HTML[#UDGARRAY2,,,2,,($D67E-$D6AD-1-16)(sprite-d67e)]
+b $D6AE Mask, 24x24 pixels. Fish cloud
+B $D6AE,72,8 #HTML[#UDGARRAY3,,,3,,($D6AE-$D6F5-1-24)(sprite-d6ae)]
+b $D6F6 Mask, 32x24 pixels.
+B $D6F6,96,8 #HTML[#UDGARRAY4,,,4,,($D6F6-$D755-1-32)(sprite-d6f6)]
+b $D756 Mask, 32x32 pixels. Round
+B $D756,128,8 #HTML[#UDGARRAY4,,,4,,($D756-$D7D5-1-32)(sprite-d756)]
+b $D7D6 Mask, 32x32 pixels. Round
+B $D7D6,128,8 #HTML[#UDGARRAY4,,,4,,($D7D6-$D855-1-32)(sprite-d7d6)]
+b $D856 Mask, 32x32 pixels. Round
+B $D856,128,8 #HTML[#UDGARRAY4,,,4,,($D856-$D8D5-1-32)(sprite-d856)]
+b $D8D6 Mask, 32x32 pixels. Round
+B $D8D6,128,8 #HTML[#UDGARRAY4,,,4,,($D8D6-$D955-1-32)(sprite-d8d6)]
+b $D956 Mask, 16x8 pixels. Snake, rearing phase
+B $D956,16,8 #HTML[#UDGARRAY2,,,2,,($D956-$D965-1-16)(sprite-d956)]
+b $D966 Mask, 16x16 pixels. Snake, rearing phase
+B $D966,32,8 #HTML[#UDGARRAY2,,,2,,($D966-$D985-1-16)(sprite-d966)]
+b $D986 Mask, 16x24 pixels. Snake, rearing phase
+B $D986,48,8 #HTML[#UDGARRAY2,,,2,,($D986-$D9B5-1-16)(sprite-d986)]
+b $D9B6 Mask, 16x32 pixels. Snake, rearing phase
+B $D9B6,64,8 #HTML[#UDGARRAY2,,,2,,($D9B6-$D9F5-1-16)(sprite-d9b6)]
+b $D9F6 Mask, 16x32 pixels. Sea Horse
+B $D9F6,64,8 #HTML[#UDGARRAY2,,,2,,($D9F6-$DA35-1-16)(sprite-d9f6)]
+b $DA36 Mask, 16x32 pixels. Sea Horse
+B $DA36,64,8 #HTML[#UDGARRAY2,,,2,,($DA36-$DA75-1-16)(sprite-da36)]
+b $DA76 Mask, 32x32 pixels. Big round fish
+B $DA76,128,8 #HTML[#UDGARRAY4,,,4,,($DA76-$DAF5-1-32)(sprite-da76)]
+b $DAF6 Mask, 32x32 pixels. Big round fish
+B $DAF6,128,8 #HTML[#UDGARRAY4,,,4,,($DAF6-$DB75-1-32)(sprite-daf6)]
+b $DB76 Mask, 32x32 pixels. Big round fish
+B $DB76,128,8 #HTML[#UDGARRAY4,,,4,,($DB76-$DBF5-1-32)(sprite-db76)]
+b $DBF6 Mask, 32x32 pixels. Big round fish
+B $DBF6,128,8 #HTML[#UDGARRAY4,,,4,,($DBF6-$DC75-1-32)(sprite-dbf6)]
+b $DC76 Sprite, 8x24 pixels. Spark/debris
+B $DC76,24,8 #HTML[#UDGARRAY1,,,1,,($DC76-$DC8D-1-8)(sprite-dc76)]
+b $DC8E Sprite, 8x24 pixels. Spark/debris
+B $DC8E,24,8 #HTML[#UDGARRAY1,,,1,,($DC8E-$DCA5-1-8)(sprite-dc8e)]
+b $DCA6 Sprite, 8x24 pixels. Spark/debris
+B $DCA6,24,8 #HTML[#UDGARRAY1,,,1,,($DCA6-$DCBD-1-8)(sprite-dca6)]
+b $DCBE Sprite, 8x24 pixels. Spark/debris
+B $DCBE,24,8 #HTML[#UDGARRAY1,,,1,,($DCBE-$DCD5-1-8)(sprite-dcbe)]
+b $DCD6 Sprite, 8x8 pixels. Gem/diamond icon
+B $DCD6,8,8 #HTML[#UDGARRAY1,,,1,,($DCD6-$DCDD-1-8)(sprite-dcd6)]
+b $DCDE Sprite, 8x8 pixels. Gem/diamond icon
+B $DCDE,8,8 #HTML[#UDGARRAY1,,,1,,($DCDE-$DCE5-1-8)(sprite-dcde)]
+b $DCE6 Sprite, 8x8 pixels. Gem/diamond icon
+B $DCE6,8,8 #HTML[#UDGARRAY1,,,1,,($DCE6-$DCED-1-8)(sprite-dce6)]
+b $DCEE Sprite, 8x8 pixels. Gem/diamond icon
+B $DCEE,8,8 #HTML[#UDGARRAY1,,,1,,($DCEE-$DCF5-1-8)(sprite-dcee)]
+b $DCF6 Sprite, 8x8 pixels. Gem/diamond icon
+B $DCF6,8,8 #HTML[#UDGARRAY1,,,1,,($DCF6-$DCFD-1-8)(sprite-dcf6)]
+b $DCFE Sprite, 32x32 pixels. Cube/crate icon
+B $DCFE,128,8 #HTML[#UDGARRAY4,,,4,,($DCFE-$DD7D-1-32)(sprite-dcfe)]
+b $DD7E Sprite, 32x32 pixels. Passage, closed/blocked
+B $DD7E,128,8 #HTML[#UDGARRAY4,,,4,,($DD7E-$DDFD-1-32)(sprite-dd7e)]
+b $DDFE Sprite, 16x16 pixels. Passage, part
+B $DDFE,32,8 #HTML[#UDGARRAY2,,,2,,($DDFE-$DE1D-1-16)(sprite-ddfe)]
+b $DE1E Sprite, 16x16 pixels. Passage, part
+B $DE1E,32,8 #HTML[#UDGARRAY2,,,2,,($DE1E-$DE3D-1-16)(sprite-de1e)]
+b $DE3E Sprite, 16x16 pixels. Passage, part
+B $DE3E,32,8 #HTML[#UDGARRAY2,,,2,,($DE3E-$DE5D-1-16)(sprite-de3e)]
+b $DE5E Sprite, 16x16 pixels. Passage, part
+B $DE5E,32,8 #HTML[#UDGARRAY2,,,2,,($DE5E-$DE7D-1-16)(sprite-de5e)]
+b $DE7E Sprite, 16x16 pixels. Passage, part
+B $DE7E,32,8 #HTML[#UDGARRAY2,,,2,,($DE7E-$DE9D-1-16)(sprite-de7e)]
+b $DE9E Sprite, 16x16 pixels. Passage, part
+B $DE9E,32,8 #HTML[#UDGARRAY2,,,2,,($DE9E-$DEBD-1-16)(sprite-de9e)]
+b $DEBE Mask, 16x24 pixels.
+B $DEBE,48,8 #HTML[#UDGARRAY2,,,2,,($DEBE-$DEED-1-16)(sprite-debe)]
+b $DEEE Mask, 16x16 pixels.
+B $DEEE,32,8 #HTML[#UDGARRAY2,,,2,,($DEEE-$DF0D-1-16)(sprite-deee)]
+b $DF0E Mask, 16x16 pixels.
+B $DF0E,32,8 #HTML[#UDGARRAY2,,,2,,($DF0E-$DF2D-1-16)(sprite-df0e)]
+b $DF2E Sprite, 88x16 pixels. RUSTOMETER gauge graphic
+B $DF2E,176,8 #HTML[#UDGARRAY11,,,11,,($DF2E-$DFDD-1-88)(sprite-df2e)]
+b $DFDE Sprite, 32x32 pixels. Passage, open
+B $DFDE,128,8 #HTML[#UDGARRAY4,,,4,,($DFDE-$E05D-1-32)(sprite-dfde)]
+b $E05E Sprite, 88x32 pixels. Sign: "PIRANHA / DO NOT TAP GLASS"
+B $E05E,352,8 #HTML[#UDGARRAY11,,,11,,($E05E-$E1BD-1-88)(sprite-e05e)]
+b $E1BE
 b $E390 Shadow screen 256x192, 32*192=6144 bytes
+N $E390 #HTML[#UDGARRAY32,,,32,,($E390-$FB8F-1-256)(screen-e390)]
 B $E390,6144,32
 b $FB90
 b $FBA8
@@ -843,3 +1015,7 @@ b $FE2D
 b $FE32
 b $FFC7
 b $FFCC
+
+
+
+

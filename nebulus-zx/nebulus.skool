@@ -1545,10 +1545,10 @@ c$801A LD A,$80      ; A=$80 -> $6056 (start flag/counter)
  $801F XOR A         ;
  $8020 LD ($60D7),A  ; set Control-key toggle flag
  $8023 LD ($8005),A  ;
- $8026 LD A,$04      ; 4 attempts/lives -> $6017
+ $8026 LD A,$04      ; 4 attempts/lives -> #R$6017
  $8028 LD ($6017),A  ; set Game mode
 
-; Routine at 802B
+; Level entry
 ;
 ; Used by the routine at #R$8115.
 @label=level_retry
@@ -1588,9 +1588,9 @@ c$802B XOR A         ;
 ; The in-play frame loop.
 ; .
 ; Each pass runs main_tick (one frame) then checks end conditions: death_flag
-; ($60C3) set      -> life-loss handler ($8084) game_state ($60D9) == 2     ->
-; level-complete ($80B2) play_timer ($6053) == 0     -> time-up ($8081)
-; Otherwise CALL $8115 (status update) and loop.
+; (#R$60C3) set      -> life-loss handler ($8084) game_state (#R$60D9) == 2
+; -> level-complete ($80B2) play_timer (#R$6053) == 0     -> time-up ($8081)
+; Otherwise CALL #R$8115 (status update) and loop.
 @label=main_loop
 c$8064 CALL $8240    ; run one frame of the game
  $8067 LD A,($60C3)  ; player died this frame?
@@ -1684,7 +1684,7 @@ c$8064 CALL $8240    ; run one frame of the game
 ; .
 ; - restart key (via $A70F): NC -> jump to level_retry
 ; .
-; - several control keys toggle ctrl_flag ($60D7) / pad_var_8005
+; - several control keys toggle ctrl_flag (#R$60D7) / pad_var_8005
 ; .
 ; - PAUSE/DEMO: key $21 enters demo_pause any joystick X exits
 ; .
@@ -1708,7 +1708,7 @@ c$8115 LD A,($8004)  ; A = freeze_ctr
  $8130 CALL $A706    ;
  $8133 JR Z,$813A    ;
  $8135 LD A,$01      ;
- $8137 LD ($60D7),A  ; set ctrl_flag ($60D7) = 1
+ $8137 LD ($60D7),A  ; set ctrl_flag (#R$60D7) = 1
 *$813A LD A,$20      ;
  $813C CALL $A706    ;
  $813F JR Z,$8148    ;
@@ -1793,19 +1793,19 @@ c$8115 LD A,($8004)  ; A = freeze_ctr
 ;
 ; (Re)build the current level's working state.
 ; .
-; Zeroes the work_buffers block ($F000.., $0FFF bytes via LDIR), loads the
+; Zeroes the work_buffers block (#R$F000.., $0FFF bytes via LDIR), loads the
 ; level's column data (load_level_col), resets the tower position
-; (init_tower_pos), re-inits flags (init_b5cf) and the renderers ($8FB7,
-; $96D4).
+; (init_tower_pos), re-inits flags (init_b5cf) and the renderers (#R$8FB7,
+; #R$96D4).
 ; .
 ; Clobbers: most.
 @label=setup_level
-c$81D7 LD HL,$F000   ; Clear work_buffers ($F000) for tower map
+c$81D7 LD HL,$F000   ; Clear work_buffers (#R$F000) for tower map
  $81DA LD DE,$F001   ;
  $81DD LD BC,$0FFF   ;
  $81E0 LD (HL),$00   ;
  $81E2 LDIR          ;
- $81E4 CALL $A763    ; Load level column data into $F000
+ $81E4 CALL $A763    ; Load level column data into #R$F000
  $81E7 CALL $83D0    ; Init tower pos
  $81EA CALL $A77E    ;
  $81ED CALL $8FB7    ; Clear actor states
@@ -1858,11 +1858,11 @@ c$81D7 LD HL,$F000   ; Clear work_buffers ($F000) for tower map
 ; tower rotation, enemies) -> redraw widgets -> HALT to sync to the 50Hz frame
 ; interrupt.
 ; .
-; State: game_state ($60D9): 3=level transition, 4=finished,
+; State: game_state (#R$60D9): 3=level transition, 4=finished,
 ; .
 ; else = normal play.
 ; .
-; demo_pause ($60D8) skips logic.
+; demo_pause (#R$60D8) skips logic.
 ; .
 ; freeze_ctr ($8004) freezes input for N frames.
 ; .
@@ -1908,9 +1908,9 @@ c$8240 LD HL,$8004   ; HL -> freeze_ctr (in code padding at $8004)
  $828E CALL $89C5    ; Check collision
 *$8291 LD A,$24      ; --- redraw HUD: A = $24 (36 rows) ---
  $8293 LD HL,$60B9   ;
- $8296 SUB (HL)      ; subtract tower_height ($60B9)
+ $8296 SUB (HL)      ; subtract tower_height (#R$60B9)
  $8297 AND $7F       ;
- $8299 LD ($6032),A  ; store display height ($6032)
+ $8299 LD ($6032),A  ; store display height (#R$6032)
  $829C CALL $A751    ; draw widgets (proc_table slots)
  $829F CALL $A75A    ;
  $82A2 CALL $A75D    ;
@@ -1983,14 +1983,14 @@ s$8301 DEFS $04
 ; Seed BOTH players' saved column-mask words.
 ; .
 ; HL = (pad_var_8005) [low=0 at level start], then H forced to $FF (all 8
-; columns present) the same $FF00|sel is written to the P1 ($8301) and P2
+; columns present) the same $FF00|sel is written to the P1 (#R$8301) and P2
 ; ($8303) slots.
 ; .
 ; Called once per level build.
 ; .
 ; In: pad_var_8005.
 ; .
-; Out: ($8301),($8303).
+; Out: (#R$8301),($8303).
 ; .
 ; Clobbers: A,HL.
 @label=init_col_state
@@ -2007,10 +2007,10 @@ c$8305 LD HL,($8005) ;
 ; .
 ;
 ; Expand a player's saved column bitmask into the 8-byte col_flags[] array
-; ($60CB) and mirror its counter into #R$6039.
+; (#R$60CB) and mirror its counter into #R$6039.
 ; .
-; lives_p1 ($6040) selects the slot (0=P1 word $8301, else P2 word $8303) --
-; here $6040 doubles as an ACTIVE-PLAYER INDEX, not a life count.
+; lives_p1 (#R$6040) selects the slot (0=P1 word #R$8301, else P2 word $8303)
+; -- here #R$6040 doubles as an ACTIVE-PLAYER INDEX, not a life count.
 ; .
 ; running_flag gates an alternate (re)init path.
 ; .
@@ -2079,7 +2079,7 @@ c$8311 LD A,($603F)  ;
 ; Inverse of restore_col_state.
 ; .
 ; Writes the live counter (#R$6039) into the selected player's low byte, then
-; packs the 8 col_flags[] LSBs ($60CB..$60D2) back into the high mask byte.
+; packs the 8 col_flags[] LSBs (#R$60CB..$60D2) back into the high mask byte.
 ; .
 ; lives_p1 selects the P1/P2 slot.
 ; .
@@ -2113,7 +2113,7 @@ c$8360 LD HL,$8301   ;
 ;
 ; .
 ;
-; Zero the selected player's column mask byte (high byte of $8301/$8303).
+; Zero the selected player's column mask byte (high byte of #R$8301/$8303).
 ; .
 ; lives_p1 selects the slot.
 @label=clear_col_mask
@@ -2160,11 +2160,11 @@ c$8390 LD A,($6039)  ;
 ;
 ; Install the Z80 mode-2 interrupt vector.
 ; .
-; Builds a 257-byte page of identical bytes at $BB00..$BC00 so that, whatever
-; the data-bus byte is at IRQ time, the Z80 reads the 16-bit vector $BABA from
-; table[$FF]/table[$100].
+; Builds a 257-byte page of identical bytes at $BB00..#R$BC00 so that, whatever
+; the data-bus byte is at IRQ time, the Z80 reads the 16-bit vector #R$BABA
+; from table[$FF]/table[$100].
 ; .
-; At $BABA it plants 'JP $83CA' -- the actual interrupt service routine.
+; At #R$BABA it plants 'JP #R$83CA' -- the actual interrupt service routine.
 ; .
 ; In:  nothing.
 ; .
@@ -2183,19 +2183,19 @@ c$83AD DI            ; no IRQs while we build the vector table
 *$83B7 LD (HL),A     ; table[i] = $BA
  $83B8 INC HL        ; next table slot
  $83B9 DJNZ $83B7    ; fill all 256 bytes of $BB00..$BBFF
- $83BB LD (HL),A     ; +1 byte at $BC00 = $BA: covers the table[$100]
+ $83BB LD (HL),A     ; +1 byte at #R$BC00 = $BA: covers the table[$100]
                      ; off-by-one
  $83BC LD H,A        ; H = $BA
- $83BD LD L,A        ; L = $BA  -> HL = $BABA (the vector the IRQ will fetch)
- $83BE LD (HL),$C3   ; plant C3 = JP opcode at $BABA
+ $83BD LD L,A        ; L = $BA  -> HL = #R$BABA (the vector the IRQ will fetch)
+ $83BE LD (HL),$C3   ; plant C3 = JP opcode at #R$BABA
  $83C0 INC L         ;
  $83C1 LD (HL),$CA   ; low byte of JP target -> $CA
  $83C3 INC L         ;
- $83C4 LD (HL),$83   ; high byte -> $83, so vector = 'JP $83CA' = irq_handler
+ $83C4 LD (HL),$83   ; high byte -> $83, so vector = 'JP #R$83CA' = irq_handler
  $83C6 IM 2          ; switch CPU to interrupt mode 2 (Z80-only)
  $83C8 EI            ; interrupts on
 
-; Routine at 83C9
+; IM2 noop return
 ;
 ; Used by the routine at #R$83CA.
 @label=im2_noop_ret
@@ -2209,9 +2209,9 @@ c$83C9 RET           ; return to game_entry
 ;
 ; IM 2 interrupt service routine (50 Hz vblank).
 ; .
-; Reached via the planted vector at $BABA -> JP here.
+; Reached via the planted vector at #R$BABA -> JP here.
 ; .
-; It is a deliberate NEAR-NO-OP: 'CALL $83C9' targets the bare RET at the end
+; It is a deliberate NEAR-NO-OP: 'CALL #R$83C9' targets the bare RET at the end
 ; of setup_im2, so the call does nothing.
 ; .
 ; The point is to REPLACE the 48K ROM's own interrupt routine (which scans the
@@ -2220,8 +2220,8 @@ c$83C9 RET           ; return to game_entry
 ; .
 ; Verified: no code anywhere
 @label=irq_handler
-c$83CA CALL $83C9    ; CALL $83C9 = the RET in setup_im2: a no-op (neutralized
-                     ; ISR)
+c$83CA CALL $83C9    ; CALL #R$83C9 = the RET in setup_im2: a no-op
+                     ; (neutralized ISR)
  $83CD EI            ; re-enable interrupts
  $83CE RETI          ; RETI: return from maskable interrupt (Z80-only
 
@@ -2272,9 +2272,9 @@ c$83D0 LD A,$04      ;
 ; .
 ;
 ; Rotate the tower by signed B: tower_height = (tower_height + B) AND $7F
-; (128-column wrap), saving the old value in $6033.
+; (128-column wrap), saving the old value in #R$6033.
 ; .
-; Tests the new position for a wall/collision ($9330) on collision (NC) it
+; Tests the new position for a wall/collision (#R$9330) on collision (NC) it
 ; reverts tower_height.
 ; .
 ; In: B=delta.
@@ -2307,7 +2307,7 @@ c$8411 LD B,A        ;
 ;
 ; Advance the column/scroll position $60BA by signed A (sign-extended via B),
 ; folding H into the 4-quadrant range (AND $03) saves the previous position in
-; $6034.
+; #R$6034.
 ; .
 ; Clobbers: A,B,HL.
 @label=step_scroll
@@ -2343,7 +2343,7 @@ c$8430 LD HL,($60BA) ;
 ;
 ; .
 ;
-; If $957A returns a pending step (CY) and there is no vertical input
+; If #R$957A returns a pending step (CY) and there is no vertical input
 ; (input_y==0), rotate the tower by it (tail-calls rotate_tower).
 ; .
 ; Clobbers: A,B.
@@ -2374,12 +2374,12 @@ b$846E DEFB $B9,$84,$8D,$86,$DB,$85,$63,$85
 ; this 'the level-transition path' -- it is really the general player update,
 ; the transition is just one caller).
 ; .
-; Preamble debounces directional input: input_latch ($6020) records whether
+; Preamble debounces directional input: input_latch (#R$6020) records whether
 ; input_x is active so a press fires once a held input is consumed (input_x
 ; cleared).
 ; .
 ; Tail reads player_state and dispatches through a 2-byte JP-address table at
-; $846E (index = state*2) to the pstate_N handler below.
+; #R$846E (index = state*2) to the pstate_N handler below.
 @label=player_tick
 c$8482 LD HL,$6020   ;
  $8485 LD A,(HL)     ;
@@ -2398,8 +2398,8 @@ c$8482 LD HL,$6020   ;
 *$849B XOR A         ;
  $849C LD ($601C),A  ; set Signed input (debounce: force input_x=0 this frame)
 *$849F LD A,($60C0)  ; get Player state-machine state
- $84A2 ADD A,A       ; {index player_state*2 into jump table $846E and dispatch
- $84A3 LD E,A        ; (JP (HL))
+ $84A2 ADD A,A       ; {index player_state*2 into jump table #R$846E and
+ $84A3 LD E,A        ; dispatch (JP (HL))
  $84A4 LD D,$00      ;
  $84A6 LD HL,$846E   ; }
  $84A9 ADD HL,DE     ;
@@ -2436,18 +2436,18 @@ c$84AF LD A,$00      ;
 ; State 0: standing/walking, the default state.
 ; .
 ; Reads the cell under the player (READ_PLAYER_CELL) and dispatches on its type
-; (0=normal falls through, 1->$8590, 2->$85A1, else->$85B0).
+; (0=normal falls through, 1->#R$8590, 2->#R$85A1, else->#R$85B0).
 ; .
 ; Normal cell: ROTATE_IF_IDLE, then vertical input picks a climb direction
 ; (tests $60BE facing sign) and enters pstate_3 (climb) at $8559.
 ; .
-; No vertical input: horizontal input nonzero -> JP $8656 (enter pstate_1,
+; No vertical input: horizontal input nonzero -> JP #R$8656 (enter pstate_1,
 ; climb a column) else ROTATE_TOWER with vertical input, carry (blocked) -> JP
-; $8673 (alt pstate_1 entry).
+; #R$8673 (alt pstate_1 entry).
 ; .
 ; No input at all: CHECK_CONVEYOR / TEST_CELL_SPECIAL under fire button -> may
-; set game_state=1 and JP $8724 (enter pstate_4, jump/fall) else just advances
-; the idle-walk animation phase (0..7, sound 2 every 4th step).
+; set game_state=1 and JP #R$8724 (enter pstate_4, jump/fall) else just
+; advances the idle-walk animation phase (0..7, sound 2 every 4th step).
 @label=pstate_play
 c$84B9 CALL $955B    ;
  $84BC CALL $949D    ; Read player cell
@@ -2532,8 +2532,8 @@ c$84B9 CALL $955B    ;
 ;
 ; State 3: vertical climb animation (entered from pstate_play at $8559).
 ; .
-; Picks a sprite frame from table $86F2 indexed by phase (mirrored via +7 when
-; $60BE facing is negative), increments phase each call.
+; Picks a sprite frame from table #R$86F2 indexed by phase (mirrored via +7
+; when $60BE facing is negative), increments phase each call.
 ; .
 ; At phase==7 the climb cycle ends: flips the facing bit ($60BE ^= $80) and
 ; returns to pstate_reset (state 0).
@@ -2701,9 +2701,9 @@ c$85DB LD A,($60BF)  ;
 ; 23-byte signed-offset data table read by pstate_1 for scroll-delta/frame
 ; lookups.
 ; .
-; Byte $863F itself doubles as a SELF-MODIFIED scratch cell: code_8656/$8673
-; store the climb's vertical-input direction there for pstate_1 to feed into
-; ROTATE_TOWER.
+; Byte #R$863F itself doubles as a SELF-MODIFIED scratch cell:
+; code_8656/#R$8673 store the climb's vertical-input direction there for
+; pstate_1 to feed into ROTATE_TOWER.
 @label=tbl_863f
 b$863F DEFB $00,$00,$00,$00,$03,$02,$02,$01
  $8647 DEFB $01,$00,$00,$FF,$FF,$FE,$FE,$FD
@@ -2765,7 +2765,7 @@ c$8673 LD A,$01      ;
 ;
 ; .
 ;
-; State 1: climbing a tower column (entered via code_8656/$8673).
+; State 1: climbing a tower column (entered via code_8656/#R$8673).
 ; .
 ; Sets a sprite frame from phase&7 combined with facing, ROTATE_TOWERs using
 ; the direction stashed in tbl_863f, then looks up a scroll delta (table $8643,
@@ -2774,7 +2774,7 @@ c$8673 LD A,$01      ;
 ; On a special zero-crossing case it aborts the climb (sound 2, back to
 ; pstate_reset). Otherwise advances phase; once phase reaches the $8642 limit
 ; it does a final STEP_SCROLL($FF) -- no-carry falls into the pstate_5 setup
-; path ($8596), carry sets phase=1 and player_state=2 (pstate_2, slide-in).
+; path (#R$8596), carry sets phase=1 and player_state=2 (pstate_2, slide-in).
 @label=pstate_1
 c$868D LD A,($60BF)  ;
  $8690 AND $07       ;
@@ -2865,15 +2865,15 @@ c$8724 LD A,$04      ;
 ;
 ; .
 ;
-; State 4: jump/fall arc (entered from $8724 or from pstate_play's
+; State 4: jump/fall arc (entered from #R$8724 or from pstate_play's
 ; ROTATE_TOWER-blocked path).
 ; .
 ; Early phase (0..6): plays a landing sound at gated points, picks a sprite
 ; frame from tables $8700/$8704 (mirrored by facing), nudges tower rotation
-; toward the center column ($60B9&7 vs 4) via ROTATE_TOWER, advances phase.
+; toward the center column (#R$60B9&7 vs 4) via ROTATE_TOWER, advances phase.
 ; .
 ; Phase 7..$0C: picks frame from table $8709, advances phase. Falls through to
-; $879B for the rest of the arc.
+; #R$879B for the rest of the arc.
 @label=pstate_4
 c$8736 LD A,($60BF)  ; A = pstate_phase (landing-sound gate)
  $8739 CP $07        ; {phase in [7,$22]? sound-gate window test
@@ -2940,9 +2940,9 @@ s$879A DEFS $01
 ; toggling a self-mod alternator so this only fires every other call.
 ; .
 ; Phase $1D..$22: frame from table $86F9. Phase>=$23: if game_state==3, JP
-; $A113 (external -- special level-transition landing, not covered here). Else
-; STEP_SCROLL($FC) and, at phase<$24, latches a landing facing direction into
-; $60BE from vertical input.
+; #R$A113 (external -- special level-transition landing, not covered here).
+; Else STEP_SCROLL($FC) and, at phase<$24, latches a landing facing direction
+; into $60BE from vertical input.
 ; .
 ; Phase $24..$27: frame from table $86E4/$86E8 (mirrored). Phase>=$28: jump
 ; sequence complete, JP pstate_reset.
@@ -3052,7 +3052,7 @@ c$8831 LD IX,$605F   ;
 ;
 ; .
 ;
-; State 5: ledge-grab / climb-onto (entered from pstate_1 at $8596 when a
+; State 5: ledge-grab / climb-onto (entered from pstate_1 at #R$8596 when a
 ; column climb ends without reaching the top-of-climb case).
 ; .
 ; Calls ROTATE_IF_IDLE each frame. At phase==3 the grab completes -> JP
@@ -3138,19 +3138,19 @@ c$88AB LD ($88AA),A  ;
 ;
 ; .
 ;
-; State 6: riding a conveyor / column-transition (entered from $88AB).
+; State 6: riding a conveyor / column-transition (entered from #R$88AB).
 ; .
-; Phase==0: nudges tower rotation ($60B9) toward the center column (compare &7
-; vs 4), same trick as pstate_4.
+; Phase==0: nudges tower rotation (#R$60B9) toward the center column (compare
+; &7 vs 4), same trick as pstate_4.
 ; .
-; Phase==1: sets flag $6038=$FE, calls CHECK_CONVEYOR and combines its result
-; with a self-mod "descending" byte at $88AA to build a movement mask, then
+; Phase==1: sets flag #R$6038=$FE, calls CHECK_CONVEYOR and combines its result
+; with a self-mod "descending" byte at #R$88AA to build a movement mask, then
 ; applies a signed 16-bit step to the actor's column position ($60BA). Every
 ; 4th sub-step plays sound $0A and re-checks the conveyor.
 ; .
 ; Examines the cell flags to either block movement (early RET) or complete it:
 ; on completion ORs $81 into the cell flags, calls $A766 (object/effect hook,
-; not analysed here), sets $6038=$FF, returns to pstate_reset.
+; not analysed here), sets #R$6038=$FF, returns to pstate_reset.
 @label=pstate_6
 c$88BD LD A,($60BF)   ; {phase!=0? skip center-rotate step
  $88C0 OR A           ;
@@ -3172,8 +3172,8 @@ c$88BD LD A,($60BF)   ; {phase!=0? skip center-rotate step
  $88DE LD A,$FE       ; }
  $88E0 LD ($6038),A   ; set Flag?? $00 $FE $FF
  $88E3 CALL $9540     ; Check conveyor
- $88E6 LD A,(HL)      ; {combine conveyor result with self-mod $88AA descending
- $88E7 AND $0C        ; flag
+ $88E6 LD A,(HL)      ; {combine conveyor result with self-mod #R$88AA
+ $88E7 AND $0C        ; descending flag
  $88E9 LD IX,$88AA    ;
  $88ED BIT 7,(IX+$00) ; }
  $88F1 JR NZ,$88F5    ;
@@ -3319,25 +3319,25 @@ c$895B LD IX,$6060   ; IX -> synthetic player record ($6060)
 ;
 ; Test the player against the tower/hazards and apply the result.
 ; .
-; Dispatches on player_state ($60C0):
+; Dispatches on player_state (#R$60C0):
 ; .
 ; 7 = invulnerable/idle -> no test (RET)
 ; .
-; 4 = check a height window ($60BF in $0A..$1E)
+; 4 = check a height window (#R$60BF in $0A..$1E)
 ; .
 ; 8 = RET else test flag $60C5.
 ; .
-; Calls $895B (carry = hit).
+; Calls #R$895B (carry = hit).
 ; .
-; On a hit it patches the value at $8A49 (SELF-MODIFYING: $14/$0F/$20 select
+; On a hit it patches the value at #R$8A49 (SELF-MODIFYING: $14/$0F/$20 select
 ; the bump/death response used downstream) and branches into the hit handler.
 @label=check_collision
-c$89C5 LD A,($60C0)  ; A = player_state ($60C0)
+c$89C5 LD A,($60C0)  ; A = player_state (#R$60C0)
  $89C8 CP $07        ;
  $89CA RET Z         ; state 7: no collision this frame
  $89CB CP $04        ;
  $89CD JR NZ,$89DB   ;
- $89CF LD A,($60BF)  ; A = $60BF (height-in-column)
+ $89CF LD A,($60BF)  ; A = #R$60BF (height-in-column)
  $89D2 CP $0A        ;
  $89D4 JR C,$89E4    ;
  $89D6 CP $1F        ;
@@ -3358,7 +3358,7 @@ c$89C5 LD A,($60C0)  ; A = player_state ($60C0)
  $89F5 CALL $9330    ; Check rotate collision
  $89F8 RET NC        ;
  $89F9 LD A,$14      ;
- $89FB LD ($8A49),A  ; patch response code at $8A49 = $14 (SELF-MOD)
+ $89FB LD ($8A49),A  ; patch response code at #R$8A49 = $14 (SELF-MOD)
  $89FE JP $8A17      ;
 *$8A01 LD A,(IX+$30) ; A = colliding object state (+48)
  $8A04 LD B,$0F      ;
@@ -3447,14 +3447,14 @@ b$8A61 DEFB $03,$02,$01,$01,$01,$00,$00,$FF
 ; .
 ;
 ; Bump/knockback handler, dispatched from check_collision's hit path via the
-; response code at hit_response ($8A49).
+; response code at hit_response (#R$8A49).
 ; .
 ; If the current animation phase equals the stored response code: "wall bump"
 ; branch ($8AB5) -- sets a sprite frame, subtracts 4 from the actor's column
 ; position ($60BA), and if that didn't go negative, re-checks via
 ; CHECK_ROTATE_COLLISION; no collision bounces back into pstate_play_cell1
-; ($8590), otherwise (or on negative position) falls into the death handler at
-; $8AD7.
+; (#R$8590), otherwise (or on negative position) falls into the death handler
+; at $8AD7.
 ; .
 ; If phase differs from the response code: "step" branch -- picks a sprite
 ; frame from table $871F (mirrored by facing), clamps the response code to $0F,
@@ -3553,8 +3553,8 @@ c$8A71 LD A,($60BF)    ; {A=phase; compare vs stored response code
 ; While phase<$18, sets sprite frame ($60C1) from phase>>2 and increments phase
 ; each call. Once phase>=$18, clears $60C2 and keeps counting.
 ; .
-; At phase==$38 sets death_flag ($60C3)=1 -- this is the signal main_loop polls
-; to trigger the life-loss handler.
+; At phase==$38 sets death_flag (#R$60C3)=1 -- this is the signal main_loop
+; polls to trigger the life-loss handler.
 @label=pstate_8
 c$8B0E LD HL,$60BF   ; {A = pstate_phase
  $8B11 LD A,(HL)     ; }
@@ -3588,12 +3588,12 @@ s$8B30 DEFS $20
 ; Compute on-screen positions for the 4 actor sprites (objects 0..3) ahead of
 ; drawing.
 ; .
-; Derives a buffer base from tower_height into $600A, fills two coordinate
-; tables at $8B30/$8B40 (X and Y per sprite, via $8BEC/$8BFF), then per object
-; copies sprite id (IX+18 -> IX+24) and stores the screen column (IX+30) from
-; the angular position (IX+0).
+; Derives a buffer base from tower_height into #R$600A, fills two coordinate
+; tables at #R$8B30/$8B40 (X and Y per sprite, via #R$8BEC/#R$8BFF), then per
+; object copies sprite id (IX+18 -> IX+24) and stores the screen column (IX+30)
+; from the angular position (IX+0).
 ; .
-; Self-mod: $8B30/$8B40 are coordinate scratch buffers IN code.
+; Self-mod: #R$8B30/$8B40 are coordinate scratch buffers IN code.
 @label=sprite_setup
 c$8B50 LD HL,$60B9     ; HL -> tower_height
  $8B53 LD A,$04        ;
@@ -3605,8 +3605,8 @@ c$8B50 LD HL,$60B9     ; HL -> tower_height
  $8B5E LD H,A          ;
  $8B5F LD DE,$6600     ; DE = $6600 sprite work buffer base
  $8B62 ADD HL,DE       ;
- $8B63 LD ($600A),HL   ; store buffer ptr -> $600A
- $8B66 LD HL,$8B30     ; fill X-coord table $8B30 (4 sprites, step 8)
+ $8B63 LD ($600A),HL   ; store buffer ptr -> #R$600A
+ $8B66 LD HL,$8B30     ; fill X-coord table #R$8B30 (4 sprites, step 8)
  $8B69 LD A,$04        ;
 *$8B6B PUSH AF         ;
  $8B6C CALL $8BEC      ; Col screen y
@@ -3680,7 +3680,7 @@ c$8B50 LD HL,$60B9     ; HL -> tower_height
 ; In: A = angular position (0..127).
 ; .
 ; Offsets by the tower rotation: rel = (A + $20 - tower_height) & $7F, then
-; returns col_y_table[$6380 + rel].
+; returns col_y_table[#R$6380 + rel].
 ; .
 ; Out: A = projected value.
 ; .
@@ -3693,7 +3693,7 @@ c$8BEC PUSH HL       ;
  $8BF3 AND $7F       ; wrap to 0..127 (around the tower)
  $8BF5 LD E,A        ;
  $8BF6 LD D,$00      ;
- $8BF8 LD HL,$6380   ; HL -> col_y_table ($6380)
+ $8BF8 LD HL,$6380   ; HL -> col_y_table (#R$6380)
  $8BFB ADD HL,DE     ;
  $8BFC LD A,(HL)     ; A = table[rel] = projected Y/value
  $8BFD POP HL        ;
@@ -3735,7 +3735,7 @@ c$8BFF PUSH HL       ;
 *$8C1C POP HL        ;
  $8C1D RET           ;
 
-; SPRITE_SHIFT_MASKS
+; Sprite shift masks
 ;
 ; .
 ;
@@ -3750,7 +3750,7 @@ c$8BFF PUSH HL       ;
 ; ($8C76/$8C77/$8C78/$8C81/$8C82/$8C83/ $8C85) that calc_sprite_shift patches
 ; with computed shift counts.
 ; .
-; Spans $8C1E..$8CC1 code resumes at calc_sprite_shift.
+; Spans #R$8C1E..$8CC1 code resumes at calc_sprite_shift.
 @label=sprite_shift_masks
 b$8C1E DEFB $FF,$FF,$FC,$FF,$FF,$F0,$FF,$FF
  $8C26 DEFB $C0,$FF,$FF,$00,$FF,$FC,$00,$FF
@@ -3784,7 +3784,7 @@ b$8C1E DEFB $FF,$FF,$FC,$FF,$FF,$F0,$FF,$FF
 ; horizontal sub-byte shift, and patch the shift counts into the self-mod slots
 ; above ($8C76/77/ 81).
 ; .
-; Reads the column buffer ($600A) to skip empty/edge columns ($0F/$0E
+; Reads the column buffer (#R$600A) to skip empty/edge columns ($0F/$0E
 ; sentinels).
 ; .
 ; Called from sprite_setup ($8BD0).
@@ -3795,7 +3795,7 @@ c$8CC2 LD A,(IX+$00)  ; A = actor angular pos (IX+0)
  $8CCA ADD A,$02      ;
  $8CCC AND $FC        ;
  $8CCE LD ($8C81),A   ; patch self-mod slot $8C81 (row)
- $8CD1 LD HL,($600A)  ; HL -> column buffer ($600A)
+ $8CD1 LD HL,($600A)  ; HL -> column buffer (#R$600A)
  $8CD4 ADD HL,DE      ;
  $8CD5 LD A,(HL)      ;
  $8CD6 CP $0F         ; $0F = empty column -> skip (RET)
@@ -4032,7 +4032,7 @@ c$8E25 LD A,(HL)     ; A = source byte (HL)
 ; new sprite bits and ANDs out the old ones at the right sub-byte shift, then
 ; calls expand_sprite_b.
 ; .
-; See gfx_c1f6 ($C1F6) for the full sprite-bitmap decode writeup (this
+; See gfx_c1f6 (#R$C1F6) for the full sprite-bitmap decode writeup (this
 ; self-modifying pipeline is why the bitmap can't be rendered as a raw UDG
 ; array image).
 ; .
@@ -4148,7 +4148,7 @@ c$8EC9 LD A,(HL)     ; A = source byte (HL)
 ;
 ; .
 ;
-; Resolve a sprite column: index table $8B30 by A, compare the result against
+; Resolve a sprite column: index table #R$8B30 by A, compare the result against
 ; the actor's clip field (IX+30), and patch the shift slot $8C81.
 ; .
 ; RET early when within bounds.
@@ -4201,48 +4201,54 @@ c$8EF1 LD E,A        ;
 ;
 ; .
 ;
-; Decode one tower cell descriptor byte at (HL): the sign bit and bits 2-3 pick
-; one of three offset tables ($8F75/$8F8B/$8FA1), which is then indexed by the
-; low bits (DE) to get an offset into sprite_shift_masks ($8C1E).
+; Decode one tower map cell byte at (HL) -- full bitfield format documented in
+; docs/Level-Format.md (bit7=occupied, bits0-1=type, bits4-5=subtype).
 ; .
-; The looked-up sprite_shift_masks entry supplies 3 AND-mask bytes that are
-; ANDed into the destination screen bytes at (BC) -- clearing the pixels for
-; this cell's feature (door/block/gap) shape -- and bumps a self-mod counter at
-; $8C78.
+; Bit7 clear (unoccupied) or type==3 (invalid combo here) -> RET, nothing
+; drawn. Otherwise type bit0 selects one of three offset tables (bit0==0 ->
+; tbl_cell_offsets_c $8FA1 bit0==1 and bits2-3==0 -> tbl_cell_offsets_a #R$8F75
+; bit0==1 and bits2-3!=0 -> tbl_cell_offsets_b $8F8B).
 ; .
-; Negative table entries (bit7 set) mean "no cell here", RET without drawing.
+; The chosen table is indexed by DE (caller-supplied sub-position, not part of
+; the cell byte) negative entries ($FF) mean nothing to draw at that
+; sub-position.
+; .
+; A non-negative entry is *3 and indexes sprite_shift_masks (#R$8C1E) for 3
+; AND-mask bytes, ANDed into 3 destination screen bytes at (BC) to punch out
+; the feature's silhouette. Bumps a self-mod counter at $8C78 on every
+; successful draw.
 ; .
 ; Clobbers: A,HL,...
 @label=draw_tower_cell
 c$8F31 PUSH HL       ;
- $8F32 LD A,(HL)     ;
+ $8F32 LD A,(HL)     ; {A = cell byte; bit7 clear (unoccupied) -> RET
  $8F33 OR A          ;
- $8F34 JP P,$8F73    ;
- $8F37 LD H,A        ;
- $8F38 AND $03       ;
- $8F3A CP $03        ;
- $8F3C JR Z,$8F73    ;
- $8F3E SRL A         ;
- $8F40 JR NC,$8F51   ;
- $8F42 LD A,H        ;
- $8F43 AND $0C       ;
- $8F45 JR Z,$8F4C    ;
- $8F47 LD HL,$8F8B   ;
- $8F4A JR $8F54      ;
-*$8F4C LD HL,$8F75   ;
- $8F4F JR $8F54      ;
-*$8F51 LD HL,$8FA1   ;
-*$8F54 ADD HL,DE     ;
- $8F55 LD A,(HL)     ;
+ $8F34 JP P,$8F73    ; }
+ $8F37 LD H,A        ; {H = cell byte; isolate type bits0-1
+ $8F38 AND $03       ; }
+ $8F3A CP $03        ; {type==3 (invalid/no-render)? -> RET
+ $8F3C JR Z,$8F73    ; }
+ $8F3E SRL A         ; {test type bit0
+ $8F40 JR NC,$8F51   ; }
+ $8F42 LD A,H        ; {reload cell byte, isolate bits2-3
+ $8F43 AND $0C       ; }
+ $8F45 JR Z,$8F4C    ; bits2-3==0 -> table_a
+ $8F47 LD HL,$8F8B   ; {else -> table_b ($8F8B)
+ $8F4A JR $8F54      ; }
+*$8F4C LD HL,$8F75   ; {table_a (#R$8F75)
+ $8F4F JR $8F54      ; }
+*$8F51 LD HL,$8FA1   ; bit0==0 -> table_c ($8FA1)
+*$8F54 ADD HL,DE     ; HL += DE (sub-position index)
+ $8F55 LD A,(HL)     ; {A = table[DE]; negative -> RET (nothing here)
  $8F56 OR A          ;
- $8F57 JP M,$8F73    ;
- $8F5A LD E,A        ;
+ $8F57 JP M,$8F73    ; }
+ $8F5A LD E,A        ; {index = A*3 into sprite_shift_masks
  $8F5B ADD A,A       ;
  $8F5C ADD A,E       ;
- $8F5D LD E,A        ;
- $8F5E LD HL,$8C1E   ;
- $8F61 ADD HL,DE     ;
- $8F62 LD A,(BC)     ;
+ $8F5D LD E,A        ; }
+ $8F5E LD HL,$8C1E   ; {HL -> sprite_shift_masks[index]
+ $8F61 ADD HL,DE     ; }
+ $8F62 LD A,(BC)     ; {AND-mask 3 destination bytes at (BC)
  $8F63 AND (HL)      ;
  $8F64 LD (BC),A     ;
  $8F65 INC BC        ;
@@ -4254,9 +4260,9 @@ c$8F31 PUSH HL       ;
  $8F6B INC HL        ;
  $8F6C LD A,(BC)     ;
  $8F6D AND (HL)      ;
- $8F6E LD (BC),A     ;
- $8F6F LD HL,$8C78   ;
- $8F72 INC (HL)      ;
+ $8F6E LD (BC),A     ; }
+ $8F6F LD HL,$8C78   ; {bump feature-drawn counter ($8C78)
+ $8F72 INC (HL)      ; }
 *$8F73 POP HL        ;
  $8F74 RET           ;
 
@@ -4266,9 +4272,9 @@ c$8F31 PUSH HL       ;
 ;
 ; .
 ;
-; First of three sibling offset tables ($8F75/$8F8B/$8FA1), selected by
+; First of three sibling offset tables (#R$8F75/$8F8B/$8FA1), selected by
 ; draw_tower_cell on the cell descriptor's bits 2-3, then indexed by DE (low
-; descriptor bits) to get an offset into sprite_shift_masks ($8C1E).
+; descriptor bits) to get an offset into sprite_shift_masks (#R$8C1E).
 @label=tbl_cell_offsets_a
 b$8F75 DEFB $0B,$0C,$0D,$0E,$0F,$10,$11,$12
  $8F7D DEFB $13,$14,$15,$1C,$0A,$09,$08,$07
@@ -4306,21 +4312,21 @@ c$8FB7 LD IX,$605B   ;
 ; .
 ;
 ; Compute the player sprite's on-screen address from the vertical scroll
-; ($6030) and draw it.
+; (#R$6030) and draw it.
 ; .
 ; Handles the tower wrap: the playfield scrolls vertically mod the tower
-; height, so the screen row is ($6030 +/- offset) kept in range.
+; height, so the screen row is (#R$6030 +/- offset) kept in range.
 ; .
 ; Stores the two derived screen pointers ($6057, $6059) then calls the blit
-; helpers ($8B50, $9035).
+; helpers (#R$8B50, #R$9035).
 ; .
-; In: $6030 = scroll position.
+; In: #R$6030 = scroll position.
 ; .
 ; Out: player drawn.
 ; .
 ; Clobbers A,HL.
 @label=draw_player
-c$8FC7 LD HL,($6030) ; HL = scroll position ($6030)
+c$8FC7 LD HL,($6030) ; HL = scroll position (#R$6030)
  $8FCA LD A,L        ;
  $8FCB SUB $08       ; - 8 (sprite top offset)
  $8FCD LD L,A        ;
@@ -4489,11 +4495,11 @@ b$908E DEFB $E4,$E1,$00,$D2,$D8,$00,$C9,$C6
 ; .
 ; 0 = inactive (skip), 7 = patrol/home toward player_col,
 ; .
-; 4/6 = -> $9158 (full movement state machine), 5 = phase countdown (+42) --
+; 4/6 = -> #R$9158 (full movement state machine), 5 = phase countdown (+42) --
 ; expires (bit7 of +42 set) into state 2.
 ; .
-; else (any other state, e.g. 3/8/9) falls straight into $9158 too, since only
-; 0/7/5 are filtered out here.
+; else (any other state, e.g. 3/8/9) falls straight into #R$9158 too, since
+; only 0/7/5 are filtered out here.
 ; .
 ; State 7 homing: moves angular pos (+0) by speed (+54), then compares against
 ; player_col and the tower quadrant marks $3C/$78 to pick a chase direction (+2
@@ -4550,7 +4556,7 @@ c$90DA LD IX,$605B     ; IX -> object_table (enemy 0)
  $9142 JR Z,$9148      ;
  $9144 LD (IX+$30),$02 ;
 *$9148 JP $931F        ;
-*$914B CALL $934C      ; default (not 4/6/5): CHECK_ACTOR_COLLISION_A ($934C)
+*$914B CALL $934C      ; Check actor collision
  $914E JR NC,$9158     ;
  $9150 LD (IX+$30),$04 ; blocked -> force state=4, phase=0
  $9154 LD (IX+$2A),$00 ;
@@ -4564,16 +4570,16 @@ c$90DA LD IX,$605B     ; IX -> object_table (enemy 0)
 ; Entry into the enemy's full movement/behaviour state machine, reached from
 ; update_enemies for states 4, 6, and the default case.
 ; .
-; state==4 -> $9183 (idle/animate-in-place check). state==6 -> tests phase
+; state==4 -> #R$9183 (idle/animate-in-place check). state==6 -> tests phase
 ; (+42): phase==6 means a pending transform is queued, jumps to enemy_transform
-; ($9170) else falls into the shared idle-animation tail (enemy_idle_anim,
-; $9191) with a mirrored phase.
+; (#R$9170) else falls into the shared idle-animation tail (enemy_idle_anim,
+; #R$9191) with a mirrored phase.
 ; .
-; Any other state falls through to $91A4 (enemy_move_dispatch2).
+; Any other state falls through to #R$91A4 (enemy_move_dispatch2).
 @label=enemy_move_dispatch
 c$9158 LD A,(IX+$30) ; A = state (+48)
  $915B CP $04        ;
- $915D JR Z,$9183    ; state 4 -> $9183
+ $915D JR Z,$9183    ; state 4 -> #R$9183
  $915F CP $06        ; state 6?
  $9161 JR NZ,$91A4   ;
  $9163 LD A,(IX+$2A) ; A = phase (+42)
@@ -4646,8 +4652,8 @@ c$9191 CP $03        ; clamp phase to 0..2
 ;
 ; Second dispatch tier, reached for any state other than 0/4/5/6/7.
 ; .
-; state==3 -> $921D (enemy_post_move, shared attack/death dispatch). state==8
-; -> $91AD (enemy_move_vertical). else -> $91F8 (enemy_move_horizontal, the
+; state==3 -> #R$921D (enemy_post_move, shared attack/death dispatch). state==8
+; -> #R$91AD (enemy_move_vertical). else -> #R$91F8 (enemy_move_horizontal, the
 ; default case covering states like 1/2/9 during normal movement).
 @label=enemy_move_dispatch2
 c$91A4 CP $03        ; state==3?
@@ -4662,16 +4668,16 @@ c$91A4 CP $03        ; state==3?
 ; .
 ;
 ; state 8: moves the enemy's 16-bit vertical position (+6/+12) by its signed
-; speed (+54), backing up the old position in $6034 first.
+; speed (+54), backing up the old position in #R$6034 first.
 ; .
-; Tests the new position via CHECK_ACTOR_COLLISION_A ($934C) and, if clear,
+; Tests the new position via CHECK_ACTOR_COLLISION_A (#R$934C) and, if clear,
 ; CHECK_COLLISIONS against the player/other actors on-screen wraps checked via
-; bit7 of the high byte (JP NZ,$9311 = out-of-bounds reset).
+; bit7 of the high byte (JP NZ,#R$9311 = out-of-bounds reset).
 ; .
 ; On a block, restores the previous position and reverses the speed sign
 ; (bounce).
 ; .
-; Always ends by setting sprite id from the level number ($6039&3)*4+$66
+; Always ends by setting sprite id from the level number (#R$6039&3)*4+$66
 ; (level-tinted variant), then next enemy -- does not fall into
 ; enemy_post_move.
 @label=enemy_move_vertical
@@ -4683,14 +4689,14 @@ c$91AD LD L,(IX+$06) ; {backup old position, add speed (16-bit)
  $91BB LD D,$00      ;
  $91BD JR Z,$91C0    ;
  $91BF DEC D         ;
-*$91C0 ADD HL,DE     ; {wrap-check: out of range -> $9311 (bounds reset)
+*$91C0 ADD HL,DE     ; {wrap-check: out of range -> #R$9311 (bounds reset)
  $91C1 BIT 7,H       ;
  $91C3 JP NZ,$9311   ; }
  $91C6 LD (IX+$06),L ;
  $91C9 LD A,H        ;
  $91CA AND $03       ;
  $91CC LD (IX+$0C),A ;
- $91CF CALL $934C    ; CHECK_ACTOR_COLLISION_A
+ $91CF CALL $934C    ; Check actor collision
  $91D2 JR C,$91D9    ;
  $91D4 CALL $95BD    ; Check collisions
  $91D7 JR NC,$91E9   ;
@@ -4717,20 +4723,20 @@ c$91AD LD L,(IX+$06) ; {backup old position, add speed (16-bit)
 ;
 ; Default movement case (any state not 3/4/5/6/7/8): moves the enemy's angular
 ; position (+0) by its signed speed (+54), mod 128, backing up the old value in
-; $6033 first.
+; #R$6033 first.
 ; .
 ; Same collision test/bounce pattern as enemy_move_vertical
 ; (CHECK_ACTOR_COLLISION_A then CHECK_COLLISIONS on clear on a block, restores
 ; old position and reverses speed).
 ; .
-; Falls through into enemy_post_move ($921D), unlike enemy_move_vertical.
+; Falls through into enemy_post_move (#R$921D), unlike enemy_move_vertical.
 @label=enemy_move_horizontal
 c$91F8 LD A,(IX+$00)  ; {backup old angular pos
  $91FB LD ($6033),A   ; }
  $91FE ADD A,(IX+$36) ; {add speed, wrap mod 128
  $9201 AND $7F        ;
  $9203 LD (IX+$00),A  ; }
- $9206 CALL $934C     ; CHECK_ACTOR_COLLISION_A
+ $9206 CALL $934C     ; Check actor collision
  $9209 JR C,$9210     ;
  $920B CALL $95BD     ; Check collisions
  $920E JR NC,$921D    ;
@@ -4746,14 +4752,15 @@ c$91F8 LD A,(IX+$00)  ; {backup old angular pos
 ;
 ; .
 ;
-; Shared post-movement dispatch: state==2 -> $92EC (enemy_hazard_react).
+; Shared post-movement dispatch: state==2 -> #R$92EC (enemy_hazard_react).
 ; state==9 -> $91E9 (just refresh the level-tinted sprite, no movement -- an
 ; inert/spawned variant).
 ; .
 ; Otherwise this is the attack-pattern driver: indexes a per-enemy step table
 ; at $90CE by phase (+42). A zero entry means no attack step due yet ->
-; enemy_attack_cooldown ($92DC, phase++ up to $0A). A nonzero entry is a signed
-; step consumed by enemy_attack_step ($9238) to chain a dash/charge move.
+; enemy_attack_cooldown (#R$92DC, phase++ up to $0A). A nonzero entry is a
+; signed step consumed by enemy_attack_step (#R$9238) to chain a dash/charge
+; move.
 @label=enemy_post_move
 c$921D LD A,(IX+$30) ; A = state (+48)
  $9220 CP $02        ; {state==2 -> enemy_hazard_react
@@ -4778,18 +4785,18 @@ c$921D LD A,(IX+$30) ; A = state (+48)
 ; for the current phase.
 ; .
 ; Applies the (sign-extended) step as a 16-bit delta to the enemy's vertical
-; position (+6/+12), backing up the old value in $6034. Wrap past the tower
-; bounds (bit7 of H) resets the enemy via $9311.
+; position (+6/+12), backing up the old value in #R$6034. Wrap past the tower
+; bounds (bit7 of H) resets the enemy via #R$9311.
 ; .
 ; Tests the new position (CHECK_ACTOR_COLLISION_A then CHECK_COLLISIONS); on a
-; block, restores the old position and falls to enemy_hazard_react ($92DC)
+; block, restores the old position and falls to enemy_hazard_react (#R$92DC)
 ; instead of continuing the dash.
 ; .
 ; On success, re-examines the just-consumed table entry: $FF or $01 (a mid-dash
-; unit step) loops back to consume the next table entry (re-enters at $9238)
+; unit step) loops back to consume the next table entry (re-enters at #R$9238)
 ; any other value (the dash's terminating marker) branches to either finish the
-; attack (state==3 -> set state=2, phase=0) or fall to $928D to decide whether
-; to trigger a fresh attack.
+; attack (state==3 -> set state=2, phase=0) or fall to #R$928D to decide
+; whether to trigger a fresh attack.
 @label=enemy_attack_step
 c$9238 LD ($90D9),A    ;
  $923B LD E,A          ;
@@ -4801,12 +4808,12 @@ c$9238 LD ($90D9),A    ;
  $9245 LD ($6034),HL   ; backup old position (16-bit)
  $9248 ADD HL,DE       ;
  $9249 BIT 7,H         ;
- $924B JP NZ,$9311     ; wrap -> $9311 (bounds reset)
+ $924B JP NZ,$9311     ; wrap -> #R$9311 (bounds reset)
  $924E LD (IX+$06),L   ;
  $9251 LD A,H          ;
  $9252 AND $03         ;
  $9254 LD (IX+$0C),A   ;
- $9257 CALL $934C      ; CHECK_ACTOR_COLLISION_A
+ $9257 CALL $934C      ; Check actor collision
  $925A JR C,$9262      ;
  $925C CALL $95BD      ; Check collisions
  $925F JP NC,$92DC     ;
@@ -5000,7 +5007,7 @@ c$9330 LD ($9329),A  ;
  $9346 LD ($9437),A  ;
  $9349 JP $9395      ;
 
-; Routine at 934C
+; Check actor collision
 ;
 ; Used by the routines at #R$90DA, #R$91AD, #R$91F8 and #R$9238.
 @label=check_actor_collision_a
@@ -5019,7 +5026,7 @@ c$934C LD A,(IX+$00) ;
  $936C LD ($9437),A  ;
  $936F JP $9395      ;
 
-; Routine at 9372
+; Check actor collision b
 ;
 ; Used by the routine at #R$96E9.
 @label=check_actor_collision_b
@@ -5160,7 +5167,7 @@ c$9372 LD A,(IX+$00)  ;
 *$9491 SCF            ;
  $9492 RET            ;
 
-; Routine at 9493
+; Pos to col
 ;
 ; Used by the routines at #R$949D and #R$9516.
 @label=pos_to_col
@@ -5186,7 +5193,7 @@ c$9493 PUSH HL       ;
 ; Clobbers: A,C,HL.
 @label=read_player_cell
 c$949D LD HL,($60BA) ;
- $94A0 CALL $9493    ;
+ $94A0 CALL $9493    ; Pos to col
  $94A3 DEC A         ;
  $94A4 LD L,A        ;
  $94A5 LD A,($60B9)  ; get Tower rotation position
@@ -5250,13 +5257,13 @@ b$94F6 DEFB $11,$20,$02,$00,$11,$00,$32,$00
 ;
 ; .
 ;
-; Return HL = address in the $F000 tower map of the player's current cell
+; Return HL = address in the #R$F000 tower map of the player's current cell
 ; (column from $60BA, row from tower_height>>3, page $F0+).
 ; .
 ; Clobbers: A,HL.
 @label=player_cell_addr
 c$9516 LD HL,($60BA) ;
- $9519 CALL $9493    ;
+ $9519 CALL $9493    ; Pos to col
  $951C LD L,A        ;
  $951D LD A,($60B9)  ; get Tower rotation position
  $9520 SRL A         ;
@@ -5274,6 +5281,8 @@ c$9516 LD HL,($60BA) ;
 ;
 ; Read the cell under the player return CY=1 with A=its $40 flag when it is a
 ; 'special' cell (type bits == 3), else NC.
+; .
+; Full tower-map cell bitfield format: docs/Level-Format.md.
 ; .
 ; Clobbers: A,B,HL.
 @label=test_cell_special
@@ -5400,8 +5409,8 @@ b$95B9 DEFB $1C,$1C,$00,$00
 ;
 ; .
 ;
-; Test actor IX against the four object_table entries (IY walks $605B..) for an
-; overlap, runs with interrupts off.
+; Test actor IX against the four object_table entries (IY walks #R$605B..) for
+; an overlap, runs with interrupts off.
 ; .
 ; Per entry, skips to the next one ($9648: INC IY, next loop pass) when: IY==IX
 ; (self), or state (+48) is 0/4/6/7 (inactive/certain non-collidable states).
@@ -5415,7 +5424,7 @@ b$95B9 DEFB $1C,$1C,$00,$00
 ; On proximity, resolves a per-shape collision bitmask: if the target is object
 ; index 5 (the synthetic player record, see collision_test) it's an
 ; unconditional hit (SCF); if index 4, tests a bit in table $95AE; otherwise
-; table $959F -- indexed by the angular delta, bit tested via RRA loop.
+; table #R$959F -- indexed by the angular delta, bit tested via RRA loop.
 ; .
 ; On a hit, exits via $9650 with CY=1 and HL=IY (colliding object's base
 ; pointer, since PUSH IY/POP HL runs before the final POP IY restores the
@@ -5484,7 +5493,7 @@ c$95BD DI             ; {DI; IY -> object_table[0]; B=4 outer loop
  $962D SUB $5B        ; {index==5 (synthetic player)? unconditional hit
  $962F CP $05         ; }
  $9631 JR Z,$9645     ;
- $9633 LD HL,$959F    ; {else pick shape table $959F/$95AE by index==4
+ $9633 LD HL,$959F    ; {else pick shape table #R$959F/$95AE by index==4
  $9636 CP $04         ;
  $9638 JR NZ,$963D    ; }
  $963A LD HL,$95AE    ;
@@ -5616,7 +5625,7 @@ b$96DD DEFB $00,$01,$00,$01,$00,$01,$00,$00
 ;
 ; Advance one actor's position around/along the tower for this frame.
 ; .
-; IX = actor_obj ($605F).
+; IX = actor_obj (#R$605F).
 ; .
 ; Fields used: (IX+0)  angular column around the tower (accumulated mod 128)
 ; (IX+6)  vertical position, low  (sub-pixel) (IX+12) vertical position, high
@@ -5624,7 +5633,7 @@ b$96DD DEFB $00,$01,$00,$01,$00,$01,$00,$00
 ; phase 0..$0C ($FF = inactive/done) (IX+48) actor state (2,4,5,8,9 -- see
 ; transitions below) (IX+54)
 @label=update_actor_pos
-c$96E9 LD IX,$605F     ; IX -> actor struct base ($605F)
+c$96E9 LD IX,$605F     ; IX -> actor struct base (#R$605F)
  $96ED LD (IX+$12),$00 ; clear per-frame scratch field (+18)
  $96F1 LD A,(IX+$2A)   ; A = phase (+42)
  $96F4 CP $FF          ; $FF = inactive -> nothing to do
@@ -5686,7 +5695,7 @@ c$96E9 LD IX,$605F     ; IX -> actor struct base ($605F)
 ;
 ; .
 ;
-; Menu / level-name / status text, $976F..$9952.
+; Menu / level-name / status text, #R$976F..$9952.
 ; .
 ; Each entry is [colour-control byte <$10] + ASCII + 00.
 ; .
@@ -5731,7 +5740,7 @@ b$976F DEFM $0E,">> GAME  ON <<",$00
 b$9953 DEFW $97A6,$97B5,$97C6,$97D6
  $995B DEFW $97E6,$97F3,$9805,$9810
 
-; Routine at 9963
+; Show level intro
 ;
 ; Used by the routine at #R$802B.
 @label=show_level_intro
@@ -5740,13 +5749,13 @@ c$9963 CALL $9CEB    ; Play title animation
  $9968 CALL $A197    ; Start music
  $996B LD A,$07      ; Print ">> GAME ON <<" at row $07
  $996D LD HL,$976F   ;
- $9970 CALL $9D21    ;
+ $9970 CALL $9D21    ; Print string at
  $9973 LD A,$09      ; Set print row $09
- $9975 CALL $9D27    ;
- $9978 CALL $9D11    ; Print "PLAYER ONE" or "PLAYER TWO"
+ $9975 CALL $9D27    ; Set print row
+ $9978 CALL $9D11    ; Print PLAYER label
  $997B LD A,$0C      ; Print "ENTERING THE" at row $0C
  $997D LD HL,$9797   ;
- $9980 CALL $9D21    ;
+ $9980 CALL $9D21    ; Print string at
  $9983 LD A,($6039)  ; Get current level number (0-7)
  $9986 ADD A,A       ; Double for word index into level name table
  $9987 LD E,A        ;
@@ -5758,7 +5767,7 @@ c$9963 CALL $9CEB    ; Play title animation
  $9990 LD D,(HL)     ; Fetch high byte
  $9991 EX DE,HL      ; Swap to HL
  $9992 LD A,$0E      ; Print level name at row $0E
- $9994 CALL $9D21    ;
+ $9994 CALL $9D21    ; Print string at
 *$9997 CALL $A1BD    ; Music tick
  $999A JR NC,$9997   ;
  $999C LD A,$19      ; Jump to wait_frames (#R$9CF0) with A=$19
@@ -5771,7 +5780,7 @@ c$9963 CALL $9CEB    ; Play title animation
 ; .
 ;
 ; Render an animated info/message screen: tick the title animation, (re)start
-; jingle 2, and print the screen's text lines (strings at $981E..) via
+; jingle 2, and print the screen's text lines (strings at #R$981E..) via
 ; print_string_at, running the music sequencer.
 ; .
 ; Clobbers: most.
@@ -5781,13 +5790,13 @@ c$99A1 CALL $9CEB    ;
  $99A6 CALL $A197    ; Start music
  $99A9 LD A,$0A      ;
  $99AB LD HL,$981E   ;
- $99AE CALL $9D21    ;
+ $99AE CALL $9D21    ; Print string at
  $99B1 LD A,$0E      ;
- $99B3 CALL $9D27    ;
- $99B6 CALL $9D11    ;
+ $99B3 CALL $9D27    ; Set print row
+ $99B6 CALL $9D11    ; Print PLAYER label
  $99B9 LD A,$12      ;
  $99BB LD HL,$982F   ;
- $99BE CALL $9D21    ;
+ $99BE CALL $9D21    ; Print string at
 *$99C1 CALL $A1BD    ; Music tick
  $99C4 JR NC,$99C1   ;
  $99C6 LD A,$19      ;
@@ -5801,18 +5810,18 @@ c$99A1 CALL $9CEB    ;
 ; .
 ;
 ; The time-up message display (reached from main_loop when play_timer expires):
-; animated title bg + jingle 2 + the time-up text (string $9918), pumping
+; animated title bg + jingle 2 + the time-up text (string #R$9918), pumping
 ; music_tick.
 @label=draw_timeup_screen
 c$99CE CALL $9CEB    ;
  $99D1 LD A,$02      ;
  $99D3 CALL $A197    ; Start music
  $99D6 LD A,$0C      ;
- $99D8 CALL $9D27    ;
- $99DB CALL $9D11    ;
+ $99D8 CALL $9D27    ; Set print row
+ $99DB CALL $9D11    ; Print PLAYER label
  $99DE LD A,$10      ;
  $99E0 LD HL,$9918   ;
- $99E3 CALL $9D21    ;
+ $99E3 CALL $9D21    ; Print string at
 *$99E6 CALL $A1BD    ; Music tick
  $99E9 JR NC,$99E6   ;
  $99EB LD A,$19      ;
@@ -5824,25 +5833,25 @@ c$99CE CALL $9CEB    ;
 ;
 ; .
 ;
-; Another animated info screen variant (text strings $9894/$98A5), same
+; Another animated info screen variant (text strings #R$9894/#R$98A5), same
 ; structure as draw_info_screen_a.
 @label=draw_info_screen_b
 c$99F0 CALL $9CEB    ;
  $99F3 LD A,$09      ;
  $99F5 LD HL,$9894   ;
- $99F8 CALL $9D21    ;
+ $99F8 CALL $9D21    ; Print string at
  $99FB LD A,$0B      ;
- $99FD CALL $9D27    ;
- $9A00 CALL $9D11    ;
+ $99FD CALL $9D27    ; Set print row
+ $9A00 CALL $9D11    ; Print PLAYER label
  $9A03 LD A,$0D      ;
  $9A05 LD HL,$98A5   ;
- $9A08 CALL $9D21    ;
+ $9A08 CALL $9D21    ; Print string at
  $9A0B LD A,$0F      ;
  $9A0D LD HL,$98AF   ;
- $9A10 CALL $9D21    ;
+ $9A10 CALL $9D21    ; Print string at
  $9A13 LD A,$11      ;
  $9A15 LD HL,$98BA   ;
- $9A18 CALL $9D21    ;
+ $9A18 CALL $9D21    ; Print string at
  $9A1B LD A,$64      ;
  $9A1D CALL $9CF0    ; Wait frames
  $9A20 JP $9D80      ;
@@ -5993,19 +6002,19 @@ c$9AD7 CALL $A519    ;
  $9B5B LD ($9891),A  ;
  $9B5E LD A,$08      ;
  $9B60 LD HL,$983E   ;
- $9B63 CALL $9D21    ;
+ $9B63 CALL $9D21    ; Print string at
  $9B66 LD A,$0A      ;
  $9B68 LD HL,$9850   ;
- $9B6B CALL $9D21    ;
+ $9B6B CALL $9D21    ; Print string at
  $9B6E LD A,$0E      ;
  $9B70 LD HL,$985E   ;
- $9B73 CALL $9D21    ;
+ $9B73 CALL $9D21    ; Print string at
  $9B76 LD A,$10      ;
  $9B78 LD HL,$9870   ;
- $9B7B CALL $9D21    ;
+ $9B7B CALL $9D21    ; Print string at
  $9B7E LD A,$12      ;
  $9B80 LD HL,$9882   ;
- $9B83 CALL $9D21    ;
+ $9B83 CALL $9D21    ; Print string at
  $9B86 RET           ;
 
 ; Data block at 9B87
@@ -6028,41 +6037,66 @@ b$9B87 DEFB $00,$BC,$01
 ; Runs proc_table as an attract demo until input, then polls the keyboard ($FE)
 ; and Kempston ($1F) for select/start.
 ; .
+; Entry: ticks the background animation once, starts music 0, resets the
+; page/timeout/active flags (#R$9B87=0 main menu page, $9B88=$C0 attract
+; timeout, $9B89=0 not-yet-active), falls into #R$9BA5.
+; .
 ; menu_page
 @label=title_menu
-c$9B8A CALL $9CEB    ;
- $9B8D LD A,$00      ;
+c$9B8A CALL $9CEB    ; tick background animation once
+ $9B8D LD A,$00      ; A = tune 0
  $9B8F CALL $A197    ; Start music
- $9B92 XOR A         ;
- $9B93 LD ($9B87),A  ;
- $9B96 LD A,$C0      ;
- $9B98 LD ($9B88),A  ;
- $9B9B XOR A         ;
- $9B9C LD ($9B89),A  ;
+ $9B92 XOR A         ; {clear menu_page (#R$9B87=0, main menu)
+ $9B93 LD ($9B87),A  ; }
+ $9B96 LD A,$C0      ; {attract_timer = $C0
+ $9B98 LD ($9B88),A  ; }
+ $9B9B XOR A         ; {menu_active = 0
+ $9B9C LD ($9B89),A  ; }
  $9B9F JP $9BA5      ;
 
-; Routine at 9BA2
+; Title menu redraw anim
 ;
 ; Used by the routine at #R$9BA5.
+;
+; .
+;
+; Re-ticks the background animation (falls straight into #R$9BA5) -- the
+; re-entry point used when the attract timer flips between the menu page and
+; the hiscore page.
+@label=title_menu_redraw_anim
 c$9BA2 CALL $A778    ;
 
-; Routine at 9BA5
+; Title menu draw
 ;
 ; Used by the routine at #R$9B8A.
+;
+; .
+;
+; Draws the current page: if menu_page (#R$9B87)!=0, shows the hiscore table
+; (draw_hiscore_screen + draw_menu_text for the CONTROLS/SOUND lines) and skips
+; straight to the input poll ($9C23).
+; .
+; Otherwise draws the main menu: blits the 24-row NEBULUS logo from $BE00 in 3
+; vertical thirds (A=0/8/16), each blitting 16 columns x 7 source bytes/column
+; via jp_get_screen_addr paints 3 header attribute rows ($58C8/$58E8/$5908,
+; colours $47/$46/$45) via fill_attr_row prints the 3 option lines ("1 PLAYER"
+; etc, strings at #R$98C8/#R$98D4/#R$98E2) at rows $0C/$0E/$10 then
+; draw_menu_text for the CONTROLS/SOUND state lines.
+@label=title_menu_draw
 c$9BA5 LD A,($9B87)  ;
  $9BA8 OR A          ;
  $9BA9 JR Z,$9BB4    ;
  $9BAB CALL $9D4C    ; Draw hiscore screen
- $9BAE CALL $9CC7    ;
+ $9BAE CALL $9CC7    ; Draw menu text
  $9BB1 JP $9C23      ;
-*$9BB4 LD DE,$BE00   ;
- $9BB7 LD A,$00      ;
+*$9BB4 LD DE,$BE00   ; DE -> logo source ($BE00)
+ $9BB7 LD A,$00      ; A = 0 (vertical third counter)
 *$9BB9 PUSH AF       ;
- $9BBA ADD A,$30     ;
+ $9BBA ADD A,$30     ; row/page base = $30+A
  $9BBC LD H,A        ;
  $9BBD LD L,$08      ;
- $9BBF CALL $A781    ;
- $9BC2 LD B,$10      ;
+ $9BBF CALL $A781    ; jp_get_screen_addr
+ $9BC2 LD B,$10      ; B = 16 (columns this third)
 *$9BC4 PUSH HL       ;
  $9BC5 LD A,(DE)     ;
  $9BC6 LD (HL),A     ;
@@ -6097,135 +6131,155 @@ c$9BA5 LD A,($9B87)  ;
  $9BE3 INC DE        ;
  $9BE4 POP HL        ;
  $9BE5 INC L         ;
- $9BE6 DJNZ $9BC4    ;
+ $9BE6 DJNZ $9BC4    ; loop 16 columns
  $9BE8 POP AF        ;
- $9BE9 ADD A,$08     ;
- $9BEB CP $18        ;
+ $9BE9 ADD A,$08     ; A += 8 (next vertical third)
+ $9BEB CP $18        ; done all 3 thirds?
  $9BED JP NZ,$9BB9   ;
  $9BF0 LD HL,$58C8   ;
- $9BF3 LD (HL),$47   ;
- $9BF5 CALL $9CBE    ;
+ $9BF3 LD (HL),$47   ; paint header attr row 1 ($47)
+ $9BF5 CALL $9CBE    ; Fill attr row
  $9BF8 LD HL,$58E8   ;
- $9BFB LD (HL),$46   ;
- $9BFD CALL $9CBE    ;
+ $9BFB LD (HL),$46   ; paint header attr row 2 ($46)
+ $9BFD CALL $9CBE    ; Fill attr row
  $9C00 LD HL,$5908   ;
- $9C03 LD (HL),$45   ;
- $9C05 CALL $9CBE    ;
+ $9C03 LD (HL),$45   ; paint header attr row 3 ($45)
+ $9C05 CALL $9CBE    ; Fill attr row
  $9C08 LD A,$0C      ;
- $9C0A LD HL,$98C8   ;
- $9C0D CALL $9D21    ;
+ $9C0A LD HL,$98C8   ; HL -> "1 PLAYER"-ish option string
+ $9C0D CALL $9D21    ; Print string at
  $9C10 LD A,$0E      ;
  $9C12 LD HL,$98D4   ;
- $9C15 CALL $9D21    ;
+ $9C15 CALL $9D21    ; Print string at
  $9C18 LD A,$10      ;
  $9C1A LD HL,$98E2   ;
- $9C1D CALL $9D21    ;
- $9C20 CALL $9CC7    ;
-*$9C23 LD A,($9B89)  ;
+ $9C1D CALL $9D21    ; Print string at
+ $9C20 CALL $9CC7    ; Draw menu text
+*$9C23 LD A,($9B89)  ; menu_active flag
  $9C26 OR A          ;
  $9C27 JR NZ,$9C32   ;
 *$9C29 CALL $A700    ; Proc table
  $9C2C LD A,($601C)  ; get Signed input
  $9C2F OR A          ;
  $9C30 JR NZ,$9C29   ;
-*$9C32 LD A,$01      ;
- $9C34 LD ($9B89),A  ;
+*$9C32 LD A,$01      ; {menu_active = 1
+ $9C34 LD ($9B89),A  ; }
  $9C37 CALL $A1BD    ; Music tick
  $9C3A XOR A         ;
- $9C3B IN A,($FE)    ;
+ $9C3B IN A,($FE)    ; {A = keyboard row $FE, inverted, masked
  $9C3D CPL           ;
- $9C3E AND $1F       ;
+ $9C3E AND $1F       ; }
  $9C40 JR NZ,$9C4E   ;
- $9C42 IN A,($1F)    ;
- $9C44 AND $1F       ;
+ $9C42 IN A,($1F)    ; nothing on keyboard -> check Kempston
+ $9C44 AND $1F       ; {Kempston: any direction or fire?
  $9C46 CP $1F        ;
- $9C48 JR Z,$9CA9    ;
+ $9C48 JR Z,$9CA9    ; }
  $9C4A AND $10       ;
  $9C4C JR Z,$9CA9    ;
-*$9C4E LD A,$00      ;
+*$9C4E LD A,$00      ; A = 0 (idle option index)
 *$9C50 LD ($6017),A  ; set Game mode
  $9C53 CALL $A700    ; Proc table
  $9C56 LD A,($601C)  ; get Signed input
- $9C59 OR A          ;
- $9C5A JP NZ,$9D07   ;
+ $9C59 OR A          ; {horizontal input? -> release-wait ($9D07)
+ $9C5A JP NZ,$9D07   ; }
  $9C5D LD A,($6017)  ; get Game mode
- $9C60 INC A         ;
- $9C61 CP $05        ;
+ $9C60 INC A         ; {advance/wrap option index 0..4
+ $9C61 CP $05        ; }
  $9C63 JR NZ,$9C50   ;
- $9C65 LD A,$24      ;
- $9C67 CALL $A706    ;
- $9C6A JR Z,$9C74    ;
- $9C6C LD A,$01      ;
+ $9C65 LD A,$24      ; A = key $24 ('1')
+ $9C67 CALL $A706    ; test_key
+ $9C6A JR Z,$9C74    ; pressed? -> 1-player start
+ $9C6C LD A,$01      ; A = 1 (running_flag: 1 player)
  $9C6E LD ($603F),A  ; set Running flag
- $9C71 JP $9BA5      ;
-*$9C74 LD A,$1C      ;
- $9C76 CALL $A706    ;
- $9C79 JR Z,$9C83    ;
- $9C7B LD A,$02      ;
+ $9C71 JP $9BA5      ; restart into game (#R$9BA5 draw path with running_flag
+                     ; set)
+*$9C74 LD A,$1C      ; A = key $1C ('2')
+ $9C76 CALL $A706    ; test_key
+ $9C79 JR Z,$9C83    ; pressed? -> 2-player start
+ $9C7B LD A,$02      ; A = 2 (running_flag: 2 player)
  $9C7D LD ($603F),A  ; set Running flag
  $9C80 JP $9BA5      ;
-*$9C83 LD A,$14      ;
- $9C85 CALL $A706    ;
+*$9C83 LD A,$14      ; A = key $14 (controls toggle)
+ $9C85 CALL $A706    ; test_key
  $9C88 JR Z,$9C96    ;
- $9C8A LD HL,$6056   ;
- $9C8D BIT 7,(HL)    ;
+ $9C8A LD HL,$6056   ; HL -> $6056 (sound-enable/control flag)
+ $9C8D BIT 7,(HL)    ; test bit 7
  $9C8F JR NZ,$9C96   ;
- $9C91 LD (HL),$80   ;
+ $9C91 LD (HL),$80   ; set bit 7 (toggle on)
  $9C93 JP $9BA5      ;
-*$9C96 LD A,$0C      ;
- $9C98 CALL $A706    ;
+*$9C96 LD A,$0C      ; A = key $0C (controls toggle off)
+ $9C98 CALL $A706    ; test_key
  $9C9B JR Z,$9CA9    ;
- $9C9D LD HL,$6056   ;
- $9CA0 BIT 7,(HL)    ;
+ $9C9D LD HL,$6056   ; HL -> $6056
+ $9CA0 BIT 7,(HL)    ; test bit 7
  $9CA2 JR Z,$9CA9    ;
- $9CA4 LD (HL),$00   ;
+ $9CA4 LD (HL),$00   ; clear bit 7 (toggle off)
  $9CA6 JP $9BA5      ;
-*$9CA9 LD HL,$9B88   ;
- $9CAC DEC (HL)      ;
- $9CAD JR NZ,$9C32   ;
- $9CAF LD A,$01      ;
+*$9CA9 LD HL,$9B88   ; HL -> attract_timer
+ $9CAC DEC (HL)      ; decrement
+ $9CAD JR NZ,$9C32   ; not yet expired -> keep polling
+ $9CAF LD A,$01      ; A = 1
  $9CB1 LD HL,$9B87   ;
- $9CB4 SUB (HL)      ;
+ $9CB4 SUB (HL)      ; flip menu_page (1-current)
  $9CB5 LD (HL),A     ;
- $9CB6 LD A,$C0      ;
+ $9CB6 LD A,$C0      ; reload attract_timer = $C0
  $9CB8 LD ($9B88),A  ;
- $9CBB JP $9BA2      ;
+ $9CBB JP $9BA2      ; redraw the other page
 
-; Routine at 9CBE
+; Fill attr row
 ;
 ; Used by the routine at #R$9BA5.
+;
+; .
+;
+; Flood-fill 16 bytes starting at HL with the byte already stored at (HL)
+; (DE=HL+1, LDIR propagates it forward) -- paints one attribute row a single
+; flat colour.
+; .
+; In: HL=start address (byte already set), fills 16 bytes total.
 @label=fill_attr_row
-c$9CBE LD E,L        ;
+c$9CBE LD E,L        ; {DE = HL+1
  $9CBF LD D,H        ;
- $9CC0 INC DE        ;
- $9CC1 LD BC,$000F   ;
- $9CC4 LDIR          ;
+ $9CC0 INC DE        ; }
+ $9CC1 LD BC,$000F   ; BC = 15 (remaining bytes)
+ $9CC4 LDIR          ; LDIR: propagate the seed byte forward
  $9CC6 RET           ;
 
-; Routine at 9CC7
+; Draw menu text
 ;
 ; Used by the routine at #R$9BA5.
+;
+; .
+;
+; Prints the two state-dependent menu lines: CONTROLS (row $15, text depends on
+; running_flag==1 vs other -- 1P vs 2P control scheme) and SOUND (row $17, text
+; depends on $6056 bit7 -- on/off).
 @label=draw_menu_text
-c$9CC7 LD A,($603F)  ;
- $9CCA CP $01        ;
+c$9CC7 LD A,($603F)  ; A = running_flag
+ $9CCA CP $01        ; ==1 (single player)?
  $9CCC LD A,$15      ;
  $9CCE LD HL,$98F0   ;
  $9CD1 JR Z,$9CD6    ;
  $9CD3 LD HL,$98FA   ;
-*$9CD6 CALL $9D21    ;
- $9CD9 LD A,($6056)  ;
+*$9CD6 CALL $9D21    ; Print string at
+ $9CD9 LD A,($6056)  ; A = sound-enable flag ($6056)
  $9CDC OR A          ;
  $9CDD LD A,$17      ;
- $9CDF LD HL,$990E   ;
+ $9CDF LD HL,$990E   ; HL -> "on" text
  $9CE2 JR Z,$9CE7    ;
- $9CE4 LD HL,$9904   ;
-*$9CE7 CALL $9D21    ;
+ $9CE4 LD HL,$9904   ; HL -> "off" text (if flag clear)
+*$9CE7 CALL $9D21    ; Print string at
  $9CEA RET           ;
 
-; Routine at 9CEB
+; Title anim tick
 ;
 ; Used by the routines at #R$9963, #R$99A1, #R$99CE, #R$99F0, #R$9A23, #R$9B8A
 ; and #R$9D80.
+;
+; .
+;
+; One-instruction wrapper around jp_anim_bg ($A778) -- ticks the title
+; background animation.
 @label=title_anim_tick
 c$9CEB CALL $A778    ;
  $9CEE RET           ;
@@ -6242,7 +6296,7 @@ s$9CEF DEFS $01
 ; Pause for A frames (HALT-synced), running the attract animation (proc_table)
 ; meanwhile returns early if input (input_x) arrives.
 ; .
-; $9CEF = frame counter.
+; #R$9CEF = frame counter.
 ; .
 ; Clobbers: A,HL.
 @label=wait_frames
@@ -6266,48 +6320,76 @@ c$9CF0 HALT          ;
  $9D0E JR NZ,$9D07   ;
 *$9D10 RET           ;
 
-; Routine at 9D11
+; Print PLAYER label
 ;
 ; Used by the routines at #R$9963, #R$99A1, #R$99CE and #R$99F0.
+;
+; .
+;
+; Prints "PLAYER 1" or "PLAYER 2" (strings at #R$977F/#R$978B) depending on
+; lives_p1 (#R$6040).
 @label=print_player_label
-c$9D11 LD A,($6040)  ;
+c$9D11 LD A,($6040)  ; A = lives_p1 (active player index)
  $9D14 LD HL,$977F   ;
- $9D17 OR A          ;
- $9D18 JR Z,$9D1D    ;
- $9D1A LD HL,$978B   ;
-*$9D1D CALL $A745    ;
+ $9D17 OR A          ; {==0? player 1
+ $9D18 JR Z,$9D1D    ; }
+ $9D1A LD HL,$978B   ; else HL -> "PLAYER 2" string
+*$9D1D CALL $A745    ; jp_print_centered
  $9D20 RET           ;
 
-; Routine at 9D21
+; Print string at
 ;
 ; Used by the routines at #R$9963, #R$99A1, #R$99CE, #R$99F0, #R$9AD7, #R$9BA5,
 ; #R$9CC7, #R$9D4C and #R$9D80.
+;
+; .
+;
+; Set the print row (A) then print the string at HL, centered. Thin wrapper
+; combining set_print_row + jp_print_centered.
 @label=print_string_at
-c$9D21 CALL $9D27    ;
- $9D24 JP $A745      ;
+c$9D21 CALL $9D27    ; set_print_row
+ $9D24 JP $A745      ; jp_print_centered (tail call)
 
-; Routine at 9D27
+; Set print row
 ;
 ; Used by the routines at #R$9963, #R$99A1, #R$99CE, #R$99F0 and #R$9D21.
+;
+; .
+;
+; Set print_cursor's row to A and column to 0.
 @label=set_print_row
-c$9D27 LD ($60C6),A  ;
- $9D2A XOR A         ;
- $9D2B LD ($60C7),A  ;
+c$9D27 LD ($60C6),A  ; store row into print_cursor high byte
+ $9D2A XOR A         ; A = 0
+ $9D2B LD ($60C7),A  ; store column = 0
  $9D2E RET           ;
 
 ; Data block at 9D2F
+;
+; .
+;
+; .
+;
+; Default hiscore table, 4 entries x 7 bytes (4 BCD score bytes + 3-char ASCII
+; name). All 4 ship with the same "JMP" initials (programmer's easter egg) and
+; descending round scores (#R$9D2F highest). Live-updated in place by
+; check_hiscore (#R$9E6D) as real scores qualify -- not reloaded from tape, so
+; scores reset each time the game is loaded.
+@label=hiscore_entry_1
 b$9D2F DEFB $40,$26,$04,$00
  $9D33 DEFM "JMP"
 
 ; Data block at 9D36
+@label=hiscore_entry_2
 b$9D36 DEFB $00,$50,$00,$00
  $9D3A DEFM "JMP"
 
 ; Data block at 9D3D
+@label=hiscore_entry_3
 b$9D3D DEFB $00,$30,$00,$00
  $9D41 DEFM "JMP"
 
 ; Data block at 9D44
+@label=hiscore_entry_4
 b$9D44 DEFB $00,$10,$00,$00
  $9D48 DEFM "JMP"
 
@@ -6320,95 +6402,116 @@ s$9D4B DEFS $01
 ;
 ; .
 ;
-; Render the high-score table (the alternate title page): header string $9927
+; Render the high-score table (the alternate title page): header string #R$9927
 ; plus each score entry printed via print_score_entry.
 ; .
 ; Clobbers: most.
 @label=draw_hiscore_screen
-c$9D4C LD A,$06      ;
- $9D4E LD HL,$9927   ;
- $9D51 CALL $9D21    ;
- $9D54 LD HL,$9D2F   ;
- $9D57 LD C,$47      ;
- $9D59 LD A,$0A      ;
+c$9D4C LD A,$06      ; A = row $06 (header)
+ $9D4E LD HL,$9927   ; HL -> header string (#R$9927)
+ $9D51 CALL $9D21    ; Print string at
+ $9D54 LD HL,$9D2F   ; HL -> hiscore_entry_1
+ $9D57 LD C,$47      ; C = colour $47
+ $9D59 LD A,$0A      ; A = row $0A
  $9D5B CALL $9E0F    ; Print score entry
- $9D5E LD HL,$9D36   ;
- $9D61 LD C,$46      ;
- $9D63 LD A,$0C      ;
+ $9D5E LD HL,$9D36   ; HL -> hiscore_entry_2
+ $9D61 LD C,$46      ; C = colour $46
+ $9D63 LD A,$0C      ; A = row $0C
  $9D65 CALL $9E0F    ; Print score entry
- $9D68 LD HL,$9D3D   ;
- $9D6B LD C,$45      ;
- $9D6D LD A,$0E      ;
+ $9D68 LD HL,$9D3D   ; HL -> hiscore_entry_3
+ $9D6B LD C,$45      ; C = colour $45
+ $9D6D LD A,$0E      ; A = row $0E
  $9D6F CALL $9E0F    ; Print score entry
- $9D72 LD HL,$9D44   ;
- $9D75 LD C,$44      ;
- $9D77 LD A,$10      ;
+ $9D72 LD HL,$9D44   ; HL -> hiscore_entry_4
+ $9D75 LD C,$44      ; C = colour $44
+ $9D77 LD A,$10      ; A = row $10
  $9D79 CALL $9E0F    ; Print score entry
  $9D7C RET           ;
 
 ; Unused
 s$9D7D DEFS $03
 
-; Routine at 9D80
+; Enter HiScore name
 ;
 ; Used by the routines at #R$99A1 and #R$99F0.
-c$9D80 CALL $9E6D      ;
- $9D83 RET NC          ;
- $9D84 LD (IX+$04),$41 ;
- $9D88 LD (IX+$05),$20 ;
- $9D8C LD (IX+$06),$20 ;
- $9D90 LD ($9D7E),IX   ;
- $9D94 LD A,$04        ;
- $9D96 LD ($9D7D),A    ;
- $9D99 CALL $9CEB      ;
+;
+; .
+;
+; "Type your initials" screen, entered from the time-up/bonus screens
+; (#R$99A1/#R$99F0) after a level. Checks check_hiscore first RET NC
+; immediately if the active player's score didn't qualify.
+; .
+; On a qualifying score: seeds the new table row's 3-char name with "A  "
+; (IX+4/5/6), stashes the row pointer at $9D7E and the letter-position counter
+; (4/5/6, one per char) at #R$9D7D=4, then redraws the hiscore screen with
+; prompt text and enters an input loop.
+; .
+; Per letter: waits for horizontal input release, then a fire/movement poll.
+; Vertical/horizontal movement (input_x, added to the current letter) cycles
+; the letter A-Z (wrapping $40/$5B boundaries) fire or continued input confirms
+; the letter and advances the position counter, defaulting the next letter to
+; the same value as the one just confirmed. After all 3 letters (counter
+; reaches 7), pauses ~25 frames and returns.
+; .
+; Clobbers: most.
+@label=enter_hiscore_name
+c$9D80 CALL $9E6D      ; check_hiscore
+ $9D83 RET NC          ; not a qualifying score -> RET
+ $9D84 LD (IX+$04),$41 ; default letter 1 = 'A'
+ $9D88 LD (IX+$05),$20 ; default letter 2 = ' '
+ $9D8C LD (IX+$06),$20 ; default letter 3 = ' '
+ $9D90 LD ($9D7E),IX   ; stash row pointer ($9D7E)
+ $9D94 LD A,$04        ; A = 4 (first letter-position value)
+ $9D96 LD ($9D7D),A    ; stash letter-position counter (#R$9D7D)
+ $9D99 CALL $9CEB      ; Title anim tick
 *$9D9C CALL $9D4C      ; Draw hiscore screen
- $9D9F LD A,$15        ;
- $9DA1 LD HL,$9935     ;
- $9DA4 CALL $9D21      ;
- $9DA7 LD A,$17        ;
- $9DA9 LD HL,$9943     ;
- $9DAC CALL $9D21      ;
- $9DAF HALT            ;
+ $9D9F LD A,$15        ; A = row $15 (prompt line 1)
+ $9DA1 LD HL,$9935     ; HL -> prompt string
+ $9DA4 CALL $9D21      ; Print string at
+ $9DA7 LD A,$17        ; A = row $17 (prompt line 2)
+ $9DA9 LD HL,$9943     ; HL -> prompt string
+ $9DAC CALL $9D21      ; Print string at
+ $9DAF HALT            ; HALT (sync)
 *$9DB0 CALL $A700      ; Proc table
  $9DB3 LD A,($601C)    ; get Signed input
  $9DB6 OR A            ;
- $9DB7 JR NZ,$9DB0     ;
-*$9DB9 LD B,$06        ;
+ $9DB7 JR NZ,$9DB0     ; horizontal input still held -> wait for release
+*$9DB9 LD B,$06        ; B = 6 (debounce frames)
 *$9DBB HALT            ;
- $9DBC DJNZ $9DBB      ;
+ $9DBC DJNZ $9DBB      ; loop 6 HALTs
  $9DBE CALL $A700      ; Proc table
  $9DC1 LD A,($601E)    ; get Signed input
  $9DC4 LD HL,$601C     ;
- $9DC7 OR (HL)         ;
- $9DC8 JR Z,$9DB9      ;
+ $9DC7 OR (HL)         ; {fire or horizontal input? else keep waiting
+ $9DC8 JR Z,$9DB9      ; }
  $9DCA LD A,($601E)    ; get Signed input
  $9DCD OR A            ;
- $9DCE JR Z,$9DEB      ;
- $9DD0 LD IX,($9D7E)   ;
- $9DD4 ADD A,(IX+$04)  ;
- $9DD7 CP $40          ;
+ $9DCE JR Z,$9DEB      ; no vertical input -> confirm letter ($9DEB)
+ $9DD0 LD IX,($9D7E)   ; IX -> current letter slot
+ $9DD4 ADD A,(IX+$04)  ; A = input_y + current letter
+ $9DD7 CP $40          ; wrapped below 'A'? -> wrap to 'Z'
  $9DD9 JR NZ,$9DDF     ;
- $9DDB LD A,$5A        ;
+ $9DDB LD A,$5A        ; A = 'Z'
  $9DDD JR $9DE5        ;
-*$9DDF CP $5B          ;
+*$9DDF CP $5B          ; wrapped past 'Z'? -> wrap to 'A'
  $9DE1 JR NZ,$9DE5     ;
- $9DE3 LD A,$41        ;
-*$9DE5 LD (IX+$04),A   ;
- $9DE8 JP $9D9C        ;
-*$9DEB LD IX,($9D7E)   ;
- $9DEF INC IX          ;
- $9DF1 LD ($9D7E),IX   ;
- $9DF5 LD A,($9D7D)    ;
+ $9DE3 LD A,$41        ; A = 'A'
+*$9DE5 LD (IX+$04),A   ; store adjusted letter
+ $9DE8 JP $9D9C        ; loop (redraw with new letter)
+*$9DEB LD IX,($9D7E)   ; IX -> current letter slot
+ $9DEF INC IX          ; IX += 1 (advance to next letter)
+ $9DF1 LD ($9D7E),IX   ; store advanced pointer
+ $9DF5 LD A,($9D7D)    ; A = letter-position counter
  $9DF8 INC A           ;
- $9DF9 LD ($9D7D),A    ;
- $9DFC CP $07          ;
+ $9DF9 LD ($9D7D),A    ; store advanced counter
+ $9DFC CP $07          ; all 3 letters entered (counter==7)?
  $9DFE JR Z,$9E09      ;
- $9E00 LD A,(IX+$03)   ;
- $9E03 LD (IX+$04),A   ;
- $9E06 JP $9D9C        ;
-*$9E09 LD B,$19        ;
-*$9E0B HALT            ;
- $9E0C DJNZ $9E0B      ;
+ $9E00 LD A,(IX+$03)   ; else: A = previous letter's final value
+ $9E03 LD (IX+$04),A   ; seed next letter with the same value
+ $9E06 JP $9D9C        ; loop (redraw for next letter)
+*$9E09 LD B,$19        ; B = $19 (pause frames)
+*$9E0B HALT            ; HALT
+ $9E0C DJNZ $9E0B      ; loop pause frames
  $9E0E RET             ;
 
 ; Print score entry
@@ -6483,63 +6586,63 @@ s$9E6C DEFS $01
 ; .
 ; Clobbers: A,IX,IY,...
 @label=check_hiscore
-c$9E6D DI             ;
+c$9E6D DI             ; DI
  $9E6E PUSH IY        ;
  $9E70 LD A,($6040)   ; get Lives
  $9E73 LD IX,$6043    ;
- $9E77 OR A           ;
+ $9E77 OR A           ; player index==0? select score buffer
  $9E78 JR Z,$9E7E     ;
- $9E7A LD IX,$6047    ;
-*$9E7E LD IY,$9D2F    ;
- $9E82 LD B,$04       ;
-*$9E84 LD A,(IY+$00)  ;
- $9E87 SUB (IX+$00)   ;
+ $9E7A LD IX,$6047    ; else IX -> P2 score ($6047)
+*$9E7E LD IY,$9D2F    ; IY -> hiscore table (#R$9D2F)
+ $9E82 LD B,$04       ; B = 4 (BCD score bytes)
+*$9E84 LD A,(IY+$00)  ; A = table entry byte
+ $9E87 SUB (IX+$00)   ; subtract score byte (with carry chain)
  $9E8A LD A,(IY+$01)  ;
  $9E8D SBC A,(IX+$01) ;
  $9E90 LD A,(IY+$02)  ;
  $9E93 SBC A,(IX+$02) ;
  $9E96 LD A,(IY+$03)  ;
  $9E99 SBC A,(IX+$03) ;
- $9E9C JR C,$9EAA     ;
+ $9E9C JR C,$9EAA     ; table entry >= score? -> next entry
  $9E9E LD DE,$0007    ;
- $9EA1 ADD IY,DE      ;
- $9EA3 DJNZ $9E84     ;
- $9EA5 POP IY         ;
- $9EA7 EI             ;
+ $9EA1 ADD IY,DE      ; IY += 7 (next table row)
+ $9EA3 DJNZ $9E84     ; loop 4 bytes; no qualifying row -> fall through
+ $9EA5 POP IY         ; restore IY
+ $9EA7 EI             ; EI
  $9EA8 OR A           ;
- $9EA9 RET            ;
-*$9EAA PUSH IY        ;
+ $9EA9 RET            ; RET (no new high score)
+*$9EAA PUSH IY        ; save insertion point (IY) into DE
  $9EAC POP DE         ;
- $9EAD LD IY,$9D44    ;
+ $9EAD LD IY,$9D44    ; IY -> end of hiscore table (#R$9D44)
 *$9EB1 PUSH IY        ;
  $9EB3 POP HL         ;
- $9EB4 LD A,L         ;
+ $9EB4 LD A,L         ; A = low byte of IY
  $9EB5 CP E           ;
- $9EB6 JR NZ,$9EBC    ;
+ $9EB6 JR NZ,$9EBC    ; not yet at insertion point? keep shifting
  $9EB8 LD A,H         ;
  $9EB9 CP D           ;
- $9EBA JR Z,$9ECF     ;
-*$9EBC LD B,$07       ;
-*$9EBE DEC IY         ;
- $9EC0 LD A,(IY+$00)  ;
+ $9EBA JR Z,$9ECF     ; reached insertion point -> store new score
+*$9EBC LD B,$07       ; B = 7 (bytes per table row)
+*$9EBE DEC IY         ; shift row down: IY -= 1
+ $9EC0 LD A,(IY+$00)  ; A = byte to shift
  $9EC3 INC IY         ;
- $9EC5 LD (IY+$06),A  ;
+ $9EC5 LD (IY+$06),A  ; store into next row (+6)
  $9EC8 DEC IY         ;
- $9ECA DJNZ $9EBE     ;
+ $9ECA DJNZ $9EBE     ; loop 7 bytes; then next row down
  $9ECC JP $9EB1       ;
-*$9ECF LD A,(IX+$00)  ;
- $9ED2 LD (IY+$00),A  ;
+*$9ECF LD A,(IX+$00)  ; A = new score byte (IX)
+ $9ED2 LD (IY+$00),A  ; store into table row (IY)
  $9ED5 LD A,(IX+$01)  ;
  $9ED8 LD (IY+$01),A  ;
  $9EDB LD A,(IX+$02)  ;
  $9EDE LD (IY+$02),A  ;
  $9EE1 LD A,(IX+$03)  ;
  $9EE4 LD (IY+$03),A  ;
- $9EE7 PUSH IY        ;
+ $9EE7 PUSH IY        ; IY -> IX (restore active player's score ptr)
  $9EE9 POP IX         ;
- $9EEB POP IY         ;
- $9EED EI             ;
- $9EEE SCF            ;
+ $9EEB POP IY         ; restore IY
+ $9EED EI             ; EI
+ $9EEE SCF            ; SCF (new high score inserted)
  $9EEF RET            ;
 
 ; Unused
@@ -6560,8 +6663,8 @@ s$9F0E DEFS $03
 ;
 ; .
 ;
-; Set up the attract/demo actor records at $9EF0 (copy 5-byte template
-; $9EFF->$9EFA, plant markers $9EF0=$FF, $9F0E=1).
+; Set up the attract/demo actor records at #R$9EF0 (copy 5-byte template
+; $9EFF->$9EFA, plant markers #R$9EF0=$FF, #R$9F0E=1).
 ; .
 ; Clobbers: A,BC,DE,HL.
 @label=init_attract_actors
@@ -6588,13 +6691,13 @@ c$9F11 LD HL,$9EFF   ;
 ; .
 ;
 ; Advance the attract/demo one frame: silence SFX, render_play_frame, then fire
-; scripted sounds keyed off the demo phase $9F0E.
+; scripted sounds keyed off the demo phase #R$9F0E.
 ; .
 ; Phase 0: sweeps a tone counter down by 2/frame until $68, then advances to
 ; phase 1 (also plays sound 3). Phase 1: cycles the 4 actor Y-offsets down by
 ; 2/frame at $9EFB, resetting a sub-counter every 9th frame, plays sound 3
 ; every wrap, advances to phase 2 at the end. Phase 2/4: replay scripted
-; actor-position frames from tables $9F04/$9F09 indexed by a frame counter
+; actor-position frames from tables #R$9F04/$9F09 indexed by a frame counter
 ; ($9F0F). Phase 3: sweeps $9EFA up/down by 2/frame between bounds, plays sound
 ; 3 at each end, toggling direction via $9F10. Phase else (5+): sweeps the same
 ; tone counter back up by 2/frame until $90, then RET (attract sequence done).
@@ -6604,7 +6707,7 @@ c$9F11 LD HL,$9EFF   ;
 c$9F33 LD ($9F10),A  ; stash tune id / phase-0 marker ($9F10)
  $9F36 CALL $A36D    ; Stop sound
 *$9F39 CALL $A02A    ; Render play frame
- $9F3C LD A,($9F0E)  ; A = demo phase ($9F0E)
+ $9F3C LD A,($9F0E)  ; A = demo phase (#R$9F0E)
  $9F3F CP $01        ; {phase == 1? -> $9F6A
  $9F41 JR NZ,$9F6A   ; }
  $9F43 LD A,$0B      ; A = sound id 11 (phase-0 tone)
@@ -6631,13 +6734,13 @@ c$9F33 LD ($9F10),A  ; stash tune id / phase-0 marker ($9F10)
  $9F71 SRL A         ; /2 -> table index
  $9F73 LD E,A        ;
  $9F74 LD D,$00      ;
- $9F76 LD HL,$9F04   ; HL -> position table $9F04
+ $9F76 LD HL,$9F04   ; HL -> position table #R$9F04
  $9F79 ADD HL,DE     ;
  $9F7A LD A,(HL)     ; {fetch scripted X, store ($9EF6)
  $9F7B LD ($9EF6),A  ; }
  $9F7E LD HL,$9F09   ; HL -> position table $9F09
  $9F81 ADD HL,DE     ;
- $9F82 LD A,(HL)     ; {fetch scripted Y, store ($9EF1)
+ $9F82 LD A,(HL)     ; {fetch scripted Y, store (#R$9EF1)
  $9F83 LD ($9EF1),A  ; }
  $9F86 LD HL,$9F0F   ; HL -> frame sub-counter
  $9F89 INC (HL)      ; {advance sub-counter
@@ -6652,7 +6755,7 @@ c$9F33 LD ($9F10),A  ; stash tune id / phase-0 marker ($9F10)
  $9F9B LD A,($9F10)  ; A = sweep direction flag ($9F10)
  $9F9E OR A          ; {nonzero? -> sweep up branch $9FC4
  $9F9F JR NZ,$9FC4   ; }
- $9FA1 LD A,$00      ; {zero flag: clear demo-actor marker ($9EF0)
+ $9FA1 LD A,$00      ; {zero flag: clear demo-actor marker (#R$9EF0)
  $9FA3 LD ($9EF0),A  ; }
  $9FA6 LD A,($9EFA)  ; A = sweep value ($9EFA)
  $9FA9 SUB $02       ; {subtract 2 (sweep down)
@@ -6723,7 +6826,7 @@ c$9F33 LD ($9F10),A  ; stash tune id / phase-0 marker ($9F10)
 ; One frame of the in-play tower screen: setup_tower_scroll, code_ad00, wait
 ; vsync (HALT), tick the sound engine (sound_tick), draw the tower body +
 ; column strip, refresh the strip params and the scroll-wrap edge, then process
-; the 5 actor records at $9EF0.
+; the 5 actor records at #R$9EF0.
 ; .
 ; Clobbers: most.
 @label=render_play_frame
@@ -6737,7 +6840,7 @@ c$A02A CALL $A75D    ; {setup_tower_scroll / code_ad00 trampolines
  $A03B POP AF        ;
  $A03C CALL $A793    ; refresh strip params (jp_setup_strip)
  $A03F CALL $A754    ; scroll-wrap edge (jp_blit_scroll_wrap)
- $A042 LD IX,$9EF0   ; {IX -> demo actor records ($9EF0), B=5
+ $A042 LD IX,$9EF0   ; {IX -> demo actor records (#R$9EF0), B=5
  $A046 LD B,$05      ; }
 *$A048 PUSH IX       ; {save IX/BC for this actor
  $A04A PUSH BC       ; }
@@ -6902,15 +7005,15 @@ c$A113 LD A,$FF      ;
 ; .
 ; While pstate_phase is negative: if the level-column property byte ($603A) has
 ; counted down to 6, jumps to $A15B to wait for scroll_pos to reach the wrap
-; point ($6030==$03E0), then INCs pstate_phase (0, still non-negative) to end
+; point (#R$6030==$03E0), then INCs pstate_phase (0, still non-negative) to end
 ; the shift on the next call.
 ; .
 ; Otherwise: steps actor_obj column position back by 4, shifts 6 columns of the
-; $F000 tower map left by one row (byte-copy loop), decrements $603A, stops the
-; current sound and plays sound $0C -- repeats every call until the column
+; #R$F000 tower map left by one row (byte-copy loop), decrements $603A, stops
+; the current sound and plays sound $0C -- repeats every call until the column
 ; property hits 6.
 ; .
-; Once pstate_phase is non-negative, falls through (next call) to $A170 to
+; Once pstate_phase is non-negative, falls through (next call) to #R$A170 to
 ; finish the transition.
 @label=pstate_9
 c$A11D LD A,($60BF)  ; get Player state-machine phase/height window
@@ -6964,7 +7067,7 @@ c$A11D LD A,($60BF)  ; get Player state-machine phase/height window
 ; .
 ;
 ; 5-byte attract-actor template, copied into the demo actor slot ($9EFA) by
-; $A170.
+; #R$A170.
 b$A16B DEFB $54,$7C,$90,$90,$90
 
 ; Level shift done
@@ -6976,7 +7079,7 @@ b$A16B DEFB $54,$7C,$90,$90,$90
 ; Finishes the level-transition shift (reached once pstate_9's pstate_phase
 ; goes non-negative).
 ; .
-; Resets the attract/demo actor state at $9EF0 (copies the $A16B template,
+; Resets the attract/demo actor state at #R$9EF0 (copies the #R$A16B template,
 ; clears the marker, sets phase 1), calls ATTRACT_STEP once, then sets
 ; game_state=4 (finished) -- the signal main_tick polls to end the transition
 ; and hand control back to main_loop's level-complete handling.
@@ -7001,7 +7104,7 @@ c$A170 LD HL,$A16B   ;
 ;
 ; .
 ;
-; Music sequencer's live state, not fixed data: stream pointer ($A190/91),
+; Music sequencer's live state, not fixed data: stream pointer (#R$A190/91),
 ; current-note pointer ($A192/93), note-groups-remaining counter ($A194), note
 ; timer ($A195), active tune id ($A196). The DEFB values shown are just the
 ; reset state baked into the snapshot.
@@ -7057,15 +7160,15 @@ c$A19A LD A,($A196)  ;
 ; Per-frame music sequencer step (DI around it).
 ; .
 ; When the note timer ($A195) elapses, fetch the next event from the stream
-; ($A190), update the current note ($A192), and play it.
+; (#R$A190), update the current note ($A192), and play it.
 ; .
 ; A $FF note byte ends the current group: decrements the group counter ($A194)
 ; and loops to the next group if any remain, otherwise either holds the last
 ; note (tune id==0) or restarts via init_music_seq (id!=0, one-shot jingles
 ; loop back to their own start).
 ; .
-; Otherwise the note byte indexes two parallel tables at $A238 (or $A23A,
-; selected by the Specialist-beeper flag $6056) for a period value and $A249
+; Otherwise the note byte indexes two parallel tables at #R$A238 (or $A23A,
+; selected by the Specialist-beeper flag $6056) for a period value and #R$A249
 ; (an 11-char string used as a duration/shape lookup) for a tone-loop shape,
 ; then bit-bangs OUT ($FE) via an inlined tone loop (same shape as sfx_tone).
 ; .
@@ -7148,7 +7251,7 @@ c$A1BD DI            ;
 ;
 ; .
 ;
-; Two parallel 8-entry period/duration tables (ZX at $A238, alternate
+; Two parallel 8-entry period/duration tables (ZX at #R$A238, alternate
 ; "Specialist" beeper variant at $A240), indexed by note code and selected via
 ; $6056.
 b$A238 DEFB $D3,$FE,$23,$2B,$00,$F2,$E7,$D8
@@ -7179,9 +7282,10 @@ b$A254 DEFB $40
 ; $A257 (9-group stream), $A269 (1-group stream) and $A26B (fallback stream)
 ; are literal entry addresses into this block, not a lookup table.
 ; .
-; Byte values are note codes (indices into the $A238/$A249 tables) $FF marks
-; the end of a note-group. Runs through $A367 the final 5 bytes ($A368-$A36C)
-; are SFX-engine state (active effect id/pointer/priority), not music data.
+; Byte values are note codes (indices into the #R$A238/#R$A249 tables) $FF
+; marks the end of a note-group. Runs through $A367 the final 5 bytes
+; ($A368-$A36C) are SFX-engine state (active effect id/pointer/priority), not
+; music data.
 b$A258 DEFB $A2,$6D,$A2,$8E,$A2,$8E,$A2,$AF
  $A260 DEFB $A2,$F0,$A2,$F0,$A2,$31,$A3,$31
  $A268 DEFB $A3,$52,$A3,$5B,$A3,$18,$16,$18
@@ -7256,8 +7360,8 @@ b$A373 DEFB $8D,$A3,$97,$A3,$9A,$A3,$9D,$A3
 ; copied into $A36C) followed by command/data bytes consumed by sound_tick:
 ; values <$80 are raw tone/length data for sfx_tone values $80/$81/$C8/$C9/$CA
 ; are specific ops (noise burst, random tone, etc., handled at
-; $A48A/$A470/$A4BF/$A52E/$A4F2) values $82..$C7 go through the generic handler
-; at $A493 anything else ends the effect.
+; #R$A48A/#R$A470/#R$A4BF/#R$A52E/#R$A4F2) values $82..$C7 go through the
+; generic handler at #R$A493 anything else ends the effect.
 @label=snd_effect_data
 b$A38D DEFB $14,$08,$20,$1C,$18,$14,$20,$18
  $A395 DEFB $20,$18,$05,$01,$81,$0A,$01,$C9
@@ -7573,8 +7677,8 @@ c$A52E PUSH AF       ;
 ;
 ; .
 ;
-; Emit a square-wave tone: pitch index A selects a half-period from table $A560
-; toggles the speaker for a fixed duration ($0148 outer).
+; Emit a square-wave tone: pitch index A selects a half-period from table
+; #R$A560 toggles the speaker for a fixed duration ($0148 outer).
 ; .
 ; In: A=pitch.
 ; .
@@ -7835,7 +7939,7 @@ c$A700 JP $A79F      ;
 ; Proc_table[0]: sample controls into the signed input_x/input_y/input_fire
 ; vars.
 ; .
-; Only active when game_mode ($6017) == 4 (in play) otherwise returns.
+; Only active when game_mode (#R$6017) == 4 (in play) otherwise returns.
 ; .
 ; Reads the Kempston joystick and converts each axis to -1/0/+1 via bit tests +
 ; SBC/NEG.
@@ -7843,7 +7947,7 @@ c$A700 JP $A79F      ;
 ; The Specialist has no Kempston port -- replace read_joystick with the
 ; target's keyboard/joystick scan, keeping the -1/0/+1 result.
 @label=read_input
-c$A79F LD A,($6017)  ; A = game_mode ($6017)
+c$A79F LD A,($6017)  ; A = game_mode (#R$6017)
  $A7A2 CP $04        ;
  $A7A4 JR NZ,$A7ED   ; only read controls while in play (mode 4)
  $A7A6 CALL $A7C8    ; A = raw joystick bits
@@ -7866,7 +7970,7 @@ c$A79F LD A,($6017)  ; A = game_mode ($6017)
 
 ; Routine at A7C8
 ;
-; Used by the routine at #R$A79F.
+; Used by the routines at #R$A79F and #R$A840.
 @label=read_joystick
 c$A7C8 IN A,($1F)    ; read Kempston joystick port $1F (Z80 IN
  $A7CA AND $1F       ;
@@ -7890,7 +7994,7 @@ b$A7D1 DEFB $1D,$15,$19,$22,$0F,$12,$1A,$1E
 ; Read one 5-key control set into the flag array at $6018.
 ; .
 ; A selects the set: index a word-pointer table at $A7E5 (A*2) to a 5-byte
-; key-id list, then test_key each one, storing 0/1 into $6018..$601C.
+; key-id list, then test_key each one, storing 0/1 into $6018..#R$601C.
 ; .
 ; Used to read the redefinable keys.
 ; .
@@ -7974,7 +8078,7 @@ c$A81F PUSH BC       ;
 *$A83E POP BC        ;
  $A83F RET           ;
 
-; POLL_ANY_KEY
+; Poll any key
 ;
 ; Used by the routine at #R$A700.
 ;
@@ -7985,9 +8089,19 @@ c$A81F PUSH BC       ;
 ; .
 ; Out: A/flags NZ = pressed.
 @label=poll_any_key
-b$A840 DEFB $AF,$DB,$FE,$2F,$E6,$1F,$C0,$CD
- $A848 DEFB $C8,$A7,$E6,$10,$C9,$CD,$40,$A8
- $A850 DEFB $20,$FB,$C9
+c$A840 XOR A         ;
+ $A841 IN A,($FE)    ;
+ $A843 CPL           ;
+ $A844 AND $1F       ;
+ $A846 RET NZ        ;
+ $A847 CALL $A7C8    ;
+ $A84A AND $10       ;
+ $A84C RET           ;
+; This entry point is used by the routine at #R$A700.
+@label=wait_no_key
+*$A84D CALL $A840    ; Poll any key
+ $A850 JR NZ,$A84D   ;
+ $A852 RET           ;
 
 ; Test break key
 ;
@@ -8010,7 +8124,7 @@ c$A853 LD A,$7F      ;
  $A85D RRA           ;
  $A85E RET           ;
 
-; DELAY_LOOP
+; Delay loop
 ;
 ; Used by the routine at #R$A700.
 ;
@@ -8022,8 +8136,15 @@ c$A853 LD A,$7F      ;
 ; .
 ; Clobbers: A,B,HL (HL preserved).
 @label=delay_loop
-b$A85F DEFB $E5,$21,$86,$00,$2B,$7C,$B5,$20
- $A867 DEFB $FB,$10,$F6,$E1,$C9
+c$A85F PUSH HL       ;
+*$A860 LD HL,$0086   ;
+*$A863 DEC HL        ;
+ $A864 LD A,H        ;
+ $A865 OR L          ;
+ $A866 JR NZ,$A863   ;
+ $A868 DJNZ $A860    ;
+ $A86A POP HL        ;
+ $A86B RET           ;
 
 ; Next random
 ;
@@ -8061,7 +8182,7 @@ c$A86C PUSH DE       ;
  $A887 POP DE        ;
  $A888 RET           ;
 
-; SAVE_REGS_FRAME / RESTORE_REGS_FRAME
+; Save regs frame
 ;
 ; Used by the routine at #R$A700.
 ;
@@ -8072,28 +8193,66 @@ c$A86C PUSH DE       ;
 ; save_regs_frame pushes main+alternate register sets, IX, IY (EX AF,AF'/EXX to
 ; reach the shadow bank), then reads a 16-bit value out of the saved frame
 ; ($SP+$17) into HL before returning.
-; .
-; restore_regs_frame ($A8A5) pops them all back.
 @label=save_regs_frame
-b$A889 DEFB $E3,$D5,$C5,$F5,$08,$D9,$E5,$D5
- $A891 DEFB $C5,$F5,$08,$D9,$DD,$E5,$FD,$E5
- $A899 DEFB $E5,$F5,$21,$17,$00,$39,$7E
- $A8A0 DEFM "+ng"
+c$A889 EX (SP),HL    ;
+ $A88A PUSH DE       ;
+ $A88B PUSH BC       ;
+ $A88C PUSH AF       ;
+ $A88D EX AF,AF'     ;
+ $A88E EXX           ;
+ $A88F PUSH HL       ;
+ $A890 PUSH DE       ;
+ $A891 PUSH BC       ;
+ $A892 PUSH AF       ;
+ $A893 EX AF,AF'     ;
+ $A894 EXX           ;
+ $A895 PUSH IX       ;
+ $A897 PUSH IY       ;
+ $A899 PUSH HL       ;
+ $A89A PUSH AF       ;
+ $A89B LD HL,$0017   ;
+ $A89E ADD HL,SP     ;
+ $A89F LD A,(HL)     ;
+ $A8A0 DEC HL        ;
+ $A8A1 LD L,(HL)     ;
+ $A8A2 LD H,A        ;
+ $A8A3 POP AF        ;
+ $A8A4 RET           ;
 
-; Data block at A8A3
-b$A8A3 DEFB $F1,$C9,$E1,$FD,$E1,$DD,$E1,$08
- $A8AB DEFB $D9,$F1,$C1,$D1,$E1,$08,$D9,$F1
- $A8B3 DEFB $C1,$D1,$E3,$C9
+; Restore regs frame
+;
+; Used by the routine at #R$A700.
+;
+; .
+;
+; Pops all registers back.
+@label=restore_regs_frame
+c$A8A5 POP HL                       ;
+ $A8A6 POP IY                       ;
+ $A8A8 POP IX                       ;
+ $A8AA EX AF,AF'                    ;
+ $A8AB EXX                          ;
+ $A8AC POP AF                       ;
+ $A8AD POP BC                       ;
+ $A8AE POP DE                       ;
+ $A8AF POP HL                       ;
+ $A8B0 EX AF,AF'                    ;
+ $A8B1 EXX                          ;
+ $A8B2 POP AF                       ;
+ $A8B3 POP BC                       ;
+ $A8B4 POP DE                       ;
+ $A8B5 EX (SP),HL                   ;
+ $A8B6 RET                          ;
 ; Initial values for #R$6053
 @label=tbl_play_timer_init
- $A8B7 DEFW $0500,$0600,$0700,$0800
- $A8BF DEFW $0900,$1000,$1100,$1200
+ $A8B7 DEFW $0500,$0600,$0700,$0800 ;
+ $A8BF DEFW $0900,$1000,$1100,$1200 ;
 @label=str_player1
- $A8C7 DEFM "PLAYER 1"
- $A8CF DEFB $00
+ $A8C7 DEFM "PLAYER 1"              ;
+ $A8CF DEFB $00                     ;
 @label=str_player2
- $A8D0 DEFM "PLAYER 2"
- $A8D8 DEFB $00
+ $A8D0 DEFM "PLAYER 2"              ;
+ $A8D8 DEFB $00                     ;
 
 ; Data block at A8D9
 @label=attr_rle
@@ -8112,7 +8271,7 @@ b$A8D9 DEFB $08,$04,$02,$00,$0C,$06,$02,$00
 ; Run once at start (via jp_setup_attrs).
 ; .
 ; Reads attr_rle (9 run-length [count,attr] pairs) and floods the attribute
-; area $5800+ with attr|$40 (BRIGHT set on every cell).
+; area #R$5800+ with attr|$40 (BRIGHT set on every cell).
 ; .
 ; Then prints the PLAYER 1 / PLAYER 2 strings and seeds two score/counter
 ; widgets via helper calls.
@@ -8122,9 +8281,9 @@ b$A8D9 DEFB $08,$04,$02,$00,$0C,$06,$02,$00
 ; Clobbers: A,BC,DE,HL.
 @label=setup_attrs
 c$A8EB LD A,$FF      ; A = $FF
- $A8ED LD ($60C8),A  ; store $FF to a flag at $60C8
+ $A8ED LD ($60C8),A  ; store $FF to a flag at #R$60C8
  $A8F0 LD HL,$A8D9   ; HL -> attr_rle (run-length attribute table)
- $A8F3 LD DE,$5800   ; DE -> $5800 = attribute area base
+ $A8F3 LD DE,$5800   ; DE -> #R$5800 = attribute area base
  $A8F6 LD C,$09      ; C = 9 outer groups
 *$A8F8 LD B,(HL)     ; B = run length for this group
  $A8F9 INC HL        ;
@@ -8180,7 +8339,7 @@ c$A936 CALL $AB7A    ;
 ;
 ; .
 ;
-; Init the score/lives HUD state for a new game: lives_p2 ($6041)=3, $6042=3,
+; Init the score/lives HUD state for a new game: lives_p2 (#R$6041)=3, $6042=3,
 ; $60C2=0, and zero the 8-byte block $6043..$604A (the two 4-byte BCD score
 ; buffers).
 ; .
@@ -8569,7 +8728,7 @@ b$AABE DEFB $40,$26,$2A,$19,$CD,$7A,$AB
 ; .
 ; else     : looked up in punct_map.
 ; .
-; cursor in print_cursor ($60C6 lo=col) cur_color ($60C8).
+; cursor in print_cursor (#R$60C6 lo=col) cur_color (#R$60C8).
 ; .
 ; Out: glyph blitted to screen column cursor ($60C7) advanced.
 @label=print_char
@@ -8602,7 +8761,7 @@ c$AAC5 PUSH AF       ; save all regs (caller-transparent)
  $AAF4 BIT 3,B       ; bit3 of code = BRIGHT -> OR $40
  $AAF6 JR Z,$AAFA    ;
  $AAF8 OR $40        ;
-*$AAFA LD ($60C8),A  ; store into cur_color ($60C8)
+*$AAFA LD ($60C8),A  ; store into cur_color (#R$60C8)
  $AAFD JR $AB4E      ;
 *$AAFF LD HL,$AAB8   ; HL -> punct_map (5 entries)
  $AB02 LD B,$05      ;
@@ -8621,7 +8780,7 @@ c$AAC5 PUSH AF       ; save all regs (caller-transparent)
  $AB12 ADD A,A       ;
  $AB13 LD L,A        ; HL = index*6
  $AB14 LD H,$00      ;
- $AB16 LD DE,$C000   ; DE = $C000 = font base
+ $AB16 LD DE,$C000   ; DE = #R$C000 = font base
  $AB19 ADD HL,DE     ; HL -> glyph bitmap (6 bytes)
  $AB1A PUSH HL       ;
  $AB1B LD BC,($60C6) ; BC = print_cursor (C=column 0..31)
@@ -8886,7 +9045,7 @@ c$AC22 LD HL,($60BA) ;
 ;
 ; When scroll_pos has wrapped past the top (H==$03 && L>=$D8), fast-fill the
 ; newly exposed strip using the LD SP,screen / stack-write trick (saves real SP
-; to $6000, DI, reads mask_acb0).
+; to #R$6000, DI, reads mask_acb0).
 ; .
 ; RET early when no wrap is pending.
 @label=blit_scroll_wrap
@@ -9060,7 +9219,7 @@ c$AD4E LD HL,$603D   ;
 ;
 ; .
 ;
-; Self-modified scratch, not pure data: $AD60/$AD61 are 1-byte accumulators
+; Self-modified scratch, not pure data: #R$AD60/$AD61 are 1-byte accumulators
 ; seeded by setup_tower_scroll ($ADA1/$ADAF) with a row-start bias and a fine
 ; row offset, then incremented every pass of setup_tower_scroll's row loop
 ; ($AE6E-$AE81) by table bytes stored at $AD62..$AD80 (16 rows x 2-byte deltas)
@@ -9087,9 +9246,9 @@ b$AD60 DEFB $00,$00,$FF,$F8,$FF,$F8,$FF,$F8
 ; draw_tower_cols.
 ; .
 ; Runs a 16-row loop ($ADB8..$AE85): for each row it reads two per-column-cell
-; nibbles from map data at $6200+DE / $6280+DE, classifies the cell
+; nibbles from map data at #R$6200+DE / $6280+DE, classifies the cell
 ; (bit-pattern tests at $AE21-$AE67) and jumps to one of the masked-blit
-; handlers below ($AEBB/$AF2A/$AF86/$AFD0/$B03F) or straight to the
+; handlers below (#R$AEBB/#R$AF2A/#R$AF86/#R$AFD0/#R$B03F) or straight to the
 ; row-accumulator advance at $AE6D. Each handler returns to the common
 ; continuation $AE18 (advance HL by -$12, DJNZ loop) before the next row.
 ; .
@@ -9118,7 +9277,7 @@ c$AD82 CALL $AB7F    ; clear object table (calc_tower_col_addr's prep)
  $ADAA LD A,$0B      ; A = $0B - coarse row
  $ADAC SUB C         ;
  $ADAD AND $0F       ; mask to 4 bits
- $ADAF LD ($AD60),A  ; self-mod store: row accumulator ($AD60)
+ $ADAF LD ($AD60),A  ; self-mod store: row accumulator (#R$AD60)
  $ADB2 EXX           ;
  $ADB3 LD B,$00      ; B = 0 (row counter)
  $ADB5 LD HL,$AD62   ; HL -> per-row delta table ($AD62)
@@ -9138,7 +9297,7 @@ c$AD82 CALL $AB7F    ; clear object table (calc_tower_col_addr's prep)
  $ADCE LD A,($AD61)  ; {E = column fraction (map offset low)
  $ADD1 LD E,A        ; }
  $ADD2 LD D,$00      ;
- $ADD4 LD HL,$6200   ; {HL -> $6200 + column (cell type table 1)
+ $ADD4 LD HL,$6200   ; {HL -> #R$6200 + column (cell type table 1)
  $ADD7 ADD HL,DE     ; }
  $ADD8 LD A,(HL)     ;
  $ADD9 OR A          ; {negative? -> $AE6D (empty cell, skip)
@@ -9234,7 +9393,8 @@ c$AD82 CALL $AB7F    ; clear object table (calc_tower_col_addr's prep)
 ;
 ; 24-entry (2 bytes each) AND/OR mask-pair table: "AND clear old bits, OR in
 ; new bits" merge masks for column pixel bytes that don't align to a whole
-; screen byte (edge-clipped column tops/bottoms). Read by the handler at $AEBB.
+; screen byte (edge-clipped column tops/bottoms). Read by the handler at
+; #R$AEBB.
 @label=col_blit_masks
 b$AE89 DEFB $FF,$00,$FC,$02,$F3,$08,$F0,$0A
  $AE91 DEFB $CF,$20,$CC,$00,$C3,$28,$C0,$22
@@ -9256,9 +9416,9 @@ b$AE89 DEFB $FF,$00,$FC,$02,$F3,$08,$F0,$0A
 ; Looks up a length adjustment (table $6300) and an edge-type value (table
 ; $6340) indexed by the column (DE), computes and self-mod-stores a destination
 ; pointer ($AEB9), then masked-merges the destination byte(s) using mask pairs
-; picked from col_blit_masks ($AE89, 16-entry branch for tall/negative case) or
-; from a second 4-entry table at $AEA9 (short/positive case), plus a run of up
-; to 3 plain-store bytes and a final 2-entry table ($AEB1) merge.
+; picked from col_blit_masks (#R$AE89, 16-entry branch for tall/negative case)
+; or from a second 4-entry table at $AEA9 (short/positive case), plus a run of
+; up to 3 plain-store bytes and a final 2-entry table ($AEB1) merge.
 ; .
 ; Ends by jumping back to setup_tower_scroll's row loop continuation ($AE18).
 ; .
@@ -9283,7 +9443,7 @@ c$AEBB PUSH BC       ; {DE=A; HL -> length table $6300+DE
  $AED4 LD A,(HL)     ;
  $AED5 OR A          ; }
  $AED6 JP P,$AEEF    ; sign bit set? -> short/positive branch
- $AED9 AND $0F       ; {tall branch: index col_blit_masks ($AE89) by
+ $AED9 AND $0F       ; {tall branch: index col_blit_masks (#R$AE89) by
  $AEDB ADD A,A       ; (type&$0F)*2
  $AEDC LD E,A        ;
  $AEDD LD HL,$AE89   ;
@@ -9355,60 +9515,60 @@ c$AEBB PUSH BC       ; {DE=A; HL -> length table $6300+DE
 ; column.
 ; .
 ; Ends `POP HL / JP $AE18` in all 4 branches.
-c$AF2A PUSH HL       ;
- $AF2B ADD HL,DE     ;
- $AF2C LD A,$00      ;
- $AF2E SRL A         ;
- $AF30 JP NZ,$AF57   ;
- $AF33 JP C,$AF42    ;
- $AF36 LD (HL),$1B   ;
+c$AF2A PUSH HL       ; save dest ptr
+ $AF2B ADD HL,DE     ; HL += DE (apply column offset)
+ $AF2C LD A,$00      ; A = self-mod test byte
+ $AF2E SRL A         ; shift test byte -> Z/C flags
+ $AF30 JP NZ,$AF57   ; nonzero -> branch 3/4 ($AF57)
+ $AF33 JP C,$AF42    ; carry set -> branch 2 ($AF42)
+ $AF36 LD (HL),$1B   ; branch 1: fixed byte 1 ($1B)
  $AF38 INC HL        ;
- $AF39 LD (HL),$FB   ;
+ $AF39 LD (HL),$FB   ; fixed byte 2 ($FB)
  $AF3B INC HL        ;
- $AF3C LD (HL),$A4   ;
- $AF3E POP HL        ;
- $AF3F JP $AE18      ;
-*$AF42 LD A,(HL)     ;
- $AF43 AND $C0       ;
- $AF45 OR $06        ;
+ $AF3C LD (HL),$A4   ; fixed byte 3 ($A4)
+ $AF3E POP HL        ; restore dest ptr
+ $AF3F JP $AE18      ; done -> setup_tower_scroll continuation
+*$AF42 LD A,(HL)     ; branch 2: A = dest byte 1
+ $AF43 AND $C0       ; keep high 2 bits (blend mask)
+ $AF45 OR $06        ; OR in fixed low bits
  $AF47 LD (HL),A     ;
  $AF48 INC HL        ;
- $AF49 LD (HL),$FE   ;
+ $AF49 LD (HL),$FE   ; fixed byte 2 ($FE)
  $AF4B INC HL        ;
- $AF4C LD (HL),$E9   ;
+ $AF4C LD (HL),$E9   ; fixed byte 3 ($E9)
  $AF4E INC HL        ;
- $AF4F LD A,(HL)     ;
- $AF50 AND $3F       ;
+ $AF4F LD A,(HL)     ; A = dest byte 3
+ $AF50 AND $3F       ; keep low 6 bits (blend mask)
  $AF52 LD (HL),A     ;
  $AF53 POP HL        ;
  $AF54 JP $AE18      ;
-*$AF57 JP C,$AF71    ;
- $AF5A LD A,(HL)     ;
- $AF5B AND $F0       ;
- $AF5D OR $01        ;
+*$AF57 JP C,$AF71    ; branch 3/4: carry set -> branch 4 ($AF71)
+ $AF5A LD A,(HL)     ; branch 3: A = dest byte 1
+ $AF5B AND $F0       ; keep high nibble (blend mask)
+ $AF5D OR $01        ; OR in fixed low bit
  $AF5F LD (HL),A     ;
  $AF60 INC HL        ;
- $AF61 LD (HL),$BF   ;
+ $AF61 LD (HL),$BF   ; fixed byte 2 ($BF)
  $AF63 INC HL        ;
- $AF64 LD (HL),$BA   ;
+ $AF64 LD (HL),$BA   ; fixed byte 3 ($BA)
  $AF66 INC HL        ;
- $AF67 LD A,(HL)     ;
- $AF68 AND $0F       ;
- $AF6A OR $40        ;
+ $AF67 LD A,(HL)     ; A = dest byte 3
+ $AF68 AND $0F       ; keep low nibble (blend mask)
+ $AF6A OR $40        ; OR in fixed high bits
  $AF6C LD (HL),A     ;
  $AF6D POP HL        ;
  $AF6E JP $AE18      ;
-*$AF71 LD A,(HL)     ;
- $AF72 AND $FC       ;
+*$AF71 LD A,(HL)     ; branch 4: A = dest byte 1
+ $AF72 AND $FC       ; keep high 6 bits (blend mask)
  $AF74 LD (HL),A     ;
  $AF75 INC HL        ;
- $AF76 LD (HL),$6F   ;
+ $AF76 LD (HL),$6F   ; fixed byte 2 ($6F)
  $AF78 INC HL        ;
- $AF79 LD (HL),$EE   ;
+ $AF79 LD (HL),$EE   ; fixed byte 3 ($EE)
  $AF7B INC HL        ;
- $AF7C LD A,(HL)     ;
- $AF7D AND $03       ;
- $AF7F OR $90        ;
+ $AF7C LD A,(HL)     ; A = dest byte 3
+ $AF7D AND $03       ; keep low 2 bits (blend mask)
+ $AF7F OR $90        ; OR in fixed high bits
  $AF81 LD (HL),A     ;
  $AF82 POP HL        ;
  $AF83 JP $AE18      ;
@@ -9486,57 +9646,57 @@ c$AF86 PUSH HL       ;
 ; .
 ; Ends `POP HL / JP $AE18` in all branches.
 @label=render_col_fill
-c$AFD0 PUSH HL       ;
- $AFD1 ADD HL,DE     ;
- $AFD2 LD A,$00      ;
- $AFD4 SRL A         ;
- $AFD6 JP NZ,$B000   ;
- $AFD9 JP C,$AFF0    ;
- $AFDC LD A,(HL)     ;
- $AFDD AND $C0       ;
- $AFDF OR $0F        ;
+c$AFD0 PUSH HL       ; save dest ptr
+ $AFD1 ADD HL,DE     ; HL += DE (apply column offset)
+ $AFD2 LD A,$00      ; A = self-mod test byte
+ $AFD4 SRL A         ; shift test byte -> Z/C flags
+ $AFD6 JP NZ,$B000   ; nonzero -> branch 3/4 ($B000)
+ $AFD9 JP C,$AFF0    ; carry set -> branch 2 ($AFF0)
+ $AFDC LD A,(HL)     ; branch 1: A = dest byte 1
+ $AFDD AND $C0       ; keep high 2 bits (blend mask)
+ $AFDF OR $0F        ; OR in fixed low bits
  $AFE1 LD (HL),A     ;
  $AFE2 INC HL        ;
- $AFE3 LD (HL),$FF   ;
+ $AFE3 LD (HL),$FF   ; solid fill byte 2 ($FF)
  $AFE5 INC HL        ;
- $AFE6 LD A,(HL)     ;
- $AFE7 AND $03       ;
+ $AFE6 LD A,(HL)     ; A = dest byte 3
+ $AFE7 AND $03       ; keep low 2 bits (blend mask)
  $AFE9 OR $F0        ;
  $AFEB LD (HL),A     ;
  $AFEC POP HL        ;
  $AFED JP $AE18      ;
-*$AFF0 LD A,(HL)     ;
- $AFF1 AND $F0       ;
+*$AFF0 LD A,(HL)     ; branch 2: A = dest byte 1
+ $AFF1 AND $F0       ; keep high nibble (blend mask)
  $AFF3 OR $03        ;
  $AFF5 LD (HL),A     ;
  $AFF6 INC HL        ;
- $AFF7 LD (HL),$FF   ;
+ $AFF7 LD (HL),$FF   ; solid fill byte 2 ($FF)
  $AFF9 INC HL        ;
- $AFFA LD (HL),$FC   ;
+ $AFFA LD (HL),$FC   ; solid fill byte 3 ($FC)
  $AFFC POP HL        ;
  $AFFD JP $AE18      ;
-*$B000 JP C,$B016    ;
- $B003 LD A,(HL)     ;
- $B004 AND $FC       ;
+*$B000 JP C,$B016    ; branch 3/4: carry set -> branch 4 ($B016)
+ $B003 LD A,(HL)     ; branch 3: A = dest byte 1
+ $B004 AND $FC       ; keep high 6 bits (blend mask)
  $B006 LD (HL),A     ;
  $B007 INC HL        ;
- $B008 LD (HL),$FF   ;
+ $B008 LD (HL),$FF   ; solid fill byte 2 ($FF)
  $B00A INC HL        ;
- $B00B LD (HL),$FF   ;
+ $B00B LD (HL),$FF   ; solid fill byte 3 ($FF)
  $B00D INC HL        ;
- $B00E LD A,(HL)     ;
- $B00F AND $3F       ;
+ $B00E LD A,(HL)     ; A = dest byte 3
+ $B00F AND $3F       ; keep low 6 bits (blend mask)
  $B011 LD (HL),A     ;
  $B012 POP HL        ;
  $B013 JP $AE18      ;
-*$B016 INC HL        ;
- $B017 LD (HL),$3F   ;
+*$B016 INC HL        ; branch 4: skip byte 1 (no write)
+ $B017 LD (HL),$3F   ; solid fill byte 2 ($3F)
  $B019 INC HL        ;
- $B01A LD (HL),$FF   ;
+ $B01A LD (HL),$FF   ; solid fill byte 3 ($FF)
  $B01C INC HL        ;
- $B01D LD A,(HL)     ;
- $B01E AND $0F       ;
- $B020 OR $C0        ;
+ $B01D LD A,(HL)     ; A = dest byte 3
+ $B01E AND $0F       ; keep low nibble (blend mask)
+ $B020 OR $C0        ; OR in fixed high bits
  $B022 LD (HL),A     ;
  $B023 POP HL        ;
  $B024 JP $AE18      ;
@@ -9548,7 +9708,7 @@ c$AFD0 PUSH HL       ;
 ; .
 ;
 ; 3 groups of 8 bytes (mask/value pairs), indexed by the $603C animation phase
-; counter (anim_bg_phase) via render_anim_texture ($B03F) -- an animated
+; counter (anim_bg_phase) via render_anim_texture (#R$B03F) -- an animated
 ; dithered/striped tower texture that cycles as $603C advances.
 @label=anim_texture_masks
 b$B027 DEFB $3F,$C0,$0F,$F0,$03,$FC,$FF,$00
@@ -9563,11 +9723,11 @@ b$B027 DEFB $3F,$C0,$0F,$F0,$03,$FC,$FF,$00
 ;
 ; Final per-cell render handler, and the only one whose graphic depends on
 ; animation phase rather than static column geometry: reads $603C into BC as an
-; index into anim_texture_masks ($B027), giving an animated tower stripe/shade
-; effect.
+; index into anim_texture_masks (#R$B027), giving an animated tower
+; stripe/shade effect.
 ; .
 ; Same self-mod 4-way branch-and-mask-merge shape as the other handlers (test
-; byte at $B045), each branch copying/merging bytes from a different $B027
+; byte at $B045), each branch copying/merging bytes from a different #R$B027
 ; offset ($B029/$B02B/$B02D).
 ; .
 ; Ends `POP BC / POP HL / JP $AE18` in all branches.
@@ -9655,10 +9815,10 @@ s$B0A1 DEFS $01
 ;
 ; Render the visible tower column strip.
 ; .
-; Patches the column count at $B0A1 ($14, reduced near the wrap edge from
+; Patches the column count at #R$B0A1 ($14, reduced near the wrap edge from
 ; scroll_pos) and dispatches on the $6021 sub-column phase.
 ; .
-; SELF-MOD: $B0A1 loop count.
+; SELF-MOD: #R$B0A1 loop count.
 ; .
 ; Clobbers: A,B,HL (+ render regs).
 @label=draw_tower_cols
@@ -9972,8 +10132,10 @@ b$B22E DEFB $67,$40,$87,$40,$A7,$40,$C7,$40
 ; .
 ;
 ; Fetch column descriptor #R$6039 from the column-major table at #R$7A00
-; (stride 8): low byte (+0) and high byte (+8) form a pointer (offset by $6A00
-; into level data), and the property byte (+16) is stashed in $603A.
+; (stride 8): low byte (+0) and high byte (+8) form a pointer (offset by
+; #R$6A00 into level data), and the property byte (+16) is stashed in $603A.
+; .
+; Cell byte format for the map this fills: docs/Level-Format.md.
 ; .
 ; Returns IX=pointer.
 ; .
@@ -10157,7 +10319,7 @@ c$B3FE LD IX,$60A9     ;
 ; .
 ; Skips when player_state is 8/9 (level-end).
 ; .
-; Derives the camera row $6036 from $6059, then walks the 4 object_table
+; Derives the camera row #R$6036 from $6059, then walks the 4 object_table
 ; actors, acting on each live one (state field IX+48 != 0).
 ; .
 ; Clobbers: A,B,HL,IX.
@@ -10195,7 +10357,7 @@ c$B421 LD A,($60C0)    ; {skip if player_state 8 or 9 (level-end)
  $B45F JP M,$B466      ;
  $B462 AND $70         ;
  $B464 JR NZ,$B478     ; }
-*$B466 LD A,H          ; {step $6015 high nibble toward $F0..$FF ring, wrap
+*$B466 LD A,H          ; {step #R$6015 high nibble toward $F0..$FF ring, wrap
  $B467 SUB $F0         ;
  $B469 INC A           ;
  $B46A AND $0F         ;
@@ -10307,27 +10469,27 @@ c$B421 LD A,($60C0)    ; {skip if player_state 8 or 9 (level-end)
 ;
 ; Cold wipe before the title/play screen draws.
 ; .
-; 1) zero game RAM $6000..$61FF (512 bytes, 2 pages).
+; 1) zero game RAM #R$6000..$61FF (512 bytes, 2 pages).
 ; .
-; 2) zero the entire display $4000..$5AFF (pixels+attrs) via LDIR.
+; 2) zero the entire display #R$4000..$5AFF (pixels+attrs) via LDIR.
 ; .
-; 3) CALL #R$B567 (build a lookup table in the reclaimed printer buffer $5B00)
-; and $B5EA.
+; 3) CALL #R$B567 (build a lookup table in the reclaimed printer buffer
+; #R$5B00) and #R$B5EA.
 ; .
 ; Clobbers: A,BC,DE,HL.
 @label=clear_screen
-c$B546 LD HL,$6000   ; HL -> game RAM base $6000
+c$B546 LD HL,$6000   ; HL -> game RAM base #R$6000
  $B549 LD B,$02      ; B = 2 pages to clear
 *$B54B LD (HL),$00   ; store 0
  $B54D INC L         ;
  $B54E JR NZ,$B54B   ; loop 256 bytes of this page
  $B550 INC H         ; next page
  $B551 DJNZ $B54B    ;
- $B553 LD HL,$4000   ; HL -> screen base $4000
+ $B553 LD HL,$4000   ; HL -> screen base #R$4000
  $B556 LD DE,$4001   ; DE -> $4001 (LDIR src=HL, dst=DE, overlap fill)
  $B559 LD BC,$1AFF   ; BC = $1AFF = 6911 bytes = whole display minus 1
  $B55C LD (HL),$00   ; seed first byte = 0
- $B55E LDIR          ; LDIR: propagate 0 across $4000..$5AFF
+ $B55E LDIR          ; LDIR: propagate 0 across #R$4000..$5AFF
  $B560 CALL $B567    ; Build screen hi LUT
  $B563 CALL $B5EA    ; Build row addr table
  $B566 RET           ;
@@ -10338,17 +10500,17 @@ c$B546 LD HL,$6000   ; HL -> game RAM base $6000
 ;
 ; .
 ;
-; Fill a 256-byte table at $5B00 mapping a byte value to its bit-reordered form
-; used in ZX screen-address math.
+; Fill a 256-byte table at #R$5B00 mapping a byte value to its bit-reordered
+; form used in ZX screen-address math.
 ; .
 ; Processes the index in 2-bit groups groups 00 and 11 pass through, 01/10 get
 ; +$40 -- the Y2<->Y0 swap that makes the ZX pixel rows non-linear.
 ; .
 ; Result accumulates in H.
 ; .
-; The porter can DELETE this and the $5B00 lookups, replac
+; The porter can DELETE this and the #R$5B00 lookups, replac
 @label=build_screen_hi_lut
-c$B567 LD DE,$5B00   ; DE -> $5B00 LUT base (reclaimed printer buffer)
+c$B567 LD DE,$5B00   ; DE -> #R$5B00 LUT base (reclaimed printer buffer)
 *$B56A LD C,E        ; C = current index (low byte of DE)
  $B56B LD B,$04      ; B = 4 groups of 2 bits
 *$B56D LD A,C        ;
@@ -10431,7 +10593,7 @@ c$B5C8 RET           ;
 c$B5CF LD A,$FF      ;
  $B5D1 LD ($6038),A  ; set Flag?? $00 $FE $FF
  $B5D4 XOR A         ;
- $B5D5 LD ($B5CB),A  ; zero flag_b5cb at $B5CB (write into code padding)
+ $B5D5 LD ($B5CB),A  ; zero flag_b5cb at #R$B5CB (write into code padding)
  $B5D8 RET           ;
 
 ; Get screen addr
@@ -10443,7 +10605,7 @@ c$B5CF LD A,$FF      ;
 ;
 ; Pixel address for (row=H, col-in-row=L).
 ; .
-; Indexes scr_row_addr_tbl ($5D00, 2 bytes/row) at 2*H to fetch the row base,
+; Indexes scr_row_addr_tbl (#R$5D00, 2 bytes/row) at 2*H to fetch the row base,
 ; then adds L to get the final byte address in HL.
 ; .
 ; In: H=row 0..191, L=byte offset within row.
@@ -10474,7 +10636,7 @@ c$B5D9 PUSH DE       ;
 ;
 ; .
 ;
-; Precompute 192 screen-row addresses into scr_row_addr_tbl ($5D00,
+; Precompute 192 screen-row addresses into scr_row_addr_tbl (#R$5D00,
 ; little-endian words).
 ; .
 ; For each row y in 0..191 it builds the ZX pixel address:
@@ -10487,7 +10649,7 @@ c$B5D9 PUSH DE       ;
 ; .
 ; get_screen_addr then just indexes this table.
 @label=build_row_addr_table
-c$B5EA LD DE,$5D00   ; DE -> $5D00 table base
+c$B5EA LD DE,$5D00   ; DE -> #R$5D00 table base
  $B5ED LD HL,$0000   ; HL: H = row counter y, builds address in HL
 *$B5F0 PUSH HL       ;
  $B5F1 PUSH DE       ;
@@ -10806,13 +10968,13 @@ c$B73E LD C,L        ;
 ; .
 ; Bounds-checks the screen row ($60A8) to [$18,$B0) (RET if off-screen),
 ; derives a sub-column fraction from $60A6, and for state-7 entries queues a
-; one-shot deferred sprite via flag_b5cb/$B5CC/$B5CE (consumed later by
+; one-shot deferred sprite via flag_b5cb/#R$B5CC/#R$B5CE (consumed later by
 ; draw_pending_sprite) instead of blitting immediately.
 ; .
 ; Otherwise computes the screen address (GET_SCREEN_ADDR), then picks the
 ; bitmap: sprite id >=$7C indexes the runtime table at $BC80 directly (fixed
 ; 3-cell-wide, 8-row blit) sprite id <$7C goes through GET_SPRITE_DEF (adds a
-; facing offset derived from $60A6) to fetch the normal $C100 sprite
+; facing offset derived from $60A6) to fetch the normal #R$C100 sprite
 ; definition. Falls through into blit_sprite_fast to draw.
 ; .
 ; Clobbers: A,HL,IX,...
@@ -10842,8 +11004,8 @@ c$B74D LD A,(IX+$18) ;
  $B777 LD A,(IX+$30) ; {state 7 again -> defer draw
  $B77A CP $07        ;
  $B77C JR NZ,$B790   ; }
- $B77E LD ($B5CC),HL ; queue deferred sprite: pos -> $B5CC
- $B781 LD A,($60A6)  ; {facing quadrant -> $B5CE
+ $B77E LD ($B5CC),HL ; queue deferred sprite: pos -> #R$B5CC
+ $B781 LD A,($60A6)  ; {facing quadrant -> #R$B5CE
  $B784 SRL A         ;
  $B786 AND $03       ;
  $B788 LD ($B5CE),A  ; }
@@ -10887,7 +11049,7 @@ c$B74D LD A,(IX+$18) ;
 ; .
 ;
 ; Fast masked sprite blit using the LD SP,screen / PUSH stack-write trick
-; (saves the real SP to $6000, DI, treats the screen as a "stack" so each
+; (saves the real SP to #R$6000, DI, treats the screen as a "stack" so each
 ; POP+merge writes one masked byte pair).
 ; .
 ; Entered by fallthrough from draw_actor_sprite's GET_SPRITE_DEF/RET (POP AF
@@ -10905,7 +11067,7 @@ c$B74D LD A,(IX+$18) ;
 ; mask/value pair per cell, ANDs the mask into the destination screen byte, ORs
 ; in the value.
 ; .
-; Restores the real SP from $6000 and EI before returning.
+; Restores the real SP from #R$6000 and EI before returning.
 ; .
 ; Clobbers: A,BC,DE,HL.
 @label=blit_sprite_fast
@@ -11096,8 +11258,8 @@ c$B869 LD A,(IX+$00) ;
 ;
 ; .
 ;
-; If flag_b5cb is set, consume it and draw the one-shot sprite queued at $B5CC
-; (pos) / $B5CE (id), with on-screen bounds checks.
+; If flag_b5cb is set, consume it and draw the one-shot sprite queued at
+; #R$B5CC (pos) / #R$B5CE (id), with on-screen bounds checks.
 ; .
 ; RET immediately when nothing queued.
 ; .
@@ -11228,8 +11390,8 @@ b$B95D DEFB $12,$29,$16,$08,$1B,$10,$3F,$2A
 ;
 ; .
 ;
-; Patch the tower column-strip blitter's params ($B941/$B9A1 row, $B942 column
-; base) from disp_height and scroll_pos (bit2 selects the $24/$2C column
+; Patch the tower column-strip blitter's params (#R$B941/$B9A1 row, $B942
+; column base) from disp_height and scroll_pos (bit2 selects the $24/$2C column
 ; phase).
 ; .
 ; SELF-MOD.
@@ -11376,10 +11538,10 @@ c$BA16 PUSH DE       ;
 ; .
 ;
 ; Repaint the tower's attribute (colour) band in the $58xx attribute file from
-; $5860, using lookup_col_attr ($BA16) for per-column colours and fill_run
+; $5860, using lookup_col_attr (#R$BA16) for per-column colours and fill_run
 ; ($BA61) to lay rows.
 ; .
-; SELF-MOD: $BA66 row count.
+; SELF-MOD: #R$BA66 row count.
 ; .
 ; Clobbers: A,BC,D,HL.
 @label=paint_tower_attrs
@@ -11436,7 +11598,7 @@ s$BA66 DEFS $01
 ; .
 ;
 ; Adjust the painted attribute band as scroll_pos advances (compares against
-; the $BA66 latch set by paint_tower_attrs) so colours track the scrolling
+; the #R$BA66 latch set by paint_tower_attrs) so colours track the scrolling
 ; tower.
 ; .
 ; Clobbers: A,B,HL.
@@ -11454,7 +11616,7 @@ c$BA67 LD HL,($6030) ; HL = scroll_pos
  $BA78 SUB $16       ; bias by -$16
  $BA7A NEG           ; negate back
 *$BA7C LD B,A        ; B = target row index
- $BA7D LD A,($BA66)  ; A = previous row index ($BA66 latch)
+ $BA7D LD A,($BA66)  ; A = previous row index (#R$BA66 latch)
  $BA80 SUB B         ; delta = new - previous
  $BA81 JR Z,$BA94    ; unchanged? -> just update latch, RET
  $BA83 CP $FF        ; delta == -1 (scrolled up one row)?
@@ -11539,13 +11701,13 @@ b$BABD DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $BBF5 DEFB $BA,$BA,$BA,$BA,$BA,$BA,$BA,$BA
  $BBFD DEFB $BA,$BA,$BA
 
-; RUNTIME_TABLES
+; Runtime tables
 ;
 ; .
 ;
 ; .
 ;
-; $BC00..$BFFF, zero in the snapshot.
+; #R$BC00..$BFFF, zero in the snapshot.
 ; .
 ; Game-state tables populated after init (enemy slots, column state, score
 ; work).
@@ -14193,7 +14355,7 @@ b$FE31 DEFB $09,$29,$1B,$7B,$FE,$15,$20,$E4
 ;
 ; .
 ;
-; Load the 17-byte ($0011) block header into the buffer at $FC21 (via
+; Load the 17-byte ($0011) block header into the buffer at #R$FC21 (via
 ; tape_read_byte) and validate the $2A signature byte retries on mismatch.
 ; .
 ; Clobbers: A,DE,IX.

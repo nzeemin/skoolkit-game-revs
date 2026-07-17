@@ -115,10 +115,10 @@ N $801A Seeds state vars, builds the level, draws the screen, then enters main_l
 N $801A On death/level-end it loops back to level_retry or game-over handling.
 C $801A,2 A=$80 -> $6056 (start flag/counter)
 C $8020,3 set Control-key toggle flag
-C $8026,2 4 attempts/lives -> $6017
+C $8026,2 4 attempts/lives -> #R$6017
 C $8028,3 set Game mode
 @ $802B label=level_retry
-c $802B
+c $802B Level entry
 C $802C,3 set Demo/pause mode flag
 C $802F,3 Title menu
 C $8032,3 Init col state
@@ -134,7 +134,7 @@ C $8061,3 Stop sound
 @ $8064 label=main_loop
 c $8064 Main loop
 N $8064 The in-play frame loop.
-N $8064 Each pass runs main_tick (one frame) then checks end conditions: death_flag ($60C3) set      -> life-loss handler ($8084) game_state ($60D9) == 2     -> level-complete ($80B2) play_timer ($6053) == 0     -> time-up ($8081) Otherwise CALL $8115 (status update) and loop.
+N $8064 Each pass runs main_tick (one frame) then checks end conditions: death_flag (#R$60C3) set      -> life-loss handler ($8084) game_state (#R$60D9) == 2     -> level-complete ($80B2) play_timer (#R$6053) == 0     -> time-up ($8081) Otherwise CALL #R$8115 (status update) and loop.
 C $8064,3 run one frame of the game
 C $8067,3 player died this frame?
 C $806B,2 yes -> life-loss handler
@@ -176,14 +176,14 @@ c $8115 Poll controls
 N $8115 Per-frame keyboard handling (called from main_loop).
 N $8115 Skipped while input is frozen (freeze_ctr).
 N $8115 - restart key (via $A70F): NC -> jump to level_retry
-N $8115 - several control keys toggle ctrl_flag ($60D7) / pad_var_8005
+N $8115 - several control keys toggle ctrl_flag (#R$60D7) / pad_var_8005
 N $8115 - PAUSE/DEMO: key $21 enters demo_pause any joystick X exits
 N $8115 - menu select: tests a column of 8 keys the index of the one pressed (0..7) -> pad_var_8005, then restarts setup at $8032.
 N $8115 Uses test_key ($A706) for t
 C $8115,3 A = freeze_ctr
 C $8119,1 frozen -> do nothing this frame
 C $811D,3 restart condition -> rebuild level
-C $8137,3 set ctrl_flag ($60D7) = 1
+C $8137,3 set ctrl_flag (#R$60D7) = 1
 C $8142,3 set Control-key toggle flag
 C $8148,3 A = demo_pause
 C $814E,3 get Level timer prescaler
@@ -207,10 +207,10 @@ C $81D4,3 restart game setup with the new selection
 @ $81D7 label=setup_level
 c $81D7 Setup level
 N $81D7 (Re)build the current level's working state.
-N $81D7 Zeroes the work_buffers block ($F000.., $0FFF bytes via LDIR), loads the level's column data (load_level_col), resets the tower position (init_tower_pos), re-inits flags (init_b5cf) and the renderers ($8FB7, $96D4).
+N $81D7 Zeroes the work_buffers block (#R$F000.., $0FFF bytes via LDIR), loads the level's column data (load_level_col), resets the tower position (init_tower_pos), re-inits flags (init_b5cf) and the renderers (#R$8FB7, #R$96D4).
 N $81D7 Clobbers: most.
-C $81D7,3 Clear work_buffers ($F000) for tower map
-C $81E4,3 Load level column data into $F000
+C $81D7,3 Clear work_buffers (#R$F000) for tower map
+C $81E4,3 Load level column data into #R$F000
 C $81E7,3 Init tower pos
 C $81ED,3 Clear actor states
 C $81F3,2 Initialise 4 object slots to empty
@@ -235,9 +235,9 @@ c $8240 Main tick
 N $8240 One frame of the game.
 N $8240 Called from main_loop.
 N $8240 Order: read input (unless frozen) -> run game-state machine (player move, tower rotation, enemies) -> redraw widgets -> HALT to sync to the 50Hz frame interrupt.
-N $8240 State: game_state ($60D9): 3=level transition, 4=finished,
+N $8240 State: game_state (#R$60D9): 3=level transition, 4=finished,
 N $8240 else = normal play.
-N $8240 demo_pause ($60D8) skips logic.
+N $8240 demo_pause (#R$60D8) skips logic.
 N $8240 freeze_ctr ($8004) freezes input for N frames.
 N $8240 Clobbers: most regs.
 N $8240 Returns once per frame.
@@ -266,8 +266,8 @@ C $8288,3 Play sound
 C $828B,3 Update enemies
 C $828E,3 Check collision
 C $8291,2 --- redraw HUD: A = $24 (36 rows) ---
-C $8296,1 subtract tower_height ($60B9)
-C $8299,3 store display height ($6032)
+C $8296,1 subtract tower_height (#R$60B9)
+C $8299,3 store display height (#R$6032)
 C $829C,3 draw widgets (proc_table slots)
 C $82A9,3 Draw player
 C $82AC,1 HALT: wait for the 50Hz frame IRQ (Z80
@@ -285,15 +285,15 @@ s $8301
 @ $8305 label=init_col_state
 c $8305 Init col state
 N $8305 Seed BOTH players' saved column-mask words.
-N $8305 HL = (pad_var_8005) [low=0 at level start], then H forced to $FF (all 8 columns present) the same $FF00|sel is written to the P1 ($8301) and P2 ($8303) slots.
+N $8305 HL = (pad_var_8005) [low=0 at level start], then H forced to $FF (all 8 columns present) the same $FF00|sel is written to the P1 (#R$8301) and P2 ($8303) slots.
 N $8305 Called once per level build.
 N $8305 In: pad_var_8005.
-N $8305 Out: ($8301),($8303).
+N $8305 Out: (#R$8301),($8303).
 N $8305 Clobbers: A,HL.
 @ $8311 label=restore_col_state
 c $8311 Restore col state
-N $8311 Expand a player's saved column bitmask into the 8-byte col_flags[] array ($60CB) and mirror its counter into #R$6039.
-N $8311 lives_p1 ($6040) selects the slot (0=P1 word $8301, else P2 word $8303) -- here $6040 doubles as an ACTIVE-PLAYER INDEX, not a life count.
+N $8311 Expand a player's saved column bitmask into the 8-byte col_flags[] array (#R$60CB) and mirror its counter into #R$6039.
+N $8311 lives_p1 (#R$6040) selects the slot (0=P1 word #R$8301, else P2 word $8303) -- here #R$6040 doubles as an ACTIVE-PLAYER INDEX, not a life count.
 N $8311 running_flag gates an alternate (re)init path.
 N $8311 Unpacks via RR through col_flags[] returns CY=1 on success.
 N $8311 Out: col_flags[0..7], #R$6039, CY.
@@ -303,14 +303,14 @@ C $8348,3 set Level number 0
 @ $8360 label=pack_col_state
 c $8360 Pack col state
 N $8360 Inverse of restore_col_state.
-N $8360 Writes the live counter (#R$6039) into the selected player's low byte, then packs the 8 col_flags[] LSBs ($60CB..$60D2) back into the high mask byte.
+N $8360 Writes the live counter (#R$6039) into the selected player's low byte, then packs the 8 col_flags[] LSBs (#R$60CB..$60D2) back into the high mask byte.
 N $8360 lives_p1 selects the P1/P2 slot.
 N $8360 Clobbers: A,B,C,HL.
 C $8363,3 get Lives
 C $836B,3 get Level number 0
 @ $8382 label=clear_col_mask
 c $8382 Clear col mask
-N $8382 Zero the selected player's column mask byte (high byte of $8301/$8303).
+N $8382 Zero the selected player's column mask byte (high byte of #R$8301/$8303).
 N $8382 lives_p1 selects the slot.
 C $8385,3 get Lives
 @ $8390 label=advance_col_counter
@@ -321,8 +321,8 @@ C $83A9,3 set Level number 0
 @ $83AD label=setup_im2
 c $83AD Setup IM2
 N $83AD Install the Z80 mode-2 interrupt vector.
-N $83AD Builds a 257-byte page of identical bytes at $BB00..$BC00 so that, whatever the data-bus byte is at IRQ time, the Z80 reads the 16-bit vector $BABA from table[$FF]/table[$100].
-N $83AD At $BABA it plants 'JP $83CA' -- the actual interrupt service routine.
+N $83AD Builds a 257-byte page of identical bytes at $BB00..#R$BC00 so that, whatever the data-bus byte is at IRQ time, the Z80 reads the 16-bit vector #R$BABA from table[$FF]/table[$100].
+N $83AD At #R$BABA it plants 'JP #R$83CA' -- the actual interrupt service routine.
 N $83AD In:  nothing.
 N $83AD Out: IM 2 active, IFF1=1 (interrupts enabled).
 N $83AD Clobbers: A, B, HL, I.
@@ -336,25 +336,25 @@ C $83B5,2 B = 0 -> DJNZ loops 256 times (Z80 DJNZ: dec B, jump nz)
 C $83B7,1 table[i] = $BA
 C $83B8,1 next table slot
 C $83B9,2 fill all 256 bytes of $BB00..$BBFF
-C $83BB,1 +1 byte at $BC00 = $BA: covers the table[$100] off-by-one
+C $83BB,1 +1 byte at #R$BC00 = $BA: covers the table[$100] off-by-one
 C $83BC,1 H = $BA
-C $83BD,1 L = $BA  -> HL = $BABA (the vector the IRQ will fetch)
-C $83BE,2 plant C3 = JP opcode at $BABA
+C $83BD,1 L = $BA  -> HL = #R$BABA (the vector the IRQ will fetch)
+C $83BE,2 plant C3 = JP opcode at #R$BABA
 C $83C1,2 low byte of JP target -> $CA
-C $83C4,2 high byte -> $83, so vector = 'JP $83CA' = irq_handler
+C $83C4,2 high byte -> $83, so vector = 'JP #R$83CA' = irq_handler
 C $83C6,2 switch CPU to interrupt mode 2 (Z80-only)
 C $83C8,1 interrupts on
 @ $83C9 label=im2_noop_ret
-c $83C9
+c $83C9 IM2 noop return
 C $83C9,1 return to game_entry
 @ $83CA label=irq_handler
 c $83CA IRQ handler
 N $83CA IM 2 interrupt service routine (50 Hz vblank).
-N $83CA Reached via the planted vector at $BABA -> JP here.
-N $83CA It is a deliberate NEAR-NO-OP: 'CALL $83C9' targets the bare RET at the end of setup_im2, so the call does nothing.
+N $83CA Reached via the planted vector at #R$BABA -> JP here.
+N $83CA It is a deliberate NEAR-NO-OP: 'CALL #R$83C9' targets the bare RET at the end of setup_im2, so the call does nothing.
 N $83CA The point is to REPLACE the 48K ROM's own interrupt routine (which scans the keyboard and bumps the FRAMES sysvar) with a handler that has no side effects, while still letting interrupts fire.
 N $83CA Verified: no code anywhere
-C $83CA,3 CALL $83C9 = the RET in setup_im2: a no-op (neutralized ISR)
+C $83CA,3 CALL #R$83C9 = the RET in setup_im2: a no-op (neutralized ISR)
 C $83CD,1 re-enable interrupts
 C $83CE,2 RETI: return from maskable interrupt (Z80-only
 @ $83D0 label=init_tower_pos
@@ -371,8 +371,8 @@ C $83FB,3 set Debounce latch
 C $8403,3 set Player state-machine state
 @ $8411 label=rotate_tower
 c $8411 Rotate tower
-N $8411 Rotate the tower by signed B: tower_height = (tower_height + B) AND $7F (128-column wrap), saving the old value in $6033.
-N $8411 Tests the new position for a wall/collision ($9330) on collision (NC) it reverts tower_height.
+N $8411 Rotate the tower by signed B: tower_height = (tower_height + B) AND $7F (128-column wrap), saving the old value in #R$6033.
+N $8411 Tests the new position for a wall/collision (#R$9330) on collision (NC) it reverts tower_height.
 N $8411 In: B=delta.
 N $8411 Out: CY=moved.
 N $8411 Clobbers: A,B,HL.
@@ -384,7 +384,7 @@ C $8426,3 get Previous tower_height
 C $8429,3 set Tower rotation position
 @ $8430 label=step_scroll
 c $8430 Step scroll
-N $8430 Advance the column/scroll position $60BA by signed A (sign-extended via B), folding H into the 4-quadrant range (AND $03) saves the previous position in $6034.
+N $8430 Advance the column/scroll position $60BA by signed A (sign-extended via B), folding H into the 4-quadrant range (AND $03) saves the previous position in #R$6034.
 N $8430 Clobbers: A,B,HL.
 C $8433,3 set Previous scroll_pos
 C $844A,3 get Tower rotation position
@@ -392,7 +392,7 @@ C $844D,3 Check rotate collision
 C $8452,3 get Previous scroll_pos
 @ $8460 label=rotate_if_idle
 c $8460 Rotate if idle
-N $8460 If $957A returns a pending step (CY) and there is no vertical input (input_y==0), rotate the tower by it (tail-calls rotate_tower).
+N $8460 If #R$957A returns a pending step (CY) and there is no vertical input (input_y==0), rotate the tower by it (tail-calls rotate_tower).
 N $8460 Clobbers: A,B.
 C $8465,3 get Signed input
 @ $846E label=player_state_table
@@ -400,13 +400,13 @@ b $846E
 @ $8482 label=player_tick
 c $8482 Player tick
 N $8482 Per-frame player state machine, run every frame from main_tick (both in normal play AND on the game_state==3 level-transition path TASK.md called this 'the level-transition path' -- it is really the general player update, the transition is just one caller).
-N $8482 Preamble debounces directional input: input_latch ($6020) records whether input_x is active so a press fires once a held input is consumed (input_x cleared).
-N $8482 Tail reads player_state and dispatches through a 2-byte JP-address table at $846E (index = state*2) to the pstate_N handler below.
+N $8482 Preamble debounces directional input: input_latch (#R$6020) records whether input_x is active so a press fires once a held input is consumed (input_x cleared).
+N $8482 Tail reads player_state and dispatches through a 2-byte JP-address table at #R$846E (index = state*2) to the pstate_N handler below.
 C $8489,3 get Signed input
 C $8492,3 get Signed input
 C $849C,3 set Signed input (debounce: force input_x=0 this frame)
 C $849F,3 get Player state-machine state
-C $84A2,7 index player_state*2 into jump table $846E and dispatch (JP (HL))
+C $84A2,7 index player_state*2 into jump table #R$846E and dispatch (JP (HL))
 @ $84AF label=pstate_reset
 c $84AF Pstate reset
 N $84AF Common "return to normal/play" exit: player_state=0, pstate_phase=0.
@@ -416,10 +416,10 @@ C $84B5,3 set Player state-machine phase/height window
 @ $84B9 label=pstate_play
 c $84B9 Pstate play
 N $84B9 State 0: standing/walking, the default state.
-N $84B9 Reads the cell under the player (READ_PLAYER_CELL) and dispatches on its type (0=normal falls through, 1->$8590, 2->$85A1, else->$85B0).
+N $84B9 Reads the cell under the player (READ_PLAYER_CELL) and dispatches on its type (0=normal falls through, 1->#R$8590, 2->#R$85A1, else->#R$85B0).
 N $84B9 Normal cell: ROTATE_IF_IDLE, then vertical input picks a climb direction (tests $60BE facing sign) and enters pstate_3 (climb) at $8559.
-N $84B9 No vertical input: horizontal input nonzero -> JP $8656 (enter pstate_1, climb a column) else ROTATE_TOWER with vertical input, carry (blocked) -> JP $8673 (alt pstate_1 entry).
-N $84B9 No input at all: CHECK_CONVEYOR / TEST_CELL_SPECIAL under fire button -> may set game_state=1 and JP $8724 (enter pstate_4, jump/fall) else just advances the idle-walk animation phase (0..7, sound 2 every 4th step).
+N $84B9 No vertical input: horizontal input nonzero -> JP #R$8656 (enter pstate_1, climb a column) else ROTATE_TOWER with vertical input, carry (blocked) -> JP #R$8673 (alt pstate_1 entry).
+N $84B9 No input at all: CHECK_CONVEYOR / TEST_CELL_SPECIAL under fire button -> may set game_state=1 and JP #R$8724 (enter pstate_4, jump/fall) else just advances the idle-walk animation phase (0..7, sound 2 every 4th step).
 C $84BC,3 Read player cell
 C $84CF,3 Rotate if idle
 C $84D2,3 get Signed input
@@ -441,7 +441,7 @@ C $855F,3 set Player state-machine phase/height window
 @ $8563 label=pstate_3
 c $8563 Pstate 3
 N $8563 State 3: vertical climb animation (entered from pstate_play at $8559).
-N $8563 Picks a sprite frame from table $86F2 indexed by phase (mirrored via +7 when $60BE facing is negative), increments phase each call.
+N $8563 Picks a sprite frame from table #R$86F2 indexed by phase (mirrored via +7 when $60BE facing is negative), increments phase each call.
 N $8563 At phase==7 the climb cycle ends: flips the facing bit ($60BE ^= $80) and returns to pstate_reset (state 0).
 C $8567,3 get Player state-machine phase/height window
 s $858D
@@ -468,7 +468,7 @@ C $862B,3 Play sound
 @ $863F label=tbl_863f
 b $863F
 N $863F 23-byte signed-offset data table read by pstate_1 for scroll-delta/frame lookups.
-N $863F Byte $863F itself doubles as a SELF-MODIFIED scratch cell: code_8656/$8673 store the climb's vertical-input direction there for pstate_1 to feed into ROTATE_TOWER.
+N $863F Byte #R$863F itself doubles as a SELF-MODIFIED scratch cell: code_8656/#R$8673 store the climb's vertical-input direction there for pstate_1 to feed into ROTATE_TOWER.
 @ $8656 label=code_8656
 c $8656 Enter column climb (via horizontal input)
 N $8656 Climb-column entry #1 (from pstate_play when horizontal input is pressed on a normal cell).
@@ -486,9 +486,9 @@ C $8678,3 get Signed input
 C $867F,3 set Player state-machine phase/height window
 @ $868D label=pstate_1
 c $868D Pstate 1
-N $868D State 1: climbing a tower column (entered via code_8656/$8673).
+N $868D State 1: climbing a tower column (entered via code_8656/#R$8673).
 N $868D Sets a sprite frame from phase&7 combined with facing, ROTATE_TOWERs using the direction stashed in tbl_863f, then looks up a scroll delta (table $8643, mirrored $864F when climbing the other way) and applies it via STEP_SCROLL.
-N $868D On a special zero-crossing case it aborts the climb (sound 2, back to pstate_reset). Otherwise advances phase; once phase reaches the $8642 limit it does a final STEP_SCROLL($FF) -- no-carry falls into the pstate_5 setup path ($8596), carry sets phase=1 and player_state=2 (pstate_2, slide-in).
+N $868D On a special zero-crossing case it aborts the climb (sound 2, back to pstate_reset). Otherwise advances phase; once phase reaches the $8642 limit it does a final STEP_SCROLL($FF) -- no-carry falls into the pstate_5 setup path (#R$8596), carry sets phase=1 and player_state=2 (pstate_2, slide-in).
 C $869E,3 Rotate tower
 C $86A1,3 get Player state-machine phase/height window
 C $86B9,3 Step scroll
@@ -507,9 +507,9 @@ C $872A,3 set Player state-machine phase/height window
 C $8732,3 Play sound
 @ $8736 label=pstate_4
 c $8736 Pstate 4
-N $8736 State 4: jump/fall arc (entered from $8724 or from pstate_play's ROTATE_TOWER-blocked path).
-N $8736 Early phase (0..6): plays a landing sound at gated points, picks a sprite frame from tables $8700/$8704 (mirrored by facing), nudges tower rotation toward the center column ($60B9&7 vs 4) via ROTATE_TOWER, advances phase.
-N $8736 Phase 7..$0C: picks frame from table $8709, advances phase. Falls through to $879B for the rest of the arc.
+N $8736 State 4: jump/fall arc (entered from #R$8724 or from pstate_play's ROTATE_TOWER-blocked path).
+N $8736 Early phase (0..6): plays a landing sound at gated points, picks a sprite frame from tables $8700/$8704 (mirrored by facing), nudges tower rotation toward the center column (#R$60B9&7 vs 4) via ROTATE_TOWER, advances phase.
+N $8736 Phase 7..$0C: picks frame from table $8709, advances phase. Falls through to #R$879B for the rest of the arc.
 C $8736,3 A = pstate_phase (landing-sound gate)
 C $8739,8 phase in [7,$22]? sound-gate window test
 C $8747,3 Play sound
@@ -527,7 +527,7 @@ s $879A
 c $879B Pstate 4 land
 N $879B Continuation of pstate_4 for phase>=$0D (descent/landing).
 N $879B At phase==$1D: clears $60C2, and if game_state!=0 sets game_state=2 (signals landing to main_tick). Also rotates tower position by +-2 per facing, toggling a self-mod alternator so this only fires every other call.
-N $879B Phase $1D..$22: frame from table $86F9. Phase>=$23: if game_state==3, JP $A113 (external -- special level-transition landing, not covered here). Else STEP_SCROLL($FC) and, at phase<$24, latches a landing facing direction into $60BE from vertical input.
+N $879B Phase $1D..$22: frame from table $86F9. Phase>=$23: if game_state==3, JP #R$A113 (external -- special level-transition landing, not covered here). Else STEP_SCROLL($FC) and, at phase<$24, latches a landing facing direction into $60BE from vertical input.
 N $879B Phase $24..$27: frame from table $86E4/$86E8 (mirrored). Phase>=$28: jump sequence complete, JP pstate_reset.
 C $879B,2 phase < $1D? skip landing-signal block
 C $879F,4 clear $60C2
@@ -552,7 +552,7 @@ C $8843,3 set Player state-machine phase/height window
 C $8850,3 Play sound
 @ $8854 label=pstate_5
 c $8854 Pstate 5
-N $8854 State 5: ledge-grab / climb-onto (entered from pstate_1 at $8596 when a column climb ends without reaching the top-of-climb case).
+N $8854 State 5: ledge-grab / climb-onto (entered from pstate_1 at #R$8596 when a column climb ends without reaching the top-of-climb case).
 N $8854 Calls ROTATE_IF_IDLE each frame. At phase==3 the grab completes -> JP pstate_reset. Otherwise picks a sprite frame from table $871C indexed by phase OR'd with facing bits ($60BE), and at phase==1 calls update_player_obj to sync the actor's screen position. Increments phase each call.
 C $8857,3 get Player state-machine phase/height window
 C $8873,3 Update player obj
@@ -570,16 +570,16 @@ C $88B4,3 set Player state-machine state
 C $88B7,3 Check conveyor
 @ $88BD label=pstate_6
 c $88BD Pstate 6
-N $88BD State 6: riding a conveyor / column-transition (entered from $88AB).
-N $88BD Phase==0: nudges tower rotation ($60B9) toward the center column (compare &7 vs 4), same trick as pstate_4.
-N $88BD Phase==1: sets flag $6038=$FE, calls CHECK_CONVEYOR and combines its result with a self-mod "descending" byte at $88AA to build a movement mask, then applies a signed 16-bit step to the actor's column position ($60BA). Every 4th sub-step plays sound $0A and re-checks the conveyor.
-N $88BD Examines the cell flags to either block movement (early RET) or complete it: on completion ORs $81 into the cell flags, calls $A766 (object/effect hook, not analysed here), sets $6038=$FF, returns to pstate_reset.
+N $88BD State 6: riding a conveyor / column-transition (entered from #R$88AB).
+N $88BD Phase==0: nudges tower rotation (#R$60B9) toward the center column (compare &7 vs 4), same trick as pstate_4.
+N $88BD Phase==1: sets flag #R$6038=$FE, calls CHECK_CONVEYOR and combines its result with a self-mod "descending" byte at #R$88AA to build a movement mask, then applies a signed 16-bit step to the actor's column position ($60BA). Every 4th sub-step plays sound $0A and re-checks the conveyor.
+N $88BD Examines the cell flags to either block movement (early RET) or complete it: on completion ORs $81 into the cell flags, calls $A766 (object/effect hook, not analysed here), sets #R$6038=$FF, returns to pstate_reset.
 C $88BD,6 phase!=0? skip center-rotate step
 C $88C3,3 get Tower rotation position
 C $88DA,6 phase==0 tail: phase++, flag_6038=$FE
 C $88E0,3 set Flag?? $00 $FE $FF
 C $88E3,3 Check conveyor
-C $88E6,11 combine conveyor result with self-mod $88AA descending flag
+C $88E6,11 combine conveyor result with self-mod #R$88AA descending flag
 C $88F6,9 A = descending flag; B = sign extend
 C $8900,17 apply signed step to actor column (16-bit)
 C $8913,3 Play sound
@@ -613,21 +613,21 @@ C $89C0,5 convert actor hit: HL(from check_collisions)->IX, set CY
 @ $89C5 label=check_collision
 c $89C5 Check collision
 N $89C5 Test the player against the tower/hazards and apply the result.
-N $89C5 Dispatches on player_state ($60C0):
+N $89C5 Dispatches on player_state (#R$60C0):
 N $89C5 7 = invulnerable/idle -> no test (RET)
-N $89C5 4 = check a height window ($60BF in $0A..$1E)
+N $89C5 4 = check a height window (#R$60BF in $0A..$1E)
 N $89C5 8 = RET else test flag $60C5.
-N $89C5 Calls $895B (carry = hit).
-N $89C5 On a hit it patches the value at $8A49 (SELF-MODIFYING: $14/$0F/$20 select the bump/death response used downstream) and branches into the hit handler.
-C $89C5,3 A = player_state ($60C0)
+N $89C5 Calls #R$895B (carry = hit).
+N $89C5 On a hit it patches the value at #R$8A49 (SELF-MODIFYING: $14/$0F/$20 select the bump/death response used downstream) and branches into the hit handler.
+C $89C5,3 A = player_state (#R$60C0)
 C $89CA,1 state 7: no collision this frame
-C $89CF,3 A = $60BF (height-in-column)
+C $89CF,3 A = #R$60BF (height-in-column)
 C $89E4,3 Collision test
 C $89E7,2 hit -> hit handler
 C $89E9,3 get Player state-machine state
 C $89EF,3 get Tower rotation position
 C $89F5,3 Check rotate collision
-C $89FB,3 patch response code at $8A49 = $14 (SELF-MOD)
+C $89FB,3 patch response code at #R$8A49 = $14 (SELF-MOD)
 C $8A01,3 A = colliding object state (+48)
 C $8A0D,3 patch response code ($0F enemy / $14 wall)
 C $8A10,3 get Player state-machine state
@@ -650,8 +650,8 @@ b $8A61
 N $8A61 16-byte signed-offset table used by code_8a71 to size the knockback step, indexed by (response_code>>1)&3.
 @ $8A71 label=code_8a71
 c $8A71 Bump/knockback handler
-N $8A71 Bump/knockback handler, dispatched from check_collision's hit path via the response code at hit_response ($8A49).
-N $8A71 If the current animation phase equals the stored response code: "wall bump" branch ($8AB5) -- sets a sprite frame, subtracts 4 from the actor's column position ($60BA), and if that didn't go negative, re-checks via CHECK_ROTATE_COLLISION; no collision bounces back into pstate_play_cell1 ($8590), otherwise (or on negative position) falls into the death handler at $8AD7.
+N $8A71 Bump/knockback handler, dispatched from check_collision's hit path via the response code at hit_response (#R$8A49).
+N $8A71 If the current animation phase equals the stored response code: "wall bump" branch ($8AB5) -- sets a sprite frame, subtracts 4 from the actor's column position ($60BA), and if that didn't go negative, re-checks via CHECK_ROTATE_COLLISION; no collision bounces back into pstate_play_cell1 (#R$8590), otherwise (or on negative position) falls into the death handler at $8AD7.
 N $8A71 If phase differs from the response code: "step" branch -- picks a sprite frame from table $871F (mirrored by facing), clamps the response code to $0F, looks up a signed delta from tbl_8a61 and applies it to the actor's column position; going negative also falls into $8AD7 (death), otherwise the position is masked/stored and phase increments.
 C $8A71,7 A=phase; compare vs stored response code (hit_response)
 C $8A7A,15 step branch: index sprite frame table $871F by (code>>1)&3
@@ -678,7 +678,7 @@ C $8B0B,3 Play sound
 c $8B0E Pstate 8
 N $8B0E State 8: death fall-off animation, entered from death_handler ($8AD7).
 N $8B0E While phase<$18, sets sprite frame ($60C1) from phase>>2 and increments phase each call. Once phase>=$18, clears $60C2 and keeps counting.
-N $8B0E At phase==$38 sets death_flag ($60C3)=1 -- this is the signal main_loop polls to trigger the life-loss handler.
+N $8B0E At phase==$38 sets death_flag (#R$60C3)=1 -- this is the signal main_loop polls to trigger the life-loss handler.
 C $8B0E,4 A = pstate_phase
 C $8B12,8 phase<$18: frame=phase>>2, phase++
 C $8B1F,9 phase>=$18: clear $60C2, check phase==$38
@@ -687,13 +687,13 @@ s $8B30
 @ $8B50 label=sprite_setup
 c $8B50 Sprite setup
 N $8B50 Compute on-screen positions for the 4 actor sprites (objects 0..3) ahead of drawing.
-N $8B50 Derives a buffer base from tower_height into $600A, fills two coordinate tables at $8B30/$8B40 (X and Y per sprite, via $8BEC/$8BFF), then per object copies sprite id (IX+18 -> IX+24) and stores the screen column (IX+30) from the angular position (IX+0).
-N $8B50 Self-mod: $8B30/$8B40 are coordinate scratch buffers IN code.
+N $8B50 Derives a buffer base from tower_height into #R$600A, fills two coordinate tables at #R$8B30/$8B40 (X and Y per sprite, via #R$8BEC/#R$8BFF), then per object copies sprite id (IX+18 -> IX+24) and stores the screen column (IX+30) from the angular position (IX+0).
+N $8B50 Self-mod: #R$8B30/$8B40 are coordinate scratch buffers IN code.
 C $8B50,3 HL -> tower_height
 C $8B55,1 4 - height, low 3 bits -> sub-row
 C $8B5F,3 DE = $6600 sprite work buffer base
-C $8B63,3 store buffer ptr -> $600A
-C $8B66,3 fill X-coord table $8B30 (4 sprites, step 8)
+C $8B63,3 store buffer ptr -> #R$600A
+C $8B66,3 fill X-coord table #R$8B30 (4 sprites, step 8)
 C $8B6C,3 Col screen y
 C $8B7A,3 fill Y-coord table $8B40 (4 sprites)
 C $8B80,3 Col screen x
@@ -708,13 +708,13 @@ C $8BD0,3 Calc sprite shift
 c $8BEC Col screen y
 N $8BEC Map an actor's angular column to its screen Y / vertical-projection value.
 N $8BEC In: A = angular position (0..127).
-N $8BEC Offsets by the tower rotation: rel = (A + $20 - tower_height) & $7F, then returns col_y_table[$6380 + rel].
+N $8BEC Offsets by the tower rotation: rel = (A + $20 - tower_height) & $7F, then returns col_y_table[#R$6380 + rel].
 N $8BEC Out: A = projected value.
 N $8BEC Preserves HL (PUSH/POP).
 C $8BED,2 bias by +$20 (quarter turn)
 C $8BF2,1 subtract current tower rotation
 C $8BF3,2 wrap to 0..127 (around the tower)
-C $8BF8,3 HL -> col_y_table ($6380)
+C $8BF8,3 HL -> col_y_table (#R$6380)
 C $8BFC,1 A = table[rel] = projected Y/value
 @ $8BFF label=col_screen_x
 c $8BFF Col screen x
@@ -731,20 +731,20 @@ C $8C10,2 back face?
 C $8C14,2 -> rel - $60 (right quadrant)
 C $8C1B,1 front: mirror $60 - rel
 @ $8C1E label=sprite_shift_masks
-b $8C1E SPRITE_SHIFT_MASKS
+b $8C1E Sprite shift masks
 N $8C1E 1bpp AND/shift mask data for drawing the tower-column sprites at sub-byte X offsets (patterns 3F/0F/03/00 FF...).
 N $8C1E Base referenced from $8D35/$8F5E.
 N $8C1E Interleaved with a few SELF-MODIFIED 1-byte slots ($8C76/$8C77/$8C78/$8C81/$8C82/$8C83/ $8C85) that calc_sprite_shift patches with computed shift counts.
-N $8C1E Spans $8C1E..$8CC1 code resumes at calc_sprite_shift.
+N $8C1E Spans #R$8C1E..$8CC1 code resumes at calc_sprite_shift.
 @ $8CC2 label=calc_sprite_shift
 c $8CC2 Calc sprite shift
 N $8CC2 For the actor at IX, compute its screen row (via col_screen_y) and the horizontal sub-byte shift, and patch the shift counts into the self-mod slots above ($8C76/77/ 81).
-N $8CC2 Reads the column buffer ($600A) to skip empty/edge columns ($0F/$0E sentinels).
+N $8CC2 Reads the column buffer (#R$600A) to skip empty/edge columns ($0F/$0E sentinels).
 N $8CC2 Called from sprite_setup ($8BD0).
 C $8CC2,3 A = actor angular pos (IX+0)
 C $8CC5,3 Col screen y
 C $8CCE,3 patch self-mod slot $8C81 (row)
-C $8CD1,3 HL -> column buffer ($600A)
+C $8CD1,3 HL -> column buffer (#R$600A)
 C $8CD6,2 $0F = empty column -> skip (RET)
 C $8CDE,3 A = tower_height (rotation)
 C $8CE5,2 /8 -> byte-column shift
@@ -772,7 +772,7 @@ C $8E44,2 loop 4 columns
 N $8E48 Entry point used by calc_sprite_shift, not by expand_sprite_a's own DJNZ loop.
 N $8E48 Reads the self-mod shift-count slot ($8C82) to index a 2-byte pair from table $8C79 (shift*2), storing it into the loop-count operands of the first/third strip's "LD B,nn" at $8E81/$8EC7 (operand bytes $8E82/$8EC8) -- CORRECTION: these are NOT routine pointers or mask operands, they are the row counts for the two edge strips. Confirmed by emulation: for every shift value 0-3, (first-strip-count + third-strip-count) == 8, and combined with the always-8-row middle strip, TOTAL decoded height is a shift-INVARIANT 16 rows. When the shift-count slot is 0, the first strip is skipped entirely (JR Z,$8E86) and its row count (0) is moot.
 N $8E48 Then, per 8-pixel strip, copies 3 source mask bytes ($600C/$600D/$600E or $600F/$6010/$6011 or $6012/$6013/$6014, selected by the same shift-count test) straight into expand_sprite_b's real OR-immediate operands ($8ECB/$8ED7/$8EE3), and their bitwise complement (CPL) into the paired AND-immediate operands ($8ED1/$8EDD/$8EE9) -- so expand_sprite_b ORs in the new sprite bits and ANDs out the old ones at the right sub-byte shift, then calls expand_sprite_b.
-N $8E48 See gfx_c1f6 ($C1F6) for the full sprite-bitmap decode writeup (this self-modifying pipeline is why the bitmap can't be rendered as a raw UDG array image).
+N $8E48 See gfx_c1f6 (#R$C1F6) for the full sprite-bitmap decode writeup (this self-modifying pipeline is why the bitmap can't be rendered as a raw UDG array image).
 N $8E48 Clobbers: A,BC.
 C $8E48,3 A = shift-count slot ($8C82)
 C $8E4B,4 index a 2-byte routine-pointer pair
@@ -802,33 +802,49 @@ C $8EED,2 loop 3 mask bytes
 C $8EEF,2 restore flags, RET
 @ $8EF1 label=calc_sprite_col
 c $8EF1 Calc sprite col
-N $8EF1 Resolve a sprite column: index table $8B30 by A, compare the result against the actor's clip field (IX+30), and patch the shift slot $8C81.
+N $8EF1 Resolve a sprite column: index table #R$8B30 by A, compare the result against the actor's clip field (IX+30), and patch the shift slot $8C81.
 N $8EF1 RET early when within bounds.
 N $8EF1 Clobbers: A,DE,HL.
 C $8F1B,3 Draw tower cell
 C $8F24,3 Draw tower cell
 @ $8F31 label=draw_tower_cell
 c $8F31 Draw tower cell
-N $8F31 Decode one tower cell descriptor byte at (HL): the sign bit and bits 2-3 pick one of three offset tables ($8F75/$8F8B/$8FA1), which is then indexed by the low bits (DE) to get an offset into sprite_shift_masks ($8C1E).
-N $8F31 The looked-up sprite_shift_masks entry supplies 3 AND-mask bytes that are ANDed into the destination screen bytes at (BC) -- clearing the pixels for this cell's feature (door/block/gap) shape -- and bumps a self-mod counter at $8C78.
-N $8F31 Negative table entries (bit7 set) mean "no cell here", RET without drawing.
+N $8F31 Decode one tower map cell byte at (HL) -- full bitfield format documented in docs/Level-Format.md (bit7=occupied, bits0-1=type, bits4-5=subtype).
+N $8F31 Bit7 clear (unoccupied) or type==3 (invalid combo here) -> RET, nothing drawn. Otherwise type bit0 selects one of three offset tables (bit0==0 -> tbl_cell_offsets_c $8FA1 bit0==1 and bits2-3==0 -> tbl_cell_offsets_a #R$8F75 bit0==1 and bits2-3!=0 -> tbl_cell_offsets_b $8F8B).
+N $8F31 The chosen table is indexed by DE (caller-supplied sub-position, not part of the cell byte) negative entries ($FF) mean nothing to draw at that sub-position.
+N $8F31 A non-negative entry is *3 and indexes sprite_shift_masks (#R$8C1E) for 3 AND-mask bytes, ANDed into 3 destination screen bytes at (BC) to punch out the feature's silhouette. Bumps a self-mod counter at $8C78 on every successful draw.
 N $8F31 Clobbers: A,HL,...
+C $8F32,5 A = cell byte; bit7 clear (unoccupied) -> RET
+C $8F37,3 H = cell byte; isolate type bits0-1
+C $8F3A,4 type==3 (invalid/no-render)? -> RET
+C $8F3E,4 test type bit0
+C $8F42,3 reload cell byte, isolate bits2-3
+C $8F45,2 bits2-3==0 -> table_a
+C $8F47,5 else -> table_b ($8F8B)
+C $8F4C,5 table_a (#R$8F75)
+C $8F51,3 bit0==0 -> table_c ($8FA1)
+C $8F54,1 HL += DE (sub-position index)
+C $8F55,5 A = table[DE]; negative -> RET (nothing here)
+C $8F5A,4 index = A*3 into sprite_shift_masks
+C $8F5E,4 HL -> sprite_shift_masks[index]
+C $8F62,13 AND-mask 3 destination bytes at (BC)
+C $8F6F,4 bump feature-drawn counter ($8C78)
 @ $8F75 label=tbl_cell_offsets_a
 b $8F75
-N $8F75 First of three sibling offset tables ($8F75/$8F8B/$8FA1), selected by draw_tower_cell on the cell descriptor's bits 2-3, then indexed by DE (low descriptor bits) to get an offset into sprite_shift_masks ($8C1E).
+N $8F75 First of three sibling offset tables (#R$8F75/$8F8B/$8FA1), selected by draw_tower_cell on the cell descriptor's bits 2-3, then indexed by DE (low descriptor bits) to get an offset into sprite_shift_masks (#R$8C1E).
 @ $8FB7 label=clear_actor_states
 c $8FB7 Clear actor states
 N $8FB7 Zero the state byte (+48) of all four object_table actors, deactivating every enemy.
 N $8FB7 Clobbers: A,B,IX.
 @ $8FC7 label=draw_player
 c $8FC7 Draw player
-N $8FC7 Compute the player sprite's on-screen address from the vertical scroll ($6030) and draw it.
-N $8FC7 Handles the tower wrap: the playfield scrolls vertically mod the tower height, so the screen row is ($6030 +/- offset) kept in range.
-N $8FC7 Stores the two derived screen pointers ($6057, $6059) then calls the blit helpers ($8B50, $9035).
-N $8FC7 In: $6030 = scroll position.
+N $8FC7 Compute the player sprite's on-screen address from the vertical scroll (#R$6030) and draw it.
+N $8FC7 Handles the tower wrap: the playfield scrolls vertically mod the tower height, so the screen row is (#R$6030 +/- offset) kept in range.
+N $8FC7 Stores the two derived screen pointers ($6057, $6059) then calls the blit helpers (#R$8B50, #R$9035).
+N $8FC7 In: #R$6030 = scroll position.
 N $8FC7 Out: player drawn.
 N $8FC7 Clobbers A,HL.
-C $8FC7,3 HL = scroll position ($6030)
+C $8FC7,3 HL = scroll position (#R$6030)
 C $8FCB,2 - 8 (sprite top offset)
 C $8FD1,2 keep within the 3 screen-thirds (mod via AND 3)
 C $8FD4,2 past the wrap point ($3D0)?
@@ -873,8 +889,8 @@ c $90DA Update enemies
 N $90DA Step the 4 enemy actors (objects 0..3 of object_table).
 N $90DA For each: dispatch on its state (+48):
 N $90DA 0 = inactive (skip), 7 = patrol/home toward player_col,
-N $90DA 4/6 = -> $9158 (full movement state machine), 5 = phase countdown (+42) -- expires (bit7 of +42 set) into state 2.
-N $90DA else (any other state, e.g. 3/8/9) falls straight into $9158 too, since only 0/7/5 are filtered out here.
+N $90DA 4/6 = -> #R$9158 (full movement state machine), 5 = phase countdown (+42) -- expires (bit7 of +42 set) into state 2.
+N $90DA else (any other state, e.g. 3/8/9) falls straight into #R$9158 too, since only 0/7/5 are filtered out here.
 N $90DA State 7 homing: moves angular pos (+0) by speed (+54), then compares against player_col and the tower quadrant marks $3C/$78 to pick a chase direction (+2 / -2), or deactivates.
 N $90DA In: nothing.
 N $90DA Loops B=4 objects.
@@ -897,15 +913,15 @@ C $912C,2 state 4?
 C $9136,2 state 5 = phase countdown
 C $913B,3 decrement phase (+42)
 C $913E,4 phase underflowed (bit7 set) -> state=2
-C $914B,3 default (not 4/6/5): CHECK_ACTOR_COLLISION_A ($934C)
+C $914B,3 Check actor collision
 C $9150,4 blocked -> force state=4, phase=0
 @ $9158 label=enemy_move_dispatch
 c $9158 Enemy state dispatch
 N $9158 Entry into the enemy's full movement/behaviour state machine, reached from update_enemies for states 4, 6, and the default case.
-N $9158 state==4 -> $9183 (idle/animate-in-place check). state==6 -> tests phase (+42): phase==6 means a pending transform is queued, jumps to enemy_transform ($9170) else falls into the shared idle-animation tail (enemy_idle_anim, $9191) with a mirrored phase.
-N $9158 Any other state falls through to $91A4 (enemy_move_dispatch2).
+N $9158 state==4 -> #R$9183 (idle/animate-in-place check). state==6 -> tests phase (+42): phase==6 means a pending transform is queued, jumps to enemy_transform (#R$9170) else falls into the shared idle-animation tail (enemy_idle_anim, #R$9191) with a mirrored phase.
+N $9158 Any other state falls through to #R$91A4 (enemy_move_dispatch2).
 C $9158,3 A = state (+48)
-C $915D,2 state 4 -> $9183
+C $915D,2 state 4 -> #R$9183
 C $915F,2 state 6?
 C $9163,3 A = phase (+42)
 C $9166,2 phase==6 -> pending transform
@@ -925,36 +941,36 @@ C $919E,3 phase++
 @ $91A4 label=enemy_move_dispatch2
 c $91A4 Enemy movement: pick vertical/horizontal/attack path
 N $91A4 Second dispatch tier, reached for any state other than 0/4/5/6/7.
-N $91A4 state==3 -> $921D (enemy_post_move, shared attack/death dispatch). state==8 -> $91AD (enemy_move_vertical). else -> $91F8 (enemy_move_horizontal, the default case covering states like 1/2/9 during normal movement).
+N $91A4 state==3 -> #R$921D (enemy_post_move, shared attack/death dispatch). state==8 -> #R$91AD (enemy_move_vertical). else -> #R$91F8 (enemy_move_horizontal, the default case covering states like 1/2/9 during normal movement).
 C $91A4,2 state==3?
 C $91A6,3 -> enemy_post_move
 C $91A9,2 state==8?
 @ $91AD label=enemy_move_vertical
 c $91AD Enemy moves vertically
-N $91AD state 8: moves the enemy's 16-bit vertical position (+6/+12) by its signed speed (+54), backing up the old position in $6034 first.
-N $91AD Tests the new position via CHECK_ACTOR_COLLISION_A ($934C) and, if clear, CHECK_COLLISIONS against the player/other actors on-screen wraps checked via bit7 of the high byte (JP NZ,$9311 = out-of-bounds reset).
+N $91AD state 8: moves the enemy's 16-bit vertical position (+6/+12) by its signed speed (+54), backing up the old position in #R$6034 first.
+N $91AD Tests the new position via CHECK_ACTOR_COLLISION_A (#R$934C) and, if clear, CHECK_COLLISIONS against the player/other actors on-screen wraps checked via bit7 of the high byte (JP NZ,#R$9311 = out-of-bounds reset).
 N $91AD On a block, restores the previous position and reverses the speed sign (bounce).
-N $91AD Always ends by setting sprite id from the level number ($6039&3)*4+$66 (level-tinted variant), then next enemy -- does not fall into enemy_post_move.
+N $91AD Always ends by setting sprite id from the level number (#R$6039&3)*4+$66 (level-tinted variant), then next enemy -- does not fall into enemy_post_move.
 C $91AD,6 backup old position, add speed (16-bit)
-C $91C0,6 wrap-check: out of range -> $9311 (bounds reset)
-C $91CF,3 CHECK_ACTOR_COLLISION_A
+C $91C0,6 wrap-check: out of range -> #R$9311 (bounds reset)
+C $91CF,3 Check actor collision
 C $91D4,3 Check collisions
 C $91D9,9 blocked: restore old position
 C $91E2,7 reverse speed sign
 @ $91F8 label=enemy_move_horizontal
 c $91F8 Enemy moves horizontally (around tower)
-N $91F8 Default movement case (any state not 3/4/5/6/7/8): moves the enemy's angular position (+0) by its signed speed (+54), mod 128, backing up the old value in $6033 first.
+N $91F8 Default movement case (any state not 3/4/5/6/7/8): moves the enemy's angular position (+0) by its signed speed (+54), mod 128, backing up the old value in #R$6033 first.
 N $91F8 Same collision test/bounce pattern as enemy_move_vertical (CHECK_ACTOR_COLLISION_A then CHECK_COLLISIONS on clear on a block, restores old position and reverses speed).
-N $91F8 Falls through into enemy_post_move ($921D), unlike enemy_move_vertical.
+N $91F8 Falls through into enemy_post_move (#R$921D), unlike enemy_move_vertical.
 C $91F8,6 backup old angular pos
 C $91FE,8 add speed, wrap mod 128
-C $9206,3 CHECK_ACTOR_COLLISION_A
+C $9206,3 Check actor collision
 C $920B,3 Check collisions
 C $9210,10 blocked: restore old position, reverse speed
 @ $921D label=enemy_post_move
 c $921D Enemy post-move: hazard/attack dispatch
-N $921D Shared post-movement dispatch: state==2 -> $92EC (enemy_hazard_react). state==9 -> $91E9 (just refresh the level-tinted sprite, no movement -- an inert/spawned variant).
-N $921D Otherwise this is the attack-pattern driver: indexes a per-enemy step table at $90CE by phase (+42). A zero entry means no attack step due yet -> enemy_attack_cooldown ($92DC, phase++ up to $0A). A nonzero entry is a signed step consumed by enemy_attack_step ($9238) to chain a dash/charge move.
+N $921D Shared post-movement dispatch: state==2 -> #R$92EC (enemy_hazard_react). state==9 -> $91E9 (just refresh the level-tinted sprite, no movement -- an inert/spawned variant).
+N $921D Otherwise this is the attack-pattern driver: indexes a per-enemy step table at $90CE by phase (+42). A zero entry means no attack step due yet -> enemy_attack_cooldown (#R$92DC, phase++ up to $0A). A nonzero entry is a signed step consumed by enemy_attack_step (#R$9238) to chain a dash/charge move.
 C $921D,3 A = state (+48)
 C $9220,5 state==2 -> enemy_hazard_react
 C $9225,5 state==9 -> refresh level-tinted sprite only
@@ -963,12 +979,12 @@ C $9235,3 entry==0 -> no attack step due, cooldown
 @ $9238 label=enemy_attack_step
 c $9238 Enemy attack dash step
 N $9238 One step of an attack dash/charge sequence, driven by the $90CE table entry for the current phase.
-N $9238 Applies the (sign-extended) step as a 16-bit delta to the enemy's vertical position (+6/+12), backing up the old value in $6034. Wrap past the tower bounds (bit7 of H) resets the enemy via $9311.
-N $9238 Tests the new position (CHECK_ACTOR_COLLISION_A then CHECK_COLLISIONS); on a block, restores the old position and falls to enemy_hazard_react ($92DC) instead of continuing the dash.
-N $9238 On success, re-examines the just-consumed table entry: $FF or $01 (a mid-dash unit step) loops back to consume the next table entry (re-enters at $9238) any other value (the dash's terminating marker) branches to either finish the attack (state==3 -> set state=2, phase=0) or fall to $928D to decide whether to trigger a fresh attack.
+N $9238 Applies the (sign-extended) step as a 16-bit delta to the enemy's vertical position (+6/+12), backing up the old value in #R$6034. Wrap past the tower bounds (bit7 of H) resets the enemy via #R$9311.
+N $9238 Tests the new position (CHECK_ACTOR_COLLISION_A then CHECK_COLLISIONS); on a block, restores the old position and falls to enemy_hazard_react (#R$92DC) instead of continuing the dash.
+N $9238 On success, re-examines the just-consumed table entry: $FF or $01 (a mid-dash unit step) loops back to consume the next table entry (re-enters at #R$9238) any other value (the dash's terminating marker) branches to either finish the attack (state==3 -> set state=2, phase=0) or fall to #R$928D to decide whether to trigger a fresh attack.
 C $9245,3 backup old position (16-bit)
-C $924B,3 wrap -> $9311 (bounds reset)
-C $9257,3 CHECK_ACTOR_COLLISION_A
+C $924B,3 wrap -> #R$9311 (bounds reset)
+C $9257,3 Check actor collision
 C $925C,3 Check collisions
 C $9262,6 blocked: restore old position
 C $9278,3 terminating step: A==1?
@@ -1017,31 +1033,34 @@ N $9330 Loads the self-mod probe params (column $9329=A, direction step $932A=$F
 N $9330 In: A=column.
 N $9330 Out: CY/flags from the probe.
 @ $934C label=check_actor_collision_a
-c $934C
+c $934C Check actor collision
 @ $9372 label=check_actor_collision_b
-c $9372
+c $9372 Check actor collision b
 @ $9395 label=run_cell_probe
 C $93E0,3 set Camera row
 C $93F5,3 set Camera row
 C $93FE,3 get Camera row
 C $946A,3 Play sound
 @ $9493 label=pos_to_col
-c $9493
+c $9493 Pos to col
 @ $949D label=read_player_cell
 c $949D Read player cell
 N $949D Compute and read the tower-map cell at the player's position (from $60BA via pos_to_col and tower_height), returning the cell contents for the pstate_play logic.
 N $949D Clobbers: A,C,HL.
+C $94A0,3 Pos to col
 C $94A5,3 get Tower rotation position
 C $94D8,3 get Tower rotation position
 b $94F6
 @ $9516 label=player_cell_addr
 c $9516 Player cell addr
-N $9516 Return HL = address in the $F000 tower map of the player's current cell (column from $60BA, row from tower_height>>3, page $F0+).
+N $9516 Return HL = address in the #R$F000 tower map of the player's current cell (column from $60BA, row from tower_height>>3, page $F0+).
 N $9516 Clobbers: A,HL.
+C $9519,3 Pos to col
 C $951D,3 get Tower rotation position
 @ $952A label=test_cell_special
 c $952A Test cell special
 N $952A Read the cell under the player return CY=1 with A=its $40 flag when it is a 'special' cell (type bits == 3), else NC.
+N $952A Full tower-map cell bitfield format: docs/Level-Format.md.
 N $952A Clobbers: A,B,HL.
 @ $9540 label=check_conveyor
 c $9540 Check conveyor
@@ -1061,10 +1080,10 @@ T $95B2
 b $95B9
 @ $95BD label=check_collisions
 c $95BD Check collisions
-N $95BD Test actor IX against the four object_table entries (IY walks $605B..) for an overlap, runs with interrupts off.
+N $95BD Test actor IX against the four object_table entries (IY walks #R$605B..) for an overlap, runs with interrupts off.
 N $95BD Per entry, skips to the next one ($9648: INC IY, next loop pass) when: IY==IX (self), or state (+48) is 0/4/6/7 (inactive/certain non-collidable states).
 N $95BD Otherwise does a 2-stage proximity test: angular distance |IX+0 - IY+0| (mod 128) must be small (<4, or >$7C i.e. wrapped small-negative) -- else skip; then vertical distance from the 16-bit position (IX+6/+12 vs IY+6/+12) must be within a small window (same page and delta<8, or one-page-back wrap with delta>=$F9) -- else skip.
-N $95BD On proximity, resolves a per-shape collision bitmask: if the target is object index 5 (the synthetic player record, see collision_test) it's an unconditional hit (SCF); if index 4, tests a bit in table $95AE; otherwise table $959F -- indexed by the angular delta, bit tested via RRA loop.
+N $95BD On proximity, resolves a per-shape collision bitmask: if the target is object index 5 (the synthetic player record, see collision_test) it's an unconditional hit (SCF); if index 4, tests a bit in table $95AE; otherwise table #R$959F -- indexed by the angular delta, bit tested via RRA loop.
 N $95BD On a hit, exits via $9650 with CY=1 and HL=IY (colliding object's base pointer, since PUSH IY/POP HL runs before the final POP IY restores the caller's IY). No hit after all 4 entries: CY=0.
 N $95BD Skips comparing the actor with itself.
 N $95BD Clobbers: A,DE,HL,IY (IX preserved).
@@ -1080,7 +1099,7 @@ C $961B,9 one-page-back wrap: within -7 rows?
 C $9624,5 build delta+3 &7 -> table index E
 C $9629,4 object index = IX low - $5B
 C $962D,4 index==5 (synthetic player)? unconditional hit
-C $9633,7 else pick shape table $959F/$95AE by index==4
+C $9633,7 else pick shape table #R$959F/$95AE by index==4
 C $963D,6 test bit E in shape table byte
 C $9648,7 next object: INC IY, loop B
 C $9650,6 exit: HL=IY (colliding object), EI, RET
@@ -1121,9 +1140,9 @@ b $96DD
 @ $96E9 label=update_actor_pos
 c $96E9 Update actor pos
 N $96E9 Advance one actor's position around/along the tower for this frame.
-N $96E9 IX = actor_obj ($605F).
+N $96E9 IX = actor_obj (#R$605F).
 N $96E9 Fields used: (IX+0)  angular column around the tower (accumulated mod 128) (IX+6)  vertical position, low  (sub-pixel) (IX+12) vertical position, high (0..3) (IX+18) per-frame scratch, cleared on entry (IX+42) animation/move phase 0..$0C ($FF = inactive/done) (IX+48) actor state (2,4,5,8,9 -- see transitions below) (IX+54)
-C $96E9,4 IX -> actor struct base ($605F)
+C $96E9,4 IX -> actor struct base (#R$605F)
 C $96ED,4 clear per-frame scratch field (+18)
 C $96F1,3 A = phase (+42)
 C $96F4,2 $FF = inactive -> nothing to do
@@ -1145,7 +1164,7 @@ C $9748,4 state 2: arm phase=$4B, state=5
 C $9752,4 default: state=4, phase=0
 C $9767,3 Play sound
 b $976F TEXT_STRINGS
-N $976F Menu / level-name / status text, $976F..$9952.
+N $976F Menu / level-name / status text, #R$976F..$9952.
 N $976F Each entry is [colour-control byte <$10] + ASCII + 00.
 N $976F Rendered by print_string / print_centered.
 T $976F
@@ -1186,14 +1205,17 @@ b $9953
 @ $9953 label=tbl_level_name
 W $9953,,8
 @ $9963 label=show_level_intro
-c $9963
+c $9963 Show level intro
 C $9963,3 Play title animation
 C $9966,2 Start music ID 1
 C $9968,3 Start music
 C $996B,2 Print ">> GAME ON <<" at row $07
+C $9970,3 Print string at
 C $9973,2 Set print row $09
-C $9978,3 Print "PLAYER ONE" or "PLAYER TWO"
+C $9975,3 Set print row
+C $9978,3 Print PLAYER label
 C $997B,2 Print "ENTERING THE" at row $0C
+C $9980,3 Print string at
 C $9983,3 Get current level number (0-7)
 C $9986,1 Double for word index into level name table
 C $998A,3 Point to level name pointer table (#R$9953)
@@ -1202,23 +1224,37 @@ C $998E,1 Fetch low byte of level name address
 C $9990,1 Fetch high byte
 C $9991,1 Swap to HL
 C $9992,2 Print level name at row $0E
+C $9994,3 Print string at
 C $9997,3 Music tick
 C $999C,2 Jump to wait_frames (#R$9CF0) with A=$19
 @ $99A1 label=draw_info_screen_a
 c $99A1 Draw info screen a
-N $99A1 Render an animated info/message screen: tick the title animation, (re)start jingle 2, and print the screen's text lines (strings at $981E..) via print_string_at, running the music sequencer.
+N $99A1 Render an animated info/message screen: tick the title animation, (re)start jingle 2, and print the screen's text lines (strings at #R$981E..) via print_string_at, running the music sequencer.
 N $99A1 Clobbers: most.
 C $99A6,3 Start music
+C $99AE,3 Print string at
+C $99B3,3 Set print row
+C $99B6,3 Print PLAYER label
+C $99BE,3 Print string at
 C $99C1,3 Music tick
 C $99C8,3 Wait frames
 @ $99CE label=draw_timeup_screen
 c $99CE Draw timeup screen
-N $99CE The time-up message display (reached from main_loop when play_timer expires): animated title bg + jingle 2 + the time-up text (string $9918), pumping music_tick.
+N $99CE The time-up message display (reached from main_loop when play_timer expires): animated title bg + jingle 2 + the time-up text (string #R$9918), pumping music_tick.
 C $99D3,3 Start music
+C $99D8,3 Set print row
+C $99DB,3 Print PLAYER label
+C $99E3,3 Print string at
 C $99E6,3 Music tick
 @ $99F0 label=draw_info_screen_b
 c $99F0 Draw info screen b
-N $99F0 Another animated info screen variant (text strings $9894/$98A5), same structure as draw_info_screen_a.
+N $99F0 Another animated info screen variant (text strings #R$9894/#R$98A5), same structure as draw_info_screen_a.
+C $99F8,3 Print string at
+C $99FD,3 Set print row
+C $9A00,3 Print PLAYER label
+C $9A08,3 Print string at
+C $9A10,3 Print string at
+C $9A18,3 Print string at
 C $9A1D,3 Wait frames
 @ $9A23 label=screen_time_bonus
 c $9A23 Screen time bonus
@@ -1235,6 +1271,11 @@ C $9A98,3 get Lives
 c $9AD7
 C $9AF4,3 get Level countdown timer
 C $9B04,3 get Lives
+C $9B63,3 Print string at
+C $9B6B,3 Print string at
+C $9B73,3 Print string at
+C $9B7B,3 Print string at
+C $9B83,3 Print string at
 @ $9B87 label=menu_page
 b $9B87
 @ $9B88 label=attract_timer
@@ -1244,31 +1285,110 @@ c $9B8A Title menu
 N $9B8A Title screen, option menu and attract/demo loop.
 N $9B8A (TASK.md guessed 'init level data' here -- WRONG verified to be the front-end.) Blits the 24-row NEBULUS logo bitmap from rt_be00 ($BE00) into the screen, paints attribute rows, and prints the option lines (1/2 PLAYER etc.) via draw_menu_text.
 N $9B8A Runs proc_table as an attract demo until input, then polls the keyboard ($FE) and Kempston ($1F) for select/start.
+N $9B8A Entry: ticks the background animation once, starts music 0, resets the page/timeout/active flags (#R$9B87=0 main menu page, $9B88=$C0 attract timeout, $9B89=0 not-yet-active), falls into #R$9BA5.
 N $9B8A menu_page
+C $9B8A,3 tick background animation once
+C $9B8D,2 A = tune 0
 C $9B8F,3 Start music
-c $9BA2
-c $9BA5
+C $9B92,4 clear menu_page (#R$9B87=0, main menu)
+C $9B96,5 attract_timer = $C0
+C $9B9B,4 menu_active = 0
+@ $9BA2 label=title_menu_redraw_anim
+c $9BA2 Title menu redraw anim
+N $9BA2 Re-ticks the background animation (falls straight into #R$9BA5) -- the re-entry point used when the attract timer flips between the menu page and the hiscore page.
+@ $9BA5 label=title_menu_draw
+c $9BA5 Title menu draw
+N $9BA5 Draws the current page: if menu_page (#R$9B87)!=0, shows the hiscore table (draw_hiscore_screen + draw_menu_text for the CONTROLS/SOUND lines) and skips straight to the input poll ($9C23).
+N $9BA5 Otherwise draws the main menu: blits the 24-row NEBULUS logo from $BE00 in 3 vertical thirds (A=0/8/16), each blitting 16 columns x 7 source bytes/column via jp_get_screen_addr paints 3 header attribute rows ($58C8/$58E8/$5908, colours $47/$46/$45) via fill_attr_row prints the 3 option lines ("1 PLAYER" etc, strings at #R$98C8/#R$98D4/#R$98E2) at rows $0C/$0E/$10 then draw_menu_text for the CONTROLS/SOUND state lines.
 C $9BAB,3 Draw hiscore screen
+C $9BAE,3 Draw menu text
+C $9BB4,3 DE -> logo source ($BE00)
+C $9BB7,2 A = 0 (vertical third counter)
+C $9BBA,2 row/page base = $30+A
+C $9BBF,3 jp_get_screen_addr
+C $9BC2,2 B = 16 (columns this third)
+C $9BE6,2 loop 16 columns
+C $9BE9,2 A += 8 (next vertical third)
+C $9BEB,2 done all 3 thirds?
+C $9BF3,2 paint header attr row 1 ($47)
+C $9BF5,3 Fill attr row
+C $9BFB,2 paint header attr row 2 ($46)
+C $9BFD,3 Fill attr row
+C $9C03,2 paint header attr row 3 ($45)
+C $9C05,3 Fill attr row
+C $9C0A,3 HL -> "1 PLAYER"-ish option string
+C $9C0D,3 Print string at
+C $9C15,3 Print string at
+C $9C1D,3 Print string at
+C $9C20,3 Draw menu text
+C $9C23,3 menu_active flag
 C $9C29,3 Proc table
 C $9C2C,3 get Signed input
+C $9C32,5 menu_active = 1
 C $9C37,3 Music tick
+C $9C3B,5 A = keyboard row $FE, inverted, masked
+C $9C42,2 nothing on keyboard -> check Kempston
+C $9C44,6 Kempston: any direction or fire?
+C $9C4E,2 A = 0 (idle option index)
 C $9C50,3 set Game mode
 C $9C53,3 Proc table
 C $9C56,3 get Signed input
+C $9C59,4 horizontal input? -> release-wait ($9D07)
 C $9C5D,3 get Game mode
+C $9C60,3 advance/wrap option index 0..4
+C $9C65,2 A = key $24 ('1')
+C $9C67,3 test_key
+C $9C6A,2 pressed? -> 1-player start
+C $9C6C,2 A = 1 (running_flag: 1 player)
 C $9C6E,3 set Running flag
+C $9C71,3 restart into game (#R$9BA5 draw path with running_flag set)
+C $9C74,2 A = key $1C ('2')
+C $9C76,3 test_key
+C $9C79,2 pressed? -> 2-player start
+C $9C7B,2 A = 2 (running_flag: 2 player)
 C $9C7D,3 set Running flag
+C $9C83,2 A = key $14 (controls toggle)
+C $9C85,3 test_key
+C $9C8A,3 HL -> $6056 (sound-enable/control flag)
+C $9C8D,2 test bit 7
+C $9C91,2 set bit 7 (toggle on)
+C $9C96,2 A = key $0C (controls toggle off)
+C $9C98,3 test_key
+C $9C9D,3 HL -> $6056
+C $9CA0,2 test bit 7
+C $9CA4,2 clear bit 7 (toggle off)
+C $9CA9,3 HL -> attract_timer
+C $9CAC,1 decrement
+C $9CAD,2 not yet expired -> keep polling
+C $9CAF,2 A = 1
+C $9CB4,1 flip menu_page (1-current)
+C $9CB6,2 reload attract_timer = $C0
+C $9CBB,3 redraw the other page
 @ $9CBE label=fill_attr_row
-c $9CBE
+c $9CBE Fill attr row
+N $9CBE Flood-fill 16 bytes starting at HL with the byte already stored at (HL) (DE=HL+1, LDIR propagates it forward) -- paints one attribute row a single flat colour.
+N $9CBE In: HL=start address (byte already set), fills 16 bytes total.
+C $9CBE,3 DE = HL+1
+C $9CC1,3 BC = 15 (remaining bytes)
+C $9CC4,2 LDIR: propagate the seed byte forward
 @ $9CC7 label=draw_menu_text
-c $9CC7
+c $9CC7 Draw menu text
+N $9CC7 Prints the two state-dependent menu lines: CONTROLS (row $15, text depends on running_flag==1 vs other -- 1P vs 2P control scheme) and SOUND (row $17, text depends on $6056 bit7 -- on/off).
+C $9CC7,3 A = running_flag
+C $9CCA,2 ==1 (single player)?
+C $9CD6,3 Print string at
+C $9CD9,3 A = sound-enable flag ($6056)
+C $9CDF,3 HL -> "on" text
+C $9CE4,3 HL -> "off" text (if flag clear)
+C $9CE7,3 Print string at
 @ $9CEB label=title_anim_tick
-c $9CEB
+c $9CEB Title anim tick
+N $9CEB One-instruction wrapper around jp_anim_bg ($A778) -- ticks the title background animation.
 s $9CEF
 @ $9CF0 label=wait_frames
 c $9CF0 Wait frames
 N $9CF0 Pause for A frames (HALT-synced), running the attract animation (proc_table) meanwhile returns early if input (input_x) arrives.
-N $9CF0 $9CEF = frame counter.
+N $9CF0 #R$9CEF = frame counter.
 N $9CF0 Clobbers: A,HL.
 C $9CFE,3 Proc table
 C $9D01,3 get Signed input
@@ -1276,36 +1396,114 @@ C $9D01,3 get Signed input
 C $9D07,3 Proc table
 C $9D0A,3 get Signed input
 @ $9D11 label=print_player_label
-c $9D11
+c $9D11 Print PLAYER label
+N $9D11 Prints "PLAYER 1" or "PLAYER 2" (strings at #R$977F/#R$978B) depending on lives_p1 (#R$6040).
+C $9D11,3 A = lives_p1 (active player index)
+C $9D17,3 ==0? player 1
+C $9D1A,3 else HL -> "PLAYER 2" string
+C $9D1D,3 jp_print_centered
 @ $9D21 label=print_string_at
-c $9D21
+c $9D21 Print string at
+N $9D21 Set the print row (A) then print the string at HL, centered. Thin wrapper combining set_print_row + jp_print_centered.
+C $9D21,3 set_print_row
+C $9D24,3 jp_print_centered (tail call)
 @ $9D27 label=set_print_row
-c $9D27
+c $9D27 Set print row
+N $9D27 Set print_cursor's row to A and column to 0.
+C $9D27,3 store row into print_cursor high byte
+C $9D2A,1 A = 0
+C $9D2B,3 store column = 0
+@ $9D2F label=hiscore_entry_1
 b $9D2F
+N $9D2F Default hiscore table, 4 entries x 7 bytes (4 BCD score bytes + 3-char ASCII name). All 4 ship with the same "JMP" initials (programmer's easter egg) and descending round scores (#R$9D2F highest). Live-updated in place by check_hiscore (#R$9E6D) as real scores qualify -- not reloaded from tape, so scores reset each time the game is loaded.
 T $9D33
+@ $9D36 label=hiscore_entry_2
 b $9D36
 T $9D3A
+@ $9D3D label=hiscore_entry_3
 b $9D3D
 T $9D41
+@ $9D44 label=hiscore_entry_4
 b $9D44
 T $9D48
 s $9D4B
 @ $9D4C label=draw_hiscore_screen
 c $9D4C Draw hiscore screen
-N $9D4C Render the high-score table (the alternate title page): header string $9927 plus each score entry printed via print_score_entry.
+N $9D4C Render the high-score table (the alternate title page): header string #R$9927 plus each score entry printed via print_score_entry.
 N $9D4C Clobbers: most.
+C $9D4C,2 A = row $06 (header)
+C $9D4E,3 HL -> header string (#R$9927)
+C $9D51,3 Print string at
+C $9D54,3 HL -> hiscore_entry_1
+C $9D57,2 C = colour $47
+C $9D59,2 A = row $0A
 C $9D5B,3 Print score entry
+C $9D5E,3 HL -> hiscore_entry_2
+C $9D61,2 C = colour $46
+C $9D63,2 A = row $0C
 C $9D65,3 Print score entry
+C $9D68,3 HL -> hiscore_entry_3
+C $9D6B,2 C = colour $45
+C $9D6D,2 A = row $0E
 C $9D6F,3 Print score entry
+C $9D72,3 HL -> hiscore_entry_4
+C $9D75,2 C = colour $44
+C $9D77,2 A = row $10
 C $9D79,3 Print score entry
 s $9D7D
-c $9D80
+@ $9D80 label=enter_hiscore_name
+c $9D80 Enter HiScore name
+N $9D80 "Type your initials" screen, entered from the time-up/bonus screens (#R$99A1/#R$99F0) after a level. Checks check_hiscore first RET NC immediately if the active player's score didn't qualify.
+N $9D80 On a qualifying score: seeds the new table row's 3-char name with "A  " (IX+4/5/6), stashes the row pointer at $9D7E and the letter-position counter (4/5/6, one per char) at #R$9D7D=4, then redraws the hiscore screen with prompt text and enters an input loop.
+N $9D80 Per letter: waits for horizontal input release, then a fire/movement poll. Vertical/horizontal movement (input_x, added to the current letter) cycles the letter A-Z (wrapping $40/$5B boundaries) fire or continued input confirms the letter and advances the position counter, defaulting the next letter to the same value as the one just confirmed. After all 3 letters (counter reaches 7), pauses ~25 frames and returns.
+N $9D80 Clobbers: most.
+C $9D80,3 check_hiscore
+C $9D83,1 not a qualifying score -> RET
+C $9D84,4 default letter 1 = 'A'
+C $9D88,4 default letter 2 = ' '
+C $9D8C,4 default letter 3 = ' '
+C $9D90,4 stash row pointer ($9D7E)
+C $9D94,2 A = 4 (first letter-position value)
+C $9D96,3 stash letter-position counter (#R$9D7D)
+C $9D99,3 Title anim tick
 C $9D9C,3 Draw hiscore screen
+C $9D9F,2 A = row $15 (prompt line 1)
+C $9DA1,3 HL -> prompt string
+C $9DA4,3 Print string at
+C $9DA7,2 A = row $17 (prompt line 2)
+C $9DA9,3 HL -> prompt string
+C $9DAC,3 Print string at
+C $9DAF,1 HALT (sync)
 C $9DB0,3 Proc table
 C $9DB3,3 get Signed input
+C $9DB7,2 horizontal input still held -> wait for release
+C $9DB9,2 B = 6 (debounce frames)
+C $9DBC,2 loop 6 HALTs
 C $9DBE,3 Proc table
 C $9DC1,3 get Signed input
+C $9DC7,3 fire or horizontal input? else keep waiting
 C $9DCA,3 get Signed input
+C $9DCE,2 no vertical input -> confirm letter ($9DEB)
+C $9DD0,4 IX -> current letter slot
+C $9DD4,3 A = input_y + current letter
+C $9DD7,2 wrapped below 'A'? -> wrap to 'Z'
+C $9DDB,2 A = 'Z'
+C $9DDF,2 wrapped past 'Z'? -> wrap to 'A'
+C $9DE3,2 A = 'A'
+C $9DE5,3 store adjusted letter
+C $9DE8,3 loop (redraw with new letter)
+C $9DEB,4 IX -> current letter slot
+C $9DEF,2 IX += 1 (advance to next letter)
+C $9DF1,4 store advanced pointer
+C $9DF5,3 A = letter-position counter
+C $9DF9,3 store advanced counter
+C $9DFC,2 all 3 letters entered (counter==7)?
+C $9E00,3 else: A = previous letter's final value
+C $9E03,3 seed next letter with the same value
+C $9E06,3 loop (redraw for next letter)
+C $9E09,2 B = $19 (pause frames)
+C $9E0B,1 HALT
+C $9E0C,2 loop pause frames
 @ $9E0F label=print_score_entry
 c $9E0F Print score entry
 N $9E0F Print one high-score row: cursor row A, colour C, entry record at HL (IX) formats the BCD score bytes via print_score_byte.
@@ -1320,7 +1518,36 @@ c $9E6D Check hiscore
 N $9E6D Compare the active player's 4-byte BCD score ($6043 / $6047 by lives_p1) against the high-score table and insert it in rank order if it qualifies.
 N $9E6D Runs with IRQs off.
 N $9E6D Clobbers: A,IX,IY,...
+C $9E6D,1 DI
 C $9E70,3 get Lives
+C $9E77,1 player index==0? select score buffer
+C $9E7A,4 else IX -> P2 score ($6047)
+C $9E7E,4 IY -> hiscore table (#R$9D2F)
+C $9E82,2 B = 4 (BCD score bytes)
+C $9E84,3 A = table entry byte
+C $9E87,3 subtract score byte (with carry chain)
+C $9E9C,2 table entry >= score? -> next entry
+C $9EA1,2 IY += 7 (next table row)
+C $9EA3,2 loop 4 bytes; no qualifying row -> fall through
+C $9EA5,2 restore IY
+C $9EA7,1 EI
+C $9EA9,1 RET (no new high score)
+C $9EAA,2 save insertion point (IY) into DE
+C $9EAD,4 IY -> end of hiscore table (#R$9D44)
+C $9EB4,1 A = low byte of IY
+C $9EB6,2 not yet at insertion point? keep shifting
+C $9EBA,2 reached insertion point -> store new score
+C $9EBC,2 B = 7 (bytes per table row)
+C $9EBE,2 shift row down: IY -= 1
+C $9EC0,3 A = byte to shift
+C $9EC5,3 store into next row (+6)
+C $9ECA,2 loop 7 bytes; then next row down
+C $9ECF,3 A = new score byte (IX)
+C $9ED2,3 store into table row (IY)
+C $9EE7,2 IY -> IX (restore active player's score ptr)
+C $9EEB,2 restore IY
+C $9EED,1 EI
+C $9EEE,1 SCF (new high score inserted)
 s $9EF0
 T $9EF1
 b $9EF9
@@ -1328,19 +1555,19 @@ T $9F04
 s $9F0E
 @ $9F11 label=init_attract_actors
 c $9F11 Init attract actors
-N $9F11 Set up the attract/demo actor records at $9EF0 (copy 5-byte template $9EFF->$9EFA, plant markers $9EF0=$FF, $9F0E=1).
+N $9F11 Set up the attract/demo actor records at #R$9EF0 (copy 5-byte template $9EFF->$9EFA, plant markers #R$9EF0=$FF, #R$9F0E=1).
 N $9F11 Clobbers: A,BC,DE,HL.
 C $9F26,3 Render play frame
 C $9F2F,3 Attract step
 @ $9F33 label=attract_step
 c $9F33 Attract step
-N $9F33 Advance the attract/demo one frame: silence SFX, render_play_frame, then fire scripted sounds keyed off the demo phase $9F0E.
-N $9F33 Phase 0: sweeps a tone counter down by 2/frame until $68, then advances to phase 1 (also plays sound 3). Phase 1: cycles the 4 actor Y-offsets down by 2/frame at $9EFB, resetting a sub-counter every 9th frame, plays sound 3 every wrap, advances to phase 2 at the end. Phase 2/4: replay scripted actor-position frames from tables $9F04/$9F09 indexed by a frame counter ($9F0F). Phase 3: sweeps $9EFA up/down by 2/frame between bounds, plays sound 3 at each end, toggling direction via $9F10. Phase else (5+): sweeps the same tone counter back up by 2/frame until $90, then RET (attract sequence done).
+N $9F33 Advance the attract/demo one frame: silence SFX, render_play_frame, then fire scripted sounds keyed off the demo phase #R$9F0E.
+N $9F33 Phase 0: sweeps a tone counter down by 2/frame until $68, then advances to phase 1 (also plays sound 3). Phase 1: cycles the 4 actor Y-offsets down by 2/frame at $9EFB, resetting a sub-counter every 9th frame, plays sound 3 every wrap, advances to phase 2 at the end. Phase 2/4: replay scripted actor-position frames from tables #R$9F04/$9F09 indexed by a frame counter ($9F0F). Phase 3: sweeps $9EFA up/down by 2/frame between bounds, plays sound 3 at each end, toggling direction via $9F10. Phase else (5+): sweeps the same tone counter back up by 2/frame until $90, then RET (attract sequence done).
 N $9F33 Clobbers: most.
 C $9F33,3 stash tune id / phase-0 marker ($9F10)
 C $9F36,3 Stop sound
 C $9F39,3 Render play frame
-C $9F3C,3 A = demo phase ($9F0E)
+C $9F3C,3 A = demo phase (#R$9F0E)
 C $9F3F,4 phase == 1? -> $9F6A
 C $9F43,2 A = sound id 11 (phase-0 tone)
 C $9F45,3 Play sound
@@ -1356,17 +1583,17 @@ C $9F64,3 Play sound
 C $9F6A,4 phase == 2? -> $9F97
 C $9F6E,3 A = frame sub-counter
 C $9F71,2 /2 -> table index
-C $9F76,3 HL -> position table $9F04
+C $9F76,3 HL -> position table #R$9F04
 C $9F7A,4 fetch scripted X, store ($9EF6)
 C $9F7E,3 HL -> position table $9F09
-C $9F82,4 fetch scripted Y, store ($9EF1)
+C $9F82,4 fetch scripted Y, store (#R$9EF1)
 C $9F86,3 HL -> frame sub-counter
 C $9F89,2 advance sub-counter
 C $9F8B,5 reached frame $09? -> advance to phase 2
 C $9F97,4 phase == 3? -> $9FE7
 C $9F9B,3 A = sweep direction flag ($9F10)
 C $9F9E,3 nonzero? -> sweep up branch $9FC4
-C $9FA1,5 zero flag: clear demo-actor marker ($9EF0)
+C $9FA1,5 zero flag: clear demo-actor marker (#R$9EF0)
 C $9FA6,3 A = sweep value ($9EFA)
 C $9FA9,5 subtract 2 (sweep down)
 C $9FAE,2 reached lower bound ($54)?
@@ -1394,7 +1621,7 @@ C $9FE1,3 Play sound
 C $A015,3 Play sound
 @ $A02A label=render_play_frame
 c $A02A Render play frame
-N $A02A One frame of the in-play tower screen: setup_tower_scroll, code_ad00, wait vsync (HALT), tick the sound engine (sound_tick), draw the tower body + column strip, refresh the strip params and the scroll-wrap edge, then process the 5 actor records at $9EF0.
+N $A02A One frame of the in-play tower screen: setup_tower_scroll, code_ad00, wait vsync (HALT), tick the sound engine (sound_tick), draw the tower body + column strip, refresh the strip params and the scroll-wrap edge, then process the 5 actor records at #R$9EF0.
 N $A02A Clobbers: most.
 C $A02A,6 setup_tower_scroll / code_ad00 trampolines
 C $A032,3 Sound tick
@@ -1402,7 +1629,7 @@ C $A035,3 draw tower body (jp_draw_tower)
 C $A038,3 draw column strip (jp_draw_strip)
 C $A03C,3 refresh strip params (jp_setup_strip)
 C $A03F,3 scroll-wrap edge (jp_blit_scroll_wrap)
-C $A042,6 IX -> demo actor records ($9EF0), B=5
+C $A042,6 IX -> demo actor records (#R$9EF0), B=5
 C $A048,3 save IX/BC for this actor
 C $A04B,5 marker==$FF? inactive, skip
 C $A053,13 compute screen row from actor Y and row table
@@ -1433,23 +1660,23 @@ C $A11A,3 set Player state-machine state
 @ $A11D label=pstate_9
 c $A11D Pstate 9
 N $A11D State 9: level-transition tower-column shift (slides the next section of the tower map into place after landing).
-N $A11D While pstate_phase is negative: if the level-column property byte ($603A) has counted down to 6, jumps to $A15B to wait for scroll_pos to reach the wrap point ($6030==$03E0), then INCs pstate_phase (0, still non-negative) to end the shift on the next call.
-N $A11D Otherwise: steps actor_obj column position back by 4, shifts 6 columns of the $F000 tower map left by one row (byte-copy loop), decrements $603A, stops the current sound and plays sound $0C -- repeats every call until the column property hits 6.
-N $A11D Once pstate_phase is non-negative, falls through (next call) to $A170 to finish the transition.
+N $A11D While pstate_phase is negative: if the level-column property byte ($603A) has counted down to 6, jumps to $A15B to wait for scroll_pos to reach the wrap point (#R$6030==$03E0), then INCs pstate_phase (0, still non-negative) to end the shift on the next call.
+N $A11D Otherwise: steps actor_obj column position back by 4, shifts 6 columns of the #R$F000 tower map left by one row (byte-copy loop), decrements $603A, stops the current sound and plays sound $0C -- repeats every call until the column property hits 6.
+N $A11D Once pstate_phase is non-negative, falls through (next call) to #R$A170 to finish the transition.
 C $A11D,3 get Player state-machine phase/height window
 C $A152,3 Stop sound
 C $A157,3 Play sound
 C $A15B,3 get Vertical scroll position
 b $A16B
-N $A16B 5-byte attract-actor template, copied into the demo actor slot ($9EFA) by $A170.
+N $A16B 5-byte attract-actor template, copied into the demo actor slot ($9EFA) by #R$A170.
 @ $A170 label=level_shift_done
 c $A170 Level shift done
 N $A170 Finishes the level-transition shift (reached once pstate_9's pstate_phase goes non-negative).
-N $A170 Resets the attract/demo actor state at $9EF0 (copies the $A16B template, clears the marker, sets phase 1), calls ATTRACT_STEP once, then sets game_state=4 (finished) -- the signal main_tick polls to end the transition and hand control back to main_loop's level-complete handling.
+N $A170 Resets the attract/demo actor state at #R$9EF0 (copies the #R$A16B template, clears the marker, sets phase 1), calls ATTRACT_STEP once, then sets game_state=4 (finished) -- the signal main_tick polls to end the transition and hand control back to main_loop's level-complete handling.
 C $A187,3 Attract step
 C $A18C,3 set Game state
 b $A190
-N $A190 Music sequencer's live state, not fixed data: stream pointer ($A190/91), current-note pointer ($A192/93), note-groups-remaining counter ($A194), note timer ($A195), active tune id ($A196). The DEFB values shown are just the reset state baked into the snapshot.
+N $A190 Music sequencer's live state, not fixed data: stream pointer (#R$A190/91), current-note pointer ($A192/93), note-groups-remaining counter ($A194), note timer ($A195), active tune id ($A196). The DEFB values shown are just the reset state baked into the snapshot.
 @ $A197 label=start_music
 c $A197 Start music
 N $A197 Begin music/jingle A: stash the id ($A196) then fall into init_music_seq to choose the data stream and arm the sequencer.
@@ -1464,9 +1691,9 @@ C $A1B0,9 arm stream pointer, group counter, note timer
 @ $A1BD label=music_tick
 c $A1BD Music tick
 N $A1BD Per-frame music sequencer step (DI around it).
-N $A1BD When the note timer ($A195) elapses, fetch the next event from the stream ($A190), update the current note ($A192), and play it.
+N $A1BD When the note timer ($A195) elapses, fetch the next event from the stream (#R$A190), update the current note ($A192), and play it.
 N $A1BD A $FF note byte ends the current group: decrements the group counter ($A194) and loops to the next group if any remain, otherwise either holds the last note (tune id==0) or restarts via init_music_seq (id!=0, one-shot jingles loop back to their own start).
-N $A1BD Otherwise the note byte indexes two parallel tables at $A238 (or $A23A, selected by the Specialist-beeper flag $6056) for a period value and $A249 (an 11-char string used as a duration/shape lookup) for a tone-loop shape, then bit-bangs OUT ($FE) via an inlined tone loop (same shape as sfx_tone).
+N $A1BD Otherwise the note byte indexes two parallel tables at #R$A238 (or $A23A, selected by the Specialist-beeper flag $6056) for a period value and #R$A249 (an 11-char string used as a duration/shape lookup) for a tone-loop shape, then bit-bangs OUT ($FE) via an inlined tone loop (same shape as sfx_tone).
 N $A1BD The Specialist has a 1-bit beeper too -- retarget the port and retune the delay loops.
 C $A1C8,3 HL -> stream pointer, fetch next 16-bit event
 C $A1D6,4 A = current note byte
@@ -1477,7 +1704,7 @@ C $A1EB,3 Init music sequence
 C $A1F4,10 index period table $A237+note, select beeper variant via $6056
 C $A21B,29 inlined tone-loop bit-bang (OUT $FE), shaped by duration string byte
 b $A238
-N $A238 Two parallel 8-entry period/duration tables (ZX at $A238, alternate "Specialist" beeper variant at $A240), indexed by note code and selected via $6056.
+N $A238 Two parallel 8-entry period/duration tables (ZX at #R$A238, alternate "Specialist" beeper variant at $A240), indexed by note code and selected via $6056.
 T $A249
 N $A249 11-char duration/shape string, one char per note code: each character's ASCII value supplies the H/L sub-loop counts for music_tick's inlined tone loop.
 b $A254
@@ -1485,7 +1712,7 @@ N $A254 A second, shorter period/shape table pair (1 byte + 3 chars) -- sparse c
 T $A255
 b $A258
 N $A258 Real note-stream data starts one byte earlier, at $A257 (see init_music_seq): $A257 (9-group stream), $A269 (1-group stream) and $A26B (fallback stream) are literal entry addresses into this block, not a lookup table.
-N $A258 Byte values are note codes (indices into the $A238/$A249 tables) $FF marks the end of a note-group. Runs through $A367 the final 5 bytes ($A368-$A36C) are SFX-engine state (active effect id/pointer/priority), not music data.
+N $A258 Byte values are note codes (indices into the #R$A238/#R$A249 tables) $FF marks the end of a note-group. Runs through $A367 the final 5 bytes ($A368-$A36C) are SFX-engine state (active effect id/pointer/priority), not music data.
 @ $A36D label=stop_sound
 c $A36D Stop sound
 N $A36D Silences the current SFX effect by marking $A368=$FF (sound_tick's "active marker" gate).
@@ -1494,7 +1721,7 @@ b $A373
 N $A373 13 pointer words (ids 0..$0C, matching play_sound's "id<$0D" range), one per sound effect, resolved by lookup_sound.
 @ $A38D label=snd_effect_data
 b $A38D
-N $A38D The 13 effects' byte streams, back-to-back, addressed via snd_ptr_table. Each stream starts with 2 header bytes (priority, then a repeat/duration count copied into $A36C) followed by command/data bytes consumed by sound_tick: values <$80 are raw tone/length data for sfx_tone values $80/$81/$C8/$C9/$CA are specific ops (noise burst, random tone, etc., handled at $A48A/$A470/$A4BF/$A52E/$A4F2) values $82..$C7 go through the generic handler at $A493 anything else ends the effect.
+N $A38D The 13 effects' byte streams, back-to-back, addressed via snd_ptr_table. Each stream starts with 2 header bytes (priority, then a repeat/duration count copied into $A36C) followed by command/data bytes consumed by sound_tick: values <$80 are raw tone/length data for sfx_tone values $80/$81/$C8/$C9/$CA are specific ops (noise burst, random tone, etc., handled at #R$A48A/#R$A470/#R$A4BF/#R$A52E/#R$A4F2) values $82..$C7 go through the generic handler at #R$A493 anything else ends the effect.
 @ $A3DE label=play_sound
 c $A3DE Play sound
 N $A3DE Trigger sound effect A (id < $0D).
@@ -1531,7 +1758,7 @@ c $A52E
 C $A534,3 SFX tone
 @ $A539 label=sfx_tone
 c $A539 SFX tone
-N $A539 Emit a square-wave tone: pitch index A selects a half-period from table $A560 toggles the speaker for a fixed duration ($0148 outer).
+N $A539 Emit a square-wave tone: pitch index A selects a half-period from table #R$A560 toggles the speaker for a fixed duration ($0148 outer).
 N $A539 In: A=pitch.
 N $A539 Clobbers: A,BC,DE,HL,AF'.
 N $A539 The Specialist has a 1-bit beeper too -- retarget the port and retune the delay loops.
@@ -1647,10 +1874,10 @@ C $A79C,3
 @ $A79F label=read_input
 c $A79F Read input
 N $A79F Proc_table[0]: sample controls into the signed input_x/input_y/input_fire vars.
-N $A79F Only active when game_mode ($6017) == 4 (in play) otherwise returns.
+N $A79F Only active when game_mode (#R$6017) == 4 (in play) otherwise returns.
 N $A79F Reads the Kempston joystick and converts each axis to -1/0/+1 via bit tests + SBC/NEG.
 N $A79F The Specialist has no Kempston port -- replace read_joystick with the target's keyboard/joystick scan, keeping the -1/0/+1 result.
-C $A79F,3 A = game_mode ($6017)
+C $A79F,3 A = game_mode (#R$6017)
 C $A7A4,2 only read controls while in play (mode 4)
 C $A7A6,3 A = raw joystick bits
 C $A7B2,3 input_y = -1/0/+1
@@ -1664,7 +1891,7 @@ b $A7D1
 @ $A7ED label=scan_control_keys
 c $A7ED Scan control keys
 N $A7ED Read one 5-key control set into the flag array at $6018.
-N $A7ED A selects the set: index a word-pointer table at $A7E5 (A*2) to a 5-byte key-id list, then test_key each one, storing 0/1 into $6018..$601C.
+N $A7ED A selects the set: index a word-pointer table at $A7E5 (A*2) to a 5-byte key-id list, then test_key each one, storing 0/1 into $6018..#R$601C.
 N $A7ED Used to read the redefinable keys.
 N $A7ED In: A=set index.
 N $A7ED Out: $6018[0..4] flags.
@@ -1688,17 +1915,18 @@ C $A834,2 read ULA keyboard port $FE (Z80 IN
 C $A836,1 shift out columns
 C $A83B,2 carry set = not pressed -> A=1
 @ $A840 label=poll_any_key
-b $A840 POLL_ANY_KEY
+c $A840 Poll any key
 N $A840 Return NZ if ANY input is active: scans the five keyboard half-rows via IN ($FE) (CPL+AND $1F), and if none, tests the Kempston fire bit ($10).
 N $A840 Out: A/flags NZ = pressed.
 @ $A84D label=wait_no_key
+C $A84D,3 Poll any key
 @ $A853 label=test_break_key
 c $A853 Test break key
 N $A853 Test the BREAK combination (CAPS SHIFT + SPACE) via two IN ($FE) row reads.
 N $A853 Returns with CARRY CLEAR only when both are held (used to abort).
 N $A853 Clobbers: A.
 @ $A85F label=delay_loop
-b $A85F DELAY_LOOP
+c $A85F Delay loop
 N $A85F Busy-wait: B outer iterations of a ~$0086 inner countdown.
 N $A85F In: B=outer count.
 N $A85F Clobbers: A,B,HL (HL preserved).
@@ -1711,12 +1939,11 @@ N $A86C Clobbers: A,DE,HL.
 C $A86E,4 get 16-bit LCG seed
 C $A882,3 set 16-bit LCG seed
 @ $A889 label=save_regs_frame
-b $A889 SAVE_REGS_FRAME / RESTORE_REGS_FRAME
+c $A889 Save regs frame
 N $A889 Paired full CPU-context save and restore.
 N $A889 save_regs_frame pushes main+alternate register sets, IX, IY (EX AF,AF'/EXX to reach the shadow bank), then reads a 16-bit value out of the saved frame ($SP+$17) into HL before returning.
-N $A889 restore_regs_frame ($A8A5) pops them all back.
-T $A8A0
-b $A8A3
+c $A8A5 Restore regs frame
+N $A8A5 Pops all registers back.
 @ $A8A5 label=restore_regs_frame
 N $A8B7 Initial values for #R$6053
 @ $A8B7 label=tbl_play_timer_init
@@ -1733,14 +1960,14 @@ b $A8D9
 c $A8EB Setup attrs
 N $A8EB Paint the static playfield attribute layout and the two PLAYER score labels.
 N $A8EB Run once at start (via jp_setup_attrs).
-N $A8EB Reads attr_rle (9 run-length [count,attr] pairs) and floods the attribute area $5800+ with attr|$40 (BRIGHT set on every cell).
+N $A8EB Reads attr_rle (9 run-length [count,attr] pairs) and floods the attribute area #R$5800+ with attr|$40 (BRIGHT set on every cell).
 N $A8EB Then prints the PLAYER 1 / PLAYER 2 strings and seeds two score/counter widgets via helper calls.
 N $A8EB In: nothing.
 N $A8EB Clobbers: A,BC,DE,HL.
 C $A8EB,2 A = $FF
-C $A8ED,3 store $FF to a flag at $60C8
+C $A8ED,3 store $FF to a flag at #R$60C8
 C $A8F0,3 HL -> attr_rle (run-length attribute table)
-C $A8F3,3 DE -> $5800 = attribute area base
+C $A8F3,3 DE -> #R$5800 = attribute area base
 C $A8F6,2 C = 9 outer groups
 C $A8F8,1 B = run length for this group
 C $A8FA,1 A = attribute byte for this group
@@ -1764,7 +1991,7 @@ N $A936 Clobbers: A,B.
 C $A93D,3 Print char
 @ $A943 label=reset_score_state
 c $A943 Reset score state
-N $A943 Init the score/lives HUD state for a new game: lives_p2 ($6041)=3, $6042=3, $60C2=0, and zero the 8-byte block $6043..$604A (the two 4-byte BCD score buffers).
+N $A943 Init the score/lives HUD state for a new game: lives_p2 (#R$6041)=3, $6042=3, $60C2=0, and zero the 8-byte block $6043..$604A (the two 4-byte BCD score buffers).
 N $A943 Reached from proc_table slot $A721 (JP) and from $A930 (CALL, then falls through to draw_hud_counters).
 C $A945,3 set Lives
 @ $A959 label=draw_hud_counters
@@ -1844,7 +2071,7 @@ N $AAC5 'A'..'Z' : glyph = (A-'A')+2.
 N $AAC5 '0'..'9' : glyph = (A-'0')+$1C.
 N $AAC5 <$10     : colour/attribute control code -> cur_color.
 N $AAC5 else     : looked up in punct_map.
-N $AAC5 cursor in print_cursor ($60C6 lo=col) cur_color ($60C8).
+N $AAC5 cursor in print_cursor (#R$60C6 lo=col) cur_color (#R$60C8).
 N $AAC5 Out: glyph blitted to screen column cursor ($60C7) advanced.
 C $AAC5,1 save all regs (caller-transparent)
 C $AAC9,2 bit7 set? -> direct graphics glyph index
@@ -1856,7 +2083,7 @@ C $AAE7,2 glyph = (A-'0') + $1C  (digits start at glyph $1C)
 C $AAED,2 code <$10? -> colour control code
 C $AAF2,2 ink = A & 7
 C $AAF4,2 bit3 of code = BRIGHT -> OR $40
-C $AAFA,3 store into cur_color ($60C8)
+C $AAFA,3 store into cur_color (#R$60C8)
 C $AAFF,3 HL -> punct_map (5 entries)
 C $AB04,1 compare code against each map char
 C $AB0E,1 matched: A = glyph index from map
@@ -1864,7 +2091,7 @@ C $AB0E,1 matched: A = glyph index from map
 C $AB0F,1 L = glyph index
 C $AB10,1 A = index*6 via index + index*2, then *2 (6 bytes/glyph)
 C $AB13,1 HL = index*6
-C $AB16,3 DE = $C000 = font base
+C $AB16,3 DE = #R$C000 = font base
 C $AB19,1 HL -> glyph bitmap (6 bytes)
 C $AB1B,4 BC = print_cursor (C=column 0..31)
 @ $AB1F label=glyph_blit
@@ -1923,7 +2150,7 @@ N $AC22 Clobbers: A,B,DE,HL.
 C $AC31,4 get Vertical scroll position
 @ $AC5E label=blit_scroll_wrap
 c $AC5E Blit scroll wrap
-N $AC5E When scroll_pos has wrapped past the top (H==$03 && L>=$D8), fast-fill the newly exposed strip using the LD SP,screen / stack-write trick (saves real SP to $6000, DI, reads mask_acb0).
+N $AC5E When scroll_pos has wrapped past the top (H==$03 && L>=$D8), fast-fill the newly exposed strip using the LD SP,screen / stack-write trick (saves real SP to #R$6000, DI, reads mask_acb0).
 N $AC5E RET early when no wrap is pending.
 C $AC74,3 Get screen addr
 C $AC78,4 set Temporary place for SP
@@ -1941,13 +2168,13 @@ c $AD4E Anim bg phase
 N $AD4E Advance the background animation phase counter ($603D) on the wrap point reload $603C with $08 (animation restart).
 N $AD4E Clobbers: A,HL.
 b $AD60
-N $AD60 Self-modified scratch, not pure data: $AD60/$AD61 are 1-byte accumulators seeded by setup_tower_scroll ($ADA1/$ADAF) with a row-start bias and a fine row offset, then incremented every pass of setup_tower_scroll's row loop ($AE6E-$AE81) by table bytes stored at $AD62..$AD80 (16 rows x 2-byte deltas) -- i.e. a per-row coarse/fine screen-row stepping table, not just static data.
+N $AD60 Self-modified scratch, not pure data: #R$AD60/$AD61 are 1-byte accumulators seeded by setup_tower_scroll ($ADA1/$ADAF) with a row-start bias and a fine row offset, then incremented every pass of setup_tower_scroll's row loop ($AE6E-$AE81) by table bytes stored at $AD62..$AD80 (16 rows x 2-byte deltas) -- i.e. a per-row coarse/fine screen-row stepping table, not just static data.
 @ $AD82 label=setup_tower_scroll
 c $AD82 Setup tower scroll
 N $AD82 Per-frame scroll/render setup.
 N $AD82 Clears the object table, derives the coarse column ($ADC6) and sub-column fraction ($6021) from scroll_pos, and the row base ($AD61) from disp_height.
 N $AD82 SELF-MODIFIES the render code ($ADC6/$AD61) and latches $6021 for draw_tower_cols.
-N $AD82 Runs a 16-row loop ($ADB8..$AE85): for each row it reads two per-column-cell nibbles from map data at $6200+DE / $6280+DE, classifies the cell (bit-pattern tests at $AE21-$AE67) and jumps to one of the masked-blit handlers below ($AEBB/$AF2A/$AF86/$AFD0/$B03F) or straight to the row-accumulator advance at $AE6D. Each handler returns to the common continuation $AE18 (advance HL by -$12, DJNZ loop) before the next row.
+N $AD82 Runs a 16-row loop ($ADB8..$AE85): for each row it reads two per-column-cell nibbles from map data at #R$6200+DE / $6280+DE, classifies the cell (bit-pattern tests at $AE21-$AE67) and jumps to one of the masked-blit handlers below (#R$AEBB/#R$AF2A/#R$AF86/#R$AFD0/#R$B03F) or straight to the row-accumulator advance at $AE6D. Each handler returns to the common continuation $AE18 (advance HL by -$12, DJNZ loop) before the next row.
 N $AD82 Clobbers: A,C,HL.
 C $AD82,3 clear object table (calc_tower_col_addr's prep)
 C $AD85,3 get Vertical scroll position
@@ -1962,7 +2189,7 @@ C $ADA1,3 self-mod store: row base ($AD61)
 C $ADA4,2 C = disp_height >> 3 (coarse row)
 C $ADAA,2 A = $0B - coarse row
 C $ADAD,2 mask to 4 bits
-C $ADAF,3 self-mod store: row accumulator ($AD60)
+C $ADAF,3 self-mod store: row accumulator (#R$AD60)
 C $ADB3,2 B = 0 (row counter)
 C $ADB5,3 HL -> per-row delta table ($AD62)
 C $ADB8,1 A = row counter
@@ -1971,7 +2198,7 @@ C $ADC0,3 Calc tower col addr
 C $ADC5,2 E = 0 (cell index low)
 C $ADC7,5 D = row accumulator + $F0 (map page)
 C $ADCE,4 E = column fraction (map offset low)
-C $ADD4,4 HL -> $6200 + column (cell type table 1)
+C $ADD4,4 HL -> #R$6200 + column (cell type table 1)
 C $ADD9,4 negative? -> $AE6D (empty cell, skip)
 C $ADDD,4 shift cell nibble right 2
 C $ADE1,6 self-mod: patch two render-handler operands
@@ -2015,11 +2242,11 @@ C $AE82,1 B++ (row counter)
 C $AE83,2 done all 16 rows?
 @ $AE89 label=col_blit_masks
 b $AE89
-N $AE89 24-entry (2 bytes each) AND/OR mask-pair table: "AND clear old bits, OR in new bits" merge masks for column pixel bytes that don't align to a whole screen byte (edge-clipped column tops/bottoms). Read by the handler at $AEBB.
+N $AE89 24-entry (2 bytes each) AND/OR mask-pair table: "AND clear old bits, OR in new bits" merge masks for column pixel bytes that don't align to a whole screen byte (edge-clipped column tops/bottoms). Read by the handler at #R$AEBB.
 @ $AEBB label=render_col_partial
 c $AEBB Render col partial
 N $AEBB One of setup_tower_scroll's five per-cell render handlers -- the "partial/short column" case.
-N $AEBB Looks up a length adjustment (table $6300) and an edge-type value (table $6340) indexed by the column (DE), computes and self-mod-stores a destination pointer ($AEB9), then masked-merges the destination byte(s) using mask pairs picked from col_blit_masks ($AE89, 16-entry branch for tall/negative case) or from a second 4-entry table at $AEA9 (short/positive case), plus a run of up to 3 plain-store bytes and a final 2-entry table ($AEB1) merge.
+N $AEBB Looks up a length adjustment (table $6300) and an edge-type value (table $6340) indexed by the column (DE), computes and self-mod-stores a destination pointer ($AEB9), then masked-merges the destination byte(s) using mask pairs picked from col_blit_masks (#R$AE89, 16-entry branch for tall/negative case) or from a second 4-entry table at $AEA9 (short/positive case), plus a run of up to 3 plain-store bytes and a final 2-entry table ($AEB1) merge.
 N $AEBB Ends by jumping back to setup_tower_scroll's row loop continuation ($AE18).
 N $AEBB Clobbers: A,DE,HL.
 C $AEBB,9 DE=A; HL -> length table $6300+DE
@@ -2027,7 +2254,7 @@ C $AEC4,9 length+3 -> destination byte offset
 C $AECD,3 self-mod store: destination pointer ($AEB9)
 C $AED0,6 HL -> edge-type table $6340+DE
 C $AED6,3 sign bit set? -> short/positive branch
-C $AED9,12 tall branch: index col_blit_masks ($AE89) by (type&$0F)*2
+C $AED9,12 tall branch: index col_blit_masks (#R$AE89) by (type&$0F)*2
 C $AEE5,10 AND/OR merge one byte, restore regs, return
 C $AEEF,13 short branch: index 2nd mask table $AEA9 by (type&3)*2
 C $AEFC,6 AND/OR merge first byte, advance DE
@@ -2039,6 +2266,40 @@ c $AF2A Render col cap a
 N $AF2A Another per-cell render handler, selected for a specific column-edge sub-case (DE==0 test in setup_tower_scroll's classification).
 N $AF2A 4-way branch on a self-mod test byte ($AF2C/$AF2E, patched by setup_tower_scroll at $ADEA/$ADED). Each branch writes 3 destination bytes with mostly-fixed bit patterns (pre-rendered tower-cap/edge tile graphics) merged via AND/OR masks at the first/last byte to blend with the adjacent column.
 N $AF2A Ends `POP HL / JP $AE18` in all 4 branches.
+C $AF2A,1 save dest ptr
+C $AF2B,1 HL += DE (apply column offset)
+C $AF2C,2 A = self-mod test byte
+C $AF2E,2 shift test byte -> Z/C flags
+C $AF30,3 nonzero -> branch 3/4 ($AF57)
+C $AF33,3 carry set -> branch 2 ($AF42)
+C $AF36,2 branch 1: fixed byte 1 ($1B)
+C $AF39,2 fixed byte 2 ($FB)
+C $AF3C,2 fixed byte 3 ($A4)
+C $AF3E,1 restore dest ptr
+C $AF3F,3 done -> setup_tower_scroll continuation
+C $AF42,1 branch 2: A = dest byte 1
+C $AF43,2 keep high 2 bits (blend mask)
+C $AF45,2 OR in fixed low bits
+C $AF49,2 fixed byte 2 ($FE)
+C $AF4C,2 fixed byte 3 ($E9)
+C $AF4F,1 A = dest byte 3
+C $AF50,2 keep low 6 bits (blend mask)
+C $AF57,3 branch 3/4: carry set -> branch 4 ($AF71)
+C $AF5A,1 branch 3: A = dest byte 1
+C $AF5B,2 keep high nibble (blend mask)
+C $AF5D,2 OR in fixed low bit
+C $AF61,2 fixed byte 2 ($BF)
+C $AF64,2 fixed byte 3 ($BA)
+C $AF67,1 A = dest byte 3
+C $AF68,2 keep low nibble (blend mask)
+C $AF6A,2 OR in fixed high bits
+C $AF71,1 branch 4: A = dest byte 1
+C $AF72,2 keep high 6 bits (blend mask)
+C $AF76,2 fixed byte 2 ($6F)
+C $AF79,2 fixed byte 3 ($EE)
+C $AF7C,1 A = dest byte 3
+C $AF7D,2 keep low 2 bits (blend mask)
+C $AF7F,2 OR in fixed high bits
 @ $AF86 label=render_col_cap_b
 c $AF86 Render col cap b
 N $AF86 Structurally identical 4-way dispatch to render_col_cap_a (self-mod test byte at $AF89, patched by $AE06/$AE09), but writes only 2 destination bytes per branch instead of 3 -- a narrower cap/edge graphic for a different column class.
@@ -2047,13 +2308,42 @@ N $AF86 Ends `POP HL / JP $AE18` in all branches.
 c $AFD0 Render col fill
 N $AFD0 Third 4-way dispatch variant (test byte self-mod at $AFD3, sharing the $ADEA/$ADED patch point with render_col_partial's mask selection), writing up to 3 bytes with mostly solid-$FF fill patterns -- a plain/bright tower-segment fill rather than a textured cap. One branch ($B000) has a nested sub-branch (JP C,$B016), making 5 cases total.
 N $AFD0 Ends `POP HL / JP $AE18` in all branches.
+C $AFD0,1 save dest ptr
+C $AFD1,1 HL += DE (apply column offset)
+C $AFD2,2 A = self-mod test byte
+C $AFD4,2 shift test byte -> Z/C flags
+C $AFD6,3 nonzero -> branch 3/4 ($B000)
+C $AFD9,3 carry set -> branch 2 ($AFF0)
+C $AFDC,1 branch 1: A = dest byte 1
+C $AFDD,2 keep high 2 bits (blend mask)
+C $AFDF,2 OR in fixed low bits
+C $AFE3,2 solid fill byte 2 ($FF)
+C $AFE6,1 A = dest byte 3
+C $AFE7,2 keep low 2 bits (blend mask)
+C $AFF0,1 branch 2: A = dest byte 1
+C $AFF1,2 keep high nibble (blend mask)
+C $AFF7,2 solid fill byte 2 ($FF)
+C $AFFA,2 solid fill byte 3 ($FC)
+C $B000,3 branch 3/4: carry set -> branch 4 ($B016)
+C $B003,1 branch 3: A = dest byte 1
+C $B004,2 keep high 6 bits (blend mask)
+C $B008,2 solid fill byte 2 ($FF)
+C $B00B,2 solid fill byte 3 ($FF)
+C $B00E,1 A = dest byte 3
+C $B00F,2 keep low 6 bits (blend mask)
+C $B016,1 branch 4: skip byte 1 (no write)
+C $B017,2 solid fill byte 2 ($3F)
+C $B01A,2 solid fill byte 3 ($FF)
+C $B01D,1 A = dest byte 3
+C $B01E,2 keep low nibble (blend mask)
+C $B020,2 OR in fixed high bits
 @ $B027 label=anim_texture_masks
 b $B027
-N $B027 3 groups of 8 bytes (mask/value pairs), indexed by the $603C animation phase counter (anim_bg_phase) via render_anim_texture ($B03F) -- an animated dithered/striped tower texture that cycles as $603C advances.
+N $B027 3 groups of 8 bytes (mask/value pairs), indexed by the $603C animation phase counter (anim_bg_phase) via render_anim_texture (#R$B03F) -- an animated dithered/striped tower texture that cycles as $603C advances.
 @ $B03F label=render_anim_texture
 c $B03F Render anim texture
-N $B03F Final per-cell render handler, and the only one whose graphic depends on animation phase rather than static column geometry: reads $603C into BC as an index into anim_texture_masks ($B027), giving an animated tower stripe/shade effect.
-N $B03F Same self-mod 4-way branch-and-mask-merge shape as the other handlers (test byte at $B045), each branch copying/merging bytes from a different $B027 offset ($B029/$B02B/$B02D).
+N $B03F Final per-cell render handler, and the only one whose graphic depends on animation phase rather than static column geometry: reads $603C into BC as an index into anim_texture_masks (#R$B027), giving an animated tower stripe/shade effect.
+N $B03F Same self-mod 4-way branch-and-mask-merge shape as the other handlers (test byte at $B045), each branch copying/merging bytes from a different #R$B027 offset ($B029/$B02B/$B02D).
 N $B03F Ends `POP BC / POP HL / JP $AE18` in all branches.
 C $B03F,1 save HL (destination byte ptr)
 C $B040,1 DE += HL (advance to next cell)
@@ -2090,8 +2380,8 @@ N $B0A1 Self-mod scratch byte, not unused: draw_tower_cols patches this as the i
 @ $B0A2 label=draw_tower_cols
 c $B0A2 Draw tower cols
 N $B0A2 Render the visible tower column strip.
-N $B0A2 Patches the column count at $B0A1 ($14, reduced near the wrap edge from scroll_pos) and dispatches on the $6021 sub-column phase.
-N $B0A2 SELF-MOD: $B0A1 loop count.
+N $B0A2 Patches the column count at #R$B0A1 ($14, reduced near the wrap edge from scroll_pos) and dispatches on the $6021 sub-column phase.
+N $B0A2 SELF-MOD: #R$B0A1 loop count.
 N $B0A2 Clobbers: A,B,HL (+ render regs).
 C $B0A7,3 get Vertical scroll position
 C $B0D2,4 set Temporary place for SP
@@ -2105,7 +2395,8 @@ C $B228,4 get Temporary place for SP
 b $B22E
 @ $B346 label=load_level_col
 c $B346 Load level col
-N $B346 Fetch column descriptor #R$6039 from the column-major table at #R$7A00 (stride 8): low byte (+0) and high byte (+8) form a pointer (offset by $6A00 into level data), and the property byte (+16) is stashed in $603A.
+N $B346 Fetch column descriptor #R$6039 from the column-major table at #R$7A00 (stride 8): low byte (+0) and high byte (+8) form a pointer (offset by #R$6A00 into level data), and the property byte (+16) is stashed in $603A.
+N $B346 Cell byte format for the map this fills: docs/Level-Format.md.
 N $B346 Returns IX=pointer.
 N $B346 Clobbers: A,BC,DE,HL,IX.
 C $B36F,3 Blit masked column
@@ -2137,7 +2428,7 @@ N $B3FE Clobbers: A,B,IX.
 c $B421 Update actors
 N $B421 Per-frame actor pass (proc_table slot A76F).
 N $B421 Skips when player_state is 8/9 (level-end).
-N $B421 Derives the camera row $6036 from $6059, then walks the 4 object_table actors, acting on each live one (state field IX+48 != 0).
+N $B421 Derives the camera row #R$6036 from $6059, then walks the 4 object_table actors, acting on each live one (state field IX+48 != 0).
 N $B421 Clobbers: A,B,HL,IX.
 C $B421,9 skip if player_state 8 or 9 (level-end)
 C $B42A,10 camera row = ($6059)>>2 (RR chain)
@@ -2147,7 +2438,7 @@ C $B449,3 get Unknown word
 C $B44C,4 already aligned to camera row? -> spawn dispatch ($B512)
 C $B453,3 get Camera row
 C $B45D,9 test cell flags at HL: special/type check
-C $B466,14 step $6015 high nibble toward $F0..$FF ring, wrap
+C $B466,14 step #R$6015 high nibble toward $F0..$FF ring, wrap
 C $B474,3 set Unknown word
 C $B478,3 set Unknown word
 C $B48C,3 set Unknown word
@@ -2171,29 +2462,29 @@ C $B539,13 store position (IX+0/+6/+12) from player position
 @ $B546 label=clear_screen
 c $B546 Clear screen
 N $B546 Cold wipe before the title/play screen draws.
-N $B546 1) zero game RAM $6000..$61FF (512 bytes, 2 pages).
-N $B546 2) zero the entire display $4000..$5AFF (pixels+attrs) via LDIR.
-N $B546 3) CALL #R$B567 (build a lookup table in the reclaimed printer buffer $5B00) and $B5EA.
+N $B546 1) zero game RAM #R$6000..$61FF (512 bytes, 2 pages).
+N $B546 2) zero the entire display #R$4000..$5AFF (pixels+attrs) via LDIR.
+N $B546 3) CALL #R$B567 (build a lookup table in the reclaimed printer buffer #R$5B00) and #R$B5EA.
 N $B546 Clobbers: A,BC,DE,HL.
-C $B546,3 HL -> game RAM base $6000
+C $B546,3 HL -> game RAM base #R$6000
 C $B549,2 B = 2 pages to clear
 C $B54B,2 store 0
 C $B54E,2 loop 256 bytes of this page
 C $B550,1 next page
-C $B553,3 HL -> screen base $4000
+C $B553,3 HL -> screen base #R$4000
 C $B556,3 DE -> $4001 (LDIR src=HL, dst=DE, overlap fill)
 C $B559,3 BC = $1AFF = 6911 bytes = whole display minus 1
 C $B55C,2 seed first byte = 0
-C $B55E,2 LDIR: propagate 0 across $4000..$5AFF
+C $B55E,2 LDIR: propagate 0 across #R$4000..$5AFF
 C $B560,3 Build screen hi LUT
 C $B563,3 Build row addr table
 @ $B567 label=build_screen_hi_lut
 c $B567 Build screen hi LUT
-N $B567 Fill a 256-byte table at $5B00 mapping a byte value to its bit-reordered form used in ZX screen-address math.
+N $B567 Fill a 256-byte table at #R$5B00 mapping a byte value to its bit-reordered form used in ZX screen-address math.
 N $B567 Processes the index in 2-bit groups groups 00 and 11 pass through, 01/10 get +$40 -- the Y2<->Y0 swap that makes the ZX pixel rows non-linear.
 N $B567 Result accumulates in H.
-N $B567 The porter can DELETE this and the $5B00 lookups, replac
-C $B567,3 DE -> $5B00 LUT base (reclaimed printer buffer)
+N $B567 The porter can DELETE this and the #R$5B00 lookups, replac
+C $B567,3 DE -> #R$5B00 LUT base (reclaimed printer buffer)
 C $B56A,1 C = current index (low byte of DE)
 C $B56B,2 B = 4 groups of 2 bits
 C $B56E,2 isolate the top 2-bit group
@@ -2219,11 +2510,11 @@ B $B5CE,1,1
 @ $B5CF label=init_b5cf
 c $B5CF
 C $B5D1,3 set Flag?? $00 $FE $FF
-C $B5D5,3 zero flag_b5cb at $B5CB (write into code padding)
+C $B5D5,3 zero flag_b5cb at #R$B5CB (write into code padding)
 @ $B5D9 label=get_screen_addr
 c $B5D9 Get screen addr
 N $B5D9 Pixel address for (row=H, col-in-row=L).
-N $B5D9 Indexes scr_row_addr_tbl ($5D00, 2 bytes/row) at 2*H to fetch the row base, then adds L to get the final byte address in HL.
+N $B5D9 Indexes scr_row_addr_tbl (#R$5D00, 2 bytes/row) at 2*H to fetch the row base, then adds L to get the final byte address in HL.
 N $B5D9 In: H=row 0..191, L=byte offset within row.
 N $B5D9 Out: HL=screen addr.
 N $B5D9 Clobbers A preserves DE.
@@ -2233,13 +2524,13 @@ C $B5E4,1 A = row base low + col offset
 C $B5E6,1 H = row base high
 @ $B5EA label=build_row_addr_table
 c $B5EA Build row addr table
-N $B5EA Precompute 192 screen-row addresses into scr_row_addr_tbl ($5D00, little-endian words).
+N $B5EA Precompute 192 screen-row addresses into scr_row_addr_tbl (#R$5D00, little-endian words).
 N $B5EA For each row y in 0..191 it builds the ZX pixel address:
 N $B5EA high = $40 | (y&7) | ((y>>3)&$18)
 N $B5EA low  = (y&$38)<<2 i.e.
 N $B5EA the famous ZX scan-order layout (Y bits split across the address).
 N $B5EA get_screen_addr then just indexes this table.
-C $B5EA,3 DE -> $5D00 table base
+C $B5EA,3 DE -> #R$5D00 table base
 C $B5ED,3 HL: H = row counter y, builds address in HL
 C $B5F2,1 (y>>3)&$18  -> D (the y bits 3..5 region)
 C $B5FC,1 + (y&7) + $40 -> high byte
@@ -2295,8 +2586,8 @@ c $B74D Draw actor sprite
 N $B74D Render one object_table actor (IX = entry).
 N $B74D Skips if the sprite id (IX+24)==$FF (inactive).
 N $B74D Computes screen-Y via actor_screen_y (also leaves an X-related byte in $60A6). State 7 (IX+48, the "static wall marker" convention used by collision_test) doubles $60A6 into a fresh angular-position copy rather than drawing normally.
-N $B74D Bounds-checks the screen row ($60A8) to [$18,$B0) (RET if off-screen), derives a sub-column fraction from $60A6, and for state-7 entries queues a one-shot deferred sprite via flag_b5cb/$B5CC/$B5CE (consumed later by draw_pending_sprite) instead of blitting immediately.
-N $B74D Otherwise computes the screen address (GET_SCREEN_ADDR), then picks the bitmap: sprite id >=$7C indexes the runtime table at $BC80 directly (fixed 3-cell-wide, 8-row blit) sprite id <$7C goes through GET_SPRITE_DEF (adds a facing offset derived from $60A6) to fetch the normal $C100 sprite definition. Falls through into blit_sprite_fast to draw.
+N $B74D Bounds-checks the screen row ($60A8) to [$18,$B0) (RET if off-screen), derives a sub-column fraction from $60A6, and for state-7 entries queues a one-shot deferred sprite via flag_b5cb/#R$B5CC/#R$B5CE (consumed later by draw_pending_sprite) instead of blitting immediately.
+N $B74D Otherwise computes the screen address (GET_SCREEN_ADDR), then picks the bitmap: sprite id >=$7C indexes the runtime table at $BC80 directly (fixed 3-cell-wide, 8-row blit) sprite id <$7C goes through GET_SPRITE_DEF (adds a facing offset derived from $60A6) to fetch the normal #R$C100 sprite definition. Falls through into blit_sprite_fast to draw.
 N $B74D Clobbers: A,HL,IX,...
 C $B750,3 sprite id == $FF -> RET (inactive)
 C $B753,3 Actor screen y
@@ -2306,8 +2597,8 @@ C $B764,3 A = screen row ($60A8)
 C $B767,6 bounds check row to [$18,$B0), else RET
 C $B76E,9 sub-column fraction: ($60A6)>>3 &$1F -> L
 C $B777,7 state 7 again -> defer draw
-C $B77E,3 queue deferred sprite: pos -> $B5CC
-C $B781,10 facing quadrant -> $B5CE
+C $B77E,3 queue deferred sprite: pos -> #R$B5CC
+C $B781,10 facing quadrant -> #R$B5CE
 C $B78B,5 flag_b5cb = 1 (pending)
 C $B790,3 Get screen addr
 C $B794,7 sprite id >= $7C? (fixed runtime-table graphic)
@@ -2320,11 +2611,11 @@ C $B7BE,1 stash variant byte for blit_sprite_fast
 C $B7BF,3 Get sprite def
 @ $B7C2 label=blit_sprite_fast
 c $B7C2 Blit sprite fast
-N $B7C2 Fast masked sprite blit using the LD SP,screen / PUSH stack-write trick (saves the real SP to $6000, DI, treats the screen as a "stack" so each POP+merge writes one masked byte pair).
+N $B7C2 Fast masked sprite blit using the LD SP,screen / PUSH stack-write trick (saves the real SP to #R$6000, DI, treats the screen as a "stack" so each POP+merge writes one masked byte pair).
 N $B7C2 Entered by fallthrough from draw_actor_sprite's GET_SPRITE_DEF/RET (POP AF recovers the sprite-variant byte pushed before that call): height B is 8 rows normally, or 4 rows when that byte is >=$4E (used for the fixed $BC80 runtime-table sprites, which pre-set C=3/B=8 explicitly and skip this test).
 N $B7C2 C selects the row width variant: 1-cell-wide ($B7DD, 2 mask/data pairs per row), 2-cell-wide ($B7FD, 4 pairs), or 3-cell-wide ($B82B, 6 pairs) each variant does the same AND/OR merge-and-advance idiom (INC H each row, wrapping L by +$20/-8 on the char-cell boundary every 8 rows -- the standard ZX scan-order step), looping B times via DJNZ.
 N $B7C2 Data is consumed via POP off the (redirected) stack: each row pops a mask/value pair per cell, ANDs the mask into the destination screen byte, ORs in the value.
-N $B7C2 Restores the real SP from $6000 and EI before returning.
+N $B7C2 Restores the real SP from #R$6000 and EI before returning.
 N $B7C2 Clobbers: A,BC,DE,HL.
 C $B7C2,1 recover sprite-variant byte pushed before GET_SPRITE_DEF
 C $B7C3,8 height = 4 rows if variant >= $4E, else 8
@@ -2350,7 +2641,7 @@ N $B869 Object-table counterpart of col_screen_y: map an actor's angular column 
 N $B869 Clobbers: A,DE,HL.
 @ $B8A8 label=draw_pending_sprite
 c $B8A8 Draw pending sprite
-N $B8A8 If flag_b5cb is set, consume it and draw the one-shot sprite queued at $B5CC (pos) / $B5CE (id), with on-screen bounds checks.
+N $B8A8 If flag_b5cb is set, consume it and draw the one-shot sprite queued at #R$B5CC (pos) / #R$B5CE (id), with on-screen bounds checks.
 N $B8A8 RET immediately when nothing queued.
 N $B8A8 Clobbers: A,BC,HL.
 C $B8A8,5 flag_b5cb set? consume it, else RET
@@ -2375,7 +2666,7 @@ T $B95A
 b $B95D
 @ $B965 label=setup_strip_draw
 c $B965 Setup strip draw
-N $B965 Patch the tower column-strip blitter's params ($B941/$B9A1 row, $B942 column base) from disp_height and scroll_pos (bit2 selects the $24/$2C column phase).
+N $B965 Patch the tower column-strip blitter's params (#R$B941/$B9A1 row, $B942 column base) from disp_height and scroll_pos (bit2 selects the $24/$2C column phase).
 N $B965 SELF-MOD.
 N $B965 Clobbers: A,B,C.
 C $B966,3 get Display height
@@ -2393,14 +2684,14 @@ c $BA16
 C $BA18,3 get Level number 0
 @ $BA26 label=paint_tower_attrs
 c $BA26 Paint tower attrs
-N $BA26 Repaint the tower's attribute (colour) band in the $58xx attribute file from $5860, using lookup_col_attr ($BA16) for per-column colours and fill_run ($BA61) to lay rows.
-N $BA26 SELF-MOD: $BA66 row count.
+N $BA26 Repaint the tower's attribute (colour) band in the $58xx attribute file from $5860, using lookup_col_attr (#R$BA16) for per-column colours and fill_run ($BA61) to lay rows.
+N $BA26 SELF-MOD: #R$BA66 row count.
 N $BA26 Clobbers: A,BC,D,HL.
 @ $BA61 label=fill_run
 s $BA66
 @ $BA67 label=scroll_tower_attrs
 c $BA67 Scroll tower attrs
-N $BA67 Adjust the painted attribute band as scroll_pos advances (compares against the $BA66 latch set by paint_tower_attrs) so colours track the scrolling tower.
+N $BA67 Adjust the painted attribute band as scroll_pos advances (compares against the #R$BA66 latch set by paint_tower_attrs) so colours track the scrolling tower.
 N $BA67 Clobbers: A,B,HL.
 C $BA67,3 HL = scroll_pos
 C $BA6A,3 top-of-tower page (H==3)?
@@ -2411,7 +2702,7 @@ C $BA74,4 /4, mask to row range
 C $BA78,2 bias by -$16
 C $BA7A,2 negate back
 C $BA7C,1 B = target row index
-C $BA7D,3 A = previous row index ($BA66 latch)
+C $BA7D,3 A = previous row index (#R$BA66 latch)
 C $BA80,1 delta = new - previous
 C $BA81,2 unchanged? -> just update latch, RET
 C $BA83,2 delta == -1 (scrolled up one row)?
@@ -2431,8 +2722,8 @@ c $BABA
 b $BABD
 @ $BB00 label=im2_vector_table
 @ $BC00 label=runtime_tables
-b $BC00 RUNTIME_TABLES
-N $BC00 $BC00..$BFFF, zero in the snapshot.
+b $BC00 Runtime tables
+N $BC00 #R$BC00..$BFFF, zero in the snapshot.
 N $BC00 Game-state tables populated after init (enemy slots, column state, score work).
 N $BC00 Referenced bases below are filled/read at runtime.
 @ $BC80 label=rt_bc80
@@ -2988,7 +3279,7 @@ T $FE2D
 b $FE31
 @ $FE5C label=tape_load_header
 c $FE5C Tape load header
-N $FE5C Load the 17-byte ($0011) block header into the buffer at $FC21 (via tape_read_byte) and validate the $2A signature byte retries on mismatch.
+N $FE5C Load the 17-byte ($0011) block header into the buffer at #R$FC21 (via tape_read_byte) and validate the $2A signature byte retries on mismatch.
 N $FE5C Clobbers: A,DE,IX.
 C $FE69,3 Tape read byte
 C $FE88,3 Tape read byte

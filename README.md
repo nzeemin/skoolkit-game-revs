@@ -40,7 +40,7 @@ Original: for ZX Spectrum, 1985, Elite Systems Ltd.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
-Status: Not finished, but have a good progress (61K .ctl file).
+Status: Not finished, but have a good progress (62K .ctl file).
 
 
 ## Hydrofool (ZX Spectrum)
@@ -91,7 +91,7 @@ Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Work in progress (42K .ctl file).
+Status: Work in progress (43K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)
@@ -121,7 +121,7 @@ Original: for ZX Spectrum, 1987, Hewson Consultants.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/nebulus-zx/nebulus/
 
-Status: just started (69K .ctl file).
+Status: Have some progress (124K .ctl file).
 Based on work done by Anatoly Vdovichev.
 
 

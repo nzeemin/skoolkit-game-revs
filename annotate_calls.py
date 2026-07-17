@@ -13,13 +13,22 @@ The title is shortened for the call-site comment: cut at the first ': ' or
 Idempotent: running it twice adds nothing new. Re-run after giving more
 routines titles to propagate them to their call sites.
 
-Usage: python annotate_calls.py [file.ctl] [file.skool]
+Pass --force to instead overwrite the text of existing C-line comments at
+call sites (address and length are kept as-is, only the trailing comment
+text is replaced) -- use this after renaming/retitling routines so their
+call-site annotations catch up.
+
+Usage: python annotate_calls.py [--force] [file.ctl] [file.skool]
 """
 import re
 import sys
 
-CTL = sys.argv[1] if len(sys.argv) > 1 else 'hydrofool.ctl'
-SKOOL = sys.argv[2] if len(sys.argv) > 2 else 'hydrofool.skool'
+args = sys.argv[1:]
+FORCE = '--force' in args
+args = [a for a in args if a != '--force']
+
+CTL = args[0] if len(args) > 0 else 'hydrofool.ctl'
+SKOOL = args[1] if len(args) > 1 else 'hydrofool.skool'
 
 
 def shorten(title):
@@ -57,14 +66,17 @@ for line in ctl_lines:
     if m:
         titles[int(m.group(1), 16)] = shorten(m.group(2).strip())
 
-# 2. Addresses already covered by a C-line in the ctl (including multi-byte spans)
+# 2. Addresses already covered by a C-line in the ctl (including multi-byte spans),
+#    and the ctl line index of each C-line's own start address (for --force rewrites)
 have_c = set()
-for line in ctl_lines:
+c_line_idx = {}  # start_addr -> index into ctl_lines
+for i, line in enumerate(ctl_lines):
     m = re.match(r'^C \$([0-9A-F]{4})(?:,(\d+))?', line)
     if m:
         start = int(m.group(1), 16)
         length = int(m.group(2)) if m.group(2) else 1
         have_c.update(range(start, start + length))
+        c_line_idx[start] = i
 
 # 3. CALL sites from the skool
 calls = []  # (site_addr, target_addr)
@@ -73,12 +85,19 @@ for line in open(SKOOL, encoding='utf-8').read().splitlines():
     if m:
         calls.append((int(m.group(1), 16), int(m.group(2), 16)))
 
-# 4. Build the new C-lines
+# 4. Build the new C-lines, and (with --force) text-only rewrites of existing ones
 new_lines = {}  # addr -> line
+rewrites = {}  # addr -> (ctl_line_index, new_line)
 for site, target in calls:
-    if site in have_c or target not in titles or not titles[target]:
+    if target not in titles or not titles[target]:
         continue
-    new_lines[site] = 'C ${:04X},3 {}'.format(site, titles[target])
+    if site not in have_c:
+        new_lines[site] = 'C ${:04X},3 {}'.format(site, titles[target])
+    elif FORCE and site in c_line_idx:
+        old = ctl_lines[c_line_idx[site]]
+        m = re.match(r'^(C \$[0-9A-F]{4}(?:,\d+)? )(\S.*)$', old)
+        if m and m.group(2) != titles[target]:
+            rewrites[site] = (c_line_idx[site], m.group(1) + titles[target])
 
 # 5. Insert each new line at its address-sorted position in the ctl
 def line_addr(line):
@@ -86,6 +105,8 @@ def line_addr(line):
     return int(m.group(1), 16) if m else None
 
 out = list(ctl_lines)
+for addr, (idx, new_line) in rewrites.items():
+    out[idx] = new_line
 for addr in sorted(new_lines):
     idx = len(out)
     for i, line in enumerate(out):
@@ -96,7 +117,9 @@ for addr in sorted(new_lines):
     out.insert(idx, new_lines[addr])
 
 open(CTL, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
-print('titled routines: {}, call sites found: {}, C-lines added: {}'.format(
-    len(titles), len(calls), len(new_lines)))
+print('titled routines: {}, call sites found: {}, C-lines added: {}, rewritten: {}'.format(
+    len(titles), len(calls), len(new_lines), len(rewrites)))
 for addr in sorted(new_lines):
     print('  ' + new_lines[addr])
+for addr in sorted(rewrites):
+    print('  ~ ' + rewrites[addr][1])

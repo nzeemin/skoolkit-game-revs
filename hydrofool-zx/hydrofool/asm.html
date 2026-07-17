@@ -97,8 +97,8 @@
 </tr>
 <tr>
 <td class="address-1"><span id="24848"></span>6110</td>
-<td class="instruction">DEFW $788A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFW <a href="#30858">$788A</a></td>
+<td class="comment-1" rowspan="1">Currently-held item: pointer to its 4-byte item-table record (room,Y,X,sprite). Equals the fixed "empty hands" sentinel record at $788A when nothing is held. Set by <a href="asm.html#35579">8AFB</a> on pickup; the pointed-to record's room byte is zeroed on pickup and restored (to the current room, at the player's position) on drop.</td>
 </tr>
 <tr>
 <td class="address-1"><span id="24850"></span>6112</td>
@@ -113,22 +113,22 @@
 <tr>
 <td class="address-1"><span id="24866"></span>6122</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">"Gnomes Gnabbed" end-game stat counter (BCD), printed by <a href="asm.html#34508">86CC</a> via <a href="asm.html#34127">854F</a></td>
 </tr>
 <tr>
 <td class="address-1"><span id="24867"></span>6123</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">"Goodies Gathered" end-game stat counter (BCD), printed by <a href="asm.html#34508">86CC</a> via <a href="asm.html#34127">854F</a>; incremented by <a href="asm.html#37697">9341</a> on each successful item delivery to a Plug Room corner cube</td>
 </tr>
 <tr>
 <td class="address-1"><span id="24868"></span>6124</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">"Plugs Pulled" end-game stat counter (BCD), printed by <a href="asm.html#34508">86CC</a> via <a href="asm.html#34127">854F</a></td>
 </tr>
 <tr>
 <td class="address-1"><span id="24869"></span>6125</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Entry-point room number choosen selecting A/B/C/D in menu, see table <a href="asm.html#34151">8567</a></td>
 </tr>
 <tr>
 <td class="address-1"><span id="24870"></span>6126</td>
@@ -234,26 +234,81 @@ Static object codes: $01=small seaweed, $02=flat rock, $03=clam shell (no pearl)
 <tr>
 <td class="address-1"><span id="24955"></span>617B</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Input device selector, read by <a href="asm.html#32446">7EBE</a>: 0=keyboard, 1=Kempston joystick, 2=Sinclair joystick, else=Cursor keys</td>
 </tr>
 <tr>
 <td class="address-1"><span id="24956"></span>617C</td>
-<td class="instruction">DEFB $00,$BF,$BF,$BF,$BF,$BF,$BF,$BF</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1">Cumulative input-held counter, incremented each frame by <a href="asm.html#24966">6186</a>'s mask value (used for key-repeat timing)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24957"></span>617D</td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (contributes bit 4 -- fire/pick-up -- to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24958"></span>617E</td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (contributes bit 2 to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24959"></span>617F</td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (contributes bit 1 to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24960"></span>6180</td>
+<td class="instruction">DEFB $BF,$BF</td>
 <td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="24962"></span>6182</td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (contributes bit 3 to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24963"></span>6183</td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (contributes bit 0 to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="24964"></span>6184</td>
-<td class="instruction">DEFB $BF,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="instruction">DEFB $BF</td>
+<td class="comment-1" rowspan="1">Keyboard row snapshot (also contributes bit 4 -- fire/pick-up -- to <a href="asm.html#24966">6186</a> via <a href="asm.html#32446">7EBE</a>)</td>
 </tr>
 <tr>
-<td class="address-1"><span id="24966"></span>6186</td>
+<td class="address-1"><span id="24965"></span>6185</td>
 <td class="instruction">DEFB $00</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="24966"></span>
+<div class="comments">
+<div class="paragraph">
+Resolved 5-bit input mask, produced every frame by <a href="asm.html#32446">7EBE</a> from whichever control method $617B selects. Bit0=Right, bit1=Left, bit2=Down, bit3=Up (Kempston-port convention: reading Kempston directly copies its byte here unmodified), bit4=Fire/pick-up. Consumed by <a href="asm.html#35176">8968</a> (movement -- resolved to a single direction via the table at <a href="asm.html#35056">88F0</a>) and <a href="asm.html#35579">8AFB</a> (fire button). Masked against a "previously pressed" copy at $6188 by <a href="asm.html#32446">7EBE</a> itself (edge-detection), and accumulated into a repeat counter at $617C.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24966"></span>6186</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1">Resolved input mask (bit0=Right, bit1=Left, bit2=Down, bit3=Up, bit4=Fire/pick-up) -- see N-line</td>
+</tr>
+<tr>
 <td class="address-1"><span id="24967"></span>6187</td>
-<td class="instruction">DEFB $00,$FF,$01</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="24968"></span>6188</td>
+<td class="instruction">DEFB $FF</td>
+<td class="comment-1" rowspan="1">Previous frame's <a href="asm.html#24966">6186</a> value, used by <a href="asm.html#32446">7EBE</a> for key-repeat/edge detection</td>
+</tr>
+<tr>
+<td class="address-1"><span id="24969"></span>6189</td>
+<td class="instruction">DEFB $01</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
@@ -324,7 +379,7 @@ Static object codes: $01=small seaweed, $02=flat rock, $03=clam shell (no pearl)
 <tr>
 <td class="address-1"><span id="24990"></span>619E</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Weapon-held flag, tested by <a href="asm.html#35579">8AFB</a> on fire/pick-up to decide attack vs. pick-up/drop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="24991"></span>619F</td>
@@ -362,13 +417,23 @@ Static object codes: $01=small seaweed, $02=flat rock, $03=clam shell (no pearl)
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="24999" class="description">61A7: JP (HL) trampoline, used by <a href="asm.html#38972">983C</a> to call a dynamic object's per-frame behaviour handler</div>
+<div id="24999" class="description">61A7: JP (HL) trampoline</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#38972">983C</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="24999"></span>
+<div class="comments">
+<div class="paragraph">
+Used by <a href="asm.html#38972">983C</a> to call a dynamic object's per-frame behaviour handler
 </div>
 </div>
 </td>
@@ -515,7 +580,7 @@ Used by the routine at <a href="asm.html#26477">676D</a>.
 <tr>
 <td class="address-1"><span id="25040"></span>61D0</td>
 <td class="instruction">LD ($610E),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Active object list HEAD pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25043"></span>61D3</td>
@@ -1590,7 +1655,7 @@ Re-reads room description byte1 (at room_base+1), merges bit4 into bit0 and bit7
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="25412" class="description">6344: Draw door graphics for $612B bits 0 and 3 (single-piece doors)</div>
+<div id="25412" class="description">6344: Draw single-piece doors, for $612B bits 0 and 3</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -1722,7 +1787,7 @@ Tests bit 0 of $612B (North), drawing one door-graphic piece via <a href="asm.ht
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="25463" class="description">6377: Draw door graphics for $612B bits 1 and 2 (three-piece doors)</div>
+<div id="25463" class="description">6377: Draw three-piece doors, for $612B bits 1 and 2</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -2943,7 +3008,7 @@ Used by the routine at <a href="asm.html#27505">6B71</a>.
 <tr>
 <td class="address-1"><span id="25910"></span>6536</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25913"></span>6539</td>
@@ -4285,7 +4350,7 @@ Used by the routine at <a href="asm.html#26408">6728</a>.
 <tr>
 <td class="address-1"><span id="26360"></span>66F8</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26363"></span>66FB</td>
@@ -4310,7 +4375,7 @@ Used by the routine at <a href="asm.html#26408">6728</a>.
 <tr>
 <td class="address-1"><span id="26373"></span>6705</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26376"></span>6708</td>
@@ -4587,7 +4652,7 @@ Used by the routine at <a href="asm.html#26477">676D</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="26477" class="description">676D: Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02</div>
+<div id="26477" class="description">676D: Draw current room</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -4602,6 +4667,9 @@ Used by the routines at <a href="asm.html#27397">6B05</a> and <a href="asm.html#
 <td class="routine-comment" colspan="5">
 <span id="26477"></span>
 <div class="comments">
+<div class="paragraph">
+Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02
+</div>
 <div class="paragraph">
 Rooms $01 and $02 are the only two type $E rooms, and are special "no walls" rooms (see <a href="asm.html#27855">6CCF</a> -- room $01 is the ending/winning room). At <a href="asm.html#26539">67AB</a>, this routine checks if the current room ($6126) is 1 or 2 and, if so, skips straight to <a href="asm.html#26592">67E0</a>, bypassing: the wall/layout draw (<a href="asm.html#25647">642F</a>), door-graphic draw (<a href="asm.html#25463">6377</a>), the message window (<a href="asm.html#26075">65DB</a>), and several creature/object placement calls (<a href="asm.html#26003">6593</a>/$655E/$663B/$6743/$8F82/$6895/$885A). The room's grid contents (rocks/seaweed etc, from its type $E template) still get drawn via a separate, non-skipped path -- consistent with the "just floating rocks and seaweed, no walls" appearance of room $01. Room $01 additionally gets one extra call, <a href="asm.html#34508">86CC</a> (CALL Z at <a href="asm.html#26600">67E8</a>, gated on room==1 specifically, not room==2) -- draws the "DEATHBOWL DIVINED" end-game stats overlay (see <a href="asm.html#34508">86CC</a>).
 </div>
@@ -4716,11 +4784,12 @@ Rooms $01 and $02 are the only two type $E rooms, and are special "no walls" roo
 <tr>
 <td class="address-1"><span id="26539"></span>67AB</td>
 <td class="instruction">LD A,($6126)</td>
-<td class="comment-1" rowspan="5">if room $6126 is 1 or 2, skip to <a href="asm.html#26592">67E0</a> (special "no walls" room -- see <a href="asm.html#26477">676D</a>)</td>
+<td class="comment-1" rowspan="1">get Room number</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26542"></span>67AE</td>
 <td class="instruction">CP $01</td>
+<td class="comment-1" rowspan="4">if room $6126 is 1 or 2, skip to <a href="asm.html#26592">67E0</a> (special "no walls" room -- see <a href="asm.html#26477">676D</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26544"></span>67B0</td>
@@ -4752,7 +4821,7 @@ Rooms $01 and $02 are the only two type $E rooms, and are special "no walls" roo
 <tr>
 <td class="address-1"><span id="26559"></span>67BF</td>
 <td class="instruction">CALL <a href="#25463">$6377</a></td>
-<td class="comment-1" rowspan="1">Draw door graphics for $612B bits 1 and 2</td>
+<td class="comment-1" rowspan="1">Draw three-piece doors, for $612B bits 1 and 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26562"></span>67C2</td>
@@ -4805,21 +4874,34 @@ Rooms $01 and $02 are the only two type $E rooms, and are special "no walls" roo
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="26592"></span>
+<div class="comments">
+<div class="paragraph">
+Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls <a href="asm.html#34508">86CC</a> (likely the end-game stats overlay)
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="26592"></span>67E0</td>
 <td class="instruction">CALL <a href="#25843">$64F3</a></td>
-<td class="comment-1" rowspan="4">Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls <a href="asm.html#34508">86CC</a> (likely the end-game stats overlay)</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="26595"></span>67E3</td>
 <td class="instruction">LD A,($6126)</td>
+<td class="comment-1" rowspan="1">get Room number</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26598"></span>67E6</td>
 <td class="instruction">CP $01</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="26600"></span>67E8</td>
 <td class="instruction">CALL Z,<a href="#34508">$86CC</a></td>
+<td class="comment-1" rowspan="1">Draw the end-game stats screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26603"></span>67EB</td>
@@ -5385,7 +5467,7 @@ This entry point is used by the routine at <a href="asm.html#26817">68C1</a>.
 <tr>
 <td class="address-1"><span id="26808"></span>68B8</td>
 <td class="instruction">LD A,($619E)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Weapon-held flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26811"></span>68BB</td>
@@ -6551,7 +6633,7 @@ Used by the routines at <a href="asm.html#27384">6AF8</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="27403"></span>6B0B</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27406"></span>6B0E</td>
@@ -6601,7 +6683,7 @@ Used by the routines at <a href="asm.html#27384">6AF8</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="27431"></span>6B27</td>
 <td class="instruction">LD ($619E),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Weapon-held flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27434"></span>6B2A</td>
@@ -6631,7 +6713,7 @@ Used by the routines at <a href="asm.html#27384">6AF8</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="27449"></span>6B39</td>
 <td class="instruction">LD ($6125),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Entry-point room number choosen selecting A/B/C/D in menu</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27452"></span>6B3C</td>
@@ -6731,7 +6813,7 @@ Used by the routines at <a href="asm.html#27384">6AF8</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="27496"></span>6B68</td>
 <td class="instruction">CALL <a href="#26477">$676D</a></td>
-<td class="comment-1" rowspan="1">Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02</td>
+<td class="comment-1" rowspan="1">Draw current room</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27499"></span>6B6B</td>
@@ -6740,7 +6822,7 @@ Used by the routines at <a href="asm.html#27384">6AF8</a> and <a href="asm.html#
 </tr>
 <tr>
 <td class="address-1"><span id="27502"></span>6B6E</td>
-<td class="instruction">CALL $8596</td>
+<td class="instruction">CALL <a href="#34198">$8596</a></td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
@@ -9734,66 +9816,230 @@ Room type $F (2 bytes) -- used by exactly 4 rooms in the whole table -- $32, $65
 </tr>
 <tr>
 <td class="address-1"><span id="30035"></span>7553</td>
-<td class="instruction">DEFB $18,$18,$03,$1A,$1A,$80,$75,$82</td>
+<td class="instruction">DEFB $18,$18,$03</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
+</table>
+<div id="30038" class="description">7556: Data block at 7556</div>
+<table class="disassembly">
 <tr>
-<td class="address-1"><span id="30043"></span>755B</td>
-<td class="instruction">DEFB $75,$84,$75,$86,$75,$88,$75,$8A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="routine-comment" colspan="5">
+<div class="details">
+</div>
+</td>
 </tr>
 <tr>
-<td class="address-1"><span id="30051"></span>7563</td>
-<td class="instruction">DEFB $75,$8C,$75,$8E,$75,$90,$75,$92</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="routine-comment" colspan="5">
+<span id="30038"></span>
+<div class="comments">
+<div class="paragraph">
+Per-terrain-code shape/behaviour pointer table, indexed by grid content code * 2 (code $00, unused since a $00 grid cell means "empty" and is never looked up, has a dummy entry). Read by <a href="asm.html#39612">9ABC</a> (player/object collision -- looks up the pointer, then reads further bytes for shape data) and <a href="asm.html#36462">8E6E</a> (creature/object setup, same table). 21 entries (codes $00-$14) pointing into the shape-record area starting at $7580; codes above $14 are never used as static grid content and have no entry.
+</div>
+</div>
+</td>
 </tr>
 <tr>
-<td class="address-1"><span id="30059"></span>756B</td>
-<td class="instruction">DEFB $75,$95,$75,$98,$75,$9B,$75,$9D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30038"></span>7556</td>
+<td class="instruction">DEFW $1A1A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30067"></span>7573</td>
-<td class="instruction">DEFB $75,$A0,$75,$A3,$75,$A6,$75,$A9</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30040"></span>7558</td>
+<td class="instruction">DEFW $7580</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30075"></span>757B</td>
-<td class="instruction">DEFB $75,$AB,$75,$AE,$75,$02,$4A,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30042"></span>755A</td>
+<td class="instruction">DEFW $7582</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30083"></span>7583</td>
-<td class="instruction">DEFB $52,$02,$54,$02,$58,$02,$BA,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30044"></span>755C</td>
+<td class="instruction">DEFW $7584</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30091"></span>758B</td>
-<td class="instruction">DEFB $48,$02,$4E,$02,$50,$02,$46,$03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30046"></span>755E</td>
+<td class="instruction">DEFW $7586</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30099"></span>7593</td>
-<td class="instruction">DEFB $3A,$BA,$03,$42,$BA,$03,$38,$BA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="30048"></span>7560</td>
+<td class="instruction">DEFW $7588</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30050"></span>7562</td>
+<td class="instruction">DEFW $758A</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30052"></span>7564</td>
+<td class="instruction">DEFW $758C</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30054"></span>7566</td>
+<td class="instruction">DEFW $758E</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30056"></span>7568</td>
+<td class="instruction">DEFW $7590</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30058"></span>756A</td>
+<td class="instruction">DEFW $7592</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30060"></span>756C</td>
+<td class="instruction">DEFW $7595</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30062"></span>756E</td>
+<td class="instruction">DEFW $7598</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30064"></span>7570</td>
+<td class="instruction">DEFW $759B</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30066"></span>7572</td>
+<td class="instruction">DEFW $759D</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30068"></span>7574</td>
+<td class="instruction">DEFW $75A0</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30070"></span>7576</td>
+<td class="instruction">DEFW $75A3</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30072"></span>7578</td>
+<td class="instruction">DEFW $75A6</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30074"></span>757A</td>
+<td class="instruction">DEFW $75A9</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30076"></span>757C</td>
+<td class="instruction">DEFW $75AB</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30078"></span>757E</td>
+<td class="instruction">DEFW <a href="#30126">$75AE</a></td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="30080"></span>7580</td>
+<td class="instruction">DEFB $02,$4A</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $01 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30082"></span>7582</td>
+<td class="instruction">DEFB $02,$52</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $02 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30084"></span>7584</td>
+<td class="instruction">DEFB $02,$54</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $03 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30086"></span>7586</td>
+<td class="instruction">DEFB $02,$58</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $04 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30088"></span>7588</td>
+<td class="instruction">DEFB $02,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $05 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30090"></span>758A</td>
+<td class="instruction">DEFB $02,$48</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $06 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30092"></span>758C</td>
+<td class="instruction">DEFB $02,$4E</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $07 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30094"></span>758E</td>
+<td class="instruction">DEFB $02,$50</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $08 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30096"></span>7590</td>
+<td class="instruction">DEFB $02,$46</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $09 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30098"></span>7592</td>
+<td class="instruction">DEFB $03,$3A,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0A (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30101"></span>7595</td>
+<td class="instruction">DEFB $03,$42,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0B (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30104"></span>7598</td>
+<td class="instruction">DEFB $03,$38,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0C (<a href="asm.html#30038">7556</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="30107"></span>759B</td>
-<td class="instruction">DEFB $02,$56,$03,$76,$BA,$03,$7A,$BA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $02,$56</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0D (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30109"></span>759D</td>
+<td class="instruction">DEFB $03,$76,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0E (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30112"></span>75A0</td>
+<td class="instruction">DEFB $03,$7A,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $0F (<a href="asm.html#30038">7556</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="30115"></span>75A3</td>
-<td class="instruction">DEFB $03,$70,$BA,$03,$00,$6A,$02,$6C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $03,$70,$BA</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $10 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30118"></span>75A6</td>
+<td class="instruction">DEFB $03,$00,$6A</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $11 (<a href="asm.html#30038">7556</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30121"></span>75A9</td>
+<td class="instruction">DEFB $02,$6C</td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $12 (<a href="asm.html#30038">7556</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="30123"></span>75AB</td>
 <td class="instruction">DEFB $03,$6D,$BA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Shape record for terrain code $13 (<a href="asm.html#30038">7556</a>)</td>
 </tr>
 </table>
-<div id="30126" class="description">75AE: Message at 75AE</div>
+<div id="30126" class="description">75AE: Data block at 75AE</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -9803,7 +10049,7 @@ Room type $F (2 bytes) -- used by exactly 4 rooms in the whole table -- $32, $65
 </tr>
 <tr>
 <td class="address-1"><span id="30126"></span>75AE</td>
-<td class="instruction">DEFM "FNPRTVl"</td>
+<td class="instruction">DEFB $46,$4E,$50,$52,$54,$56,$6C</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
@@ -10267,642 +10513,647 @@ Room type $F (2 bytes) -- used by exactly 4 rooms in the whole table -- $32, $65
 </tr>
 <tr>
 <td class="address-1"><span id="30853"></span>7885</td>
-<td class="instruction">DEFB $07,$00,$1C,$01,$5A,$00,$01,$18</td>
+<td class="instruction">DEFB $07,$00,$1C,$01,$5A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30861"></span>788D</td>
-<td class="instruction">DEFB $6D,$00,$01,$18,$6D,$0F,$21,$54</td>
+<td class="address-1"><span id="30858"></span>788A</td>
+<td class="instruction">DEFB $00,$01,$18,$6D</td>
+<td class="comment-1" rowspan="1">"Empty hands" sentinel item record (room,Y,X,sprite) -- <a href="asm.html#24848">6110</a> (currently-held item) points here when nothing is held; <a href="asm.html#35579">8AFB</a> compares against this fixed address to decide pick-up vs. drop</td>
+</tr>
+<tr>
+<td class="address-1"><span id="30862"></span>788E</td>
+<td class="instruction">DEFB $00,$01,$18,$6D,$0F,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30869"></span>7895</td>
-<td class="instruction">DEFB $36,$0F,$21,$54,$36,$1F,$22,$18</td>
+<td class="address-1"><span id="30870"></span>7896</td>
+<td class="instruction">DEFB $0F,$21,$54,$36,$1F,$22,$18,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30877"></span>789D</td>
-<td class="instruction">DEFB $36,$1F,$22,$18,$36,$35,$21,$54</td>
+<td class="address-1"><span id="30878"></span>789E</td>
+<td class="instruction">DEFB $1F,$22,$18,$36,$35,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30885"></span>78A5</td>
-<td class="instruction">DEFB $36,$35,$21,$54,$36,$45,$05,$30</td>
+<td class="address-1"><span id="30886"></span>78A6</td>
+<td class="instruction">DEFB $35,$21,$54,$36,$45,$05,$30,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30893"></span>78AD</td>
-<td class="instruction">DEFB $36,$45,$05,$30,$36,$47,$2E,$18</td>
+<td class="address-1"><span id="30894"></span>78AE</td>
+<td class="instruction">DEFB $45,$05,$30,$36,$47,$2E,$18,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30901"></span>78B5</td>
-<td class="instruction">DEFB $36,$47,$2E,$18,$36,$54,$21,$54</td>
+<td class="address-1"><span id="30902"></span>78B6</td>
+<td class="instruction">DEFB $47,$2E,$18,$36,$54,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30909"></span>78BD</td>
-<td class="instruction">DEFB $36,$54,$21,$54,$36,$5B,$12,$18</td>
+<td class="address-1"><span id="30910"></span>78BE</td>
+<td class="instruction">DEFB $54,$21,$54,$36,$5B,$12,$18,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30917"></span>78C5</td>
-<td class="instruction">DEFB $36,$5B,$12,$18,$36,$6A,$33,$18</td>
+<td class="address-1"><span id="30918"></span>78C6</td>
+<td class="instruction">DEFB $5B,$12,$18,$36,$6A,$33,$18,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30925"></span>78CD</td>
-<td class="instruction">DEFB $36,$6A,$33,$18,$36,$76,$37,$30</td>
+<td class="address-1"><span id="30926"></span>78CE</td>
+<td class="instruction">DEFB $6A,$33,$18,$36,$76,$37,$30,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30933"></span>78D5</td>
-<td class="instruction">DEFB $36,$76,$37,$30,$36,$8D,$1A,$18</td>
+<td class="address-1"><span id="30934"></span>78D6</td>
+<td class="instruction">DEFB $76,$37,$30,$36,$8D,$1A,$18,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30941"></span>78DD</td>
-<td class="instruction">DEFB $36,$8D,$1A,$18,$36,$9A,$21,$54</td>
+<td class="address-1"><span id="30942"></span>78DE</td>
+<td class="instruction">DEFB $8D,$1A,$18,$36,$9A,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30949"></span>78E5</td>
-<td class="instruction">DEFB $36,$9A,$21,$54,$36,$9D,$21,$54</td>
+<td class="address-1"><span id="30950"></span>78E6</td>
+<td class="instruction">DEFB $9A,$21,$54,$36,$9D,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30957"></span>78ED</td>
-<td class="instruction">DEFB $36,$9D,$21,$54,$36,$B7,$21,$54</td>
+<td class="address-1"><span id="30958"></span>78EE</td>
+<td class="instruction">DEFB $9D,$21,$54,$36,$B7,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30965"></span>78F5</td>
-<td class="instruction">DEFB $36,$B7,$21,$54,$36,$C1,$21,$54</td>
+<td class="address-1"><span id="30966"></span>78F6</td>
+<td class="instruction">DEFB $B7,$21,$54,$36,$C1,$21,$54,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30973"></span>78FD</td>
-<td class="instruction">DEFB $36,$C1,$21,$54,$36,$CF,$2D,$30</td>
+<td class="address-1"><span id="30974"></span>78FE</td>
+<td class="instruction">DEFB $C1,$21,$54,$36,$CF,$2D,$30,$36</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30981"></span>7905</td>
-<td class="instruction">DEFB $36,$CF,$2D,$30,$36,$4A,$21,$54</td>
+<td class="address-1"><span id="30982"></span>7906</td>
+<td class="instruction">DEFB $CF,$2D,$30,$36,$4A,$21,$54,$42</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30989"></span>790D</td>
-<td class="instruction">DEFB $42,$4A,$21,$54,$42,$66,$2F,$18</td>
+<td class="address-1"><span id="30990"></span>790E</td>
+<td class="instruction">DEFB $4A,$21,$54,$42,$66,$2F,$18,$42</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="30997"></span>7915</td>
-<td class="instruction">DEFB $42,$66,$2F,$18,$42,$8B,$22,$18</td>
+<td class="address-1"><span id="30998"></span>7916</td>
+<td class="instruction">DEFB $66,$2F,$18,$42,$8B,$22,$18,$38</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31005"></span>791D</td>
-<td class="instruction">DEFB $38,$8B,$22,$18,$38,$72,$05,$18</td>
+<td class="address-1"><span id="31006"></span>791E</td>
+<td class="instruction">DEFB $8B,$22,$18,$38,$72,$05,$18,$3A</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31013"></span>7925</td>
-<td class="instruction">DEFB $3A,$72,$05,$18,$3A,$21,$17,$18</td>
+<td class="address-1"><span id="31014"></span>7926</td>
+<td class="instruction">DEFB $72,$05,$18,$3A,$21,$17,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31021"></span>792D</td>
-<td class="instruction">DEFB $72,$21,$17,$18,$72,$18,$24,$18</td>
+<td class="address-1"><span id="31022"></span>792E</td>
+<td class="instruction">DEFB $21,$17,$18,$72,$18,$24,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31029"></span>7935</td>
-<td class="instruction">DEFB $72,$18,$24,$18,$72,$34,$0A,$18</td>
+<td class="address-1"><span id="31030"></span>7936</td>
+<td class="instruction">DEFB $18,$24,$18,$72,$34,$0A,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31037"></span>793D</td>
-<td class="instruction">DEFB $72,$34,$0A,$18,$72,$71,$0C,$18</td>
+<td class="address-1"><span id="31038"></span>793E</td>
+<td class="instruction">DEFB $34,$0A,$18,$72,$71,$0C,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31045"></span>7945</td>
-<td class="instruction">DEFB $72,$71,$0C,$18,$72,$84,$1D,$18</td>
+<td class="address-1"><span id="31046"></span>7946</td>
+<td class="instruction">DEFB $71,$0C,$18,$72,$84,$1D,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31053"></span>794D</td>
-<td class="instruction">DEFB $72,$84,$1D,$18,$72,$A6,$12,$18</td>
+<td class="address-1"><span id="31054"></span>794E</td>
+<td class="instruction">DEFB $84,$1D,$18,$72,$A6,$12,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31061"></span>7955</td>
-<td class="instruction">DEFB $72,$A6,$12,$18,$72,$C3,$1C,$18</td>
+<td class="address-1"><span id="31062"></span>7956</td>
+<td class="instruction">DEFB $A6,$12,$18,$72,$C3,$1C,$18,$72</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31069"></span>795D</td>
-<td class="instruction">DEFB $72,$C3,$1C,$18,$72,$2F,$04,$18</td>
+<td class="address-1"><span id="31070"></span>795E</td>
+<td class="instruction">DEFB $C3,$1C,$18,$72,$2F,$04,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31077"></span>7965</td>
-<td class="instruction">DEFB $3E,$2F,$04,$18,$3E,$0E,$0E,$18</td>
+<td class="address-1"><span id="31078"></span>7966</td>
+<td class="instruction">DEFB $2F,$04,$18,$3E,$0E,$0E,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31085"></span>796D</td>
-<td class="instruction">DEFB $3E,$0E,$0E,$18,$3E,$0C,$1B,$18</td>
+<td class="address-1"><span id="31086"></span>796E</td>
+<td class="instruction">DEFB $0E,$0E,$18,$3E,$0C,$1B,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31093"></span>7975</td>
-<td class="instruction">DEFB $3E,$0C,$1B,$18,$3E,$53,$0F,$18</td>
+<td class="address-1"><span id="31094"></span>7976</td>
+<td class="instruction">DEFB $0C,$1B,$18,$3E,$53,$0F,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31101"></span>797D</td>
-<td class="instruction">DEFB $3E,$53,$0F,$18,$3E,$6E,$04,$18</td>
+<td class="address-1"><span id="31102"></span>797E</td>
+<td class="instruction">DEFB $53,$0F,$18,$3E,$6E,$04,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31109"></span>7985</td>
-<td class="instruction">DEFB $3E,$6E,$04,$18,$3E,$81,$02,$18</td>
+<td class="address-1"><span id="31110"></span>7986</td>
+<td class="instruction">DEFB $6E,$04,$18,$3E,$81,$02,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31117"></span>798D</td>
-<td class="instruction">DEFB $3E,$81,$02,$18,$3E,$83,$2C,$18</td>
+<td class="address-1"><span id="31118"></span>798E</td>
+<td class="instruction">DEFB $81,$02,$18,$3E,$83,$2C,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31125"></span>7995</td>
-<td class="instruction">DEFB $3E,$83,$2C,$18,$3E,$96,$0E,$18</td>
+<td class="address-1"><span id="31126"></span>7996</td>
+<td class="instruction">DEFB $83,$2C,$18,$3E,$96,$0E,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31133"></span>799D</td>
-<td class="instruction">DEFB $3E,$96,$0E,$18,$3E,$A0,$25,$18</td>
+<td class="address-1"><span id="31134"></span>799E</td>
+<td class="instruction">DEFB $96,$0E,$18,$3E,$A0,$25,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31141"></span>79A5</td>
-<td class="instruction">DEFB $3E,$A0,$25,$18,$3E,$AC,$23,$18</td>
+<td class="address-1"><span id="31142"></span>79A6</td>
+<td class="instruction">DEFB $A0,$25,$18,$3E,$AC,$23,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31149"></span>79AD</td>
-<td class="instruction">DEFB $3E,$AC,$23,$18,$3E,$C2,$25,$18</td>
+<td class="address-1"><span id="31150"></span>79AE</td>
+<td class="instruction">DEFB $AC,$23,$18,$3E,$C2,$25,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31157"></span>79B5</td>
-<td class="instruction">DEFB $3E,$C2,$25,$18,$3E,$CC,$25,$18</td>
+<td class="address-1"><span id="31158"></span>79B6</td>
+<td class="instruction">DEFB $C2,$25,$18,$3E,$CC,$25,$18,$3E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31165"></span>79BD</td>
-<td class="instruction">DEFB $3E,$CC,$25,$18,$3E,$41,$1D,$18</td>
+<td class="address-1"><span id="31166"></span>79BE</td>
+<td class="instruction">DEFB $CC,$25,$18,$3E,$41,$1D,$18,$76</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31173"></span>79C5</td>
-<td class="instruction">DEFB $76,$41,$1D,$18,$76,$2A,$01,$18</td>
+<td class="address-1"><span id="31174"></span>79C6</td>
+<td class="instruction">DEFB $41,$1D,$18,$76,$2A,$01,$18,$76</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31181"></span>79CD</td>
-<td class="instruction">DEFB $76,$2A,$01,$18,$76,$B5,$0D,$18</td>
+<td class="address-1"><span id="31182"></span>79CE</td>
+<td class="instruction">DEFB $2A,$01,$18,$76,$B5,$0D,$18,$76</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31189"></span>79D5</td>
-<td class="instruction">DEFB $76,$B5,$0D,$18,$76,$C5,$0B,$18</td>
+<td class="address-1"><span id="31190"></span>79D6</td>
+<td class="instruction">DEFB $B5,$0D,$18,$76,$C5,$0B,$18,$76</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31197"></span>79DD</td>
-<td class="instruction">DEFB $76,$C5,$0B,$18,$76,$67,$12,$18</td>
+<td class="address-1"><span id="31198"></span>79DE</td>
+<td class="instruction">DEFB $C5,$0B,$18,$76,$67,$12,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31205"></span>79E5</td>
-<td class="instruction">DEFB $74,$67,$12,$18,$74,$15,$23,$18</td>
+<td class="address-1"><span id="31206"></span>79E6</td>
+<td class="instruction">DEFB $67,$12,$18,$74,$15,$23,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31213"></span>79ED</td>
-<td class="instruction">DEFB $74,$15,$23,$18,$74,$43,$2B,$18</td>
+<td class="address-1"><span id="31214"></span>79EE</td>
+<td class="instruction">DEFB $15,$23,$18,$74,$43,$2B,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31221"></span>79F5</td>
-<td class="instruction">DEFB $74,$43,$2B,$18,$74,$78,$0F,$18</td>
+<td class="address-1"><span id="31222"></span>79F6</td>
+<td class="instruction">DEFB $43,$2B,$18,$74,$78,$0F,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31229"></span>79FD</td>
-<td class="instruction">DEFB $74,$78,$0F,$18,$74,$87,$0E,$18</td>
+<td class="address-1"><span id="31230"></span>79FE</td>
+<td class="instruction">DEFB $78,$0F,$18,$74,$87,$0E,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31237"></span>7A05</td>
-<td class="instruction">DEFB $74,$87,$0E,$18,$74,$93,$21,$54</td>
+<td class="address-1"><span id="31238"></span>7A06</td>
+<td class="instruction">DEFB $87,$0E,$18,$74,$93,$21,$54,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31245"></span>7A0D</td>
-<td class="instruction">DEFB $74,$93,$21,$54,$74,$A9,$1B,$18</td>
+<td class="address-1"><span id="31246"></span>7A0E</td>
+<td class="instruction">DEFB $93,$21,$54,$74,$A9,$1B,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31253"></span>7A15</td>
-<td class="instruction">DEFB $74,$A9,$1B,$18,$74,$AD,$23,$18</td>
+<td class="address-1"><span id="31254"></span>7A16</td>
+<td class="instruction">DEFB $A9,$1B,$18,$74,$AD,$23,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31261"></span>7A1D</td>
-<td class="instruction">DEFB $74,$AD,$23,$18,$74,$BC,$27,$18</td>
+<td class="address-1"><span id="31262"></span>7A1E</td>
+<td class="instruction">DEFB $AD,$23,$18,$74,$BC,$27,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31269"></span>7A25</td>
-<td class="instruction">DEFB $74,$BC,$27,$18,$74,$BF,$0E,$18</td>
+<td class="address-1"><span id="31270"></span>7A26</td>
+<td class="instruction">DEFB $BC,$27,$18,$74,$BF,$0E,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31277"></span>7A2D</td>
-<td class="instruction">DEFB $74,$BF,$0E,$18,$74,$CB,$34,$18</td>
+<td class="address-1"><span id="31278"></span>7A2E</td>
+<td class="instruction">DEFB $BF,$0E,$18,$74,$CB,$34,$18,$74</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31285"></span>7A35</td>
-<td class="instruction">DEFB $74,$CB,$34,$18,$74,$91,$12,$18</td>
+<td class="address-1"><span id="31286"></span>7A36</td>
+<td class="instruction">DEFB $CB,$34,$18,$74,$91,$12,$18,$70</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31293"></span>7A3D</td>
-<td class="instruction">DEFB $70,$91,$12,$18,$70,$7C,$13,$18</td>
+<td class="address-1"><span id="31294"></span>7A3E</td>
+<td class="instruction">DEFB $91,$12,$18,$70,$7C,$13,$18,$70</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31301"></span>7A45</td>
-<td class="instruction">DEFB $70,$7C,$13,$18,$70,$A2,$0A,$18</td>
+<td class="address-1"><span id="31302"></span>7A46</td>
+<td class="instruction">DEFB $7C,$13,$18,$70,$A2,$0A,$18,$70</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31309"></span>7A4D</td>
-<td class="instruction">DEFB $70,$A2,$0A,$18,$70,$BE,$2B,$18</td>
+<td class="address-1"><span id="31310"></span>7A4E</td>
+<td class="instruction">DEFB $A2,$0A,$18,$70,$BE,$2B,$18,$70</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31317"></span>7A55</td>
-<td class="instruction">DEFB $70,$BE,$2B,$18,$70,$5C,$35,$18</td>
+<td class="address-1"><span id="31318"></span>7A56</td>
+<td class="instruction">DEFB $BE,$2B,$18,$70,$5C,$35,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31325"></span>7A5D</td>
-<td class="instruction">DEFB $78,$5C,$35,$18,$78,$1D,$1B,$18</td>
+<td class="address-1"><span id="31326"></span>7A5E</td>
+<td class="instruction">DEFB $5C,$35,$18,$78,$1D,$1B,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31333"></span>7A65</td>
-<td class="instruction">DEFB $78,$1D,$1B,$18,$78,$3D,$2A,$18</td>
+<td class="address-1"><span id="31334"></span>7A66</td>
+<td class="instruction">DEFB $1D,$1B,$18,$78,$3D,$2A,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31341"></span>7A6D</td>
-<td class="instruction">DEFB $78,$3D,$2A,$18,$78,$4C,$2A,$18</td>
+<td class="address-1"><span id="31342"></span>7A6E</td>
+<td class="instruction">DEFB $3D,$2A,$18,$78,$4C,$2A,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31349"></span>7A75</td>
-<td class="instruction">DEFB $78,$4C,$2A,$18,$78,$7F,$21,$18</td>
+<td class="address-1"><span id="31350"></span>7A76</td>
+<td class="instruction">DEFB $4C,$2A,$18,$78,$7F,$21,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31357"></span>7A7D</td>
-<td class="instruction">DEFB $78,$7F,$21,$18,$78,$9C,$35,$18</td>
+<td class="address-1"><span id="31358"></span>7A7E</td>
+<td class="instruction">DEFB $7F,$21,$18,$78,$9C,$35,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31365"></span>7A85</td>
-<td class="instruction">DEFB $78,$9C,$35,$18,$78,$62,$2F,$18</td>
+<td class="address-1"><span id="31366"></span>7A86</td>
+<td class="instruction">DEFB $9C,$35,$18,$78,$62,$2F,$18,$78</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31373"></span>7A8D</td>
-<td class="instruction">DEFB $78,$62,$2F,$18,$78,$8A,$0B,$18</td>
+<td class="address-1"><span id="31374"></span>7A8E</td>
+<td class="instruction">DEFB $62,$2F,$18,$78,$8A,$0B,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31381"></span>7A95</td>
-<td class="instruction">DEFB $40,$8A,$0B,$18,$40,$04,$1B,$18</td>
+<td class="address-1"><span id="31382"></span>7A96</td>
+<td class="instruction">DEFB $8A,$0B,$18,$40,$04,$1B,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31389"></span>7A9D</td>
-<td class="instruction">DEFB $40,$04,$1B,$18,$40,$48,$36,$18</td>
+<td class="address-1"><span id="31390"></span>7A9E</td>
+<td class="instruction">DEFB $04,$1B,$18,$40,$48,$36,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31397"></span>7AA5</td>
-<td class="instruction">DEFB $40,$48,$36,$18,$40,$7B,$33,$18</td>
+<td class="address-1"><span id="31398"></span>7AA6</td>
+<td class="instruction">DEFB $48,$36,$18,$40,$7B,$33,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31405"></span>7AAD</td>
-<td class="instruction">DEFB $40,$7B,$33,$18,$40,$5D,$0C,$18</td>
+<td class="address-1"><span id="31406"></span>7AAE</td>
+<td class="instruction">DEFB $7B,$33,$18,$40,$5D,$0C,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31413"></span>7AB5</td>
-<td class="instruction">DEFB $40,$5D,$0C,$18,$40,$9E,$37,$18</td>
+<td class="address-1"><span id="31414"></span>7AB6</td>
+<td class="instruction">DEFB $5D,$0C,$18,$40,$9E,$37,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31421"></span>7ABD</td>
-<td class="instruction">DEFB $40,$9E,$37,$18,$40,$A5,$26,$18</td>
+<td class="address-1"><span id="31422"></span>7ABE</td>
+<td class="instruction">DEFB $9E,$37,$18,$40,$A5,$26,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31429"></span>7AC5</td>
-<td class="instruction">DEFB $40,$A5,$26,$18,$40,$B4,$1D,$18</td>
+<td class="address-1"><span id="31430"></span>7AC6</td>
+<td class="instruction">DEFB $A5,$26,$18,$40,$B4,$1D,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31437"></span>7ACD</td>
-<td class="instruction">DEFB $40,$B4,$1D,$18,$40,$BA,$2E,$18</td>
+<td class="address-1"><span id="31438"></span>7ACE</td>
+<td class="instruction">DEFB $B4,$1D,$18,$40,$BA,$2E,$18,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31445"></span>7AD5</td>
-<td class="instruction">DEFB $40,$BA,$2E,$18,$40,$CC,$25,$38</td>
+<td class="address-1"><span id="31446"></span>7AD6</td>
+<td class="instruction">DEFB $BA,$2E,$18,$40,$CC,$25,$38,$40</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31453"></span>7ADD</td>
-<td class="instruction">DEFB $40,$CC,$25,$38,$40,$07,$12,$18</td>
+<td class="address-1"><span id="31454"></span>7ADE</td>
+<td class="instruction">DEFB $CC,$25,$38,$40,$07,$12,$18,$44</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31461"></span>7AE5</td>
-<td class="instruction">DEFB $44,$07,$12,$18,$44,$22,$0A,$18</td>
+<td class="address-1"><span id="31462"></span>7AE6</td>
+<td class="instruction">DEFB $07,$12,$18,$44,$22,$0A,$18,$44</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31469"></span>7AED</td>
-<td class="instruction">DEFB $44,$22,$0A,$18,$44,$82,$1D,$18</td>
+<td class="address-1"><span id="31470"></span>7AEE</td>
+<td class="instruction">DEFB $22,$0A,$18,$44,$82,$1D,$18,$44</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31477"></span>7AF5</td>
-<td class="instruction">DEFB $44,$82,$1D,$18,$44,$A1,$0A,$18</td>
+<td class="address-1"><span id="31478"></span>7AF6</td>
+<td class="instruction">DEFB $82,$1D,$18,$44,$A1,$0A,$18,$44</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31485"></span>7AFD</td>
-<td class="instruction">DEFB $44,$A1,$0A,$18,$44,$D3,$12,$18</td>
+<td class="address-1"><span id="31486"></span>7AFE</td>
+<td class="instruction">DEFB $A1,$0A,$18,$44,$D3,$12,$18,$44</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31493"></span>7B05</td>
-<td class="instruction">DEFB $44,$D3,$12,$18,$44,$24,$2D,$18</td>
+<td class="address-1"><span id="31494"></span>7B06</td>
+<td class="instruction">DEFB $D3,$12,$18,$44,$24,$2D,$18,$3C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31501"></span>7B0D</td>
-<td class="instruction">DEFB $3C,$24,$2D,$18,$3C,$13,$21,$54</td>
+<td class="address-1"><span id="31502"></span>7B0E</td>
+<td class="instruction">DEFB $24,$2D,$18,$3C,$13,$21,$54,$3C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31509"></span>7B15</td>
-<td class="instruction">DEFB $3C,$13,$21,$54,$3C,$8F,$21,$54</td>
+<td class="address-1"><span id="31510"></span>7B16</td>
+<td class="instruction">DEFB $13,$21,$54,$3C,$8F,$21,$54,$3C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31517"></span>7B1D</td>
-<td class="instruction">DEFB $3C,$8F,$21,$54,$3C,$AE,$27,$18</td>
+<td class="address-1"><span id="31518"></span>7B1E</td>
+<td class="instruction">DEFB $8F,$21,$54,$3C,$AE,$27,$18,$3C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31525"></span>7B25</td>
-<td class="instruction">DEFB $3C,$AE,$27,$18,$3C,$CD,$23,$18</td>
+<td class="address-1"><span id="31526"></span>7B26</td>
+<td class="instruction">DEFB $AE,$27,$18,$3C,$CD,$23,$18,$3C</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31533"></span>7B2D</td>
-<td class="instruction">DEFB $3C,$CD,$23,$18,$3C,$06,$24,$18</td>
+<td class="address-1"><span id="31534"></span>7B2E</td>
+<td class="instruction">DEFB $CD,$23,$18,$3C,$06,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31541"></span>7B35</td>
-<td class="instruction">DEFB $6E,$06,$24,$18,$6E,$08,$24,$18</td>
+<td class="address-1"><span id="31542"></span>7B36</td>
+<td class="instruction">DEFB $06,$24,$18,$6E,$08,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31549"></span>7B3D</td>
-<td class="instruction">DEFB $6E,$08,$24,$18,$6E,$0D,$24,$18</td>
+<td class="address-1"><span id="31550"></span>7B3E</td>
+<td class="instruction">DEFB $08,$24,$18,$6E,$0D,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31557"></span>7B45</td>
-<td class="instruction">DEFB $6E,$0D,$24,$18,$6E,$16,$2E,$18</td>
+<td class="address-1"><span id="31558"></span>7B46</td>
+<td class="instruction">DEFB $0D,$24,$18,$6E,$16,$2E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31565"></span>7B4D</td>
-<td class="instruction">DEFB $6E,$16,$2E,$18,$6E,$17,$2D,$18</td>
+<td class="address-1"><span id="31566"></span>7B4E</td>
+<td class="instruction">DEFB $16,$2E,$18,$6E,$17,$2D,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31573"></span>7B55</td>
-<td class="instruction">DEFB $6E,$17,$2D,$18,$6E,$1E,$0F,$18</td>
+<td class="address-1"><span id="31574"></span>7B56</td>
+<td class="instruction">DEFB $17,$2D,$18,$6E,$1E,$0F,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31581"></span>7B5D</td>
-<td class="instruction">DEFB $6E,$1E,$0F,$18,$6E,$20,$14,$18</td>
+<td class="address-1"><span id="31582"></span>7B5E</td>
+<td class="instruction">DEFB $1E,$0F,$18,$6E,$20,$14,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31589"></span>7B65</td>
-<td class="instruction">DEFB $6E,$20,$14,$18,$6E,$28,$14,$18</td>
+<td class="address-1"><span id="31590"></span>7B66</td>
+<td class="instruction">DEFB $20,$14,$18,$6E,$28,$14,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31597"></span>7B6D</td>
-<td class="instruction">DEFB $6E,$28,$14,$18,$6E,$31,$1B,$18</td>
+<td class="address-1"><span id="31598"></span>7B6E</td>
+<td class="instruction">DEFB $28,$14,$18,$6E,$31,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31605"></span>7B75</td>
-<td class="instruction">DEFB $6E,$31,$1B,$18,$6E,$33,$24,$18</td>
+<td class="address-1"><span id="31606"></span>7B76</td>
+<td class="instruction">DEFB $31,$1B,$18,$6E,$33,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31613"></span>7B7D</td>
-<td class="instruction">DEFB $6E,$33,$24,$18,$6E,$39,$12,$18</td>
+<td class="address-1"><span id="31614"></span>7B7E</td>
+<td class="instruction">DEFB $33,$24,$18,$6E,$39,$12,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31621"></span>7B85</td>
-<td class="instruction">DEFB $6E,$39,$12,$18,$6E,$3E,$0A,$18</td>
+<td class="address-1"><span id="31622"></span>7B86</td>
+<td class="instruction">DEFB $39,$12,$18,$6E,$3E,$0A,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31629"></span>7B8D</td>
-<td class="instruction">DEFB $6E,$3E,$0A,$18,$6E,$42,$0B,$18</td>
+<td class="address-1"><span id="31630"></span>7B8E</td>
+<td class="instruction">DEFB $3E,$0A,$18,$6E,$42,$0B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31637"></span>7B95</td>
-<td class="instruction">DEFB $6E,$42,$0B,$18,$6E,$46,$2D,$18</td>
+<td class="address-1"><span id="31638"></span>7B96</td>
+<td class="instruction">DEFB $42,$0B,$18,$6E,$46,$2D,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31645"></span>7B9D</td>
-<td class="instruction">DEFB $6E,$46,$2D,$18,$6E,$51,$2A,$18</td>
+<td class="address-1"><span id="31646"></span>7B9E</td>
+<td class="instruction">DEFB $46,$2D,$18,$6E,$51,$2A,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31653"></span>7BA5</td>
-<td class="instruction">DEFB $6E,$51,$2A,$18,$6E,$52,$0E,$18</td>
+<td class="address-1"><span id="31654"></span>7BA6</td>
+<td class="instruction">DEFB $51,$2A,$18,$6E,$52,$0E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31661"></span>7BAD</td>
-<td class="instruction">DEFB $6E,$52,$0E,$18,$6E,$56,$37,$18</td>
+<td class="address-1"><span id="31662"></span>7BAE</td>
+<td class="instruction">DEFB $52,$0E,$18,$6E,$56,$37,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31669"></span>7BB5</td>
-<td class="instruction">DEFB $6E,$56,$37,$18,$6E,$5A,$2D,$30</td>
+<td class="address-1"><span id="31670"></span>7BB6</td>
+<td class="instruction">DEFB $56,$37,$18,$6E,$5A,$2D,$30,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31677"></span>7BBD</td>
-<td class="instruction">DEFB $6E,$5A,$2D,$30,$6E,$5B,$37,$18</td>
+<td class="address-1"><span id="31678"></span>7BBE</td>
+<td class="instruction">DEFB $5A,$2D,$30,$6E,$5B,$37,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31685"></span>7BC5</td>
-<td class="instruction">DEFB $6E,$5B,$37,$18,$6E,$5F,$2D,$18</td>
+<td class="address-1"><span id="31686"></span>7BC6</td>
+<td class="instruction">DEFB $5B,$37,$18,$6E,$5F,$2D,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31693"></span>7BCD</td>
-<td class="instruction">DEFB $6E,$5F,$2D,$18,$6E,$69,$37,$18</td>
+<td class="address-1"><span id="31694"></span>7BCE</td>
+<td class="instruction">DEFB $5F,$2D,$18,$6E,$69,$37,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31701"></span>7BD5</td>
-<td class="instruction">DEFB $6E,$69,$37,$18,$6E,$6D,$12,$18</td>
+<td class="address-1"><span id="31702"></span>7BD6</td>
+<td class="instruction">DEFB $69,$37,$18,$6E,$6D,$12,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31709"></span>7BDD</td>
-<td class="instruction">DEFB $6E,$6D,$12,$18,$6E,$6F,$0E,$18</td>
+<td class="address-1"><span id="31710"></span>7BDE</td>
+<td class="instruction">DEFB $6D,$12,$18,$6E,$6F,$0E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31717"></span>7BE5</td>
-<td class="instruction">DEFB $6E,$6F,$0E,$18,$6E,$70,$19,$18</td>
+<td class="address-1"><span id="31718"></span>7BE6</td>
+<td class="instruction">DEFB $6F,$0E,$18,$6E,$70,$19,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31725"></span>7BED</td>
-<td class="instruction">DEFB $6E,$70,$19,$18,$6E,$77,$24,$18</td>
+<td class="address-1"><span id="31726"></span>7BEE</td>
+<td class="instruction">DEFB $70,$19,$18,$6E,$77,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31733"></span>7BF5</td>
-<td class="instruction">DEFB $6E,$77,$24,$18,$6E,$80,$1B,$18</td>
+<td class="address-1"><span id="31734"></span>7BF6</td>
+<td class="instruction">DEFB $77,$24,$18,$6E,$80,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31741"></span>7BFD</td>
-<td class="instruction">DEFB $6E,$80,$1B,$18,$6E,$89,$1B,$18</td>
+<td class="address-1"><span id="31742"></span>7BFE</td>
+<td class="instruction">DEFB $80,$1B,$18,$6E,$89,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31749"></span>7C05</td>
-<td class="instruction">DEFB $6E,$89,$1B,$18,$6E,$8B,$1E,$18</td>
+<td class="address-1"><span id="31750"></span>7C06</td>
+<td class="instruction">DEFB $89,$1B,$18,$6E,$8B,$1E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31757"></span>7C0D</td>
-<td class="instruction">DEFB $6E,$8B,$1E,$18,$6E,$95,$2D,$18</td>
+<td class="address-1"><span id="31758"></span>7C0E</td>
+<td class="instruction">DEFB $8B,$1E,$18,$6E,$95,$2D,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31765"></span>7C15</td>
-<td class="instruction">DEFB $6E,$95,$2D,$18,$6E,$98,$2C,$18</td>
+<td class="address-1"><span id="31766"></span>7C16</td>
+<td class="instruction">DEFB $95,$2D,$18,$6E,$98,$2C,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31773"></span>7C1D</td>
-<td class="instruction">DEFB $6E,$98,$2C,$18,$6E,$A3,$1B,$18</td>
+<td class="address-1"><span id="31774"></span>7C1E</td>
+<td class="instruction">DEFB $98,$2C,$18,$6E,$A3,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31781"></span>7C25</td>
-<td class="instruction">DEFB $6E,$A3,$1B,$18,$6E,$A8,$2E,$18</td>
+<td class="address-1"><span id="31782"></span>7C26</td>
+<td class="instruction">DEFB $A3,$1B,$18,$6E,$A8,$2E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31789"></span>7C2D</td>
-<td class="instruction">DEFB $6E,$A8,$2E,$18,$6E,$AB,$23,$18</td>
+<td class="address-1"><span id="31790"></span>7C2E</td>
+<td class="instruction">DEFB $A8,$2E,$18,$6E,$AB,$23,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31797"></span>7C35</td>
-<td class="instruction">DEFB $6E,$AB,$23,$18,$6E,$AF,$22,$18</td>
+<td class="address-1"><span id="31798"></span>7C36</td>
+<td class="instruction">DEFB $AB,$23,$18,$6E,$AF,$22,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31805"></span>7C3D</td>
-<td class="instruction">DEFB $6E,$AF,$22,$18,$6E,$B3,$1B,$18</td>
+<td class="address-1"><span id="31806"></span>7C3E</td>
+<td class="instruction">DEFB $AF,$22,$18,$6E,$B3,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31813"></span>7C45</td>
-<td class="instruction">DEFB $6E,$B3,$1B,$18,$6E,$B9,$2A,$18</td>
+<td class="address-1"><span id="31814"></span>7C46</td>
+<td class="instruction">DEFB $B3,$1B,$18,$6E,$B9,$2A,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31821"></span>7C4D</td>
-<td class="instruction">DEFB $6E,$B9,$2A,$18,$6E,$BB,$34,$18</td>
+<td class="address-1"><span id="31822"></span>7C4E</td>
+<td class="instruction">DEFB $B9,$2A,$18,$6E,$BB,$34,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31829"></span>7C55</td>
-<td class="instruction">DEFB $6E,$BB,$34,$18,$6E,$BD,$0E,$18</td>
+<td class="address-1"><span id="31830"></span>7C56</td>
+<td class="instruction">DEFB $BB,$34,$18,$6E,$BD,$0E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31837"></span>7C5D</td>
-<td class="instruction">DEFB $6E,$BD,$0E,$18,$6E,$C6,$24,$18</td>
+<td class="address-1"><span id="31838"></span>7C5E</td>
+<td class="instruction">DEFB $BD,$0E,$18,$6E,$C6,$24,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31845"></span>7C65</td>
-<td class="instruction">DEFB $6E,$C6,$24,$18,$6E,$C7,$14,$18</td>
+<td class="address-1"><span id="31846"></span>7C66</td>
+<td class="instruction">DEFB $C6,$24,$18,$6E,$C7,$14,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31853"></span>7C6D</td>
-<td class="instruction">DEFB $6E,$C7,$14,$18,$6E,$D0,$2E,$18</td>
+<td class="address-1"><span id="31854"></span>7C6E</td>
+<td class="instruction">DEFB $C7,$14,$18,$6E,$D0,$2E,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31861"></span>7C75</td>
-<td class="instruction">DEFB $6E,$D0,$2E,$18,$6E,$D4,$1B,$18</td>
+<td class="address-1"><span id="31862"></span>7C76</td>
+<td class="instruction">DEFB $D0,$2E,$18,$6E,$D4,$1B,$18,$6E</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="31869"></span>7C7D</td>
-<td class="instruction">DEFB $6E,$D4,$1B,$18</td>
+<td class="address-1"><span id="31870"></span>7C7E</td>
+<td class="instruction">DEFB $D4,$1B,$18</td>
 <td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
@@ -12624,7 +12875,7 @@ Used by the routine at <a href="asm.html#32446">7EBE</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="32446" class="description">7EBE: Routine at 7EBE</div>
+<div id="32446" class="description">7EBE: Read input: normalize the active control method into the 5-bit mask at <a href="asm.html#24966">6186</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -12636,529 +12887,539 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="32446"></span>
+<div class="comments">
+<div class="paragraph">
+Dispatches on the device selector $617B: keyboard (scans 6 half-rows into $6186's bits, some duplicated -- e.g. both $617D and $6184 set bit 4/fire), Kempston (port $001F, used as the mask directly), Sinclair (port $EFFE, bit-rotated into the mask), or Cursor keys (ports $EFFE/$F7FE). Result is masked against the previous frame's value at $6188 and stored to $6186; also accumulates a held-key counter at $617C. See <a href="asm.html#24966">6186</a> for the bit layout.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="32446"></span>7EBE</td>
 <td class="instruction">LD A,($617B)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32449"></span>7EC1</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32450"></span>7EC2</td>
 <td class="instruction">JP NZ,$7F8A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32453"></span>7EC5</td>
 <td class="instruction">LD A,($6185)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32456"></span>7EC8</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32457"></span>7EC9</td>
 <td class="instruction">JR NZ,$7F28</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32459"></span>7ECB</td>
 <td class="instruction">CALL <a href="#32425">$7EA9</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32462"></span>7ECE</td>
 <td class="instruction">LD B,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32464"></span>7ED0</td>
 <td class="instruction">LD A,($6182)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32467"></span>7ED3</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32469"></span>7ED5</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32471"></span>7ED7</td>
 <td class="instruction">JR Z,$7EDB</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32473"></span>7ED9</td>
 <td class="instruction">SET 3,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32475"></span>7EDB</td>
 <td class="instruction">LD A,($617E)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32478"></span>7EDE</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32480"></span>7EE0</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32482"></span>7EE2</td>
 <td class="instruction">JR Z,$7EE6</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32484"></span>7EE4</td>
 <td class="instruction">SET 2,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32486"></span>7EE6</td>
 <td class="instruction">LD A,($6183)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32489"></span>7EE9</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32491"></span>7EEB</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32493"></span>7EED</td>
 <td class="instruction">JR Z,$7EF1</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32495"></span>7EEF</td>
 <td class="instruction">SET 0,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32497"></span>7EF1</td>
 <td class="instruction">LD A,($617F)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32500"></span>7EF4</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32502"></span>7EF6</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32504"></span>7EF8</td>
 <td class="instruction">JR Z,$7EFC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32506"></span>7EFA</td>
 <td class="instruction">SET 1,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32508"></span>7EFC</td>
 <td class="instruction">LD A,($617D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32511"></span>7EFF</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32513"></span>7F01</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32515"></span>7F03</td>
 <td class="instruction">JR Z,$7F07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32517"></span>7F05</td>
 <td class="instruction">SET 4,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32519"></span>7F07</td>
 <td class="instruction">LD A,($6184)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32522"></span>7F0A</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32524"></span>7F0C</td>
 <td class="instruction">XOR $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32526"></span>7F0E</td>
 <td class="instruction">JR Z,$7F12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32528"></span>7F10</td>
 <td class="instruction">SET 4,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32530"></span>7F12</td>
 <td class="instruction">LD A,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32531"></span>7F13</td>
 <td class="instruction">LD B,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32532"></span>7F14</td>
 <td class="instruction">LD HL,$6188</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32535"></span>7F17</td>
 <td class="instruction">AND (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32536"></span>7F18</td>
 <td class="instruction">LD ($6186),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Resolved input mask</td>
 </tr>
 <tr>
 <td class="address-1"><span id="32539"></span>7F1B</td>
 <td class="instruction">LD A,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32540"></span>7F1C</td>
 <td class="instruction">CPL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32541"></span>7F1D</td>
 <td class="instruction">OR $CF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32543"></span>7F1F</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32544"></span>7F20</td>
 <td class="instruction">LD A,($617C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32547"></span>7F23</td>
 <td class="instruction">ADD A,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32548"></span>7F24</td>
 <td class="instruction">LD ($617C),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32551"></span>7F27</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32552"></span>7F28</td>
 <td class="instruction">CP $01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32554"></span>7F2A</td>
 <td class="instruction">JR NZ,$7F33</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32556"></span>7F2C</td>
 <td class="instruction">LD BC,$001F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32559"></span>7F2F</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32561"></span>7F31</td>
 <td class="instruction">JR $7F13</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32563"></span>7F33</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32565"></span>7F35</td>
 <td class="instruction">JR NZ,$7F5A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32567"></span>7F37</td>
 <td class="instruction">LD BC,$EFFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32570"></span>7F3A</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32572"></span>7F3C</td>
 <td class="instruction">CPL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32573"></span>7F3D</td>
 <td class="instruction">LD B,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32575"></span>7F3F</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32576"></span>7F40</td>
 <td class="instruction">JR NC,$7F44</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32578"></span>7F42</td>
 <td class="instruction">SET 4,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32580"></span>7F44</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32581"></span>7F45</td>
 <td class="instruction">JR NC,$7F49</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32583"></span>7F47</td>
 <td class="instruction">SET 3,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32585"></span>7F49</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32586"></span>7F4A</td>
 <td class="instruction">JR NC,$7F4E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32588"></span>7F4C</td>
 <td class="instruction">SET 2,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32590"></span>7F4E</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32591"></span>7F4F</td>
 <td class="instruction">JR NC,$7F53</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32593"></span>7F51</td>
 <td class="instruction">SET 0,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32595"></span>7F53</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32596"></span>7F54</td>
 <td class="instruction">JR NC,$7F12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32598"></span>7F56</td>
 <td class="instruction">SET 1,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32600"></span>7F58</td>
 <td class="instruction">JR $7F12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32602"></span>7F5A</td>
 <td class="instruction">LD BC,$EFFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32605"></span>7F5D</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32607"></span>7F5F</td>
 <td class="instruction">CPL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32608"></span>7F60</td>
 <td class="instruction">LD BC,$F7FE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32611"></span>7F63</td>
 <td class="instruction">IN C,(C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32613"></span>7F65</td>
 <td class="instruction">BIT 4,C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32615"></span>7F67</td>
 <td class="instruction">JR NZ,$7F6B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32617"></span>7F69</td>
 <td class="instruction">SET 1,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32619"></span>7F6B</td>
 <td class="instruction">LD B,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32621"></span>7F6D</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32622"></span>7F6E</td>
 <td class="instruction">JR NC,$7F72</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32624"></span>7F70</td>
 <td class="instruction">SET 4,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32626"></span>7F72</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32627"></span>7F73</td>
 <td class="instruction">JR NC,$7F77</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32629"></span>7F75</td>
 <td class="instruction">SET 1,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32631"></span>7F77</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32632"></span>7F78</td>
 <td class="instruction">JR NC,$7F7C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32634"></span>7F7A</td>
 <td class="instruction">SET 0,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32636"></span>7F7C</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32637"></span>7F7D</td>
 <td class="instruction">JR NC,$7F81</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32639"></span>7F7F</td>
 <td class="instruction">SET 3,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32641"></span>7F81</td>
 <td class="instruction">RRCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32642"></span>7F82</td>
 <td class="instruction">JP NC,$7F12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32645"></span>7F85</td>
 <td class="instruction">SET 2,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="32647"></span>7F87</td>
 <td class="instruction">JP $7F12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="32650"></span>7F8A</td>
 <td class="instruction">LD ($6186),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Resolved input mask</td>
 </tr>
 <tr>
 <td class="address-1"><span id="32653"></span>7F8D</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="32654" class="description">7F8E: Routine at 7F8E</div>
@@ -17415,30 +17676,48 @@ Used by the routines at <a href="asm.html#26171">663B</a>, <a href="asm.html#267
 </tr>
 <tr>
 <td class="address-1"><span id="34155"></span>856B</td>
-<td class="instruction">DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+"</td>
+<td class="instruction">DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+",$5E</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="34197" class="description">8595: Data block at 8595</div>
+<div id="34198" class="description">8596: Routine at 8596</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+<div class="paragraph">
+Used by the routine at <a href="asm.html#27397">6B05</a>.
+</div>
 </div>
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="34197"></span>8595</td>
-<td class="instruction">DEFB $5E,$FD,$2A,$A4,$61,$ED,$56,$FB</td>
+<td class="address-2"><span id="34198"></span>8596</td>
+<td class="instruction">LD IY,($61A4)</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="34202"></span>859A</td>
+<td class="instruction">IM 1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="34204"></span>859C</td>
+<td class="instruction">EI</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34205"></span>859D</td>
-<td class="instruction">DEFB $AF,$32,$AA,$FB</td>
+<td class="instruction">XOR A</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="34206"></span>859E</td>
+<td class="instruction">LD ($FBAA),A</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="34209" class="description">85A1: Main menu screen: title, tune list A-D, controls menu; loops until a selection starts the game</div>
+<div id="34209" class="description">85A1: Main menu screen: title, entry list A-D, controls menu; loops until a selection starts the game</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -17464,22 +17743,22 @@ Used by the routines at <a href="asm.html#26171">663B</a>, <a href="asm.html#267
 <tr>
 <td class="address-1"><span id="34239"></span>85BF</td>
 <td class="instruction">DEFM $16,$02,$00,"A RETURN TO SENDER"</td>
-<td class="comment-1" rowspan="1">key A tune name (likely)</td>
+<td class="comment-1" rowspan="1">key A entry name</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34260"></span>85D4</td>
 <td class="instruction">DEFM $16,$04,$00,"B JAIL HOUSE ROCK"</td>
-<td class="comment-1" rowspan="1">key B tune name (likely)</td>
+<td class="comment-1" rowspan="1">key B entry name</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34280"></span>85E8</td>
 <td class="instruction">DEFM $16,$06,$00,"C O SOLE O MIO"</td>
-<td class="comment-1" rowspan="1">key C tune name (likely)</td>
+<td class="comment-1" rowspan="1">key C entry name</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34297"></span>85F9</td>
 <td class="instruction">DEFM $16,$08,$00,"D HEARTBREAK HOTEL",$5E</td>
-<td class="comment-1" rowspan="1">key D tune name (likely); Elvis song titles, not room selection</td>
+<td class="comment-1" rowspan="1">key D entry name (Elvis song titles)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34319"></span>860F</td>
@@ -17840,7 +18119,7 @@ Used by the routines at <a href="asm.html#26171">663B</a>, <a href="asm.html#267
 <tr>
 <td class="address-1"><span id="34502"></span>86C6</td>
 <td class="instruction">LD ($6125),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set entry-point room number</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34505"></span>86C9</td>
@@ -17853,7 +18132,7 @@ Used by the routines at <a href="asm.html#26171">663B</a>, <a href="asm.html#267
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="34508" class="description">86CC: Draw the end-game stats screen ("DEATHBOWL DIVINED")</div>
+<div id="34508" class="description">86CC: Draw the end-game stats screen</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18127,7 +18406,7 @@ End-game stats overlay labels (see <a href="asm.html#26477">676D</a>: called onl
 <tr>
 <td class="address-1"><span id="34691"></span>8783</td>
 <td class="instruction">LD A,($6124)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Plugs Pulled" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34694"></span>8786</td>
@@ -18147,7 +18426,7 @@ End-game stats overlay labels (see <a href="asm.html#26477">676D</a>: called onl
 <tr>
 <td class="address-1"><span id="34704"></span>8790</td>
 <td class="instruction">LD A,($6123)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Goodies Gathered" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34707"></span>8793</td>
@@ -18167,7 +18446,7 @@ End-game stats overlay labels (see <a href="asm.html#26477">676D</a>: called onl
 <tr>
 <td class="address-1"><span id="34717"></span>879D</td>
 <td class="instruction">LD A,($6122)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Gnomes Gnabbed" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34720"></span>87A0</td>
@@ -18192,7 +18471,7 @@ End-game stats overlay labels (see <a href="asm.html#26477">676D</a>: called onl
 <tr>
 <td class="address-1"><span id="34729"></span>87A9</td>
 <td class="instruction">LD A,($6124)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Plugs Pulled" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34732"></span>87AC</td>
@@ -18740,82 +19019,112 @@ Used by the routines at <a href="asm.html#26773">6895</a> and <a href="asm.html#
 </tr>
 <tr>
 <td class="address-1"><span id="35055"></span>88EF</td>
-<td class="instruction">DEFB $00,$08,$01,$04,$02,$02,$06,$01</td>
+<td class="instruction">DEFB $00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35063"></span>88F7</td>
-<td class="instruction">DEFB $04,$80,$00,$16,$16,$17,$17,$16</td>
+<td class="routine-comment" colspan="5">
+<span id="35056"></span>
+<div class="comments">
+<div class="paragraph">
+Input-mask -&gt; direction-code priority table, scanned by <a href="asm.html#35176">8968</a>: (mask,direction) byte pairs, tried in order, first whose mask bits overlap ($6186's mask OR $80) wins. $08,$01 (Up bit -&gt; direction $01); $04,$02 (Down bit -&gt; $02); $02,$06 (Left bit -&gt; $06); $01,$04 (Right bit -&gt; $04); $80,$00 (default/no-input catch-all -- mask bit 7 always matches since <a href="asm.html#35176">8968</a> ORs $80 into the scan key -- resolves to direction $00, i.e. no movement).
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="35056"></span>88F0</td>
+<td class="instruction">DEFB $08,$01</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35071"></span>88FF</td>
-<td class="instruction">DEFB $16,$18,$18,$16,$16,$17,$17,$1E</td>
+<td class="address-1"><span id="35058"></span>88F2</td>
+<td class="instruction">DEFB $04,$02</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35079"></span>8907</td>
-<td class="instruction">DEFB $1E,$18,$18,$FF,$02,$02,$03,$03</td>
+<td class="address-1"><span id="35060"></span>88F4</td>
+<td class="instruction">DEFB $02,$06</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35087"></span>890F</td>
-<td class="instruction">DEFB $02,$02,$04,$04,$02,$02,$03,$03</td>
+<td class="address-1"><span id="35062"></span>88F6</td>
+<td class="instruction">DEFB $01,$04</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35095"></span>8917</td>
-<td class="instruction">DEFB $0A,$0A,$04,$04,$FF,$FA,$88,$0B</td>
+<td class="address-1"><span id="35064"></span>88F8</td>
+<td class="instruction">DEFB $80,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35103"></span>891F</td>
-<td class="instruction">DEFB $89,$08,$07,$07,$08,$08,$07,$07</td>
+<td class="address-1"><span id="35066"></span>88FA</td>
+<td class="instruction">DEFB $16,$16,$17,$17,$16,$16,$18,$18</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35111"></span>8927</td>
-<td class="instruction">DEFB $FF,$FE,$01,$08,$FE,$01,$08,$08</td>
+<td class="address-1"><span id="35074"></span>8902</td>
+<td class="instruction">DEFB $16,$16,$17,$17,$1E,$1E,$18,$18</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35119"></span>892F</td>
-<td class="instruction">DEFB $FE,$FF,$08,$FE,$FF,$08,$08,$FF</td>
+<td class="address-1"><span id="35082"></span>890A</td>
+<td class="instruction">DEFB $FF,$02,$02,$03,$03,$02,$02,$04</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35127"></span>8937</td>
-<td class="instruction">DEFB $FE,$01,$08,$FE,$01,$08,$FE,$02</td>
+<td class="address-1"><span id="35090"></span>8912</td>
+<td class="instruction">DEFB $04,$02,$02,$03,$03,$0A,$0A,$04</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35135"></span>893F</td>
-<td class="instruction">DEFB $08,$FE,$02,$08,$FF,$48,$89,$4F</td>
+<td class="address-1"><span id="35098"></span>891A</td>
+<td class="instruction">DEFB $04,$FF,$FA,$88,$0B,$89,$08,$07</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35143"></span>8947</td>
-<td class="instruction">DEFB $89,$FE,$FE,$19,$19,$19,$19,$FF</td>
+<td class="address-1"><span id="35106"></span>8922</td>
+<td class="instruction">DEFB $07,$08,$08,$07,$07,$FF,$FE,$01</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35151"></span>894F</td>
-<td class="instruction">DEFB $FE,$FE,$05,$05,$05,$05,$FF,$5A</td>
+<td class="address-1"><span id="35114"></span>892A</td>
+<td class="instruction">DEFB $08,$FE,$01,$08,$08,$FE,$FF,$08</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35159"></span>8957</td>
-<td class="instruction">DEFB $89,$61,$89,$15,$15,$15,$15,$15</td>
+<td class="address-1"><span id="35122"></span>8932</td>
+<td class="instruction">DEFB $FE,$FF,$08,$08,$FF,$FE,$01,$08</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35167"></span>895F</td>
-<td class="instruction">DEFB $15,$FF,$01,$01,$01,$01,$01,$01</td>
+<td class="address-1"><span id="35130"></span>893A</td>
+<td class="instruction">DEFB $FE,$01,$08,$FE,$02,$08,$FE,$02</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35175"></span>8967</td>
-<td class="instruction">DEFB $FF</td>
+<td class="address-1"><span id="35138"></span>8942</td>
+<td class="instruction">DEFB $08,$FF,$48,$89,$4F,$89,$FE,$FE</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35146"></span>894A</td>
+<td class="instruction">DEFB $19,$19,$19,$19,$FF,$FE,$FE,$05</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35154"></span>8952</td>
+<td class="instruction">DEFB $05,$05,$05,$FF,$5A,$89,$61,$89</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35162"></span>895A</td>
+<td class="instruction">DEFB $15,$15,$15,$15,$15,$15,$FF,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35170"></span>8962</td>
+<td class="instruction">DEFB $01,$01,$01,$01,$01,$FF</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
@@ -18833,6 +19142,9 @@ Used by the routines at <a href="asm.html#26773">6895</a> and <a href="asm.html#
 <div class="comments">
 <div class="paragraph">
 This is the handler address held in the player object record's +3/+4 field ($8DB9 -- see <a href="asm.html#36278">8DB6</a>), called every frame from <a href="asm.html#38972">983C</a>'s dispatcher like any other object handler. Explains its many special cases: room $01 check (ending room), the vertical room transitions (<a href="asm.html#35463">8A87</a>), etc. The player's handler pointer is swappable for state changes: <a href="asm.html#38234">955A</a> tests ($8DB9)==$8968 ("normal state?"), <a href="asm.html#38244">9564</a> swaps in <a href="asm.html#36113">8D11</a>.
+</div>
+<div class="paragraph">
+MOVEMENT: reads the input mask at <a href="asm.html#24966">6186</a> (OR $80, a wildcard sentinel), then scans the (mask,direction) pair table at <a href="asm.html#35056">88F0</a> for the first entry whose mask overlaps -- this resolves the raw multi-button input into a single prioritized direction code (0/1=Up, 2/3=Down, 4/5=Right, 6/7=Left; the low bit distinguishes sub-states, masked off by <a href="asm.html#35515">8ABB</a>'s AND $0E). If the resolved direction equals the player's current facing ((IX+$0B)), calls <a href="asm.html#35545">8AD9</a> immediately to take a step; if it differs and is nonzero, just updates the pending-direction latch at $8DC1 (turning takes one frame before the first step); if it resolves to 0 (no input), no movement happens this frame.
 </div>
 </div>
 </td>
@@ -18865,7 +19177,7 @@ This is the handler address held in the player object record's +3/+4 field ($8DB
 <tr>
 <td class="address-1"><span id="35191"></span>8977</td>
 <td class="instruction">CALL <a href="#32446">$7EBE</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Read input</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35194"></span>897A</td>
@@ -18910,7 +19222,7 @@ This is the handler address held in the player object record's +3/+4 field ($8DB
 <tr>
 <td class="address-1"><span id="35214"></span>898E</td>
 <td class="instruction">LD A,($6125)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Entry-point room number choosen selecting A/B/C/D in menu</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35217"></span>8991</td>
@@ -18940,17 +19252,17 @@ This is the handler address held in the player object record's +3/+4 field ($8DB
 <tr>
 <td class="address-1"><span id="35230"></span>899E</td>
 <td class="instruction">CALL <a href="#35579">$8AFB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fire/pick-up button handler</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35233"></span>89A1</td>
 <td class="instruction">LD A,($6186)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Resolved input mask</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35236"></span>89A4</td>
 <td class="instruction">OR $80</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set bit 7 as a wildcard sentinel, for the <a href="asm.html#35056">88F0</a> priority-table scan (matches its default/no-input entry)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35238"></span>89A6</td>
@@ -19050,7 +19362,7 @@ This is the handler address held in the player object record's +3/+4 field ($8DB
 <tr>
 <td class="address-2"><span id="35270"></span>89C6</td>
 <td class="instruction">CALL <a href="#35545">$8AD9</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Take one walk step</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -19295,17 +19607,17 @@ This entry point is used by the routine at <a href="asm.html#36113">8D11</a>.
 <tr>
 <td class="address-1"><span id="35391"></span>8A3F</td>
 <td class="instruction">CALL <a href="#32446">$7EBE</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Read input</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35394"></span>8A42</td>
 <td class="instruction">LD A,($6186)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Resolved input mask</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35397"></span>8A45</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">test for ANY key pressed (bits 0-4)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35399"></span>8A47</td>
@@ -19330,7 +19642,7 @@ This entry point is used by the routine at <a href="asm.html#36113">8D11</a>.
 <tr>
 <td class="address-1"><span id="35409"></span>8A51</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35412"></span>8A54</td>
@@ -19518,7 +19830,7 @@ Computes the room number one level down ($6126 - $24, i.e. -36 -- a whirlpool) o
 <td class="comment-1" rowspan="1">Change current room to A</td>
 </tr>
 </table>
-<div id="35507" class="description">8AB3: Data block at 8AB3</div>
+<div id="35507" class="description">8AB3: Direction -&gt; screen position delta table, indexed by (facing_code AND $0E): 4 (dx,dy) pairs -- Up=(-2,0), Down=(+2,0), Right=(0,+2), Left=(0,-2). Read by <a href="asm.html#35515">8ABB</a>.</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -19532,13 +19844,23 @@ Computes the room number one level down ($6126 - $24, i.e. -36 -- a whirlpool) o
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35515" class="description">8ABB: Routine at 8ABB</div>
+<div id="35515" class="description">8ABB: Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#35545">8AD9</a>, <a href="asm.html#36897">9021</a>, <a href="asm.html#37032">90A8</a>, <a href="asm.html#37468">925C</a> and <a href="asm.html#39267">9963</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="35515"></span>
+<div class="comments">
+<div class="paragraph">
+Looks up (IX+$0B) AND $0E in the delta table at <a href="asm.html#35507">8AB3</a> and adds it to the object's position (+5/+6) in place. Screen deltas are +-2px along one axis per direction (Up/Down move dx, Right/Left move dy) -- the isometric-diamond room layout means each cardinal game direction is a diagonal-looking step on screen along a single axis. Used by <a href="asm.html#35545">8AD9</a> (player movement) and <a href="asm.html#39203">9923</a>.
 </div>
 </div>
 </td>
@@ -19634,13 +19956,23 @@ This entry point is used by the routine at <a href="asm.html#39203">9923</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35545" class="description">8AD9: Routine at 8AD9</div>
+<div id="35545" class="description">8AD9: Take one walk step: apply the facing delta, then check for a room-edge/door transition and a collision, reverting the position if blocked</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#35176">8968</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="35545"></span>
+<div class="comments">
+<div class="paragraph">
+CALLs <a href="asm.html#35515">8ABB</a> to move (IX+5/+6) by the facing delta (old position saved in BC), then <a href="asm.html#26609">67F1</a> (door/room-transition check) and <a href="asm.html#39920">9BF0</a> (grid + object collision check). If <a href="asm.html#39920">9BF0</a> reports no collision (NC), the new position is kept as-is. If it reports a collision (C): if also Z, pokes $FF into offset +9 of the colliding object's record (DE, from <a href="asm.html#39920">9BF0</a>/<a href="asm.html#39612">9ABC</a>) -- disables it; either way, the position is then reverted to the saved BC (blocked), and the animation countdown (+0x0E) is reset.
 </div>
 </div>
 </td>
@@ -19663,7 +19995,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35552"></span>8AE0</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35555"></span>8AE3</td>
@@ -19726,13 +20058,29 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="35579" class="description">8AFB: Routine at 8AFB</div>
+<div id="35579" class="description">8AFB: Fire/pick-up button handler: attack with the held weapon, or pick up/drop an item</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#35176">8968</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="35579"></span>
+<div class="comments">
+<div class="paragraph">
+Gated on the fire/pick-up key (bit 4 of <a href="asm.html#24966">6186</a>); if a weapon is currently held ($619E), jumps to <a href="asm.html#36237">8D8D</a> (attack) instead. Otherwise plays a "reach out" animation, then continues at $8B2B: if the held-item pointer <a href="asm.html#24848">6110</a> currently equals the fixed "empty hands" sentinel record at $788A (i.e. nothing held), attempts to PICK UP something nearby; otherwise DROPS the currently-held item.
+</div>
+<div class="paragraph">
+PICK UP ($8B2B, nothing currently held): walks nearby objects via <a href="asm.html#39773">9B5D</a> (proximity/collision helper, same one used by movement collision), skipping any whose kind byte (offset +8 from the found record) is $44 (the shared "vulnerable creature" pose -- not pickupable). For the first valid candidate: if its kind is $6E, calls <a href="asm.html#26146">6622</a> (unidentified -- likely a special pickup, e.g. a key or weapon-specific item); if its kind is $36, treats it as a GNOME -- calls <a href="asm.html#34958">888E</a>, increments the "Gnomes Gnabbed" counter at $6122 (BCD), then plays sound effect $04 and finalizes via <a href="asm.html#39520">9A60</a> (the gnome object is consumed). For any other kind, searches a weapon lookup buffer at $7C83 (via <a href="asm.html#35043">88E3</a>) -- if found, sets the Weapon-held flag $619E (and possibly a variant at $619F depending on a $3C check) instead of picking the object straight up; either way, the found record's pointer is stored into <a href="asm.html#24848">6110</a> (now "held") and <a href="asm.html#26773">6895</a> is called (equip/HUD update?), then sound effect $04 plays.
+</div>
+<div class="paragraph">
+DROP ($8BC4, something currently held): writes the CURRENT ROOM into the held item's table record (byte0), restoring it to the world -- the same field that item-table entries have their room zeroed on pickup (see Room-Format.md). Re-derives the item's stored Y/X (record bytes 1/2) from the player's own position ($8DBB/$8DBC, grid-aligned) -- i.e. the item is dropped at the player's feet. Exact bit-packing of the combined Y/X byte not fully resolved.
 </div>
 </div>
 </td>
@@ -19755,7 +20103,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35585"></span>8B01</td>
 <td class="instruction">LD A,($619E)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get Weapon-held flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35588"></span>8B04</td>
@@ -19820,7 +20168,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35621"></span>8B25</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35624"></span>8B28</td>
@@ -20065,7 +20413,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35726"></span>8B8E</td>
 <td class="instruction">LD A,($6122)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Gnomes Gnabbed" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35729"></span>8B91</td>
@@ -20080,7 +20428,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35732"></span>8B94</td>
 <td class="instruction">LD ($6122),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set "Gnomes Gnabbed" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35735"></span>8B97</td>
@@ -20125,7 +20473,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-2"><span id="35754"></span>8BAA</td>
 <td class="instruction">LD ($619E),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set Weapon-held flag</td>
 </tr>
 <tr>
 <td class="address-2"><span id="35757"></span>8BAD</td>
@@ -20280,7 +20628,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="35820"></span>8BEC</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35823"></span>8BEF</td>
@@ -20681,62 +21029,62 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-2"><span id="36063"></span>8CDF</td>
 <td class="instruction">LD HL,$8DBD</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36066"></span>8CE2</td>
 <td class="instruction">LD A,$28</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36068"></span>8CE4</td>
 <td class="instruction">CP (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36069"></span>8CE5</td>
 <td class="instruction">RET NC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36070"></span>8CE6</td>
 <td class="instruction">DEC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36071"></span>8CE7</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36074"></span>8CEA</td>
 <td class="instruction">RET NC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36075"></span>8CEB</td>
 <td class="instruction">RES 0,(IX+$0D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36079"></span>8CEF</td>
 <td class="instruction">RES 1,(IX+$0D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36083"></span>8CF3</td>
 <td class="instruction">LD HL,$8DBD</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36086"></span>8CF6</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36087"></span>8CF7</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="36088" class="description">8CF8: Data block at 8CF8</div>
@@ -21014,7 +21362,7 @@ Used by the routine at <a href="asm.html#35176">8968</a>.
 <tr>
 <td class="address-1"><span id="36231"></span>8D87</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36234"></span>8D8A</td>
@@ -21101,7 +21449,7 @@ Used by the routine at <a href="asm.html#35579">8AFB</a>.
 <tr>
 <td class="address-1"><span id="36274"></span>8DB2</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36277"></span>8DB5</td>
@@ -22740,7 +23088,7 @@ Used by the routine at <a href="asm.html#26477">676D</a>.
 <tr>
 <td class="address-1"><span id="36943"></span>904F</td>
 <td class="instruction">CALL <a href="#35515">$8ABB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36946"></span>9052</td>
@@ -23082,7 +23430,7 @@ This entry point is used by the routines at <a href="asm.html#36997">9085</a> an
 <tr>
 <td class="address-1"><span id="37092"></span>90E4</td>
 <td class="instruction">CALL <a href="#35515">$8ABB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37095"></span>90E7</td>
@@ -23092,7 +23440,7 @@ This entry point is used by the routines at <a href="asm.html#36997">9085</a> an
 <tr>
 <td class="address-1"><span id="37096"></span>90E8</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37099"></span>90EB</td>
@@ -23147,7 +23495,7 @@ This entry point is used by the routines at <a href="asm.html#36997">9085</a> an
 <tr>
 <td class="address-2"><span id="37123"></span>9103</td>
 <td class="instruction">CALL <a href="#39329">$99A1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Direction-indexed sprite-animation stepper</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37126"></span>9106</td>
@@ -23397,7 +23745,7 @@ This entry point is used by the routines at <a href="asm.html#36997">9085</a> an
 <tr>
 <td class="address-1"><span id="37257"></span>9189</td>
 <td class="instruction">CALL <a href="#39329">$99A1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Direction-indexed sprite-animation stepper</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37260"></span>918C</td>
@@ -24137,7 +24485,7 @@ Used by the routine at <a href="asm.html#37032">90A8</a>.
 <tr>
 <td class="address-1"><span id="37604"></span>92E4</td>
 <td class="instruction">CALL <a href="#35515">$8ABB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37607"></span>92E7</td>
@@ -24147,7 +24495,7 @@ Used by the routine at <a href="asm.html#37032">90A8</a>.
 <tr>
 <td class="address-1"><span id="37608"></span>92E8</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37611"></span>92EB</td>
@@ -24369,11 +24717,24 @@ Used by the routine at <a href="asm.html#37032">90A8</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="37697" class="description">9341: CREATURE per-frame behaviour handler (installed by the creature spawn at <a href="asm.html#26211">6663</a>; the creature type comes from the room's byte2 -- see <a href="asm.html#27855">6CCF</a>)</div>
+<div id="37697" class="description">9341: Room-creature per-frame behaviour handler (installed by the creature spawn at <a href="asm.html#26211">6663</a>) -- dual purpose: item-delivery detector in Plug Rooms, settle/float physics + hit detection elsewhere</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="37697"></span>
+<div class="comments">
+<div class="paragraph">
+PLUG ROOM BRANCH (taken when <a href="asm.html#25337">62F9</a> confirms the current room is this level's Plug Room): compares this object's own sprite number (+0x08) against each of the 4 required item sprites in the level's <a href="asm.html#29319">7287</a> table (bytes 2-5), gated by the corresponding undelivered bit in the level's state nibble (byte1, CPL'd so unset/undelivered bits read as 1). On a match: sets that delivery bit in the state byte, repositions itself at the matching corner-cube grid cell (<a href="asm.html#25172">6254</a>), increments the "Goodies Gathered" counter at $6123 (BCD), plays sound effect $01, runs a short animation via the <a href="asm.html#37274">919A</a> table, then re-pokes the grid cell to the "delivered" marker $13 and self-destructs ((IX+$02)=$FF). This strongly implies the object's sprite (+0x08) is set elsewhere to track whichever item the player is currently carrying/delivering -- that link is not yet found. If the state nibble is already fully clear (all delivered), falls through to the normal branch below.
+</div>
+<div class="paragraph">
+NORMAL-ROOM BRANCH (<a href="asm.html#37825">93C1</a>): settle/float physics -- the height/Z field (+0x07) decays by 4 each frame toward a rest value $18 (clamped), tested each step via <a href="asm.html#39920">9BF0</a> (collision); if blocked, the height is bounced back up by 4 instead. Also checks bit 2 of (IX+$0D) (a "just hit by a weapon" flag set elsewhere, not yet traced) and calls <a href="asm.html#37889">9401</a> if set.
+</div>
 </div>
 </td>
 </tr>
@@ -24565,7 +24926,7 @@ Used by the routine at <a href="asm.html#37032">90A8</a>.
 <tr>
 <td class="address-1"><span id="37772"></span>938C</td>
 <td class="instruction">LD A,($6123)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Goodies Gathered" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37775"></span>938F</td>
@@ -24580,7 +24941,7 @@ Used by the routine at <a href="asm.html#37032">90A8</a>.
 <tr>
 <td class="address-1"><span id="37778"></span>9392</td>
 <td class="instruction">LD ($6123),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set "Goodies Gathered" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37781"></span>9395</td>
@@ -24745,7 +25106,7 @@ This entry point is used by the routine at <a href="asm.html#37889">9401</a>.
 <tr>
 <td class="address-1"><span id="37852"></span>93DC</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37855"></span>93DF</td>
@@ -24823,13 +25184,23 @@ This entry point is used by the routine at <a href="asm.html#37889">9401</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="37889" class="description">9401: Routine at 9401</div>
+<div id="37889" class="description">9401: Creature hit/defeat sequence, called from <a href="asm.html#37697">9341</a> when the "just hit" flag (bit 2 of +0x0D) is set</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#37697">9341</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="37889"></span>
+<div class="comments">
+<div class="paragraph">
+CONFIRMED structure (trigger not yet traced): clears the hit flag, then only proceeds if the creature's current sprite (+0x08) is $44 (a shared "vulnerable" pose -- creatures presumably must be in this pose to register a hit). Searches a (room, position, reward-sprite) triple table at $7C89 (count from $7C97) for an entry matching the current room and this object's position field (+0x09); on a match, swaps the reward sprite into +0x09 and into offset +3 of a linked record (via +0x0E/+0x0F), plays sound effect $01 (the same "success" sound as item delivery), steps through the <a href="asm.html#37274">919A</a> animation table to transform the sprite, then finalizes (+0x08 = reward sprite, <a href="asm.html#39595">9AAB</a> kind lookup into +0x0A, <a href="asm.html#39520">9A60</a>) and resumes normal behaviour at <a href="asm.html#37825">93C1</a>. Likely how a creature is "defeated" and turns into a collectible (a Gnome?).
 </div>
 </div>
 </td>
@@ -25416,11 +25787,21 @@ Its <a href="asm.html#39381">99D5</a> animation table (<a href="asm.html#38121">
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="38132" class="description">94F4: Per-frame behaviour handler for value-$6B objects -- plug</div>
+<div id="38132" class="description">94F4: Per-frame behaviour handler for value-$6B objects -- plug. WIN-CONDITION TRIGGER: polls every frame for full item delivery, then pops and increments the "Plugs Pulled" counter.</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="38132"></span>
+<div class="comments">
+<div class="paragraph">
+CONFIRMED: re-checks (every frame, via <a href="asm.html#25337">62F9</a> + AND $0F/CP $0F) whether this level's Plug Room state nibble has reached $0F (all 4 items delivered -- see <a href="asm.html#37697">9341</a>). Once it has: increments the "Plugs Pulled" counter at $6124 (BCD), plays sound effect $09, and animates the plug popping out (+0x07 += 8 per frame, gated by bit 4 of +0x0D so this only fires once), then self-destructs on the following frame (bit 6 of +0x0D check). This is the actual win-condition trigger for a single Plug Room.
+</div>
 </div>
 </td>
 </tr>
@@ -25452,7 +25833,7 @@ Its <a href="asm.html#39381">99D5</a> animation table (<a href="asm.html#38121">
 <tr>
 <td class="address-1"><span id="38141"></span>94FD</td>
 <td class="instruction">LD A,($6124)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get "Plugs Pulled" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="38144"></span>9500</td>
@@ -25467,7 +25848,7 @@ Its <a href="asm.html#39381">99D5</a> animation table (<a href="asm.html#38121">
 <tr>
 <td class="address-1"><span id="38147"></span>9503</td>
 <td class="instruction">LD ($6124),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set "Plugs Pulled" end-game stat counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="38150"></span>9506</td>
@@ -25670,7 +26051,7 @@ Its <a href="asm.html#39381">99D5</a> animation table (<a href="asm.html#38182">
 <tr>
 <td class="address-2"><span id="38234"></span>955A</td>
 <td class="instruction">LD HL,($8DB9)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">get player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="38237"></span>955D</td>
@@ -25700,7 +26081,7 @@ Its <a href="asm.html#39381">99D5</a> animation table (<a href="asm.html#38182">
 <tr>
 <td class="address-1"><span id="38247"></span>9567</td>
 <td class="instruction">LD ($8DB9),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">set player behaviour-handler pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="38250"></span>956A</td>
@@ -28114,7 +28495,7 @@ Used by the routine at <a href="asm.html#36237">8D8D</a>.
 <tr>
 <td class="address-1"><span id="39271"></span>9967</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39274"></span>996A</td>
@@ -28129,7 +28510,7 @@ Used by the routine at <a href="asm.html#36237">8D8D</a>.
 <tr>
 <td class="address-1"><span id="39277"></span>996D</td>
 <td class="instruction">CALL <a href="#35515">$8ABB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39280"></span>9970</td>
@@ -28139,7 +28520,7 @@ Used by the routine at <a href="asm.html#36237">8D8D</a>.
 <tr>
 <td class="address-1"><span id="39281"></span>9971</td>
 <td class="instruction">CALL <a href="#39920">$9BF0</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Collision test</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39284"></span>9974</td>
@@ -28242,13 +28623,23 @@ Used by the routine at <a href="asm.html#36237">8D8D</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="39329" class="description">99A1: Routine at 99A1</div>
+<div id="39329" class="description">99A1: Direction-indexed sprite-animation stepper: pick one of 4 per-direction tables via (IX+$0B), then run <a href="asm.html#39381">99D5</a>'s stepper on it</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#37032">90A8</a> and <a href="asm.html#37468">925C</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="39329"></span>
+<div class="comments">
+<div class="paragraph">
+HL = (IX+$1D)/(IX+$1E), a pointer to a table of 4 sub-table addresses. Selects one by facing direction ((IX+$0B), mapped 1-&gt;0/2-&gt;1/... via a small comparison chain, then AND $03), loads that sub-table's address, and falls into <a href="asm.html#39381">99D5</a>'s shared byte-code interpreter ($FD/$FC/$FE/$FB position-delta markers, otherwise a sprite number) -- this is how the player's (and other directional objects') walk-cycle animation is driven per-facing.
 </div>
 </div>
 </td>
@@ -29078,7 +29469,7 @@ Used by the routines at <a href="asm.html#25787">64BB</a>, <a href="asm.html#262
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="39612" class="description">9ABC: Routine at 9ABC</div>
+<div id="39612" class="description">9ABC: Terrain collision test for one screen point (B,C): convert to a grid cell and check its content</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -29096,6 +29487,16 @@ Used by the routine at <a href="asm.html#39920">9BF0</a>.
 <td class="register-desc">??</td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="39612"></span>
+<div class="comments">
+<div class="paragraph">
+Converts screen coordinates (B=X,C=Y) to a room-grid cell: (Y AND $F8)&gt;&gt;3 * 8 + (X AND $F8)&gt;&gt;3 -- confirms the <a href="asm.html#24876">612C</a> grid's row*8+col indexing operates on 8px-aligned screen tiles. Reads the grid cell; $00 = passable (no collision). $7F = solid wall, hard block (see <a href="asm.html#39766">9B56</a>). Any other nonzero code is looked up in a per-terrain-code shape/behaviour table at $7556 (the same table <a href="asm.html#36462">8E6E</a> reads) -- individual terrain codes may have different collision shapes rather than being uniformly solid.
+</div>
+</div>
 </td>
 </tr>
 <tr>
@@ -30041,7 +30442,7 @@ This entry point is used by the routine at <a href="asm.html#39770">9B5A</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="39920" class="description">9BF0: Routine at 9BF0</div>
+<div id="39920" class="description">9BF0: Collision test: check the object's 4 bounding-box corners against the room grid, then check for overlap with other objects</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -30059,6 +30460,16 @@ Used by the routines at <a href="asm.html#26318">66CE</a>, <a href="asm.html#355
 <td class="register-desc">??</td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="39920"></span>
+<div class="comments">
+<div class="paragraph">
+Tests all 4 corners of the object's bounding box (screen-coordinate pairs at +0x10/+0x11, +0x10/+0x13, +0x12/+0x13, +0x12/+0x11 -- i.e. (left,top)/(left,bottom)/(right,bottom)/(right,top)) via <a href="asm.html#39612">9ABC</a>, returning early (C) if any corner hits solid terrain. If all 4 corners are clear, finishes with <a href="asm.html#39770">9B5A</a> (object-vs-object overlap scan). Also calls <a href="asm.html#39520">9A60</a> first and returns early if it reports collision (purpose of that specific pre-check not fully traced).
+</div>
+</div>
 </td>
 </tr>
 <tr>
@@ -30109,7 +30520,7 @@ Used by the routines at <a href="asm.html#26318">66CE</a>, <a href="asm.html#355
 <tr>
 <td class="address-1"><span id="39942"></span>9C06</td>
 <td class="instruction">CALL <a href="#39612">$9ABC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Terrain collision test for one screen point</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39945"></span>9C09</td>
@@ -30129,7 +30540,7 @@ Used by the routines at <a href="asm.html#26318">66CE</a>, <a href="asm.html#355
 <tr>
 <td class="address-1"><span id="39952"></span>9C10</td>
 <td class="instruction">CALL <a href="#39612">$9ABC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Terrain collision test for one screen point</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39955"></span>9C13</td>
@@ -30149,7 +30560,7 @@ Used by the routines at <a href="asm.html#26318">66CE</a>, <a href="asm.html#355
 <tr>
 <td class="address-1"><span id="39962"></span>9C1A</td>
 <td class="instruction">CALL <a href="#39612">$9ABC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Terrain collision test for one screen point</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39965"></span>9C1D</td>
@@ -30169,7 +30580,7 @@ Used by the routines at <a href="asm.html#26318">66CE</a>, <a href="asm.html#355
 <tr>
 <td class="address-1"><span id="39972"></span>9C24</td>
 <td class="instruction">CALL <a href="#39612">$9ABC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Terrain collision test for one screen point</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39975"></span>9C27</td>

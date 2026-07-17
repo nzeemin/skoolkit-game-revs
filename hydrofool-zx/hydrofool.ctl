@@ -5,10 +5,11 @@ W $60EC,10,8 Draw queue: object-record pointers, drawn by #R$9900
 W $610A,2
 W $610C,2
 W $610E,2 Active object list HEAD pointer: points at the most recently spawned object record; each record's +0/+1 links to the next, ending in the fixed records #R$8DB6 (player) -> $8DCF -> $8DEF -> $0000. Passed as IX into #R$84AE, which head-inserts the new object here. Other insertion points exist (e.g. $8DEF for creatures -- see #R$6663), placing objects later in the list.
-W $6110,2
-B $6122,1
-B $6124,1
-B $6125,1
+W $6110,2 Currently-held item: pointer to its 4-byte item-table record (room,Y,X,sprite). Equals the fixed "empty hands" sentinel record at $788A when nothing is held. Set by #R$8AFB on pickup; the pointed-to record's room byte is zeroed on pickup and restored (to the current room, at the player's position) on drop.
+B $6122,1 "Gnomes Gnabbed" end-game stat counter (BCD), printed by #R$86CC via #R$854F
+B $6123,1 "Goodies Gathered" end-game stat counter (BCD), printed by #R$86CC via #R$854F; incremented by #R$9341 on each successful item delivery to a Plug Room corner cube
+B $6124,1 "Plugs Pulled" end-game stat counter (BCD), printed by #R$86CC via #R$854F
+B $6125,1 Entry-point room number choosen selecting A/B/C/D in menu, see table #R$8567
 B $6126,1 Room number
 W $6127,2 Room description address
 B $6129,1 Room shape/layout selector (0 or 1; bit 6 from byte 3 of Room description, shifted to bit 0). Selects one of 2 fixed wall/decoration layouts drawn by #R$642F.
@@ -21,8 +22,17 @@ B $6174,1
 B $6175,1 Room color 0..15
 B $6179,1
 B $617A,1
-B $617B,1
-B $6186,1
+B $617B,1 Input device selector, read by #R$7EBE: 0=keyboard, 1=Kempston joystick, 2=Sinclair joystick, else=Cursor keys
+B $617C,1 Cumulative input-held counter, incremented each frame by #R$6186's mask value (used for key-repeat timing)
+B $617D,1 Keyboard row snapshot (contributes bit 4 -- fire/pick-up -- to #R$6186 via #R$7EBE)
+B $617E,1 Keyboard row snapshot (contributes bit 2 to #R$6186 via #R$7EBE)
+B $617F,1 Keyboard row snapshot (contributes bit 1 to #R$6186 via #R$7EBE)
+B $6182,1 Keyboard row snapshot (contributes bit 3 to #R$6186 via #R$7EBE)
+B $6183,1 Keyboard row snapshot (contributes bit 0 to #R$6186 via #R$7EBE)
+B $6184,1 Keyboard row snapshot (also contributes bit 4 -- fire/pick-up -- to #R$6186 via #R$7EBE)
+N $6186 Resolved 5-bit input mask, produced every frame by #R$7EBE from whichever control method $617B selects. Bit0=Right, bit1=Left, bit2=Down, bit3=Up (Kempston-port convention: reading Kempston directly copies its byte here unmodified), bit4=Fire/pick-up. Consumed by #R$8968 (movement -- resolved to a single direction via the table at #R$88F0) and #R$8AFB (fire button). Masked against a "previously pressed" copy at $6188 by #R$7EBE itself (edge-detection), and accumulated into a repeat counter at $617C.
+B $6186,1 Resolved input mask (bit0=Right, bit1=Left, bit2=Down, bit3=Up, bit4=Fire/pick-up) -- see N-line
+B $6188,1 Previous frame's #R$6186 value, used by #R$7EBE for key-repeat/edge detection
 B $618A,1 Message-window restore timer (counts down in #R$9808; the room/creature title is redrawn when it expires)
 W $618B,2 Free-list head pointer for the dynamic object pool (#R$A900), consumed/updated by #R$84AE. Its high byte (at $618C) is also read standalone as an empty/enabled check.
 W $618D,2 Current sprite: data address (copied from a #R$A5DC record by #R$84ED)
@@ -36,16 +46,18 @@ B $6199,1
 B $619A,1 Room number copy
 W $619B,2
 B $619D,1
-B $619E,1
+B $619E,1 Weapon-held flag, tested by #R$8AFB on fire/pick-up to decide attack vs. pick-up/drop
 B $619F,1
 B $61A0,1
 B $61A1,1
 B $61A2,1
 B $61A3,1
 B $61A6,1
-c $61A7 JP (HL) trampoline, used by #R$983C to call a dynamic object's per-frame behaviour handler
+c $61A7 JP (HL) trampoline
+N $61A7 Used by #R$983C to call a dynamic object's per-frame behaviour handler
 c $61A8 Initialize the object free list: chain B 24-byte records starting at DE (each record's first word points to the next)
 c $61C1
+C $61D0,3 set Active object list HEAD pointer
 C $61D8,3 Initialize the object free list
 c $61E3
 C $6224,3 Room descriptions start address
@@ -65,10 +77,10 @@ c $630D
 c $6329 Build the door/exit bitfield at $612B from the room description's byte1
 N $6329 Re-reads room description byte1 (at room_base+1), merges bit4 into bit0 and bit7 into bit3 (via AND $90, RRCA x4, OR), writes the result back into the room description itself AND into $612B. Bits 0-3 of the result are then tested by #R$6344/#R$6377 to conditionally draw door graphics at fixed screen positions -- one bit per exit direction: bit0=North, bit1=East, bit2=South, bit3=West (see #R$67F1).
 C $633D,3 Draw door graphics for $612B bits 0 and 3
-c $6344 Draw door graphics for $612B bits 0 and 3 (single-piece doors)
+c $6344 Draw single-piece doors, for $612B bits 0 and 3
 N $6344 Tests bit 0 of $612B (North), drawing one door-graphic piece via #R$8128 at a fixed screen position if set; then bit 3 (West), drawing a different fixed-position piece if set.
 C $635B,3 Draw sprite C with its mask at screen position DE
-c $6377 Draw door graphics for $612B bits 1 and 2 (three-piece doors)
+c $6377 Draw three-piece doors, for $612B bits 1 and 2
 N $6377 Tests bit 1 of $612B (East), drawing three door-graphic pieces via #R$8128 (three fixed screen positions) if set; then bit 2 (South), drawing three different fixed-position pieces if set. Calls #R$6344 first.
 C $638A,3 Draw sprite C with its mask at screen position DE
 C $6396,3 Draw sprite C with its mask at screen position DE
@@ -95,6 +107,7 @@ B $6502 Oil level??
 c $6503 Routine ?? Oil
 C $6507,1 POKE 201 (RET) here for infinite Oil
 C $6508,3 get room number
+C $6536,3 set player behaviour-handler pointer
 b $653F
 c $6543
 c $655E
@@ -136,22 +149,28 @@ C $668C,3 Dynamic object finalizer
 c $6692
 c $66CE
 C $66E9,3 Spawn the room's creature
+C $66F8,3 Collision test
+C $6705,3 Collision test
 c $6728
 C $6733,3 get room number
 c $6743
-c $676D Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02
+c $676D Draw current room
+N $676D Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02
 N $676D Rooms $01 and $02 are the only two type $E rooms, and are special "no walls" rooms (see #R$6CCF -- room $01 is the ending/winning room). At #R$67AB, this routine checks if the current room ($6126) is 1 or 2 and, if so, skips straight to #R$67E0, bypassing: the wall/layout draw (#R$642F), door-graphic draw (#R$6377), the message window (#R$65DB), and several creature/object placement calls (#R$6593/$655E/$663B/$6743/$8F82/$6895/$885A). The room's grid contents (rocks/seaweed etc, from its type $E template) still get drawn via a separate, non-skipped path -- consistent with the "just floating rocks and seaweed, no walls" appearance of room $01. Room $01 additionally gets one extra call, #R$86CC (CALL Z at #R$67E8, gated on room==1 specifically, not room==2) -- draws the "DEATHBOWL DIVINED" end-game stats overlay (see #R$86CC).
 C $6776,3 get room number
 C $679C,3 Set current room to A
 C $67A8,3 Clear shadow screen
-C $67AB,11 if room $6126 is 1 or 2, skip to #R$67E0 (special "no walls" room -- see #R$676D)
+C $67AB,3 get Room number
+C $67AE,8 if room $6126 is 1 or 2, skip to #R$67E0 (special "no walls" room -- see #R$676D)
 C $67B6,3 Draw the fixed wall/decoration layout selected by $6129
-C $67BF,3 Draw door graphics for $612B bits 1 and 2
+C $67BF,3 Draw three-piece doors, for $612B bits 1 and 2
 C $67C5,3 Draw message window
 C $67CE,3 Prepare room with color 0
 C $67D1,3 Get room color from room description and store to 6175
 C $67D4,3 Re-initialize the state blocks of the two fixed object records at $8DCF and $8DEF
-C $67E0,11 Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls #R$86CC (likely the end-game stats overlay)
+N $67E0 Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls #R$86CC (likely the end-game stats overlay)
+C $67E3,3 get Room number
+C $67E8,3 Draw the end-game stats screen
 C $67EB,3 Prepare room with color 0
 C $67EE,3 Get room color from room description and store to 6175
 c $67F1 Attempt to move to an adjacent room (horizontal, via a door) in the direction given by ($8DC1)
@@ -171,6 +190,7 @@ C $68A4,3 Draw sprite C with its mask at screen position DE
 C $68A8,3 Search the buffer at $7C83 for byte A
 C $68B1,3 print inline string, then resume after it
 T $68B4,4 cursor position only, no visible text
+C $68B8,3 get Weapon-held flag
 C $68BB,3 Print BCD byte A as two digits, high digit blanked to a space if zero
 c $68C1
 C $68CC,3 print inline string, then resume after it
@@ -188,8 +208,11 @@ c $6AF8
 c $6AFB
 c $6AFC
 c $6B05
+C $6B0B,3 set player behaviour-handler pointer
 C $6B1F,3 Set object position (IX+5/+6) from grid index A
-C $6B68,3 Draw the full room (walls, doors, message window, creatures/objects) -- or the reduced special-room variant for rooms $01/$02
+C $6B27,3 set Weapon-held flag
+C $6B39,3 set Entry-point room number choosen selecting A/B/C/D in menu
+C $6B68,3 Draw current room
 C $6B6B,3 Per-frame main loop entry
 c $6B71
 C $6B8F,3 Routine ?? Oil
@@ -604,9 +627,32 @@ T $7491 "NOT DRINKING WATER "
 T $74A5 "DONT BITE THE FISH "
 T $74B9 " PLEASE GO QUIETLY "
 b $74CE
-B $750B
-t $75AE
+B $750B,75
+b $7556
+N $7556 Per-terrain-code shape/behaviour pointer table, indexed by grid content code * 2 (code $00, unused since a $00 grid cell means "empty" and is never looked up, has a dummy entry). Read by #R$9ABC (player/object collision -- looks up the pointer, then reads further bytes for shape data) and #R$8E6E (creature/object setup, same table). 21 entries (codes $00-$14) pointing into the shape-record area starting at $7580; codes above $14 are never used as static grid content and have no entry.
+W $7556,42,2
+B $7580,2 Shape record for terrain code $01 (#R$7556)
+B $7582,2 Shape record for terrain code $02 (#R$7556)
+B $7584,2 Shape record for terrain code $03 (#R$7556)
+B $7586,2 Shape record for terrain code $04 (#R$7556)
+B $7588,2 Shape record for terrain code $05 (#R$7556)
+B $758A,2 Shape record for terrain code $06 (#R$7556)
+B $758C,2 Shape record for terrain code $07 (#R$7556)
+B $758E,2 Shape record for terrain code $08 (#R$7556)
+B $7590,2 Shape record for terrain code $09 (#R$7556)
+B $7592,3 Shape record for terrain code $0A (#R$7556)
+B $7595,3 Shape record for terrain code $0B (#R$7556)
+B $7598,3 Shape record for terrain code $0C (#R$7556)
+B $759B,2 Shape record for terrain code $0D (#R$7556)
+B $759D,3 Shape record for terrain code $0E (#R$7556)
+B $75A0,3 Shape record for terrain code $0F (#R$7556)
+B $75A3,3 Shape record for terrain code $10 (#R$7556)
+B $75A6,3 Shape record for terrain code $11 (#R$7556)
+B $75A9,2 Shape record for terrain code $12 (#R$7556)
+B $75AB,3 Shape record for terrain code $13 (#R$7556)
+b $75AE
 b $75B5
+B $788A,4 "Empty hands" sentinel item record (room,Y,X,sprite) -- #R$6110 (currently-held item) points here when nothing is held; #R$8AFB compares against this fixed address to decide pick-up vs. drop
 W $7C81,2
 B $7C88,1
 W $7C9A,4,4
@@ -684,7 +730,10 @@ C $7E75,1 inner loop: 8 pixel rows per group
 C $7E80,1 innermost loop: ceil(width/2) byte pairs per row
 C $7E83,25 Flip the byte
 c $7EA9
-c $7EBE
+c $7EBE Read input: normalize the active control method into the 5-bit mask at #R$6186
+N $7EBE Dispatches on the device selector $617B: keyboard (scans 6 half-rows into $6186's bits, some duplicated -- e.g. both $617D and $6184 set bit 4/fire), Kempston (port $001F, used as the mask directly), Sinclair (port $EFFE, bit-rotated into the mask), or Cursor keys (ports $EFFE/$F7FE). Result is masked against the previous frame's value at $6188 and stored to $6186; also accumulates a held-key counter at $617C. See #R$6186 for the bit layout.
+C $7F18,3 set Resolved input mask
+C $7F8A,3 set Resolved input mask
 c $7F8E
 c $7F9B
 b $7FBD
@@ -749,15 +798,15 @@ N $8567 4 bytes, one per starting location, in order A/B/C/D: $52 (level 3, row 
 B $8567,4
 t $856B Controls sub-menu text
 N $856B "1 KEYBOARD 2 KEMPSTON 3 SINCLAIR 4 CURSOR", printed by #R$8617 via the #R$7CEC print engine.
-b $8595
-c $85A1 Main menu screen: title, tune list A-D, controls menu; loops until a selection starts the game
+c $8596
+c $85A1 Main menu screen: title, entry list A-D, controls menu; loops until a selection starts the game
 C $85A1,3 print inline string, then resume after it
 T $85A4,15 main menu title
 T $85B3,12 sub-heading
-T $85BF,21 key A tune name (likely)
-T $85D4,20 key B tune name (likely)
-T $85E8,17 key C tune name (likely)
-T $85F9,22 key D tune name (likely); Elvis song titles, not room selection
+T $85BF,21 key A entry name
+T $85D4,20 key B entry name
+T $85E8,17 key C entry name
+T $85F9,22 key D entry name (Elvis song titles)
 C $8617,3 load pointer to Controls menu text at #R$856B
 C $861A,5 control code $16: set print cursor row (selects the menu row to print into)
 C $8620,3 print the Controls menu text (via #R$7CEC print engine loop)
@@ -775,7 +824,8 @@ C $8670,3 print inline string, then resume after it
 T $8673,14 "SFX" label, shown selected/inverse
 C $868D,3 Menu tune + key-wait driver
 C $86C1,3 load pointer to entry-point room number table (#R$8567) -- used to look up the starting room for the pressed menu key A/B/C/D
-c $86CC Draw the end-game stats screen ("DEATHBOWL DIVINED")
+C $86C6,3 set entry-point room number
+c $86CC Draw the end-game stats screen
 C $86CC,3 print inline string, then resume after it
 N $86CF End-game stats overlay labels (see #R$676D: called only when room==1)
 T $86CF,22 title
@@ -795,13 +845,17 @@ T $876D,4 cursor position only, no visible text (positions for a stat value prin
 C $8779,3 Print a BCD number
 C $877C,3 print inline string, then resume after it
 T $877F,4 cursor position only, no visible text
+C $8783,3 get "Plugs Pulled" end-game stat counter
 C $8786,3 Print BCD byte A as two digits, high digit blanked to a space if zero
 C $8789,3 print inline string, then resume after it
 T $878C,4 cursor position only, no visible text
+C $8790,3 get "Goodies Gathered" end-game stat counter
 C $8793,3 Print BCD byte A as two digits, high digit blanked to a space if zero
 C $8796,3 print inline string, then resume after it
 T $8799,4 cursor position only, no visible text
+C $879D,3 get "Gnomes Gnabbed" end-game stat counter
 C $87A0,3 Print BCD byte A as two digits, high digit blanked to a space if zero
+C $87A9,3 get "Plugs Pulled" end-game stat counter
 C $87B0,3 print inline string, then resume after it
 N $87B3 End-game message, shown on an early/partial completion outcome
 T $87B3,30 line 1
@@ -826,9 +880,19 @@ c $88D7
 c $88DD
 c $88E3 Search the buffer at $7C83 for byte A (CPIR, length from $7C88)
 b $88EF
+B $88EF,1
+N $88F0 Input-mask -> direction-code priority table, scanned by #R$8968: (mask,direction) byte pairs, tried in order, first whose mask bits overlap ($6186's mask OR $80) wins. $08,$01 (Up bit -> direction $01); $04,$02 (Down bit -> $02); $02,$06 (Left bit -> $06); $01,$04 (Right bit -> $04); $80,$00 (default/no-input catch-all -- mask bit 7 always matches since #R$8968 ORs $80 into the scan key -- resolves to direction $00, i.e. no movement).
+B $88F0,10,2
 c $8968 PLAYER per-frame behaviour handler
 N $8968 This is the handler address held in the player object record's +3/+4 field ($8DB9 -- see #R$8DB6), called every frame from #R$983C's dispatcher like any other object handler. Explains its many special cases: room $01 check (ending room), the vertical room transitions (#R$8A87), etc. The player's handler pointer is swappable for state changes: #R$955A tests ($8DB9)==$8968 ("normal state?"), #R$9564 swaps in #R$8D11.
+N $8968 MOVEMENT: reads the input mask at #R$6186 (OR $80, a wildcard sentinel), then scans the (mask,direction) pair table at #R$88F0 for the first entry whose mask overlaps -- this resolves the raw multi-button input into a single prioritized direction code (0/1=Up, 2/3=Down, 4/5=Right, 6/7=Left; the low bit distinguishes sub-states, masked off by #R$8ABB's AND $0E). If the resolved direction equals the player's current facing ((IX+$0B)), calls #R$8AD9 immediately to take a step; if it differs and is nonzero, just updates the pending-direction latch at $8DC1 (turning takes one frame before the first step); if it resolves to 0 (no input), no movement happens this frame.
+C $8977,3 Read input
 C $8987,3 get room number
+C $898E,3 get Entry-point room number choosen selecting A/B/C/D in menu
+C $899E,3 Fire/pick-up button handler
+C $89A1,3 get Resolved input mask
+C $89A4,2 set bit 7 as a wildcard sentinel, for the #R$88F0 priority-table scan (matches its default/no-input entry)
+C $89C6,3 Take one walk step
 C $89EB,3 Request sound effect A
 C $8A0B,3 Save continuation
 C $8A11,3 Sprite-animation stepper
@@ -836,6 +900,10 @@ C $8A28,3 Save continuation
 C $8A2E,3 Sprite-animation stepper
 C $8A36,3 Save continuation
 C $8A3C,3 Sprite-animation stepper
+C $8A3F,3 Read input
+C $8A42,3 get Resolved input mask
+C $8A45,2 test for ANY key pressed (bits 0-4)
+C $8A51,3 set player behaviour-handler pointer
 C $8A76,3 get room number
 c $8A87 Attempt to move to an adjacent room (vertical, via whirlpool/bubble)
 N $8A87 Computes the room number one level down ($6126 - $24, i.e. -36 -- a whirlpool) or one level up ($6126 + $24, i.e. +36 -- a bubble), the 6x6x6 cube level-stride (see x-docs/Room-Format.md). Has special-case handling when the current room number is exactly 1 (down) or 2 (up) -- overrides the computed value instead of using the generic +-36 arithmetic; not yet understood why. The upward case also bounds-checks the result against $D9 before allowing it (JP C,#R$97FC), falling back to a different path (through $8C83) if out of range. #R$97FC is called with the new room number to actually perform the transition, same as the horizontal case (#R$67F1).
@@ -850,17 +918,29 @@ C $8AA2,3 Change current room to A (if in range)
 C $8AA5,8 out of range: fall back instead of changing room
 C $8AAD,3 room==2 special case: use $6125 instead
 C $8AB0,3 Change current room to A
-b $8AB3
-c $8ABB
-c $8AD9
+b $8AB3 Direction -> screen position delta table, indexed by (facing_code AND $0E): 4 (dx,dy) pairs -- Up=(-2,0), Down=(+2,0), Right=(0,+2), Left=(0,-2). Read by #R$8ABB.
+c $8ABB Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
+N $8ABB Looks up (IX+$0B) AND $0E in the delta table at #R$8AB3 and adds it to the object's position (+5/+6) in place. Screen deltas are +-2px along one axis per direction (Up/Down move dx, Right/Left move dy) -- the isometric-diamond room layout means each cardinal game direction is a diagonal-looking step on screen along a single axis. Used by #R$8AD9 (player movement) and #R$9923.
+c $8AD9 Take one walk step: apply the facing delta, then check for a room-edge/door transition and a collision, reverting the position if blocked
+N $8AD9 CALLs #R$8ABB to move (IX+5/+6) by the facing delta (old position saved in BC), then #R$67F1 (door/room-transition check) and #R$9BF0 (grid + object collision check). If #R$9BF0 reports no collision (NC), the new position is kept as-is. If it reports a collision (C): if also Z, pokes $FF into offset +9 of the colliding object's record (DE, from #R$9BF0/#R$9ABC) -- disables it; either way, the position is then reverted to the saved BC (blocked), and the animation countdown (+0x0E) is reset.
 C $8ADD,3 Attempt to move to an adjacent room (horizontal, via a door) in the direction given by
-c $8AFB
+C $8AE0,3 Collision test
+c $8AFB Fire/pick-up button handler: attack with the held weapon, or pick up/drop an item
+N $8AFB Gated on the fire/pick-up key (bit 4 of #R$6186); if a weapon is currently held ($619E), jumps to #R$8D8D (attack) instead. Otherwise plays a "reach out" animation, then continues at $8B2B: if the held-item pointer #R$6110 currently equals the fixed "empty hands" sentinel record at $788A (i.e. nothing held), attempts to PICK UP something nearby; otherwise DROPS the currently-held item.
+N $8AFB PICK UP ($8B2B, nothing currently held): walks nearby objects via #R$9B5D (proximity/collision helper, same one used by movement collision), skipping any whose kind byte (offset +8 from the found record) is $44 (the shared "vulnerable creature" pose -- not pickupable). For the first valid candidate: if its kind is $6E, calls #R$6622 (unidentified -- likely a special pickup, e.g. a key or weapon-specific item); if its kind is $36, treats it as a GNOME -- calls #R$888E, increments the "Gnomes Gnabbed" counter at $6122 (BCD), then plays sound effect $04 and finalizes via #R$9A60 (the gnome object is consumed). For any other kind, searches a weapon lookup buffer at $7C83 (via #R$88E3) -- if found, sets the Weapon-held flag $619E (and possibly a variant at $619F depending on a $3C check) instead of picking the object straight up; either way, the found record's pointer is stored into #R$6110 (now "held") and #R$6895 is called (equip/HUD update?), then sound effect $04 plays.
+N $8AFB DROP ($8BC4, something currently held): writes the CURRENT ROOM into the held item's table record (byte0), restoring it to the world -- the same field that item-table entries have their room zeroed on pickup (see Room-Format.md). Re-derives the item's stored Y/X (record bytes 1/2) from the player's own position ($8DBB/$8DBC, grid-aligned) -- i.e. the item is dropped at the player's feet. Exact bit-packing of the combined Y/X byte not fully resolved.
+C $8B01,3 get Weapon-held flag
 C $8B0C,3 Save continuation
+C $8B25,3 set player behaviour-handler pointer
 C $8B3F,3 Dynamic object finalizer
+C $8B8E,3 get "Gnomes Gnabbed" end-game stat counter
+C $8B94,3 set "Gnomes Gnabbed" end-game stat counter
 C $8B9A,3 Search the buffer at $7C83 for byte A
+C $8BAA,3 set Weapon-held flag
 C $8BB6,3 Request sound effect A
 C $8BC7,3 get room number
 C $8BE9,3 Spawn the room's creature
+C $8BEC,3 Collision test
 C $8BF1,3 get room number
 C $8C07,3 Request sound effect A
 c $8C35
@@ -868,14 +948,17 @@ b $8C48
 t $8CD9
 b $8CDC
 c $8CDF
+C $8CE7,3 Collision test
 b $8CF8
 c $8D11 Alternate PLAYER behaviour handler (swapped into $8DB9 by #R$9564; see #R$8968 and #R$8DB6)
 C $8D15,3 Save continuation
 C $8D43,3 Save continuation
 C $8D75,3 Save continuation
 C $8D7B,3 Sprite-animation stepper
+C $8D87,3 set player behaviour-handler pointer
 c $8D8D
 C $8DA1,3 Save continuation
+C $8DB2,3 set player behaviour-handler pointer
 b $8DB6 PLAYER object record + 2 more fixed object records
 N $8DB6 The player is an object record with the same layout as the dynamic pool records (see #R$A900), statically allocated here. Fields: +0/+1 = $8DCF (link to the next record in the active object list); +2 = current room number (mirrors $6126); +3/+4 = $8968 -- the player's per-frame behaviour handler (#R$8968), SWAPPABLE: #R$955A tests it against $8968 ("is the player in the normal state?") and #R$9564 swaps it to #R$8D11 (an alternate player state); +5/+6 = player Y/X position -- these are the $8DBB/$8DBC bytes referenced by proximity checks all over the code; +16..+19 = previous/target position pair (unconfirmed). The active object list runs: ($610E head) -> newest spawned objects ... -> $8DB6 (player) -> $8DCF -> $8DEF -> $0000 end.
 W $8DB6,2 link to next object record ($8DCF)
@@ -929,6 +1012,7 @@ c $8F82 Re-initialize the state blocks of the two fixed object records at $8DCF 
 C $8FB6,3 get room number
 C $9007,3 Dynamic object finalizer
 c $9021
+C $904F,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
 C $9052,3 Dynamic object finalizer
 C $9055,3 Save continuation
 C $9060,3 Collision/overlap scan
@@ -940,12 +1024,16 @@ c $9085
 t $908D
 b $9091
 c $90A8
+C $90E4,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
+C $90E8,3 Collision test
+C $9103,3 Direction-indexed sprite-animation stepper
 C $9115,3 Request sound effect A
 C $9118,3 Save continuation
 C $914C,3 Dynamic object allocator
 W $914F,2 Dynamic object handler address
 C $917C,3 Dynamic object finalizer
 C $9183,3 Save continuation
+C $9189,3 Direction-indexed sprite-animation stepper
 b $919A
 c $91A6
 C $91C4,3 Build the door/exit bitfield at $612B from the room description's byte1
@@ -959,16 +1047,24 @@ c $9232
 c $923E Save continuation: set the object's handler (+3/+4) to the address just after the caller's CALL, then jump there (the object resumes at that point next frame)
 b $9246
 c $925C
+C $92E4,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
+C $92E8,3 Collision test
 C $9307,3 Request sound effect A
 C $9332,3 Dynamic object finalizer
 s $933D
-c $9341 CREATURE per-frame behaviour handler (installed by the creature spawn at #R$6663; the creature type comes from the room's byte2 -- see #R$6CCF)
+c $9341 Room-creature per-frame behaviour handler (installed by the creature spawn at #R$6663) -- dual purpose: item-delivery detector in Plug Rooms, settle/float physics + hit detection elsewhere
+N $9341 PLUG ROOM BRANCH (taken when #R$62F9 confirms the current room is this level's Plug Room): compares this object's own sprite number (+0x08) against each of the 4 required item sprites in the level's #R$7287 table (bytes 2-5), gated by the corresponding undelivered bit in the level's state nibble (byte1, CPL'd so unset/undelivered bits read as 1). On a match: sets that delivery bit in the state byte, repositions itself at the matching corner-cube grid cell (#R$6254), increments the "Goodies Gathered" counter at $6123 (BCD), plays sound effect $01, runs a short animation via the #R$919A table, then re-pokes the grid cell to the "delivered" marker $13 and self-destructs ((IX+$02)=$FF). This strongly implies the object's sprite (+0x08) is set elsewhere to track whichever item the player is currently carrying/delivering -- that link is not yet found. If the state nibble is already fully clear (all delivered), falls through to the normal branch below.
+N $9341 NORMAL-ROOM BRANCH (#R$93C1): settle/float physics -- the height/Z field (+0x07) decays by 4 each frame toward a rest value $18 (clamped), tested each step via #R$9BF0 (collision); if blocked, the height is bounced back up by 4 instead. Also checks bit 2 of (IX+$0D) (a "just hit by a weapon" flag set elsewhere, not yet traced) and calls #R$9401 if set.
 C $9381,3 Set object position (IX+5/+6) from grid index A
+C $938C,3 get "Goodies Gathered" end-game stat counter
+C $9392,3 set "Goodies Gathered" end-game stat counter
 C $9397,3 Request sound effect A
 C $939A,3 Save continuation
 C $93A0,3 Sprite-animation stepper
 C $93C1,3 Save continuation
-c $9401
+C $93DC,3 Collision test
+c $9401 Creature hit/defeat sequence, called from #R$9341 when the "just hit" flag (bit 2 of +0x0D) is set
+N $9401 CONFIRMED structure (trigger not yet traced): clears the hit flag, then only proceeds if the creature's current sprite (+0x08) is $44 (a shared "vulnerable" pose -- creatures presumably must be in this pose to register a hit). Searches a (room, position, reward-sprite) triple table at $7C89 (count from $7C97) for an entry matching the current room and this object's position field (+0x09); on a match, swaps the reward sprite into +0x09 and into offset +3 of a linked record (via +0x0E/+0x0F), plays sound effect $01 (the same "success" sound as item delivery), steps through the #R$919A animation table to transform the sprite, then finalizes (+0x08 = reward sprite, #R$9AAB kind lookup into +0x0A, #R$9A60) and resumes normal behaviour at #R$93C1. Likely how a creature is "defeated" and turns into a collectible (a Gnome?).
 C $9436,3 Request sound effect A
 C $943F,3 Save continuation
 C $9456,3 Search the (key,data) pair table at $74CE for key A
@@ -985,7 +1081,10 @@ b $94E9 #R$99D5 sprite-animation table for the plant/coral object (#R$94EE)
 N $94E9 Sprites $4E,$4E,$50,$50 (see #R$A714/#R$A71C, both labeled "Plant/coral"), terminated by $FF -- a simple 2-frame swaying decoration.
 c $94EE Per-frame behaviour handler for value-$67 objects -- plant/coral
 N $94EE Its #R$99D5 animation table (#R$94E9) is sprites $4E,$4E,$50,$50, both "Plant/coral" sprites -- a simple 2-frame swaying decoration.
-c $94F4 Per-frame behaviour handler for value-$6B objects -- plug
+c $94F4 Per-frame behaviour handler for value-$6B objects -- plug. WIN-CONDITION TRIGGER: polls every frame for full item delivery, then pops and increments the "Plugs Pulled" counter.
+N $94F4 CONFIRMED: re-checks (every frame, via #R$62F9 + AND $0F/CP $0F) whether this level's Plug Room state nibble has reached $0F (all 4 items delivered -- see #R$9341). Once it has: increments the "Plugs Pulled" counter at $6124 (BCD), plays sound effect $09, and animates the plug popping out (+0x07 += 8 per frame, gated by bit 4 of +0x0D so this only fires once), then self-destructs on the following frame (bit 6 of +0x0D check). This is the actual win-condition trigger for a single Plug Room.
+C $94FD,3 get "Plugs Pulled" end-game stat counter
+C $9503,3 set "Plugs Pulled" end-game stat counter
 C $9508,3 Request sound effect A
 C $950B,3 Save continuation
 b $9526 #R$99D5 sprite-animation table for the whirlpool object (#R$952D)
@@ -993,6 +1092,8 @@ c $952D Per-frame behaviour handler for value-$69 objects -- whirlpool
 N $952D Its #R$99D5 animation table (#R$9526) is sprites $4C,$4C,$4D,$4D, both "Whirlpool, animation phase" sprites.
 C $9530,3 Sprite-animation stepper
 C $9533,3 Test whether the current room is this level's Plug Room
+C $955A,3 get player behaviour-handler pointer
+C $9567,3 set player behaviour-handler pointer
 b $9577 #R$99D5 sprite-animation table for the bubble source object (#R$957C)
 N $9577 Sprites $68,$68,$69,$69 (see #R$C38E/#R$C39E, both relabeled "Bubble"), terminated by $FF.
 c $957C Per-frame behaviour handler for value-$66/$6A objects -- bubble source
@@ -1044,9 +1145,13 @@ W $9930,2 Dynamic object handler address
 C $9955,3 Dynamic object finalizer
 b $995E
 c $9963
+C $9967,3 Collision test
+C $996D,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
+C $9971,3 Collision test
 C $9992,3 Save continuation
 C $9998,3 Sprite-animation stepper
-c $99A1
+c $99A1 Direction-indexed sprite-animation stepper: pick one of 4 per-direction tables via (IX+$0B), then run #R$99D5's stepper on it
+N $99A1 HL = (IX+$1D)/(IX+$1E), a pointer to a table of 4 sub-table addresses. Selects one by facing direction ((IX+$0B), mapped 1->0/2->1/... via a small comparison chain, then AND $03), loads that sub-table's address, and falls into #R$99D5's shared byte-code interpreter ($FD/$FC/$FE/$FB position-delta markers, otherwise a sprite number) -- this is how the player's (and other directional objects') walk-cycle animation is driven per-facing.
 C $99A7,2 "RET" instruction code
 C $99A9,3 set instruction
 C $99B3,1 "NOP" instruction code
@@ -1066,7 +1171,8 @@ c $9A60 Dynamic object finalizer (called at the end of every spawn routine's obj
 N $9A60 Role still open: the handler-address write into record +3/+4 and the list insertion both happen inside #R$84AE, so neither is this routine's job. Observed effect: record offset $09 (the triggering grid value) reads back as $00 after this call. Internals not yet traced.
 c $9AAB Search the (key,data) pair table at $74CE for key A; returns Z with HL pointing at the matched pair's data byte
 b $9ABA
-c $9ABC
+c $9ABC Terrain collision test for one screen point (B,C): convert to a grid cell and check its content
+N $9ABC Converts screen coordinates (B=X,C=Y) to a room-grid cell: (Y AND $F8)>>3 * 8 + (X AND $F8)>>3 -- confirms the #R$612C grid's row*8+col indexing operates on 8px-aligned screen tiles. Reads the grid cell; $00 = passable (no collision). $7F = solid wall, hard block (see #R$9B56). Any other nonzero code is looked up in a per-terrain-code shape/behaviour table at $7556 (the same table #R$8E6E reads) -- individual terrain codes may have different collision shapes rather than being uniformly solid.
 R $9ABC BC ??
 C $9AD3,3 Room grid address
 c $9AFD
@@ -1074,9 +1180,14 @@ C $9B04,3 Search the (key,data) pair table at $74CE for key A
 c $9B5A Collision/overlap scan: walk the active object list looking for another same-room object whose bounding box (+$10..+$13) overlaps IX's; DE = the object found
 b $9BD2
 c $9BD4
-c $9BF0
+c $9BF0 Collision test: check the object's 4 bounding-box corners against the room grid, then check for overlap with other objects
+N $9BF0 Tests all 4 corners of the object's bounding box (screen-coordinate pairs at +0x10/+0x11, +0x10/+0x13, +0x12/+0x13, +0x12/+0x11 -- i.e. (left,top)/(left,bottom)/(right,bottom)/(right,top)) via #R$9ABC, returning early (C) if any corner hits solid terrain. If all 4 corners are clear, finishes with #R$9B5A (object-vs-object overlap scan). Also calls #R$9A60 first and returns early if it reports collision (purpose of that specific pre-check not fully traced).
 R $9BF0 IX ??
 C $9BFC,3 Dynamic object finalizer
+C $9C06,3 Terrain collision test for one screen point
+C $9C10,3 Terrain collision test for one screen point
+C $9C1A,3 Terrain collision test for one screen point
+C $9C24,3 Terrain collision test for one screen point
 C $9C2C,3 Collision/overlap scan
 b $9C32
 c $9C35

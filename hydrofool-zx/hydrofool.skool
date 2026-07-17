@@ -28,13 +28,33 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
                                             ; creatures -- see #R$6663),
                                             ; placing objects later in the
                                             ; list.
- $6110 DEFW $788A
+ $6110 DEFW $788A                           ; Currently-held item: pointer to
+                                            ; its 4-byte item-table record
+                                            ; (room,Y,X,sprite). Equals the
+                                            ; fixed "empty hands" sentinel
+                                            ; record at $788A when nothing is
+                                            ; held. Set by #R$8AFB on pickup;
+                                            ; the pointed-to record's room byte
+                                            ; is zeroed on pickup and restored
+                                            ; (to the current room, at the
+                                            ; player's position) on drop.
  $6112 DEFB $00,$00,$00,$00,$00,$00,$00,$04
  $611A DEFB $05,$00,$00,$00,$00,$00,$00,$00
- $6122 DEFB $00
- $6123 DEFB $00
- $6124 DEFB $00
- $6125 DEFB $00
+ $6122 DEFB $00                             ; "Gnomes Gnabbed" end-game stat
+                                            ; counter (BCD), printed by #R$86CC
+                                            ; via #R$854F
+ $6123 DEFB $00                             ; "Goodies Gathered" end-game stat
+                                            ; counter (BCD), printed by #R$86CC
+                                            ; via #R$854F; incremented by
+                                            ; #R$9341 on each successful item
+                                            ; delivery to a Plug Room corner
+                                            ; cube
+ $6124 DEFB $00                             ; "Plugs Pulled" end-game stat
+                                            ; counter (BCD), printed by #R$86CC
+                                            ; via #R$854F
+ $6125 DEFB $00                             ; Entry-point room number choosen
+                                            ; selecting A/B/C/D in menu, see
+                                            ; table #R$8567
  $6126 DEFB $02                             ; Room number
  $6127 DEFW $6CD6                           ; Room description address
  $6129 DEFB $00                             ; Room shape/layout selector (0 or
@@ -86,11 +106,50 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $6176 DEFB $40,$40,$40
  $6179 DEFB $00
  $617A DEFB $00
- $617B DEFB $00
- $617C DEFB $00,$BF,$BF,$BF,$BF,$BF,$BF,$BF
- $6184 DEFB $BF,$00
- $6186 DEFB $00
- $6187 DEFB $00,$FF,$01
+ $617B DEFB $00                             ; Input device selector, read by
+                                            ; #R$7EBE: 0=keyboard, 1=Kempston
+                                            ; joystick, 2=Sinclair joystick,
+                                            ; else=Cursor keys
+ $617C DEFB $00                             ; Cumulative input-held counter,
+                                            ; incremented each frame by
+                                            ; #R$6186's mask value (used for
+                                            ; key-repeat timing)
+ $617D DEFB $BF                             ; Keyboard row snapshot
+                                            ; (contributes bit 4 --
+                                            ; fire/pick-up -- to #R$6186 via
+                                            ; #R$7EBE)
+ $617E DEFB $BF                             ; Keyboard row snapshot
+                                            ; (contributes bit 2 to #R$6186 via
+                                            ; #R$7EBE)
+ $617F DEFB $BF                             ; Keyboard row snapshot
+                                            ; (contributes bit 1 to #R$6186 via
+                                            ; #R$7EBE)
+ $6180 DEFB $BF,$BF
+ $6182 DEFB $BF                             ; Keyboard row snapshot
+                                            ; (contributes bit 3 to #R$6186 via
+                                            ; #R$7EBE)
+ $6183 DEFB $BF                             ; Keyboard row snapshot
+                                            ; (contributes bit 0 to #R$6186 via
+                                            ; #R$7EBE)
+ $6184 DEFB $BF                             ; Keyboard row snapshot (also
+                                            ; contributes bit 4 -- fire/pick-up
+                                            ; -- to #R$6186 via #R$7EBE)
+ $6185 DEFB $00
+; Resolved 5-bit input mask, produced every frame by #R$7EBE from whichever
+; control method $617B selects. Bit0=Right, bit1=Left, bit2=Down, bit3=Up
+; (Kempston-port convention: reading Kempston directly copies its byte here
+; unmodified), bit4=Fire/pick-up. Consumed by #R$8968 (movement -- resolved to
+; a single direction via the table at #R$88F0) and #R$8AFB (fire button).
+; Masked against a "previously pressed" copy at $6188 by #R$7EBE itself
+; (edge-detection), and accumulated into a repeat counter at $617C.
+ $6186 DEFB $00                             ; Resolved input mask (bit0=Right,
+                                            ; bit1=Left, bit2=Down, bit3=Up,
+                                            ; bit4=Fire/pick-up) -- see N-line
+ $6187 DEFB $00
+ $6188 DEFB $FF                             ; Previous frame's #R$6186 value,
+                                            ; used by #R$7EBE for
+                                            ; key-repeat/edge detection
+ $6189 DEFB $01
  $618A DEFB $00                             ; Message-window restore timer
                                             ; (counts down in #R$9808; the
                                             ; room/creature title is redrawn
@@ -119,7 +178,9 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $619A DEFB $1C                             ; Room number copy
  $619B DEFW $1C34
  $619D DEFB $04
- $619E DEFB $00
+ $619E DEFB $00                             ; Weapon-held flag, tested by
+                                            ; #R$8AFB on fire/pick-up to decide
+                                            ; attack vs. pick-up/drop
  $619F DEFB $00
  $61A0 DEFB $01
  $61A1 DEFB $00
@@ -128,10 +189,13 @@ b$60C2 DEFB $58,$27,$20,$FB,$6C,$F8,$2B,$2D
  $61A4 DEFB $3A,$5C
  $61A6 DEFB $00
 
-; JP (HL) trampoline, used by #R$983C to call a dynamic object's per-frame
-; behaviour handler
+; JP (HL) trampoline
 ;
 ; Used by the routine at #R$983C.
+;
+; .
+;
+; Used by #R$983C to call a dynamic object's per-frame behaviour handler
 c$61A7 JP (HL)       ;
 
 ; Initialize the object free list: chain B 24-byte records starting at DE (each
@@ -164,7 +228,7 @@ c$61C1 LD HL,$0000   ;
  $61C7 LD ($8DEF),HL ;
  $61CA LD ($618B),HL ;
  $61CD LD HL,$8DB6   ;
- $61D0 LD ($610E),HL ;
+ $61D0 LD ($610E),HL ; set Active object list HEAD pointer
  $61D3 LD DE,$5B00   ;
  $61D6 LD B,$08      ;
  $61D8 CALL $61A8    ; Initialize the object free list
@@ -410,7 +474,7 @@ c$6329 PUSH BC       ;
  $6342 POP BC        ;
  $6343 RET           ;
 
-; Draw door graphics for $612B bits 0 and 3 (single-piece doors)
+; Draw single-piece doors, for $612B bits 0 and 3
 ;
 ; Used by the routines at #R$6329 and #R$6377.
 ;
@@ -442,7 +506,7 @@ c$6344 LD BC,$C7C7   ;
  $6372 LD E,$48      ;
  $6374 JP $8128      ;
 
-; Draw door graphics for $612B bits 1 and 2 (three-piece doors)
+; Draw three-piece doors, for $612B bits 1 and 2
 ;
 ; Used by the routine at #R$676D.
 ;
@@ -706,7 +770,7 @@ c$6503 LD A,($617A)  ;
  $6530 JR C,$6543    ;
  $6532 DEC (HL)      ;
  $6533 LD HL,$8C48   ;
- $6536 LD ($8DB9),HL ;
+ $6536 LD ($8DB9),HL ; set player behaviour-handler pointer
  $6539 LD A,$01      ;
  $653B LD ($617A),A  ;
  $653E RET           ;
@@ -1003,12 +1067,12 @@ c$66CE LD HL,$8DB8     ;
  $66F1 LD (IX+$07),A   ;
  $66F4 CP $18          ;
  $66F6 JR C,$66FD      ;
- $66F8 CALL $9BF0      ;
+ $66F8 CALL $9BF0      ; Collision test
  $66FB JR NC,$66EC     ;
 *$66FD LD A,(IX+$07)   ;
  $6700 ADD A,$04       ;
  $6702 LD (IX+$07),A   ;
- $6705 CALL $9BF0      ;
+ $6705 CALL $9BF0      ; Collision test
  $6708 JR C,$66FD      ;
  $670A LD (IX+$0D),$00 ;
  $670E LD L,(IX+$0E)   ;
@@ -1068,13 +1132,15 @@ c$6743 LD HL,($6127) ;
  $6769 CALL $88DD    ;
  $676C RET           ;
 
-; Draw the full room (walls, doors, message window, creatures/objects) -- or
-; the reduced special-room variant for rooms $01/$02
+; Draw current room
 ;
 ; Used by the routines at #R$6B05 and #R$97FC.
 ;
 ; .
 ;
+; Draw the full room (walls, doors, message window, creatures/objects) -- or
+; the reduced special-room variant for rooms $01/$02
+; .
 ; Rooms $01 and $02 are the only two type $E rooms, and are special "no walls"
 ; rooms (see #R$6CCF -- room $01 is the ending/winning room). At #R$67AB, this
 ; routine checks if the current room ($6126) is 1 or 2 and, if so, skips
@@ -1108,15 +1174,15 @@ c$676D LD ($8DB8),A  ;
  $67A2 CALL $7FC0    ;
  $67A5 CALL $7F8E    ;
  $67A8 CALL $63D0    ; Clear shadow screen
- $67AB LD A,($6126)  ; {if room $6126 is 1 or 2, skip to #R$67E0 (special "no
- $67AE CP $01        ; walls" room -- see #R$676D)
- $67B0 JR Z,$67E0    ;
+ $67AB LD A,($6126)  ; get Room number
+ $67AE CP $01        ; {if room $6126 is 1 or 2, skip to #R$67E0 (special "no
+ $67B0 JR Z,$67E0    ; walls" room -- see #R$676D)
  $67B2 CP $02        ;
  $67B4 JR Z,$67E0    ; }
  $67B6 CALL $642F    ; Draw the fixed wall/decoration layout selected by $6129
  $67B9 CALL $64F3    ;
  $67BC CALL $6593    ;
- $67BF CALL $6377    ; Draw door graphics for $612B bits 1 and 2
+ $67BF CALL $6377    ; Draw three-piece doors, for $612B bits 1 and 2
  $67C2 CALL $655E    ;
  $67C5 CALL $65DB    ; Draw message window
  $67C8 CALL $663B    ;
@@ -1128,10 +1194,13 @@ c$676D LD ($8DB8),A  ;
  $67D7 CALL $6895    ;
  $67DA CALL $885A    ;
  $67DD JP $6728      ;
-*$67E0 CALL $64F3    ; {Special-room path for rooms $01/$02: skips
- $67E3 LD A,($6126)  ; walls/doors/message-window/most creature calls; room $01
- $67E6 CP $01        ; additionally calls #R$86CC (likely the end-game stats
- $67E8 CALL Z,$86CC  ; overlay)}
+; Special-room path for rooms $01/$02: skips walls/doors/message-window/most
+; creature calls; room $01 additionally calls #R$86CC (likely the end-game
+; stats overlay)
+*$67E0 CALL $64F3    ;
+ $67E3 LD A,($6126)  ; get Room number
+ $67E6 CP $01        ;
+ $67E8 CALL Z,$86CC  ; Draw the end-game stats screen
  $67EB CALL $6653    ; Prepare room with color 0
  $67EE JP $6657      ; Get room color from room description and store to 6175
 
@@ -1260,7 +1329,7 @@ c$6895 LD HL,($6110)        ;
  $68B0 PUSH BC              ;
  $68B1 CALL $850E           ; print inline string, then resume after it
  $68B4 DEFM $16,$13,$1C,$5E ; cursor position only, no visible text
- $68B8 LD A,($619E)         ;
+ $68B8 LD A,($619E)         ; get Weapon-held flag
  $68BB CALL $854F           ; Print BCD byte A as two digits, high digit
                             ; blanked to a space if zero
  $68BE POP BC               ;
@@ -1505,7 +1574,7 @@ c$6AFC LD A,$C9      ;
 ; Used by the routines at #R$6AF8 and #R$6B71.
 c$6B05 CALL $61E3      ;
  $6B08 LD HL,$8968     ;
- $6B0B LD ($8DB9),HL   ;
+ $6B0B LD ($8DB9),HL   ; set player behaviour-handler pointer
  $6B0E LD HL,$788A     ;
  $6B11 LD ($6110),HL   ;
  $6B14 LD A,$04        ;
@@ -1515,13 +1584,14 @@ c$6B05 CALL $61E3      ;
  $6B1F CALL $6254      ; Set object position (IX+5/+6) from grid index A
  $6B22 LD (IX+$07),$28 ;
  $6B26 XOR A           ;
- $6B27 LD ($619E),A    ;
+ $6B27 LD ($619E),A    ; set Weapon-held flag
  $6B2A LD ($8DC5),A    ;
  $6B2D LD ($8DC0),A    ;
  $6B30 LD ($8DC3),A    ;
  $6B33 LD ($8DCE),A    ;
  $6B36 LD ($617A),A    ;
- $6B39 LD ($6125),A    ;
+ $6B39 LD ($6125),A    ; set Entry-point room number choosen selecting A/B/C/D
+                       ; in menu
  $6B3C LD ($6501),A    ;
  $6B3F LD HL,$9489     ;
  $6B42 LD ($9493),HL   ;
@@ -1541,9 +1611,7 @@ c$6B05 CALL $61E3      ;
  $6B60 LD ($61A2),A    ;
  $6B63 LD ($61A3),A    ;
  $6B66 LD A,$02        ;
- $6B68 CALL $676D      ; Draw the full room (walls, doors, message window,
-                       ; creatures/objects) -- or the reduced special-room
-                       ; variant for rooms $01/$02
+ $6B68 CALL $676D      ; Draw current room
  $6B6B CALL $9808      ; Per-frame main loop entry
  $6B6E CALL $8596      ;
 
@@ -2244,21 +2312,64 @@ b$74CE DEFB $00,$0C,$6A,$0E,$38,$0D,$3A,$0D
  $753B DEFB $14,$16,$02,$24,$35,$03,$18,$20
  $7543 DEFB $04,$1C,$1E,$03,$08,$0E,$03,$08
  $754B DEFB $0C,$03,$10,$14,$03,$08,$10,$04
- $7553 DEFB $18,$18,$03,$1A,$1A,$80,$75,$82
- $755B DEFB $75,$84,$75,$86,$75,$88,$75,$8A
- $7563 DEFB $75,$8C,$75,$8E,$75,$90,$75,$92
- $756B DEFB $75,$95,$75,$98,$75,$9B,$75,$9D
- $7573 DEFB $75,$A0,$75,$A3,$75,$A6,$75,$A9
- $757B DEFB $75,$AB,$75,$AE,$75,$02,$4A,$02
- $7583 DEFB $52,$02,$54,$02,$58,$02,$BA,$02
- $758B DEFB $48,$02,$4E,$02,$50,$02,$46,$03
- $7593 DEFB $3A,$BA,$03,$42,$BA,$03,$38,$BA
- $759B DEFB $02,$56,$03,$76,$BA,$03,$7A,$BA
- $75A3 DEFB $03,$70,$BA,$03,$00,$6A,$02,$6C
- $75AB DEFB $03,$6D,$BA
+ $7553 DEFB $18,$18,$03
 
-; Message at 75AE
-t$75AE DEFM "FNPRTVl"
+; Data block at 7556
+;
+; .
+;
+; .
+;
+; Per-terrain-code shape/behaviour pointer table, indexed by grid content code
+; * 2 (code $00, unused since a $00 grid cell means "empty" and is never looked
+; up, has a dummy entry). Read by #R$9ABC (player/object collision -- looks up
+; the pointer, then reads further bytes for shape data) and #R$8E6E
+; (creature/object setup, same table). 21 entries (codes $00-$14) pointing into
+; the shape-record area starting at $7580; codes above $14 are never used as
+; static grid content and have no entry.
+b$7556 DEFW $1A1A
+ $7558 DEFW $7580
+ $755A DEFW $7582
+ $755C DEFW $7584
+ $755E DEFW $7586
+ $7560 DEFW $7588
+ $7562 DEFW $758A
+ $7564 DEFW $758C
+ $7566 DEFW $758E
+ $7568 DEFW $7590
+ $756A DEFW $7592
+ $756C DEFW $7595
+ $756E DEFW $7598
+ $7570 DEFW $759B
+ $7572 DEFW $759D
+ $7574 DEFW $75A0
+ $7576 DEFW $75A3
+ $7578 DEFW $75A6
+ $757A DEFW $75A9
+ $757C DEFW $75AB
+ $757E DEFW $75AE
+ $7580 DEFB $02,$4A     ; Shape record for terrain code $01 (#R$7556)
+ $7582 DEFB $02,$52     ; Shape record for terrain code $02 (#R$7556)
+ $7584 DEFB $02,$54     ; Shape record for terrain code $03 (#R$7556)
+ $7586 DEFB $02,$58     ; Shape record for terrain code $04 (#R$7556)
+ $7588 DEFB $02,$BA     ; Shape record for terrain code $05 (#R$7556)
+ $758A DEFB $02,$48     ; Shape record for terrain code $06 (#R$7556)
+ $758C DEFB $02,$4E     ; Shape record for terrain code $07 (#R$7556)
+ $758E DEFB $02,$50     ; Shape record for terrain code $08 (#R$7556)
+ $7590 DEFB $02,$46     ; Shape record for terrain code $09 (#R$7556)
+ $7592 DEFB $03,$3A,$BA ; Shape record for terrain code $0A (#R$7556)
+ $7595 DEFB $03,$42,$BA ; Shape record for terrain code $0B (#R$7556)
+ $7598 DEFB $03,$38,$BA ; Shape record for terrain code $0C (#R$7556)
+ $759B DEFB $02,$56     ; Shape record for terrain code $0D (#R$7556)
+ $759D DEFB $03,$76,$BA ; Shape record for terrain code $0E (#R$7556)
+ $75A0 DEFB $03,$7A,$BA ; Shape record for terrain code $0F (#R$7556)
+ $75A3 DEFB $03,$70,$BA ; Shape record for terrain code $10 (#R$7556)
+ $75A6 DEFB $03,$00,$6A ; Shape record for terrain code $11 (#R$7556)
+ $75A9 DEFB $02,$6C     ; Shape record for terrain code $12 (#R$7556)
+ $75AB DEFB $03,$6D,$BA ; Shape record for terrain code $13 (#R$7556)
+
+; Data block at 75AE
+b$75AE DEFB $46,$4E,$50,$52,$54,$56,$6C
 
 ; Data block at 75B5
 b$75B5 DEFB $07,$0D,$01,$32,$92,$34,$34,$07
@@ -2351,134 +2462,141 @@ b$75B5 DEFB $07,$0D,$01,$32,$92,$34,$34,$07
  $786D DEFB $09,$01,$1E,$92,$1C,$24,$07,$40
  $7875 DEFB $D3,$09,$01,$1E,$92,$2C,$1C,$07
  $787D DEFB $40,$D3,$09,$01,$85,$90,$24,$14
- $7885 DEFB $07,$00,$1C,$01,$5A,$00,$01,$18
- $788D DEFB $6D,$00,$01,$18,$6D,$0F,$21,$54
- $7895 DEFB $36,$0F,$21,$54,$36,$1F,$22,$18
- $789D DEFB $36,$1F,$22,$18,$36,$35,$21,$54
- $78A5 DEFB $36,$35,$21,$54,$36,$45,$05,$30
- $78AD DEFB $36,$45,$05,$30,$36,$47,$2E,$18
- $78B5 DEFB $36,$47,$2E,$18,$36,$54,$21,$54
- $78BD DEFB $36,$54,$21,$54,$36,$5B,$12,$18
- $78C5 DEFB $36,$5B,$12,$18,$36,$6A,$33,$18
- $78CD DEFB $36,$6A,$33,$18,$36,$76,$37,$30
- $78D5 DEFB $36,$76,$37,$30,$36,$8D,$1A,$18
- $78DD DEFB $36,$8D,$1A,$18,$36,$9A,$21,$54
- $78E5 DEFB $36,$9A,$21,$54,$36,$9D,$21,$54
- $78ED DEFB $36,$9D,$21,$54,$36,$B7,$21,$54
- $78F5 DEFB $36,$B7,$21,$54,$36,$C1,$21,$54
- $78FD DEFB $36,$C1,$21,$54,$36,$CF,$2D,$30
- $7905 DEFB $36,$CF,$2D,$30,$36,$4A,$21,$54
- $790D DEFB $42,$4A,$21,$54,$42,$66,$2F,$18
- $7915 DEFB $42,$66,$2F,$18,$42,$8B,$22,$18
- $791D DEFB $38,$8B,$22,$18,$38,$72,$05,$18
- $7925 DEFB $3A,$72,$05,$18,$3A,$21,$17,$18
- $792D DEFB $72,$21,$17,$18,$72,$18,$24,$18
- $7935 DEFB $72,$18,$24,$18,$72,$34,$0A,$18
- $793D DEFB $72,$34,$0A,$18,$72,$71,$0C,$18
- $7945 DEFB $72,$71,$0C,$18,$72,$84,$1D,$18
- $794D DEFB $72,$84,$1D,$18,$72,$A6,$12,$18
- $7955 DEFB $72,$A6,$12,$18,$72,$C3,$1C,$18
- $795D DEFB $72,$C3,$1C,$18,$72,$2F,$04,$18
- $7965 DEFB $3E,$2F,$04,$18,$3E,$0E,$0E,$18
- $796D DEFB $3E,$0E,$0E,$18,$3E,$0C,$1B,$18
- $7975 DEFB $3E,$0C,$1B,$18,$3E,$53,$0F,$18
- $797D DEFB $3E,$53,$0F,$18,$3E,$6E,$04,$18
- $7985 DEFB $3E,$6E,$04,$18,$3E,$81,$02,$18
- $798D DEFB $3E,$81,$02,$18,$3E,$83,$2C,$18
- $7995 DEFB $3E,$83,$2C,$18,$3E,$96,$0E,$18
- $799D DEFB $3E,$96,$0E,$18,$3E,$A0,$25,$18
- $79A5 DEFB $3E,$A0,$25,$18,$3E,$AC,$23,$18
- $79AD DEFB $3E,$AC,$23,$18,$3E,$C2,$25,$18
- $79B5 DEFB $3E,$C2,$25,$18,$3E,$CC,$25,$18
- $79BD DEFB $3E,$CC,$25,$18,$3E,$41,$1D,$18
- $79C5 DEFB $76,$41,$1D,$18,$76,$2A,$01,$18
- $79CD DEFB $76,$2A,$01,$18,$76,$B5,$0D,$18
- $79D5 DEFB $76,$B5,$0D,$18,$76,$C5,$0B,$18
- $79DD DEFB $76,$C5,$0B,$18,$76,$67,$12,$18
- $79E5 DEFB $74,$67,$12,$18,$74,$15,$23,$18
- $79ED DEFB $74,$15,$23,$18,$74,$43,$2B,$18
- $79F5 DEFB $74,$43,$2B,$18,$74,$78,$0F,$18
- $79FD DEFB $74,$78,$0F,$18,$74,$87,$0E,$18
- $7A05 DEFB $74,$87,$0E,$18,$74,$93,$21,$54
- $7A0D DEFB $74,$93,$21,$54,$74,$A9,$1B,$18
- $7A15 DEFB $74,$A9,$1B,$18,$74,$AD,$23,$18
- $7A1D DEFB $74,$AD,$23,$18,$74,$BC,$27,$18
- $7A25 DEFB $74,$BC,$27,$18,$74,$BF,$0E,$18
- $7A2D DEFB $74,$BF,$0E,$18,$74,$CB,$34,$18
- $7A35 DEFB $74,$CB,$34,$18,$74,$91,$12,$18
- $7A3D DEFB $70,$91,$12,$18,$70,$7C,$13,$18
- $7A45 DEFB $70,$7C,$13,$18,$70,$A2,$0A,$18
- $7A4D DEFB $70,$A2,$0A,$18,$70,$BE,$2B,$18
- $7A55 DEFB $70,$BE,$2B,$18,$70,$5C,$35,$18
- $7A5D DEFB $78,$5C,$35,$18,$78,$1D,$1B,$18
- $7A65 DEFB $78,$1D,$1B,$18,$78,$3D,$2A,$18
- $7A6D DEFB $78,$3D,$2A,$18,$78,$4C,$2A,$18
- $7A75 DEFB $78,$4C,$2A,$18,$78,$7F,$21,$18
- $7A7D DEFB $78,$7F,$21,$18,$78,$9C,$35,$18
- $7A85 DEFB $78,$9C,$35,$18,$78,$62,$2F,$18
- $7A8D DEFB $78,$62,$2F,$18,$78,$8A,$0B,$18
- $7A95 DEFB $40,$8A,$0B,$18,$40,$04,$1B,$18
- $7A9D DEFB $40,$04,$1B,$18,$40,$48,$36,$18
- $7AA5 DEFB $40,$48,$36,$18,$40,$7B,$33,$18
- $7AAD DEFB $40,$7B,$33,$18,$40,$5D,$0C,$18
- $7AB5 DEFB $40,$5D,$0C,$18,$40,$9E,$37,$18
- $7ABD DEFB $40,$9E,$37,$18,$40,$A5,$26,$18
- $7AC5 DEFB $40,$A5,$26,$18,$40,$B4,$1D,$18
- $7ACD DEFB $40,$B4,$1D,$18,$40,$BA,$2E,$18
- $7AD5 DEFB $40,$BA,$2E,$18,$40,$CC,$25,$38
- $7ADD DEFB $40,$CC,$25,$38,$40,$07,$12,$18
- $7AE5 DEFB $44,$07,$12,$18,$44,$22,$0A,$18
- $7AED DEFB $44,$22,$0A,$18,$44,$82,$1D,$18
- $7AF5 DEFB $44,$82,$1D,$18,$44,$A1,$0A,$18
- $7AFD DEFB $44,$A1,$0A,$18,$44,$D3,$12,$18
- $7B05 DEFB $44,$D3,$12,$18,$44,$24,$2D,$18
- $7B0D DEFB $3C,$24,$2D,$18,$3C,$13,$21,$54
- $7B15 DEFB $3C,$13,$21,$54,$3C,$8F,$21,$54
- $7B1D DEFB $3C,$8F,$21,$54,$3C,$AE,$27,$18
- $7B25 DEFB $3C,$AE,$27,$18,$3C,$CD,$23,$18
- $7B2D DEFB $3C,$CD,$23,$18,$3C,$06,$24,$18
- $7B35 DEFB $6E,$06,$24,$18,$6E,$08,$24,$18
- $7B3D DEFB $6E,$08,$24,$18,$6E,$0D,$24,$18
- $7B45 DEFB $6E,$0D,$24,$18,$6E,$16,$2E,$18
- $7B4D DEFB $6E,$16,$2E,$18,$6E,$17,$2D,$18
- $7B55 DEFB $6E,$17,$2D,$18,$6E,$1E,$0F,$18
- $7B5D DEFB $6E,$1E,$0F,$18,$6E,$20,$14,$18
- $7B65 DEFB $6E,$20,$14,$18,$6E,$28,$14,$18
- $7B6D DEFB $6E,$28,$14,$18,$6E,$31,$1B,$18
- $7B75 DEFB $6E,$31,$1B,$18,$6E,$33,$24,$18
- $7B7D DEFB $6E,$33,$24,$18,$6E,$39,$12,$18
- $7B85 DEFB $6E,$39,$12,$18,$6E,$3E,$0A,$18
- $7B8D DEFB $6E,$3E,$0A,$18,$6E,$42,$0B,$18
- $7B95 DEFB $6E,$42,$0B,$18,$6E,$46,$2D,$18
- $7B9D DEFB $6E,$46,$2D,$18,$6E,$51,$2A,$18
- $7BA5 DEFB $6E,$51,$2A,$18,$6E,$52,$0E,$18
- $7BAD DEFB $6E,$52,$0E,$18,$6E,$56,$37,$18
- $7BB5 DEFB $6E,$56,$37,$18,$6E,$5A,$2D,$30
- $7BBD DEFB $6E,$5A,$2D,$30,$6E,$5B,$37,$18
- $7BC5 DEFB $6E,$5B,$37,$18,$6E,$5F,$2D,$18
- $7BCD DEFB $6E,$5F,$2D,$18,$6E,$69,$37,$18
- $7BD5 DEFB $6E,$69,$37,$18,$6E,$6D,$12,$18
- $7BDD DEFB $6E,$6D,$12,$18,$6E,$6F,$0E,$18
- $7BE5 DEFB $6E,$6F,$0E,$18,$6E,$70,$19,$18
- $7BED DEFB $6E,$70,$19,$18,$6E,$77,$24,$18
- $7BF5 DEFB $6E,$77,$24,$18,$6E,$80,$1B,$18
- $7BFD DEFB $6E,$80,$1B,$18,$6E,$89,$1B,$18
- $7C05 DEFB $6E,$89,$1B,$18,$6E,$8B,$1E,$18
- $7C0D DEFB $6E,$8B,$1E,$18,$6E,$95,$2D,$18
- $7C15 DEFB $6E,$95,$2D,$18,$6E,$98,$2C,$18
- $7C1D DEFB $6E,$98,$2C,$18,$6E,$A3,$1B,$18
- $7C25 DEFB $6E,$A3,$1B,$18,$6E,$A8,$2E,$18
- $7C2D DEFB $6E,$A8,$2E,$18,$6E,$AB,$23,$18
- $7C35 DEFB $6E,$AB,$23,$18,$6E,$AF,$22,$18
- $7C3D DEFB $6E,$AF,$22,$18,$6E,$B3,$1B,$18
- $7C45 DEFB $6E,$B3,$1B,$18,$6E,$B9,$2A,$18
- $7C4D DEFB $6E,$B9,$2A,$18,$6E,$BB,$34,$18
- $7C55 DEFB $6E,$BB,$34,$18,$6E,$BD,$0E,$18
- $7C5D DEFB $6E,$BD,$0E,$18,$6E,$C6,$24,$18
- $7C65 DEFB $6E,$C6,$24,$18,$6E,$C7,$14,$18
- $7C6D DEFB $6E,$C7,$14,$18,$6E,$D0,$2E,$18
- $7C75 DEFB $6E,$D0,$2E,$18,$6E,$D4,$1B,$18
- $7C7D DEFB $6E,$D4,$1B,$18
+ $7885 DEFB $07,$00,$1C,$01,$5A
+ $788A DEFB $00,$01,$18,$6D                 ; "Empty hands" sentinel item
+                                            ; record (room,Y,X,sprite) --
+                                            ; #R$6110 (currently-held item)
+                                            ; points here when nothing is held;
+                                            ; #R$8AFB compares against this
+                                            ; fixed address to decide pick-up
+                                            ; vs. drop
+ $788E DEFB $00,$01,$18,$6D,$0F,$21,$54,$36
+ $7896 DEFB $0F,$21,$54,$36,$1F,$22,$18,$36
+ $789E DEFB $1F,$22,$18,$36,$35,$21,$54,$36
+ $78A6 DEFB $35,$21,$54,$36,$45,$05,$30,$36
+ $78AE DEFB $45,$05,$30,$36,$47,$2E,$18,$36
+ $78B6 DEFB $47,$2E,$18,$36,$54,$21,$54,$36
+ $78BE DEFB $54,$21,$54,$36,$5B,$12,$18,$36
+ $78C6 DEFB $5B,$12,$18,$36,$6A,$33,$18,$36
+ $78CE DEFB $6A,$33,$18,$36,$76,$37,$30,$36
+ $78D6 DEFB $76,$37,$30,$36,$8D,$1A,$18,$36
+ $78DE DEFB $8D,$1A,$18,$36,$9A,$21,$54,$36
+ $78E6 DEFB $9A,$21,$54,$36,$9D,$21,$54,$36
+ $78EE DEFB $9D,$21,$54,$36,$B7,$21,$54,$36
+ $78F6 DEFB $B7,$21,$54,$36,$C1,$21,$54,$36
+ $78FE DEFB $C1,$21,$54,$36,$CF,$2D,$30,$36
+ $7906 DEFB $CF,$2D,$30,$36,$4A,$21,$54,$42
+ $790E DEFB $4A,$21,$54,$42,$66,$2F,$18,$42
+ $7916 DEFB $66,$2F,$18,$42,$8B,$22,$18,$38
+ $791E DEFB $8B,$22,$18,$38,$72,$05,$18,$3A
+ $7926 DEFB $72,$05,$18,$3A,$21,$17,$18,$72
+ $792E DEFB $21,$17,$18,$72,$18,$24,$18,$72
+ $7936 DEFB $18,$24,$18,$72,$34,$0A,$18,$72
+ $793E DEFB $34,$0A,$18,$72,$71,$0C,$18,$72
+ $7946 DEFB $71,$0C,$18,$72,$84,$1D,$18,$72
+ $794E DEFB $84,$1D,$18,$72,$A6,$12,$18,$72
+ $7956 DEFB $A6,$12,$18,$72,$C3,$1C,$18,$72
+ $795E DEFB $C3,$1C,$18,$72,$2F,$04,$18,$3E
+ $7966 DEFB $2F,$04,$18,$3E,$0E,$0E,$18,$3E
+ $796E DEFB $0E,$0E,$18,$3E,$0C,$1B,$18,$3E
+ $7976 DEFB $0C,$1B,$18,$3E,$53,$0F,$18,$3E
+ $797E DEFB $53,$0F,$18,$3E,$6E,$04,$18,$3E
+ $7986 DEFB $6E,$04,$18,$3E,$81,$02,$18,$3E
+ $798E DEFB $81,$02,$18,$3E,$83,$2C,$18,$3E
+ $7996 DEFB $83,$2C,$18,$3E,$96,$0E,$18,$3E
+ $799E DEFB $96,$0E,$18,$3E,$A0,$25,$18,$3E
+ $79A6 DEFB $A0,$25,$18,$3E,$AC,$23,$18,$3E
+ $79AE DEFB $AC,$23,$18,$3E,$C2,$25,$18,$3E
+ $79B6 DEFB $C2,$25,$18,$3E,$CC,$25,$18,$3E
+ $79BE DEFB $CC,$25,$18,$3E,$41,$1D,$18,$76
+ $79C6 DEFB $41,$1D,$18,$76,$2A,$01,$18,$76
+ $79CE DEFB $2A,$01,$18,$76,$B5,$0D,$18,$76
+ $79D6 DEFB $B5,$0D,$18,$76,$C5,$0B,$18,$76
+ $79DE DEFB $C5,$0B,$18,$76,$67,$12,$18,$74
+ $79E6 DEFB $67,$12,$18,$74,$15,$23,$18,$74
+ $79EE DEFB $15,$23,$18,$74,$43,$2B,$18,$74
+ $79F6 DEFB $43,$2B,$18,$74,$78,$0F,$18,$74
+ $79FE DEFB $78,$0F,$18,$74,$87,$0E,$18,$74
+ $7A06 DEFB $87,$0E,$18,$74,$93,$21,$54,$74
+ $7A0E DEFB $93,$21,$54,$74,$A9,$1B,$18,$74
+ $7A16 DEFB $A9,$1B,$18,$74,$AD,$23,$18,$74
+ $7A1E DEFB $AD,$23,$18,$74,$BC,$27,$18,$74
+ $7A26 DEFB $BC,$27,$18,$74,$BF,$0E,$18,$74
+ $7A2E DEFB $BF,$0E,$18,$74,$CB,$34,$18,$74
+ $7A36 DEFB $CB,$34,$18,$74,$91,$12,$18,$70
+ $7A3E DEFB $91,$12,$18,$70,$7C,$13,$18,$70
+ $7A46 DEFB $7C,$13,$18,$70,$A2,$0A,$18,$70
+ $7A4E DEFB $A2,$0A,$18,$70,$BE,$2B,$18,$70
+ $7A56 DEFB $BE,$2B,$18,$70,$5C,$35,$18,$78
+ $7A5E DEFB $5C,$35,$18,$78,$1D,$1B,$18,$78
+ $7A66 DEFB $1D,$1B,$18,$78,$3D,$2A,$18,$78
+ $7A6E DEFB $3D,$2A,$18,$78,$4C,$2A,$18,$78
+ $7A76 DEFB $4C,$2A,$18,$78,$7F,$21,$18,$78
+ $7A7E DEFB $7F,$21,$18,$78,$9C,$35,$18,$78
+ $7A86 DEFB $9C,$35,$18,$78,$62,$2F,$18,$78
+ $7A8E DEFB $62,$2F,$18,$78,$8A,$0B,$18,$40
+ $7A96 DEFB $8A,$0B,$18,$40,$04,$1B,$18,$40
+ $7A9E DEFB $04,$1B,$18,$40,$48,$36,$18,$40
+ $7AA6 DEFB $48,$36,$18,$40,$7B,$33,$18,$40
+ $7AAE DEFB $7B,$33,$18,$40,$5D,$0C,$18,$40
+ $7AB6 DEFB $5D,$0C,$18,$40,$9E,$37,$18,$40
+ $7ABE DEFB $9E,$37,$18,$40,$A5,$26,$18,$40
+ $7AC6 DEFB $A5,$26,$18,$40,$B4,$1D,$18,$40
+ $7ACE DEFB $B4,$1D,$18,$40,$BA,$2E,$18,$40
+ $7AD6 DEFB $BA,$2E,$18,$40,$CC,$25,$38,$40
+ $7ADE DEFB $CC,$25,$38,$40,$07,$12,$18,$44
+ $7AE6 DEFB $07,$12,$18,$44,$22,$0A,$18,$44
+ $7AEE DEFB $22,$0A,$18,$44,$82,$1D,$18,$44
+ $7AF6 DEFB $82,$1D,$18,$44,$A1,$0A,$18,$44
+ $7AFE DEFB $A1,$0A,$18,$44,$D3,$12,$18,$44
+ $7B06 DEFB $D3,$12,$18,$44,$24,$2D,$18,$3C
+ $7B0E DEFB $24,$2D,$18,$3C,$13,$21,$54,$3C
+ $7B16 DEFB $13,$21,$54,$3C,$8F,$21,$54,$3C
+ $7B1E DEFB $8F,$21,$54,$3C,$AE,$27,$18,$3C
+ $7B26 DEFB $AE,$27,$18,$3C,$CD,$23,$18,$3C
+ $7B2E DEFB $CD,$23,$18,$3C,$06,$24,$18,$6E
+ $7B36 DEFB $06,$24,$18,$6E,$08,$24,$18,$6E
+ $7B3E DEFB $08,$24,$18,$6E,$0D,$24,$18,$6E
+ $7B46 DEFB $0D,$24,$18,$6E,$16,$2E,$18,$6E
+ $7B4E DEFB $16,$2E,$18,$6E,$17,$2D,$18,$6E
+ $7B56 DEFB $17,$2D,$18,$6E,$1E,$0F,$18,$6E
+ $7B5E DEFB $1E,$0F,$18,$6E,$20,$14,$18,$6E
+ $7B66 DEFB $20,$14,$18,$6E,$28,$14,$18,$6E
+ $7B6E DEFB $28,$14,$18,$6E,$31,$1B,$18,$6E
+ $7B76 DEFB $31,$1B,$18,$6E,$33,$24,$18,$6E
+ $7B7E DEFB $33,$24,$18,$6E,$39,$12,$18,$6E
+ $7B86 DEFB $39,$12,$18,$6E,$3E,$0A,$18,$6E
+ $7B8E DEFB $3E,$0A,$18,$6E,$42,$0B,$18,$6E
+ $7B96 DEFB $42,$0B,$18,$6E,$46,$2D,$18,$6E
+ $7B9E DEFB $46,$2D,$18,$6E,$51,$2A,$18,$6E
+ $7BA6 DEFB $51,$2A,$18,$6E,$52,$0E,$18,$6E
+ $7BAE DEFB $52,$0E,$18,$6E,$56,$37,$18,$6E
+ $7BB6 DEFB $56,$37,$18,$6E,$5A,$2D,$30,$6E
+ $7BBE DEFB $5A,$2D,$30,$6E,$5B,$37,$18,$6E
+ $7BC6 DEFB $5B,$37,$18,$6E,$5F,$2D,$18,$6E
+ $7BCE DEFB $5F,$2D,$18,$6E,$69,$37,$18,$6E
+ $7BD6 DEFB $69,$37,$18,$6E,$6D,$12,$18,$6E
+ $7BDE DEFB $6D,$12,$18,$6E,$6F,$0E,$18,$6E
+ $7BE6 DEFB $6F,$0E,$18,$6E,$70,$19,$18,$6E
+ $7BEE DEFB $70,$19,$18,$6E,$77,$24,$18,$6E
+ $7BF6 DEFB $77,$24,$18,$6E,$80,$1B,$18,$6E
+ $7BFE DEFB $80,$1B,$18,$6E,$89,$1B,$18,$6E
+ $7C06 DEFB $89,$1B,$18,$6E,$8B,$1E,$18,$6E
+ $7C0E DEFB $8B,$1E,$18,$6E,$95,$2D,$18,$6E
+ $7C16 DEFB $95,$2D,$18,$6E,$98,$2C,$18,$6E
+ $7C1E DEFB $98,$2C,$18,$6E,$A3,$1B,$18,$6E
+ $7C26 DEFB $A3,$1B,$18,$6E,$A8,$2E,$18,$6E
+ $7C2E DEFB $A8,$2E,$18,$6E,$AB,$23,$18,$6E
+ $7C36 DEFB $AB,$23,$18,$6E,$AF,$22,$18,$6E
+ $7C3E DEFB $AF,$22,$18,$6E,$B3,$1B,$18,$6E
+ $7C46 DEFB $B3,$1B,$18,$6E,$B9,$2A,$18,$6E
+ $7C4E DEFB $B9,$2A,$18,$6E,$BB,$34,$18,$6E
+ $7C56 DEFB $BB,$34,$18,$6E,$BD,$0E,$18,$6E
+ $7C5E DEFB $BD,$0E,$18,$6E,$C6,$24,$18,$6E
+ $7C66 DEFB $C6,$24,$18,$6E,$C7,$14,$18,$6E
+ $7C6E DEFB $C7,$14,$18,$6E,$D0,$2E,$18,$6E
+ $7C76 DEFB $D0,$2E,$18,$6E,$D4,$1B,$18,$6E
+ $7C7E DEFB $D4,$1B,$18
  $7C81 DEFW $7F6E
  $7C83 DEFB $3E,$78,$72,$74,$3C
  $7C88 DEFB $05
@@ -2866,9 +2984,19 @@ c$7EA9 LD HL,$6184   ;
  $7EBB LD B,A        ;
  $7EBC JR $7EB1      ;
 
-; Routine at 7EBE
+; Read input: normalize the active control method into the 5-bit mask at
+; #R$6186
 ;
 ; Used by the routine at #R$8968.
+;
+; .
+;
+; Dispatches on the device selector $617B: keyboard (scans 6 half-rows into
+; $6186's bits, some duplicated -- e.g. both $617D and $6184 set bit 4/fire),
+; Kempston (port $001F, used as the mask directly), Sinclair (port $EFFE,
+; bit-rotated into the mask), or Cursor keys (ports $EFFE/$F7FE). Result is
+; masked against the previous frame's value at $6188 and stored to $6186; also
+; accumulates a held-key counter at $617C. See #R$6186 for the bit layout.
 c$7EBE LD A,($617B)  ;
  $7EC1 AND A         ;
  $7EC2 JP NZ,$7F8A   ;
@@ -2911,7 +3039,7 @@ c$7EBE LD A,($617B)  ;
 *$7F13 LD B,A        ;
  $7F14 LD HL,$6188   ;
  $7F17 AND (HL)      ;
- $7F18 LD ($6186),A  ;
+ $7F18 LD ($6186),A  ; set Resolved input mask
  $7F1B LD A,B        ;
  $7F1C CPL           ;
  $7F1D OR $CF        ;
@@ -2972,7 +3100,7 @@ c$7EBE LD A,($617B)  ;
  $7F82 JP NC,$7F12   ;
  $7F85 SET 2,B       ;
  $7F87 JP $7F12      ;
-*$7F8A LD ($6186),A  ;
+*$7F8A LD ($6186),A  ; set Resolved input mask
  $7F8D RET           ;
 
 ; Routine at 7F8E
@@ -3922,24 +4050,28 @@ b$8567 DEFB $52,$C0,$1A,$84
 ;
 ; "1 KEYBOARD 2 KEMPSTON 3 SINCLAIR 4 CURSOR", printed by #R$8617 via the
 ; #R$7CEC print engine.
-t$856B DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+"
+t$856B DEFM "1 KEYBOARD+2 KEMPSTON+3 SINCLAIR+4 CURSOR+",$5E
 
-; Data block at 8595
-b$8595 DEFB $5E,$FD,$2A,$A4,$61,$ED,$56,$FB
- $859D DEFB $AF,$32,$AA,$FB
+; Routine at 8596
+;
+; Used by the routine at #R$6B05.
+c$8596 LD IY,($61A4) ;
+ $859A IM 1          ;
+ $859C EI            ;
+ $859D XOR A         ;
+ $859E LD ($FBAA),A  ;
 
-; Main menu screen: title, tune list A-D, controls menu; loops until a
+; Main menu screen: title, entry list A-D, controls menu; loops until a
 ; selection starts the game
 c$85A1 CALL $850E                                ; print inline string, then
                                                  ; resume after it
  $85A4 DEFM $14,$00,$16,$00,$00,"DEATHBOWL."     ; main menu title
  $85B3 DEFM $16,$00,$14,"CONTROLS."              ; sub-heading
- $85BF DEFM $16,$02,$00,"A RETURN TO SENDER"     ; key A tune name (likely)
- $85D4 DEFM $16,$04,$00,"B JAIL HOUSE ROCK"      ; key B tune name (likely)
- $85E8 DEFM $16,$06,$00,"C O SOLE O MIO"         ; key C tune name (likely)
- $85F9 DEFM $16,$08,$00,"D HEARTBREAK HOTEL",$5E ; key D tune name (likely);
-                                                 ; Elvis song titles, not room
-                                                 ; selection
+ $85BF DEFM $16,$02,$00,"A RETURN TO SENDER"     ; key A entry name
+ $85D4 DEFM $16,$04,$00,"B JAIL HOUSE ROCK"      ; key B entry name
+ $85E8 DEFM $16,$06,$00,"C O SOLE O MIO"         ; key C entry name
+ $85F9 DEFM $16,$08,$00,"D HEARTBREAK HOTEL",$5E ; key D entry name (Elvis song
+                                                 ; titles)
  $860F LD A,($6185)                              ;
  $8612 ADD A,$01                                 ;
  $8614 LD C,A                                    ;
@@ -4030,11 +4162,11 @@ c$85A1 CALL $850E                                ; print inline string, then
                                                  ; pressed menu key A/B/C/D
  $86C4 ADD HL,BC                                 ;
  $86C5 LD A,(HL)                                 ;
- $86C6 LD ($6125),A                              ;
+ $86C6 LD ($6125),A                              ; set entry-point room number
  $86C9 IM 2                                      ;
  $86CB RET                                       ;
 
-; Draw the end-game stats screen ("DEATHBOWL DIVINED")
+; Draw the end-game stats screen
 ;
 ; Used by the routine at #R$676D.
 c$86CC CALL $850E                                     ; print inline string,
@@ -4103,7 +4235,8 @@ c$86CC CALL $850E                                     ; print inline string,
                                                       ; then resume after it
  $877F DEFM $16,$04,$05,$5E                           ; cursor position only,
                                                       ; no visible text
- $8783 LD A,($6124)                                   ;
+ $8783 LD A,($6124)                                   ; get "Plugs Pulled"
+                                                      ; end-game stat counter
  $8786 CALL $854F                                     ; Print BCD byte A as two
                                                       ; digits, high digit
                                                       ; blanked to a space if
@@ -4112,7 +4245,8 @@ c$86CC CALL $850E                                     ; print inline string,
                                                       ; then resume after it
  $878C DEFM $16,$06,$05,$5E                           ; cursor position only,
                                                       ; no visible text
- $8790 LD A,($6123)                                   ;
+ $8790 LD A,($6123)                                   ; get "Goodies Gathered"
+                                                      ; end-game stat counter
  $8793 CALL $854F                                     ; Print BCD byte A as two
                                                       ; digits, high digit
                                                       ; blanked to a space if
@@ -4121,7 +4255,8 @@ c$86CC CALL $850E                                     ; print inline string,
                                                       ; then resume after it
  $8799 DEFM $16,$08,$05,$5E                           ; cursor position only,
                                                       ; no visible text
- $879D LD A,($6122)                                   ;
+ $879D LD A,($6122)                                   ; get "Gnomes Gnabbed"
+                                                      ; end-game stat counter
  $87A0 CALL $854F                                     ; Print BCD byte A as two
                                                       ; digits, high digit
                                                       ; blanked to a space if
@@ -4129,7 +4264,8 @@ c$86CC CALL $850E                                     ; print inline string,
  $87A3 LD A,($617A)                                   ;
  $87A6 CP $02                                         ;
  $87A8 RET NZ                                         ;
- $87A9 LD A,($6124)                                   ;
+ $87A9 LD A,($6124)                                   ; get "Plugs Pulled"
+                                                      ; end-game stat counter
  $87AC CP $04                                         ;
  $87AE JR Z,$87FD                                     ;
  $87B0 CALL $850E                                     ; print inline string,
@@ -4252,22 +4388,32 @@ c$88E3 LD HL,$7C83   ;
  $88EE RET           ;
 
 ; Data block at 88EF
-b$88EF DEFB $00,$08,$01,$04,$02,$02,$06,$01
- $88F7 DEFB $04,$80,$00,$16,$16,$17,$17,$16
- $88FF DEFB $16,$18,$18,$16,$16,$17,$17,$1E
- $8907 DEFB $1E,$18,$18,$FF,$02,$02,$03,$03
- $890F DEFB $02,$02,$04,$04,$02,$02,$03,$03
- $8917 DEFB $0A,$0A,$04,$04,$FF,$FA,$88,$0B
- $891F DEFB $89,$08,$07,$07,$08,$08,$07,$07
- $8927 DEFB $FF,$FE,$01,$08,$FE,$01,$08,$08
- $892F DEFB $FE,$FF,$08,$FE,$FF,$08,$08,$FF
- $8937 DEFB $FE,$01,$08,$FE,$01,$08,$FE,$02
- $893F DEFB $08,$FE,$02,$08,$FF,$48,$89,$4F
- $8947 DEFB $89,$FE,$FE,$19,$19,$19,$19,$FF
- $894F DEFB $FE,$FE,$05,$05,$05,$05,$FF,$5A
- $8957 DEFB $89,$61,$89,$15,$15,$15,$15,$15
- $895F DEFB $15,$FF,$01,$01,$01,$01,$01,$01
- $8967 DEFB $FF
+b$88EF DEFB $00
+; Input-mask -> direction-code priority table, scanned by #R$8968:
+; (mask,direction) byte pairs, tried in order, first whose mask bits overlap
+; ($6186's mask OR $80) wins. $08,$01 (Up bit -> direction $01); $04,$02 (Down
+; bit -> $02); $02,$06 (Left bit -> $06); $01,$04 (Right bit -> $04); $80,$00
+; (default/no-input catch-all -- mask bit 7 always matches since #R$8968 ORs
+; $80 into the scan key -- resolves to direction $00, i.e. no movement).
+ $88F0 DEFB $08,$01
+ $88F2 DEFB $04,$02
+ $88F4 DEFB $02,$06
+ $88F6 DEFB $01,$04
+ $88F8 DEFB $80,$00
+ $88FA DEFB $16,$16,$17,$17,$16,$16,$18,$18
+ $8902 DEFB $16,$16,$17,$17,$1E,$1E,$18,$18
+ $890A DEFB $FF,$02,$02,$03,$03,$02,$02,$04
+ $8912 DEFB $04,$02,$02,$03,$03,$0A,$0A,$04
+ $891A DEFB $04,$FF,$FA,$88,$0B,$89,$08,$07
+ $8922 DEFB $07,$08,$08,$07,$07,$FF,$FE,$01
+ $892A DEFB $08,$FE,$01,$08,$08,$FE,$FF,$08
+ $8932 DEFB $FE,$FF,$08,$08,$FF,$FE,$01,$08
+ $893A DEFB $FE,$01,$08,$FE,$02,$08,$FE,$02
+ $8942 DEFB $08,$FF,$48,$89,$4F,$89,$FE,$FE
+ $894A DEFB $19,$19,$19,$19,$FF,$FE,$FE,$05
+ $8952 DEFB $05,$05,$05,$FF,$5A,$89,$61,$89
+ $895A DEFB $15,$15,$15,$15,$15,$15,$FF,$01
+ $8962 DEFB $01,$01,$01,$01,$01,$FF
 
 ; PLAYER per-frame behaviour handler
 ;
@@ -4281,12 +4427,23 @@ b$88EF DEFB $00,$08,$01,$04,$02,$02,$06,$01
 ; room), the vertical room transitions (#R$8A87), etc. The player's handler
 ; pointer is swappable for state changes: #R$955A tests ($8DB9)==$8968 ("normal
 ; state?"), #R$9564 swaps in #R$8D11.
+; .
+; MOVEMENT: reads the input mask at #R$6186 (OR $80, a wildcard sentinel), then
+; scans the (mask,direction) pair table at #R$88F0 for the first entry whose
+; mask overlaps -- this resolves the raw multi-button input into a single
+; prioritized direction code (0/1=Up, 2/3=Down, 4/5=Right, 6/7=Left; the low
+; bit distinguishes sub-states, masked off by #R$8ABB's AND $0E). If the
+; resolved direction equals the player's current facing ((IX+$0B)), calls
+; #R$8AD9 immediately to take a step; if it differs and is nonzero, just
+; updates the pending-direction latch at $8DC1 (turning takes one frame before
+; the first step); if it resolves to 0 (no input), no movement happens this
+; frame.
 c$8968 LD A,($6126)    ;
  $896B CP $01          ;
  $896D JP Z,$8CAA      ;
  $8970 BIT 6,(IX+$0D)  ;
  $8974 JP NZ,$8A6B     ;
- $8977 CALL $7EBE      ;
+ $8977 CALL $7EBE      ; Read input
  $897A LD A,(IX+$0D)   ;
  $897D BIT 1,A         ;
  $897F JP NZ,$89D6     ;
@@ -4295,15 +4452,18 @@ c$8968 LD A,($6126)    ;
  $8987 LD A,($6126)    ; get room number
  $898A CP $02          ;
  $898C JR NZ,$899B     ;
- $898E LD A,($6125)    ;
+ $898E LD A,($6125)    ; get Entry-point room number choosen selecting A/B/C/D
+                       ; in menu
  $8991 AND A           ;
  $8992 JP Z,$89C9      ;
  $8995 LD (IX+$0A),$00 ;
  $8999 JR $89C6        ;
 *$899B CALL $8CDF      ;
- $899E CALL $8AFB      ;
- $89A1 LD A,($6186)    ;
- $89A4 OR $80          ;
+ $899E CALL $8AFB      ; Fire/pick-up button handler
+ $89A1 LD A,($6186)    ; get Resolved input mask
+ $89A4 OR $80          ; set bit 7 as a wildcard sentinel, for the #R$88F0
+                       ; priority-table scan (matches its default/no-input
+                       ; entry)
  $89A6 LD HL,$88F0     ;
  $89A9 LD C,A          ;
 *$89AA LD A,(HL)       ;
@@ -4323,7 +4483,7 @@ c$8968 LD A,($6126)    ;
  $89BF JR $89C9        ;
 *$89C1 LD ($8DC1),A    ;
  $89C4 JR $89C9        ;
-*$89C6 CALL $8AD9      ;
+*$89C6 CALL $8AD9      ; Take one walk step
 ; This entry point is used by the routine at #R$8D11.
 *$89C9 LD IX,$8DB6     ;
  $89CD LD HL,$891C     ;
@@ -4371,14 +4531,14 @@ c$8968 LD A,($6126)    ;
  $8A36 CALL $923E      ; Save continuation
  $8A39 LD HL,$8928     ;
  $8A3C CALL $99D5      ; Sprite-animation stepper
- $8A3F CALL $7EBE      ;
- $8A42 LD A,($6186)    ;
- $8A45 AND $1F         ;
+ $8A3F CALL $7EBE      ; Read input
+ $8A42 LD A,($6186)    ; get Resolved input mask
+ $8A45 AND $1F         ; test for ANY key pressed (bits 0-4)
  $8A47 RET Z           ;
  $8A48 LD HL,$9489     ;
  $8A4B LD ($9493),HL   ;
  $8A4E LD HL,$8968     ;
- $8A51 LD ($8DB9),HL   ;
+ $8A51 LD ($8DB9),HL   ; set player behaviour-handler pointer
  $8A54 LD (IX+$0A),$00 ;
  $8A58 LD (IX+$0F),$00 ;
  $8A5C RES 1,(IX+$0D)  ;
@@ -4430,12 +4590,23 @@ c$8A87 LD A,$98       ;
 *$8AAD LD A,($6125)   ; room==2 special case: use $6125 instead
  $8AB0 JP $97FC       ; Change current room to A
 
-; Data block at 8AB3
+; Direction -> screen position delta table, indexed by (facing_code AND $0E): 4
+; (dx,dy) pairs -- Up=(-2,0), Down=(+2,0), Right=(0,+2), Left=(0,-2). Read by
+; #R$8ABB.
 b$8AB3 DEFB $FE,$00,$02,$00,$00,$02,$00,$FE
 
-; Routine at 8ABB
+; Apply the object's facing direction to its position (IX+5/+6), returning the
+; OLD position in BC
 ;
 ; Used by the routines at #R$8AD9, #R$9021, #R$90A8, #R$925C and #R$9963.
+;
+; .
+;
+; Looks up (IX+$0B) AND $0E in the delta table at #R$8AB3 and adds it to the
+; object's position (+5/+6) in place. Screen deltas are +-2px along one axis
+; per direction (Up/Down move dx, Right/Left move dy) -- the isometric-diamond
+; room layout means each cardinal game direction is a diagonal-looking step on
+; screen along a single axis. Used by #R$8AD9 (player movement) and #R$9923.
 c$8ABB LD HL,$8AB3   ;
 ; This entry point is used by the routine at #R$9923.
 *$8ABE LD A,(IX+$0B) ;
@@ -4454,14 +4625,25 @@ c$8ABB LD HL,$8AB3   ;
  $8AD5 LD (IX+$06),A ;
  $8AD8 RET           ;
 
-; Routine at 8AD9
+; Take one walk step: apply the facing delta, then check for a room-edge/door
+; transition and a collision, reverting the position if blocked
 ;
 ; Used by the routine at #R$8968.
+;
+; .
+;
+; CALLs #R$8ABB to move (IX+5/+6) by the facing delta (old position saved in
+; BC), then #R$67F1 (door/room-transition check) and #R$9BF0 (grid + object
+; collision check). If #R$9BF0 reports no collision (NC), the new position is
+; kept as-is. If it reports a collision (C): if also Z, pokes $FF into offset
+; +9 of the colliding object's record (DE, from #R$9BF0/#R$9ABC) -- disables
+; it; either way, the position is then reverted to the saved BC (blocked), and
+; the animation countdown (+0x0E) is reset.
 c$8AD9 CALL $8ABB      ;
  $8ADC PUSH BC         ;
  $8ADD CALL $67F1      ; Attempt to move to an adjacent room (horizontal, via a
                        ; door) in the direction given by
- $8AE0 CALL $9BF0      ;
+ $8AE0 CALL $9BF0      ; Collision test
  $8AE3 JR C,$8AE7      ;
  $8AE5 POP BC          ;
  $8AE6 RET             ;
@@ -4475,13 +4657,44 @@ c$8AD9 CALL $8ABB      ;
  $8AF6 LD (IX+$0E),$00 ;
  $8AFA RET             ;
 
-; Routine at 8AFB
+; Fire/pick-up button handler: attack with the held weapon, or pick up/drop an
+; item
 ;
 ; Used by the routine at #R$8968.
+;
+; .
+;
+; Gated on the fire/pick-up key (bit 4 of #R$6186); if a weapon is currently
+; held ($619E), jumps to #R$8D8D (attack) instead. Otherwise plays a "reach
+; out" animation, then continues at $8B2B: if the held-item pointer #R$6110
+; currently equals the fixed "empty hands" sentinel record at $788A (i.e.
+; nothing held), attempts to PICK UP something nearby; otherwise DROPS the
+; currently-held item.
+; .
+; PICK UP ($8B2B, nothing currently held): walks nearby objects via #R$9B5D
+; (proximity/collision helper, same one used by movement collision), skipping
+; any whose kind byte (offset +8 from the found record) is $44 (the shared
+; "vulnerable creature" pose -- not pickupable). For the first valid candidate:
+; if its kind is $6E, calls #R$6622 (unidentified -- likely a special pickup,
+; e.g. a key or weapon-specific item); if its kind is $36, treats it as a GNOME
+; -- calls #R$888E, increments the "Gnomes Gnabbed" counter at $6122 (BCD),
+; then plays sound effect $04 and finalizes via #R$9A60 (the gnome object is
+; consumed). For any other kind, searches a weapon lookup buffer at $7C83 (via
+; #R$88E3) -- if found, sets the Weapon-held flag $619E (and possibly a variant
+; at $619F depending on a $3C check) instead of picking the object straight up;
+; either way, the found record's pointer is stored into #R$6110 (now "held")
+; and #R$6895 is called (equip/HUD update?), then sound effect $04 plays.
+; .
+; DROP ($8BC4, something currently held): writes the CURRENT ROOM into the held
+; item's table record (byte0), restoring it to the world -- the same field that
+; item-table entries have their room zeroed on pickup (see Room-Format.md).
+; Re-derives the item's stored Y/X (record bytes 1/2) from the player's own
+; position ($8DBB/$8DBC, grid-aligned) -- i.e. the item is dropped at the
+; player's feet. Exact bit-packing of the combined Y/X byte not fully resolved.
 c$8AFB LD A,($6186)    ;
  $8AFE BIT 4,A         ;
  $8B00 RET Z           ;
- $8B01 LD A,($619E)    ;
+ $8B01 LD A,($619E)    ; get Weapon-held flag
  $8B04 AND A           ;
  $8B05 JP NZ,$8D8D     ;
  $8B08 LD (IX+$0F),$00 ;
@@ -4494,7 +4707,7 @@ c$8AFB LD A,($6186)    ;
  $8B1B LD ($8DBD),A    ;
  $8B1E LD (IX+$0F),$00 ;
  $8B22 LD HL,$8968     ;
- $8B25 LD ($8DB9),HL   ;
+ $8B25 LD ($8DB9),HL   ; set player behaviour-handler pointer
  $8B28 JP $8B2B        ;
 *$8B2B LD HL,($6110)   ;
  $8B2E LD DE,$788A     ;
@@ -4543,10 +4756,10 @@ c$8AFB LD A,($6186)    ;
  $8B86 JR NZ,$8B9A     ;
  $8B88 LD HL,$5000     ;
  $8B8B CALL $888E      ;
- $8B8E LD A,($6122)    ;
+ $8B8E LD A,($6122)    ; get "Gnomes Gnabbed" end-game stat counter
  $8B91 ADD A,$01       ;
  $8B93 DAA             ;
- $8B94 LD ($6122),A    ;
+ $8B94 LD ($6122),A    ; set "Gnomes Gnabbed" end-game stat counter
  $8B97 JP $8BB4        ;
 *$8B9A CALL $88E3      ; Search the buffer at $7C83 for byte A
  $8B9D JR NZ,$8BAD     ;
@@ -4555,7 +4768,7 @@ c$8AFB LD A,($6186)    ;
  $8BA4 LD A,$03        ;
  $8BA6 JR NZ,$8BAA     ;
  $8BA8 LD A,$02        ;
-*$8BAA LD ($619E),A    ;
+*$8BAA LD ($619E),A    ; set Weapon-held flag
 *$8BAD LD ($6110),DE   ;
  $8BB1 CALL $6895      ;
 *$8BB4 LD A,$04        ;
@@ -4586,7 +4799,7 @@ c$8AFB LD A,($6186)    ;
  $8BE4 PUSH IX         ;
  $8BE6 LD HL,($6110)   ;
  $8BE9 CALL $6663      ; Spawn the room's creature
- $8BEC CALL $9BF0      ;
+ $8BEC CALL $9BF0      ; Collision test
  $8BEF JR C,$8C0F      ;
  $8BF1 LD A,($6126)    ; get room number
  $8BF4 CALL $6880      ;
@@ -4672,7 +4885,7 @@ c$8CDF LD HL,$8DBD    ;
  $8CE4 CP (HL)        ;
  $8CE5 RET NC         ;
  $8CE6 DEC (HL)       ;
- $8CE7 CALL $9BF0     ;
+ $8CE7 CALL $9BF0     ; Collision test
  $8CEA RET NC         ;
  $8CEB RES 0,(IX+$0D) ;
  $8CEF RES 1,(IX+$0D) ;
@@ -4735,7 +4948,7 @@ c$8D11 LD (IX+$0F),$00 ;
  $8D81 CP $18          ;
  $8D83 RET NC          ;
  $8D84 LD HL,$8968     ;
- $8D87 LD ($8DB9),HL   ;
+ $8D87 LD ($8DB9),HL   ; set player behaviour-handler pointer
  $8D8A JP $8A87        ;
 
 ; Routine at 8D8D
@@ -4754,7 +4967,7 @@ c$8D8D PUSH IX         ;
  $8DAA RET NC          ;
  $8DAB LD (IX+$0F),$00 ;
  $8DAF LD HL,$8968     ;
- $8DB2 LD ($8DB9),HL   ;
+ $8DB2 LD ($8DB9),HL   ; set player behaviour-handler pointer
  $8DB5 RET             ;
 
 ; PLAYER object record + 2 more fixed object records
@@ -5149,7 +5362,8 @@ c$9021 LD L,(IX+$18)   ;
  $9045 LD A,($619D)    ;
  $9048 LD (IX+$0B),A   ;
  $904B LD (IX+$09),$0A ;
- $904F CALL $8ABB      ;
+ $904F CALL $8ABB      ; Apply the object's facing direction to its position
+                       ; (IX+5/+6), returning the OLD position in BC
  $9052 CALL $9A60      ; Dynamic object finalizer
  $9055 CALL $923E      ; Save continuation
  $9058 DEC (IX+$09)    ;
@@ -5218,9 +5432,10 @@ c$90A8 LD A,$78        ;
  $90DE AND $FC         ;
  $90E0 CP $0C          ;
  $90E2 JR Z,$90F4      ;
- $90E4 CALL $8ABB      ;
+ $90E4 CALL $8ABB      ; Apply the object's facing direction to its position
+                       ; (IX+5/+6), returning the OLD position in BC
  $90E7 PUSH BC         ;
- $90E8 CALL $9BF0      ;
+ $90E8 CALL $9BF0      ; Collision test
  $90EB POP BC          ;
  $90EC JR NC,$9103     ;
  $90EE LD (IX+$05),B   ;
@@ -5231,7 +5446,7 @@ c$90A8 LD A,$78        ;
  $90FD CPIR            ;
  $90FF LD A,(HL)       ;
  $9100 LD (IX+$0B),A   ;
-*$9103 CALL $99A1      ;
+*$9103 CALL $99A1      ; Direction-indexed sprite-animation stepper
  $9106 JP $9A60        ;
 *$9109 LD (IX+$1B),$32 ;
  $910D LD HL,$911B     ;
@@ -5281,7 +5496,7 @@ c$90A8 LD A,$78        ;
  $9181 POP IX          ;
  $9183 CALL $923E      ; Save continuation
  $9186 CALL $91A6      ;
- $9189 CALL $99A1      ;
+ $9189 CALL $99A1      ; Direction-indexed sprite-animation stepper
  $918C DEC (IX+$1C)    ;
  $918F RET NZ          ;
  $9190 LD (IX+$1C),$32 ;
@@ -5437,9 +5652,10 @@ c$925C LD HL,($8DBB) ;
  $92DF PUSH HL       ;
  $92E0 LD A,(HL)     ;
  $92E1 LD (IX+$0B),A ;
- $92E4 CALL $8ABB    ;
+ $92E4 CALL $8ABB    ; Apply the object's facing direction to its position
+                     ; (IX+5/+6), returning the OLD position in BC
  $92E7 PUSH BC       ;
- $92E8 CALL $9BF0    ;
+ $92E8 CALL $9BF0    ; Collision test
  $92EB POP BC        ;
  $92EC JR NC,$9338   ;
  $92EE LD (IX+$05),B ;
@@ -5485,8 +5701,34 @@ c$925C LD HL,($8DBB) ;
 ; Unused
 s$933D DEFS $04
 
-; CREATURE per-frame behaviour handler (installed by the creature spawn at
-; #R$6663; the creature type comes from the room's byte2 -- see #R$6CCF)
+; Room-creature per-frame behaviour handler (installed by the creature spawn at
+; #R$6663) -- dual purpose: item-delivery detector in Plug Rooms, settle/float
+; physics + hit detection elsewhere
+;
+; .
+;
+; .
+;
+; PLUG ROOM BRANCH (taken when #R$62F9 confirms the current room is this
+; level's Plug Room): compares this object's own sprite number (+0x08) against
+; each of the 4 required item sprites in the level's #R$7287 table (bytes 2-5),
+; gated by the corresponding undelivered bit in the level's state nibble
+; (byte1, CPL'd so unset/undelivered bits read as 1). On a match: sets that
+; delivery bit in the state byte, repositions itself at the matching
+; corner-cube grid cell (#R$6254), increments the "Goodies Gathered" counter at
+; $6123 (BCD), plays sound effect $01, runs a short animation via the #R$919A
+; table, then re-pokes the grid cell to the "delivered" marker $13 and
+; self-destructs ((IX+$02)=$FF). This strongly implies the object's sprite
+; (+0x08) is set elsewhere to track whichever item the player is currently
+; carrying/delivering -- that link is not yet found. If the state nibble is
+; already fully clear (all delivered), falls through to the normal branch
+; below.
+; .
+; NORMAL-ROOM BRANCH (#R$93C1): settle/float physics -- the height/Z field
+; (+0x07) decays by 4 each frame toward a rest value $18 (clamped), tested each
+; step via #R$9BF0 (collision); if blocked, the height is bounced back up by 4
+; instead. Also checks bit 2 of (IX+$0D) (a "just hit by a weapon" flag set
+; elsewhere, not yet traced) and calls #R$9401 if set.
 c$9341 CALL $62F9      ;
  $9344 JR NZ,$93C1     ;
  $9346 LD ($933F),HL   ;
@@ -5524,10 +5766,10 @@ c$9341 CALL $62F9      ;
  $9381 CALL $6254      ; Set object position (IX+5/+6) from grid index A
  $9384 LD (IX+$0F),$00 ;
  $9388 LD (IX+$07),$18 ;
- $938C LD A,($6123)    ;
+ $938C LD A,($6123)    ; get "Goodies Gathered" end-game stat counter
  $938F ADD A,$01       ;
  $9391 DAA             ;
- $9392 LD ($6123),A    ;
+ $9392 LD ($6123),A    ; set "Goodies Gathered" end-game stat counter
  $9395 LD A,$01        ;
  $9397 CALL $848E      ; Request sound effect A
  $939A CALL $923E      ; Save continuation
@@ -5559,7 +5801,7 @@ c$9341 CALL $62F9      ;
  $93D5 JR NC,$93D9     ;
  $93D7 LD A,$18        ;
 *$93D9 LD (IX+$07),A   ;
- $93DC CALL $9BF0      ;
+ $93DC CALL $9BF0      ; Collision test
  $93DF RES 1,(IX+$0D)  ;
  $93E3 RES 0,(IX+$0D)  ;
  $93E7 JR NC,$93F4     ;
@@ -5576,9 +5818,24 @@ c$9341 CALL $62F9      ;
  $93FF LD (HL),A       ;
  $9400 RET             ;
 
-; Routine at 9401
+; Creature hit/defeat sequence, called from #R$9341 when the "just hit" flag
+; (bit 2 of +0x0D) is set
 ;
 ; Used by the routine at #R$9341.
+;
+; .
+;
+; CONFIRMED structure (trigger not yet traced): clears the hit flag, then only
+; proceeds if the creature's current sprite (+0x08) is $44 (a shared
+; "vulnerable" pose -- creatures presumably must be in this pose to register a
+; hit). Searches a (room, position, reward-sprite) triple table at $7C89 (count
+; from $7C97) for an entry matching the current room and this object's position
+; field (+0x09); on a match, swaps the reward sprite into +0x09 and into offset
+; +3 of a linked record (via +0x0E/+0x0F), plays sound effect $01 (the same
+; "success" sound as item delivery), steps through the #R$919A animation table
+; to transform the sprite, then finalizes (+0x08 = reward sprite, #R$9AAB kind
+; lookup into +0x0A, #R$9A60) and resumes normal behaviour at #R$93C1. Likely
+; how a creature is "defeated" and turns into a collectible (a Gnome?).
 c$9401 RES 2,(IX+$0D) ;
  $9405 LD A,(IX+$08)  ;
  $9408 CP $44         ;
@@ -5710,16 +5967,30 @@ b$94E9 DEFB $4E,$4E,$50,$50,$FF
 c$94EE LD HL,$94E9   ;
  $94F1 JP $99D5      ;
 
-; Per-frame behaviour handler for value-$6B objects -- plug
+; Per-frame behaviour handler for value-$6B objects -- plug. WIN-CONDITION
+; TRIGGER: polls every frame for full item delivery, then pops and increments
+; the "Plugs Pulled" counter.
+;
+; .
+;
+; .
+;
+; CONFIRMED: re-checks (every frame, via #R$62F9 + AND $0F/CP $0F) whether this
+; level's Plug Room state nibble has reached $0F (all 4 items delivered -- see
+; #R$9341). Once it has: increments the "Plugs Pulled" counter at $6124 (BCD),
+; plays sound effect $09, and animates the plug popping out (+0x07 += 8 per
+; frame, gated by bit 4 of +0x0D so this only fires once), then self-destructs
+; on the following frame (bit 6 of +0x0D check). This is the actual
+; win-condition trigger for a single Plug Room.
 c$94F4 CALL $62F9      ;
  $94F7 LD A,(HL)       ;
  $94F8 AND $0F         ;
  $94FA CP $0F          ;
  $94FC RET NZ          ;
- $94FD LD A,($6124)    ;
+ $94FD LD A,($6124)    ; get "Plugs Pulled" end-game stat counter
  $9500 ADD A,$01       ;
  $9502 DAA             ;
- $9503 LD ($6124),A    ;
+ $9503 LD ($6124),A    ; set "Plugs Pulled" end-game stat counter
  $9506 LD A,$09        ;
  $9508 CALL $848E      ; Request sound effect A
  $950B CALL $923E      ; Save continuation
@@ -5765,13 +6036,13 @@ c$952D LD HL,$9526   ;
  $9555 NEG           ;
 *$9557 CP $06        ;
  $9559 RET NC        ;
-*$955A LD HL,($8DB9) ;
+*$955A LD HL,($8DB9) ; get player behaviour-handler pointer
  $955D LD DE,$8968   ;
  $9560 AND A         ;
  $9561 SBC HL,DE     ;
  $9563 RET NZ        ;
  $9564 LD HL,$8D11   ;
- $9567 LD ($8DB9),HL ;
+ $9567 LD ($8DB9),HL ; set player behaviour-handler pointer
  $956A LD A,(IX+$05) ;
  $956D LD ($952B),A  ;
  $9570 LD A,(IX+$06) ;
@@ -6325,12 +6596,13 @@ b$995E DEFB $1C,$1C,$9C,$9C,$FF
 ; Routine at 9963
 c$9963 CALL $8ABB      ;
  $9966 PUSH BC         ;
- $9967 CALL $9BF0      ;
+ $9967 CALL $9BF0      ; Collision test
  $996A POP BC          ;
  $996B JR C,$9976      ;
- $996D CALL $8ABB      ;
+ $996D CALL $8ABB      ; Apply the object's facing direction to its position
+                       ; (IX+5/+6), returning the OLD position in BC
  $9970 PUSH BC         ;
- $9971 CALL $9BF0      ;
+ $9971 CALL $9BF0      ; Collision test
  $9974 POP BC          ;
  $9975 RET NC          ;
 *$9976 LD (IX+$05),B   ;
@@ -6352,9 +6624,19 @@ c$9963 CALL $8ABB      ;
  $999C LD (IX+$02),$FF ;
  $99A0 RET             ;
 
-; Routine at 99A1
+; Direction-indexed sprite-animation stepper: pick one of 4 per-direction
+; tables via (IX+$0B), then run #R$99D5's stepper on it
 ;
 ; Used by the routines at #R$90A8 and #R$925C.
+;
+; .
+;
+; HL = (IX+$1D)/(IX+$1E), a pointer to a table of 4 sub-table addresses.
+; Selects one by facing direction ((IX+$0B), mapped 1->0/2->1/... via a small
+; comparison chain, then AND $03), loads that sub-table's address, and falls
+; into #R$99D5's shared byte-code interpreter ($FD/$FC/$FE/$FB position-delta
+; markers, otherwise a sprite number) -- this is how the player's (and other
+; directional objects') walk-cycle animation is driven per-facing.
 c$99A1 LD L,(IX+$1D) ;
  $99A4 LD H,(IX+$1E) ;
 ; This entry point is used by the routines at #R$8968, #R$8AFB, #R$8D8D and
@@ -6549,11 +6831,20 @@ c$9AAB LD HL,$74CE   ;
 ; Data block at 9ABA
 b$9ABA DEFB $00,$FF
 
-; Routine at 9ABC
+; Terrain collision test for one screen point (B,C): convert to a grid cell and
+; check its content
 ;
 ; Used by the routine at #R$9BF0.
 ;
 ; BC ??
+;
+; Converts screen coordinates (B=X,C=Y) to a room-grid cell: (Y AND $F8)>>3 * 8
+; + (X AND $F8)>>3 -- confirms the #R$612C grid's row*8+col indexing operates
+; on 8px-aligned screen tiles. Reads the grid cell; $00 = passable (no
+; collision). $7F = solid wall, hard block (see #R$9B56). Any other nonzero
+; code is looked up in a per-terrain-code shape/behaviour table at $7556 (the
+; same table #R$8E6E reads) -- individual terrain codes may have different
+; collision shapes rather than being uniformly solid.
 c$9ABC LD A,B         ;
  $9ABD AND $F8        ;
  $9ABF LD L,A         ;
@@ -6745,12 +7036,21 @@ c$9BD4 LD (IX+$14),$01 ;
 *$9BEC EX DE,HL        ;
  $9BED JP $9B5D        ;
 
-; Routine at 9BF0
+; Collision test: check the object's 4 bounding-box corners against the room
+; grid, then check for overlap with other objects
 ;
 ; Used by the routines at #R$66CE, #R$8AD9, #R$8AFB, #R$8CDF, #R$90A8, #R$925C,
 ; #R$9341 and #R$9963.
 ;
 ; IX ??
+;
+; Tests all 4 corners of the object's bounding box (screen-coordinate pairs at
+; +0x10/+0x11, +0x10/+0x13, +0x12/+0x13, +0x12/+0x11 -- i.e.
+; (left,top)/(left,bottom)/(right,bottom)/(right,top)) via #R$9ABC, returning
+; early (C) if any corner hits solid terrain. If all 4 corners are clear,
+; finishes with #R$9B5A (object-vs-object overlap scan). Also calls #R$9A60
+; first and returns early if it reports collision (purpose of that specific
+; pre-check not fully traced).
 c$9BF0 XOR A         ;
  $9BF1 LD (IX+$14),A ;
  $9BF4 LD ($9ABA),A  ;
@@ -6760,19 +7060,19 @@ c$9BF0 XOR A         ;
  $9BFF RET C         ;
  $9C00 LD B,(IX+$10) ;
  $9C03 LD C,(IX+$11) ;
- $9C06 CALL $9ABC    ;
+ $9C06 CALL $9ABC    ; Terrain collision test for one screen point
  $9C09 RET C         ;
  $9C0A LD B,(IX+$10) ;
  $9C0D LD C,(IX+$13) ;
- $9C10 CALL $9ABC    ;
+ $9C10 CALL $9ABC    ; Terrain collision test for one screen point
  $9C13 RET C         ;
  $9C14 LD B,(IX+$12) ;
  $9C17 LD C,(IX+$13) ;
- $9C1A CALL $9ABC    ;
+ $9C1A CALL $9ABC    ; Terrain collision test for one screen point
  $9C1D RET C         ;
  $9C1E LD B,(IX+$12) ;
  $9C21 LD C,(IX+$11) ;
- $9C24 CALL $9ABC    ;
+ $9C24 CALL $9ABC    ; Terrain collision test for one screen point
  $9C27 RET C         ;
  $9C28 XOR A         ;
  $9C29 LD ($9ABA),A  ;

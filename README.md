@@ -121,7 +121,7 @@ Original: for ZX Spectrum, 1987, Hewson Consultants.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/nebulus-zx/nebulus/
 
-Status: Have some progress (124K .ctl file).
+Status: Have some progress (140K .ctl file).
 Based on work done by Anatoly Vdovichev.
 
 

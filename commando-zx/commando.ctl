@@ -99,14 +99,17 @@ B $6883,12
 C $6890,2 number 0..9 -> char '0'..'9'
 C $6892,3 Print char
 c $6896
+C $689E,3 -> $98F5
 c $68A6
 R $68A6 I:HL ??
 c $68CA
 C $68DB,3 Address on the screen
+C $68F2,3 -> $9904 - DOWN HL
 c $6950
 c $6975
 c $699A
 c $69B4
+C $69C6,3 -> $8E92
 b $69D2
 c $69F3 Top Score and Main Menu??
 C $69F3,3 Print Score Table
@@ -152,11 +155,14 @@ B $6AD2,2
 T $6AD4,7
 B $6ADB,4
 c $6AE1
+C $6B0D,3 -> $9904 - DOWN HL
 c $6B14 Wait key unpress, wait key press
 C $6B14,3 Get last key read from keyboard
 C $6B1A,3 Get last key read from keyboard
 c $6B21
 c $6B4C
+C $6B54,3 -> $98F5
+C $6B60,3 -> $9904 - DOWN HL
 t $6B67 Letters to select from entering Top Score
 T $6B67,,8
 c $6B87
@@ -220,6 +226,7 @@ C $6CA9,3 Print char
 c $6CAE Game Over
 C $6CAE,3 Find a place in Top Score table
 C $6CB2,3 => Top Score and Main Menu
+C $6CC0,3 Print Score Table
 C $6CC6,3 Print immediate string
 B $6CC9,6
 C $6CCF,3 Letters to select from entering Top Score
@@ -233,12 +240,17 @@ C $6CEC,3 Print immediate string
 B $6CEF,9
 T $6CF8,15
 B $6D07,7
+C $6D30,3 -> $9922
+C $6D3B,3 -> $9922
 C $6D3E,3 Copy 64 bytes $66D1 to $6711
 C $6D4D,3 Get last key read from keyboard
 C $6D53,3 Get last joystick/keyboard bits
 C $6D5A,3 Print immediate string
 B $6D5D,9
+C $6D66,3 Prepare records at $6FD9
+C $6D69,3 Prepare records at $6FE5
 C $6D71,4 Check bit 4 (Fire) of Last joystick/keyboard bits ($FD85)
+C $6D98,3 -> $9922
 C $6D9E,3 Get last joystick/keyboard bits
 C $6DCC,3 Get last joystick/keyboard bits
 b $6E08
@@ -265,6 +277,7 @@ c $6F1D
 c $6F46 Prepare records at $6FE5
 c $6F52
 c $6F79
+C $6FBA,3 -> $98F5
 c $6FC7 Prepare records at $6FD9
 b $6FD9
 B $6FD9,12,3
@@ -275,6 +288,8 @@ C $7032,3 => Copy 64 bytes $66D1 to $6711
 c $706E
 b $709A
 c $70BD
+C $70C9,3 -> $98F5
+C $70E6,3 -> $9904 - DOWN HL
 c $70EC Copy 64 bytes $66D1 to $6711
 c $70F8 Find a place in Top Score table
 C $70F8,3 Score address
@@ -416,6 +431,11 @@ C $767F,3 (HL) -> HL
 C $76B2,3 Delay by BC
 N $7687 Print usual char >= $20
 C $76BC,4 Get Font address
+C $76C8,3 -> $98F5
+C $76DF,3 -> $9904 - DOWN HL
+C $7703,3 -> $9904 - DOWN HL
+C $770F,3 -> $9904 - DOWN HL
+C $7719,3 -> $9904 - DOWN HL
 C $7754,3 HL = HL + A
 C $7757,3 (HL) -> HL
 b $775F
@@ -444,6 +464,7 @@ c $784A
 c $7852
 c $7866
 c $786E
+C $7875,3 Print immediate string
 B $7878,4
 c $787F
 c $7887
@@ -543,6 +564,8 @@ c $854A
 b $8594
 c $85AB ?? Smth about Truck
 C $85C4,3 Get Truck sprite to $6300 buffer and shift it if needed
+C $85F9,3 -> $6600
+C $8601,3 -> $6600
 c $8618
 c $867C
 C $86B0,2 $FE00 - table of even screen lines addresses
@@ -552,6 +575,8 @@ N $86C7 Shift 8*32 bytes at $6300 one bit left
 C $86CB,3 Buffer address
 C $86D1,2 Loop counter = 32
 c $86F5
+C $8721,3 -> $6600
+C $872A,3 -> $6600
 c $872F
 C $8743,3 Get attributes address for screen line D
 c $876E Draw walls??
@@ -1860,6 +1885,7 @@ c $DC92 -> $DF33
 c $DC95
 C $DC95,3 -> $9193
 c $DCAF
+C $DCBB,3 Get random byte??
 C $DCCF,3 -> $E1AC
 C $DCD6,3 -> $E44D
 c $DCDF Initialization and go to game main loop
@@ -1884,6 +1910,7 @@ c $DD89 Process Player's object record
 C $DD89,4 Player's object record address
 c $DD8D Process object IX??
 R $DD8D I:IX Address of the 20-byte object record
+C $DDF5,3 -> $98F5
 C $DE8E,3 -> $806B
 c $DE91 Game's main loop, Part 1
 C $DE91,4 Is Player alive??
@@ -1913,6 +1940,8 @@ c $DF71
 C $DF71 Player is dead??
 c $DF7B
 c $E01B
+C $E061,3 -> $E1AC
+C $E075,3 -> $E1AC
 C $E0A2,4 Check bit 3 (Up) of Last joystick/keyboard bits ($FD85)
 b $E0BF
 c $E100 -> $E4FC
@@ -1944,6 +1973,10 @@ C $E326,2 $03 - Fortress byte
 C $E360,3 -> $DF16 - Get random byte??
 C $E39B,3 -> $DF16 - Get random byte??
 C $E3A4,3 -> $DF16 - Get random byte??
+C $E425,3 -> $DF16 - Get random byte??
+C $E42C,3 -> $DF16 - Get random byte??
+C $E438,3 -> $DF16 - Get random byte??
+C $E48D,3 -> $DF33
 b $E4F2
 c $E4FC
 C $E4FC,4 Player's object record address
@@ -1977,8 +2010,12 @@ c $E794
 C $E7B9,4 Player is dead??
 c $E86B
 c $E881
+C $E887,3 -> $DF16 - Get random byte??
 c $E8A0
+C $E8C4,3 -> $DF16 - Get random byte??
+C $E8E0,3 -> $DF16 - Get random byte??
 c $E90A
+C $E960,3 -> $DF16 - Get random byte??
 c $E972
 b $E9C7
 t $E9E1
@@ -1987,10 +2024,14 @@ t $EAC4
 b $EAC7
 c $EB13
 C $EB15,3 Get Area number
+C $EB21,3 -> $DF16 - Get random byte??
 C $EB44,3 Get Area number
+C $EB55,3 -> $DF16 - Get random byte??
 c $EB68
 c $EB7B
 c $EB96
+C $EB9C,3 -> $DF16 - Get random byte??
+C $EBC0,3 -> $DF16 - Get random byte??
 c $EBE1
 c $EC1B
 C $EC3F,3 Get Area number
@@ -2007,12 +2048,14 @@ C $ED11,3 -> $F4E3
 C $ED15,2 -1 more grenades
 C $ED17,3 -> $6C7A - We've got A more grenades
 C $ED1F,3 Player's object record address
+C $ED29,3 -> $F24A
 C $ED2E,3 -> $6456
 c $ED31
 c $ED52
 C $EDAE,3 -> $7511 - XOR AF and AF' with every byte in $F900-F9FF
 c $EDC8
 c $EDD6
+C $EDEE,3 -> $DF16 - Get random byte??
 c $EE11
 c $EE15
 b $EE24
@@ -2034,7 +2077,9 @@ b $EFC5
 t $EFD2
 b $EFD7
 c $EFDD
+C $EFF5,3 -> $DF16 - Get random byte??
 C $F003,3 Get Area number
+C $F045,3 -> $DF16 - Get random byte??
 b $F052
 t $F05D
 b $F060
@@ -2075,24 +2120,32 @@ c $F237
 c $F23B
 c $F24A
 c $F26E
+C $F314,3 -> $E44D
 C $F323,3 -> $6456
 C $F326,3 +1000
 C $F329,3 -> $6825 - Update Score
+C $F331,3 -> $DF37
 c $F34F
 c $F36D
 c $F37B
 c $F381
 C $F46C,4 Player is dead??
+C $F4CA,3 -> $6600
 C $F4CF,3 -> $6456
 c $F4E3
 c $F4E9
 c $F4F6
 c $F582
+C $F589,3 -> $98F5
 c $F5A0
+C $F5A7,3 -> $98F5
 c $F5BF
 c $F5C6
 c $F5CD
 c $F5DD
+C $F64D,3 -> $9922
+C $F66E,3 -> $9922
+C $F684,3 -> $9922
 c $F68A
 c $F6C2
 c $F707

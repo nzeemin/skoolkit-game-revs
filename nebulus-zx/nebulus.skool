@@ -3982,13 +3982,13 @@ c$8CC2 LD A,(IX+$00)  ; A = actor angular pos (IX+0)
 ; .
 ; Clobbers: A,DE,HL.
 @label=expand_sprite_a
-c$8E25 LD A,(HL)     ;
- $8E26 OR $00        ;
- $8E28 LD (DE),A     ;
+c$8E25 LD A,(HL)     ; A = source byte (HL)
+ $8E26 OR $00        ; self-mod OR mask (set by calc_sprite_shift)
+ $8E28 LD (DE),A     ; store merged byte, advance dest
  $8E29 INC HL        ;
  $8E2A INC DE        ;
- $8E2B LD A,(HL)     ;
- $8E2C AND $00       ;
+ $8E2B LD A,(HL)     ; A = next source byte
+ $8E2C AND $00       ; self-mod AND mask (set by calc_sprite_shift)
  $8E2E LD (DE),A     ;
  $8E2F INC HL        ;
  $8E30 INC DE        ;
@@ -4002,52 +4002,61 @@ c$8E25 LD A,(HL)     ;
  $8E3A LD (DE),A     ;
  $8E3B INC HL        ;
  $8E3C INC DE        ;
- $8E3D LD A,$FF      ;
- $8E3F LD (DE),A     ;
+ $8E3D LD A,$FF      ; A = $FF (terminator byte)
+ $8E3F LD (DE),A     ; store terminator, advance dest
  $8E40 INC DE        ;
- $8E41 INC A         ;
+ $8E41 INC A         ; A += 1 (second terminator byte)
  $8E42 LD (DE),A     ;
  $8E43 INC DE        ;
- $8E44 DJNZ $8E25    ;
+ $8E44 DJNZ $8E25    ; loop 4 columns
  $8E46 OR A          ;
  $8E47 RET           ;
 ; Entry point used by calc_sprite_shift, not by expand_sprite_a's own DJNZ
 ; loop.
 ; .
-; Reads the self-mod shift-count slot ($8C82) to index a 2-byte routine-pointer
-; pair, storing it into expand_sprite_b's own OR/AND immediate operands
-; ($8E82/$8EC8) -- i.e. re-targets which unrolled copy body expand_sprite_b's
-; DJNZ tail uses.
+; Reads the self-mod shift-count slot ($8C82) to index a 2-byte pair from table
+; $8C79 (shift*2), storing it into the loop-count operands of the first/third
+; strip's "LD B,nn" at $8E81/$8EC7 (operand bytes $8E82/$8EC8) -- CORRECTION:
+; these are NOT routine pointers or mask operands, they are the row counts for
+; the two edge strips. Confirmed by emulation: for every shift value 0-3,
+; (first-strip-count + third-strip-count) == 8, and combined with the
+; always-8-row middle strip, TOTAL decoded height is a shift-INVARIANT 16 rows.
+; When the shift-count slot is 0, the first strip is skipped entirely (JR
+; Z,$8E86) and its row count (0) is moot.
 ; .
 ; Then, per 8-pixel strip, copies 3 source mask bytes ($600C/$600D/$600E or
 ; $600F/$6010/$6011 or $6012/$6013/$6014, selected by the same shift-count
-; test) straight into expand_sprite_b's OR-immediate operands, and their
-; bitwise complement (CPL) into the paired AND-immediate operands -- so
-; expand_sprite_b ORs in the new sprite bits and ANDs out the old ones at the
-; right sub-byte shift, then calls expand_sprite_b (B=$00/$08/$00 sets loop
-; count per strip).
+; test) straight into expand_sprite_b's real OR-immediate operands
+; ($8ECB/$8ED7/$8EE3), and their bitwise complement (CPL) into the paired
+; AND-immediate operands ($8ED1/$8EDD/$8EE9) -- so expand_sprite_b ORs in the
+; new sprite bits and ANDs out the old ones at the right sub-byte shift, then
+; calls expand_sprite_b.
+; .
+; See gfx_c1f6 ($C1F6) for the full sprite-bitmap decode writeup (this
+; self-modifying pipeline is why the bitmap can't be rendered as a raw UDG
+; array image).
 ; .
 ; Clobbers: A,BC.
 @label=patch_expand_masks
-*$8E48 LD A,($8C82)  ;
- $8E4B ADD A,A       ;
+*$8E48 LD A,($8C82)  ; A = shift-count slot ($8C82)
+ $8E4B ADD A,A       ; {index a 2-byte routine-pointer pair
  $8E4C ADD A,$79     ;
- $8E4E LD C,A        ;
+ $8E4E LD C,A        ; }
  $8E4F LD A,$8C      ;
  $8E51 ADC A,$00     ;
  $8E53 LD B,A        ;
- $8E54 LD A,(BC)     ;
- $8E55 LD ($8E82),A  ;
+ $8E54 LD A,(BC)     ; fetch first pointer byte
+ $8E55 LD ($8E82),A  ; self-mod store: expand_sprite_b OR operand
  $8E58 INC BC        ;
- $8E59 LD A,(BC)     ;
- $8E5A LD ($8EC8),A  ;
- $8E5D LD A,($8C82)  ;
+ $8E59 LD A,(BC)     ; fetch second pointer byte
+ $8E5A LD ($8EC8),A  ; self-mod store: expand_sprite_b AND operand
+ $8E5D LD A,($8C82)  ; re-test shift-count slot
  $8E60 OR A          ;
- $8E61 JR Z,$8E86    ;
- $8E63 LD A,($600C)  ;
- $8E66 LD ($8ED1),A  ;
- $8E69 CPL           ;
- $8E6A LD ($8ECB),A  ;
+ $8E61 JR Z,$8E86    ; zero? -> skip first mask triple
+ $8E63 LD A,($600C)  ; A = mask byte 1 ($600C)
+ $8E66 LD ($8ED1),A  ; self-mod store: OR operand
+ $8E69 CPL           ; complement for AND operand
+ $8E6A LD ($8ECB),A  ; self-mod store: AND operand
  $8E6D LD A,($600D)  ;
  $8E70 LD ($8EDD),A  ;
  $8E73 CPL           ;
@@ -4056,7 +4065,7 @@ c$8E25 LD A,(HL)     ;
  $8E7A LD ($8EE9),A  ;
  $8E7D CPL           ;
  $8E7E LD ($8EE3),A  ;
- $8E81 LD B,$00      ;
+ $8E81 LD B,$00      ; B = 0 (loop count for this strip)
  $8E83 CALL $8EC9    ; Expand sprite b
 *$8E86 LD A,($600F)  ;
  $8E89 LD ($8ED1),A  ;
@@ -4070,7 +4079,7 @@ c$8E25 LD A,(HL)     ;
  $8E9D LD ($8EE9),A  ;
  $8EA0 CPL           ;
  $8EA1 LD ($8EE3),A  ;
- $8EA4 LD B,$08      ;
+ $8EA4 LD B,$08      ; B = $08 (loop count for this strip)
  $8EA6 CALL $8EC9    ; Expand sprite b
  $8EA9 LD A,($6012)  ;
  $8EAC LD ($8ED1),A  ;
@@ -4084,7 +4093,7 @@ c$8E25 LD A,(HL)     ;
  $8EC0 LD ($8EE9),A  ;
  $8EC3 CPL           ;
  $8EC4 LD ($8EE3),A  ;
- $8EC7 LD B,$00      ;
+ $8EC7 LD B,$00      ; B = 0 (loop count for final strip)
 
 ; Expand sprite b
 ;
@@ -4099,9 +4108,9 @@ c$8E25 LD A,(HL)     ;
 ; .
 ; Clobbers: A,DE,HL.
 @label=expand_sprite_b
-c$8EC9 LD A,(HL)     ;
- $8ECA OR $00        ;
- $8ECC LD (DE),A     ;
+c$8EC9 LD A,(HL)     ; A = source byte (HL)
+ $8ECA OR $00        ; self-mod OR mask (set by patch_expand_masks)
+ $8ECC LD (DE),A     ; store merged byte, advance dest
  $8ECD INC HL        ;
  $8ECE INC DE        ;
  $8ECF LD A,(HL)     ;
@@ -4129,9 +4138,9 @@ c$8EC9 LD A,(HL)     ;
  $8EEA LD (DE),A     ;
  $8EEB INC HL        ;
  $8EEC INC DE        ;
- $8EED DJNZ $8EC9    ;
- $8EEF OR A          ;
- $8EF0 RET           ;
+ $8EED DJNZ $8EC9    ; loop 3 mask bytes
+ $8EEF OR A          ; {restore flags, RET
+ $8EF0 RET           ; }
 
 ; Calc sprite col
 ;
@@ -6581,90 +6590,99 @@ c$9F11 LD HL,$9EFF   ;
 ; Advance the attract/demo one frame: silence SFX, render_play_frame, then fire
 ; scripted sounds keyed off the demo phase $9F0E.
 ; .
+; Phase 0: sweeps a tone counter down by 2/frame until $68, then advances to
+; phase 1 (also plays sound 3). Phase 1: cycles the 4 actor Y-offsets down by
+; 2/frame at $9EFB, resetting a sub-counter every 9th frame, plays sound 3
+; every wrap, advances to phase 2 at the end. Phase 2/4: replay scripted
+; actor-position frames from tables $9F04/$9F09 indexed by a frame counter
+; ($9F0F). Phase 3: sweeps $9EFA up/down by 2/frame between bounds, plays sound
+; 3 at each end, toggling direction via $9F10. Phase else (5+): sweeps the same
+; tone counter back up by 2/frame until $90, then RET (attract sequence done).
+; .
 ; Clobbers: most.
 @label=attract_step
-c$9F33 LD ($9F10),A  ;
+c$9F33 LD ($9F10),A  ; stash tune id / phase-0 marker ($9F10)
  $9F36 CALL $A36D    ; Stop sound
 *$9F39 CALL $A02A    ; Render play frame
- $9F3C LD A,($9F0E)  ;
- $9F3F CP $01        ;
- $9F41 JR NZ,$9F6A   ;
- $9F43 LD A,$0B      ;
+ $9F3C LD A,($9F0E)  ; A = demo phase ($9F0E)
+ $9F3F CP $01        ; {phase == 1? -> $9F6A
+ $9F41 JR NZ,$9F6A   ; }
+ $9F43 LD A,$0B      ; A = sound id 11 (phase-0 tone)
  $9F45 CALL $A3DE    ; Play sound
- $9F48 LD HL,$9EFB   ;
- $9F4B LD B,$04      ;
-*$9F4D LD A,(HL)     ;
+ $9F48 LD HL,$9EFB   ; HL -> actor Y-offsets ($9EFB)
+ $9F4B LD B,$04      ; B = 4 (offset count)
+*$9F4D LD A,(HL)     ; {subtract 2 from this offset, next
  $9F4E SUB $02       ;
  $9F50 LD (HL),A     ;
- $9F51 INC HL        ;
- $9F52 DJNZ $9F4D    ;
- $9F54 CP $68        ;
+ $9F51 INC HL        ; }
+ $9F52 DJNZ $9F4D    ; loop 4 offsets
+ $9F54 CP $68        ; reached lower bound ($68)?
  $9F56 JP NZ,$9F39   ;
- $9F59 LD HL,$9F0E   ;
- $9F5C INC (HL)      ;
+ $9F59 LD HL,$9F0E   ; HL -> demo phase
+ $9F5C INC (HL)      ; advance to phase 1
  $9F5D LD A,$00      ;
- $9F5F LD ($9F0F),A  ;
+ $9F5F LD ($9F0F),A  ; reset frame sub-counter ($9F0F)=0
  $9F62 LD A,$03      ;
  $9F64 CALL $A3DE    ; Play sound
  $9F67 JP $9F39      ;
-*$9F6A CP $02        ;
- $9F6C JR NZ,$9F97   ;
- $9F6E LD A,($9F0F)  ;
- $9F71 SRL A         ;
+*$9F6A CP $02        ; {phase == 2? -> $9F97
+ $9F6C JR NZ,$9F97   ; }
+ $9F6E LD A,($9F0F)  ; A = frame sub-counter
+ $9F71 SRL A         ; /2 -> table index
  $9F73 LD E,A        ;
  $9F74 LD D,$00      ;
- $9F76 LD HL,$9F04   ;
+ $9F76 LD HL,$9F04   ; HL -> position table $9F04
  $9F79 ADD HL,DE     ;
- $9F7A LD A,(HL)     ;
- $9F7B LD ($9EF6),A  ;
- $9F7E LD HL,$9F09   ;
+ $9F7A LD A,(HL)     ; {fetch scripted X, store ($9EF6)
+ $9F7B LD ($9EF6),A  ; }
+ $9F7E LD HL,$9F09   ; HL -> position table $9F09
  $9F81 ADD HL,DE     ;
- $9F82 LD A,(HL)     ;
- $9F83 LD ($9EF1),A  ;
- $9F86 LD HL,$9F0F   ;
- $9F89 INC (HL)      ;
- $9F8A LD A,(HL)     ;
- $9F8B CP $09        ;
- $9F8D JP NZ,$9F39   ;
+ $9F82 LD A,(HL)     ; {fetch scripted Y, store ($9EF1)
+ $9F83 LD ($9EF1),A  ; }
+ $9F86 LD HL,$9F0F   ; HL -> frame sub-counter
+ $9F89 INC (HL)      ; {advance sub-counter
+ $9F8A LD A,(HL)     ; }
+ $9F8B CP $09        ; {reached frame $09? -> advance to phase 2
+ $9F8D JP NZ,$9F39   ; }
  $9F90 LD HL,$9F0E   ;
  $9F93 INC (HL)      ;
  $9F94 JP $9F39      ;
-*$9F97 CP $03        ;
- $9F99 JR NZ,$9FE7   ;
- $9F9B LD A,($9F10)  ;
- $9F9E OR A          ;
- $9F9F JR NZ,$9FC4   ;
- $9FA1 LD A,$00      ;
- $9FA3 LD ($9EF0),A  ;
- $9FA6 LD A,($9EFA)  ;
- $9FA9 SUB $02       ;
- $9FAB LD ($9EFA),A  ;
- $9FAE CP $54        ;
+*$9F97 CP $03        ; {phase == 3? -> $9FE7
+ $9F99 JR NZ,$9FE7   ; }
+ $9F9B LD A,($9F10)  ; A = sweep direction flag ($9F10)
+ $9F9E OR A          ; {nonzero? -> sweep up branch $9FC4
+ $9F9F JR NZ,$9FC4   ; }
+ $9FA1 LD A,$00      ; {zero flag: clear demo-actor marker ($9EF0)
+ $9FA3 LD ($9EF0),A  ; }
+ $9FA6 LD A,($9EFA)  ; A = sweep value ($9EFA)
+ $9FA9 SUB $02       ; {subtract 2 (sweep down)
+ $9FAB LD ($9EFA),A  ; }
+ $9FAE CP $54        ; reached lower bound ($54)?
  $9FB0 JP NZ,$9F39   ;
  $9FB3 LD HL,$9F0E   ;
  $9FB6 INC (HL)      ;
- $9FB7 LD A,$08      ;
- $9FB9 LD ($9F0F),A  ;
+ $9FB7 LD A,$08      ; {A = 8, seed frame sub-counter
+ $9FB9 LD ($9F0F),A  ; }
  $9FBC LD A,$03      ;
  $9FBE CALL $A3DE    ; Play sound
  $9FC1 JP $9F39      ;
-*$9FC4 LD A,($9EFA)  ;
- $9FC7 ADD A,$02     ;
- $9FC9 LD ($9EFA),A  ;
- $9FCC CP $68        ;
+*$9FC4 LD A,($9EFA)  ; A = sweep value ($9EFA)
+ $9FC7 ADD A,$02     ; {add 2 (sweep up)
+ $9FC9 LD ($9EFA),A  ; }
+ $9FCC CP $68        ; reached upper bound ($68)?
  $9FCE JP NZ,$9F39   ;
  $9FD1 LD HL,$9F0E   ;
  $9FD4 INC (HL)      ;
- $9FD5 LD A,$FF      ;
- $9FD7 LD ($9EF0),A  ;
+ $9FD5 LD A,$FF      ; {A = $FF, mark demo-actor active
+ $9FD7 LD ($9EF0),A  ; }
  $9FDA LD A,$08      ;
  $9FDC LD ($9F0F),A  ;
  $9FDF LD A,$03      ;
  $9FE1 CALL $A3DE    ; Play sound
  $9FE4 JP $9F39      ;
-*$9FE7 CP $04        ;
- $9FE9 JR NZ,$A013   ;
- $9FEB LD A,($9F0F)  ;
+*$9FE7 CP $04        ; {phase == 4? -> $A013
+ $9FE9 JR NZ,$A013   ; }
+ $9FEB LD A,($9F0F)  ; A = frame sub-counter
  $9FEE SRL A         ;
  $9FF0 LD E,A        ;
  $9FF1 LD D,$00      ;
@@ -6676,23 +6694,23 @@ c$9F33 LD ($9F10),A  ;
  $9FFE ADD HL,DE     ;
  $9FFF LD A,(HL)     ;
  $A000 LD ($9EF1),A  ;
- $A003 LD HL,$9F0F   ;
- $A006 DEC (HL)      ;
- $A007 BIT 7,(HL)    ;
+ $A003 LD HL,$9F0F   ; HL -> frame sub-counter
+ $A006 DEC (HL)      ; decrement sub-counter
+ $A007 BIT 7,(HL)    ; underflowed (bit7 set)?
  $A009 JP Z,$9F39    ;
- $A00C LD HL,$9F0E   ;
- $A00F INC (HL)      ;
+ $A00C LD HL,$9F0E   ; HL -> demo phase
+ $A00F INC (HL)      ; advance to next phase
  $A010 JP $9F39      ;
-*$A013 LD A,$0B      ;
+*$A013 LD A,$0B      ; A = sound id 11 (final sweep tone)
  $A015 CALL $A3DE    ; Play sound
- $A018 LD HL,$9EFB   ;
- $A01B LD B,$04      ;
-*$A01D LD A,(HL)     ;
+ $A018 LD HL,$9EFB   ; HL -> actor Y-offsets ($9EFB)
+ $A01B LD B,$04      ; B = 4 (offset count)
+*$A01D LD A,(HL)     ; {add 2 to this offset, next
  $A01E ADD A,$02     ;
  $A020 LD (HL),A     ;
- $A021 INC HL        ;
- $A022 DJNZ $A01D    ;
- $A024 CP $90        ;
+ $A021 INC HL        ; }
+ $A022 DJNZ $A01D    ; loop 4 offsets
+ $A024 CP $90        ; reached upper bound ($90)? done
  $A026 JP NZ,$9F39   ;
  $A029 RET           ;
 
@@ -9077,103 +9095,103 @@ b$AD60 DEFB $00,$00,$FF,$F8,$FF,$F8,$FF,$F8
 ; .
 ; Clobbers: A,C,HL.
 @label=setup_tower_scroll
-c$AD82 CALL $AB7F    ;
+c$AD82 CALL $AB7F    ; clear object table (calc_tower_col_addr's prep)
  $AD85 LD HL,($6030) ; get Vertical scroll position
  $AD88 LD A,L        ;
- $AD89 SRL H         ;
+ $AD89 SRL H         ; shift scroll_pos right by 3 (coarse column)
  $AD8B RRA           ;
  $AD8C SRL H         ;
  $AD8E RRA           ;
- $AD8F LD ($ADC6),A  ;
+ $AD8F LD ($ADC6),A  ; self-mod store: coarse column ($ADC6)
  $AD92 LD A,L        ;
- $AD93 AND $03       ;
+ $AD93 AND $03       ; isolate sub-column fraction bits
  $AD95 ADD A,A       ;
- $AD96 LD ($6021),A  ;
+ $AD96 LD ($6021),A  ; latch sub-column phase ($6021)
  $AD99 LD A,($6032)  ; get Display height
  $AD9C LD C,A        ;
- $AD9D AND $07       ;
- $AD9F ADD A,$58     ;
- $ADA1 LD ($AD61),A  ;
- $ADA4 SRL C         ;
+ $AD9D AND $07       ; isolate row-in-cell bits (disp_height&7)
+ $AD9F ADD A,$58     ; bias by $58 (attribute-row base)
+ $ADA1 LD ($AD61),A  ; self-mod store: row base ($AD61)
+ $ADA4 SRL C         ; C = disp_height >> 3 (coarse row)
  $ADA6 SRL C         ;
  $ADA8 SRL C         ;
- $ADAA LD A,$0B      ;
+ $ADAA LD A,$0B      ; A = $0B - coarse row
  $ADAC SUB C         ;
- $ADAD AND $0F       ;
- $ADAF LD ($AD60),A  ;
+ $ADAD AND $0F       ; mask to 4 bits
+ $ADAF LD ($AD60),A  ; self-mod store: row accumulator ($AD60)
  $ADB2 EXX           ;
- $ADB3 LD B,$00      ;
- $ADB5 LD HL,$AD62   ;
-*$ADB8 LD A,B        ;
- $ADB9 CP $08        ;
- $ADBB JP NZ,$ADC5   ;
+ $ADB3 LD B,$00      ; B = 0 (row counter)
+ $ADB5 LD HL,$AD62   ; HL -> per-row delta table ($AD62)
+*$ADB8 LD A,B        ; A = row counter
+ $ADB9 CP $08        ; {row==8? recompute column addr mid-loop
+ $ADBB JP NZ,$ADC5   ; }
  $ADBE PUSH BC       ;
  $ADBF PUSH HL       ;
  $ADC0 CALL $AB97    ; Calc tower col addr
  $ADC3 POP HL        ;
  $ADC4 POP BC        ;
-*$ADC5 LD E,$00      ;
- $ADC7 LD A,($AD60)  ;
- $ADCA ADD A,$F0     ;
+*$ADC5 LD E,$00      ; E = 0 (cell index low)
+ $ADC7 LD A,($AD60)  ; {D = row accumulator + $F0 (map page)
+ $ADCA ADD A,$F0     ; }
  $ADCC LD D,A        ;
  $ADCD EXX           ;
- $ADCE LD A,($AD61)  ;
- $ADD1 LD E,A        ;
+ $ADCE LD A,($AD61)  ; {E = column fraction (map offset low)
+ $ADD1 LD E,A        ; }
  $ADD2 LD D,$00      ;
- $ADD4 LD HL,$6200   ;
- $ADD7 ADD HL,DE     ;
+ $ADD4 LD HL,$6200   ; {HL -> $6200 + column (cell type table 1)
+ $ADD7 ADD HL,DE     ; }
  $ADD8 LD A,(HL)     ;
- $ADD9 OR A          ;
- $ADDA JP M,$AE6D    ;
- $ADDD SRL A         ;
- $ADDF SRL A         ;
- $ADE1 LD ($AE35),A  ;
- $ADE4 LD ($AE4B),A  ;
- $ADE7 LD A,(HL)     ;
- $ADE8 AND $03       ;
- $ADEA LD ($AF2D),A  ;
- $ADED LD ($AFD3),A  ;
- $ADF0 LD HL,$6280   ;
- $ADF3 ADD HL,DE     ;
+ $ADD9 OR A          ; {negative? -> $AE6D (empty cell, skip)
+ $ADDA JP M,$AE6D    ; }
+ $ADDD SRL A         ; {shift cell nibble right 2
+ $ADDF SRL A         ; }
+ $ADE1 LD ($AE35),A  ; {self-mod: patch two render-handler operands
+ $ADE4 LD ($AE4B),A  ; }
+ $ADE7 LD A,(HL)     ; {A = cell byte again, mask low 2 bits
+ $ADE8 AND $03       ; }
+ $ADEA LD ($AF2D),A  ; {self-mod: patch two more render-handler operands
+ $ADED LD ($AFD3),A  ; }
+ $ADF0 LD HL,$6280   ; {HL -> $6280 + column (cell type table 2)
+ $ADF3 ADD HL,DE     ; }
  $ADF4 LD A,(HL)     ;
  $ADF5 OR A          ;
- $ADF6 JP M,$ADFD    ;
- $ADF9 SRL A         ;
+ $ADF6 JP M,$ADFD    ; negative? skip the shift
+ $ADF9 SRL A         ; shift cell nibble right 2
  $ADFB SRL A         ;
-*$ADFD LD ($AE40),A  ;
- $AE00 LD ($AE58),A  ;
- $AE03 LD A,(HL)     ;
- $AE04 AND $03       ;
- $AE06 LD ($AF89),A  ;
- $AE09 LD ($B044),A  ;
- $AE0C LD B,$14      ;
- $AE0E LD HL,$65B6   ;
-*$AE11 EXX           ;
+*$ADFD LD ($AE40),A  ; {self-mod: patch two render-handler operands
+ $AE00 LD ($AE58),A  ; }
+ $AE03 LD A,(HL)     ; {A = 2nd cell byte, mask low 2 bits
+ $AE04 AND $03       ; }
+ $AE06 LD ($AF89),A  ; {self-mod: patch two more render-handler operands
+ $AE09 LD ($B044),A  ; }
+ $AE0C LD B,$14      ; B = $14 (20 sub-cells to classify)
+ $AE0E LD HL,$65B6   ; HL -> classification bitmap ($65B6)
+*$AE11 EXX           ; {fetch next classification bit
  $AE12 LD A,(DE)     ;
  $AE13 INC E         ;
- $AE14 EXX           ;
- $AE15 ADD A,A       ;
+ $AE14 EXX           ; }
+ $AE15 ADD A,A       ; shift bit into carry
  $AE16 JR C,$AE21    ;
 ; This entry point is used by the routines at #R$AEBB, #R$AF2A, #R$AF86,
 ; #R$AFD0 and #R$B03F.
-*$AE18 LD DE,$FFEE   ;
+*$AE18 LD DE,$FFEE   ; DE = -$12 (back up dest ptr)
  $AE1B ADD HL,DE     ;
- $AE1C DJNZ $AE11    ;
+ $AE1C DJNZ $AE11    ; loop 20 sub-cells
  $AE1E JP $AE6D      ;
-*$AE21 RRA           ;
- $AE22 LD C,A        ;
- $AE23 AND $0C       ;
+*$AE21 RRA           ; shift in the next bit
+ $AE22 LD C,A        ; C = classification byte so far
+ $AE23 AND $0C       ; test bits $0C (cell sub-type)
  $AE25 JR Z,$AE2B    ;
- $AE27 BIT 0,C       ;
+ $AE27 BIT 0,C       ; test bit 0 of C
  $AE29 JR NZ,$AE4A   ;
 *$AE2B LD A,C        ;
- $AE2C AND $03       ;
- $AE2E SRL A         ;
- $AE30 JR NZ,$AE55   ;
- $AE32 JR NC,$AE3F   ;
- $AE34 LD DE,$0000   ;
- $AE37 BIT 7,E       ;
- $AE39 JP Z,$AF2A    ;
+ $AE2C AND $03       ; mask to bits 0-1
+ $AE2E SRL A         ; shift right (test bit 0)
+ $AE30 JR NZ,$AE55   ; nonzero -> $AE55 (anim-texture case)
+ $AE32 JR NC,$AE3F   ; no carry -> $AE3F (cap-b case)
+ $AE34 LD DE,$0000   ; self-mod operand for the handler call
+ $AE37 BIT 7,E       ; test bit 7 of E
+ $AE39 JP Z,$AF2A    ; dispatch -> render_col_cap_a
  $AE3C JP $AE18      ;
 *$AE3F LD DE,$0000   ;
  $AE42 BIT 7,E       ;
@@ -9183,28 +9201,28 @@ c$AD82 CALL $AB7F    ;
  $AE4D BIT 7,E       ;
  $AE4F JP Z,$AFD0    ;
  $AE52 JP $AE18      ;
-*$AE55 JR C,$AE62    ;
+*$AE55 JR C,$AE62    ; carry set -> $AE62 (partial-column case)
  $AE57 LD DE,$0000   ;
  $AE5A BIT 7,E       ;
  $AE5C JP Z,$B03F    ;
  $AE5F JP $AE18      ;
-*$AE62 LD A,($AD61)  ;
- $AE65 CP $40        ;
- $AE67 JP C,$AEBB    ;
+*$AE62 LD A,($AD61)  ; A = row base
+ $AE65 CP $40        ; compare vs $40 (screen-half boundary)
+ $AE67 JP C,$AEBB    ; dispatch -> render_col_partial
  $AE6A JP $AE18      ;
-*$AE6D EXX           ;
- $AE6E LD A,($AD60)  ;
- $AE71 ADD A,(HL)    ;
- $AE72 AND $0F       ;
- $AE74 LD ($AD60),A  ;
+*$AE6D EXX           ; EXX back to main register set
+ $AE6E LD A,($AD60)  ; A = row accumulator
+ $AE71 ADD A,(HL)    ; {add per-row delta, wrap to 4 bits
+ $AE72 AND $0F       ; }
+ $AE74 LD ($AD60),A  ; store updated row accumulator
  $AE77 INC HL        ;
- $AE78 LD A,($AD61)  ;
- $AE7B ADD A,(HL)    ;
- $AE7C AND $7F       ;
- $AE7E LD ($AD61),A  ;
+ $AE78 LD A,($AD61)  ; A = fine row offset
+ $AE7B ADD A,(HL)    ; {add per-row delta, wrap to 7 bits
+ $AE7C AND $7F       ; }
+ $AE7E LD ($AD61),A  ; store updated fine row offset
  $AE81 INC HL        ;
- $AE82 INC B         ;
- $AE83 BIT 4,B       ;
+ $AE82 INC B         ; B++ (row counter)
+ $AE83 BIT 4,B       ; done all 16 rows?
  $AE85 JP Z,$ADB8    ;
  $AE88 RET           ;
 
@@ -11423,51 +11441,52 @@ s$BA66 DEFS $01
 ; .
 ; Clobbers: A,B,HL.
 @label=scroll_tower_attrs
-c$BA67 LD HL,($6030) ;
- $BA6A LD A,H        ;
- $BA6B CP $03        ;
- $BA6D LD A,$16      ;
+c$BA67 LD HL,($6030) ; HL = scroll_pos
+ $BA6A LD A,H        ; {top-of-tower page (H==3)?
+ $BA6B CP $03        ; }
+ $BA6D LD A,$16      ; A = $16 (default row index)
  $BA6F JR NZ,$BA7C   ;
- $BA71 LD A,L        ;
- $BA72 NEG           ;
- $BA74 RRA           ;
+ $BA71 LD A,L        ; A = scroll_pos low byte
+ $BA72 NEG           ; negate (count down from top)
+ $BA74 RRA           ; {/4, mask to row range
  $BA75 RRA           ;
- $BA76 AND $0F       ;
- $BA78 SUB $16       ;
- $BA7A NEG           ;
-*$BA7C LD B,A        ;
- $BA7D LD A,($BA66)  ;
- $BA80 SUB B         ;
- $BA81 JR Z,$BA94    ;
- $BA83 CP $FF        ;
+ $BA76 AND $0F       ; }
+ $BA78 SUB $16       ; bias by -$16
+ $BA7A NEG           ; negate back
+*$BA7C LD B,A        ; B = target row index
+ $BA7D LD A,($BA66)  ; A = previous row index ($BA66 latch)
+ $BA80 SUB B         ; delta = new - previous
+ $BA81 JR Z,$BA94    ; unchanged? -> just update latch, RET
+ $BA83 CP $FF        ; delta == -1 (scrolled up one row)?
  $BA85 JR Z,$BA99    ;
- $BA87 CP $01        ;
+ $BA87 CP $01        ; delta == +1 (scrolled down one row)?
  $BA89 JR NZ,$BA94   ;
- $BA8B LD A,B        ;
- $BA8C LD ($BA66),A  ;
- $BA8F INC B         ;
- $BA90 LD C,$41      ;
+ $BA8B LD A,B        ; {store new row index in latch
+ $BA8C LD ($BA66),A  ; }
+ $BA8F INC B         ; B++ (paint the row below)
+ $BA90 LD C,$41      ; C = $41 (default attribute)
  $BA92 JR $BAA1      ;
 *$BA94 LD A,B        ;
  $BA95 LD ($BA66),A  ;
  $BA98 RET           ;
-*$BA99 LD A,B        ;
- $BA9A LD ($BA66),A  ;
- $BA9D CALL $BA16    ;
+*$BA99 LD A,B        ; {store new row index in latch
+ $BA9A LD ($BA66),A  ; }
+ $BA9D CALL $BA16    ; recompute the attribute for this column via
+                     ; lookup_col_attr
  $BAA0 LD C,A        ;
-*$BAA1 LD L,B        ;
+*$BAA1 LD L,B        ; {HL = B * 32 (attribute row address)
  $BAA2 LD H,$00      ;
  $BAA4 ADD HL,HL     ;
  $BAA5 ADD HL,HL     ;
  $BAA6 ADD HL,HL     ;
  $BAA7 ADD HL,HL     ;
- $BAA8 ADD HL,HL     ;
- $BAA9 LD DE,$5802   ;
+ $BAA8 ADD HL,HL     ; }
+ $BAA9 LD DE,$5802   ; DE = $5802 (attribute area base + offset)
  $BAAC ADD HL,DE     ;
- $BAAD LD B,$1C      ;
-*$BAAF LD (HL),C     ;
+ $BAAD LD B,$1C      ; B = $1C (28 columns)
+*$BAAF LD (HL),C     ; {fill one attribute row with C, loop
  $BAB0 INC HL        ;
- $BAB1 DJNZ $BAAF    ;
+ $BAB1 DJNZ $BAAF    ; }
  $BAB3 RET           ;
 
 ; Unused
@@ -11845,1701 +11864,1711 @@ b$C100 DEFB $F6,$00                         ; #R$C1F6, 4 frames
  $C1F0 DEFB $26,$AD                         ; #R$EE26, 2 frames
  $C1F2 DEFB $76,$AD                         ; #R$EE76, 2 frames
  $C1F4 DEFB $C6,$ED                         ; #R$EEC6, 3 frames
-; Graphics, 4 frames
+; Graphics, animation frame 1 of 4 -- masks for Pogo (frames 2-4 are
+; gfx_c26e/gfx_c2e6/gfx_c35e, each an independent block).
+; .
+; NOT a raw 1bpp raster -- these bytes only become real pixels after
+; calc_sprite_shift/expand_sprite_b's self-modifying decode (see
+; patch_expand_masks, $8E48). Reading this block directly as a bitmap produces
+; garbage; a UDG array macro cannot render it.
+; .
+; Verified by emulation (decode_sprite.py, real Z80 core, self-mod masks forced
+; to identity OR $00/AND $FF): decodes to a fixed 16 rows x 3 cells (24x16px),
+; 96 source bytes consumed, invariant across all 4 shift values.
 @label=gfx_c1f6
- $C1F6 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $C1FE DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07
- $C206 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF
- $C20E DEFB $FE,$40,$0D,$03,$98,$FF,$FE,$00
- $C216 DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03
- $C21E DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF
- $C226 DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00
- $C22E DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00
- $C236 DEFB $9D,$7F,$FF,$00,$7F,$00,$FE,$FF
- $C23E DEFB $FF,$00,$7D,$01,$DC,$FF,$FF,$80
- $C246 DEFB $1E,$03,$E0,$FF,$FF,$C0,$0E,$1F
- $C24E DEFB $80,$FF,$FF,$E0,$0E,$7F,$00,$FF
- $C256 DEFB $FF,$E1,$0C,$FF,$00,$FF,$FF,$C0
- $C25E DEFB $1C,$FF,$00,$FF,$FF,$C0,$1F,$7F
- $C266 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C1F6 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C1FE DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07 ; src="images/gfx/gfx-c1f6.png">]
+ $C206 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF ;
+ $C20E DEFB $FE,$40,$0D,$03,$98,$FF,$FE,$00 ;
+ $C216 DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03 ;
+ $C21E DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF ;
+ $C226 DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00 ;
+ $C22E DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00 ;
+ $C236 DEFB $9D,$7F,$FF,$00,$7F,$00,$FE,$FF ;
+ $C23E DEFB $FF,$00,$7D,$01,$DC,$FF,$FF,$80 ;
+ $C246 DEFB $1E,$03,$E0,$FF,$FF,$C0,$0E,$1F ;
+ $C24E DEFB $80,$FF,$FF,$E0,$0E,$7F,$00,$FF ;
+ $C256 DEFB $FF,$E1,$0C,$FF,$00,$FF,$FF,$C0 ;
+ $C25E DEFB $1C,$FF,$00,$FF,$FF,$C0,$1F,$7F ;
+ $C266 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF ; }
+; Graphics, animation frame 2 of 4 -- masks for Pogo.
 @label=gfx_c26e
- $C26E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F
- $C276 DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F
- $C27E DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF
- $C286 DEFB $FF,$9E,$00,$07,$F0,$FF,$FF,$20
- $C28E DEFB $01,$03,$98,$FF,$FE,$00,$1D,$03
- $C296 DEFB $48,$FF,$FE,$00,$7D,$01,$08,$FF
- $C29E DEFB $FE,$00,$FE,$00,$92,$FF,$FE,$00
- $C2A6 DEFB $FE,$00,$F7,$7F,$FE,$00,$FF,$00
- $C2AE DEFB $6F,$7F,$FE,$00,$E7,$00,$9D,$7F
- $C2B6 DEFB $FF,$00,$7B,$00,$FE,$FF,$FF,$00
- $C2BE DEFB $7D,$01,$DC,$FF,$FF,$80,$1D,$03
- $C2C6 DEFB $E0,$FF,$FF,$C0,$1B,$1F,$80,$FF
- $C2CE DEFB $FF,$80,$30,$3F,$00,$FF,$FF,$80
- $C2D6 DEFB $35,$3F,$80,$FF,$FF,$C0,$1C,$7F
- $C2DE DEFB $00,$FF,$FF,$E3,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C26E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C276 DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F ; src="images/gfx/gfx-c26e.png">]
+ $C27E DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF ;
+ $C286 DEFB $FF,$9E,$00,$07,$F0,$FF,$FF,$20 ;
+ $C28E DEFB $01,$03,$98,$FF,$FE,$00,$1D,$03 ;
+ $C296 DEFB $48,$FF,$FE,$00,$7D,$01,$08,$FF ;
+ $C29E DEFB $FE,$00,$FE,$00,$92,$FF,$FE,$00 ;
+ $C2A6 DEFB $FE,$00,$F7,$7F,$FE,$00,$FF,$00 ;
+ $C2AE DEFB $6F,$7F,$FE,$00,$E7,$00,$9D,$7F ;
+ $C2B6 DEFB $FF,$00,$7B,$00,$FE,$FF,$FF,$00 ;
+ $C2BE DEFB $7D,$01,$DC,$FF,$FF,$80,$1D,$03 ;
+ $C2C6 DEFB $E0,$FF,$FF,$C0,$1B,$1F,$80,$FF ;
+ $C2CE DEFB $FF,$80,$30,$3F,$00,$FF,$FF,$80 ;
+ $C2D6 DEFB $35,$3F,$80,$FF,$FF,$C0,$1C,$7F ;
+ $C2DE DEFB $00,$FF,$FF,$E3,$00,$FF,$00,$FF ; }
+; Graphics, animation frame 3 of 4 -- masks for Pogo.
 @label=gfx_c2e6
- $C2E6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F
- $C2EE DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F
- $C2F6 DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF
- $C2FE DEFB $FF,$9E,$00,$07,$F0,$FF,$FF,$20
- $C306 DEFB $01,$03,$98,$FF,$FE,$00,$1D,$03
- $C30E DEFB $48,$FF,$FE,$00,$7D,$03,$08,$FF
- $C316 DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00
- $C31E DEFB $FE,$00,$F6,$FF,$FE,$00,$EF,$00
- $C326 DEFB $6F,$7F,$FE,$00,$F7,$00,$9F,$7F
- $C32E DEFB $FF,$00,$7B,$00,$FD,$7F,$FF,$00
- $C336 DEFB $3B,$00,$DE,$FF,$FF,$80,$37,$01
- $C33E DEFB $EC,$FF,$FF,$00,$63,$13,$80,$FF
- $C346 DEFB $FF,$00,$7C,$3F,$00,$FF,$FF,$80
- $C34E DEFB $1D,$1F,$40,$FF,$FF,$E0,$03,$1F
- $C356 DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF
-; Graphics, 4 frames
+ $C2E6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C2EE DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F ; src="images/gfx/gfx-c2e6.png">]
+ $C2F6 DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF ;
+ $C2FE DEFB $FF,$9E,$00,$07,$F0,$FF,$FF,$20 ;
+ $C306 DEFB $01,$03,$98,$FF,$FE,$00,$1D,$03 ;
+ $C30E DEFB $48,$FF,$FE,$00,$7D,$03,$08,$FF ;
+ $C316 DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00 ;
+ $C31E DEFB $FE,$00,$F6,$FF,$FE,$00,$EF,$00 ;
+ $C326 DEFB $6F,$7F,$FE,$00,$F7,$00,$9F,$7F ;
+ $C32E DEFB $FF,$00,$7B,$00,$FD,$7F,$FF,$00 ;
+ $C336 DEFB $3B,$00,$DE,$FF,$FF,$80,$37,$01 ;
+ $C33E DEFB $EC,$FF,$FF,$00,$63,$13,$80,$FF ;
+ $C346 DEFB $FF,$00,$7C,$3F,$00,$FF,$FF,$80 ;
+ $C34E DEFB $1D,$1F,$40,$FF,$FF,$E0,$03,$1F ;
+ $C356 DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF ; }
+; Graphics, animation frame 4 of 4 -- masks for Pogo.
 @label=gfx_c35e
- $C35E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $C366 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07
- $C36E DEFB $F0,$FF,$FF,$3E,$00,$07,$F0,$FF
- $C376 DEFB $FE,$60,$01,$03,$F8,$FF,$FE,$00
- $C37E DEFB $1D,$03,$98,$FF,$FE,$00,$7D,$03
- $C386 DEFB $48,$FF,$FE,$00,$FE,$07,$00,$FF
- $C38E DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00
- $C396 DEFB $FF,$00,$6E,$FF,$FE,$00,$F3,$00
- $C39E DEFB $9F,$7F,$FF,$00,$7D,$00,$FF,$7F
- $C3A6 DEFB $FF,$00,$5D,$00,$FD,$7F,$FF,$80
- $C3AE DEFB $1B,$00,$DE,$FF,$FF,$80,$33,$01
- $C3B6 DEFB $8C,$FF,$FF,$80,$35,$73,$00,$FF
- $C3BE DEFB $FF,$C0,$1C,$7F,$00,$FF,$FF,$E0
- $C3C6 DEFB $02,$3F,$80,$FF,$FF,$F0,$07,$3F
- $C3CE DEFB $80,$FF,$FF,$F8,$00,$7F,$00,$FF
-; Graphics, 4 frames
+ $C35E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C366 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07 ; src="images/gfx/gfx-c35e.png">]
+ $C36E DEFB $F0,$FF,$FF,$3E,$00,$07,$F0,$FF ;
+ $C376 DEFB $FE,$60,$01,$03,$F8,$FF,$FE,$00 ;
+ $C37E DEFB $1D,$03,$98,$FF,$FE,$00,$7D,$03 ;
+ $C386 DEFB $48,$FF,$FE,$00,$FE,$07,$00,$FF ;
+ $C38E DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00 ;
+ $C396 DEFB $FF,$00,$6E,$FF,$FE,$00,$F3,$00 ;
+ $C39E DEFB $9F,$7F,$FF,$00,$7D,$00,$FF,$7F ;
+ $C3A6 DEFB $FF,$00,$5D,$00,$FD,$7F,$FF,$80 ;
+ $C3AE DEFB $1B,$00,$DE,$FF,$FF,$80,$33,$01 ;
+ $C3B6 DEFB $8C,$FF,$FF,$80,$35,$73,$00,$FF ;
+ $C3BE DEFB $FF,$C0,$1C,$7F,$00,$FF,$FF,$E0 ;
+ $C3C6 DEFB $02,$3F,$80,$FF,$FF,$F0,$07,$3F ;
+ $C3CE DEFB $80,$FF,$FF,$F8,$00,$7F,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c3d6
- $C3D6 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $C3DE DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07
- $C3E6 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF
- $C3EE DEFB $FE,$40,$0D,$03,$98,$FF,$FE,$00
- $C3F6 DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03
- $C3FE DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF
- $C406 DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00
- $C40E DEFB $FF,$00,$6F,$7F,$FE,$00,$FB,$00
- $C416 DEFB $9F,$7F,$FF,$00,$7D,$00,$FD,$7F
- $C41E DEFB $FF,$00,$7D,$00,$DE,$FF,$FF,$80
- $C426 DEFB $2D,$01,$EC,$FF,$FF,$C0,$1C,$13
- $C42E DEFB $80,$FF,$FF,$C0,$19,$7F,$00,$FF
- $C436 DEFB $FF,$E0,$0F,$7F,$00,$FF,$FF,$C0
- $C43E DEFB $10,$7F,$00,$FF,$FF,$C0,$1F,$7F
- $C446 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C3D6 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C3DE DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07 ; src="images/gfx/gfx-c3d6.png">]
+ $C3E6 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF ;
+ $C3EE DEFB $FE,$40,$0D,$03,$98,$FF,$FE,$00 ;
+ $C3F6 DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03 ;
+ $C3FE DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF ;
+ $C406 DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00 ;
+ $C40E DEFB $FF,$00,$6F,$7F,$FE,$00,$FB,$00 ;
+ $C416 DEFB $9F,$7F,$FF,$00,$7D,$00,$FD,$7F ;
+ $C41E DEFB $FF,$00,$7D,$00,$DE,$FF,$FF,$80 ;
+ $C426 DEFB $2D,$01,$EC,$FF,$FF,$C0,$1C,$13 ;
+ $C42E DEFB $80,$FF,$FF,$C0,$19,$7F,$00,$FF ;
+ $C436 DEFB $FF,$E0,$0F,$7F,$00,$FF,$FF,$C0 ;
+ $C43E DEFB $10,$7F,$00,$FF,$FF,$C0,$1F,$7F ;
+ $C446 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c44e
- $C44E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F
- $C456 DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F
- $C45E DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF
- $C466 DEFB $FF,$9E,$00,$07,$90,$FF,$FF,$20
- $C46E DEFB $01,$03,$48,$FF,$FE,$00,$1D,$03
- $C476 DEFB $08,$FF,$FE,$00,$7D,$01,$98,$FF
- $C47E DEFB $FE,$00,$FE,$00,$F2,$FF,$FE,$00
- $C486 DEFB $FE,$00,$F7,$7F,$FE,$00,$FF,$00
- $C48E DEFB $6F,$7F,$FE,$00,$FD,$00,$9D,$7F
- $C496 DEFB $FF,$00,$7E,$00,$FE,$FF,$FF,$00
- $C49E DEFB $77,$01,$4C,$FF,$FF,$80,$3B,$03
- $C4A6 DEFB $60,$FF,$FF,$C0,$0A,$1F,$00,$FF
- $C4AE DEFB $FF,$80,$36,$3F,$80,$FF,$FF,$80
- $C4B6 DEFB $37,$3F,$80,$FF,$FF,$C0,$18,$7F
- $C4BE DEFB $00,$FF,$FF,$E3,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C44E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C456 DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F ; src="images/gfx/gfx-c44e.png">]
+ $C45E DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF ;
+ $C466 DEFB $FF,$9E,$00,$07,$90,$FF,$FF,$20 ;
+ $C46E DEFB $01,$03,$48,$FF,$FE,$00,$1D,$03 ;
+ $C476 DEFB $08,$FF,$FE,$00,$7D,$01,$98,$FF ;
+ $C47E DEFB $FE,$00,$FE,$00,$F2,$FF,$FE,$00 ;
+ $C486 DEFB $FE,$00,$F7,$7F,$FE,$00,$FF,$00 ;
+ $C48E DEFB $6F,$7F,$FE,$00,$FD,$00,$9D,$7F ;
+ $C496 DEFB $FF,$00,$7E,$00,$FE,$FF,$FF,$00 ;
+ $C49E DEFB $77,$01,$4C,$FF,$FF,$80,$3B,$03 ;
+ $C4A6 DEFB $60,$FF,$FF,$C0,$0A,$1F,$00,$FF ;
+ $C4AE DEFB $FF,$80,$36,$3F,$80,$FF,$FF,$80 ;
+ $C4B6 DEFB $37,$3F,$80,$FF,$FF,$C0,$18,$7F ;
+ $C4BE DEFB $00,$FF,$FF,$E3,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c4c6
- $C4C6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F
- $C4CE DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F
- $C4D6 DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF
- $C4DE DEFB $FF,$9E,$00,$07,$90,$FF,$FF,$20
- $C4E6 DEFB $01,$03,$48,$FF,$FE,$00,$1D,$03
- $C4EE DEFB $08,$FF,$FE,$00,$7D,$03,$98,$FF
- $C4F6 DEFB $FE,$00,$FE,$01,$F0,$FF,$FE,$00
- $C4FE DEFB $FE,$00,$F6,$FF,$FE,$00,$FF,$00
- $C506 DEFB $6F,$7F,$FE,$00,$FF,$00,$9F,$7F
- $C50E DEFB $FF,$00,$7E,$00,$FD,$7F,$FF,$00
- $C516 DEFB $7F,$00,$5E,$FF,$FF,$80,$3F,$01
- $C51E DEFB $AC,$FF,$FF,$00,$4B,$13,$80,$FF
- $C526 DEFB $FF,$00,$77,$3F,$00,$FF,$FF,$80
- $C52E DEFB $16,$1F,$C0,$FF,$FF,$E0,$03,$1F
- $C536 DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF
-; Graphics, 4 frames
+ $C4C6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C4CE DEFB $00,$9F,$00,$FF,$FF,$9F,$00,$0F ; src="images/gfx/gfx-c4c6.png">]
+ $C4D6 DEFB $60,$FF,$FF,$9E,$00,$07,$F0,$FF ;
+ $C4DE DEFB $FF,$9E,$00,$07,$90,$FF,$FF,$20 ;
+ $C4E6 DEFB $01,$03,$48,$FF,$FE,$00,$1D,$03 ;
+ $C4EE DEFB $08,$FF,$FE,$00,$7D,$03,$98,$FF ;
+ $C4F6 DEFB $FE,$00,$FE,$01,$F0,$FF,$FE,$00 ;
+ $C4FE DEFB $FE,$00,$F6,$FF,$FE,$00,$FF,$00 ;
+ $C506 DEFB $6F,$7F,$FE,$00,$FF,$00,$9F,$7F ;
+ $C50E DEFB $FF,$00,$7E,$00,$FD,$7F,$FF,$00 ;
+ $C516 DEFB $7F,$00,$5E,$FF,$FF,$80,$3F,$01 ;
+ $C51E DEFB $AC,$FF,$FF,$00,$4B,$13,$80,$FF ;
+ $C526 DEFB $FF,$00,$77,$3F,$00,$FF,$FF,$80 ;
+ $C52E DEFB $16,$1F,$C0,$FF,$FF,$E0,$03,$1F ;
+ $C536 DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c53e
- $C53E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $C546 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07
- $C54E DEFB $F0,$FF,$FF,$3E,$00,$07,$F0,$FF
- $C556 DEFB $FE,$60,$01,$03,$98,$FF,$FE,$00
- $C55E DEFB $1D,$03,$48,$FF,$FE,$00,$7D,$03
- $C566 DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF
- $C56E DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00
- $C576 DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00
- $C57E DEFB $9F,$7F,$FF,$00,$7D,$00,$FD,$7F
- $C586 DEFB $FF,$00,$7E,$00,$DE,$FF,$FF,$80
- $C58E DEFB $3F,$01,$6C,$FF,$FF,$80,$0B,$13
- $C596 DEFB $00,$FF,$FF,$80,$33,$7F,$00,$FF
- $C59E DEFB $FF,$C0,$16,$7F,$00,$FF,$FF,$E0
- $C5A6 DEFB $06,$3F,$80,$FF,$FF,$F0,$07,$3F
- $C5AE DEFB $80,$FF,$FF,$F8,$00,$7F,$00,$FF
-; Graphics, 4 frames
+ $C53E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $C546 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07 ; src="images/gfx/gfx-c53e.png">]
+ $C54E DEFB $F0,$FF,$FF,$3E,$00,$07,$F0,$FF ;
+ $C556 DEFB $FE,$60,$01,$03,$98,$FF,$FE,$00 ;
+ $C55E DEFB $1D,$03,$48,$FF,$FE,$00,$7D,$03 ;
+ $C566 DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF ;
+ $C56E DEFB $FE,$00,$FE,$00,$F6,$FF,$FE,$00 ;
+ $C576 DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00 ;
+ $C57E DEFB $9F,$7F,$FF,$00,$7D,$00,$FD,$7F ;
+ $C586 DEFB $FF,$00,$7E,$00,$DE,$FF,$FF,$80 ;
+ $C58E DEFB $3F,$01,$6C,$FF,$FF,$80,$0B,$13 ;
+ $C596 DEFB $00,$FF,$FF,$80,$33,$7F,$00,$FF ;
+ $C59E DEFB $FF,$C0,$16,$7F,$00,$FF,$FF,$E0 ;
+ $C5A6 DEFB $06,$3F,$80,$FF,$FF,$F0,$07,$3F ;
+ $C5AE DEFB $80,$FF,$FF,$F8,$00,$7F,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c5b6
- $C5B6 DEFB $FF,$FF,$00,$87,$00,$FF,$FF,$9F
- $C5BE DEFB $00,$03,$68,$FF,$FF,$CE,$00,$01
- $C5C6 DEFB $F4,$FF,$FF,$C8,$00,$01,$F4,$FF
- $C5CE DEFB $FF,$80,$05,$00,$9A,$FF,$FF,$00
- $C5D6 DEFB $1D,$00,$48,$FF,$FF,$00,$3D,$00
- $C5DE DEFB $08,$FF,$FF,$00,$7E,$00,$96,$FF
- $C5E6 DEFB $FF,$00,$7E,$00,$F7,$7F,$FF,$00
- $C5EE DEFB $7F,$00,$6F,$7F,$FF,$00,$7B,$00
- $C5F6 DEFB $9B,$7F,$FF,$80,$3D,$00,$FE,$FF
- $C5FE DEFB $FF,$80,$3E,$01,$DC,$FF,$FF,$C0
- $C606 DEFB $16,$03,$E0,$FF,$FF,$E0,$0E,$1F
- $C60E DEFB $C0,$FF,$FF,$C0,$1C,$3F,$00,$FF
- $C616 DEFB $FF,$C0,$1D,$1F,$00,$FF,$FF,$E0
- $C61E DEFB $0F,$0F,$60,$FF,$FF,$F0,$00,$0F
- $C626 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF
-; Graphics, 2 frames
+ $C5B6 DEFB $FF,$FF,$00,$87,$00,$FF,$FF,$9F ; {#HTML[<img
+ $C5BE DEFB $00,$03,$68,$FF,$FF,$CE,$00,$01 ; src="images/gfx/gfx-c5b6.png">]
+ $C5C6 DEFB $F4,$FF,$FF,$C8,$00,$01,$F4,$FF ;
+ $C5CE DEFB $FF,$80,$05,$00,$9A,$FF,$FF,$00 ;
+ $C5D6 DEFB $1D,$00,$48,$FF,$FF,$00,$3D,$00 ;
+ $C5DE DEFB $08,$FF,$FF,$00,$7E,$00,$96,$FF ;
+ $C5E6 DEFB $FF,$00,$7E,$00,$F7,$7F,$FF,$00 ;
+ $C5EE DEFB $7F,$00,$6F,$7F,$FF,$00,$7B,$00 ;
+ $C5F6 DEFB $9B,$7F,$FF,$80,$3D,$00,$FE,$FF ;
+ $C5FE DEFB $FF,$80,$3E,$01,$DC,$FF,$FF,$C0 ;
+ $C606 DEFB $16,$03,$E0,$FF,$FF,$E0,$0E,$1F ;
+ $C60E DEFB $C0,$FF,$FF,$C0,$1C,$3F,$00,$FF ;
+ $C616 DEFB $FF,$C0,$1D,$1F,$00,$FF,$FF,$E0 ;
+ $C61E DEFB $0F,$0F,$60,$FF,$FF,$F0,$00,$0F ;
+ $C626 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_c62e
- $C62E DEFB $CE,$00,$67,$00,$E4,$01,$03,$98
- $C636 DEFB $E0,$03,$01,$DC,$C0,$03,$01,$DC
- $C63E DEFB $80,$16,$00,$62,$80,$35,$00,$28
- $C646 DEFB $00,$34,$00,$00,$00,$74,$01,$30
- $C64E DEFB $00,$7A,$01,$7C,$00,$7C,$01,$FC
- $C656 DEFB $00,$76,$01,$D8,$80,$3B,$03,$78
- $C65E DEFB $80,$1B,$07,$70,$C0,$1B,$0F,$80
- $C666 DEFB $80,$33,$0F,$C0,$80,$3C,$1F,$00
- $C66E DEFB $82,$38,$0F,$80,$C6,$00,$07,$F0
- $C676 DEFB $FE,$00,$07,$F0,$FF,$00,$0F,$00
-; Graphics, 2 frames
+ $C62E DEFB $CE,$00,$67,$00,$E4,$01,$03,$98 ; {#HTML[<img
+ $C636 DEFB $E0,$03,$01,$DC,$C0,$03,$01,$DC ; src="images/gfx/gfx-c62e.png">]
+ $C63E DEFB $80,$16,$00,$62,$80,$35,$00,$28 ;
+ $C646 DEFB $00,$34,$00,$00,$00,$74,$01,$30 ;
+ $C64E DEFB $00,$7A,$01,$7C,$00,$7C,$01,$FC ;
+ $C656 DEFB $00,$76,$01,$D8,$80,$3B,$03,$78 ;
+ $C65E DEFB $80,$1B,$07,$70,$C0,$1B,$0F,$80 ;
+ $C666 DEFB $80,$33,$0F,$C0,$80,$3C,$1F,$00 ;
+ $C66E DEFB $82,$38,$0F,$80,$C6,$00,$07,$F0 ;
+ $C676 DEFB $FE,$00,$07,$F0,$FF,$00,$0F,$00 ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_c67e
- $C67E DEFB $E1,$00,$E7,$00,$F0,$06,$C3,$18
- $C686 DEFB $E0,$0F,$01,$3C,$E0,$0F,$01,$3C
- $C68E DEFB $C0,$19,$00,$A6,$80,$14,$00,$92
- $C696 DEFB $80,$10,$00,$82,$00,$69,$00,$66
- $C69E DEFB $00,$6E,$01,$F4,$00,$75,$01,$F0
- $C6A6 DEFB $00,$79,$01,$64,$80,$3D,$01,$F4
- $C6AE DEFB $80,$36,$03,$E8,$C0,$1B,$07,$10
- $C6B6 DEFB $C0,$1B,$07,$C0,$C0,$08,$0F,$20
- $C6BE DEFB $83,$30,$87,$20,$83,$38,$83,$18
- $C6C6 DEFB $C7,$00,$83,$38,$FF,$00,$C7,$00
-; Graphics, 2 frames
+ $C67E DEFB $E1,$00,$E7,$00,$F0,$06,$C3,$18 ; {#HTML[<img
+ $C686 DEFB $E0,$0F,$01,$3C,$E0,$0F,$01,$3C ; src="images/gfx/gfx-c67e.png">]
+ $C68E DEFB $C0,$19,$00,$A6,$80,$14,$00,$92 ;
+ $C696 DEFB $80,$10,$00,$82,$00,$69,$00,$66 ;
+ $C69E DEFB $00,$6E,$01,$F4,$00,$75,$01,$F0 ;
+ $C6A6 DEFB $00,$79,$01,$64,$80,$3D,$01,$F4 ;
+ $C6AE DEFB $80,$36,$03,$E8,$C0,$1B,$07,$10 ;
+ $C6B6 DEFB $C0,$1B,$07,$C0,$C0,$08,$0F,$20 ;
+ $C6BE DEFB $83,$30,$87,$20,$83,$38,$83,$18 ;
+ $C6C6 DEFB $C7,$00,$83,$38,$FF,$00,$C7,$00 ; }
+; Graphics, 2 frames -- Pogo front.
 @label=gfx_c6ce
- $C6CE DEFB $E4,$00,$E7,$00,$C2,$18,$43,$18
- $C6D6 DEFB $80,$3C,$01,$3C,$80,$3C,$01,$3C
- $C6DE DEFB $00,$66,$00,$66,$00,$52,$00,$4A
- $C6E6 DEFB $00,$40,$00,$02,$00,$23,$00,$C4
- $C6EE DEFB $00,$37,$00,$EC,$00,$57,$00,$EA
- $C6F6 DEFB $00,$65,$00,$A6,$80,$37,$01,$EC
- $C6FE DEFB $80,$3B,$01,$DC,$80,$3C,$01,$3C
- $C706 DEFB $C0,$17,$03,$E8,$C0,$18,$03,$18
- $C70E DEFB $C1,$0C,$83,$30,$83,$30,$C1,$0C
- $C716 DEFB $83,$38,$C1,$1C,$C7,$00,$E3,$00
-; Graphics, 4 frames
+ $C6CE DEFB $E4,$00,$E7,$00,$C2,$18,$43,$18 ; {#HTML[<img
+ $C6D6 DEFB $80,$3C,$01,$3C,$80,$3C,$01,$3C ; src="images/gfx/gfx-c6ce.png">]
+ $C6DE DEFB $00,$66,$00,$66,$00,$52,$00,$4A ;
+ $C6E6 DEFB $00,$40,$00,$02,$00,$23,$00,$C4 ;
+ $C6EE DEFB $00,$37,$00,$EC,$00,$57,$00,$EA ;
+ $C6F6 DEFB $00,$65,$00,$A6,$80,$37,$01,$EC ;
+ $C6FE DEFB $80,$3B,$01,$DC,$80,$3C,$01,$3C ;
+ $C706 DEFB $C0,$17,$03,$E8,$C0,$18,$03,$18 ;
+ $C70E DEFB $C1,$0C,$83,$30,$83,$30,$C1,$0C ;
+ $C716 DEFB $83,$38,$C1,$1C,$C7,$00,$E3,$00 ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c71e
- $C71E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $C726 DEFB $00,$FF,$00,$FF,$FE,$7F,$00,$9F
- $C72E DEFB $00,$FF,$FF,$3F,$00,$0F,$60,$FF
- $C736 DEFB $FF,$3E,$00,$07,$F0,$FF,$FF,$30
- $C73E DEFB $00,$07,$F0,$FF,$FE,$40,$0D,$03
- $C746 DEFB $98,$FF,$FE,$00,$3D,$03,$48,$FF
- $C74E DEFB $FE,$00,$7D,$01,$08,$FF,$FE,$00
- $C756 DEFB $FE,$00,$96,$FF,$FE,$00,$FE,$00
- $C75E DEFB $F7,$7F,$FE,$00,$F3,$00,$6F,$7F
- $C766 DEFB $FE,$00,$FD,$00,$9D,$7F,$FF,$00
- $C76E DEFB $7E,$00,$FE,$FF,$FF,$00,$6E,$01
- $C776 DEFB $DC,$FF,$FF,$80,$2D,$03,$E0,$FF
- $C77E DEFB $FF,$C0,$0C,$1F,$80,$FF,$FF,$C0
- $C786 DEFB $1B,$7F,$00,$FF,$FF,$C0,$1F,$7F
- $C78E DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C71E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $C726 DEFB $00,$FF,$00,$FF,$FE,$7F,$00,$9F ; src="images/gfx/gfx-c71e.png">]
+ $C72E DEFB $00,$FF,$FF,$3F,$00,$0F,$60,$FF ;
+ $C736 DEFB $FF,$3E,$00,$07,$F0,$FF,$FF,$30 ;
+ $C73E DEFB $00,$07,$F0,$FF,$FE,$40,$0D,$03 ;
+ $C746 DEFB $98,$FF,$FE,$00,$3D,$03,$48,$FF ;
+ $C74E DEFB $FE,$00,$7D,$01,$08,$FF,$FE,$00 ;
+ $C756 DEFB $FE,$00,$96,$FF,$FE,$00,$FE,$00 ;
+ $C75E DEFB $F7,$7F,$FE,$00,$F3,$00,$6F,$7F ;
+ $C766 DEFB $FE,$00,$FD,$00,$9D,$7F,$FF,$00 ;
+ $C76E DEFB $7E,$00,$FE,$FF,$FF,$00,$6E,$01 ;
+ $C776 DEFB $DC,$FF,$FF,$80,$2D,$03,$E0,$FF ;
+ $C77E DEFB $FF,$C0,$0C,$1F,$80,$FF,$FF,$C0 ;
+ $C786 DEFB $1B,$7F,$00,$FF,$FF,$C0,$1F,$7F ;
+ $C78E DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c796
- $C796 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $C79E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $C7A6 DEFB $00,$FF,$FF,$3F,$00,$FF,$00,$FF
- $C7AE DEFB $FF,$9F,$00,$9F,$00,$FF,$FF,$9F
- $C7B6 DEFB $00,$0F,$60,$FF,$FF,$9E,$00,$07
- $C7BE DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF
- $C7C6 DEFB $FF,$00,$0D,$03,$98,$FF,$FE,$00
- $C7CE DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$01
- $C7D6 DEFB $08,$FF,$FE,$00,$FE,$00,$92,$FF
- $C7DE DEFB $FE,$00,$FC,$00,$F7,$7F,$FE,$00
- $C7E6 DEFB $FE,$00,$6F,$7F,$FE,$00,$FE,$00
- $C7EE DEFB $9D,$7F,$FF,$00,$6D,$00,$FE,$FF
- $C7F6 DEFB $FF,$00,$6C,$01,$DC,$FF,$FF,$80
- $C7FE DEFB $1B,$03,$60,$FF,$FF,$C0,$1F,$1F
- $C806 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C796 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $C79E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-c796.png">]
+ $C7A6 DEFB $00,$FF,$FF,$3F,$00,$FF,$00,$FF ;
+ $C7AE DEFB $FF,$9F,$00,$9F,$00,$FF,$FF,$9F ;
+ $C7B6 DEFB $00,$0F,$60,$FF,$FF,$9E,$00,$07 ;
+ $C7BE DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF ;
+ $C7C6 DEFB $FF,$00,$0D,$03,$98,$FF,$FE,$00 ;
+ $C7CE DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$01 ;
+ $C7D6 DEFB $08,$FF,$FE,$00,$FE,$00,$92,$FF ;
+ $C7DE DEFB $FE,$00,$FC,$00,$F7,$7F,$FE,$00 ;
+ $C7E6 DEFB $FE,$00,$6F,$7F,$FE,$00,$FE,$00 ;
+ $C7EE DEFB $9D,$7F,$FF,$00,$6D,$00,$FE,$FF ;
+ $C7F6 DEFB $FF,$00,$6C,$01,$DC,$FF,$FF,$80 ;
+ $C7FE DEFB $1B,$03,$60,$FF,$FF,$C0,$1F,$1F ;
+ $C806 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c80e
- $C80E DEFB $FF,$E1,$00,$FF,$00,$FF,$FF,$C7
- $C816 DEFB $00,$FF,$00,$FF,$FF,$91,$00,$FF
- $C81E DEFB $00,$FF,$FF,$00,$0E,$7F,$00,$FF
- $C826 DEFB $FF,$00,$3F,$23,$80,$FF,$FE,$00
- $C82E DEFB $7F,$01,$DC,$FF,$FE,$00,$7F,$00
- $C836 DEFB $BE,$FF,$FE,$00,$FF,$00,$66,$FF
- $C83E DEFB $FE,$00,$FF,$00,$52,$FF,$FE,$00
- $C846 DEFB $FF,$00,$42,$FF,$FE,$00,$FB,$01
- $C84E DEFB $A4,$FF,$FF,$00,$5D,$01,$B0,$FF
- $C856 DEFB $FF,$00,$1D,$00,$CE,$FF,$FF,$80
- $C85E DEFB $1D,$00,$FF,$7F,$FF,$00,$7B,$00
- $C866 DEFB $FF,$7F,$FF,$00,$61,$00,$DB,$7F
- $C86E DEFB $FF,$02,$68,$00,$1C,$FF,$FF,$83
- $C876 DEFB $38,$E3,$00,$FF,$FF,$C3,$18,$FF
- $C87E DEFB $00,$FF,$FF,$E7,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $C80E DEFB $FF,$E1,$00,$FF,$00,$FF,$FF,$C7 ; {#HTML[<img
+ $C816 DEFB $00,$FF,$00,$FF,$FF,$91,$00,$FF ; src="images/gfx/gfx-c80e.png">]
+ $C81E DEFB $00,$FF,$FF,$00,$0E,$7F,$00,$FF ;
+ $C826 DEFB $FF,$00,$3F,$23,$80,$FF,$FE,$00 ;
+ $C82E DEFB $7F,$01,$DC,$FF,$FE,$00,$7F,$00 ;
+ $C836 DEFB $BE,$FF,$FE,$00,$FF,$00,$66,$FF ;
+ $C83E DEFB $FE,$00,$FF,$00,$52,$FF,$FE,$00 ;
+ $C846 DEFB $FF,$00,$42,$FF,$FE,$00,$FB,$01 ;
+ $C84E DEFB $A4,$FF,$FF,$00,$5D,$01,$B0,$FF ;
+ $C856 DEFB $FF,$00,$1D,$00,$CE,$FF,$FF,$80 ;
+ $C85E DEFB $1D,$00,$FF,$7F,$FF,$00,$7B,$00 ;
+ $C866 DEFB $FF,$7F,$FF,$00,$61,$00,$DB,$7F ;
+ $C86E DEFB $FF,$02,$68,$00,$1C,$FF,$FF,$83 ;
+ $C876 DEFB $38,$E3,$00,$FF,$FF,$C3,$18,$FF ;
+ $C87E DEFB $00,$FF,$FF,$E7,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c886
- $C886 DEFB $FF,$FF,$00,$3F,$00,$FF,$FF,$3E
- $C88E DEFB $00,$1F,$C0,$FF,$FF,$9C,$01,$0F
- $C896 DEFB $E0,$FF,$FF,$9C,$01,$0F,$E0,$FF
- $C89E DEFB $FF,$90,$01,$07,$F0,$FF,$FF,$00
- $C8A6 DEFB $0D,$01,$30,$FF,$FF,$00,$3C,$00
- $C8AE DEFB $96,$FF,$FE,$00,$7E,$00,$17,$7F
- $C8B6 DEFB $FE,$00,$FE,$00,$2D,$7F,$FE,$00
- $C8BE DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00
- $C8C6 DEFB $9F,$7F,$FE,$00,$FF,$00,$F6,$FF
- $C8CE DEFB $FE,$00,$FC,$01,$F8,$FF,$FF,$00
- $C8D6 DEFB $7F,$07,$70,$FF,$FF,$00,$7F,$0F
- $C8DE DEFB $40,$FF,$FF,$80,$37,$07,$30,$FF
- $C8E6 DEFB $FF,$C0,$1B,$07,$50,$FF,$FF,$E0
- $C8EE DEFB $03,$0F,$C0,$FF,$FF,$F8,$03,$1F
- $C8F6 DEFB $80,$FF,$FF,$FC,$00,$7F,$00,$FF
-; Graphics, 4 frames
+ $C886 DEFB $FF,$FF,$00,$3F,$00,$FF,$FF,$3E ; {#HTML[<img
+ $C88E DEFB $00,$1F,$C0,$FF,$FF,$9C,$01,$0F ; src="images/gfx/gfx-c886.png">]
+ $C896 DEFB $E0,$FF,$FF,$9C,$01,$0F,$E0,$FF ;
+ $C89E DEFB $FF,$90,$01,$07,$F0,$FF,$FF,$00 ;
+ $C8A6 DEFB $0D,$01,$30,$FF,$FF,$00,$3C,$00 ;
+ $C8AE DEFB $96,$FF,$FE,$00,$7E,$00,$17,$7F ;
+ $C8B6 DEFB $FE,$00,$FE,$00,$2D,$7F,$FE,$00 ;
+ $C8BE DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00 ;
+ $C8C6 DEFB $9F,$7F,$FE,$00,$FF,$00,$F6,$FF ;
+ $C8CE DEFB $FE,$00,$FC,$01,$F8,$FF,$FF,$00 ;
+ $C8D6 DEFB $7F,$07,$70,$FF,$FF,$00,$7F,$0F ;
+ $C8DE DEFB $40,$FF,$FF,$80,$37,$07,$30,$FF ;
+ $C8E6 DEFB $FF,$C0,$1B,$07,$50,$FF,$FF,$E0 ;
+ $C8EE DEFB $03,$0F,$C0,$FF,$FF,$F8,$03,$1F ;
+ $C8F6 DEFB $80,$FF,$FF,$FC,$00,$7F,$00,$FF ; }
+; Graphics, 4 frames -- masks for Pogo.
 @label=gfx_c8fe
- $C8FE DEFB $FF,$3F,$00,$0F,$00,$FF,$FF,$9E
- $C906 DEFB $00,$07,$B0,$FF,$FF,$9E,$00,$03
- $C90E DEFB $B8,$FF,$FF,$90,$00,$03,$78,$FF
- $C916 DEFB $FF,$80,$0F,$01,$64,$FF,$FF,$00
- $C91E DEFB $1F,$01,$50,$FF,$FF,$00,$3F,$01
- $C926 DEFB $40,$FF,$FF,$00,$3F,$00,$A4,$FF
- $C92E DEFB $FF,$00,$7F,$00,$BD,$7F,$FF,$00
- $C936 DEFB $7F,$00,$DB,$7F,$FF,$00,$7F,$00
- $C93E DEFB $E7,$7F,$FF,$80,$3F,$00,$7D,$7F
- $C946 DEFB $FF,$80,$3F,$00,$AE,$FF,$FF,$C0
- $C94E DEFB $1D,$01,$B0,$FF,$FF,$E0,$0D,$0F
- $C956 DEFB $80,$FF,$FF,$F0,$01,$3F,$00,$FF
- $C95E DEFB $FF,$E0,$0B,$1F,$40,$FF,$FF,$E0
- $C966 DEFB $0B,$1F,$C0,$FF,$FF,$E0,$0C,$3F
- $C96E DEFB $00,$FF,$FF,$F0,$00,$FF,$00,$FF
-; Graphics, 2 frames
+ $C8FE DEFB $FF,$3F,$00,$0F,$00,$FF,$FF,$9E ; {#HTML[<img
+ $C906 DEFB $00,$07,$B0,$FF,$FF,$9E,$00,$03 ; src="images/gfx/gfx-c8fe.png">]
+ $C90E DEFB $B8,$FF,$FF,$90,$00,$03,$78,$FF ;
+ $C916 DEFB $FF,$80,$0F,$01,$64,$FF,$FF,$00 ;
+ $C91E DEFB $1F,$01,$50,$FF,$FF,$00,$3F,$01 ;
+ $C926 DEFB $40,$FF,$FF,$00,$3F,$00,$A4,$FF ;
+ $C92E DEFB $FF,$00,$7F,$00,$BD,$7F,$FF,$00 ;
+ $C936 DEFB $7F,$00,$DB,$7F,$FF,$00,$7F,$00 ;
+ $C93E DEFB $E7,$7F,$FF,$80,$3F,$00,$7D,$7F ;
+ $C946 DEFB $FF,$80,$3F,$00,$AE,$FF,$FF,$C0 ;
+ $C94E DEFB $1D,$01,$B0,$FF,$FF,$E0,$0D,$0F ;
+ $C956 DEFB $80,$FF,$FF,$F0,$01,$3F,$00,$FF ;
+ $C95E DEFB $FF,$E0,$0B,$1F,$40,$FF,$FF,$E0 ;
+ $C966 DEFB $0B,$1F,$C0,$FF,$FF,$E0,$0C,$3F ;
+ $C96E DEFB $00,$FF,$FF,$F0,$00,$FF,$00,$FF ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_c976
- $C976 DEFB $CE,$00,$4F,$00,$E4,$01,$07,$B0
- $C97E DEFB $E0,$03,$03,$B8,$E0,$00,$03,$78
- $C986 DEFB $C0,$07,$01,$7C,$80,$27,$01,$64
- $C98E DEFB $00,$67,$01,$50,$00,$4F,$01,$40
- $C996 DEFB $00,$5F,$01,$60,$00,$7F,$00,$BA
- $C99E DEFB $00,$7F,$00,$36,$00,$7F,$00,$CE
- $C9A6 DEFB $80,$3D,$01,$CC,$80,$1E,$03,$D0
- $C9AE DEFB $C0,$06,$0F,$80,$C0,$18,$07,$D0
- $C9B6 DEFB $82,$30,$07,$F0,$81,$34,$0F,$00
- $C9BE DEFB $81,$3C,$FF,$00,$C3,$00,$FF,$00
-; Graphics, 2 frames
+ $C976 DEFB $CE,$00,$4F,$00,$E4,$01,$07,$B0 ; {#HTML[<img
+ $C97E DEFB $E0,$03,$03,$B8,$E0,$00,$03,$78 ; src="images/gfx/gfx-c976.png">]
+ $C986 DEFB $C0,$07,$01,$7C,$80,$27,$01,$64 ;
+ $C98E DEFB $00,$67,$01,$50,$00,$4F,$01,$40 ;
+ $C996 DEFB $00,$5F,$01,$60,$00,$7F,$00,$BA ;
+ $C99E DEFB $00,$7F,$00,$36,$00,$7F,$00,$CE ;
+ $C9A6 DEFB $80,$3D,$01,$CC,$80,$1E,$03,$D0 ;
+ $C9AE DEFB $C0,$06,$0F,$80,$C0,$18,$07,$D0 ;
+ $C9B6 DEFB $82,$30,$07,$F0,$81,$34,$0F,$00 ;
+ $C9BE DEFB $81,$3C,$FF,$00,$C3,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_c9c6
- $C9C6 DEFB $F1,$00,$E7,$00,$F0,$00,$C3,$18
- $C9CE DEFB $E0,$09,$01,$3C,$E0,$00,$01,$3C
- $C9D6 DEFB $C0,$09,$00,$B2,$80,$33,$00,$A8
- $C9DE DEFB $80,$33,$00,$A0,$00,$67,$01,$B0
- $C9E6 DEFB $00,$6F,$00,$DC,$00,$7F,$00,$DA
- $C9EE DEFB $00,$7F,$00,$E6,$80,$3F,$01,$FC
- $C9F6 DEFB $80,$3F,$03,$E8,$C0,$1F,$07,$70
- $C9FE DEFB $C0,$0F,$07,$B0,$C0,$10,$07,$30
-*$CA06 DEFB $87,$30,$83,$38,$83,$38,$83,$38
- $CA0E DEFB $83,$38,$C7,$00,$C7,$00,$FF,$00
-; Graphics, 2 frames
+ $C9C6 DEFB $F1,$00,$E7,$00,$F0,$00,$C3,$18 ; {#HTML[<img
+ $C9CE DEFB $E0,$09,$01,$3C,$E0,$00,$01,$3C ; src="images/gfx/gfx-c9c6.png">]
+ $C9D6 DEFB $C0,$09,$00,$B2,$80,$33,$00,$A8 ;
+ $C9DE DEFB $80,$33,$00,$A0,$00,$67,$01,$B0 ;
+ $C9E6 DEFB $00,$6F,$00,$DC,$00,$7F,$00,$DA ;
+ $C9EE DEFB $00,$7F,$00,$E6,$80,$3F,$01,$FC ;
+ $C9F6 DEFB $80,$3F,$03,$E8,$C0,$1F,$07,$70 ;
+ $C9FE DEFB $C0,$0F,$07,$B0,$C0,$10,$07,$30 ;
+*$CA06 DEFB $87,$30,$83,$38,$83,$38,$83,$38 ;
+ $CA0E DEFB $83,$38,$C7,$00,$C7,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo back.
 @label=gfx_ca16
- $CA16 DEFB $F2,$00,$4F,$00,$E0,$0C,$87,$30
- $CA1E DEFB $C0,$1C,$03,$78,$C0,$1C,$03,$38
- $CA26 DEFB $80,$20,$01,$CC,$80,$1C,$01,$F0
- $CA2E DEFB $80,$3C,$01,$FC,$00,$7C,$00,$FE
- $CA36 DEFB $00,$7E,$00,$7E,$00,$7F,$00,$7E
- $CA3E DEFB $00,$7F,$00,$FE,$80,$3F,$01,$FC
- $CA46 DEFB $80,$3F,$01,$FC,$80,$1F,$01,$F8
- $CA4E DEFB $C0,$0F,$03,$F0,$C0,$10,$03,$08
- $CA56 DEFB $C3,$18,$C3,$18,$87,$30,$E1,$0C
- $CA5E DEFB $87,$30,$E1,$0C,$CF,$00,$F3,$00
-; Graphics, 2 frames
+ $CA16 DEFB $F2,$00,$4F,$00,$E0,$0C,$87,$30 ; {#HTML[<img
+ $CA1E DEFB $C0,$1C,$03,$78,$C0,$1C,$03,$38 ; src="images/gfx/gfx-ca16.png">]
+ $CA26 DEFB $80,$20,$01,$CC,$80,$1C,$01,$F0 ;
+ $CA2E DEFB $80,$3C,$01,$FC,$00,$7C,$00,$FE ;
+ $CA36 DEFB $00,$7E,$00,$7E,$00,$7F,$00,$7E ;
+ $CA3E DEFB $00,$7F,$00,$FE,$80,$3F,$01,$FC ;
+ $CA46 DEFB $80,$3F,$01,$FC,$80,$1F,$01,$F8 ;
+ $CA4E DEFB $C0,$0F,$03,$F0,$C0,$10,$03,$08 ;
+ $CA56 DEFB $C3,$18,$C3,$18,$87,$30,$E1,$0C ;
+ $CA5E DEFB $87,$30,$E1,$0C,$CF,$00,$F3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_ca66
- $CA66 DEFB $FF,$00,$FF,$00,$F2,$00,$4F,$00
- $CA6E DEFB $E0,$0C,$07,$30,$E0,$0C,$07,$70
- $CA76 DEFB $C0,$1C,$03,$38,$C0,$02,$03,$48
- $CA7E DEFB $C0,$1C,$03,$F0,$C0,$1C,$03,$F8
- $CA86 DEFB $80,$3E,$01,$7C,$80,$3F,$01,$7C
- $CA8E DEFB $80,$3F,$01,$FC,$80,$3F,$01,$FC
- $CA96 DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8
- $CA9E DEFB $E0,$0F,$03,$F0,$C0,$10,$03,$08
- $CAA6 DEFB $C3,$18,$E1,$0C,$87,$30,$E1,$0C
- $CAAE DEFB $87,$30,$F3,$00,$CF,$00,$FF,$00
-; Graphics, 2 frames
+ $CA66 DEFB $FF,$00,$FF,$00,$F2,$00,$4F,$00 ; {#HTML[<img
+ $CA6E DEFB $E0,$0C,$07,$30,$E0,$0C,$07,$70 ; src="images/gfx/gfx-ca66.png">]
+ $CA76 DEFB $C0,$1C,$03,$38,$C0,$02,$03,$48 ;
+ $CA7E DEFB $C0,$1C,$03,$F0,$C0,$1C,$03,$F8 ;
+ $CA86 DEFB $80,$3E,$01,$7C,$80,$3F,$01,$7C ;
+ $CA8E DEFB $80,$3F,$01,$FC,$80,$3F,$01,$FC ;
+ $CA96 DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8 ;
+ $CA9E DEFB $E0,$0F,$03,$F0,$C0,$10,$03,$08 ;
+ $CAA6 DEFB $C3,$18,$E1,$0C,$87,$30,$E1,$0C ;
+ $CAAE DEFB $87,$30,$F3,$00,$CF,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo back going from camera.
 @label=gfx_cab6
- $CAB6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CABE DEFB $F2,$00,$4F,$00,$E1,$0C,$07,$30
- $CAC6 DEFB $E0,$0E,$07,$70,$C0,$1C,$03,$38
- $CACE DEFB $C0,$12,$03,$48,$E0,$0E,$07,$70
- $CAD6 DEFB $C0,$1E,$03,$F8,$C0,$1E,$03,$F8
- $CADE DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8
- $CAE6 DEFB $E0,$0F,$07,$F0,$E0,$0F,$07,$F0
- $CAEE DEFB $E0,$07,$0F,$E0,$E0,$08,$07,$00
- $CAF6 DEFB $C3,$18,$87,$30,$C3,$18,$C3,$18
- $CAFE DEFB $E7,$00,$C3,$18,$FF,$00,$E7,$00
-; Graphics, 2 frames
+ $CAB6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CABE DEFB $F2,$00,$4F,$00,$E1,$0C,$07,$30 ; src="images/gfx/gfx-cab6.png">]
+ $CAC6 DEFB $E0,$0E,$07,$70,$C0,$1C,$03,$38 ;
+ $CACE DEFB $C0,$12,$03,$48,$E0,$0E,$07,$70 ;
+ $CAD6 DEFB $C0,$1E,$03,$F8,$C0,$1E,$03,$F8 ;
+ $CADE DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8 ;
+ $CAE6 DEFB $E0,$0F,$07,$F0,$E0,$0F,$07,$F0 ;
+ $CAEE DEFB $E0,$07,$0F,$E0,$E0,$08,$07,$00 ;
+ $CAF6 DEFB $C3,$18,$87,$30,$C3,$18,$C3,$18 ;
+ $CAFE DEFB $E7,$00,$C3,$18,$FF,$00,$E7,$00 ; }
+; Graphics, 2 frames -- Pogo back going from camera.
 @label=gfx_cb06
- $CB06 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CB0E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CB16 DEFB $F9,$00,$3F,$00,$F0,$04,$1F,$40
- $CB1E DEFB $E0,$0E,$0F,$E0,$E0,$0C,$0F,$20
- $CB26 DEFB $E0,$01,$0F,$C0,$E0,$0D,$0F,$E0
- $CB2E DEFB $C0,$1E,$07,$F0,$C0,$1E,$07,$F0
- $CB36 DEFB $C0,$1F,$07,$F0,$C0,$1F,$07,$F0
- $CB3E DEFB $E0,$0F,$0F,$E0,$F0,$03,$0F,$C0
- $CB46 DEFB $F0,$00,$0F,$00,$E1,$0C,$87,$30
- $CB4E DEFB $E1,$0C,$87,$30,$F3,$00,$CF,$00
-; Graphics, 2 frames
+ $CB06 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CB0E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-cb06.png">]
+ $CB16 DEFB $F9,$00,$3F,$00,$F0,$04,$1F,$40 ;
+ $CB1E DEFB $E0,$0E,$0F,$E0,$E0,$0C,$0F,$20 ;
+ $CB26 DEFB $E0,$01,$0F,$C0,$E0,$0D,$0F,$E0 ;
+ $CB2E DEFB $C0,$1E,$07,$F0,$C0,$1E,$07,$F0 ;
+ $CB36 DEFB $C0,$1F,$07,$F0,$C0,$1F,$07,$F0 ;
+ $CB3E DEFB $E0,$0F,$0F,$E0,$F0,$03,$0F,$C0 ;
+ $CB46 DEFB $F0,$00,$0F,$00,$E1,$0C,$87,$30 ;
+ $CB4E DEFB $E1,$0C,$87,$30,$F3,$00,$CF,$00 ; }
+; Graphics, 2 frames -- Pogo front going to camera.
 @label=gfx_cb56
- $CB56 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CB5E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CB66 DEFB $F9,$00,$1F,$00,$F0,$06,$0F,$60
- $CB6E DEFB $E0,$0E,$07,$70,$E0,$0A,$07,$10
- $CB76 DEFB $E0,$04,$07,$20,$E0,$00,$07,$00
- $CB7E DEFB $C0,$15,$03,$A8,$C0,$1B,$03,$D8
- $CB86 DEFB $C0,$1A,$03,$98,$C0,$1D,$03,$B8
- $CB8E DEFB $E0,$0E,$07,$70,$E0,$0B,$07,$B0
- $CB96 DEFB $E0,$04,$0F,$40,$C3,$18,$87,$30
- $CB9E DEFB $C3,$18,$87,$30,$E7,$00,$CF,$00
-; Graphics, 2 frames
+ $CB56 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CB5E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-cb56.png">]
+ $CB66 DEFB $F9,$00,$1F,$00,$F0,$06,$0F,$60 ;
+ $CB6E DEFB $E0,$0E,$07,$70,$E0,$0A,$07,$10 ;
+ $CB76 DEFB $E0,$04,$07,$20,$E0,$00,$07,$00 ;
+ $CB7E DEFB $C0,$15,$03,$A8,$C0,$1B,$03,$D8 ;
+ $CB86 DEFB $C0,$1A,$03,$98,$C0,$1D,$03,$B8 ;
+ $CB8E DEFB $E0,$0E,$07,$70,$E0,$0B,$07,$B0 ;
+ $CB96 DEFB $E0,$04,$0F,$40,$C3,$18,$87,$30 ;
+ $CB9E DEFB $C3,$18,$87,$30,$E7,$00,$CF,$00 ; }
+; Graphics, 2 frames -- Pogo front going to camera.
 @label=gfx_cba6
- $CBA6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CBAE DEFB $F3,$00,$8F,$00,$E1,$0C,$07,$70
- $CBB6 DEFB $E0,$0E,$07,$70,$C0,$12,$03,$48
- $CBBE DEFB $C0,$08,$03,$20,$C0,$00,$03,$00
- $CBC6 DEFB $C0,$01,$03,$C0,$80,$2B,$01,$E4
- $CBCE DEFB $80,$33,$01,$EC,$80,$3A,$01,$AC
- $CBD6 DEFB $C0,$1D,$03,$D8,$C0,$1E,$03,$38
- $CBDE DEFB $E0,$0B,$07,$D0,$E0,$0C,$07,$20
- $CBE6 DEFB $E1,$04,$C3,$18,$C3,$18,$C3,$18
- $CBEE DEFB $C3,$18,$E7,$00,$E7,$00,$FF,$00
-; Graphics, 2 frames
+ $CBA6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CBAE DEFB $F3,$00,$8F,$00,$E1,$0C,$07,$70 ; src="images/gfx/gfx-cba6.png">]
+ $CBB6 DEFB $E0,$0E,$07,$70,$C0,$12,$03,$48 ;
+ $CBBE DEFB $C0,$08,$03,$20,$C0,$00,$03,$00 ;
+ $CBC6 DEFB $C0,$01,$03,$C0,$80,$2B,$01,$E4 ;
+ $CBCE DEFB $80,$33,$01,$EC,$80,$3A,$01,$AC ;
+ $CBD6 DEFB $C0,$1D,$03,$D8,$C0,$1E,$03,$38 ;
+ $CBDE DEFB $E0,$0B,$07,$D0,$E0,$0C,$07,$20 ;
+ $CBE6 DEFB $E1,$04,$C3,$18,$C3,$18,$C3,$18 ;
+ $CBEE DEFB $C3,$18,$E7,$00,$E7,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo front going to camera.
 @label=gfx_cbf6
- $CBF6 DEFB $FF,$00,$FF,$00,$F1,$00,$8F,$00
- $CBFE DEFB $E0,$0C,$07,$30,$C0,$1E,$03,$78
- $CC06 DEFB $C0,$1E,$03,$78,$80,$32,$01,$4C
- $CC0E DEFB $80,$28,$01,$24,$80,$20,$01,$04
- $CC16 DEFB $80,$13,$01,$C8,$80,$27,$01,$E4
- $CC1E DEFB $80,$37,$01,$EC,$80,$35,$01,$AC
- $CC26 DEFB $C0,$1B,$03,$D8,$C0,$14,$03,$28
- $CC2E DEFB $C0,$1B,$03,$D8,$C0,$08,$03,$18
- $CC36 DEFB $87,$30,$C3,$10,$87,$30,$E1,$0C
- $CC3E DEFB $CF,$00,$E1,$0C,$FF,$00,$F3,$00
-; Graphics, 4 frames
+ $CBF6 DEFB $FF,$00,$FF,$00,$F1,$00,$8F,$00 ; {#HTML[<img
+ $CBFE DEFB $E0,$0C,$07,$30,$C0,$1E,$03,$78 ; src="images/gfx/gfx-cbf6.png">]
+ $CC06 DEFB $C0,$1E,$03,$78,$80,$32,$01,$4C ;
+ $CC0E DEFB $80,$28,$01,$24,$80,$20,$01,$04 ;
+ $CC16 DEFB $80,$13,$01,$C8,$80,$27,$01,$E4 ;
+ $CC1E DEFB $80,$37,$01,$EC,$80,$35,$01,$AC ;
+ $CC26 DEFB $C0,$1B,$03,$D8,$C0,$14,$03,$28 ;
+ $CC2E DEFB $C0,$1B,$03,$D8,$C0,$08,$03,$18 ;
+ $CC36 DEFB $87,$30,$C3,$10,$87,$30,$E1,$0C ;
+ $CC3E DEFB $CF,$00,$E1,$0C,$FF,$00,$F3,$00 ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_cc46
- $CC46 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $CC4E DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07
- $CC56 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF
- $CC5E DEFB $FE,$40,$0D,$03,$C8,$FF,$FE,$00
- $CC66 DEFB $3D,$03,$A0,$FF,$FE,$00,$7D,$01
- $CC6E DEFB $80,$FF,$FE,$00,$FE,$00,$C6,$FF
- $CC76 DEFB $FE,$00,$FE,$00,$F7,$7F,$FE,$00
- $CC7E DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00
- $CC86 DEFB $9D,$7F,$FF,$00,$7D,$00,$FE,$FF
- $CC8E DEFB $FF,$00,$7E,$01,$DC,$FF,$FF,$80
- $CC96 DEFB $37,$03,$60,$FF,$FF,$C0,$1B,$1F
- $CC9E DEFB $40,$FF,$FF,$E0,$07,$3F,$00,$FF
- $CCA6 DEFB $FF,$E0,$06,$1F,$C0,$FF,$FF,$C0
- $CCAE DEFB $1B,$1F,$C0,$FF,$FF,$C0,$1C,$3F
- $CCB6 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $CC46 DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $CC4E DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$07 ; src="images/gfx/gfx-cc46.png">]
+ $CC56 DEFB $F0,$FF,$FF,$30,$00,$07,$F0,$FF ;
+ $CC5E DEFB $FE,$40,$0D,$03,$C8,$FF,$FE,$00 ;
+ $CC66 DEFB $3D,$03,$A0,$FF,$FE,$00,$7D,$01 ;
+ $CC6E DEFB $80,$FF,$FE,$00,$FE,$00,$C6,$FF ;
+ $CC76 DEFB $FE,$00,$FE,$00,$F7,$7F,$FE,$00 ;
+ $CC7E DEFB $FF,$00,$6F,$7F,$FE,$00,$FF,$00 ;
+ $CC86 DEFB $9D,$7F,$FF,$00,$7D,$00,$FE,$FF ;
+ $CC8E DEFB $FF,$00,$7E,$01,$DC,$FF,$FF,$80 ;
+ $CC96 DEFB $37,$03,$60,$FF,$FF,$C0,$1B,$1F ;
+ $CC9E DEFB $40,$FF,$FF,$E0,$07,$3F,$00,$FF ;
+ $CCA6 DEFB $FF,$E0,$06,$1F,$C0,$FF,$FF,$C0 ;
+ $CCAE DEFB $1B,$1F,$C0,$FF,$FF,$C0,$1C,$3F ;
+ $CCB6 DEFB $00,$FF,$FF,$E0,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_ccbe
- $CCBE DEFB $FF,$FF,$00,$9F,$00,$FF,$FF,$3F
- $CCC6 DEFB $00,$0F,$60,$FF,$FF,$9E,$00,$07
- $CCCE DEFB $F0,$FF,$FF,$90,$00,$07,$F0,$FF
- $CCD6 DEFB $FF,$00,$0D,$03,$E0,$FF,$FE,$00
- $CCDE DEFB $3D,$03,$D0,$FF,$FE,$00,$7D,$01
- $CCE6 DEFB $C0,$FF,$FE,$00,$FE,$00,$E2,$FF
- $CCEE DEFB $FE,$00,$FC,$00,$F7,$7F,$FE,$00
- $CCF6 DEFB $FE,$00,$6F,$7F,$FE,$00,$FF,$00
- $CCFE DEFB $9D,$7F,$FF,$00,$7F,$00,$CE,$FF
- $CD06 DEFB $FF,$00,$7D,$01,$D4,$FF,$FF,$80
- $CD0E DEFB $3E,$03,$F0,$FF,$FF,$C0,$0E,$0F
- $CD16 DEFB $E0,$FF,$FF,$E0,$03,$1F,$00,$FF
- $CD1E DEFB $FF,$E0,$0C,$7F,$00,$FF,$FF,$C0
- $CD26 DEFB $1B,$7F,$00,$FF,$FF,$C0,$1E,$FF
- $CD2E DEFB $00,$FF,$FF,$E1,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $CCBE DEFB $FF,$FF,$00,$9F,$00,$FF,$FF,$3F ; {#HTML[<img
+ $CCC6 DEFB $00,$0F,$60,$FF,$FF,$9E,$00,$07 ; src="images/gfx/gfx-ccbe.png">]
+ $CCCE DEFB $F0,$FF,$FF,$90,$00,$07,$F0,$FF ;
+ $CCD6 DEFB $FF,$00,$0D,$03,$E0,$FF,$FE,$00 ;
+ $CCDE DEFB $3D,$03,$D0,$FF,$FE,$00,$7D,$01 ;
+ $CCE6 DEFB $C0,$FF,$FE,$00,$FE,$00,$E2,$FF ;
+ $CCEE DEFB $FE,$00,$FC,$00,$F7,$7F,$FE,$00 ;
+ $CCF6 DEFB $FE,$00,$6F,$7F,$FE,$00,$FF,$00 ;
+ $CCFE DEFB $9D,$7F,$FF,$00,$7F,$00,$CE,$FF ;
+ $CD06 DEFB $FF,$00,$7D,$01,$D4,$FF,$FF,$80 ;
+ $CD0E DEFB $3E,$03,$F0,$FF,$FF,$C0,$0E,$0F ;
+ $CD16 DEFB $E0,$FF,$FF,$E0,$03,$1F,$00,$FF ;
+ $CD1E DEFB $FF,$E0,$0C,$7F,$00,$FF,$FF,$C0 ;
+ $CD26 DEFB $1B,$7F,$00,$FF,$FF,$C0,$1E,$FF ;
+ $CD2E DEFB $00,$FF,$FF,$E1,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_cd36
- $CD36 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$E1
- $CD3E DEFB $00,$9F,$00,$FF,$FF,$C0,$1E,$0F
- $CD46 DEFB $60,$FF,$FF,$C0,$00,$07,$90,$FF
- $CD4E DEFB $FE,$00,$1D,$03,$08,$FF,$FF,$00
- $CD56 DEFB $3D,$03,$48,$FF,$FF,$00,$1D,$01
- $CD5E DEFB $98,$FF,$FE,$00,$9E,$00,$FA,$FF
- $CD66 DEFB $FE,$00,$9F,$00,$75,$7F,$FE,$00
- $CD6E DEFB $3F,$00,$8F,$7F,$FE,$00,$7F,$00
- $CD76 DEFB $8F,$7F,$FE,$00,$FF,$00,$75,$7F
- $CD7E DEFB $FE,$00,$FE,$00,$FA,$FF,$FF,$00
- $CD86 DEFB $7D,$01,$98,$FF,$FF,$00,$7D,$03
- $CD8E DEFB $48,$FF,$FF,$80,$1D,$03,$08,$FF
- $CD96 DEFB $FF,$C0,$00,$07,$90,$FF,$FF,$C0
- $CD9E DEFB $1E,$0F,$60,$FF,$FF,$E1,$00,$9F
- $CDA6 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $CD36 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$E1 ; {#HTML[<img
+ $CD3E DEFB $00,$9F,$00,$FF,$FF,$C0,$1E,$0F ; src="images/gfx/gfx-cd36.png">]
+ $CD46 DEFB $60,$FF,$FF,$C0,$00,$07,$90,$FF ;
+ $CD4E DEFB $FE,$00,$1D,$03,$08,$FF,$FF,$00 ;
+ $CD56 DEFB $3D,$03,$48,$FF,$FF,$00,$1D,$01 ;
+ $CD5E DEFB $98,$FF,$FE,$00,$9E,$00,$FA,$FF ;
+ $CD66 DEFB $FE,$00,$9F,$00,$75,$7F,$FE,$00 ;
+ $CD6E DEFB $3F,$00,$8F,$7F,$FE,$00,$7F,$00 ;
+ $CD76 DEFB $8F,$7F,$FE,$00,$FF,$00,$75,$7F ;
+ $CD7E DEFB $FE,$00,$FE,$00,$FA,$FF,$FF,$00 ;
+ $CD86 DEFB $7D,$01,$98,$FF,$FF,$00,$7D,$03 ;
+ $CD8E DEFB $48,$FF,$FF,$80,$1D,$03,$08,$FF ;
+ $CD96 DEFB $FF,$C0,$00,$07,$90,$FF,$FF,$C0 ;
+ $CD9E DEFB $1E,$0F,$60,$FF,$FF,$E1,$00,$9F ;
+ $CDA6 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_cdae
- $CDAE DEFB $FF,$E0,$00,$FF,$00,$FF,$FF,$C0
- $CDB6 DEFB $1F,$7F,$00,$FF,$FF,$C0,$1C,$FF
- $CDBE DEFB $00,$FF,$FF,$E1,$0C,$FF,$00,$FF
- $CDC6 DEFB $FF,$E0,$0E,$7F,$00,$FF,$FF,$C0
- $CDCE DEFB $0E,$1F,$80,$FF,$FF,$80,$1E,$03
- $CDD6 DEFB $E0,$FF,$FF,$00,$7D,$01,$DC,$FF
- $CDDE DEFB $FF,$00,$7F,$00,$FE,$FF,$FE,$00
- $CDE6 DEFB $FF,$00,$9D,$7F,$FE,$00,$FF,$00
- $CDEE DEFB $6F,$7F,$FE,$00,$FE,$00,$F6,$FF
- $CDF6 DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00
- $CDFE DEFB $7D,$03,$08,$FF,$FE,$00,$3D,$03
- $CE06 DEFB $48,$FF,$FE,$40,$0D,$03,$98,$FF
- $CE0E DEFB $FF,$30,$00,$07,$F0,$FF,$FF,$3E
- $CE16 DEFB $00,$07,$F0,$FF,$FF,$3F,$00,$0F
- $CE1E DEFB $60,$FF,$FE,$7F,$00,$9F,$00,$FF
-; Graphics, 4 frames
+ $CDAE DEFB $FF,$E0,$00,$FF,$00,$FF,$FF,$C0 ; {#HTML[<img
+ $CDB6 DEFB $1F,$7F,$00,$FF,$FF,$C0,$1C,$FF ; src="images/gfx/gfx-cdae.png">]
+ $CDBE DEFB $00,$FF,$FF,$E1,$0C,$FF,$00,$FF ;
+ $CDC6 DEFB $FF,$E0,$0E,$7F,$00,$FF,$FF,$C0 ;
+ $CDCE DEFB $0E,$1F,$80,$FF,$FF,$80,$1E,$03 ;
+ $CDD6 DEFB $E0,$FF,$FF,$00,$7D,$01,$DC,$FF ;
+ $CDDE DEFB $FF,$00,$7F,$00,$FE,$FF,$FE,$00 ;
+ $CDE6 DEFB $FF,$00,$9D,$7F,$FE,$00,$FF,$00 ;
+ $CDEE DEFB $6F,$7F,$FE,$00,$FE,$00,$F6,$FF ;
+ $CDF6 DEFB $FE,$00,$FE,$01,$90,$FF,$FE,$00 ;
+ $CDFE DEFB $7D,$03,$08,$FF,$FE,$00,$3D,$03 ;
+ $CE06 DEFB $48,$FF,$FE,$40,$0D,$03,$98,$FF ;
+ $CE0E DEFB $FF,$30,$00,$07,$F0,$FF,$FF,$3E ;
+ $CE16 DEFB $00,$07,$F0,$FF,$FF,$3F,$00,$0F ;
+ $CE1E DEFB $60,$FF,$FE,$7F,$00,$9F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_ce26
- $CE26 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$E0
- $CE2E DEFB $00,$FF,$00,$FF,$FF,$C0,$1F,$7F
- $CE36 DEFB $00,$FF,$FF,$C0,$1F,$1F,$00,$FF
- $CE3E DEFB $FF,$80,$1E,$07,$E0,$FF,$FF,$00
- $CE46 DEFB $61,$03,$F8,$FF,$FF,$00,$7F,$01
- $CE4E DEFB $E0,$FF,$FE,$00,$FF,$00,$DE,$FF
- $CE56 DEFB $FE,$00,$FF,$00,$FF,$7F,$FE,$00
- $CE5E DEFB $FF,$00,$FF,$7F,$FE,$00,$FF,$00
- $CE66 DEFB $FF,$7F,$FE,$00,$FF,$00,$FF,$7F
- $CE6E DEFB $FE,$00,$FF,$00,$DE,$FF,$FF,$00
- $CE76 DEFB $7F,$01,$E0,$FF,$FE,$00,$61,$03
- $CE7E DEFB $F8,$FF,$FE,$00,$1E,$07,$60,$FF
- $CE86 DEFB $FF,$C0,$1F,$1F,$00,$FF,$FF,$C0
- $CE8E DEFB $1F,$7F,$00,$FF,$FF,$E0,$00,$FF
- $CE96 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $CE26 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$E0 ; {#HTML[<img
+ $CE2E DEFB $00,$FF,$00,$FF,$FF,$C0,$1F,$7F ; src="images/gfx/gfx-ce26.png">]
+ $CE36 DEFB $00,$FF,$FF,$C0,$1F,$1F,$00,$FF ;
+ $CE3E DEFB $FF,$80,$1E,$07,$E0,$FF,$FF,$00 ;
+ $CE46 DEFB $61,$03,$F8,$FF,$FF,$00,$7F,$01 ;
+ $CE4E DEFB $E0,$FF,$FE,$00,$FF,$00,$DE,$FF ;
+ $CE56 DEFB $FE,$00,$FF,$00,$FF,$7F,$FE,$00 ;
+ $CE5E DEFB $FF,$00,$FF,$7F,$FE,$00,$FF,$00 ;
+ $CE66 DEFB $FF,$7F,$FE,$00,$FF,$00,$FF,$7F ;
+ $CE6E DEFB $FE,$00,$FF,$00,$DE,$FF,$FF,$00 ;
+ $CE76 DEFB $7F,$01,$E0,$FF,$FE,$00,$61,$03 ;
+ $CE7E DEFB $F8,$FF,$FE,$00,$1E,$07,$60,$FF ;
+ $CE86 DEFB $FF,$C0,$1F,$1F,$00,$FF,$FF,$C0 ;
+ $CE8E DEFB $1F,$7F,$00,$FF,$FF,$E0,$00,$FF ;
+ $CE96 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_ce9e
- $CE9E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $CEA6 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $CEAE DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $CEB6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $CEBE DEFB $00,$FF,$00,$FF,$FE,$7F,$00,$9F
- $CEC6 DEFB $00,$FF,$FF,$3F,$00,$0F,$60,$FF
- $CECE DEFB $FF,$3E,$00,$07,$F0,$FF,$FF,$30
- $CED6 DEFB $00,$07,$F0,$FF,$FE,$40,$0D,$03
- $CEDE DEFB $98,$FF,$FE,$00,$3D,$03,$48,$FF
- $CEE6 DEFB $FE,$00,$7D,$03,$08,$FF,$FE,$00
- $CEEE DEFB $FE,$01,$90,$FF,$FE,$00,$FE,$00
- $CEF6 DEFB $F6,$FF,$FE,$00,$FF,$00,$6F,$7F
- $CEFE DEFB $FE,$00,$FF,$00,$9D,$7F,$FF,$00
- $CF06 DEFB $7F,$00,$FE,$FF,$FF,$00,$7D,$01
- $CF0E DEFB $DC,$FF,$FF,$80,$1E,$03,$E0,$FF
-; Graphics, 4 frames
+ $CE9E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $CEA6 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-ce9e.png">]
+ $CEAE DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $CEB6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $CEBE DEFB $00,$FF,$00,$FF,$FE,$7F,$00,$9F ;
+ $CEC6 DEFB $00,$FF,$FF,$3F,$00,$0F,$60,$FF ;
+ $CECE DEFB $FF,$3E,$00,$07,$F0,$FF,$FF,$30 ;
+ $CED6 DEFB $00,$07,$F0,$FF,$FE,$40,$0D,$03 ;
+ $CEDE DEFB $98,$FF,$FE,$00,$3D,$03,$48,$FF ;
+ $CEE6 DEFB $FE,$00,$7D,$03,$08,$FF,$FE,$00 ;
+ $CEEE DEFB $FE,$01,$90,$FF,$FE,$00,$FE,$00 ;
+ $CEF6 DEFB $F6,$FF,$FE,$00,$FF,$00,$6F,$7F ;
+ $CEFE DEFB $FE,$00,$FF,$00,$9D,$7F,$FF,$00 ;
+ $CF06 DEFB $7F,$00,$FE,$FF,$FF,$00,$7D,$01 ;
+ $CF0E DEFB $DC,$FF,$FF,$80,$1E,$03,$E0,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_cf16
- $CF16 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $CF1E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $CF26 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $CF2E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $CF36 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $CF3E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $CF46 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $CF4E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $CF56 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $CF5E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F
- $CF66 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$06
- $CF6E DEFB $F0,$FF,$FF,$30,$00,$04,$F1,$7F
- $CF76 DEFB $FE,$40,$0D,$02,$98,$FF,$FE,$00
- $CF7E DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03
- $CF86 DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF
-; Graphics, 2 frames
+ $CF16 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $CF1E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-cf16.png">]
+ $CF26 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $CF2E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $CF36 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ;
+ $CF3E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $CF46 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $CF4E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ;
+ $CF56 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $CF5E DEFB $FE,$7F,$00,$9F,$00,$FF,$FF,$3F ;
+ $CF66 DEFB $00,$0F,$60,$FF,$FF,$3E,$00,$06 ;
+ $CF6E DEFB $F0,$FF,$FF,$30,$00,$04,$F1,$7F ;
+ $CF76 DEFB $FE,$40,$0D,$02,$98,$FF,$FE,$00 ;
+ $CF7E DEFB $3D,$03,$48,$FF,$FE,$00,$7D,$03 ;
+ $CF86 DEFB $08,$FF,$FE,$00,$FE,$01,$90,$FF ; }
+; Graphics, 2 frames -- bubbles animation phases.
 @label=gfx_cf8e
- $CF8E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CF96 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CF9E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CFA6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CFAE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CFB6 DEFB $FF,$00,$EF,$00,$FD,$00,$C7,$10
- $CFBE DEFB $F8,$02,$E9,$00,$FD,$00,$F0,$06
- $CFC6 DEFB $FF,$00,$70,$06,$FE,$00,$39,$80
- $CFCE DEFB $FF,$00,$7F,$00,$FF,$00,$FF,$00
- $CFD6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $CF8E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CF96 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-cf8e.png">]
+ $CF9E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $CFA6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $CFAE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $CFB6 DEFB $FF,$00,$EF,$00,$FD,$00,$C7,$10 ;
+ $CFBE DEFB $F8,$02,$E9,$00,$FD,$00,$F0,$06 ;
+ $CFC6 DEFB $FF,$00,$70,$06,$FE,$00,$39,$80 ;
+ $CFCE DEFB $FF,$00,$7F,$00,$FF,$00,$FF,$00 ;
+ $CFD6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames -- bubbles animation phases.
 @label=gfx_cfde
- $CFDE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CFE6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $CFEE DEFB $FF,$00,$FF,$00,$FF,$00,$CF,$00
- $CFF6 DEFB $FF,$00,$07,$30,$FE,$00,$07,$D0
- $CFFE DEFB $FE,$00,$01,$C0,$FF,$00,$20,$0E
- $D006 DEFB $F9,$00,$E0,$0E,$F0,$06,$E0,$0E
- $D00E DEFB $F0,$06,$F1,$00,$F9,$00,$FF,$00
- $D016 DEFB $FF,$00,$BF,$00,$FF,$00,$1F,$40
- $D01E DEFB $FF,$00,$BF,$00,$FF,$00,$FF,$00
- $D026 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $CFDE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $CFE6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-cfde.png">]
+ $CFEE DEFB $FF,$00,$FF,$00,$FF,$00,$CF,$00 ;
+ $CFF6 DEFB $FF,$00,$07,$30,$FE,$00,$07,$D0 ;
+ $CFFE DEFB $FE,$00,$01,$C0,$FF,$00,$20,$0E ;
+ $D006 DEFB $F9,$00,$E0,$0E,$F0,$06,$E0,$0E ;
+ $D00E DEFB $F0,$06,$F1,$00,$F9,$00,$FF,$00 ;
+ $D016 DEFB $FF,$00,$BF,$00,$FF,$00,$1F,$40 ;
+ $D01E DEFB $FF,$00,$BF,$00,$FF,$00,$FF,$00 ;
+ $D026 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames -- bubbles animation phases.
 @label=gfx_d02e
- $D02E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D036 DEFB $FF,$00,$FF,$00,$FE,$00,$7F,$00
- $D03E DEFB $FC,$01,$3F,$80,$FC,$01,$39,$80
- $D046 DEFB $FE,$00,$70,$06,$E7,$00,$F0,$06
- $D04E DEFB $C3,$18,$E1,$00,$C3,$18,$C3,$18
- $D056 DEFB $E6,$00,$43,$18,$FC,$01,$27,$80
- $D05E DEFB $FC,$01,$27,$80,$FE,$00,$43,$18
- $D066 DEFB $FF,$00,$C3,$18,$FF,$00,$E7,$00
- $D06E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D076 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $D02E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $D036 DEFB $FF,$00,$FF,$00,$FE,$00,$7F,$00 ; src="images/gfx/gfx-d02e.png">]
+ $D03E DEFB $FC,$01,$3F,$80,$FC,$01,$39,$80 ;
+ $D046 DEFB $FE,$00,$70,$06,$E7,$00,$F0,$06 ;
+ $D04E DEFB $C3,$18,$E1,$00,$C3,$18,$C3,$18 ;
+ $D056 DEFB $E6,$00,$43,$18,$FC,$01,$27,$80 ;
+ $D05E DEFB $FC,$01,$27,$80,$FE,$00,$43,$18 ;
+ $D066 DEFB $FF,$00,$C3,$18,$FF,$00,$E7,$00 ;
+ $D06E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $D076 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames -- bubbles animation phases.
 @label=gfx_d07e
- $D07E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D086 DEFB $FF,$00,$FF,$00,$FF,$00,$BF,$00
- $D08E DEFB $FF,$00,$1F,$40,$FF,$00,$BD,$00
- $D096 DEFB $FF,$00,$F8,$02,$FD,$00,$FD,$00
- $D09E DEFB $F8,$02,$FF,$00,$FD,$00,$EF,$00
- $D0A6 DEFB $FF,$00,$C7,$10,$FF,$00,$EF,$00
- $D0AE DEFB $FF,$00,$BD,$00,$FF,$00,$18,$42
- $D0B6 DEFB $FF,$00,$BD,$00,$FF,$00,$FF,$00
- $D0BE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D0C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 4 frames
+ $D07E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $D086 DEFB $FF,$00,$FF,$00,$FF,$00,$BF,$00 ; src="images/gfx/gfx-d07e.png">]
+ $D08E DEFB $FF,$00,$1F,$40,$FF,$00,$BD,$00 ;
+ $D096 DEFB $FF,$00,$F8,$02,$FD,$00,$FD,$00 ;
+ $D09E DEFB $F8,$02,$FF,$00,$FD,$00,$EF,$00 ;
+ $D0A6 DEFB $FF,$00,$C7,$10,$FF,$00,$EF,$00 ;
+ $D0AE DEFB $FF,$00,$BD,$00,$FF,$00,$18,$42 ;
+ $D0B6 DEFB $FF,$00,$BD,$00,$FF,$00,$FF,$00 ;
+ $D0BE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $D0C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d0ce
- $D0CE DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $D0D6 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C
- $D0DE DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF
- $D0E6 DEFB $FF,$C0,$19,$02,$B0,$7F,$FF,$C0
- $D0EE DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00
- $D0F6 DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F
- $D0FE DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00
- $D106 DEFB $F6,$00,$FF,$7F,$FE,$00,$B9,$00
- $D10E DEFB $FF,$7F,$FF,$00,$7F,$00,$FE,$FF
- $D116 DEFB $FF,$80,$3B,$00,$BE,$FF,$FF,$C0
- $D11E DEFB $07,$01,$78,$FF,$FF,$F8,$01,$03
- $D126 DEFB $70,$FF,$FF,$FE,$00,$07,$70,$FF
- $D12E DEFB $FF,$FF,$00,$87,$30,$FF,$FF,$FF
- $D136 DEFB $00,$03,$38,$FF,$FF,$FE,$00,$03
- $D13E DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF
-; Graphics, 4 frames
+ $D0CE DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ; {#HTML[<img
+ $D0D6 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C ; src="images/gfx/gfx-d0ce.png">]
+ $D0DE DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF ;
+ $D0E6 DEFB $FF,$C0,$19,$02,$B0,$7F,$FF,$C0 ;
+ $D0EE DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00 ;
+ $D0F6 DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F ;
+ $D0FE DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00 ;
+ $D106 DEFB $F6,$00,$FF,$7F,$FE,$00,$B9,$00 ;
+ $D10E DEFB $FF,$7F,$FF,$00,$7F,$00,$FE,$FF ;
+ $D116 DEFB $FF,$80,$3B,$00,$BE,$FF,$FF,$C0 ;
+ $D11E DEFB $07,$01,$78,$FF,$FF,$F8,$01,$03 ;
+ $D126 DEFB $70,$FF,$FF,$FE,$00,$07,$70,$FF ;
+ $D12E DEFB $FF,$FF,$00,$87,$30,$FF,$FF,$FF ;
+ $D136 DEFB $00,$03,$38,$FF,$FF,$FE,$00,$03 ;
+ $D13E DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d146
- $D146 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9
- $D14E DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9
- $D156 DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF
- $D15E DEFB $FF,$E0,$0F,$79,$00,$FF,$FF,$C0
- $D166 DEFB $19,$04,$80,$FF,$FF,$C0,$12,$00
- $D16E DEFB $B8,$7F,$FF,$80,$10,$00,$BE,$7F
- $D176 DEFB $FF,$00,$49,$00,$7F,$7F,$FE,$00
- $D17E DEFB $EF,$00,$7F,$7F,$FE,$00,$F6,$00
- $D186 DEFB $FF,$7F,$FE,$00,$B9,$00,$E7,$7F
- $D18E DEFB $FF,$00,$7F,$00,$DE,$FF,$FF,$80
- $D196 DEFB $3B,$00,$BE,$FF,$FF,$C0,$07,$01
- $D19E DEFB $B8,$FF,$FF,$F8,$01,$03,$D8,$FF
- $D1A6 DEFB $FF,$FC,$00,$01,$0C,$FF,$FF,$FC
- $D1AE DEFB $01,$01,$AC,$FF,$FF,$FE,$00,$03
- $D1B6 DEFB $38,$FF,$FF,$FF,$00,$C7,$00,$FF
-; Graphics, 4 frames
+ $D146 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9 ; {#HTML[<img
+ $D14E DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9 ; src="images/gfx/gfx-d146.png">]
+ $D156 DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF ;
+ $D15E DEFB $FF,$E0,$0F,$79,$00,$FF,$FF,$C0 ;
+ $D166 DEFB $19,$04,$80,$FF,$FF,$C0,$12,$00 ;
+ $D16E DEFB $B8,$7F,$FF,$80,$10,$00,$BE,$7F ;
+ $D176 DEFB $FF,$00,$49,$00,$7F,$7F,$FE,$00 ;
+ $D17E DEFB $EF,$00,$7F,$7F,$FE,$00,$F6,$00 ;
+ $D186 DEFB $FF,$7F,$FE,$00,$B9,$00,$E7,$7F ;
+ $D18E DEFB $FF,$00,$7F,$00,$DE,$FF,$FF,$80 ;
+ $D196 DEFB $3B,$00,$BE,$FF,$FF,$C0,$07,$01 ;
+ $D19E DEFB $B8,$FF,$FF,$F8,$01,$03,$D8,$FF ;
+ $D1A6 DEFB $FF,$FC,$00,$01,$0C,$FF,$FF,$FC ;
+ $D1AE DEFB $01,$01,$AC,$FF,$FF,$FE,$00,$03 ;
+ $D1B6 DEFB $38,$FF,$FF,$FF,$00,$C7,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d1be
- $D1BE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9
- $D1C6 DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9
- $D1CE DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF
- $D1D6 DEFB $FF,$E0,$0F,$79,$00,$FF,$FF,$C0
- $D1DE DEFB $19,$04,$80,$FF,$FF,$C0,$12,$00
- $D1E6 DEFB $B8,$7F,$FF,$C0,$10,$00,$BE,$7F
- $D1EE DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$00
- $D1F6 DEFB $6F,$00,$7F,$7F,$FE,$00,$F6,$00
- $D1FE DEFB $F7,$7F,$FE,$00,$F9,$00,$EF,$7F
- $D206 DEFB $FE,$00,$BF,$00,$DE,$FF,$FF,$00
- $D20E DEFB $7B,$00,$DC,$FF,$FF,$80,$37,$01
- $D216 DEFB $EC,$FF,$FF,$C8,$01,$00,$C6,$FF
- $D21E DEFB $FF,$FC,$00,$00,$3E,$FF,$FF,$F8
- $D226 DEFB $02,$01,$B8,$FF,$FF,$F8,$03,$07
- $D22E DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF
-; Graphics, 4 frames
+ $D1BE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9 ; {#HTML[<img
+ $D1C6 DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9 ; src="images/gfx/gfx-d1be.png">]
+ $D1CE DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF ;
+ $D1D6 DEFB $FF,$E0,$0F,$79,$00,$FF,$FF,$C0 ;
+ $D1DE DEFB $19,$04,$80,$FF,$FF,$C0,$12,$00 ;
+ $D1E6 DEFB $B8,$7F,$FF,$C0,$10,$00,$BE,$7F ;
+ $D1EE DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$00 ;
+ $D1F6 DEFB $6F,$00,$7F,$7F,$FE,$00,$F6,$00 ;
+ $D1FE DEFB $F7,$7F,$FE,$00,$F9,$00,$EF,$7F ;
+ $D206 DEFB $FE,$00,$BF,$00,$DE,$FF,$FF,$00 ;
+ $D20E DEFB $7B,$00,$DC,$FF,$FF,$80,$37,$01 ;
+ $D216 DEFB $EC,$FF,$FF,$C8,$01,$00,$C6,$FF ;
+ $D21E DEFB $FF,$FC,$00,$00,$3E,$FF,$FF,$F8 ;
+ $D226 DEFB $02,$01,$B8,$FF,$FF,$F8,$03,$07 ;
+ $D22E DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d236
- $D236 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $D23E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C
- $D246 DEFB $00,$FF,$FF,$E0,$0F,$7C,$00,$FF
- $D24E DEFB $FF,$C0,$1F,$06,$80,$7F,$FF,$C0
- $D256 DEFB $19,$00,$B8,$7F,$FF,$C0,$12,$00
- $D25E DEFB $BE,$7F,$FF,$E0,$00,$00,$7F,$7F
- $D266 DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$00
- $D26E DEFB $76,$00,$FF,$7F,$FE,$00,$F9,$00
- $D276 DEFB $CF,$7F,$FE,$00,$FF,$00,$BE,$FF
- $D27E DEFB $FE,$00,$BF,$00,$BA,$FF,$FF,$00
- $D286 DEFB $7B,$01,$D8,$FF,$FF,$80,$31,$01
- $D28E DEFB $CC,$FF,$FF,$CE,$00,$01,$AC,$FF
- $D296 DEFB $FF,$FE,$00,$03,$38,$FF,$FF,$FC
- $D29E DEFB $01,$07,$40,$FF,$FF,$FC,$01,$0F
- $D2A6 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF
-; Graphics, 4 frames
+ $D236 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ; {#HTML[<img
+ $D23E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C ; src="images/gfx/gfx-d236.png">]
+ $D246 DEFB $00,$FF,$FF,$E0,$0F,$7C,$00,$FF ;
+ $D24E DEFB $FF,$C0,$1F,$06,$80,$7F,$FF,$C0 ;
+ $D256 DEFB $19,$00,$B8,$7F,$FF,$C0,$12,$00 ;
+ $D25E DEFB $BE,$7F,$FF,$E0,$00,$00,$7F,$7F ;
+ $D266 DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$00 ;
+ $D26E DEFB $76,$00,$FF,$7F,$FE,$00,$F9,$00 ;
+ $D276 DEFB $CF,$7F,$FE,$00,$FF,$00,$BE,$FF ;
+ $D27E DEFB $FE,$00,$BF,$00,$BA,$FF,$FF,$00 ;
+ $D286 DEFB $7B,$01,$D8,$FF,$FF,$80,$31,$01 ;
+ $D28E DEFB $CC,$FF,$FF,$CE,$00,$01,$AC,$FF ;
+ $D296 DEFB $FF,$FE,$00,$03,$38,$FF,$FF,$FC ;
+ $D29E DEFB $01,$07,$40,$FF,$FF,$FC,$01,$0F ;
+ $D2A6 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d2ae
- $D2AE DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $D2B6 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C
- $D2BE DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF
- $D2C6 DEFB $FF,$C0,$19,$02,$B0,$7F,$FF,$C0
- $D2CE DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00
- $D2D6 DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F
- $D2DE DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00
- $D2E6 DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00
- $D2EE DEFB $DF,$7F,$FE,$00,$BF,$00,$BE,$FF
- $D2F6 DEFB $FF,$00,$7B,$00,$BE,$FF,$FF,$80
- $D2FE DEFB $37,$01,$B4,$FF,$FF,$C8,$01,$03
- $D306 DEFB $38,$FF,$FF,$FE,$00,$03,$98,$FF
- $D30E DEFB $FF,$FE,$00,$07,$F0,$FF,$FF,$FE
- $D316 DEFB $00,$03,$08,$FF,$FF,$FE,$00,$03
- $D31E DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF
-; Graphics, 4 frames
+ $D2AE DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ; {#HTML[<img
+ $D2B6 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C ; src="images/gfx/gfx-d2ae.png">]
+ $D2BE DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF ;
+ $D2C6 DEFB $FF,$C0,$19,$02,$B0,$7F,$FF,$C0 ;
+ $D2CE DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00 ;
+ $D2D6 DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F ;
+ $D2DE DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00 ;
+ $D2E6 DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00 ;
+ $D2EE DEFB $DF,$7F,$FE,$00,$BF,$00,$BE,$FF ;
+ $D2F6 DEFB $FF,$00,$7B,$00,$BE,$FF,$FF,$80 ;
+ $D2FE DEFB $37,$01,$B4,$FF,$FF,$C8,$01,$03 ;
+ $D306 DEFB $38,$FF,$FF,$FE,$00,$03,$98,$FF ;
+ $D30E DEFB $FF,$FE,$00,$07,$F0,$FF,$FF,$FE ;
+ $D316 DEFB $00,$03,$08,$FF,$FF,$FE,$00,$03 ;
+ $D31E DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d326
- $D326 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9
- $D32E DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9
- $D336 DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF
- $D33E DEFB $FF,$E0,$09,$79,$00,$FF,$FF,$C0
- $D346 DEFB $12,$04,$80,$FF,$FF,$C0,$10,$00
- $D34E DEFB $B8,$7F,$FF,$80,$19,$00,$BE,$7F
- $D356 DEFB $FF,$00,$4F,$00,$7F,$7F,$FE,$00
- $D35E DEFB $EF,$00,$7F,$7F,$FE,$00,$F6,$00
- $D366 DEFB $FF,$7F,$FE,$00,$B9,$00,$BF,$7F
- $D36E DEFB $FF,$00,$7F,$00,$7E,$FF,$FF,$80
- $D376 DEFB $32,$00,$EE,$FF,$FF,$C0,$06,$01
- $D37E DEFB $DC,$FF,$FF,$F8,$00,$03,$50,$FF
- $D386 DEFB $FF,$FC,$01,$01,$6C,$FF,$FF,$FC
- $D38E DEFB $01,$01,$EC,$FF,$FF,$FE,$00,$03
- $D396 DEFB $18,$FF,$FF,$FF,$00,$C7,$00,$FF
-; Graphics, 4 frames
+ $D326 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9 ; {#HTML[<img
+ $D32E DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9 ; src="images/gfx/gfx-d326.png">]
+ $D336 DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF ;
+ $D33E DEFB $FF,$E0,$09,$79,$00,$FF,$FF,$C0 ;
+ $D346 DEFB $12,$04,$80,$FF,$FF,$C0,$10,$00 ;
+ $D34E DEFB $B8,$7F,$FF,$80,$19,$00,$BE,$7F ;
+ $D356 DEFB $FF,$00,$4F,$00,$7F,$7F,$FE,$00 ;
+ $D35E DEFB $EF,$00,$7F,$7F,$FE,$00,$F6,$00 ;
+ $D366 DEFB $FF,$7F,$FE,$00,$B9,$00,$BF,$7F ;
+ $D36E DEFB $FF,$00,$7F,$00,$7E,$FF,$FF,$80 ;
+ $D376 DEFB $32,$00,$EE,$FF,$FF,$C0,$06,$01 ;
+ $D37E DEFB $DC,$FF,$FF,$F8,$00,$03,$50,$FF ;
+ $D386 DEFB $FF,$FC,$01,$01,$6C,$FF,$FF,$FC ;
+ $D38E DEFB $01,$01,$EC,$FF,$FF,$FE,$00,$03 ;
+ $D396 DEFB $18,$FF,$FF,$FF,$00,$C7,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d39e
- $D39E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9
- $D3A6 DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9
- $D3AE DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF
- $D3B6 DEFB $FF,$E0,$09,$79,$00,$FF,$FF,$C0
- $D3BE DEFB $12,$04,$80,$FF,$FF,$C0,$10,$00
- $D3C6 DEFB $B8,$7F,$FF,$C0,$19,$00,$BE,$7F
- $D3CE DEFB $FF,$80,$0F,$00,$7F,$7F,$FF,$00
- $D3D6 DEFB $6F,$00,$7F,$7F,$FE,$00,$F6,$00
- $D3DE DEFB $FF,$7F,$FE,$00,$F9,$00,$FF,$7F
- $D3E6 DEFB $FE,$00,$BF,$00,$7E,$FF,$FF,$00
- $D3EE DEFB $7A,$00,$FE,$FF,$FF,$80,$35,$01
- $D3F6 DEFB $FC,$FF,$FF,$C8,$01,$00,$D2,$FF
- $D3FE DEFB $FF,$FC,$00,$00,$EE,$FF,$FF,$F8
- $D406 DEFB $03,$01,$68,$FF,$FF,$F8,$03,$07
- $D40E DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF
-; Graphics, 4 frames
+ $D39E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9 ; {#HTML[<img
+ $D3A6 DEFB $00,$FC,$00,$FF,$FF,$F0,$06,$F9 ; src="images/gfx/gfx-d39e.png">]
+ $D3AE DEFB $00,$FF,$FF,$E0,$0F,$79,$00,$FF ;
+ $D3B6 DEFB $FF,$E0,$09,$79,$00,$FF,$FF,$C0 ;
+ $D3BE DEFB $12,$04,$80,$FF,$FF,$C0,$10,$00 ;
+ $D3C6 DEFB $B8,$7F,$FF,$C0,$19,$00,$BE,$7F ;
+ $D3CE DEFB $FF,$80,$0F,$00,$7F,$7F,$FF,$00 ;
+ $D3D6 DEFB $6F,$00,$7F,$7F,$FE,$00,$F6,$00 ;
+ $D3DE DEFB $FF,$7F,$FE,$00,$F9,$00,$FF,$7F ;
+ $D3E6 DEFB $FE,$00,$BF,$00,$7E,$FF,$FF,$00 ;
+ $D3EE DEFB $7A,$00,$FE,$FF,$FF,$80,$35,$01 ;
+ $D3F6 DEFB $FC,$FF,$FF,$C8,$01,$00,$D2,$FF ;
+ $D3FE DEFB $FF,$FC,$00,$00,$EE,$FF,$FF,$F8 ;
+ $D406 DEFB $03,$01,$68,$FF,$FF,$F8,$03,$07 ;
+ $D40E DEFB $C0,$FF,$FF,$FC,$00,$3F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d416
- $D416 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $D41E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C
- $D426 DEFB $00,$FF,$FF,$E0,$0F,$7C,$00,$FF
- $D42E DEFB $FF,$C0,$19,$06,$80,$7F,$FF,$C0
- $D436 DEFB $12,$00,$B8,$7F,$FF,$C0,$10,$00
- $D43E DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F
- $D446 DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00
- $D44E DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00
- $D456 DEFB $FF,$7F,$FE,$00,$BF,$00,$BE,$FF
- $D45E DEFB $FF,$00,$7B,$00,$7E,$FF,$FF,$80
- $D466 DEFB $36,$01,$FC,$FF,$FF,$C8,$00,$01
- $D46E DEFB $D0,$FF,$FF,$FE,$00,$01,$CC,$FF
- $D476 DEFB $FF,$FE,$00,$03,$68,$FF,$FF,$FC
- $D47E DEFB $01,$07,$60,$FF,$FF,$FC,$01,$0F
- $D486 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF
-; Graphics, 4 frames
+ $D416 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ; {#HTML[<img
+ $D41E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C ; src="images/gfx/gfx-d416.png">]
+ $D426 DEFB $00,$FF,$FF,$E0,$0F,$7C,$00,$FF ;
+ $D42E DEFB $FF,$C0,$19,$06,$80,$7F,$FF,$C0 ;
+ $D436 DEFB $12,$00,$B8,$7F,$FF,$C0,$10,$00 ;
+ $D43E DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F ;
+ $D446 DEFB $FF,$00,$6F,$00,$7F,$7F,$FE,$00 ;
+ $D44E DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00 ;
+ $D456 DEFB $FF,$7F,$FE,$00,$BF,$00,$BE,$FF ;
+ $D45E DEFB $FF,$00,$7B,$00,$7E,$FF,$FF,$80 ;
+ $D466 DEFB $36,$01,$FC,$FF,$FF,$C8,$00,$01 ;
+ $D46E DEFB $D0,$FF,$FF,$FE,$00,$01,$CC,$FF ;
+ $D476 DEFB $FF,$FE,$00,$03,$68,$FF,$FF,$FC ;
+ $D47E DEFB $01,$07,$60,$FF,$FF,$FC,$01,$0F ;
+ $D486 DEFB $E0,$FF,$FF,$FE,$00,$1F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d48e
- $D48E DEFB $FF,$E1,$00,$FF,$00,$FF,$FF,$C0
- $D496 DEFB $16,$F9,$00,$FF,$FF,$80,$2F,$73
- $D49E DEFB $00,$FF,$FF,$80,$2F,$13,$00,$FF
- $D4A6 DEFB $FF,$00,$59,$01,$A0,$FF,$FF,$00
- $D4AE DEFB $12,$00,$B8,$FF,$FF,$00,$10,$00
- $D4B6 DEFB $BC,$FF,$FF,$00,$69,$00,$7E,$FF
- $D4BE DEFB $FE,$00,$EF,$00,$7E,$FF,$FE,$00
- $D4C6 DEFB $F6,$00,$FE,$FF,$FE,$00,$D9,$00
- $D4CE DEFB $DE,$FF,$FF,$00,$7F,$01,$BC,$FF
- $D4D6 DEFB $FF,$80,$3B,$01,$7C,$FF,$FF,$C0
- $D4DE DEFB $07,$03,$68,$FF,$FF,$F8,$03,$07
- $D4E6 DEFB $70,$FF,$FF,$FC,$00,$03,$38,$FF
- $D4EE DEFB $FF,$F8,$00,$03,$B8,$FF,$FF,$F0
- $D4F6 DEFB $06,$07,$F0,$FF,$FF,$F0,$07,$0F
- $D4FE DEFB $00,$FF,$FF,$F8,$00,$7F,$00,$FF
-; Graphics, 2 frames
+ $D48E DEFB $FF,$E1,$00,$FF,$00,$FF,$FF,$C0 ; {#HTML[<img
+ $D496 DEFB $16,$F9,$00,$FF,$FF,$80,$2F,$73 ; src="images/gfx/gfx-d48e.png">]
+ $D49E DEFB $00,$FF,$FF,$80,$2F,$13,$00,$FF ;
+ $D4A6 DEFB $FF,$00,$59,$01,$A0,$FF,$FF,$00 ;
+ $D4AE DEFB $12,$00,$B8,$FF,$FF,$00,$10,$00 ;
+ $D4B6 DEFB $BC,$FF,$FF,$00,$69,$00,$7E,$FF ;
+ $D4BE DEFB $FE,$00,$EF,$00,$7E,$FF,$FE,$00 ;
+ $D4C6 DEFB $F6,$00,$FE,$FF,$FE,$00,$D9,$00 ;
+ $D4CE DEFB $DE,$FF,$FF,$00,$7F,$01,$BC,$FF ;
+ $D4D6 DEFB $FF,$80,$3B,$01,$7C,$FF,$FF,$C0 ;
+ $D4DE DEFB $07,$03,$68,$FF,$FF,$F8,$03,$07 ;
+ $D4E6 DEFB $70,$FF,$FF,$FC,$00,$03,$38,$FF ;
+ $D4EE DEFB $FF,$F8,$00,$03,$B8,$FF,$FF,$F0 ;
+ $D4F6 DEFB $06,$07,$F0,$FF,$FF,$F0,$07,$0F ;
+ $D4FE DEFB $00,$FF,$FF,$F8,$00,$7F,$00,$FF ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_d506
- $D506 DEFB $E6,$00,$73,$00,$C0,$19,$27,$80
- $D50E DEFB $80,$3B,$07,$C0,$80,$3B,$03,$C0
- $D516 DEFB $00,$46,$01,$68,$00,$14,$01,$AC
- $D51E DEFB $00,$00,$00,$2C,$80,$0C,$00,$2E
- $D526 DEFB $80,$3E,$00,$5E,$80,$3F,$00,$3E
- $D52E DEFB $80,$1B,$00,$6E,$C0,$1E,$01,$DC
- $D536 DEFB $E0,$0E,$01,$D8,$F0,$01,$03,$D8
- $D53E DEFB $F0,$03,$01,$CC,$F8,$00,$01,$3C
- $D546 DEFB $F0,$01,$41,$1C,$E0,$0F,$63,$00
- $D54E DEFB $E0,$0F,$7F,$00,$F0,$00,$FF,$00
-; Graphics, 2 frames
+ $D506 DEFB $E6,$00,$73,$00,$C0,$19,$27,$80 ; {#HTML[<img
+ $D50E DEFB $80,$3B,$07,$C0,$80,$3B,$03,$C0 ; src="images/gfx/gfx-d506.png">]
+ $D516 DEFB $00,$46,$01,$68,$00,$14,$01,$AC ;
+ $D51E DEFB $00,$00,$00,$2C,$80,$0C,$00,$2E ;
+ $D526 DEFB $80,$3E,$00,$5E,$80,$3F,$00,$3E ;
+ $D52E DEFB $80,$1B,$00,$6E,$C0,$1E,$01,$DC ;
+ $D536 DEFB $E0,$0E,$01,$D8,$F0,$01,$03,$D8 ;
+ $D53E DEFB $F0,$03,$01,$CC,$F8,$00,$01,$3C ;
+ $D546 DEFB $F0,$01,$41,$1C,$E0,$0F,$63,$00 ;
+ $D54E DEFB $E0,$0F,$7F,$00,$F0,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_d556
- $D556 DEFB $E7,$00,$87,$00,$C3,$18,$0F,$60
- $D55E DEFB $80,$3C,$07,$F0,$80,$3C,$07,$F0
- $D566 DEFB $00,$65,$03,$98,$00,$49,$01,$28
- $D56E DEFB $00,$41,$01,$08,$00,$66,$00,$96
- $D576 DEFB $80,$2F,$00,$76,$80,$0F,$00,$AE
- $D57E DEFB $80,$26,$00,$9E,$80,$2F,$01,$BC
- $D586 DEFB $C0,$17,$01,$6C,$E0,$08,$03,$D8
- $D58E DEFB $E0,$03,$03,$D8,$F0,$04,$03,$10
- $D596 DEFB $E1,$04,$C1,$0C,$C1,$18,$C1,$1C
- $D59E DEFB $C1,$1C,$E3,$00,$E3,$00,$FF,$00
-; Graphics, 2 frames
+ $D556 DEFB $E7,$00,$87,$00,$C3,$18,$0F,$60 ; {#HTML[<img
+ $D55E DEFB $80,$3C,$07,$F0,$80,$3C,$07,$F0 ; src="images/gfx/gfx-d556.png">]
+ $D566 DEFB $00,$65,$03,$98,$00,$49,$01,$28 ;
+ $D56E DEFB $00,$41,$01,$08,$00,$66,$00,$96 ;
+ $D576 DEFB $80,$2F,$00,$76,$80,$0F,$00,$AE ;
+ $D57E DEFB $80,$26,$00,$9E,$80,$2F,$01,$BC ;
+ $D586 DEFB $C0,$17,$01,$6C,$E0,$08,$03,$D8 ;
+ $D58E DEFB $E0,$03,$03,$D8,$F0,$04,$03,$10 ;
+ $D596 DEFB $E1,$04,$C1,$0C,$C1,$18,$C1,$1C ;
+ $D59E DEFB $C1,$1C,$E3,$00,$E3,$00,$FF,$00 ; }
+; Graphics, 2 frames -- Pogo rotating.
 @label=gfx_d5a6
- $D5A6 DEFB $E7,$00,$27,$00,$C2,$18,$43,$18
- $D5AE DEFB $80,$3C,$01,$3C,$80,$3C,$01,$3C
- $D5B6 DEFB $00,$66,$00,$66,$00,$52,$00,$4A
- $D5BE DEFB $00,$40,$00,$02,$00,$23,$00,$C4
- $D5C6 DEFB $00,$37,$00,$EC,$00,$57,$00,$EA
- $D5CE DEFB $00,$65,$00,$A6,$80,$37,$01,$EC
- $D5D6 DEFB $80,$3B,$01,$DC,$80,$3C,$01,$3C
- $D5DE DEFB $C0,$17,$03,$E8,$C0,$18,$03,$18
- $D5E6 DEFB $C1,$0C,$83,$30,$83,$30,$C1,$0C
- $D5EE DEFB $83,$38,$C1,$1C,$C7,$00,$E3,$00
-; Graphics, 4 frames
+ $D5A6 DEFB $E7,$00,$27,$00,$C2,$18,$43,$18 ; {#HTML[<img
+ $D5AE DEFB $80,$3C,$01,$3C,$80,$3C,$01,$3C ; src="images/gfx/gfx-d5a6.png">]
+ $D5B6 DEFB $00,$66,$00,$66,$00,$52,$00,$4A ;
+ $D5BE DEFB $00,$40,$00,$02,$00,$23,$00,$C4 ;
+ $D5C6 DEFB $00,$37,$00,$EC,$00,$57,$00,$EA ;
+ $D5CE DEFB $00,$65,$00,$A6,$80,$37,$01,$EC ;
+ $D5D6 DEFB $80,$3B,$01,$DC,$80,$3C,$01,$3C ;
+ $D5DE DEFB $C0,$17,$03,$E8,$C0,$18,$03,$18 ;
+ $D5E6 DEFB $C1,$0C,$83,$30,$83,$30,$C1,$0C ;
+ $D5EE DEFB $83,$38,$C1,$1C,$C7,$00,$E3,$00 ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d5f6
- $D5F6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $D5FE DEFB $00,$FF,$00,$FF,$FF,$F9,$00,$FE
- $D606 DEFB $00,$7F,$FF,$F0,$06,$FC,$00,$FF
- $D60E DEFB $FF,$E0,$0F,$7C,$00,$FF,$FF,$E0
- $D616 DEFB $0F,$0C,$00,$FF,$FF,$C0,$19,$02
- $D61E DEFB $B0,$7F,$FF,$C0,$12,$00,$BC,$7F
- $D626 DEFB $FF,$80,$10,$00,$BE,$7F,$FF,$00
- $D62E DEFB $69,$00,$7F,$7F,$FE,$00,$EF,$00
- $D636 DEFB $7F,$7F,$FE,$00,$F6,$00,$CF,$7F
- $D63E DEFB $FE,$00,$B9,$00,$BF,$7F,$FF,$00
- $D646 DEFB $7F,$00,$7E,$FF,$FF,$80,$3B,$00
- $D64E DEFB $76,$FF,$FF,$C0,$07,$01,$B4,$FF
- $D656 DEFB $FF,$F8,$01,$03,$30,$FF,$FF,$FE
- $D65E DEFB $00,$03,$D8,$FF,$FF,$FE,$00,$03
- $D666 DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF
-; Graphics, 4 frames
+ $D5F6 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $D5FE DEFB $00,$FF,$00,$FF,$FF,$F9,$00,$FE ; src="images/gfx/gfx-d5f6.png">]
+ $D606 DEFB $00,$7F,$FF,$F0,$06,$FC,$00,$FF ;
+ $D60E DEFB $FF,$E0,$0F,$7C,$00,$FF,$FF,$E0 ;
+ $D616 DEFB $0F,$0C,$00,$FF,$FF,$C0,$19,$02 ;
+ $D61E DEFB $B0,$7F,$FF,$C0,$12,$00,$BC,$7F ;
+ $D626 DEFB $FF,$80,$10,$00,$BE,$7F,$FF,$00 ;
+ $D62E DEFB $69,$00,$7F,$7F,$FE,$00,$EF,$00 ;
+ $D636 DEFB $7F,$7F,$FE,$00,$F6,$00,$CF,$7F ;
+ $D63E DEFB $FE,$00,$B9,$00,$BF,$7F,$FF,$00 ;
+ $D646 DEFB $7F,$00,$7E,$FF,$FF,$80,$3B,$00 ;
+ $D64E DEFB $76,$FF,$FF,$C0,$07,$01,$B4,$FF ;
+ $D656 DEFB $FF,$F8,$01,$03,$30,$FF,$FF,$FE ;
+ $D65E DEFB $00,$03,$D8,$FF,$FF,$FE,$00,$03 ;
+ $D666 DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d66e
- $D66E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $D676 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $D67E DEFB $00,$FF,$FF,$FF,$00,$FC,$00,$FF
- $D686 DEFB $FF,$F9,$00,$F9,$00,$FF,$FF,$F0
- $D68E DEFB $06,$F9,$00,$FF,$FF,$E0,$0F,$79
- $D696 DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF
- $D69E DEFB $FF,$C0,$19,$00,$B0,$FF,$FF,$C0
- $D6A6 DEFB $12,$00,$BC,$7F,$FF,$80,$10,$00
- $D6AE DEFB $BE,$7F,$FF,$00,$49,$00,$7F,$7F
- $D6B6 DEFB $FE,$00,$EF,$00,$3F,$7F,$FE,$00
- $D6BE DEFB $F6,$00,$7F,$7F,$FE,$00,$B9,$00
- $D6C6 DEFB $7F,$7F,$FF,$00,$7F,$00,$B6,$FF
- $D6CE DEFB $FF,$80,$3B,$00,$36,$FF,$FF,$C0
- $D6D6 DEFB $06,$01,$D8,$FF,$FF,$F8,$00,$03
- $D6DE DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF
-; Graphics, 4 frames
+ $D66E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $D676 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-d66e.png">]
+ $D67E DEFB $00,$FF,$FF,$FF,$00,$FC,$00,$FF ;
+ $D686 DEFB $FF,$F9,$00,$F9,$00,$FF,$FF,$F0 ;
+ $D68E DEFB $06,$F9,$00,$FF,$FF,$E0,$0F,$79 ;
+ $D696 DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF ;
+ $D69E DEFB $FF,$C0,$19,$00,$B0,$FF,$FF,$C0 ;
+ $D6A6 DEFB $12,$00,$BC,$7F,$FF,$80,$10,$00 ;
+ $D6AE DEFB $BE,$7F,$FF,$00,$49,$00,$7F,$7F ;
+ $D6B6 DEFB $FE,$00,$EF,$00,$3F,$7F,$FE,$00 ;
+ $D6BE DEFB $F6,$00,$7F,$7F,$FE,$00,$B9,$00 ;
+ $D6C6 DEFB $7F,$7F,$FF,$00,$7F,$00,$B6,$FF ;
+ $D6CE DEFB $FF,$80,$3B,$00,$36,$FF,$FF,$C0 ;
+ $D6D6 DEFB $06,$01,$D8,$FF,$FF,$F8,$00,$03 ;
+ $D6DE DEFB $F8,$FF,$FF,$FF,$00,$07,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d6e6
- $D6E6 DEFB $FF,$FF,$00,$87,$00,$FF,$FF,$FF
- $D6EE DEFB $00,$E3,$00,$FF,$FF,$FF,$00,$89
- $D6F6 DEFB $00,$FF,$FF,$FE,$00,$00,$70,$FF
- $D6FE DEFB $FF,$C4,$01,$00,$FC,$FF,$FF,$80
- $D706 DEFB $3B,$00,$FE,$7F,$FF,$00,$7D,$00
- $D70E DEFB $FE,$7F,$FF,$00,$66,$00,$FF,$7F
- $D716 DEFB $FF,$00,$4A,$00,$FF,$7F,$FF,$00
- $D71E DEFB $42,$00,$FF,$7F,$FF,$80,$25,$00
- $D726 DEFB $DF,$7F,$FF,$80,$0D,$00,$BA,$FF
- $D72E DEFB $FF,$00,$73,$00,$B8,$FF,$FE,$00
- $D736 DEFB $FF,$01,$B8,$FF,$FE,$00,$FF,$00
- $D73E DEFB $DE,$FF,$FE,$00,$DB,$00,$86,$FF
- $D746 DEFB $FF,$00,$38,$40,$16,$FF,$FF,$C7
- $D74E DEFB $00,$C1,$1C,$FF,$FF,$FF,$00,$C3
- $D756 DEFB $18,$FF,$FF,$FF,$00,$E7,$00,$FF
-; Graphics, 4 frames
+ $D6E6 DEFB $FF,$FF,$00,$87,$00,$FF,$FF,$FF ; {#HTML[<img
+ $D6EE DEFB $00,$E3,$00,$FF,$FF,$FF,$00,$89 ; src="images/gfx/gfx-d6e6.png">]
+ $D6F6 DEFB $00,$FF,$FF,$FE,$00,$00,$70,$FF ;
+ $D6FE DEFB $FF,$C4,$01,$00,$FC,$FF,$FF,$80 ;
+ $D706 DEFB $3B,$00,$FE,$7F,$FF,$00,$7D,$00 ;
+ $D70E DEFB $FE,$7F,$FF,$00,$66,$00,$FF,$7F ;
+ $D716 DEFB $FF,$00,$4A,$00,$FF,$7F,$FF,$00 ;
+ $D71E DEFB $42,$00,$FF,$7F,$FF,$80,$25,$00 ;
+ $D726 DEFB $DF,$7F,$FF,$80,$0D,$00,$BA,$FF ;
+ $D72E DEFB $FF,$00,$73,$00,$B8,$FF,$FE,$00 ;
+ $D736 DEFB $FF,$01,$B8,$FF,$FE,$00,$FF,$00 ;
+ $D73E DEFB $DE,$FF,$FE,$00,$DB,$00,$86,$FF ;
+ $D746 DEFB $FF,$00,$38,$40,$16,$FF,$FF,$C7 ;
+ $D74E DEFB $00,$C1,$1C,$FF,$FF,$FF,$00,$C3 ;
+ $D756 DEFB $18,$FF,$FF,$FF,$00,$E7,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d75e
- $D75E DEFB $FF,$FC,$00,$FF,$00,$FF,$FF,$F8
- $D766 DEFB $03,$7C,$00,$FF,$FF,$F0,$07,$39
- $D76E DEFB $80,$FF,$FF,$F0,$07,$39,$80,$FF
- $D776 DEFB $FF,$E0,$0F,$09,$80,$FF,$FF,$80
- $D77E DEFB $0C,$00,$B0,$FF,$FF,$00,$69,$00
- $D786 DEFB $3C,$FF,$FE,$00,$E8,$00,$7E,$7F
- $D78E DEFB $FE,$00,$B4,$00,$7F,$7F,$FE,$00
- $D796 DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00
- $D79E DEFB $FF,$7F,$FF,$00,$6F,$00,$FF,$7F
- $D7A6 DEFB $FF,$80,$1F,$00,$3F,$7F,$FF,$E0
- $D7AE DEFB $0E,$00,$FE,$FF,$FF,$F0,$02,$00
- $D7B6 DEFB $FE,$FF,$FF,$E0,$0C,$01,$EC,$FF
- $D7BE DEFB $FF,$E0,$0A,$03,$D8,$FF,$FF,$F0
- $D7C6 DEFB $03,$07,$C0,$FF,$FF,$F8,$01,$1F
- $D7CE DEFB $C0,$FF,$FF,$FE,$00,$3F,$00,$FF
-; Graphics, 4 frames
+ $D75E DEFB $FF,$FC,$00,$FF,$00,$FF,$FF,$F8 ; {#HTML[<img
+ $D766 DEFB $03,$7C,$00,$FF,$FF,$F0,$07,$39 ; src="images/gfx/gfx-d75e.png">]
+ $D76E DEFB $80,$FF,$FF,$F0,$07,$39,$80,$FF ;
+ $D776 DEFB $FF,$E0,$0F,$09,$80,$FF,$FF,$80 ;
+ $D77E DEFB $0C,$00,$B0,$FF,$FF,$00,$69,$00 ;
+ $D786 DEFB $3C,$FF,$FE,$00,$E8,$00,$7E,$7F ;
+ $D78E DEFB $FE,$00,$B4,$00,$7F,$7F,$FE,$00 ;
+ $D796 DEFB $F6,$00,$FF,$7F,$FE,$00,$F9,$00 ;
+ $D79E DEFB $FF,$7F,$FF,$00,$6F,$00,$FF,$7F ;
+ $D7A6 DEFB $FF,$80,$1F,$00,$3F,$7F,$FF,$E0 ;
+ $D7AE DEFB $0E,$00,$FE,$FF,$FF,$F0,$02,$00 ;
+ $D7B6 DEFB $FE,$FF,$FF,$E0,$0C,$01,$EC,$FF ;
+ $D7BE DEFB $FF,$E0,$0A,$03,$D8,$FF,$FF,$F0 ;
+ $D7C6 DEFB $03,$07,$C0,$FF,$FF,$F8,$01,$1F ;
+ $D7CE DEFB $C0,$FF,$FF,$FE,$00,$3F,$00,$FF ; }
+; Graphics, 4 frames -- Pogo masks.
 @label=gfx_d7d6
- $D7D6 DEFB $FF,$F0,$00,$FC,$00,$FF,$FF,$E0
- $D7DE DEFB $0D,$79,$00,$FF,$FF,$C0,$1D,$79
- $D7E6 DEFB $00,$FF,$FF,$C0,$1E,$09,$00,$FF
- $D7EE DEFB $FF,$80,$26,$01,$F0,$FF,$FF,$80
- $D7F6 DEFB $0A,$00,$F8,$FF,$FF,$80,$02,$00
- $D7FE DEFB $FC,$FF,$FF,$00,$25,$00,$FC,$FF
- $D806 DEFB $FE,$00,$BD,$00,$FE,$FF,$FE,$00
- $D80E DEFB $DB,$00,$FE,$FF,$FE,$00,$E7,$00
- $D816 DEFB $FE,$FF,$FE,$00,$BE,$01,$FC,$FF
- $D81E DEFB $FF,$00,$75,$01,$FC,$FF,$FF,$80
- $D826 DEFB $0D,$03,$B8,$FF,$FF,$F0,$01,$07
- $D82E DEFB $B0,$FF,$FF,$FC,$00,$0F,$80,$FF
- $D836 DEFB $FF,$F8,$02,$07,$D0,$FF,$FF,$F8
- $D83E DEFB $03,$07,$D0,$FF,$FF,$FC,$00,$07
- $D846 DEFB $30,$FF,$FF,$FF,$00,$0F,$00,$FF
-; Graphics, 2 frames
+ $D7D6 DEFB $FF,$F0,$00,$FC,$00,$FF,$FF,$E0 ; {#HTML[<img
+ $D7DE DEFB $0D,$79,$00,$FF,$FF,$C0,$1D,$79 ; src="images/gfx/gfx-d7d6.png">]
+ $D7E6 DEFB $00,$FF,$FF,$C0,$1E,$09,$00,$FF ;
+ $D7EE DEFB $FF,$80,$26,$01,$F0,$FF,$FF,$80 ;
+ $D7F6 DEFB $0A,$00,$F8,$FF,$FF,$80,$02,$00 ;
+ $D7FE DEFB $FC,$FF,$FF,$00,$25,$00,$FC,$FF ;
+ $D806 DEFB $FE,$00,$BD,$00,$FE,$FF,$FE,$00 ;
+ $D80E DEFB $DB,$00,$FE,$FF,$FE,$00,$E7,$00 ;
+ $D816 DEFB $FE,$FF,$FE,$00,$BE,$01,$FC,$FF ;
+ $D81E DEFB $FF,$00,$75,$01,$FC,$FF,$FF,$80 ;
+ $D826 DEFB $0D,$03,$B8,$FF,$FF,$F0,$01,$07 ;
+ $D82E DEFB $B0,$FF,$FF,$FC,$00,$0F,$80,$FF ;
+ $D836 DEFB $FF,$F8,$02,$07,$D0,$FF,$FF,$F8 ;
+ $D83E DEFB $03,$07,$D0,$FF,$FF,$FC,$00,$07 ;
+ $D846 DEFB $30,$FF,$FF,$FF,$00,$0F,$00,$FF ; }
+; Graphics, 2 frames.
 @label=gfx_d84e
- $D84E DEFB $F2,$00,$73,$00,$E0,$0D,$27,$80
- $D856 DEFB $C0,$1D,$07,$C0,$C0,$1E,$07,$00
- $D85E DEFB $80,$3E,$03,$E0,$80,$26,$01,$E4
- $D866 DEFB $80,$0A,$00,$E6,$80,$02,$00,$F2
- $D86E DEFB $80,$06,$00,$FA,$00,$5D,$00,$FE
- $D876 DEFB $00,$6C,$00,$FE,$00,$73,$00,$FE
- $D87E DEFB $80,$33,$01,$BC,$C0,$0B,$01,$78
- $D886 DEFB $F0,$01,$03,$60,$E0,$0B,$03,$18
- $D88E DEFB $E0,$0F,$41,$0C,$F0,$00,$81,$2C
- $D896 DEFB $FF,$00,$81,$3C,$FF,$00,$C3,$00
-; Graphics, 2 frames
+ $D84E DEFB $F2,$00,$73,$00,$E0,$0D,$27,$80 ; {#HTML[<img
+ $D856 DEFB $C0,$1D,$07,$C0,$C0,$1E,$07,$00 ; src="images/gfx/gfx-d84e.png">]
+ $D85E DEFB $80,$3E,$03,$E0,$80,$26,$01,$E4 ;
+ $D866 DEFB $80,$0A,$00,$E6,$80,$02,$00,$F2 ;
+ $D86E DEFB $80,$06,$00,$FA,$00,$5D,$00,$FE ;
+ $D876 DEFB $00,$6C,$00,$FE,$00,$73,$00,$FE ;
+ $D87E DEFB $80,$33,$01,$BC,$C0,$0B,$01,$78 ;
+ $D886 DEFB $F0,$01,$03,$60,$E0,$0B,$03,$18 ;
+ $D88E DEFB $E0,$0F,$41,$0C,$F0,$00,$81,$2C ;
+ $D896 DEFB $FF,$00,$81,$3C,$FF,$00,$C3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_d89e
- $D89E DEFB $E7,$00,$8F,$00,$C3,$18,$0F,$00
- $D8A6 DEFB $80,$3C,$07,$90,$80,$3C,$07,$00
- $D8AE DEFB $00,$4D,$03,$90,$00,$15,$01,$CC
- $D8B6 DEFB $00,$05,$01,$CC,$80,$0D,$00,$E6
- $D8BE DEFB $00,$3B,$00,$F6,$00,$5B,$00,$FE
- $D8C6 DEFB $00,$67,$00,$FE,$80,$3F,$01,$FC
- $D8CE DEFB $C0,$17,$01,$FC,$E0,$0E,$03,$F8
- $D8D6 DEFB $E0,$0D,$03,$F0,$E0,$0C,$03,$08
- $D8DE DEFB $C1,$1C,$E1,$0C,$C1,$1C,$C1,$1C
- $D8E6 DEFB $E3,$00,$C1,$1C,$FF,$00,$E3,$00
-; Graphics, 2 frames
+ $D89E DEFB $E7,$00,$8F,$00,$C3,$18,$0F,$00 ; {#HTML[<img
+ $D8A6 DEFB $80,$3C,$07,$90,$80,$3C,$07,$00 ; src="images/gfx/gfx-d89e.png">]
+ $D8AE DEFB $00,$4D,$03,$90,$00,$15,$01,$CC ;
+ $D8B6 DEFB $00,$05,$01,$CC,$80,$0D,$00,$E6 ;
+ $D8BE DEFB $00,$3B,$00,$F6,$00,$5B,$00,$FE ;
+ $D8C6 DEFB $00,$67,$00,$FE,$80,$3F,$01,$FC ;
+ $D8CE DEFB $C0,$17,$01,$FC,$E0,$0E,$03,$F8 ;
+ $D8D6 DEFB $E0,$0D,$03,$F0,$E0,$0C,$03,$08 ;
+ $D8DE DEFB $C1,$1C,$E1,$0C,$C1,$1C,$C1,$1C ;
+ $D8E6 DEFB $E3,$00,$C1,$1C,$FF,$00,$E3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_d8ee
- $D8EE DEFB $F2,$00,$4F,$00,$E1,$0C,$07,$30
- $D8F6 DEFB $C0,$1E,$03,$38,$C0,$1C,$03,$38
- $D8FE DEFB $80,$33,$01,$04,$80,$0F,$01,$38
- $D906 DEFB $80,$3F,$01,$3C,$00,$7F,$00,$3E
- $D90E DEFB $00,$7E,$00,$7E,$00,$7E,$00,$FE
- $D916 DEFB $00,$7F,$00,$FE,$80,$3F,$01,$FC
- $D91E DEFB $80,$3F,$01,$FC,$80,$1F,$01,$F8
- $D926 DEFB $C0,$0F,$03,$F0,$C0,$10,$03,$08
- $D92E DEFB $C3,$18,$C3,$18,$87,$30,$E1,$0C
- $D936 DEFB $87,$30,$E1,$0C,$CF,$00,$F3,$00
-; Graphics, 2 frames
+ $D8EE DEFB $F2,$00,$4F,$00,$E1,$0C,$07,$30 ; {#HTML[<img
+ $D8F6 DEFB $C0,$1E,$03,$38,$C0,$1C,$03,$38 ; src="images/gfx/gfx-d8ee.png">]
+ $D8FE DEFB $80,$33,$01,$04,$80,$0F,$01,$38 ;
+ $D906 DEFB $80,$3F,$01,$3C,$00,$7F,$00,$3E ;
+ $D90E DEFB $00,$7E,$00,$7E,$00,$7E,$00,$FE ;
+ $D916 DEFB $00,$7F,$00,$FE,$80,$3F,$01,$FC ;
+ $D91E DEFB $80,$3F,$01,$FC,$80,$1F,$01,$F8 ;
+ $D926 DEFB $C0,$0F,$03,$F0,$C0,$10,$03,$08 ;
+ $D92E DEFB $C3,$18,$C3,$18,$87,$30,$E1,$0C ;
+ $D936 DEFB $87,$30,$E1,$0C,$CF,$00,$F3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_d93e
- $D93E DEFB $FF,$00,$FF,$00,$F2,$00,$4F,$00
- $D946 DEFB $E0,$0C,$07,$30,$E0,$0E,$07,$30
- $D94E DEFB $C0,$1C,$03,$38,$C0,$12,$03,$40
- $D956 DEFB $C0,$0F,$03,$38,$C0,$1F,$03,$38
- $D95E DEFB $80,$3E,$01,$7C,$80,$3E,$01,$FC
- $D966 DEFB $80,$3F,$01,$FC,$80,$3F,$01,$FC
- $D96E DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8
- $D976 DEFB $C0,$0F,$07,$F0,$C0,$10,$03,$08
- $D97E DEFB $87,$30,$C3,$18,$87,$30,$E1,$0C
- $D986 DEFB $CF,$00,$E1,$0C,$FF,$00,$F3,$00
-; Graphics, 2 frames
+ $D93E DEFB $FF,$00,$FF,$00,$F2,$00,$4F,$00 ; {#HTML[<img
+ $D946 DEFB $E0,$0C,$07,$30,$E0,$0E,$07,$30 ; src="images/gfx/gfx-d93e.png">]
+ $D94E DEFB $C0,$1C,$03,$38,$C0,$12,$03,$40 ;
+ $D956 DEFB $C0,$0F,$03,$38,$C0,$1F,$03,$38 ;
+ $D95E DEFB $80,$3E,$01,$7C,$80,$3E,$01,$FC ;
+ $D966 DEFB $80,$3F,$01,$FC,$80,$3F,$01,$FC ;
+ $D96E DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8 ;
+ $D976 DEFB $C0,$0F,$07,$F0,$C0,$10,$03,$08 ;
+ $D97E DEFB $87,$30,$C3,$18,$87,$30,$E1,$0C ;
+ $D986 DEFB $CF,$00,$E1,$0C,$FF,$00,$F3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_d98e
- $D98E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D996 DEFB $F2,$00,$4F,$00,$E0,$0C,$87,$30
- $D99E DEFB $E0,$0E,$07,$70,$C0,$1C,$03,$38
- $D9A6 DEFB $C0,$12,$03,$48,$E0,$0E,$07,$70
- $D9AE DEFB $C0,$1F,$03,$78,$C0,$1F,$03,$78
- $D9B6 DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8
- $D9BE DEFB $E0,$0F,$07,$F0,$E0,$0F,$07,$F0
- $D9C6 DEFB $F0,$07,$07,$E0,$E0,$00,$07,$10
- $D9CE DEFB $E1,$0C,$C3,$18,$C3,$18,$C3,$18
- $D9D6 DEFB $C3,$18,$E7,$00,$E7,$00,$FF,$00
-; Graphics, 2 frames
+ $D98E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $D996 DEFB $F2,$00,$4F,$00,$E0,$0C,$87,$30 ; src="images/gfx/gfx-d98e.png">]
+ $D99E DEFB $E0,$0E,$07,$70,$C0,$1C,$03,$38 ;
+ $D9A6 DEFB $C0,$12,$03,$48,$E0,$0E,$07,$70 ;
+ $D9AE DEFB $C0,$1F,$03,$78,$C0,$1F,$03,$78 ;
+ $D9B6 DEFB $C0,$1F,$03,$F8,$C0,$1F,$03,$F8 ;
+ $D9BE DEFB $E0,$0F,$07,$F0,$E0,$0F,$07,$F0 ;
+ $D9C6 DEFB $F0,$07,$07,$E0,$E0,$00,$07,$10 ;
+ $D9CE DEFB $E1,$0C,$C3,$18,$C3,$18,$C3,$18 ;
+ $D9D6 DEFB $C3,$18,$E7,$00,$E7,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_d9de
- $D9DE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D9E6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $D9EE DEFB $FC,$00,$9F,$00,$F8,$02,$0F,$20
- $D9F6 DEFB $F0,$07,$07,$70,$F0,$04,$07,$30
- $D9FE DEFB $F0,$03,$07,$80,$F0,$07,$07,$B0
- $DA06 DEFB $E0,$0F,$03,$78,$E0,$0F,$03,$78
- $DA0E DEFB $E0,$0F,$03,$F8,$E0,$0F,$03,$F8
- $DA16 DEFB $F0,$07,$07,$F0,$F0,$03,$0F,$C0
- $DA1E DEFB $F0,$00,$0F,$00,$E1,$0C,$87,$30
- $DA26 DEFB $E1,$0C,$87,$30,$F3,$00,$CF,$00
-; Graphics, 2 frames
+ $D9DE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $D9E6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-d9de.png">]
+ $D9EE DEFB $FC,$00,$9F,$00,$F8,$02,$0F,$20 ;
+ $D9F6 DEFB $F0,$07,$07,$70,$F0,$04,$07,$30 ;
+ $D9FE DEFB $F0,$03,$07,$80,$F0,$07,$07,$B0 ;
+ $DA06 DEFB $E0,$0F,$03,$78,$E0,$0F,$03,$78 ;
+ $DA0E DEFB $E0,$0F,$03,$F8,$E0,$0F,$03,$F8 ;
+ $DA16 DEFB $F0,$07,$07,$F0,$F0,$03,$0F,$C0 ;
+ $DA1E DEFB $F0,$00,$0F,$00,$E1,$0C,$87,$30 ;
+ $DA26 DEFB $E1,$0C,$87,$30,$F3,$00,$CF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_da2e
- $DA2E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DA36 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DA3E DEFB $F8,$00,$9F,$00,$F0,$06,$0F,$60
- $DA46 DEFB $E0,$0E,$07,$70,$E0,$08,$07,$50
- $DA4E DEFB $E0,$04,$07,$20,$E0,$00,$07,$00
- $DA56 DEFB $C0,$15,$03,$A8,$C0,$1B,$03,$D8
- $DA5E DEFB $C0,$19,$03,$58,$C0,$1D,$03,$B8
- $DA66 DEFB $E0,$0E,$07,$70,$E0,$0D,$07,$D0
- $DA6E DEFB $F0,$02,$07,$20,$E1,$0C,$C3,$18
- $DA76 DEFB $E1,$0C,$C3,$18,$F3,$00,$E7,$00
-; Graphics, 2 frames
+ $DA2E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DA36 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-da2e.png">]
+ $DA3E DEFB $F8,$00,$9F,$00,$F0,$06,$0F,$60 ;
+ $DA46 DEFB $E0,$0E,$07,$70,$E0,$08,$07,$50 ;
+ $DA4E DEFB $E0,$04,$07,$20,$E0,$00,$07,$00 ;
+ $DA56 DEFB $C0,$15,$03,$A8,$C0,$1B,$03,$D8 ;
+ $DA5E DEFB $C0,$19,$03,$58,$C0,$1D,$03,$B8 ;
+ $DA66 DEFB $E0,$0E,$07,$70,$E0,$0D,$07,$D0 ;
+ $DA6E DEFB $F0,$02,$07,$20,$E1,$0C,$C3,$18 ;
+ $DA76 DEFB $E1,$0C,$C3,$18,$F3,$00,$E7,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_da7e
- $DA7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DA86 DEFB $F1,$00,$CF,$00,$E0,$0E,$87,$30
- $DA8E DEFB $E0,$0E,$07,$70,$C0,$12,$03,$48
- $DA96 DEFB $C0,$04,$03,$10,$C0,$00,$03,$00
- $DA9E DEFB $C0,$03,$03,$80,$80,$27,$01,$D4
- $DAA6 DEFB $80,$37,$01,$CC,$80,$35,$01,$5C
- $DAAE DEFB $C0,$1B,$03,$B8,$C0,$1C,$03,$78
- $DAB6 DEFB $E0,$0B,$07,$D0,$E0,$04,$07,$30
- $DABE DEFB $C3,$18,$87,$20,$C3,$18,$C3,$18
- $DAC6 DEFB $E7,$00,$C3,$18,$FF,$00,$E7,$00
-; Graphics, 2 frames
+ $DA7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DA86 DEFB $F1,$00,$CF,$00,$E0,$0E,$87,$30 ; src="images/gfx/gfx-da7e.png">]
+ $DA8E DEFB $E0,$0E,$07,$70,$C0,$12,$03,$48 ;
+ $DA96 DEFB $C0,$04,$03,$10,$C0,$00,$03,$00 ;
+ $DA9E DEFB $C0,$03,$03,$80,$80,$27,$01,$D4 ;
+ $DAA6 DEFB $80,$37,$01,$CC,$80,$35,$01,$5C ;
+ $DAAE DEFB $C0,$1B,$03,$B8,$C0,$1C,$03,$78 ;
+ $DAB6 DEFB $E0,$0B,$07,$D0,$E0,$04,$07,$30 ;
+ $DABE DEFB $C3,$18,$87,$20,$C3,$18,$C3,$18 ;
+ $DAC6 DEFB $E7,$00,$C3,$18,$FF,$00,$E7,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_dace
- $DACE DEFB $FF,$00,$FF,$00,$F1,$00,$8F,$00
- $DAD6 DEFB $E0,$0C,$07,$30,$C0,$1E,$03,$78
- $DADE DEFB $C0,$1E,$03,$78,$80,$32,$01,$4C
- $DAE6 DEFB $80,$24,$01,$14,$80,$20,$01,$04
- $DAEE DEFB $80,$13,$01,$C8,$80,$27,$01,$E4
- $DAF6 DEFB $80,$37,$01,$EC,$80,$35,$01,$AC
- $DAFE DEFB $C0,$1B,$03,$D8,$C0,$14,$03,$28
- $DB06 DEFB $C0,$1B,$03,$D8,$C0,$18,$03,$10
- $DB0E DEFB $C3,$08,$E1,$0C,$87,$30,$E1,$0C
- $DB16 DEFB $87,$30,$F3,$00,$CF,$00,$FF,$00
-; Graphics, 4 frames
+ $DACE DEFB $FF,$00,$FF,$00,$F1,$00,$8F,$00 ; {#HTML[<img
+ $DAD6 DEFB $E0,$0C,$07,$30,$C0,$1E,$03,$78 ; src="images/gfx/gfx-dace.png">]
+ $DADE DEFB $C0,$1E,$03,$78,$80,$32,$01,$4C ;
+ $DAE6 DEFB $80,$24,$01,$14,$80,$20,$01,$04 ;
+ $DAEE DEFB $80,$13,$01,$C8,$80,$27,$01,$E4 ;
+ $DAF6 DEFB $80,$37,$01,$EC,$80,$35,$01,$AC ;
+ $DAFE DEFB $C0,$1B,$03,$D8,$C0,$14,$03,$28 ;
+ $DB06 DEFB $C0,$1B,$03,$D8,$C0,$18,$03,$10 ;
+ $DB0E DEFB $C3,$08,$E1,$0C,$87,$30,$E1,$0C ;
+ $DB16 DEFB $87,$30,$F3,$00,$CF,$00,$FF,$00 ; }
+; Graphics, 4 frames.
 @label=gfx_db1e
- $DB1E DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $DB26 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C
- $DB2E DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF
- $DB36 DEFB $FF,$C0,$13,$02,$B0,$7F,$FF,$C0
- $DB3E DEFB $05,$00,$BC,$7F,$FF,$80,$01,$00
- $DB46 DEFB $BE,$7F,$FF,$00,$63,$00,$7F,$7F
- $DB4E DEFB $FE,$00,$EF,$00,$7F,$7F,$FE,$00
- $DB56 DEFB $F6,$00,$FF,$7F,$FE,$00,$B9,$00
- $DB5E DEFB $FF,$7F,$FF,$00,$7F,$00,$BE,$FF
- $DB66 DEFB $FF,$80,$3B,$00,$7E,$FF,$FF,$C0
- $DB6E DEFB $06,$01,$EC,$FF,$FF,$F8,$02,$03
- $DB76 DEFB $D8,$FF,$FF,$FC,$00,$07,$E0,$FF
- $DB7E DEFB $FF,$F8,$03,$07,$60,$FF,$FF,$F8
- $DB86 DEFB $03,$03,$D8,$FF,$FF,$FC,$00,$03
- $DB8E DEFB $38,$FF,$FF,$FF,$00,$07,$00,$FF
-; Graphics, 4 frames
+ $DB1E DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ; {#HTML[<img
+ $DB26 DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$7C ; src="images/gfx/gfx-db1e.png">]
+ $DB2E DEFB $00,$FF,$FF,$E0,$0F,$0C,$00,$FF ;
+ $DB36 DEFB $FF,$C0,$13,$02,$B0,$7F,$FF,$C0 ;
+ $DB3E DEFB $05,$00,$BC,$7F,$FF,$80,$01,$00 ;
+ $DB46 DEFB $BE,$7F,$FF,$00,$63,$00,$7F,$7F ;
+ $DB4E DEFB $FE,$00,$EF,$00,$7F,$7F,$FE,$00 ;
+ $DB56 DEFB $F6,$00,$FF,$7F,$FE,$00,$B9,$00 ;
+ $DB5E DEFB $FF,$7F,$FF,$00,$7F,$00,$BE,$FF ;
+ $DB66 DEFB $FF,$80,$3B,$00,$7E,$FF,$FF,$C0 ;
+ $DB6E DEFB $06,$01,$EC,$FF,$FF,$F8,$02,$03 ;
+ $DB76 DEFB $D8,$FF,$FF,$FC,$00,$07,$E0,$FF ;
+ $DB7E DEFB $FF,$F8,$03,$07,$60,$FF,$FF,$F8 ;
+ $DB86 DEFB $03,$03,$D8,$FF,$FF,$FC,$00,$03 ;
+ $DB8E DEFB $38,$FF,$FF,$FF,$00,$07,$00,$FF ; }
+; Graphics, 4 frames.
 @label=gfx_db96
- $DB96 DEFB $FF,$F9,$00,$FF,$00,$FF,$FF,$F0
- $DB9E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$79
- $DBA6 DEFB $00,$FF,$FF,$E0,$0F,$09,$00,$FF
- $DBAE DEFB $FF,$C0,$07,$00,$B0,$FF,$FF,$C0
- $DBB6 DEFB $0B,$00,$BC,$7F,$FF,$80,$03,$00
- $DBBE DEFB $BE,$7F,$FF,$00,$47,$00,$7F,$7F
- $DBC6 DEFB $FE,$00,$EF,$00,$3F,$7F,$FE,$00
- $DBCE DEFB $F6,$00,$7F,$7F,$FE,$00,$B9,$00
- $DBD6 DEFB $FF,$7F,$FF,$00,$73,$00,$FE,$FF
- $DBDE DEFB $FF,$80,$2B,$00,$BE,$FF,$FF,$C0
- $DBE6 DEFB $0F,$01,$7C,$FF,$FF,$F0,$07,$03
- $DBEE DEFB $70,$FF,$FF,$F8,$00,$07,$C0,$FF
- $DBF6 DEFB $FF,$FE,$00,$07,$30,$FF,$FF,$FE
- $DBFE DEFB $00,$03,$D8,$FF,$FF,$FF,$00,$03
- $DC06 DEFB $78,$FF,$FF,$FF,$00,$87,$00,$FF
-; Graphics, 4 frames
+ $DB96 DEFB $FF,$F9,$00,$FF,$00,$FF,$FF,$F0 ; {#HTML[<img
+ $DB9E DEFB $06,$FC,$00,$FF,$FF,$E0,$0F,$79 ; src="images/gfx/gfx-db96.png">]
+ $DBA6 DEFB $00,$FF,$FF,$E0,$0F,$09,$00,$FF ;
+ $DBAE DEFB $FF,$C0,$07,$00,$B0,$FF,$FF,$C0 ;
+ $DBB6 DEFB $0B,$00,$BC,$7F,$FF,$80,$03,$00 ;
+ $DBBE DEFB $BE,$7F,$FF,$00,$47,$00,$7F,$7F ;
+ $DBC6 DEFB $FE,$00,$EF,$00,$3F,$7F,$FE,$00 ;
+ $DBCE DEFB $F6,$00,$7F,$7F,$FE,$00,$B9,$00 ;
+ $DBD6 DEFB $FF,$7F,$FF,$00,$73,$00,$FE,$FF ;
+ $DBDE DEFB $FF,$80,$2B,$00,$BE,$FF,$FF,$C0 ;
+ $DBE6 DEFB $0F,$01,$7C,$FF,$FF,$F0,$07,$03 ;
+ $DBEE DEFB $70,$FF,$FF,$F8,$00,$07,$C0,$FF ;
+ $DBF6 DEFB $FF,$FE,$00,$07,$30,$FF,$FF,$FE ;
+ $DBFE DEFB $00,$03,$D8,$FF,$FF,$FF,$00,$03 ;
+ $DC06 DEFB $78,$FF,$FF,$FF,$00,$87,$00,$FF ; }
+; Graphics, 4 frames.
 @label=gfx_dc0e
- $DC0E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9
- $DC16 DEFB $00,$87,$00,$FF,$FF,$F0,$06,$03
- $DC1E DEFB $78,$FF,$FF,$E0,$09,$03,$00,$FF
- $DC26 DEFB $FF,$C0,$10,$00,$B8,$7F,$FF,$C0
- $DC2E DEFB $12,$00,$BC,$FF,$FF,$80,$19,$00
- $DC36 DEFB $B8,$FF,$FF,$00,$5F,$00,$79,$7F
- $DC3E DEFB $FE,$00,$AE,$00,$F9,$7F,$FE,$00
- $DC46 DEFB $F1,$00,$FC,$7F,$FE,$00,$F1,$00
- $DC4E DEFB $FE,$7F,$FE,$00,$AE,$00,$FF,$7F
- $DC56 DEFB $FF,$00,$5F,$00,$7F,$7F,$FF,$80
- $DC5E DEFB $19,$00,$BE,$FF,$FF,$C0,$12,$00
- $DC66 DEFB $BE,$FF,$FF,$C0,$10,$01,$B8,$FF
- $DC6E DEFB $FF,$E0,$09,$03,$00,$FF,$FF,$F0
- $DC76 DEFB $06,$03,$78,$FF,$FF,$F9,$00,$87
- $DC7E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $DC0E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$F9 ; {#HTML[<img
+ $DC16 DEFB $00,$87,$00,$FF,$FF,$F0,$06,$03 ; src="images/gfx/gfx-dc0e.png">]
+ $DC1E DEFB $78,$FF,$FF,$E0,$09,$03,$00,$FF ;
+ $DC26 DEFB $FF,$C0,$10,$00,$B8,$7F,$FF,$C0 ;
+ $DC2E DEFB $12,$00,$BC,$FF,$FF,$80,$19,$00 ;
+ $DC36 DEFB $B8,$FF,$FF,$00,$5F,$00,$79,$7F ;
+ $DC3E DEFB $FE,$00,$AE,$00,$F9,$7F,$FE,$00 ;
+ $DC46 DEFB $F1,$00,$FC,$7F,$FE,$00,$F1,$00 ;
+ $DC4E DEFB $FE,$7F,$FE,$00,$AE,$00,$FF,$7F ;
+ $DC56 DEFB $FF,$00,$5F,$00,$7F,$7F,$FF,$80 ;
+ $DC5E DEFB $19,$00,$BE,$FF,$FF,$C0,$12,$00 ;
+ $DC66 DEFB $BE,$FF,$FF,$C0,$10,$01,$B8,$FF ;
+ $DC6E DEFB $FF,$E0,$09,$03,$00,$FF,$FF,$F0 ;
+ $DC76 DEFB $06,$03,$78,$FF,$FF,$F9,$00,$87 ;
+ $DC7E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames.
 @label=gfx_dc86
- $DC86 DEFB $FF,$FF,$00,$07,$00,$FF,$FF,$FE
- $DC8E DEFB $00,$03,$F8,$FF,$FF,$FF,$00,$03
- $DC96 DEFB $38,$FF,$FF,$FF,$00,$87,$30,$FF
- $DC9E DEFB $FF,$FE,$00,$07,$70,$FF,$FF,$F8
- $DCA6 DEFB $01,$03,$70,$FF,$FF,$C0,$07,$01
- $DCAE DEFB $78,$FF,$FF,$80,$3B,$00,$BE,$FF
- $DCB6 DEFB $FF,$00,$7F,$00,$FE,$FF,$FE,$00
- $DCBE DEFB $B9,$00,$FF,$7F,$FE,$00,$F6,$00
- $DCC6 DEFB $FF,$7F,$FF,$00,$6F,$00,$7F,$7F
- $DCCE DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$C0
- $DCD6 DEFB $10,$00,$BE,$7F,$FF,$C0,$12,$00
- $DCDE DEFB $BC,$7F,$FF,$C0,$19,$02,$B0,$7F
- $DCE6 DEFB $FF,$E0,$0F,$0C,$00,$FF,$FF,$E0
- $DCEE DEFB $0F,$7C,$00,$FF,$FF,$F0,$06,$FC
- $DCF6 DEFB $00,$FF,$FF,$F9,$00,$FE,$00,$7F
-; Graphics, 4 frames
+ $DC86 DEFB $FF,$FF,$00,$07,$00,$FF,$FF,$FE ; {#HTML[<img
+ $DC8E DEFB $00,$03,$F8,$FF,$FF,$FF,$00,$03 ; src="images/gfx/gfx-dc86.png">]
+ $DC96 DEFB $38,$FF,$FF,$FF,$00,$87,$30,$FF ;
+ $DC9E DEFB $FF,$FE,$00,$07,$70,$FF,$FF,$F8 ;
+ $DCA6 DEFB $01,$03,$70,$FF,$FF,$C0,$07,$01 ;
+ $DCAE DEFB $78,$FF,$FF,$80,$3B,$00,$BE,$FF ;
+ $DCB6 DEFB $FF,$00,$7F,$00,$FE,$FF,$FE,$00 ;
+ $DCBE DEFB $B9,$00,$FF,$7F,$FE,$00,$F6,$00 ;
+ $DCC6 DEFB $FF,$7F,$FF,$00,$6F,$00,$7F,$7F ;
+ $DCCE DEFB $FF,$80,$09,$00,$7F,$7F,$FF,$C0 ;
+ $DCD6 DEFB $10,$00,$BE,$7F,$FF,$C0,$12,$00 ;
+ $DCDE DEFB $BC,$7F,$FF,$C0,$19,$02,$B0,$7F ;
+ $DCE6 DEFB $FF,$E0,$0F,$0C,$00,$FF,$FF,$E0 ;
+ $DCEE DEFB $0F,$7C,$00,$FF,$FF,$F0,$06,$FC ;
+ $DCF6 DEFB $00,$FF,$FF,$F9,$00,$FE,$00,$7F ; }
+; Graphics, 4 frames.
 @label=gfx_dcfe
- $DCFE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DD06 DEFB $00,$07,$00,$FF,$FF,$FE,$00,$03
- $DD0E DEFB $F8,$FF,$FF,$F8,$00,$03,$F8,$FF
- $DD16 DEFB $FF,$E0,$07,$01,$78,$FF,$FF,$C0
- $DD1E DEFB $1F,$00,$86,$FF,$FF,$80,$07,$00
- $DD26 DEFB $FE,$FF,$FF,$00,$7B,$00,$FF,$7F
- $DD2E DEFB $FE,$00,$FF,$00,$FF,$7F,$FE,$00
- $DD36 DEFB $FF,$00,$FF,$7F,$FE,$00,$FF,$00
- $DD3E DEFB $FF,$7F,$FE,$00,$FF,$00,$FF,$7F
- $DD46 DEFB $FF,$00,$7B,$00,$FF,$7F,$FF,$80
- $DD4E DEFB $07,$00,$FE,$FF,$FF,$C0,$1F,$00
- $DD56 DEFB $86,$7F,$FF,$E0,$06,$00,$78,$7F
- $DD5E DEFB $FF,$F8,$00,$03,$F8,$FF,$FF,$FE
- $DD66 DEFB $00,$03,$F8,$FF,$FF,$FF,$00,$07
- $DD6E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
-; Graphics, 4 frames
+ $DCFE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $DD06 DEFB $00,$07,$00,$FF,$FF,$FE,$00,$03 ; src="images/gfx/gfx-dcfe.png">]
+ $DD0E DEFB $F8,$FF,$FF,$F8,$00,$03,$F8,$FF ;
+ $DD16 DEFB $FF,$E0,$07,$01,$78,$FF,$FF,$C0 ;
+ $DD1E DEFB $1F,$00,$86,$FF,$FF,$80,$07,$00 ;
+ $DD26 DEFB $FE,$FF,$FF,$00,$7B,$00,$FF,$7F ;
+ $DD2E DEFB $FE,$00,$FF,$00,$FF,$7F,$FE,$00 ;
+ $DD36 DEFB $FF,$00,$FF,$7F,$FE,$00,$FF,$00 ;
+ $DD3E DEFB $FF,$7F,$FE,$00,$FF,$00,$FF,$7F ;
+ $DD46 DEFB $FF,$00,$7B,$00,$FF,$7F,$FF,$80 ;
+ $DD4E DEFB $07,$00,$FE,$FF,$FF,$C0,$1F,$00 ;
+ $DD56 DEFB $86,$7F,$FF,$E0,$06,$00,$78,$7F ;
+ $DD5E DEFB $FF,$F8,$00,$03,$F8,$FF,$FF,$FE ;
+ $DD66 DEFB $00,$03,$F8,$FF,$FF,$FF,$00,$07 ;
+ $DD6E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ; }
+; Graphics, 4 frames.
 @label=gfx_dd76
- $DD76 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DD7E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $DD86 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $DD8E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DD96 DEFB $00,$FF,$00,$FF,$FF,$F9,$00,$FE
- $DD9E DEFB $00,$7F,$FF,$F0,$06,$FC,$00,$FF
- $DDA6 DEFB $FF,$E0,$0F,$7C,$00,$FF,$FF,$E0
- $DDAE DEFB $0F,$0C,$00,$FF,$FF,$C0,$19,$02
- $DDB6 DEFB $B0,$7F,$FF,$C0,$12,$00,$BC,$7F
- $DDBE DEFB $FF,$C0,$10,$00,$BE,$7F,$FF,$80
- $DDC6 DEFB $09,$00,$7F,$7F,$FF,$00,$6F,$00
- $DDCE DEFB $7F,$7F,$FE,$00,$F6,$00,$FF,$7F
- $DDD6 DEFB $FE,$00,$B9,$00,$FF,$7F,$FF,$00
- $DDDE DEFB $7F,$00,$FE,$FF,$FF,$80,$3B,$00
- $DDE6 DEFB $BE,$FF,$FF,$C0,$07,$01,$78,$FF
-; Graphics, 4 frames
+ $DD76 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $DD7E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-dd76.png">]
+ $DD86 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $DD8E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $DD96 DEFB $00,$FF,$00,$FF,$FF,$F9,$00,$FE ;
+ $DD9E DEFB $00,$7F,$FF,$F0,$06,$FC,$00,$FF ;
+ $DDA6 DEFB $FF,$E0,$0F,$7C,$00,$FF,$FF,$E0 ;
+ $DDAE DEFB $0F,$0C,$00,$FF,$FF,$C0,$19,$02 ;
+ $DDB6 DEFB $B0,$7F,$FF,$C0,$12,$00,$BC,$7F ;
+ $DDBE DEFB $FF,$C0,$10,$00,$BE,$7F,$FF,$80 ;
+ $DDC6 DEFB $09,$00,$7F,$7F,$FF,$00,$6F,$00 ;
+ $DDCE DEFB $7F,$7F,$FE,$00,$F6,$00,$FF,$7F ;
+ $DDD6 DEFB $FE,$00,$B9,$00,$FF,$7F,$FF,$00 ;
+ $DDDE DEFB $7F,$00,$FE,$FF,$FF,$80,$3B,$00 ;
+ $DDE6 DEFB $BE,$FF,$FF,$C0,$07,$01,$78,$FF ; }
+; Graphics, 4 frames.
 @label=gfx_ddee
- $DDEE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DDF6 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $DDFE DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $DE06 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DE0E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $DE16 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $DE1E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF
- $DE26 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF
- $DE2E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF
- $DE36 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0
- $DE3E DEFB $06,$FC,$00,$FF,$FF,$60,$0F,$7C
- $DE46 DEFB $00,$FF,$FE,$20,$8F,$0C,$00,$FF
- $DE4E DEFB $FF,$40,$19,$02,$B0,$7F,$FF,$C0
- $DE56 DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00
- $DE5E DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F
-; Graphics, 2 frames
+ $DDEE DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ; {#HTML[<img
+ $DDF6 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ; src="images/gfx/gfx-ddee.png">]
+ $DDFE DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $DE06 DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $DE0E DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ;
+ $DE16 DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $DE1E DEFB $FF,$FF,$00,$FF,$00,$FF,$FF,$FF ;
+ $DE26 DEFB $00,$FF,$00,$FF,$FF,$FF,$00,$FF ;
+ $DE2E DEFB $00,$FF,$FF,$FF,$00,$FF,$00,$FF ;
+ $DE36 DEFB $FF,$F9,$00,$FE,$00,$7F,$FF,$F0 ;
+ $DE3E DEFB $06,$FC,$00,$FF,$FF,$60,$0F,$7C ;
+ $DE46 DEFB $00,$FF,$FE,$20,$8F,$0C,$00,$FF ;
+ $DE4E DEFB $FF,$40,$19,$02,$B0,$7F,$FF,$C0 ;
+ $DE56 DEFB $12,$00,$BC,$7F,$FF,$C0,$10,$00 ;
+ $DE5E DEFB $BE,$7F,$FF,$80,$09,$00,$7F,$7F ; }
+; Graphics, 2 frames.
 @label=gfx_de66
- $DE66 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DE6E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DE76 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DE7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DE86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DE8E DEFB $F7,$00,$FF,$00,$E3,$08,$BF,$00
- $DE96 DEFB $97,$00,$1F,$40,$0F,$60,$BF,$00
- $DE9E DEFB $0E,$60,$FF,$00,$9C,$01,$7F,$00
- $DEA6 DEFB $FE,$00,$FF,$00,$FF,$00,$FF,$00
- $DEAE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $DE66 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DE6E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-de66.png">]
+ $DE76 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DE7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DE86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DE8E DEFB $F7,$00,$FF,$00,$E3,$08,$BF,$00 ;
+ $DE96 DEFB $97,$00,$1F,$40,$0F,$60,$BF,$00 ;
+ $DE9E DEFB $0E,$60,$FF,$00,$9C,$01,$7F,$00 ;
+ $DEA6 DEFB $FE,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DEAE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_deb6
- $DEB6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DEBE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DEC6 DEFB $FF,$00,$FF,$00,$F3,$00,$FF,$00
- $DECE DEFB $E0,$0C,$FF,$00,$E0,$0B,$7F,$00
- $DED6 DEFB $80,$03,$7F,$00,$04,$70,$FF,$00
- $DEDE DEFB $07,$70,$9F,$00,$07,$70,$0F,$60
- $DEE6 DEFB $8F,$00,$0F,$60,$FF,$00,$9F,$00
- $DEEE DEFB $FD,$00,$FF,$00,$F8,$02,$FF,$00
- $DEF6 DEFB $FD,$00,$FF,$00,$FF,$00,$FF,$00
- $DEFE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $DEB6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DEBE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-deb6.png">]
+ $DEC6 DEFB $FF,$00,$FF,$00,$F3,$00,$FF,$00 ;
+ $DECE DEFB $E0,$0C,$FF,$00,$E0,$0B,$7F,$00 ;
+ $DED6 DEFB $80,$03,$7F,$00,$04,$70,$FF,$00 ;
+ $DEDE DEFB $07,$70,$9F,$00,$07,$70,$0F,$60 ;
+ $DEE6 DEFB $8F,$00,$0F,$60,$FF,$00,$9F,$00 ;
+ $DEEE DEFB $FD,$00,$FF,$00,$F8,$02,$FF,$00 ;
+ $DEF6 DEFB $FD,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DEFE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_df06
- $DF06 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DF0E DEFB $FF,$00,$FF,$00,$FE,$00,$7F,$00
- $DF16 DEFB $FC,$01,$3F,$80,$9C,$01,$3F,$80
- $DF1E DEFB $0E,$60,$7F,$00,$0F,$60,$E7,$00
- $DF26 DEFB $87,$00,$C3,$18,$C3,$18,$C3,$18
- $DF2E DEFB $C2,$18,$67,$00,$E4,$01,$3F,$80
- $DF36 DEFB $E4,$01,$3F,$80,$C2,$18,$7F,$00
- $DF3E DEFB $C3,$18,$FF,$00,$E7,$00,$FF,$00
- $DF46 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DF4E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $DF06 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DF0E DEFB $FF,$00,$FF,$00,$FE,$00,$7F,$00 ; src="images/gfx/gfx-df06.png">]
+ $DF16 DEFB $FC,$01,$3F,$80,$9C,$01,$3F,$80 ;
+ $DF1E DEFB $0E,$60,$7F,$00,$0F,$60,$E7,$00 ;
+ $DF26 DEFB $87,$00,$C3,$18,$C3,$18,$C3,$18 ;
+ $DF2E DEFB $C2,$18,$67,$00,$E4,$01,$3F,$80 ;
+ $DF36 DEFB $E4,$01,$3F,$80,$C2,$18,$7F,$00 ;
+ $DF3E DEFB $C3,$18,$FF,$00,$E7,$00,$FF,$00 ;
+ $DF46 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DF4E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_df56
- $DF56 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DF5E DEFB $FF,$00,$FF,$00,$FD,$00,$FF,$00
- $DF66 DEFB $F8,$02,$FF,$00,$BD,$00,$FF,$00
- $DF6E DEFB $1F,$40,$FF,$00,$BF,$00,$BF,$00
- $DF76 DEFB $FF,$00,$1F,$40,$F7,$00,$BF,$00
- $DF7E DEFB $E3,$08,$FF,$00,$F7,$00,$FF,$00
- $DF86 DEFB $BD,$00,$FF,$00,$18,$42,$FF,$00
- $DF8E DEFB $BD,$00,$FF,$00,$FF,$00,$FF,$00
- $DF96 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $DF9E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $DF56 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $DF5E DEFB $FF,$00,$FF,$00,$FD,$00,$FF,$00 ; src="images/gfx/gfx-df56.png">]
+ $DF66 DEFB $F8,$02,$FF,$00,$BD,$00,$FF,$00 ;
+ $DF6E DEFB $1F,$40,$FF,$00,$BF,$00,$BF,$00 ;
+ $DF76 DEFB $FF,$00,$1F,$40,$F7,$00,$BF,$00 ;
+ $DF7E DEFB $E3,$08,$FF,$00,$F7,$00,$FF,$00 ;
+ $DF86 DEFB $BD,$00,$FF,$00,$18,$42,$FF,$00 ;
+ $DF8E DEFB $BD,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DF96 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $DF9E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_dfa6
- $DFA6 DEFB $C7,$00,$FF,$00,$83,$38,$FF,$00
- $DFAE DEFB $01,$7C,$FF,$00,$01,$7C,$FF,$00
- $DFB6 DEFB $01,$7C,$FF,$00,$01,$7C,$FF,$00
- $DFBE DEFB $83,$38,$FF,$00,$C7,$00,$FF,$00
-; Graphics, 2 frames
+ $DFA6 DEFB $C7,$00,$FF,$00,$83,$38,$FF,$00 ; {#HTML[<img
+ $DFAE DEFB $01,$7C,$FF,$00,$01,$7C,$FF,$00 ; src="images/gfx/gfx-dfa6.png">]
+ $DFB6 DEFB $01,$7C,$FF,$00,$01,$7C,$FF,$00 ;
+ $DFBE DEFB $83,$38,$FF,$00,$C7,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_dfc6
- $DFC6 DEFB $F1,$00,$FF,$00,$E0,$0E,$FF,$00
- $DFCE DEFB $C0,$1F,$7F,$00,$C0,$1F,$7F,$00
- $DFD6 DEFB $C0,$1F,$7F,$00,$C0,$1F,$7F,$00
- $DFDE DEFB $E0,$0E,$FF,$00,$F1,$00,$FF,$00
-; Graphics, 2 frames
+ $DFC6 DEFB $F1,$00,$FF,$00,$E0,$0E,$FF,$00 ; {#HTML[<img
+ $DFCE DEFB $C0,$1F,$7F,$00,$C0,$1F,$7F,$00 ; src="images/gfx/gfx-dfc6.png">]
+ $DFD6 DEFB $C0,$1F,$7F,$00,$C0,$1F,$7F,$00 ;
+ $DFDE DEFB $E0,$0E,$FF,$00,$F1,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_dfe6
- $DFE6 DEFB $FC,$00,$7F,$00,$F8,$03,$3F,$80
- $DFEE DEFB $F0,$07,$1F,$C0,$F0,$07,$1F,$C0
- $DFF6 DEFB $F0,$07,$1F,$C0,$F0,$07,$1F,$C0
- $DFFE DEFB $F8,$03,$3F,$80,$FC,$00,$7F,$00
-; Graphics, 2 frames
+ $DFE6 DEFB $FC,$00,$7F,$00,$F8,$03,$3F,$80 ; {#HTML[<img
+ $DFEE DEFB $F0,$07,$1F,$C0,$F0,$07,$1F,$C0 ; src="images/gfx/gfx-dfe6.png">]
+ $DFF6 DEFB $F0,$07,$1F,$C0,$F0,$07,$1F,$C0 ;
+ $DFFE DEFB $F8,$03,$3F,$80,$FC,$00,$7F,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e006
- $E006 DEFB $FF,$00,$1F,$00,$FE,$00,$0F,$E0
- $E00E DEFB $FC,$01,$07,$F0,$FC,$01,$07,$F0
- $E016 DEFB $FC,$01,$07,$F0,$FC,$01,$07,$F0
- $E01E DEFB $FE,$00,$0F,$E0,$FF,$00,$1F,$00
-; Graphics, 2 frames
+ $E006 DEFB $FF,$00,$1F,$00,$FE,$00,$0F,$E0 ; {#HTML[<img
+ $E00E DEFB $FC,$01,$07,$F0,$FC,$01,$07,$F0 ; src="images/gfx/gfx-e006.png">]
+ $E016 DEFB $FC,$01,$07,$F0,$FC,$01,$07,$F0 ;
+ $E01E DEFB $FE,$00,$0F,$E0,$FF,$00,$1F,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e026
- $E026 DEFB $FE,$00,$7F,$00,$FC,$01,$3F,$80
- $E02E DEFB $F8,$03,$1F,$C0,$F8,$03,$1F,$C0
- $E036 DEFB $FC,$01,$3F,$80,$CE,$00,$73,$00
- $E03E DEFB $86,$30,$61,$0C,$00,$79,$00,$9E
- $E046 DEFB $00,$79,$00,$9E,$86,$30,$61,$0C
- $E04E DEFB $CE,$00,$73,$00,$FC,$01,$3F,$80
- $E056 DEFB $F8,$03,$1F,$C0,$F8,$03,$1F,$C0
- $E05E DEFB $FC,$01,$3F,$80,$FE,$00,$7F,$00
-; Graphics, 3 frames
+ $E026 DEFB $FE,$00,$7F,$00,$FC,$01,$3F,$80 ; {#HTML[<img
+ $E02E DEFB $F8,$03,$1F,$C0,$F8,$03,$1F,$C0 ; src="images/gfx/gfx-e026.png">]
+ $E036 DEFB $FC,$01,$3F,$80,$CE,$00,$73,$00 ;
+ $E03E DEFB $86,$30,$61,$0C,$00,$79,$00,$9E ;
+ $E046 DEFB $00,$79,$00,$9E,$86,$30,$61,$0C ;
+ $E04E DEFB $CE,$00,$73,$00,$FC,$01,$3F,$80 ;
+ $E056 DEFB $F8,$03,$1F,$C0,$F8,$03,$1F,$C0 ;
+ $E05E DEFB $FC,$01,$3F,$80,$FE,$00,$7F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e066
- $E066 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00
- $E06E DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C
- $E076 DEFB $FF,$00,$F3,$00,$81,$3C,$FF,$00
- $E07E DEFB $E1,$0C,$C3,$18,$FF,$00,$C0,$1E
- $E086 DEFB $E7,$00,$FF,$00,$C0,$1E,$9F,$00
- $E08E DEFB $FF,$00,$E1,$0C,$0C,$60,$FF,$00
- $E096 DEFB $F3,$00,$08,$63,$7F,$00,$FF,$00
- $E09E DEFB $90,$07,$3F,$80,$FE,$00,$70,$07
- $E0A6 DEFB $3F,$80,$FC,$01,$38,$83,$7F,$00
- $E0AE DEFB $F8,$03,$1C,$C0,$FF,$00,$F8,$03
- $E0B6 DEFB $1F,$C0,$FF,$00,$FC,$01,$3F,$80
- $E0BE DEFB $FF,$00,$FE,$00,$7F,$00,$FF,$00
-; Graphics, 3 frames
+ $E066 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E06E DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C ; src="images/gfx/gfx-e066.png">]
+ $E076 DEFB $FF,$00,$F3,$00,$81,$3C,$FF,$00 ;
+ $E07E DEFB $E1,$0C,$C3,$18,$FF,$00,$C0,$1E ;
+ $E086 DEFB $E7,$00,$FF,$00,$C0,$1E,$9F,$00 ;
+ $E08E DEFB $FF,$00,$E1,$0C,$0C,$60,$FF,$00 ;
+ $E096 DEFB $F3,$00,$08,$63,$7F,$00,$FF,$00 ;
+ $E09E DEFB $90,$07,$3F,$80,$FE,$00,$70,$07 ;
+ $E0A6 DEFB $3F,$80,$FC,$01,$38,$83,$7F,$00 ;
+ $E0AE DEFB $F8,$03,$1C,$C0,$FF,$00,$F8,$03 ;
+ $E0B6 DEFB $1F,$C0,$FF,$00,$FC,$01,$3F,$80 ;
+ $E0BE DEFB $FF,$00,$FE,$00,$7F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e0c6
- $E0C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FE,$00
- $E0CE DEFB $7E,$00,$7F,$00,$FC,$01,$3C,$81
- $E0D6 DEFB $3F,$80,$F8,$03,$18,$C3,$1F,$C0
- $E0DE DEFB $F8,$03,$18,$C3,$1F,$C0,$FC,$01
- $E0E6 DEFB $3C,$81,$3F,$80,$FE,$00,$66,$00
- $E0EE DEFB $7F,$00,$FF,$00,$C3,$18,$FF,$00
- $E0F6 DEFB $FF,$00,$C3,$18,$FF,$00,$FE,$00
- $E0FE DEFB $66,$00,$7F,$00,$FC,$01,$3C,$81
- $E106 DEFB $3F,$80,$F8,$03,$18,$C3,$1F,$C0
- $E10E DEFB $F8,$03,$18,$C3,$1F,$C0,$FC,$01
- $E116 DEFB $3C,$81,$3F,$80,$FE,$00,$7E,$00
- $E11E DEFB $7F,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E0C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FE,$00 ; {#HTML[<img
+ $E0CE DEFB $7E,$00,$7F,$00,$FC,$01,$3C,$81 ; src="images/gfx/gfx-e0c6.png">]
+ $E0D6 DEFB $3F,$80,$F8,$03,$18,$C3,$1F,$C0 ;
+ $E0DE DEFB $F8,$03,$18,$C3,$1F,$C0,$FC,$01 ;
+ $E0E6 DEFB $3C,$81,$3F,$80,$FE,$00,$66,$00 ;
+ $E0EE DEFB $7F,$00,$FF,$00,$C3,$18,$FF,$00 ;
+ $E0F6 DEFB $FF,$00,$C3,$18,$FF,$00,$FE,$00 ;
+ $E0FE DEFB $66,$00,$7F,$00,$FC,$01,$3C,$81 ;
+ $E106 DEFB $3F,$80,$F8,$03,$18,$C3,$1F,$C0 ;
+ $E10E DEFB $F8,$03,$18,$C3,$1F,$C0,$FC,$01 ;
+ $E116 DEFB $3C,$81,$3F,$80,$FE,$00,$7E,$00 ;
+ $E11E DEFB $7F,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e126
- $E126 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00
- $E12E DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C
- $E136 DEFB $FF,$00,$FF,$00,$81,$3C,$CF,$00
- $E13E DEFB $FF,$00,$C3,$18,$87,$30,$FF,$00
- $E146 DEFB $E7,$00,$03,$78,$FF,$00,$F9,$00
- $E14E DEFB $03,$78,$FF,$00,$30,$06,$87,$30
- $E156 DEFB $FE,$00,$10,$C6,$CF,$00,$FC,$01
- $E15E DEFB $09,$E0,$FF,$00,$FC,$01,$0E,$E0
- $E166 DEFB $7F,$00,$FE,$00,$1C,$C1,$3F,$80
- $E16E DEFB $FF,$00,$38,$03,$1F,$C0,$FF,$00
- $E176 DEFB $F8,$03,$1F,$C0,$FF,$00,$FC,$01
- $E17E DEFB $3F,$80,$FF,$00,$FE,$00,$7F,$00
-; Graphics, 2 frames
+ $E126 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E12E DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C ; src="images/gfx/gfx-e126.png">]
+ $E136 DEFB $FF,$00,$FF,$00,$81,$3C,$CF,$00 ;
+ $E13E DEFB $FF,$00,$C3,$18,$87,$30,$FF,$00 ;
+ $E146 DEFB $E7,$00,$03,$78,$FF,$00,$F9,$00 ;
+ $E14E DEFB $03,$78,$FF,$00,$30,$06,$87,$30 ;
+ $E156 DEFB $FE,$00,$10,$C6,$CF,$00,$FC,$01 ;
+ $E15E DEFB $09,$E0,$FF,$00,$FC,$01,$0E,$E0 ;
+ $E166 DEFB $7F,$00,$FE,$00,$1C,$C1,$3F,$80 ;
+ $E16E DEFB $FF,$00,$38,$03,$1F,$C0,$FF,$00 ;
+ $E176 DEFB $F8,$03,$1F,$C0,$FF,$00,$FC,$01 ;
+ $E17E DEFB $3F,$80,$FF,$00,$FE,$00,$7F,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e186
- $E186 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0
- $E18E DEFB $E0,$0F,$07,$F0,$C0,$1D,$03,$F8
- $E196 DEFB $80,$3F,$01,$FC,$80,$33,$01,$FC
- $E19E DEFB $00,$7F,$00,$FE,$00,$67,$00,$FE
- $E1A6 DEFB $00,$67,$00,$FE,$00,$7F,$00,$F6
- $E1AE DEFB $80,$3F,$01,$F4,$80,$3F,$01,$FC
- $E1B6 DEFB $C0,$1F,$03,$D8,$E0,$0F,$07,$F0
- $E1BE DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00
-; Graphics, 3 frames
+ $E186 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0 ; {#HTML[<img
+ $E18E DEFB $E0,$0F,$07,$F0,$C0,$1D,$03,$F8 ; src="images/gfx/gfx-e186.png">]
+ $E196 DEFB $80,$3F,$01,$FC,$80,$33,$01,$FC ;
+ $E19E DEFB $00,$7F,$00,$FE,$00,$67,$00,$FE ;
+ $E1A6 DEFB $00,$67,$00,$FE,$00,$7F,$00,$F6 ;
+ $E1AE DEFB $80,$3F,$01,$F4,$80,$3F,$01,$FC ;
+ $E1B6 DEFB $C0,$1F,$03,$D8,$E0,$0F,$07,$F0 ;
+ $E1BE DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e1c6
- $E1C6 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00
- $E1CE DEFB $03,$F0,$FF,$00,$F8,$03,$01,$FC
- $E1D6 DEFB $FF,$00,$F0,$07,$00,$7E,$FF,$00
- $E1DE DEFB $E0,$0F,$00,$FF,$7F,$00,$E0,$0C
- $E1E6 DEFB $00,$FF,$7F,$00,$C0,$1F,$00,$FF
- $E1EE DEFB $3F,$80,$C0,$19,$00,$FF,$3F,$80
- $E1F6 DEFB $C0,$19,$00,$FF,$3F,$80,$C0,$1F
- $E1FE DEFB $00,$FD,$3F,$80,$E0,$0F,$00,$FD
- $E206 DEFB $7F,$00,$E0,$0F,$00,$FF,$7F,$00
- $E20E DEFB $F0,$07,$00,$F6,$FF,$00,$F8,$03
- $E216 DEFB $01,$FC,$FF,$00,$FC,$00,$03,$F0
- $E21E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00
-; Graphics, 3 frames
+ $E1C6 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00 ; {#HTML[<img
+ $E1CE DEFB $03,$F0,$FF,$00,$F8,$03,$01,$FC ; src="images/gfx/gfx-e1c6.png">]
+ $E1D6 DEFB $FF,$00,$F0,$07,$00,$7E,$FF,$00 ;
+ $E1DE DEFB $E0,$0F,$00,$FF,$7F,$00,$E0,$0C ;
+ $E1E6 DEFB $00,$FF,$7F,$00,$C0,$1F,$00,$FF ;
+ $E1EE DEFB $3F,$80,$C0,$19,$00,$FF,$3F,$80 ;
+ $E1F6 DEFB $C0,$19,$00,$FF,$3F,$80,$C0,$1F ;
+ $E1FE DEFB $00,$FD,$3F,$80,$E0,$0F,$00,$FD ;
+ $E206 DEFB $7F,$00,$E0,$0F,$00,$FF,$7F,$00 ;
+ $E20E DEFB $F0,$07,$00,$F6,$FF,$00,$F8,$03 ;
+ $E216 DEFB $01,$FC,$FF,$00,$FC,$00,$03,$F0 ;
+ $E21E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e226
- $E226 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00
- $E22E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$FF
- $E236 DEFB $7F,$00,$FC,$01,$00,$DF,$3F,$80
- $E23E DEFB $F8,$03,$00,$FF,$1F,$C0,$F8,$03
- $E246 DEFB $00,$3F,$1F,$C0,$F0,$07,$00,$FF
- $E24E DEFB $0F,$E0,$F0,$06,$00,$7F,$0F,$E0
- $E256 DEFB $F0,$06,$00,$7F,$0F,$E0,$F0,$07
- $E25E DEFB $00,$FF,$0F,$60,$F8,$03,$00,$FF
- $E266 DEFB $1F,$40,$F8,$03,$00,$FF,$1F,$C0
- $E26E DEFB $FC,$01,$00,$FD,$3F,$80,$FE,$00
- $E276 DEFB $00,$FF,$7F,$00,$FF,$00,$00,$3C
- $E27E DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00
-; Graphics, 3 frames
+ $E226 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E22E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$FF ; src="images/gfx/gfx-e226.png">]
+ $E236 DEFB $7F,$00,$FC,$01,$00,$DF,$3F,$80 ;
+ $E23E DEFB $F8,$03,$00,$FF,$1F,$C0,$F8,$03 ;
+ $E246 DEFB $00,$3F,$1F,$C0,$F0,$07,$00,$FF ;
+ $E24E DEFB $0F,$E0,$F0,$06,$00,$7F,$0F,$E0 ;
+ $E256 DEFB $F0,$06,$00,$7F,$0F,$E0,$F0,$07 ;
+ $E25E DEFB $00,$FF,$0F,$60,$F8,$03,$00,$FF ;
+ $E266 DEFB $1F,$40,$F8,$03,$00,$FF,$1F,$C0 ;
+ $E26E DEFB $FC,$01,$00,$FD,$3F,$80,$FE,$00 ;
+ $E276 DEFB $00,$FF,$7F,$00,$FF,$00,$00,$3C ;
+ $E27E DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e286
- $E286 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00
- $E28E DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$3F
- $E296 DEFB $1F,$C0,$FF,$00,$00,$77,$0F,$E0
- $E29E DEFB $FE,$00,$00,$FF,$07,$F0,$FE,$00
- $E2A6 DEFB $00,$CF,$07,$F0,$FC,$01,$00,$FF
- $E2AE DEFB $03,$F8,$FC,$01,$00,$9F,$03,$F8
- $E2B6 DEFB $FC,$01,$00,$9F,$03,$F8,$FC,$01
- $E2BE DEFB $00,$FF,$03,$D8,$FE,$00,$00,$FF
- $E2C6 DEFB $07,$D0,$FE,$00,$00,$FF,$07,$F0
- $E2CE DEFB $FF,$00,$00,$7F,$0F,$60,$FF,$00
- $E2D6 DEFB $80,$3F,$1F,$C0,$FF,$00,$C0,$0F
- $E2DE DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00
-; Graphics, 2 frames
+ $E286 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E28E DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$3F ; src="images/gfx/gfx-e286.png">]
+ $E296 DEFB $1F,$C0,$FF,$00,$00,$77,$0F,$E0 ;
+ $E29E DEFB $FE,$00,$00,$FF,$07,$F0,$FE,$00 ;
+ $E2A6 DEFB $00,$CF,$07,$F0,$FC,$01,$00,$FF ;
+ $E2AE DEFB $03,$F8,$FC,$01,$00,$9F,$03,$F8 ;
+ $E2B6 DEFB $FC,$01,$00,$9F,$03,$F8,$FC,$01 ;
+ $E2BE DEFB $00,$FF,$03,$D8,$FE,$00,$00,$FF ;
+ $E2C6 DEFB $07,$D0,$FE,$00,$00,$FF,$07,$F0 ;
+ $E2CE DEFB $FF,$00,$00,$7F,$0F,$60,$FF,$00 ;
+ $E2D6 DEFB $80,$3F,$1F,$C0,$FF,$00,$C0,$0F ;
+ $E2DE DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e2e6
- $E2E6 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0
- $E2EE DEFB $E0,$0C,$07,$30,$C0,$11,$03,$08
- $E2F6 DEFB $80,$26,$01,$04,$80,$20,$01,$04
- $E2FE DEFB $00,$4C,$00,$02,$00,$58,$00,$02
- $E306 DEFB $00,$58,$00,$02,$00,$40,$00,$02
- $E30E DEFB $80,$20,$01,$04,$80,$20,$01,$44
- $E316 DEFB $C0,$10,$03,$08,$E0,$0C,$07,$30
- $E31E DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00
-; Graphics, 3 frames
+ $E2E6 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0 ; {#HTML[<img
+ $E2EE DEFB $E0,$0C,$07,$30,$C0,$11,$03,$08 ; src="images/gfx/gfx-e2e6.png">]
+ $E2F6 DEFB $80,$26,$01,$04,$80,$20,$01,$04 ;
+ $E2FE DEFB $00,$4C,$00,$02,$00,$58,$00,$02 ;
+ $E306 DEFB $00,$58,$00,$02,$00,$40,$00,$02 ;
+ $E30E DEFB $80,$20,$01,$04,$80,$20,$01,$44 ;
+ $E316 DEFB $C0,$10,$03,$08,$E0,$0C,$07,$30 ;
+ $E31E DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e326
- $E326 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00
- $E32E DEFB $03,$F0,$FF,$00,$F8,$03,$01,$0C
- $E336 DEFB $FF,$00,$F0,$04,$00,$42,$FF,$00
- $E33E DEFB $E0,$09,$00,$81,$7F,$00,$E0,$08
- $E346 DEFB $00,$01,$7F,$00,$C0,$13,$00,$00
- $E34E DEFB $3F,$80,$C0,$16,$00,$00,$3F,$80
- $E356 DEFB $C0,$16,$00,$00,$3F,$80,$C0,$10
- $E35E DEFB $00,$00,$3F,$80,$E0,$08,$00,$01
- $E366 DEFB $7F,$00,$E0,$08,$00,$11,$7F,$00
- $E36E DEFB $F0,$04,$00,$02,$FF,$00,$F8,$03
- $E376 DEFB $01,$0C,$FF,$00,$FC,$00,$03,$F0
- $E37E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00
-; Graphics, 3 frames
+ $E326 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00 ; {#HTML[<img
+ $E32E DEFB $03,$F0,$FF,$00,$F8,$03,$01,$0C ; src="images/gfx/gfx-e326.png">]
+ $E336 DEFB $FF,$00,$F0,$04,$00,$42,$FF,$00 ;
+ $E33E DEFB $E0,$09,$00,$81,$7F,$00,$E0,$08 ;
+ $E346 DEFB $00,$01,$7F,$00,$C0,$13,$00,$00 ;
+ $E34E DEFB $3F,$80,$C0,$16,$00,$00,$3F,$80 ;
+ $E356 DEFB $C0,$16,$00,$00,$3F,$80,$C0,$10 ;
+ $E35E DEFB $00,$00,$3F,$80,$E0,$08,$00,$01 ;
+ $E366 DEFB $7F,$00,$E0,$08,$00,$11,$7F,$00 ;
+ $E36E DEFB $F0,$04,$00,$02,$FF,$00,$F8,$03 ;
+ $E376 DEFB $01,$0C,$FF,$00,$FC,$00,$03,$F0 ;
+ $E37E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e386
- $E386 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00
- $E38E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$C3
- $E396 DEFB $7F,$00,$FC,$01,$00,$10,$3F,$80
- $E39E DEFB $F8,$02,$00,$60,$1F,$40,$F8,$02
- $E3A6 DEFB $00,$00,$1F,$40,$F0,$04,$00,$C0
- $E3AE DEFB $0F,$20,$F0,$05,$00,$80,$0F,$20
- $E3B6 DEFB $F0,$05,$00,$80,$0F,$20,$F0,$04
- $E3BE DEFB $00,$00,$0F,$20,$F8,$02,$00,$00
- $E3C6 DEFB $1F,$40,$F8,$02,$00,$04,$1F,$40
- $E3CE DEFB $FC,$01,$00,$00,$3F,$80,$FE,$00
- $E3D6 DEFB $00,$C3,$7F,$00,$FF,$00,$00,$3C
- $E3DE DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00
-; Graphics, 3 frames
+ $E386 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E38E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$C3 ; src="images/gfx/gfx-e386.png">]
+ $E396 DEFB $7F,$00,$FC,$01,$00,$10,$3F,$80 ;
+ $E39E DEFB $F8,$02,$00,$60,$1F,$40,$F8,$02 ;
+ $E3A6 DEFB $00,$00,$1F,$40,$F0,$04,$00,$C0 ;
+ $E3AE DEFB $0F,$20,$F0,$05,$00,$80,$0F,$20 ;
+ $E3B6 DEFB $F0,$05,$00,$80,$0F,$20,$F0,$04 ;
+ $E3BE DEFB $00,$00,$0F,$20,$F8,$02,$00,$00 ;
+ $E3C6 DEFB $1F,$40,$F8,$02,$00,$04,$1F,$40 ;
+ $E3CE DEFB $FC,$01,$00,$00,$3F,$80,$FE,$00 ;
+ $E3D6 DEFB $00,$C3,$7F,$00,$FF,$00,$00,$3C ;
+ $E3DE DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e3e6
- $E3E6 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00
- $E3EE DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$30
- $E3F6 DEFB $1F,$C0,$FF,$00,$00,$44,$0F,$20
- $E3FE DEFB $FE,$00,$00,$98,$07,$10,$FE,$00
- $E406 DEFB $00,$80,$07,$10,$FC,$01,$00,$30
- $E40E DEFB $03,$08,$FC,$01,$00,$60,$03,$08
- $E416 DEFB $FC,$01,$00,$60,$03,$08,$FC,$01
- $E41E DEFB $00,$00,$03,$08,$FE,$00,$00,$80
- $E426 DEFB $07,$10,$FE,$00,$00,$81,$07,$10
- $E42E DEFB $FF,$00,$00,$40,$0F,$20,$FF,$00
- $E436 DEFB $80,$30,$1F,$C0,$FF,$00,$C0,$0F
- $E43E DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00
-; Graphics, 2 frames
+ $E3E6 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E3EE DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$30 ; src="images/gfx/gfx-e3e6.png">]
+ $E3F6 DEFB $1F,$C0,$FF,$00,$00,$44,$0F,$20 ;
+ $E3FE DEFB $FE,$00,$00,$98,$07,$10,$FE,$00 ;
+ $E406 DEFB $00,$80,$07,$10,$FC,$01,$00,$30 ;
+ $E40E DEFB $03,$08,$FC,$01,$00,$60,$03,$08 ;
+ $E416 DEFB $FC,$01,$00,$60,$03,$08,$FC,$01 ;
+ $E41E DEFB $00,$00,$03,$08,$FE,$00,$00,$80 ;
+ $E426 DEFB $07,$10,$FE,$00,$00,$81,$07,$10 ;
+ $E42E DEFB $FF,$00,$00,$40,$0F,$20,$FF,$00 ;
+ $E436 DEFB $80,$30,$1F,$C0,$FF,$00,$C0,$0F ;
+ $E43E DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e446
- $E446 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E44E DEFB $FF,$00,$FF,$00,$FD,$00,$7F,$00
- $E456 DEFB $F8,$02,$3F,$80,$E0,$07,$1F,$C0
- $E45E DEFB $C0,$1E,$0F,$E0,$E1,$0C,$0F,$60
- $E466 DEFB $C3,$18,$1F,$40,$C2,$18,$1F,$C0
- $E46E DEFB $E0,$0D,$1F,$C0,$F0,$03,$3F,$80
- $E476 DEFB $FC,$00,$7F,$00,$FF,$00,$FF,$00
- $E47E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E446 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E44E DEFB $FF,$00,$FF,$00,$FD,$00,$7F,$00 ; src="images/gfx/gfx-e446.png">]
+ $E456 DEFB $F8,$02,$3F,$80,$E0,$07,$1F,$C0 ;
+ $E45E DEFB $C0,$1E,$0F,$E0,$E1,$0C,$0F,$60 ;
+ $E466 DEFB $C3,$18,$1F,$40,$C2,$18,$1F,$C0 ;
+ $E46E DEFB $E0,$0D,$1F,$C0,$F0,$03,$3F,$80 ;
+ $E476 DEFB $FC,$00,$7F,$00,$FF,$00,$FF,$00 ;
+ $E47E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e486
- $E486 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E48E DEFB $FF,$00,$FF,$00,$FF,$00,$5F,$00
- $E496 DEFB $FE,$00,$0F,$A0,$F8,$01,$07,$F0
- $E49E DEFB $F0,$07,$03,$B8,$F8,$03,$43,$18
- $E4A6 DEFB $F0,$06,$C7,$10,$F0,$06,$87,$30
- $E4AE DEFB $F8,$03,$07,$70,$FC,$00,$0F,$E0
- $E4B6 DEFB $FF,$00,$1F,$00,$FF,$00,$FF,$00
- $E4BE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E486 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E48E DEFB $FF,$00,$FF,$00,$FF,$00,$5F,$00 ; src="images/gfx/gfx-e486.png">]
+ $E496 DEFB $FE,$00,$0F,$A0,$F8,$01,$07,$F0 ;
+ $E49E DEFB $F0,$07,$03,$B8,$F8,$03,$43,$18 ;
+ $E4A6 DEFB $F0,$06,$C7,$10,$F0,$06,$87,$30 ;
+ $E4AE DEFB $F8,$03,$07,$70,$FC,$00,$0F,$E0 ;
+ $E4B6 DEFB $FF,$00,$1F,$00,$FF,$00,$FF,$00 ;
+ $E4BE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e4c6
- $E4C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E4CE DEFB $FF,$00,$FF,$00,$FF,$00,$D7,$00
- $E4D6 DEFB $FF,$00,$83,$28,$FE,$00,$01,$7C
- $E4DE DEFB $FC,$01,$00,$EE,$FE,$00,$10,$C6
- $E4E6 DEFB $FC,$01,$31,$84,$FC,$01,$21,$8C
- $E4EE DEFB $FE,$00,$01,$DC,$FF,$00,$03,$38
- $E4F6 DEFB $FF,$00,$C7,$00,$FF,$00,$FF,$00
- $E4FE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E4C6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E4CE DEFB $FF,$00,$FF,$00,$FF,$00,$D7,$00 ; src="images/gfx/gfx-e4c6.png">]
+ $E4D6 DEFB $FF,$00,$83,$28,$FE,$00,$01,$7C ;
+ $E4DE DEFB $FC,$01,$00,$EE,$FE,$00,$10,$C6 ;
+ $E4E6 DEFB $FC,$01,$31,$84,$FC,$01,$21,$8C ;
+ $E4EE DEFB $FE,$00,$01,$DC,$FF,$00,$03,$38 ;
+ $E4F6 DEFB $FF,$00,$C7,$00,$FF,$00,$FF,$00 ;
+ $E4FE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e506
- $E506 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E50E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E516 DEFB $FF,$00,$FF,$00,$F5,$00,$FF,$00
- $E51E DEFB $FF,$00,$E0,$0A,$FF,$00,$FF,$00
- $E526 DEFB $80,$1F,$7F,$00,$FF,$00,$00,$7B
- $E52E DEFB $3F,$80,$FF,$00,$84,$31,$3F,$80
- $E536 DEFB $FF,$00,$0C,$61,$7F,$00,$FF,$00
- $E53E DEFB $08,$63,$7F,$00,$FF,$00,$80,$37
- $E546 DEFB $7F,$00,$FF,$00,$C0,$0E,$FF,$00
- $E54E DEFB $FF,$00,$F1,$00,$FF,$00,$FF,$00
- $E556 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $E55E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E506 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E50E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-e506.png">]
+ $E516 DEFB $FF,$00,$FF,$00,$F5,$00,$FF,$00 ;
+ $E51E DEFB $FF,$00,$E0,$0A,$FF,$00,$FF,$00 ;
+ $E526 DEFB $80,$1F,$7F,$00,$FF,$00,$00,$7B ;
+ $E52E DEFB $3F,$80,$FF,$00,$84,$31,$3F,$80 ;
+ $E536 DEFB $FF,$00,$0C,$61,$7F,$00,$FF,$00 ;
+ $E53E DEFB $08,$63,$7F,$00,$FF,$00,$80,$37 ;
+ $E546 DEFB $7F,$00,$FF,$00,$C0,$0E,$FF,$00 ;
+ $E54E DEFB $FF,$00,$F1,$00,$FF,$00,$FF,$00 ;
+ $E556 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $E55E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e566
- $E566 DEFB $EE,$00,$FF,$00,$C4,$11,$7F,$00
- $E56E DEFB $80,$39,$3F,$80,$80,$3F,$07,$C0
- $E576 DEFB $80,$1E,$03,$D8,$01,$78,$07,$70
- $E57E DEFB $07,$70,$83,$38,$03,$78,$87,$30
- $E586 DEFB $87,$30,$C7,$10,$03,$78,$87,$30
- $E58E DEFB $80,$3C,$03,$78,$80,$3F,$07,$E0
- $E596 DEFB $C0,$1F,$03,$98,$E0,$09,$27,$80
- $E59E DEFB $F6,$00,$7F,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E566 DEFB $EE,$00,$FF,$00,$C4,$11,$7F,$00 ; {#HTML[<img
+ $E56E DEFB $80,$39,$3F,$80,$80,$3F,$07,$C0 ; src="images/gfx/gfx-e566.png">]
+ $E576 DEFB $80,$1E,$03,$D8,$01,$78,$07,$70 ;
+ $E57E DEFB $07,$70,$83,$38,$03,$78,$87,$30 ;
+ $E586 DEFB $87,$30,$C7,$10,$03,$78,$87,$30 ;
+ $E58E DEFB $80,$3C,$03,$78,$80,$3F,$07,$E0 ;
+ $E596 DEFB $C0,$1F,$03,$98,$E0,$09,$27,$80 ;
+ $E59E DEFB $F6,$00,$7F,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e5a6
- $E5A6 DEFB $FB,$00,$BF,$00,$F1,$04,$1F,$40
- $E5AE DEFB $E0,$0E,$0F,$60,$E0,$0F,$01,$F0
- $E5B6 DEFB $E0,$07,$00,$B6,$C0,$1E,$41,$1C
- $E5BE DEFB $C1,$1C,$E0,$0E,$C0,$1E,$E1,$0C
- $E5C6 DEFB $E1,$0C,$F1,$04,$C0,$1E,$E1,$0C
- $E5CE DEFB $E0,$0F,$00,$1E,$E0,$0F,$01,$F8
- $E5D6 DEFB $F0,$07,$00,$E6,$F8,$02,$09,$60
- $E5DE DEFB $FD,$00,$9F,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E5A6 DEFB $FB,$00,$BF,$00,$F1,$04,$1F,$40 ; {#HTML[<img
+ $E5AE DEFB $E0,$0E,$0F,$60,$E0,$0F,$01,$F0 ; src="images/gfx/gfx-e5a6.png">]
+ $E5B6 DEFB $E0,$07,$00,$B6,$C0,$1E,$41,$1C ;
+ $E5BE DEFB $C1,$1C,$E0,$0E,$C0,$1E,$E1,$0C ;
+ $E5C6 DEFB $E1,$0C,$F1,$04,$C0,$1E,$E1,$0C ;
+ $E5CE DEFB $E0,$0F,$00,$1E,$E0,$0F,$01,$F8 ;
+ $E5D6 DEFB $F0,$07,$00,$E6,$F8,$02,$09,$60 ;
+ $E5DE DEFB $FD,$00,$9F,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e5e6
- $E5E6 DEFB $FE,$00,$EF,$00,$FF,$00,$FC,$01
- $E5EE DEFB $47,$10,$FF,$00,$F8,$03,$03,$98
- $E5F6 DEFB $FF,$00,$F8,$03,$00,$FC,$7F,$00
- $E5FE DEFB $F8,$01,$00,$ED,$3F,$80,$F0,$07
- $E606 DEFB $10,$87,$7F,$00,$F0,$07,$78,$03
- $E60E DEFB $3F,$80,$F0,$07,$38,$83,$7F,$00
- $E616 DEFB $F8,$03,$7C,$01,$7F,$00,$F0,$07
- $E61E DEFB $38,$83,$7F,$00,$F8,$03,$00,$C7
- $E626 DEFB $3F,$80,$F8,$03,$00,$FE,$7F,$00
- $E62E DEFB $FC,$01,$00,$F9,$3F,$80,$FE,$00
- $E636 DEFB $02,$98,$7F,$00,$FF,$00,$67,$00
- $E63E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E5E6 DEFB $FE,$00,$EF,$00,$FF,$00,$FC,$01 ; {#HTML[<img
+ $E5EE DEFB $47,$10,$FF,$00,$F8,$03,$03,$98 ; src="images/gfx/gfx-e5e6.png">]
+ $E5F6 DEFB $FF,$00,$F8,$03,$00,$FC,$7F,$00 ;
+ $E5FE DEFB $F8,$01,$00,$ED,$3F,$80,$F0,$07 ;
+ $E606 DEFB $10,$87,$7F,$00,$F0,$07,$78,$03 ;
+ $E60E DEFB $3F,$80,$F0,$07,$38,$83,$7F,$00 ;
+ $E616 DEFB $F8,$03,$7C,$01,$7F,$00,$F0,$07 ;
+ $E61E DEFB $38,$83,$7F,$00,$F8,$03,$00,$C7 ;
+ $E626 DEFB $3F,$80,$F8,$03,$00,$FE,$7F,$00 ;
+ $E62E DEFB $FC,$01,$00,$F9,$3F,$80,$FE,$00 ;
+ $E636 DEFB $02,$98,$7F,$00,$FF,$00,$67,$00 ;
+ $E63E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e646
- $E646 DEFB $FF,$00,$BB,$00,$FF,$00,$FF,$00
- $E64E DEFB $11,$44,$FF,$00,$FE,$00,$00,$E6
- $E656 DEFB $FF,$00,$FE,$00,$00,$FF,$1F,$00
- $E65E DEFB $FE,$00,$00,$7B,$0F,$60,$FC,$01
- $E666 DEFB $04,$E1,$1F,$C0,$FC,$01,$1E,$C0
- $E66E DEFB $0F,$E0,$FC,$01,$0E,$E0,$1F,$C0
- $E676 DEFB $FE,$00,$1F,$C0,$1F,$40,$FC,$01
- $E67E DEFB $0E,$E0,$1F,$C0,$FE,$00,$00,$F1
- $E686 DEFB $0F,$E0,$FE,$00,$00,$FF,$1F,$80
- $E68E DEFB $FF,$00,$00,$7E,$0F,$60,$FF,$00
- $E696 DEFB $80,$26,$9F,$00,$FF,$00,$D9,$00
- $E69E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E646 DEFB $FF,$00,$BB,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E64E DEFB $11,$44,$FF,$00,$FE,$00,$00,$E6 ; src="images/gfx/gfx-e646.png">]
+ $E656 DEFB $FF,$00,$FE,$00,$00,$FF,$1F,$00 ;
+ $E65E DEFB $FE,$00,$00,$7B,$0F,$60,$FC,$01 ;
+ $E666 DEFB $04,$E1,$1F,$C0,$FC,$01,$1E,$C0 ;
+ $E66E DEFB $0F,$E0,$FC,$01,$0E,$E0,$1F,$C0 ;
+ $E676 DEFB $FE,$00,$1F,$C0,$1F,$40,$FC,$01 ;
+ $E67E DEFB $0E,$E0,$1F,$C0,$FE,$00,$00,$F1 ;
+ $E686 DEFB $0F,$E0,$FE,$00,$00,$FF,$1F,$80 ;
+ $E68E DEFB $FF,$00,$00,$7E,$0F,$60,$FF,$00 ;
+ $E696 DEFB $80,$26,$9F,$00,$FF,$00,$D9,$00 ;
+ $E69E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e6a6
- $E6A6 DEFB $C7,$00,$F7,$00,$81,$38,$C3,$08
- $E6AE DEFB $00,$6E,$81,$3C,$80,$36,$80,$2E
- $E6B6 DEFB $81,$3C,$C1,$1C,$C3,$18,$E1,$0C
- $E6BE DEFB $E7,$00,$C1,$1C,$FF,$00,$E3,$08
- $E6C6 DEFB $DF,$00,$F7,$00,$87,$20,$E3,$08
- $E6CE DEFB $03,$58,$C1,$1C,$81,$3C,$C3,$18
- $E6D6 DEFB $01,$6C,$81,$3C,$91,$04,$01,$5C
- $E6DE DEFB $FB,$00,$A3,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E6A6 DEFB $C7,$00,$F7,$00,$81,$38,$C3,$08 ; {#HTML[<img
+ $E6AE DEFB $00,$6E,$81,$3C,$80,$36,$80,$2E ; src="images/gfx/gfx-e6a6.png">]
+ $E6B6 DEFB $81,$3C,$C1,$1C,$C3,$18,$E1,$0C ;
+ $E6BE DEFB $E7,$00,$C1,$1C,$FF,$00,$E3,$08 ;
+ $E6C6 DEFB $DF,$00,$F7,$00,$87,$20,$E3,$08 ;
+ $E6CE DEFB $03,$58,$C1,$1C,$81,$3C,$C3,$18 ;
+ $E6D6 DEFB $01,$6C,$81,$3C,$91,$04,$01,$5C ;
+ $E6DE DEFB $FB,$00,$A3,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e6e6
- $E6E6 DEFB $F1,$00,$FD,$00,$FF,$00,$E0,$0E
- $E6EE DEFB $70,$02,$FF,$00,$C0,$1B,$20,$8F
- $E6F6 DEFB $7F,$00,$E0,$0D,$20,$8B,$3F,$80
- $E6FE DEFB $E0,$0F,$70,$07,$7F,$00,$F0,$06
- $E706 DEFB $F8,$03,$7F,$00,$F9,$00,$F0,$07
- $E70E DEFB $7F,$00,$FF,$00,$F8,$02,$FF,$00
- $E716 DEFB $F7,$00,$FD,$00,$FF,$00,$E1,$08
- $E71E DEFB $F8,$02,$FF,$00,$C0,$16,$F0,$07
- $E726 DEFB $7F,$00,$E0,$0F,$70,$06,$FF,$00
- $E72E DEFB $C0,$1B,$60,$0F,$7F,$00,$E4,$01
- $E736 DEFB $40,$17,$7F,$00,$FE,$00,$E8,$00
- $E73E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E6E6 DEFB $F1,$00,$FD,$00,$FF,$00,$E0,$0E ; {#HTML[<img
+ $E6EE DEFB $70,$02,$FF,$00,$C0,$1B,$20,$8F ; src="images/gfx/gfx-e6e6.png">]
+ $E6F6 DEFB $7F,$00,$E0,$0D,$20,$8B,$3F,$80 ;
+ $E6FE DEFB $E0,$0F,$70,$07,$7F,$00,$F0,$06 ;
+ $E706 DEFB $F8,$03,$7F,$00,$F9,$00,$F0,$07 ;
+ $E70E DEFB $7F,$00,$FF,$00,$F8,$02,$FF,$00 ;
+ $E716 DEFB $F7,$00,$FD,$00,$FF,$00,$E1,$08 ;
+ $E71E DEFB $F8,$02,$FF,$00,$C0,$16,$F0,$07 ;
+ $E726 DEFB $7F,$00,$E0,$0F,$70,$06,$FF,$00 ;
+ $E72E DEFB $C0,$1B,$60,$0F,$7F,$00,$E4,$01 ;
+ $E736 DEFB $40,$17,$7F,$00,$FE,$00,$E8,$00 ;
+ $E73E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e746
- $E746 DEFB $FC,$00,$7F,$00,$7F,$00,$F8,$03
- $E74E DEFB $1C,$80,$3F,$80,$F0,$06,$08,$E3
- $E756 DEFB $1F,$C0,$F8,$03,$08,$62,$0F,$E0
- $E75E DEFB $F8,$03,$1C,$C1,$1F,$C0,$FC,$01
- $E766 DEFB $3E,$80,$1F,$C0,$FE,$00,$7C,$01
- $E76E DEFB $1F,$C0,$FF,$00,$FE,$00,$3F,$80
- $E776 DEFB $FD,$00,$FF,$00,$7F,$00,$F8,$02
- $E77E DEFB $7E,$00,$3F,$80,$F0,$05,$3C,$81
- $E786 DEFB $1F,$C0,$F8,$03,$1C,$C1,$3F,$80
- $E78E DEFB $F0,$06,$18,$C3,$1F,$C0,$F9,$00
- $E796 DEFB $10,$45,$1F,$C0,$FF,$00,$BA,$00
- $E79E DEFB $3F,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 3 frames
+ $E746 DEFB $FC,$00,$7F,$00,$7F,$00,$F8,$03 ; {#HTML[<img
+ $E74E DEFB $1C,$80,$3F,$80,$F0,$06,$08,$E3 ; src="images/gfx/gfx-e746.png">]
+ $E756 DEFB $1F,$C0,$F8,$03,$08,$62,$0F,$E0 ;
+ $E75E DEFB $F8,$03,$1C,$C1,$1F,$C0,$FC,$01 ;
+ $E766 DEFB $3E,$80,$1F,$C0,$FE,$00,$7C,$01 ;
+ $E76E DEFB $1F,$C0,$FF,$00,$FE,$00,$3F,$80 ;
+ $E776 DEFB $FD,$00,$FF,$00,$7F,$00,$F8,$02 ;
+ $E77E DEFB $7E,$00,$3F,$80,$F0,$05,$3C,$81 ;
+ $E786 DEFB $1F,$C0,$F8,$03,$1C,$C1,$3F,$80 ;
+ $E78E DEFB $F0,$06,$18,$C3,$1F,$C0,$F9,$00 ;
+ $E796 DEFB $10,$45,$1F,$C0,$FF,$00,$BA,$00 ;
+ $E79E DEFB $3F,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e7a6
- $E7A6 DEFB $FF,$00,$1F,$00,$DF,$00,$FE,$00
- $E7AE DEFB $07,$E0,$0F,$20,$FC,$01,$02,$B8
- $E7B6 DEFB $07,$F0,$FE,$00,$02,$D8,$03,$B8
- $E7BE DEFB $FE,$00,$07,$F0,$07,$70,$FF,$00
- $E7C6 DEFB $0F,$60,$87,$30,$FF,$00,$9F,$00
- $E7CE DEFB $07,$70,$FF,$00,$FF,$00,$8F,$20
- $E7D6 DEFB $FF,$00,$7F,$00,$DF,$00,$FE,$00
- $E7DE DEFB $1F,$80,$8F,$20,$FC,$01,$0F,$60
- $E7E6 DEFB $07,$70,$FE,$00,$07,$F0,$0F,$60
- $E7EE DEFB $FC,$01,$06,$B0,$07,$F0,$FE,$00
- $E7F6 DEFB $44,$11,$07,$70,$FF,$00,$EE,$00
- $E7FE DEFB $8F,$00,$FF,$00,$FF,$00,$FF,$00
-; Graphics, 2 frames
+ $E7A6 DEFB $FF,$00,$1F,$00,$DF,$00,$FE,$00 ; {#HTML[<img
+ $E7AE DEFB $07,$E0,$0F,$20,$FC,$01,$02,$B8 ; src="images/gfx/gfx-e7a6.png">]
+ $E7B6 DEFB $07,$F0,$FE,$00,$02,$D8,$03,$B8 ;
+ $E7BE DEFB $FE,$00,$07,$F0,$07,$70,$FF,$00 ;
+ $E7C6 DEFB $0F,$60,$87,$30,$FF,$00,$9F,$00 ;
+ $E7CE DEFB $07,$70,$FF,$00,$FF,$00,$8F,$20 ;
+ $E7D6 DEFB $FF,$00,$7F,$00,$DF,$00,$FE,$00 ;
+ $E7DE DEFB $1F,$80,$8F,$20,$FC,$01,$0F,$60 ;
+ $E7E6 DEFB $07,$70,$FE,$00,$07,$F0,$0F,$60 ;
+ $E7EE DEFB $FC,$01,$06,$B0,$07,$F0,$FE,$00 ;
+ $E7F6 DEFB $44,$11,$07,$70,$FF,$00,$EE,$00 ;
+ $E7FE DEFB $8F,$00,$FF,$00,$FF,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e806
- $E806 DEFB $FC,$00,$3F,$00,$E0,$03,$07,$C0
- $E80E DEFB $C0,$1D,$03,$B8,$80,$2D,$01,$B4
- $E816 DEFB $00,$30,$00,$0C,$00,$C0,$00,$63
- $E81E DEFB $00,$30,$00,$3C,$00,$F3,$00,$3F
- $E826 DEFB $00,$F2,$00,$3F,$00,$70,$00,$3E
- $E82E DEFB $00,$98,$00,$79,$00,$63,$00,$C6
- $E836 DEFB $80,$3C,$01,$3C,$C0,$1F,$03,$F8
- $E83E DEFB $E0,$03,$07,$C0,$FC,$00,$3F,$00
-; Graphics, 3 frames
+ $E806 DEFB $FC,$00,$3F,$00,$E0,$03,$07,$C0 ; {#HTML[<img
+ $E80E DEFB $C0,$1D,$03,$B8,$80,$2D,$01,$B4 ; src="images/gfx/gfx-e806.png">]
+ $E816 DEFB $00,$30,$00,$0C,$00,$C0,$00,$63 ;
+ $E81E DEFB $00,$30,$00,$3C,$00,$F3,$00,$3F ;
+ $E826 DEFB $00,$F2,$00,$3F,$00,$70,$00,$3E ;
+ $E82E DEFB $00,$98,$00,$79,$00,$63,$00,$C6 ;
+ $E836 DEFB $80,$3C,$01,$3C,$C0,$1F,$03,$F8 ;
+ $E83E DEFB $E0,$03,$07,$C0,$FC,$00,$3F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e846
- $E846 DEFB $FF,$00,$0F,$00,$FF,$00,$F8,$00
- $E84E DEFB $01,$F0,$FF,$00,$F0,$07,$00,$6E
- $E856 DEFB $FF,$00,$E0,$0B,$00,$6D,$7F,$00
- $E85E DEFB $C0,$0C,$00,$03,$3F,$00,$C0,$30
- $E866 DEFB $00,$18,$3F,$C0,$C0,$0C,$00,$0F
- $E86E DEFB $3F,$00,$C0,$3C,$00,$CF,$3F,$C0
- $E876 DEFB $C0,$3C,$00,$8F,$3F,$C0,$C0,$1C
- $E87E DEFB $00,$0F,$3F,$80,$C0,$26,$00,$1E
- $E886 DEFB $3F,$40,$C0,$18,$00,$F1,$3F,$80
- $E88E DEFB $E0,$0F,$00,$0F,$7F,$00,$F0,$07
- $E896 DEFB $00,$FE,$FF,$00,$F8,$00,$01,$F0
- $E89E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00
-; Graphics, 3 frames
+ $E846 DEFB $FF,$00,$0F,$00,$FF,$00,$F8,$00 ; {#HTML[<img
+ $E84E DEFB $01,$F0,$FF,$00,$F0,$07,$00,$6E ; src="images/gfx/gfx-e846.png">]
+ $E856 DEFB $FF,$00,$E0,$0B,$00,$6D,$7F,$00 ;
+ $E85E DEFB $C0,$0C,$00,$03,$3F,$00,$C0,$30 ;
+ $E866 DEFB $00,$18,$3F,$C0,$C0,$0C,$00,$0F ;
+ $E86E DEFB $3F,$00,$C0,$3C,$00,$CF,$3F,$C0 ;
+ $E876 DEFB $C0,$3C,$00,$8F,$3F,$C0,$C0,$1C ;
+ $E87E DEFB $00,$0F,$3F,$80,$C0,$26,$00,$1E ;
+ $E886 DEFB $3F,$40,$C0,$18,$00,$F1,$3F,$80 ;
+ $E88E DEFB $E0,$0F,$00,$0F,$7F,$00,$F0,$07 ;
+ $E896 DEFB $00,$FE,$FF,$00,$F8,$00,$01,$F0 ;
+ $E89E DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e8a6
- $E8A6 DEFB $FF,$00,$C3,$00,$FF,$00,$FE,$00
- $E8AE DEFB $00,$3C,$7F,$00,$FC,$01,$00,$DB
- $E8B6 DEFB $3F,$80,$F8,$02,$00,$DB,$1F,$40
- $E8BE DEFB $F0,$03,$00,$00,$0F,$C0,$F0,$0C
- $E8C6 DEFB $00,$06,$0F,$30,$F0,$03,$00,$03
- $E8CE DEFB $0F,$C0,$F0,$0F,$00,$33,$0F,$F0
- $E8D6 DEFB $F0,$0F,$00,$23,$0F,$F0,$F0,$07
- $E8DE DEFB $00,$03,$0F,$E0,$F0,$09,$00,$87
- $E8E6 DEFB $0F,$90,$F0,$06,$00,$3C,$0F,$60
- $E8EE DEFB $F8,$03,$00,$C3,$1F,$C0,$FC,$01
- $E8F6 DEFB $00,$FF,$3F,$80,$FE,$00,$00,$3C
- $E8FE DEFB $7F,$00,$FF,$00,$C3,$00,$FF,$00
-; Graphics, 3 frames
+ $E8A6 DEFB $FF,$00,$C3,$00,$FF,$00,$FE,$00 ; {#HTML[<img
+ $E8AE DEFB $00,$3C,$7F,$00,$FC,$01,$00,$DB ; src="images/gfx/gfx-e8a6.png">]
+ $E8B6 DEFB $3F,$80,$F8,$02,$00,$DB,$1F,$40 ;
+ $E8BE DEFB $F0,$03,$00,$00,$0F,$C0,$F0,$0C ;
+ $E8C6 DEFB $00,$06,$0F,$30,$F0,$03,$00,$03 ;
+ $E8CE DEFB $0F,$C0,$F0,$0F,$00,$33,$0F,$F0 ;
+ $E8D6 DEFB $F0,$0F,$00,$23,$0F,$F0,$F0,$07 ;
+ $E8DE DEFB $00,$03,$0F,$E0,$F0,$09,$00,$87 ;
+ $E8E6 DEFB $0F,$90,$F0,$06,$00,$3C,$0F,$60 ;
+ $E8EE DEFB $F8,$03,$00,$C3,$1F,$C0,$FC,$01 ;
+ $E8F6 DEFB $00,$FF,$3F,$80,$FE,$00,$00,$3C ;
+ $E8FE DEFB $7F,$00,$FF,$00,$C3,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e906
- $E906 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00
- $E90E DEFB $80,$0F,$1F,$00,$FF,$00,$00,$76
- $E916 DEFB $0F,$E0,$FE,$00,$00,$B6,$07,$D0
- $E91E DEFB $FC,$00,$00,$C0,$03,$30,$FC,$03
- $E926 DEFB $00,$01,$03,$8C,$FC,$00,$00,$C0
- $E92E DEFB $03,$F0,$FC,$03,$00,$CC,$03,$FC
- $E936 DEFB $FC,$03,$00,$C8,$03,$FC,$FC,$01
- $E93E DEFB $00,$C0,$03,$F8,$FC,$02,$00,$61
- $E946 DEFB $03,$E4,$FC,$01,$00,$8F,$03,$18
- $E94E DEFB $FE,$00,$00,$F0,$07,$F0,$FF,$00
- $E956 DEFB $00,$7F,$0F,$E0,$FF,$00,$80,$0F
- $E95E DEFB $1F,$00,$FF,$00,$F0,$00,$FF,$00
-; Graphics, 2 frames
+ $E906 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $E90E DEFB $80,$0F,$1F,$00,$FF,$00,$00,$76 ; src="images/gfx/gfx-e906.png">]
+ $E916 DEFB $0F,$E0,$FE,$00,$00,$B6,$07,$D0 ;
+ $E91E DEFB $FC,$00,$00,$C0,$03,$30,$FC,$03 ;
+ $E926 DEFB $00,$01,$03,$8C,$FC,$00,$00,$C0 ;
+ $E92E DEFB $03,$F0,$FC,$03,$00,$CC,$03,$FC ;
+ $E936 DEFB $FC,$03,$00,$C8,$03,$FC,$FC,$01 ;
+ $E93E DEFB $00,$C0,$03,$F8,$FC,$02,$00,$61 ;
+ $E946 DEFB $03,$E4,$FC,$01,$00,$8F,$03,$18 ;
+ $E94E DEFB $FE,$00,$00,$F0,$07,$F0,$FF,$00 ;
+ $E956 DEFB $00,$7F,$0F,$E0,$FF,$00,$80,$0F ;
+ $E95E DEFB $1F,$00,$FF,$00,$F0,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_e966
- $E966 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0
- $E96E DEFB $E0,$0E,$07,$70,$C0,$19,$03,$98
- $E976 DEFB $80,$31,$01,$8C,$80,$21,$01,$84
- $E97E DEFB $00,$21,$00,$84,$00,$5E,$00,$7A
- $E986 DEFB $00,$61,$00,$86,$00,$36,$00,$6C
- $E98E DEFB $80,$17,$01,$E8,$80,$2E,$01,$74
- $E996 DEFB $C0,$1F,$03,$F8,$E0,$0E,$07,$70
- $E99E DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00
-; Graphics, 3 frames
+ $E966 DEFB $FC,$00,$3F,$00,$F0,$03,$0F,$C0 ; {#HTML[<img
+ $E96E DEFB $E0,$0E,$07,$70,$C0,$19,$03,$98 ; src="images/gfx/gfx-e966.png">]
+ $E976 DEFB $80,$31,$01,$8C,$80,$21,$01,$84 ;
+ $E97E DEFB $00,$21,$00,$84,$00,$5E,$00,$7A ;
+ $E986 DEFB $00,$61,$00,$86,$00,$36,$00,$6C ;
+ $E98E DEFB $80,$17,$01,$E8,$80,$2E,$01,$74 ;
+ $E996 DEFB $C0,$1F,$03,$F8,$E0,$0E,$07,$70 ;
+ $E99E DEFB $F0,$03,$0F,$C0,$FC,$00,$3F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_e9a6
- $E9A6 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00
- $E9AE DEFB $03,$F0,$FF,$00,$F8,$03,$01,$9C
- $E9B6 DEFB $FF,$00,$F0,$06,$00,$66,$FF,$00
- $E9BE DEFB $E0,$0C,$00,$63,$7F,$00,$E0,$08
- $E9C6 DEFB $00,$61,$7F,$00,$C0,$08,$00,$61
- $E9CE DEFB $3F,$00,$C0,$17,$00,$9E,$3F,$80
- $E9D6 DEFB $C0,$18,$00,$61,$3F,$80,$C0,$0D
- $E9DE DEFB $00,$9B,$3F,$00,$E0,$05,$00,$FA
- $E9E6 DEFB $7F,$00,$E0,$0B,$00,$9D,$7F,$00
- $E9EE DEFB $F0,$07,$00,$FE,$FF,$00,$F8,$03
- $E9F6 DEFB $01,$9C,$FF,$00,$FC,$00,$03,$F0
- $E9FE DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00
-; Graphics, 3 frames
+ $E9A6 DEFB $FF,$00,$0F,$00,$FF,$00,$FC,$00 ; {#HTML[<img
+ $E9AE DEFB $03,$F0,$FF,$00,$F8,$03,$01,$9C ; src="images/gfx/gfx-e9a6.png">]
+ $E9B6 DEFB $FF,$00,$F0,$06,$00,$66,$FF,$00 ;
+ $E9BE DEFB $E0,$0C,$00,$63,$7F,$00,$E0,$08 ;
+ $E9C6 DEFB $00,$61,$7F,$00,$C0,$08,$00,$61 ;
+ $E9CE DEFB $3F,$00,$C0,$17,$00,$9E,$3F,$80 ;
+ $E9D6 DEFB $C0,$18,$00,$61,$3F,$80,$C0,$0D ;
+ $E9DE DEFB $00,$9B,$3F,$00,$E0,$05,$00,$FA ;
+ $E9E6 DEFB $7F,$00,$E0,$0B,$00,$9D,$7F,$00 ;
+ $E9EE DEFB $F0,$07,$00,$FE,$FF,$00,$F8,$03 ;
+ $E9F6 DEFB $01,$9C,$FF,$00,$FC,$00,$03,$F0 ;
+ $E9FE DEFB $FF,$00,$FF,$00,$0F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ea06
- $EA06 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00
- $EA0E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$E7
- $EA16 DEFB $7F,$00,$FC,$01,$00,$99,$3F,$80
- $EA1E DEFB $F8,$03,$00,$18,$1F,$C0,$F8,$02
- $EA26 DEFB $00,$18,$1F,$40,$F0,$02,$00,$18
- $EA2E DEFB $0F,$40,$F0,$05,$00,$E7,$0F,$A0
- $EA36 DEFB $F0,$06,$00,$18,$0F,$60,$F0,$03
- $EA3E DEFB $00,$66,$0F,$C0,$F8,$01,$00,$7E
- $EA46 DEFB $1F,$80,$F8,$02,$00,$E7,$1F,$40
- $EA4E DEFB $FC,$01,$00,$FF,$3F,$80,$FE,$00
- $EA56 DEFB $00,$E7,$7F,$00,$FF,$00,$00,$3C
- $EA5E DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00
-; Graphics, 3 frames
+ $EA06 DEFB $FF,$00,$C3,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EA0E DEFB $00,$3C,$FF,$00,$FE,$00,$00,$E7 ; src="images/gfx/gfx-ea06.png">]
+ $EA16 DEFB $7F,$00,$FC,$01,$00,$99,$3F,$80 ;
+ $EA1E DEFB $F8,$03,$00,$18,$1F,$C0,$F8,$02 ;
+ $EA26 DEFB $00,$18,$1F,$40,$F0,$02,$00,$18 ;
+ $EA2E DEFB $0F,$40,$F0,$05,$00,$E7,$0F,$A0 ;
+ $EA36 DEFB $F0,$06,$00,$18,$0F,$60,$F0,$03 ;
+ $EA3E DEFB $00,$66,$0F,$C0,$F8,$01,$00,$7E ;
+ $EA46 DEFB $1F,$80,$F8,$02,$00,$E7,$1F,$40 ;
+ $EA4E DEFB $FC,$01,$00,$FF,$3F,$80,$FE,$00 ;
+ $EA56 DEFB $00,$E7,$7F,$00,$FF,$00,$00,$3C ;
+ $EA5E DEFB $FF,$00,$FF,$00,$C3,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ea66
- $EA66 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00
- $EA6E DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$39
- $EA76 DEFB $1F,$C0,$FF,$00,$00,$66,$0F,$60
- $EA7E DEFB $FE,$00,$00,$C6,$07,$30,$FE,$00
- $EA86 DEFB $00,$86,$07,$10,$FC,$00,$00,$86
- $EA8E DEFB $03,$10,$FC,$01,$00,$79,$03,$E8
- $EA96 DEFB $FC,$01,$00,$86,$03,$18,$FC,$00
- $EA9E DEFB $00,$D9,$03,$B0,$FE,$00,$00,$5F
- $EAA6 DEFB $07,$A0,$FE,$00,$00,$B9,$07,$D0
- $EAAE DEFB $FF,$00,$00,$7F,$0F,$E0,$FF,$00
- $EAB6 DEFB $80,$39,$1F,$C0,$FF,$00,$C0,$0F
- $EABE DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00
-; Graphics, 2 frames
+ $EA66 DEFB $FF,$00,$F0,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EA6E DEFB $C0,$0F,$3F,$00,$FF,$00,$80,$39 ; src="images/gfx/gfx-ea66.png">]
+ $EA76 DEFB $1F,$C0,$FF,$00,$00,$66,$0F,$60 ;
+ $EA7E DEFB $FE,$00,$00,$C6,$07,$30,$FE,$00 ;
+ $EA86 DEFB $00,$86,$07,$10,$FC,$00,$00,$86 ;
+ $EA8E DEFB $03,$10,$FC,$01,$00,$79,$03,$E8 ;
+ $EA96 DEFB $FC,$01,$00,$86,$03,$18,$FC,$00 ;
+ $EA9E DEFB $00,$D9,$03,$B0,$FE,$00,$00,$5F ;
+ $EAA6 DEFB $07,$A0,$FE,$00,$00,$B9,$07,$D0 ;
+ $EAAE DEFB $FF,$00,$00,$7F,$0F,$E0,$FF,$00 ;
+ $EAB6 DEFB $80,$39,$1F,$C0,$FF,$00,$C0,$0F ;
+ $EABE DEFB $3F,$00,$FF,$00,$F0,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_eac6
- $EAC6 DEFB $F8,$00,$1F,$00,$E0,$07,$07,$E0
- $EACE DEFB $C0,$1F,$03,$F8,$80,$3F,$01,$FC
- $EAD6 DEFB $00,$7F,$00,$FE,$00,$67,$00,$E6
- $EADE DEFB $00,$43,$00,$C2,$00,$43,$00,$C2
- $EAE6 DEFB $80,$27,$01,$E4,$C0,$1F,$03,$F8
- $EAEE DEFB $E0,$0F,$07,$F0,$30,$06,$0C,$60
- $EAF6 DEFB $00,$44,$00,$22,$80,$36,$01,$6C
- $EAFE DEFB $00,$43,$00,$C2,$3C,$00,$3C,$00
-; Graphics, 3 frames
+ $EAC6 DEFB $F8,$00,$1F,$00,$E0,$07,$07,$E0 ; {#HTML[<img
+ $EACE DEFB $C0,$1F,$03,$F8,$80,$3F,$01,$FC ; src="images/gfx/gfx-eac6.png">]
+ $EAD6 DEFB $00,$7F,$00,$FE,$00,$67,$00,$E6 ;
+ $EADE DEFB $00,$43,$00,$C2,$00,$43,$00,$C2 ;
+ $EAE6 DEFB $80,$27,$01,$E4,$C0,$1F,$03,$F8 ;
+ $EAEE DEFB $E0,$0F,$07,$F0,$30,$06,$0C,$60 ;
+ $EAF6 DEFB $00,$44,$00,$22,$80,$36,$01,$6C ;
+ $EAFE DEFB $00,$43,$00,$C2,$3C,$00,$3C,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_eb06
- $EB06 DEFB $FE,$00,$07,$00,$FF,$00,$F8,$01
- $EB0E DEFB $01,$F8,$FF,$00,$F0,$07,$00,$FE
- $EB16 DEFB $FF,$00,$E0,$0F,$00,$FF,$7F,$00
- $EB1E DEFB $C0,$1F,$00,$FF,$3F,$80,$C0,$19
- $EB26 DEFB $00,$F9,$3F,$80,$C0,$10,$00,$F0
- $EB2E DEFB $3F,$80,$C0,$10,$00,$F0,$3F,$80
- $EB36 DEFB $E0,$09,$00,$F9,$7F,$00,$F0,$07
- $EB3E DEFB $00,$FE,$FF,$00,$F8,$03,$01,$FC
- $EB46 DEFB $FF,$00,$CC,$01,$03,$98,$3F,$00
- $EB4E DEFB $C0,$11,$00,$08,$3F,$80,$E0,$0D
- $EB56 DEFB $00,$9B,$7F,$00,$C0,$10,$00,$F0
- $EB5E DEFB $3F,$80,$CF,$00,$0F,$00,$3F,$00
-; Graphics, 3 frames
+ $EB06 DEFB $FE,$00,$07,$00,$FF,$00,$F8,$01 ; {#HTML[<img
+ $EB0E DEFB $01,$F8,$FF,$00,$F0,$07,$00,$FE ; src="images/gfx/gfx-eb06.png">]
+ $EB16 DEFB $FF,$00,$E0,$0F,$00,$FF,$7F,$00 ;
+ $EB1E DEFB $C0,$1F,$00,$FF,$3F,$80,$C0,$19 ;
+ $EB26 DEFB $00,$F9,$3F,$80,$C0,$10,$00,$F0 ;
+ $EB2E DEFB $3F,$80,$C0,$10,$00,$F0,$3F,$80 ;
+ $EB36 DEFB $E0,$09,$00,$F9,$7F,$00,$F0,$07 ;
+ $EB3E DEFB $00,$FE,$FF,$00,$F8,$03,$01,$FC ;
+ $EB46 DEFB $FF,$00,$CC,$01,$03,$98,$3F,$00 ;
+ $EB4E DEFB $C0,$11,$00,$08,$3F,$80,$E0,$0D ;
+ $EB56 DEFB $00,$9B,$7F,$00,$C0,$10,$00,$F0 ;
+ $EB5E DEFB $3F,$80,$CF,$00,$0F,$00,$3F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_eb66
- $EB66 DEFB $FF,$00,$81,$00,$FF,$00,$FE,$00
- $EB6E DEFB $00,$7E,$7F,$00,$FC,$01,$00,$FF
- $EB76 DEFB $3F,$80,$F8,$03,$00,$FF,$1F,$C0
- $EB7E DEFB $F0,$07,$00,$FF,$0F,$E0,$F0,$06
- $EB86 DEFB $00,$7E,$0F,$60,$F0,$04,$00,$3C
- $EB8E DEFB $0F,$20,$F0,$04,$00,$3C,$0F,$20
- $EB96 DEFB $F8,$02,$00,$7E,$1F,$40,$FC,$01
- $EB9E DEFB $00,$FF,$3F,$80,$FE,$00,$00,$FF
- $EBA6 DEFB $7F,$00,$F3,$00,$00,$66,$CF,$00
- $EBAE DEFB $F0,$04,$00,$42,$0F,$20,$F8,$03
- $EBB6 DEFB $00,$66,$1F,$C0,$F0,$04,$00,$3C
- $EBBE DEFB $0F,$20,$F3,$00,$C3,$00,$CF,$00
-; Graphics, 3 frames
+ $EB66 DEFB $FF,$00,$81,$00,$FF,$00,$FE,$00 ; {#HTML[<img
+ $EB6E DEFB $00,$7E,$7F,$00,$FC,$01,$00,$FF ; src="images/gfx/gfx-eb66.png">]
+ $EB76 DEFB $3F,$80,$F8,$03,$00,$FF,$1F,$C0 ;
+ $EB7E DEFB $F0,$07,$00,$FF,$0F,$E0,$F0,$06 ;
+ $EB86 DEFB $00,$7E,$0F,$60,$F0,$04,$00,$3C ;
+ $EB8E DEFB $0F,$20,$F0,$04,$00,$3C,$0F,$20 ;
+ $EB96 DEFB $F8,$02,$00,$7E,$1F,$40,$FC,$01 ;
+ $EB9E DEFB $00,$FF,$3F,$80,$FE,$00,$00,$FF ;
+ $EBA6 DEFB $7F,$00,$F3,$00,$00,$66,$CF,$00 ;
+ $EBAE DEFB $F0,$04,$00,$42,$0F,$20,$F8,$03 ;
+ $EBB6 DEFB $00,$66,$1F,$C0,$F0,$04,$00,$3C ;
+ $EBBE DEFB $0F,$20,$F3,$00,$C3,$00,$CF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ebc6
- $EBC6 DEFB $FF,$00,$E0,$00,$7F,$00,$FF,$00
- $EBCE DEFB $80,$1F,$1F,$80,$FF,$00,$00,$7F
- $EBD6 DEFB $0F,$E0,$FE,$00,$00,$FF,$07,$F0
- $EBDE DEFB $FC,$01,$00,$FF,$03,$F8,$FC,$01
- $EBE6 DEFB $00,$9F,$03,$98,$FC,$01,$00,$0F
- $EBEE DEFB $03,$08,$FC,$01,$00,$0F,$03,$08
- $EBF6 DEFB $FE,$00,$00,$9F,$07,$90,$FF,$00
- $EBFE DEFB $00,$7F,$0F,$E0,$FF,$00,$80,$3F
- $EC06 DEFB $1F,$C0,$FC,$00,$C0,$19,$33,$80
- $EC0E DEFB $FC,$01,$00,$10,$03,$88,$FE,$00
- $EC16 DEFB $00,$D9,$07,$B0,$FC,$01,$00,$0F
- $EC1E DEFB $03,$08,$FC,$00,$F0,$00,$F3,$00
-; Graphics, 2 frames
+ $EBC6 DEFB $FF,$00,$E0,$00,$7F,$00,$FF,$00 ; {#HTML[<img
+ $EBCE DEFB $80,$1F,$1F,$80,$FF,$00,$00,$7F ; src="images/gfx/gfx-ebc6.png">]
+ $EBD6 DEFB $0F,$E0,$FE,$00,$00,$FF,$07,$F0 ;
+ $EBDE DEFB $FC,$01,$00,$FF,$03,$F8,$FC,$01 ;
+ $EBE6 DEFB $00,$9F,$03,$98,$FC,$01,$00,$0F ;
+ $EBEE DEFB $03,$08,$FC,$01,$00,$0F,$03,$08 ;
+ $EBF6 DEFB $FE,$00,$00,$9F,$07,$90,$FF,$00 ;
+ $EBFE DEFB $00,$7F,$0F,$E0,$FF,$00,$80,$3F ;
+ $EC06 DEFB $1F,$C0,$FC,$00,$C0,$19,$33,$80 ;
+ $EC0E DEFB $FC,$01,$00,$10,$03,$88,$FE,$00 ;
+ $EC16 DEFB $00,$D9,$07,$B0,$FC,$01,$00,$0F ;
+ $EC1E DEFB $03,$08,$FC,$00,$F0,$00,$F3,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_ec26
- $EC26 DEFB $FE,$00,$7F,$00,$FC,$01,$3F,$80
- $EC2E DEFB $F8,$03,$1F,$C0,$F0,$07,$0F,$E0
- $EC36 DEFB $E8,$03,$17,$C0,$C4,$11,$23,$88
- $EC3E DEFB $82,$28,$41,$14,$01,$44,$80,$22
- $EC46 DEFB $01,$44,$80,$22,$82,$28,$41,$14
- $EC4E DEFB $C4,$11,$23,$88,$E8,$03,$17,$C0
- $EC56 DEFB $F0,$06,$0F,$60,$F8,$03,$1F,$C0
- $EC5E DEFB $FC,$01,$3F,$80,$FE,$00,$7F,$00
-; Graphics, 3 frames
+ $EC26 DEFB $FE,$00,$7F,$00,$FC,$01,$3F,$80 ; {#HTML[<img
+ $EC2E DEFB $F8,$03,$1F,$C0,$F0,$07,$0F,$E0 ; src="images/gfx/gfx-ec26.png">]
+ $EC36 DEFB $E8,$03,$17,$C0,$C4,$11,$23,$88 ;
+ $EC3E DEFB $82,$28,$41,$14,$01,$44,$80,$22 ;
+ $EC46 DEFB $01,$44,$80,$22,$82,$28,$41,$14 ;
+ $EC4E DEFB $C4,$11,$23,$88,$E8,$03,$17,$C0 ;
+ $EC56 DEFB $F0,$06,$0F,$60,$F8,$03,$1F,$C0 ;
+ $EC5E DEFB $FC,$01,$3F,$80,$FE,$00,$7F,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ec66
- $EC66 DEFB $FF,$00,$9F,$00,$FF,$00,$FF,$00
- $EC6E DEFB $0F,$60,$FF,$00,$FE,$00,$07,$F0
- $EC76 DEFB $FF,$00,$FC,$01,$03,$F8,$FF,$00
- $EC7E DEFB $FA,$00,$05,$F0,$FF,$00,$F1,$04
- $EC86 DEFB $08,$62,$FF,$00,$E0,$0A,$90,$05
- $EC8E DEFB $7F,$00,$C0,$11,$60,$08,$3F,$80
- $EC96 DEFB $C0,$11,$60,$08,$3F,$80,$E0,$0A
- $EC9E DEFB $90,$05,$7F,$00,$F1,$04,$08,$62
- $ECA6 DEFB $FF,$00,$FA,$00,$05,$F0,$FF,$00
- $ECAE DEFB $FC,$01,$03,$98,$FF,$00,$FE,$00
- $ECB6 DEFB $07,$F0,$FF,$00,$FF,$00,$0F,$60
- $ECBE DEFB $FF,$00,$FF,$00,$9F,$00,$FF,$00
-; Graphics, 3 frames
+ $EC66 DEFB $FF,$00,$9F,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EC6E DEFB $0F,$60,$FF,$00,$FE,$00,$07,$F0 ; src="images/gfx/gfx-ec66.png">]
+ $EC76 DEFB $FF,$00,$FC,$01,$03,$F8,$FF,$00 ;
+ $EC7E DEFB $FA,$00,$05,$F0,$FF,$00,$F1,$04 ;
+ $EC86 DEFB $08,$62,$FF,$00,$E0,$0A,$90,$05 ;
+ $EC8E DEFB $7F,$00,$C0,$11,$60,$08,$3F,$80 ;
+ $EC96 DEFB $C0,$11,$60,$08,$3F,$80,$E0,$0A ;
+ $EC9E DEFB $90,$05,$7F,$00,$F1,$04,$08,$62 ;
+ $ECA6 DEFB $FF,$00,$FA,$00,$05,$F0,$FF,$00 ;
+ $ECAE DEFB $FC,$01,$03,$98,$FF,$00,$FE,$00 ;
+ $ECB6 DEFB $07,$F0,$FF,$00,$FF,$00,$0F,$60 ;
+ $ECBE DEFB $FF,$00,$FF,$00,$9F,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ecc6
- $ECC6 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00
- $ECCE DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C
- $ECD6 DEFB $FF,$00,$FF,$00,$00,$7E,$FF,$00
- $ECDE DEFB $FE,$00,$81,$3C,$7F,$00,$FC,$01
- $ECE6 DEFB $42,$18,$3F,$80,$F8,$02,$24,$81
- $ECEE DEFB $1F,$40,$F0,$04,$18,$42,$0F,$20
- $ECF6 DEFB $F0,$04,$18,$42,$0F,$20,$F8,$02
- $ECFE DEFB $24,$81,$1F,$40,$FC,$01,$42,$18
- $ED06 DEFB $3F,$80,$FE,$00,$81,$3C,$7F,$00
- $ED0E DEFB $FF,$00,$00,$66,$FF,$00,$FF,$00
- $ED16 DEFB $81,$3C,$FF,$00,$FF,$00,$C3,$18
- $ED1E DEFB $FF,$00,$FF,$00,$E7,$00,$FF,$00
-; Graphics, 3 frames
+ $ECC6 DEFB $FF,$00,$E7,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $ECCE DEFB $C3,$18,$FF,$00,$FF,$00,$81,$3C ; src="images/gfx/gfx-ecc6.png">]
+ $ECD6 DEFB $FF,$00,$FF,$00,$00,$7E,$FF,$00 ;
+ $ECDE DEFB $FE,$00,$81,$3C,$7F,$00,$FC,$01 ;
+ $ECE6 DEFB $42,$18,$3F,$80,$F8,$02,$24,$81 ;
+ $ECEE DEFB $1F,$40,$F0,$04,$18,$42,$0F,$20 ;
+ $ECF6 DEFB $F0,$04,$18,$42,$0F,$20,$F8,$02 ;
+ $ECFE DEFB $24,$81,$1F,$40,$FC,$01,$42,$18 ;
+ $ED06 DEFB $3F,$80,$FE,$00,$81,$3C,$7F,$00 ;
+ $ED0E DEFB $FF,$00,$00,$66,$FF,$00,$FF,$00 ;
+ $ED16 DEFB $81,$3C,$FF,$00,$FF,$00,$C3,$18 ;
+ $ED1E DEFB $FF,$00,$FF,$00,$E7,$00,$FF,$00 ; }
+; Graphics, 3 frames.
 @label=gfx_ed26
- $ED26 DEFB $FF,$00,$F9,$00,$FF,$00,$FF,$00
- $ED2E DEFB $F0,$06,$FF,$00,$FF,$00,$E0,$0F
- $ED36 DEFB $7F,$00,$FF,$00,$C0,$1F,$3F,$80
- $ED3E DEFB $FF,$00,$A0,$0F,$5F,$00,$FF,$00
- $ED46 DEFB $10,$46,$8F,$20,$FE,$00,$09,$A0
- $ED4E DEFB $07,$50,$FC,$01,$06,$10,$03,$88
- $ED56 DEFB $FC,$01,$06,$10,$03,$88,$FE,$00
- $ED5E DEFB $09,$A0,$07,$50,$FF,$00,$10,$46
- $ED66 DEFB $8F,$20,$FF,$00,$A0,$0F,$5F,$00
- $ED6E DEFB $FF,$00,$C0,$19,$3F,$80,$FF,$00
- $ED76 DEFB $E0,$0F,$7F,$00,$FF,$00,$F0,$06
- $ED7E DEFB $FF,$00,$FF,$00,$F9,$00,$FF,$00
-; Graphics, 2 frames
+ $ED26 DEFB $FF,$00,$F9,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $ED2E DEFB $F0,$06,$FF,$00,$FF,$00,$E0,$0F ; src="images/gfx/gfx-ed26.png">]
+ $ED36 DEFB $7F,$00,$FF,$00,$C0,$1F,$3F,$80 ;
+ $ED3E DEFB $FF,$00,$A0,$0F,$5F,$00,$FF,$00 ;
+ $ED46 DEFB $10,$46,$8F,$20,$FE,$00,$09,$A0 ;
+ $ED4E DEFB $07,$50,$FC,$01,$06,$10,$03,$88 ;
+ $ED56 DEFB $FC,$01,$06,$10,$03,$88,$FE,$00 ;
+ $ED5E DEFB $09,$A0,$07,$50,$FF,$00,$10,$46 ;
+ $ED66 DEFB $8F,$20,$FF,$00,$A0,$0F,$5F,$00 ;
+ $ED6E DEFB $FF,$00,$C0,$19,$3F,$80,$FF,$00 ;
+ $ED76 DEFB $E0,$0F,$7F,$00,$FF,$00,$F0,$06 ;
+ $ED7E DEFB $FF,$00,$FF,$00,$F9,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_ed86
- $ED86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $ED8E DEFB $FF,$00,$80,$00,$FF,$00,$00,$7F
- $ED96 DEFB $FF,$00,$00,$6B,$FE,$00,$00,$E1
- $ED9E DEFB $9E,$00,$00,$FF,$0C,$61,$00,$AA
- $EDA6 DEFB $0C,$61,$00,$55,$00,$42,$00,$AA
- $EDAE DEFB $80,$3D,$00,$55,$80,$3E,$00,$AA
- $EDB6 DEFB $00,$41,$00,$55,$0C,$60,$00,$AA
- $EDBE DEFB $0C,$60,$00,$55,$9E,$00,$00,$00
- $EDC6 DEFB $FE,$00,$00,$1E,$FF,$00,$00,$14
- $EDCE DEFB $FF,$00,$00,$00,$FF,$00,$80,$00
-; Graphics, 2 frames
+ $ED86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $ED8E DEFB $FF,$00,$80,$00,$FF,$00,$00,$7F ; src="images/gfx/gfx-ed86.png">]
+ $ED96 DEFB $FF,$00,$00,$6B,$FE,$00,$00,$E1 ;
+ $ED9E DEFB $9E,$00,$00,$FF,$0C,$61,$00,$AA ;
+ $EDA6 DEFB $0C,$61,$00,$55,$00,$42,$00,$AA ;
+ $EDAE DEFB $80,$3D,$00,$55,$80,$3E,$00,$AA ;
+ $EDB6 DEFB $00,$41,$00,$55,$0C,$60,$00,$AA ;
+ $EDBE DEFB $0C,$60,$00,$55,$9E,$00,$00,$00 ;
+ $EDC6 DEFB $FE,$00,$00,$1E,$FF,$00,$00,$14 ;
+ $EDCE DEFB $FF,$00,$00,$00,$FF,$00,$80,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_edd6
- $EDD6 DEFB $00,$00,$00,$00,$00,$5B,$00,$DA
- $EDDE DEFB $00,$00,$00,$00,$00,$FF,$00,$FF
- $EDE6 DEFB $00,$AF,$00,$EB,$00,$87,$00,$E1
- $EDEE DEFB $00,$FF,$00,$FF,$00,$AA,$00,$AA
- $EDF6 DEFB $00,$55,$00,$55,$00,$AA,$00,$AA
- $EDFE DEFB $00,$55,$00,$55,$00,$AA,$00,$AA
- $EE06 DEFB $00,$55,$00,$55,$00,$AA,$00,$AA
- $EE0E DEFB $00,$55,$00,$55,$00,$00,$00,$00
- $EE16 DEFB $00,$78,$00,$1E,$00,$50,$00,$14
- $EE1E DEFB $00,$00,$00,$00,$00,$00,$00,$00
-; Graphics, 2 frames
+ $EDD6 DEFB $00,$00,$00,$00,$00,$5B,$00,$DA ; {#HTML[<img
+ $EDDE DEFB $00,$00,$00,$00,$00,$FF,$00,$FF ; src="images/gfx/gfx-edd6.png">]
+ $EDE6 DEFB $00,$AF,$00,$EB,$00,$87,$00,$E1 ;
+ $EDEE DEFB $00,$FF,$00,$FF,$00,$AA,$00,$AA ;
+ $EDF6 DEFB $00,$55,$00,$55,$00,$AA,$00,$AA ;
+ $EDFE DEFB $00,$55,$00,$55,$00,$AA,$00,$AA ;
+ $EE06 DEFB $00,$55,$00,$55,$00,$AA,$00,$AA ;
+ $EE0E DEFB $00,$55,$00,$55,$00,$00,$00,$00 ;
+ $EE16 DEFB $00,$78,$00,$1E,$00,$50,$00,$14 ;
+ $EE1E DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_ee26
- $EE26 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EE2E DEFB $07,$00,$FF,$00,$03,$F8,$FF,$00
- $EE36 DEFB $00,$D4,$FF,$00,$00,$87,$7F,$00
- $EE3E DEFB $00,$FF,$1F,$80,$00,$AB,$0F,$E0
- $EE46 DEFB $00,$55,$03,$70,$00,$AA,$01,$AC
- $EE4E DEFB $00,$55,$00,$56,$00,$AA,$00,$A8
- $EE56 DEFB $00,$55,$01,$50,$00,$AA,$03,$80
- $EE5E DEFB $00,$54,$0F,$00,$00,$00,$1F,$00
- $EE66 DEFB $00,$78,$7F,$00,$00,$28,$FF,$00
- $EE6E DEFB $03,$00,$FF,$00,$07,$00,$FF,$00
-; Graphics, 2 frames
+ $EE26 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EE2E DEFB $07,$00,$FF,$00,$03,$F8,$FF,$00 ; src="images/gfx/gfx-ee26.png">]
+ $EE36 DEFB $00,$D4,$FF,$00,$00,$87,$7F,$00 ;
+ $EE3E DEFB $00,$FF,$1F,$80,$00,$AB,$0F,$E0 ;
+ $EE46 DEFB $00,$55,$03,$70,$00,$AA,$01,$AC ;
+ $EE4E DEFB $00,$55,$00,$56,$00,$AA,$00,$A8 ;
+ $EE56 DEFB $00,$55,$01,$50,$00,$AA,$03,$80 ;
+ $EE5E DEFB $00,$54,$0F,$00,$00,$00,$1F,$00 ;
+ $EE66 DEFB $00,$78,$7F,$00,$00,$28,$FF,$00 ;
+ $EE6E DEFB $03,$00,$FF,$00,$07,$00,$FF,$00 ; }
+; Graphics, 2 frames.
 @label=gfx_ee76
- $EE76 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EE7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EE86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EE8E DEFB $FC,$03,$3F,$C0,$F0,$0C,$0F,$30
- $EE96 DEFB $E0,$10,$07,$08,$C0,$24,$03,$04
- $EE9E DEFB $C0,$20,$03,$04,$80,$58,$01,$02
- $EEA6 DEFB $80,$40,$01,$02,$80,$40,$01,$02
- $EEAE DEFB $00,$B0,$00,$01,$00,$B0,$00,$01
- $EEB6 DEFB $00,$80,$00,$01,$00,$80,$00,$01
- $EEBE DEFB $00,$80,$00,$01,$00,$FF,$00,$FF
-; Graphics, 3 frames
+ $EE76 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EE7E DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-ee76.png">]
+ $EE86 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $EE8E DEFB $FC,$03,$3F,$C0,$F0,$0C,$0F,$30 ;
+ $EE96 DEFB $E0,$10,$07,$08,$C0,$24,$03,$04 ;
+ $EE9E DEFB $C0,$20,$03,$04,$80,$58,$01,$02 ;
+ $EEA6 DEFB $80,$40,$01,$02,$80,$40,$01,$02 ;
+ $EEAE DEFB $00,$B0,$00,$01,$00,$B0,$00,$01 ;
+ $EEB6 DEFB $00,$80,$00,$01,$00,$80,$00,$01 ;
+ $EEBE DEFB $00,$80,$00,$01,$00,$FF,$00,$FF ; }
+; Graphics, 3 frames.
 @label=gfx_eec6
- $EEC6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EECE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EED6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EEDE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00
- $EEE6 DEFB $FF,$00,$FF,$00,$FF,$00,$C3,$3C
- $EEEE DEFB $FF,$00,$FF,$00,$00,$C3,$FF,$00
- $EEF6 DEFB $FE,$01,$00,$00,$7F,$80,$FC,$02
- $EEFE DEFB $00,$40,$3F,$40,$FC,$02,$00,$00
- $EF06 DEFB $3F,$40,$F8,$05,$00,$80,$1F,$20
- $EF0E DEFB $F8,$04,$00,$00,$1F,$20,$F8,$04
- $EF16 DEFB $00,$00,$1F,$20,$F0,$0B,$00,$00
- $EF1E DEFB $0F,$10,$F0,$0B,$00,$00,$0F,$10
- $EF26 DEFB $F0,$08,$00,$00,$0F,$10,$F0,$08
- $EF2E DEFB $00,$00,$0F,$10,$F0,$08,$00,$00
- $EF36 DEFB $0F,$10,$F0,$0F,$00,$FF,$0F,$F0
+ $EEC6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; {#HTML[<img
+ $EECE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ; src="images/gfx/gfx-eec6.png">]
+ $EED6 DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $EEDE DEFB $FF,$00,$FF,$00,$FF,$00,$FF,$00 ;
+ $EEE6 DEFB $FF,$00,$FF,$00,$FF,$00,$C3,$3C ;
+ $EEEE DEFB $FF,$00,$FF,$00,$00,$C3,$FF,$00 ;
+ $EEF6 DEFB $FE,$01,$00,$00,$7F,$80,$FC,$02 ;
+ $EEFE DEFB $00,$40,$3F,$40,$FC,$02,$00,$00 ;
+ $EF06 DEFB $3F,$40,$F8,$05,$00,$80,$1F,$20 ;
+ $EF0E DEFB $F8,$04,$00,$00,$1F,$20,$F8,$04 ;
+ $EF16 DEFB $00,$00,$1F,$20,$F0,$0B,$00,$00 ;
+ $EF1E DEFB $0F,$10,$F0,$0B,$00,$00,$0F,$10 ;
+ $EF26 DEFB $F0,$08,$00,$00,$0F,$10,$F0,$08 ;
+ $EF2E DEFB $00,$00,$0F,$10,$F0,$08,$00,$00 ;
+ $EF36 DEFB $0F,$10,$F0,$0F,$00,$FF,$0F,$F0 ; }
 
 ; Data block at EF3E
 b$EF3E DEFB $00,$00,$00,$00,$00,$00,$00,$00

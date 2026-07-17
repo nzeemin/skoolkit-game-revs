@@ -759,17 +759,47 @@ c $8E25 Expand sprite a
 N $8E25 Unrolled copy of a sprite/mask definition from (HL) to (DE), terminated by $FF.
 N $8E25 The alternating OR $00 / AND $00 immediates are SELF-MODIFIED (by calc_sprite_shift) to apply the per-column shift mask.
 N $8E25 Clobbers: A,DE,HL.
+C $8E25,1 A = source byte (HL)
+C $8E26,2 self-mod OR mask (set by calc_sprite_shift)
+C $8E28,1 store merged byte, advance dest
+C $8E2B,1 A = next source byte
+C $8E2C,2 self-mod AND mask (set by calc_sprite_shift)
+C $8E3D,2 A = $FF (terminator byte)
+C $8E3F,1 store terminator, advance dest
+C $8E41,1 A += 1 (second terminator byte)
+C $8E44,2 loop 4 columns
 @ $8E48 label=patch_expand_masks
 N $8E48 Entry point used by calc_sprite_shift, not by expand_sprite_a's own DJNZ loop.
-N $8E48 Reads the self-mod shift-count slot ($8C82) to index a 2-byte routine-pointer pair, storing it into expand_sprite_b's own OR/AND immediate operands ($8E82/$8EC8) -- i.e. re-targets which unrolled copy body expand_sprite_b's DJNZ tail uses.
-N $8E48 Then, per 8-pixel strip, copies 3 source mask bytes ($600C/$600D/$600E or $600F/$6010/$6011 or $6012/$6013/$6014, selected by the same shift-count test) straight into expand_sprite_b's OR-immediate operands, and their bitwise complement (CPL) into the paired AND-immediate operands -- so expand_sprite_b ORs in the new sprite bits and ANDs out the old ones at the right sub-byte shift, then calls expand_sprite_b (B=$00/$08/$00 sets loop count per strip).
+N $8E48 Reads the self-mod shift-count slot ($8C82) to index a 2-byte pair from table $8C79 (shift*2), storing it into the loop-count operands of the first/third strip's "LD B,nn" at $8E81/$8EC7 (operand bytes $8E82/$8EC8) -- CORRECTION: these are NOT routine pointers or mask operands, they are the row counts for the two edge strips. Confirmed by emulation: for every shift value 0-3, (first-strip-count + third-strip-count) == 8, and combined with the always-8-row middle strip, TOTAL decoded height is a shift-INVARIANT 16 rows. When the shift-count slot is 0, the first strip is skipped entirely (JR Z,$8E86) and its row count (0) is moot.
+N $8E48 Then, per 8-pixel strip, copies 3 source mask bytes ($600C/$600D/$600E or $600F/$6010/$6011 or $6012/$6013/$6014, selected by the same shift-count test) straight into expand_sprite_b's real OR-immediate operands ($8ECB/$8ED7/$8EE3), and their bitwise complement (CPL) into the paired AND-immediate operands ($8ED1/$8EDD/$8EE9) -- so expand_sprite_b ORs in the new sprite bits and ANDs out the old ones at the right sub-byte shift, then calls expand_sprite_b.
+N $8E48 See gfx_c1f6 ($C1F6) for the full sprite-bitmap decode writeup (this self-modifying pipeline is why the bitmap can't be rendered as a raw UDG array image).
 N $8E48 Clobbers: A,BC.
+C $8E48,3 A = shift-count slot ($8C82)
+C $8E4B,4 index a 2-byte routine-pointer pair
+C $8E54,1 fetch first pointer byte
+C $8E55,3 self-mod store: expand_sprite_b OR operand
+C $8E59,1 fetch second pointer byte
+C $8E5A,3 self-mod store: expand_sprite_b AND operand
+C $8E5D,3 re-test shift-count slot
+C $8E61,2 zero? -> skip first mask triple
+C $8E63,3 A = mask byte 1 ($600C)
+C $8E66,3 self-mod store: OR operand
+C $8E69,1 complement for AND operand
+C $8E6A,3 self-mod store: AND operand
+C $8E81,2 B = 0 (loop count for this strip)
 C $8E83,3 Expand sprite b
+C $8EA4,2 B = $08 (loop count for this strip)
 C $8EA6,3 Expand sprite b
+C $8EC7,2 B = 0 (loop count for final strip)
 @ $8EC9 label=expand_sprite_b
 c $8EC9 Expand sprite b
 N $8EC9 Same unrolled-copy shape as expand_sprite_a, but its OR/AND immediate operands are self-modified by patch_expand_masks ($8E48) rather than calc_sprite_shift directly -- used for the shift-boundary case where 3 source mask bytes (not 2) are needed per strip.
 N $8EC9 Clobbers: A,DE,HL.
+C $8EC9,1 A = source byte (HL)
+C $8ECA,2 self-mod OR mask (set by patch_expand_masks)
+C $8ECC,1 store merged byte, advance dest
+C $8EED,2 loop 3 mask bytes
+C $8EEF,2 restore flags, RET
 @ $8EF1 label=calc_sprite_col
 c $8EF1 Calc sprite col
 N $8EF1 Resolve a sprite column: index table $8B30 by A, compare the result against the actor's clip field (IX+30), and patch the shift slot $8C81.
@@ -1305,12 +1335,61 @@ C $9F2F,3 Attract step
 @ $9F33 label=attract_step
 c $9F33 Attract step
 N $9F33 Advance the attract/demo one frame: silence SFX, render_play_frame, then fire scripted sounds keyed off the demo phase $9F0E.
+N $9F33 Phase 0: sweeps a tone counter down by 2/frame until $68, then advances to phase 1 (also plays sound 3). Phase 1: cycles the 4 actor Y-offsets down by 2/frame at $9EFB, resetting a sub-counter every 9th frame, plays sound 3 every wrap, advances to phase 2 at the end. Phase 2/4: replay scripted actor-position frames from tables $9F04/$9F09 indexed by a frame counter ($9F0F). Phase 3: sweeps $9EFA up/down by 2/frame between bounds, plays sound 3 at each end, toggling direction via $9F10. Phase else (5+): sweeps the same tone counter back up by 2/frame until $90, then RET (attract sequence done).
 N $9F33 Clobbers: most.
+C $9F33,3 stash tune id / phase-0 marker ($9F10)
 C $9F36,3 Stop sound
 C $9F39,3 Render play frame
+C $9F3C,3 A = demo phase ($9F0E)
+C $9F3F,4 phase == 1? -> $9F6A
+C $9F43,2 A = sound id 11 (phase-0 tone)
 C $9F45,3 Play sound
+C $9F48,3 HL -> actor Y-offsets ($9EFB)
+C $9F4B,2 B = 4 (offset count)
+C $9F4D,5 subtract 2 from this offset, next
+C $9F52,2 loop 4 offsets
+C $9F54,2 reached lower bound ($68)?
+C $9F59,3 HL -> demo phase
+C $9F5C,1 advance to phase 1
+C $9F5F,3 reset frame sub-counter ($9F0F)=0
 C $9F64,3 Play sound
+C $9F6A,4 phase == 2? -> $9F97
+C $9F6E,3 A = frame sub-counter
+C $9F71,2 /2 -> table index
+C $9F76,3 HL -> position table $9F04
+C $9F7A,4 fetch scripted X, store ($9EF6)
+C $9F7E,3 HL -> position table $9F09
+C $9F82,4 fetch scripted Y, store ($9EF1)
+C $9F86,3 HL -> frame sub-counter
+C $9F89,2 advance sub-counter
+C $9F8B,5 reached frame $09? -> advance to phase 2
+C $9F97,4 phase == 3? -> $9FE7
+C $9F9B,3 A = sweep direction flag ($9F10)
+C $9F9E,3 nonzero? -> sweep up branch $9FC4
+C $9FA1,5 zero flag: clear demo-actor marker ($9EF0)
+C $9FA6,3 A = sweep value ($9EFA)
+C $9FA9,5 subtract 2 (sweep down)
+C $9FAE,2 reached lower bound ($54)?
+C $9FB7,5 A = 8, seed frame sub-counter
 C $9FBE,3 Play sound
+C $9FC4,3 A = sweep value ($9EFA)
+C $9FC7,5 add 2 (sweep up)
+C $9FCC,2 reached upper bound ($68)?
+C $9FD5,5 A = $FF, mark demo-actor active
+C $9FE7,4 phase == 4? -> $A013
+C $9FEB,3 A = frame sub-counter
+C $A003,3 HL -> frame sub-counter
+C $A006,1 decrement sub-counter
+C $A007,2 underflowed (bit7 set)?
+C $A00C,3 HL -> demo phase
+C $A00F,1 advance to next phase
+C $A013,2 A = sound id 11 (final sweep tone)
+C $A015,3 Play sound
+C $A018,3 HL -> actor Y-offsets ($9EFB)
+C $A01B,2 B = 4 (offset count)
+C $A01D,5 add 2 to this offset, next
+C $A022,2 loop 4 offsets
+C $A024,2 reached upper bound ($90)? done
 C $9FE1,3 Play sound
 C $A015,3 Play sound
 @ $A02A label=render_play_frame
@@ -1870,9 +1949,70 @@ N $AD82 Clears the object table, derives the coarse column ($ADC6) and sub-colum
 N $AD82 SELF-MODIFIES the render code ($ADC6/$AD61) and latches $6021 for draw_tower_cols.
 N $AD82 Runs a 16-row loop ($ADB8..$AE85): for each row it reads two per-column-cell nibbles from map data at $6200+DE / $6280+DE, classifies the cell (bit-pattern tests at $AE21-$AE67) and jumps to one of the masked-blit handlers below ($AEBB/$AF2A/$AF86/$AFD0/$B03F) or straight to the row-accumulator advance at $AE6D. Each handler returns to the common continuation $AE18 (advance HL by -$12, DJNZ loop) before the next row.
 N $AD82 Clobbers: A,C,HL.
+C $AD82,3 clear object table (calc_tower_col_addr's prep)
 C $AD85,3 get Vertical scroll position
+C $AD89,2 shift scroll_pos right by 3 (coarse column)
+C $AD8F,3 self-mod store: coarse column ($ADC6)
+C $AD93,2 isolate sub-column fraction bits
+C $AD96,3 latch sub-column phase ($6021)
 C $AD99,3 get Display height
+C $AD9D,2 isolate row-in-cell bits (disp_height&7)
+C $AD9F,2 bias by $58 (attribute-row base)
+C $ADA1,3 self-mod store: row base ($AD61)
+C $ADA4,2 C = disp_height >> 3 (coarse row)
+C $ADAA,2 A = $0B - coarse row
+C $ADAD,2 mask to 4 bits
+C $ADAF,3 self-mod store: row accumulator ($AD60)
+C $ADB3,2 B = 0 (row counter)
+C $ADB5,3 HL -> per-row delta table ($AD62)
+C $ADB8,1 A = row counter
+C $ADB9,5 row==8? recompute column addr mid-loop
 C $ADC0,3 Calc tower col addr
+C $ADC5,2 E = 0 (cell index low)
+C $ADC7,5 D = row accumulator + $F0 (map page)
+C $ADCE,4 E = column fraction (map offset low)
+C $ADD4,4 HL -> $6200 + column (cell type table 1)
+C $ADD9,4 negative? -> $AE6D (empty cell, skip)
+C $ADDD,4 shift cell nibble right 2
+C $ADE1,6 self-mod: patch two render-handler operands
+C $ADE7,3 A = cell byte again, mask low 2 bits
+C $ADEA,6 self-mod: patch two more render-handler operands
+C $ADF0,4 HL -> $6280 + column (cell type table 2)
+C $ADF6,3 negative? skip the shift
+C $ADF9,2 shift cell nibble right 2
+C $ADFD,6 self-mod: patch two render-handler operands
+C $AE03,3 A = 2nd cell byte, mask low 2 bits
+C $AE06,6 self-mod: patch two more render-handler operands
+C $AE0C,2 B = $14 (20 sub-cells to classify)
+C $AE0E,3 HL -> classification bitmap ($65B6)
+C $AE11,4 fetch next classification bit
+C $AE15,1 shift bit into carry
+C $AE18,3 DE = -$12 (back up dest ptr)
+C $AE1C,2 loop 20 sub-cells
+C $AE21,1 shift in the next bit
+C $AE22,1 C = classification byte so far
+C $AE23,2 test bits $0C (cell sub-type)
+C $AE27,2 test bit 0 of C
+C $AE2C,2 mask to bits 0-1
+C $AE2E,2 shift right (test bit 0)
+C $AE30,2 nonzero -> $AE55 (anim-texture case)
+C $AE32,2 no carry -> $AE3F (cap-b case)
+C $AE34,3 self-mod operand for the handler call
+C $AE37,2 test bit 7 of E
+C $AE39,3 dispatch -> render_col_cap_a
+C $AE55,2 carry set -> $AE62 (partial-column case)
+C $AE62,3 A = row base
+C $AE65,2 compare vs $40 (screen-half boundary)
+C $AE67,3 dispatch -> render_col_partial
+C $AE6D,1 EXX back to main register set
+C $AE6E,3 A = row accumulator
+C $AE71,3 add per-row delta, wrap to 4 bits
+C $AE74,3 store updated row accumulator
+C $AE78,3 A = fine row offset
+C $AE7B,3 add per-row delta, wrap to 7 bits
+C $AE7E,3 store updated fine row offset
+C $AE82,1 B++ (row counter)
+C $AE83,2 done all 16 rows?
 @ $AE89 label=col_blit_masks
 b $AE89
 N $AE89 24-entry (2 bytes each) AND/OR mask-pair table: "AND clear old bits, OR in new bits" merge masks for column pixel bytes that don't align to a whole screen byte (edge-clipped column tops/bottoms). Read by the handler at $AEBB.
@@ -2262,6 +2402,29 @@ s $BA66
 c $BA67 Scroll tower attrs
 N $BA67 Adjust the painted attribute band as scroll_pos advances (compares against the $BA66 latch set by paint_tower_attrs) so colours track the scrolling tower.
 N $BA67 Clobbers: A,B,HL.
+C $BA67,3 HL = scroll_pos
+C $BA6A,3 top-of-tower page (H==3)?
+C $BA6D,2 A = $16 (default row index)
+C $BA71,1 A = scroll_pos low byte
+C $BA72,2 negate (count down from top)
+C $BA74,4 /4, mask to row range
+C $BA78,2 bias by -$16
+C $BA7A,2 negate back
+C $BA7C,1 B = target row index
+C $BA7D,3 A = previous row index ($BA66 latch)
+C $BA80,1 delta = new - previous
+C $BA81,2 unchanged? -> just update latch, RET
+C $BA83,2 delta == -1 (scrolled up one row)?
+C $BA87,2 delta == +1 (scrolled down one row)?
+C $BA8B,4 store new row index in latch
+C $BA8F,1 B++ (paint the row below)
+C $BA90,2 C = $41 (default attribute)
+C $BA99,4 store new row index in latch
+C $BA9D,3 recompute the attribute for this column via lookup_col_attr
+C $BAA1,8 HL = B * 32 (attribute row address)
+C $BAA9,3 DE = $5802 (attribute area base + offset)
+C $BAAD,2 B = $1C (28 columns)
+C $BAAF,4 fill one attribute row with C, loop
 s $BAB4
 @ $BABA label=im2_dispatch
 c $BABA
@@ -2420,251 +2583,376 @@ B $C1F0,2,2 #R$EE26, 2 frames
 B $C1F2,2,2 #R$EE76, 2 frames
 B $C1F4,2,2 #R$EEC6, 3 frames
 @ $C1F6 label=gfx_c1f6
-N $C1F6 Graphics, 4 frames
+B $C1F6,120,8 #HTML[<img src="images/gfx/gfx-c1f6.png">]
+N $C1F6 Graphics, animation frame 1 of 4 -- masks for Pogo (frames 2-4 are gfx_c26e/gfx_c2e6/gfx_c35e, each an independent block).
+N $C1F6 NOT a raw 1bpp raster -- these bytes only become real pixels after calc_sprite_shift/expand_sprite_b's self-modifying decode (see patch_expand_masks, $8E48). Reading this block directly as a bitmap produces garbage; a UDG array macro cannot render it.
+N $C1F6 Verified by emulation (decode_sprite.py, real Z80 core, self-mod masks forced to identity OR $00/AND $FF): decodes to a fixed 16 rows x 3 cells (24x16px), 96 source bytes consumed, invariant across all 4 shift values.
 @ $C26E label=gfx_c26e
-N $C26E Graphics, 4 frames
+B $C26E,120,8 #HTML[<img src="images/gfx/gfx-c26e.png">]
+N $C26E Graphics, animation frame 2 of 4 -- masks for Pogo.
 @ $C2E6 label=gfx_c2e6
-N $C2E6 Graphics, 4 frames
+B $C2E6,120,8 #HTML[<img src="images/gfx/gfx-c2e6.png">]
+N $C2E6 Graphics, animation frame 3 of 4 -- masks for Pogo.
 @ $C35E label=gfx_c35e
-N $C35E Graphics, 4 frames
+B $C35E,120,8 #HTML[<img src="images/gfx/gfx-c35e.png">]
+N $C35E Graphics, animation frame 4 of 4 -- masks for Pogo.
 @ $C3D6 label=gfx_c3d6
-N $C3D6 Graphics, 4 frames
+B $C3D6,120,8 #HTML[<img src="images/gfx/gfx-c3d6.png">]
+N $C3D6 Graphics, 4 frames -- masks for Pogo.
 @ $C44E label=gfx_c44e
-N $C44E Graphics, 4 frames
+B $C44E,120,8 #HTML[<img src="images/gfx/gfx-c44e.png">]
+N $C44E Graphics, 4 frames -- masks for Pogo.
 @ $C4C6 label=gfx_c4c6
-N $C4C6 Graphics, 4 frames
+B $C4C6,120,8 #HTML[<img src="images/gfx/gfx-c4c6.png">]
+N $C4C6 Graphics, 4 frames -- masks for Pogo.
 @ $C53E label=gfx_c53e
-N $C53E Graphics, 4 frames
+B $C53E,120,8 #HTML[<img src="images/gfx/gfx-c53e.png">]
+N $C53E Graphics, 4 frames -- masks for Pogo.
 @ $C5B6 label=gfx_c5b6
-N $C5B6 Graphics, 4 frames
+B $C5B6,120,8 #HTML[<img src="images/gfx/gfx-c5b6.png">]
+N $C5B6 Graphics, 4 frames -- masks for Pogo.
 @ $C62E label=gfx_c62e
-N $C62E Graphics, 2 frames
+B $C62E,80,8 #HTML[<img src="images/gfx/gfx-c62e.png">]
+N $C62E Graphics, 2 frames -- Pogo rotating.
 @ $C67E label=gfx_c67e
-N $C67E Graphics, 2 frames
+B $C67E,80,8 #HTML[<img src="images/gfx/gfx-c67e.png">]
+N $C67E Graphics, 2 frames -- Pogo rotating.
 @ $C6CE label=gfx_c6ce
-N $C6CE Graphics, 2 frames
+B $C6CE,80,8 #HTML[<img src="images/gfx/gfx-c6ce.png">]
+N $C6CE Graphics, 2 frames -- Pogo front.
 @ $C71E label=gfx_c71e
-N $C71E Graphics, 4 frames
+B $C71E,120,8 #HTML[<img src="images/gfx/gfx-c71e.png">]
+N $C71E Graphics, 4 frames -- masks for Pogo.
 @ $C796 label=gfx_c796
-N $C796 Graphics, 4 frames
+B $C796,120,8 #HTML[<img src="images/gfx/gfx-c796.png">]
+N $C796 Graphics, 4 frames -- masks for Pogo.
 @ $C80E label=gfx_c80e
-N $C80E Graphics, 4 frames
+B $C80E,120,8 #HTML[<img src="images/gfx/gfx-c80e.png">]
+N $C80E Graphics, 4 frames -- masks for Pogo.
 @ $C886 label=gfx_c886
-N $C886 Graphics, 4 frames
+B $C886,120,8 #HTML[<img src="images/gfx/gfx-c886.png">]
+N $C886 Graphics, 4 frames -- masks for Pogo.
 @ $C8FE label=gfx_c8fe
-N $C8FE Graphics, 4 frames
+B $C8FE,120,8 #HTML[<img src="images/gfx/gfx-c8fe.png">]
+N $C8FE Graphics, 4 frames -- masks for Pogo.
 @ $C976 label=gfx_c976
-N $C976 Graphics, 2 frames
+B $C976,80,8 #HTML[<img src="images/gfx/gfx-c976.png">]
+N $C976 Graphics, 2 frames -- Pogo rotating.
 @ $C9C6 label=gfx_c9c6
-N $C9C6 Graphics, 2 frames
+B $C9C6,80,8 #HTML[<img src="images/gfx/gfx-c9c6.png">]
+N $C9C6 Graphics, 2 frames -- Pogo rotating.
 @ $CA16 label=gfx_ca16
-N $CA16 Graphics, 2 frames
+B $CA16,80,8 #HTML[<img src="images/gfx/gfx-ca16.png">]
+N $CA16 Graphics, 2 frames -- Pogo back.
 @ $CA66 label=gfx_ca66
-N $CA66 Graphics, 2 frames
+B $CA66,80,8 #HTML[<img src="images/gfx/gfx-ca66.png">]
+N $CA66 Graphics, 2 frames.
 @ $CAB6 label=gfx_cab6
-N $CAB6 Graphics, 2 frames
+B $CAB6,80,8 #HTML[<img src="images/gfx/gfx-cab6.png">]
+N $CAB6 Graphics, 2 frames -- Pogo back going from camera.
 @ $CB06 label=gfx_cb06
-N $CB06 Graphics, 2 frames
+B $CB06,80,8 #HTML[<img src="images/gfx/gfx-cb06.png">]
+N $CB06 Graphics, 2 frames -- Pogo back going from camera.
 @ $CB56 label=gfx_cb56
-N $CB56 Graphics, 2 frames
+B $CB56,80,8 #HTML[<img src="images/gfx/gfx-cb56.png">]
+N $CB56 Graphics, 2 frames -- Pogo front going to camera.
 @ $CBA6 label=gfx_cba6
-N $CBA6 Graphics, 2 frames
+B $CBA6,80,8 #HTML[<img src="images/gfx/gfx-cba6.png">]
+N $CBA6 Graphics, 2 frames -- Pogo front going to camera.
 @ $CBF6 label=gfx_cbf6
-N $CBF6 Graphics, 2 frames
+B $CBF6,80,8 #HTML[<img src="images/gfx/gfx-cbf6.png">]
+N $CBF6 Graphics, 2 frames -- Pogo front going to camera.
 @ $CC46 label=gfx_cc46
-N $CC46 Graphics, 4 frames
+B $CC46,120,8 #HTML[<img src="images/gfx/gfx-cc46.png">]
+N $CC46 Graphics, 4 frames -- Pogo masks.
 @ $CCBE label=gfx_ccbe
-N $CCBE Graphics, 4 frames
+B $CCBE,120,8 #HTML[<img src="images/gfx/gfx-ccbe.png">]
+N $CCBE Graphics, 4 frames -- Pogo masks.
 @ $CD36 label=gfx_cd36
-N $CD36 Graphics, 4 frames
+B $CD36,120,8 #HTML[<img src="images/gfx/gfx-cd36.png">]
+N $CD36 Graphics, 4 frames -- Pogo masks.
 @ $CDAE label=gfx_cdae
-N $CDAE Graphics, 4 frames
+B $CDAE,120,8 #HTML[<img src="images/gfx/gfx-cdae.png">]
+N $CDAE Graphics, 4 frames -- Pogo masks.
 @ $CE26 label=gfx_ce26
-N $CE26 Graphics, 4 frames
+B $CE26,120,8 #HTML[<img src="images/gfx/gfx-ce26.png">]
+N $CE26 Graphics, 4 frames -- Pogo masks.
 @ $CE9E label=gfx_ce9e
-N $CE9E Graphics, 4 frames
+B $CE9E,120,8 #HTML[<img src="images/gfx/gfx-ce9e.png">]
+N $CE9E Graphics, 4 frames -- Pogo masks.
 @ $CF16 label=gfx_cf16
-N $CF16 Graphics, 4 frames
+B $CF16,120,8 #HTML[<img src="images/gfx/gfx-cf16.png">]
+N $CF16 Graphics, 4 frames -- Pogo masks.
 @ $CF8E label=gfx_cf8e
-N $CF8E Graphics, 2 frames
+B $CF8E,80,8 #HTML[<img src="images/gfx/gfx-cf8e.png">]
+N $CF8E Graphics, 2 frames -- bubbles animation phases.
 @ $CFDE label=gfx_cfde
-N $CFDE Graphics, 2 frames
+B $CFDE,80,8 #HTML[<img src="images/gfx/gfx-cfde.png">]
+N $CFDE Graphics, 2 frames -- bubbles animation phases.
 @ $D02E label=gfx_d02e
-N $D02E Graphics, 2 frames
+B $D02E,80,8 #HTML[<img src="images/gfx/gfx-d02e.png">]
+N $D02E Graphics, 2 frames -- bubbles animation phases.
 @ $D07E label=gfx_d07e
-N $D07E Graphics, 2 frames
+B $D07E,80,8 #HTML[<img src="images/gfx/gfx-d07e.png">]
+N $D07E Graphics, 2 frames -- bubbles animation phases.
 @ $D0CE label=gfx_d0ce
-N $D0CE Graphics, 4 frames
+B $D0CE,120,8 #HTML[<img src="images/gfx/gfx-d0ce.png">]
+N $D0CE Graphics, 4 frames -- Pogo masks.
 @ $D146 label=gfx_d146
-N $D146 Graphics, 4 frames
+B $D146,120,8 #HTML[<img src="images/gfx/gfx-d146.png">]
+N $D146 Graphics, 4 frames -- Pogo masks.
 @ $D1BE label=gfx_d1be
-N $D1BE Graphics, 4 frames
+B $D1BE,120,8 #HTML[<img src="images/gfx/gfx-d1be.png">]
+N $D1BE Graphics, 4 frames -- Pogo masks.
 @ $D236 label=gfx_d236
-N $D236 Graphics, 4 frames
+B $D236,120,8 #HTML[<img src="images/gfx/gfx-d236.png">]
+N $D236 Graphics, 4 frames -- Pogo masks.
 @ $D2AE label=gfx_d2ae
-N $D2AE Graphics, 4 frames
+B $D2AE,120,8 #HTML[<img src="images/gfx/gfx-d2ae.png">]
+N $D2AE Graphics, 4 frames -- Pogo masks.
 @ $D326 label=gfx_d326
-N $D326 Graphics, 4 frames
+B $D326,120,8 #HTML[<img src="images/gfx/gfx-d326.png">]
+N $D326 Graphics, 4 frames -- Pogo masks.
 @ $D39E label=gfx_d39e
-N $D39E Graphics, 4 frames
+B $D39E,120,8 #HTML[<img src="images/gfx/gfx-d39e.png">]
+N $D39E Graphics, 4 frames -- Pogo masks.
 @ $D416 label=gfx_d416
-N $D416 Graphics, 4 frames
+B $D416,120,8 #HTML[<img src="images/gfx/gfx-d416.png">]
+N $D416 Graphics, 4 frames -- Pogo masks.
 @ $D48E label=gfx_d48e
-N $D48E Graphics, 4 frames
+B $D48E,120,8 #HTML[<img src="images/gfx/gfx-d48e.png">]
+N $D48E Graphics, 4 frames -- Pogo masks.
 @ $D506 label=gfx_d506
-N $D506 Graphics, 2 frames
+B $D506,80,8 #HTML[<img src="images/gfx/gfx-d506.png">]
+N $D506 Graphics, 2 frames -- Pogo rotating.
 @ $D556 label=gfx_d556
-N $D556 Graphics, 2 frames
+B $D556,80,8 #HTML[<img src="images/gfx/gfx-d556.png">]
+N $D556 Graphics, 2 frames -- Pogo rotating.
 @ $D5A6 label=gfx_d5a6
-N $D5A6 Graphics, 2 frames
+B $D5A6,80,8 #HTML[<img src="images/gfx/gfx-d5a6.png">]
+N $D5A6 Graphics, 2 frames -- Pogo rotating.
 @ $D5F6 label=gfx_d5f6
-N $D5F6 Graphics, 4 frames
+B $D5F6,120,8 #HTML[<img src="images/gfx/gfx-d5f6.png">]
+N $D5F6 Graphics, 4 frames -- Pogo masks.
 @ $D66E label=gfx_d66e
-N $D66E Graphics, 4 frames
+B $D66E,120,8 #HTML[<img src="images/gfx/gfx-d66e.png">]
+N $D66E Graphics, 4 frames -- Pogo masks.
 @ $D6E6 label=gfx_d6e6
-N $D6E6 Graphics, 4 frames
+B $D6E6,120,8 #HTML[<img src="images/gfx/gfx-d6e6.png">]
+N $D6E6 Graphics, 4 frames -- Pogo masks.
 @ $D75E label=gfx_d75e
-N $D75E Graphics, 4 frames
+B $D75E,120,8 #HTML[<img src="images/gfx/gfx-d75e.png">]
+N $D75E Graphics, 4 frames -- Pogo masks.
 @ $D7D6 label=gfx_d7d6
-N $D7D6 Graphics, 4 frames
+B $D7D6,120,8 #HTML[<img src="images/gfx/gfx-d7d6.png">]
+N $D7D6 Graphics, 4 frames -- Pogo masks.
 @ $D84E label=gfx_d84e
-N $D84E Graphics, 2 frames
+B $D84E,80,8 #HTML[<img src="images/gfx/gfx-d84e.png">]
+N $D84E Graphics, 2 frames.
 @ $D89E label=gfx_d89e
-N $D89E Graphics, 2 frames
+B $D89E,80,8 #HTML[<img src="images/gfx/gfx-d89e.png">]
+N $D89E Graphics, 2 frames.
 @ $D8EE label=gfx_d8ee
-N $D8EE Graphics, 2 frames
+B $D8EE,80,8 #HTML[<img src="images/gfx/gfx-d8ee.png">]
+N $D8EE Graphics, 2 frames.
 @ $D93E label=gfx_d93e
-N $D93E Graphics, 2 frames
+B $D93E,80,8 #HTML[<img src="images/gfx/gfx-d93e.png">]
+N $D93E Graphics, 2 frames.
 @ $D98E label=gfx_d98e
-N $D98E Graphics, 2 frames
+B $D98E,80,8 #HTML[<img src="images/gfx/gfx-d98e.png">]
+N $D98E Graphics, 2 frames.
 @ $D9DE label=gfx_d9de
-N $D9DE Graphics, 2 frames
+B $D9DE,80,8 #HTML[<img src="images/gfx/gfx-d9de.png">]
+N $D9DE Graphics, 2 frames.
 @ $DA2E label=gfx_da2e
-N $DA2E Graphics, 2 frames
+B $DA2E,80,8 #HTML[<img src="images/gfx/gfx-da2e.png">]
+N $DA2E Graphics, 2 frames.
 @ $DA7E label=gfx_da7e
-N $DA7E Graphics, 2 frames
+B $DA7E,80,8 #HTML[<img src="images/gfx/gfx-da7e.png">]
+N $DA7E Graphics, 2 frames.
 @ $DACE label=gfx_dace
-N $DACE Graphics, 2 frames
+B $DACE,80,8 #HTML[<img src="images/gfx/gfx-dace.png">]
+N $DACE Graphics, 2 frames.
 @ $DB1E label=gfx_db1e
-N $DB1E Graphics, 4 frames
+B $DB1E,120,8 #HTML[<img src="images/gfx/gfx-db1e.png">]
+N $DB1E Graphics, 4 frames.
 @ $DB96 label=gfx_db96
-N $DB96 Graphics, 4 frames
+B $DB96,120,8 #HTML[<img src="images/gfx/gfx-db96.png">]
+N $DB96 Graphics, 4 frames.
 @ $DC0E label=gfx_dc0e
-N $DC0E Graphics, 4 frames
+B $DC0E,120,8 #HTML[<img src="images/gfx/gfx-dc0e.png">]
+N $DC0E Graphics, 4 frames.
 @ $DC86 label=gfx_dc86
-N $DC86 Graphics, 4 frames
+B $DC86,120,8 #HTML[<img src="images/gfx/gfx-dc86.png">]
+N $DC86 Graphics, 4 frames.
 @ $DCFE label=gfx_dcfe
-N $DCFE Graphics, 4 frames
+B $DCFE,120,8 #HTML[<img src="images/gfx/gfx-dcfe.png">]
+N $DCFE Graphics, 4 frames.
 @ $DD76 label=gfx_dd76
-N $DD76 Graphics, 4 frames
+B $DD76,120,8 #HTML[<img src="images/gfx/gfx-dd76.png">]
+N $DD76 Graphics, 4 frames.
 @ $DDEE label=gfx_ddee
-N $DDEE Graphics, 4 frames
+B $DDEE,120,8 #HTML[<img src="images/gfx/gfx-ddee.png">]
+N $DDEE Graphics, 4 frames.
 @ $DE66 label=gfx_de66
-N $DE66 Graphics, 2 frames
+B $DE66,80,8 #HTML[<img src="images/gfx/gfx-de66.png">]
+N $DE66 Graphics, 2 frames.
 @ $DEB6 label=gfx_deb6
-N $DEB6 Graphics, 2 frames
+B $DEB6,80,8 #HTML[<img src="images/gfx/gfx-deb6.png">]
+N $DEB6 Graphics, 2 frames.
 @ $DF06 label=gfx_df06
-N $DF06 Graphics, 2 frames
+B $DF06,80,8 #HTML[<img src="images/gfx/gfx-df06.png">]
+N $DF06 Graphics, 2 frames.
 @ $DF56 label=gfx_df56
-N $DF56 Graphics, 2 frames
+B $DF56,80,8 #HTML[<img src="images/gfx/gfx-df56.png">]
+N $DF56 Graphics, 2 frames.
 @ $DFA6 label=gfx_dfa6
-N $DFA6 Graphics, 2 frames
+B $DFA6,32,8 #HTML[<img src="images/gfx/gfx-dfa6.png">]
+N $DFA6 Graphics, 2 frames.
 @ $DFC6 label=gfx_dfc6
-N $DFC6 Graphics, 2 frames
+B $DFC6,32,8 #HTML[<img src="images/gfx/gfx-dfc6.png">]
+N $DFC6 Graphics, 2 frames.
 @ $DFE6 label=gfx_dfe6
-N $DFE6 Graphics, 2 frames
+B $DFE6,32,8 #HTML[<img src="images/gfx/gfx-dfe6.png">]
+N $DFE6 Graphics, 2 frames.
 @ $E006 label=gfx_e006
-N $E006 Graphics, 2 frames
+B $E006,32,8 #HTML[<img src="images/gfx/gfx-e006.png">]
+N $E006 Graphics, 2 frames.
 @ $E026 label=gfx_e026
-N $E026 Graphics, 2 frames
+B $E026,64,8 #HTML[<img src="images/gfx/gfx-e026.png">]
+N $E026 Graphics, 2 frames.
 @ $E066 label=gfx_e066
-N $E066 Graphics, 3 frames
+B $E066,96,8 #HTML[<img src="images/gfx/gfx-e066.png">]
+N $E066 Graphics, 3 frames.
 @ $E0C6 label=gfx_e0c6
-N $E0C6 Graphics, 3 frames
+B $E0C6,96,8 #HTML[<img src="images/gfx/gfx-e0c6.png">]
+N $E0C6 Graphics, 3 frames.
 @ $E126 label=gfx_e126
-N $E126 Graphics, 3 frames
+B $E126,96,8 #HTML[<img src="images/gfx/gfx-e126.png">]
+N $E126 Graphics, 3 frames.
 @ $E186 label=gfx_e186
-N $E186 Graphics, 2 frames
+B $E186,64,8 #HTML[<img src="images/gfx/gfx-e186.png">]
+N $E186 Graphics, 2 frames.
 @ $E1C6 label=gfx_e1c6
-N $E1C6 Graphics, 3 frames
+B $E1C6,96,8 #HTML[<img src="images/gfx/gfx-e1c6.png">]
+N $E1C6 Graphics, 3 frames.
 @ $E226 label=gfx_e226
-N $E226 Graphics, 3 frames
+B $E226,96,8 #HTML[<img src="images/gfx/gfx-e226.png">]
+N $E226 Graphics, 3 frames.
 @ $E286 label=gfx_e286
-N $E286 Graphics, 3 frames
+B $E286,96,8 #HTML[<img src="images/gfx/gfx-e286.png">]
+N $E286 Graphics, 3 frames.
 @ $E2E6 label=gfx_e2e6
-N $E2E6 Graphics, 2 frames
+B $E2E6,64,8 #HTML[<img src="images/gfx/gfx-e2e6.png">]
+N $E2E6 Graphics, 2 frames.
 @ $E326 label=gfx_e326
-N $E326 Graphics, 3 frames
+B $E326,96,8 #HTML[<img src="images/gfx/gfx-e326.png">]
+N $E326 Graphics, 3 frames.
 @ $E386 label=gfx_e386
-N $E386 Graphics, 3 frames
+B $E386,96,8 #HTML[<img src="images/gfx/gfx-e386.png">]
+N $E386 Graphics, 3 frames.
 @ $E3E6 label=gfx_e3e6
-N $E3E6 Graphics, 3 frames
+B $E3E6,96,8 #HTML[<img src="images/gfx/gfx-e3e6.png">]
+N $E3E6 Graphics, 3 frames.
 @ $E446 label=gfx_e446
-N $E446 Graphics, 2 frames
+B $E446,64,8 #HTML[<img src="images/gfx/gfx-e446.png">]
+N $E446 Graphics, 2 frames.
 @ $E486 label=gfx_e486
-N $E486 Graphics, 2 frames
+B $E486,64,8 #HTML[<img src="images/gfx/gfx-e486.png">]
+N $E486 Graphics, 2 frames.
 @ $E4C6 label=gfx_e4c6
-N $E4C6 Graphics, 2 frames
+B $E4C6,64,8 #HTML[<img src="images/gfx/gfx-e4c6.png">]
+N $E4C6 Graphics, 2 frames.
 @ $E506 label=gfx_e506
-N $E506 Graphics, 3 frames
+B $E506,96,8 #HTML[<img src="images/gfx/gfx-e506.png">]
+N $E506 Graphics, 3 frames.
 @ $E566 label=gfx_e566
-N $E566 Graphics, 2 frames
+B $E566,64,8 #HTML[<img src="images/gfx/gfx-e566.png">]
+N $E566 Graphics, 2 frames.
 @ $E5A6 label=gfx_e5a6
-N $E5A6 Graphics, 2 frames
+B $E5A6,64,8 #HTML[<img src="images/gfx/gfx-e5a6.png">]
+N $E5A6 Graphics, 2 frames.
 @ $E5E6 label=gfx_e5e6
-N $E5E6 Graphics, 3 frames
+B $E5E6,96,8 #HTML[<img src="images/gfx/gfx-e5e6.png">]
+N $E5E6 Graphics, 3 frames.
 @ $E646 label=gfx_e646
-N $E646 Graphics, 3 frames
+B $E646,96,8 #HTML[<img src="images/gfx/gfx-e646.png">]
+N $E646 Graphics, 3 frames.
 @ $E6A6 label=gfx_e6a6
-N $E6A6 Graphics, 2 frames
+B $E6A6,64,8 #HTML[<img src="images/gfx/gfx-e6a6.png">]
+N $E6A6 Graphics, 2 frames.
 @ $E6E6 label=gfx_e6e6
-N $E6E6 Graphics, 3 frames
+B $E6E6,96,8 #HTML[<img src="images/gfx/gfx-e6e6.png">]
+N $E6E6 Graphics, 3 frames.
 @ $E746 label=gfx_e746
-N $E746 Graphics, 3 frames
+B $E746,96,8 #HTML[<img src="images/gfx/gfx-e746.png">]
+N $E746 Graphics, 3 frames.
 @ $E7A6 label=gfx_e7a6
-N $E7A6 Graphics, 3 frames
+B $E7A6,96,8 #HTML[<img src="images/gfx/gfx-e7a6.png">]
+N $E7A6 Graphics, 3 frames.
 @ $E806 label=gfx_e806
-N $E806 Graphics, 2 frames
+B $E806,64,8 #HTML[<img src="images/gfx/gfx-e806.png">]
+N $E806 Graphics, 2 frames.
 @ $E846 label=gfx_e846
-N $E846 Graphics, 3 frames
+B $E846,96,8 #HTML[<img src="images/gfx/gfx-e846.png">]
+N $E846 Graphics, 3 frames.
 @ $E8A6 label=gfx_e8a6
-N $E8A6 Graphics, 3 frames
+B $E8A6,96,8 #HTML[<img src="images/gfx/gfx-e8a6.png">]
+N $E8A6 Graphics, 3 frames.
 @ $E906 label=gfx_e906
-N $E906 Graphics, 3 frames
+B $E906,96,8 #HTML[<img src="images/gfx/gfx-e906.png">]
+N $E906 Graphics, 3 frames.
 @ $E966 label=gfx_e966
-N $E966 Graphics, 2 frames
+B $E966,64,8 #HTML[<img src="images/gfx/gfx-e966.png">]
+N $E966 Graphics, 2 frames.
 @ $E9A6 label=gfx_e9a6
-N $E9A6 Graphics, 3 frames
+B $E9A6,96,8 #HTML[<img src="images/gfx/gfx-e9a6.png">]
+N $E9A6 Graphics, 3 frames.
 @ $EA06 label=gfx_ea06
-N $EA06 Graphics, 3 frames
+B $EA06,96,8 #HTML[<img src="images/gfx/gfx-ea06.png">]
+N $EA06 Graphics, 3 frames.
 @ $EA66 label=gfx_ea66
-N $EA66 Graphics, 3 frames
+B $EA66,96,8 #HTML[<img src="images/gfx/gfx-ea66.png">]
+N $EA66 Graphics, 3 frames.
 @ $EAC6 label=gfx_eac6
-N $EAC6 Graphics, 2 frames
+B $EAC6,64,8 #HTML[<img src="images/gfx/gfx-eac6.png">]
+N $EAC6 Graphics, 2 frames.
 @ $EB06 label=gfx_eb06
-N $EB06 Graphics, 3 frames
+B $EB06,96,8 #HTML[<img src="images/gfx/gfx-eb06.png">]
+N $EB06 Graphics, 3 frames.
 @ $EB66 label=gfx_eb66
-N $EB66 Graphics, 3 frames
+B $EB66,96,8 #HTML[<img src="images/gfx/gfx-eb66.png">]
+N $EB66 Graphics, 3 frames.
 @ $EBC6 label=gfx_ebc6
-N $EBC6 Graphics, 3 frames
+B $EBC6,96,8 #HTML[<img src="images/gfx/gfx-ebc6.png">]
+N $EBC6 Graphics, 3 frames.
 @ $EC26 label=gfx_ec26
-N $EC26 Graphics, 2 frames
+B $EC26,64,8 #HTML[<img src="images/gfx/gfx-ec26.png">]
+N $EC26 Graphics, 2 frames.
 @ $EC66 label=gfx_ec66
-N $EC66 Graphics, 3 frames
+B $EC66,96,8 #HTML[<img src="images/gfx/gfx-ec66.png">]
+N $EC66 Graphics, 3 frames.
 @ $ECC6 label=gfx_ecc6
-N $ECC6 Graphics, 3 frames
+B $ECC6,96,8 #HTML[<img src="images/gfx/gfx-ecc6.png">]
+N $ECC6 Graphics, 3 frames.
 @ $ED26 label=gfx_ed26
-N $ED26 Graphics, 3 frames
+B $ED26,96,8 #HTML[<img src="images/gfx/gfx-ed26.png">]
+N $ED26 Graphics, 3 frames.
 @ $ED86 label=gfx_ed86
-N $ED86 Graphics, 2 frames
+B $ED86,80,8 #HTML[<img src="images/gfx/gfx-ed86.png">]
+N $ED86 Graphics, 2 frames.
 @ $EDD6 label=gfx_edd6
-N $EDD6 Graphics, 2 frames
+B $EDD6,80,8 #HTML[<img src="images/gfx/gfx-edd6.png">]
+N $EDD6 Graphics, 2 frames.
 @ $EE26 label=gfx_ee26
-N $EE26 Graphics, 2 frames
+B $EE26,80,8 #HTML[<img src="images/gfx/gfx-ee26.png">]
+N $EE26 Graphics, 2 frames.
 @ $EE76 label=gfx_ee76
-N $EE76 Graphics, 2 frames
+B $EE76,80,8 #HTML[<img src="images/gfx/gfx-ee76.png">]
+N $EE76 Graphics, 2 frames.
 @ $EEC6 label=gfx_eec6
-N $EEC6 Graphics, 3 frames
+B $EEC6,120,8 #HTML[<img src="images/gfx/gfx-eec6.png">]
+N $EEC6 Graphics, 3 frames.
 b $EF3E
 b $F000
 @ $F000 label=work_buffers

@@ -22,13 +22,13 @@
 <tr>
 <td class="map-c"><span id="24999"></span><a href="../asm.html#24999">61A7</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#24999">CONFIRMED live: JP (HL) trampoline, used by <a href="../asm.html#38972">983C</a> to call a dynamic object's per-frame behaviour handler</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#24999">JP (HL) trampoline, used by <a href="../asm.html#38972">983C</a> to call a dynamic object's per-frame behaviour handler</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="25000"></span><a href="../asm.html#25000">61A8</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25000">Routine at 61A8</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25000">Initialize the object free list: chain B 24-byte records starting at DE (each record's first word points to the next)</a></div>
 </td>
 </tr>
 <tr>
@@ -46,19 +46,19 @@
 <tr>
 <td class="map-c"><span id="25172"></span><a href="../asm.html#25172">6254</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25172">Routine at 6254</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25172">Set object position (IX+5/+6) from grid index A (cell centre: row*8+4, col*8+4)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="25193"></span><a href="../asm.html#25193">6269</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25193">Routine at 6269</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25193">Set current room to A: locate its description record and build the room</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="25337"></span><a href="../asm.html#25337">62F9</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25337">Routine at 62F9</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25337">Test whether the current room is this level's Plug Room (via the per-level table at $7287); returns Z if so, with HL pointing at the entry's state byte</a></div>
 </td>
 </tr>
 <tr>
@@ -178,7 +178,7 @@
 <tr>
 <td class="map-c"><span id="26211"></span><a href="../asm.html#26211">6663</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26211">Routine at 6663</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26211">Spawn the room's creature (dynamic object)</a></div>
 </td>
 </tr>
 <tr>
@@ -400,7 +400,7 @@
 <tr>
 <td class="map-c"><span id="33064"></span><a href="../asm.html#33064">8128</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#33064">Routine at 8128</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#33064">Draw sprite C with its mask at screen position DE (mask sprite number from the table at <a href="../asm.html#27654">6C06</a>; A bit 7 = mirror flag)</a></div>
 </td>
 </tr>
 <tr>
@@ -448,7 +448,7 @@
 <tr>
 <td class="map-c"><span id="33934"></span><a href="../asm.html#33934">848E</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#33934">Routine at 848E</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#33934">Request sound effect A (queued at $61A2, gated by the $61A0/$61A1 flags)</a></div>
 </td>
 </tr>
 <tr>
@@ -484,31 +484,31 @@
 <tr>
 <td class="map-c"><span id="34083"></span><a href="../asm.html#34083">8523</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34083">Routine at 8523</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34083">Print a BCD number: B bytes from (HL), two digits per byte, leading zeros as spaces; DE = per-digit print routine (self-modifies <a href="../asm.html#34124">854C</a>'s JP)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="34124"></span><a href="../asm.html#34124">854C</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34124">Routine at 854C</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34124">Print one digit (JP target self-modified by <a href="../asm.html#34083">8523</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="34127"></span><a href="../asm.html#34127">854F</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34127">Routine at 854F</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34127">Print BCD byte A as two digits, high digit blanked to a space if zero</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="34209"></span><a href="../asm.html#34209">85A1</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34209">Routine at 85A1</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34209">Main menu screen: title, tune list A-D, controls menu; loops until a selection starts the game</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="34508"></span><a href="../asm.html#34508">86CC</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34508">Routine at 86CC</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#34508">Draw the end-game stats screen ("DEATHBOWL DIVINED")</a></div>
 </td>
 </tr>
 <tr>
@@ -556,13 +556,13 @@
 <tr>
 <td class="map-c"><span id="35043"></span><a href="../asm.html#35043">88E3</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#35043">Routine at 88E3</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#35043">Search the buffer at $7C83 for byte A (CPIR, length from $7C88)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="35176"></span><a href="../asm.html#35176">8968</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#35176">Routine at 8968</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#35176">PLAYER per-frame behaviour handler</a></div>
 </td>
 </tr>
 <tr>
@@ -604,7 +604,7 @@
 <tr>
 <td class="map-c"><span id="36113"></span><a href="../asm.html#36113">8D11</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36113">Routine at 8D11</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36113">Alternate PLAYER behaviour handler (swapped into $8DB9 by <a href="../asm.html#38244">9564</a>; see <a href="../asm.html#35176">8968</a> and <a href="../asm.html#36278">8DB6</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -616,7 +616,7 @@
 <tr>
 <td class="map-c"><span id="36415"></span><a href="../asm.html#36415">8E3F</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36415">Special grid-value spawn routine (value $68) -- CONFIRMED: rearing snake</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36415">Special grid-value spawn routine (value $68) -- rearing snake</a></div>
 </td>
 </tr>
 <tr>
@@ -628,31 +628,31 @@
 <tr>
 <td class="map-c"><span id="36519"></span><a href="../asm.html#36519">8EA7</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36519">Special grid-value spawn routine (values $66/$6A) -- spawns a dynamic object (a door/passage, most likely) instead of leaving a static grid entry</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36519">Special grid-value spawn routine (values $66/$6A) -- bubble source ($6A full-strength, $66 weak; see <a href="../asm.html#38402">9602</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="36594"></span><a href="../asm.html#36594">8EF2</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36594">Special grid-value spawn routine (value $67) -- CONFIRMED: plant/coral</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36594">Special grid-value spawn routine (value $67) -- plant/coral</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="36638"></span><a href="../asm.html#36638">8F1E</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36638">Special grid-value spawn routine (value $69) -- CONFIRMED: whirlpool</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36638">Special grid-value spawn routine (value $69) -- whirlpool</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="36684"></span><a href="../asm.html#36684">8F4C</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36684">Special grid-value spawn routine (value $6B) -- CONFIRMED: plug</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36684">Special grid-value spawn routine (value $6B) -- plug</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="36738"></span><a href="../asm.html#36738">8F82</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36738">Routine at 8F82</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#36738">Re-initialize the state blocks of the two fixed object records at $8DCF and $8DEF (22 bytes each from $5C92 to $8DD1/$8DF1 -- see <a href="../asm.html#36278">8DB6</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -694,7 +694,7 @@
 <tr>
 <td class="map-c"><span id="37438"></span><a href="../asm.html#37438">923E</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#37438">Routine at 923E</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#37438">Save continuation: set the object's handler (+3/+4) to the address just after the caller's CALL, then jump there (the object resumes at that point next frame)</a></div>
 </td>
 </tr>
 <tr>
@@ -706,7 +706,7 @@
 <tr>
 <td class="map-c"><span id="37697"></span><a href="../asm.html#37697">9341</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#37697">Routine at 9341</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#37697">CREATURE per-frame behaviour handler (installed by the creature spawn at <a href="../asm.html#26211">6663</a>; the creature type comes from the room's byte2 -- see <a href="../asm.html#27855">6CCF</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -718,13 +718,13 @@
 <tr>
 <td class="map-c"><span id="38001"></span><a href="../asm.html#38001">9471</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38001">Routine at 9471</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38001">Behaviour handler of the fixed object record at $8E0F (object identity not yet known)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38046"></span><a href="../asm.html#38046">949E</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38046">Routine at 949E</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38046">Behaviour handler of the fixed object record at $8E27 (object identity not yet known)</a></div>
 </td>
 </tr>
 <tr>
@@ -736,37 +736,37 @@
 <tr>
 <td class="map-c"><span id="38126"></span><a href="../asm.html#38126">94EE</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38126">Per-object behaviour handler for value-$67 objects -- CONFIRMED: plant/coral</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38126">Per-frame behaviour handler for value-$67 objects -- plant/coral</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38132"></span><a href="../asm.html#38132">94F4</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38132">Per-object behaviour handler - PLUG</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38132">Per-frame behaviour handler for value-$6B objects -- plug</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38189"></span><a href="../asm.html#38189">952D</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38189">Per-object behaviour handler for value-$69 objects -- CONFIRMED: whirlpool</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38189">Per-frame behaviour handler for value-$69 objects -- whirlpool</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38268"></span><a href="../asm.html#38268">957C</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38268">Per-object behaviour handler for value-$66/$6A objects -- CONFIRMED: source of bubbles</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38268">Per-frame behaviour handler for value-$66/$6A objects -- bubble source</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38402"></span><a href="../asm.html#38402">9602</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38402">Per-frame handler for the individual rising-bubble particle spawned by <a href="../asm.html#38268">957C</a></a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38402">Per-frame behaviour handler for the individual rising-bubble particle spawned by <a href="../asm.html#38268">957C</a></a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38532"></span><a href="../asm.html#38532">9684</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38532">Per-object behaviour handler for value-$68 objects -- CONFIRMED: rearing snake</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38532">Per-frame behaviour handler for value-$68 objects -- rearing snake</a></div>
 </td>
 </tr>
 <tr>
@@ -778,7 +778,7 @@
 <tr>
 <td class="map-c"><span id="38842"></span><a href="../asm.html#38842">97BA</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38842">Routine at 97BA</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38842">Draw an object's sprite: convert record position (+5/+6) to screen coordinates and draw sprite (+8) with its mask via <a href="../asm.html#33064">8128</a></a></div>
 </td>
 </tr>
 <tr>
@@ -790,19 +790,19 @@
 <tr>
 <td class="map-c"><span id="38920"></span><a href="../asm.html#38920">9808</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38920">Routine at 9808</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38920">Per-frame main loop entry: saves SP to $60E9 (restored by <a href="../asm.html#38908">97FC</a> on room change); restores the message-window title when the $618A timer expires</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="38972"></span><a href="../asm.html#38972">983C</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38972">Per-frame dynamic object dispatcher (walks the object pool, see <a href="../asm.html#43264">A900</a>)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#38972">Per-frame dynamic object dispatcher (walks the active object list from the head at <a href="../asm.html#24846">610E</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="39168"></span><a href="../asm.html#39168">9900</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39168">Routine at 9900</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39168">Draw all queued objects: walk the record-pointer list at $60EC (count at $60EB), drawing each via <a href="../asm.html#38842">97BA</a></a></div>
 </td>
 </tr>
 <tr>
@@ -844,13 +844,13 @@
 <tr>
 <td class="map-c"><span id="39520"></span><a href="../asm.html#39520">9A60</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39520">Dynamic object finalizer, called at the end of <a href="../asm.html#36519">8EA7</a>'s object setup</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39520">Dynamic object finalizer (called at the end of every spawn routine's object setup)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="39595"></span><a href="../asm.html#39595">9AAB</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39595">Routine at 9AAB</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39595">Search the (key,data) pair table at $74CE for key A; returns Z with HL pointing at the matched pair's data byte</a></div>
 </td>
 </tr>
 <tr>
@@ -868,7 +868,7 @@
 <tr>
 <td class="map-c"><span id="39770"></span><a href="../asm.html#39770">9B5A</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39770">Routine at 9B5A</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#39770">Collision/overlap scan: walk the active object list looking for another same-room object whose bounding box (+$10..+$13) overlaps IX's; DE = the object found</a></div>
 </td>
 </tr>
 <tr>

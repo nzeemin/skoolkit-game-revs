@@ -16,190 +16,82 @@ t $5E62
 b $5E68
 t $5E6F
 b $5E79
-b $6400 Sprites and masks
-N $6400 Sprite 32x32
+b $6400 Sparkle (kill effect) sprites and masks
+N $6400 Sparkle frame 1
 B $6400,128,8 #HTML[#UDGARRAY4,7,4,4,,($6400-$647F-1-32)(spr6400)]
-N $6480 Sprite 32x32
+N $6480 Sparkle frame 2
 B $6480,128,8 #HTML[#UDGARRAY4,7,4,4,,($6480-$64FF-1-32)(spr6480)]
-N $6500 Sprite 32x32
+N $6500 Sparkle frame 3
 B $6500,128,8 #HTML[#UDGARRAY4,7,4,4,,($6500-$657F-1-32)(spr6500)]
-N $6580 Sprite 32x32
+N $6580 Sparkle frame 4
 B $6580,128,8 #HTML[#UDGARRAY4,7,4,4,,($6580-$65FF-1-32)(spr6580)]
-N $6600 Mask 32x32
+N $6600 Sparkle mask 1
 B $6600,128,8 #HTML[#UDGARRAY4,7,4,4,,($6600-$667F-1-32)(msk6600)]
-N $6680 Mask 32x32
+N $6680 Sparkle mask 2
 B $6680,128,8 #HTML[#UDGARRAY4,7,4,4,,($6680-$66FF-1-32)(msk6680)]
-N $6700 Mask 32x32
+N $6700 Sparkle mask 3
 B $6700,128,8 #HTML[#UDGARRAY4,7,4,4,,($6700-$677F-1-32)(msk6700)]
-N $6780 Mask 32x32
+N $6780 Sparkle mask 4
 B $6780,128,8 #HTML[#UDGARRAY4,7,4,4,,($6780-$67FF-1-32)(msk6780)]
-N $6800 Sprite 32x32
+N $6800 Sparkle frame 5
 B $6800,128,8 #HTML[#UDGARRAY4,7,4,4,,($6800-$687F-1-32)(spr6800)]
-N $6880 Sprite 32x32
+N $6880 Sparkle frame 6
 B $6880,128,8 #HTML[#UDGARRAY4,7,4,4,,($6880-$68FF-1-32)(spr6880)]
-N $6900 Sprite 32x32
+N $6900 Sparkle frame 7
 B $6900,128,8 #HTML[#UDGARRAY4,7,4,4,,($6900-$697F-1-32)(spr6900)]
-N $6980 Sprite 32x32
+N $6980 Sparkle frame 8
 B $6980,128,8 #HTML[#UDGARRAY4,7,4,4,,($6980-$69FF-1-32)(spr6980)]
-N $6A00 Mask 32x32
+N $6A00 Sparkle mask 5
 B $6A00,128,8 #HTML[#UDGARRAY4,7,4,4,,($6A00-$6A7F-1-32)(msk6A00)]
-N $6A80 Mask 32x32
+N $6A80 Sparkle mask 6
 B $6A80,128,8 #HTML[#UDGARRAY4,7,4,4,,($6A80-$6AFF-1-32)(msk6A80)]
-N $6B00 Mask 32x32
+N $6B00 Sparkle mask 7
 B $6B00,128,8 #HTML[#UDGARRAY4,7,4,4,,($6B00-$6B7F-1-32)(msk6B00)]
-N $6B80 Mask 32x32
+N $6B80 Sparkle mask 8
 B $6B80,128,8 #HTML[#UDGARRAY4,7,4,4,,($6B80-$6BFF-1-32)(msk6B80)]
-t $6C01
-b $6C0F
-t $6C11
-b $6C27
-t $6C29
-b $6C37
-t $6C39
-b $6C3F
-t $6C59
-b $6C67
-t $6C69
-b $6C6F
-t $6C71
-b $6C7F
-t $6C99
-b $6C9F
-t $6CA1
-b $6CA7
-t $6CA9
-b $6CB7
-t $6CB9
-b $6CBF
-t $6CC4
-b $6CD5
-t $6CDE
-b $6CFF
-t $6D09
-b $6D17
-t $6D19
-b $6D1F
-t $6D21
-b $6D3F
-t $6D40
-b $6D47
-t $6D49
-b $6D67
-t $6D79
-b $6D8D
-t $6D99
-b $6D9F
-t $6DA1
-b $6DA7
-t $6DB4
-b $6DC0
-t $6DC4
-b $6DCE
-t $6DDA
-b $6DEC
-t $6E03
-b $6E0D
-t $6E1B
-b $6E2B
-t $6E39
-b $6E3F
-t $6E41
-b $6E47
-t $6E49
-b $6E4F
-t $6E51
-b $6E5F
-t $6E61
-b $6E67
-t $6E69
-b $6E6F
-t $6E71
-b $6E77
-t $6E79
-b $6E7F
-t $6E81
-b $6E8F
-t $6E91
-b $6E97
-t $6E99
-b $6EA7
-t $6EA9
-b $6EBF
-t $6EC0
-b $6ECF
-t $6ED1
-b $6EEF
-t $6EF1
-b $6EF7
-t $6EF9
-b $6F00
-t $6F01
-b $6F1F
-t $6F21
-b $6F2F
-t $6F31
-b $6F3F
-t $6F41
-b $6F4F
-t $6F51
-b $6F6F
-t $6F71
-b $6F77
-t $6F79
-b $6F7F
-t $6F80
-b $6F87
-t $6F89
-b $6F97
-t $6F99
-b $6FA7
-t $6FA9
-b $6FC0
-t $6FC1
-b $6FCF
-t $6FD4
-b $6FDD
-t $6FE1
-b $6FE7
-t $6FE9
-b $6FFF
-b $7000 Sprites and masks
-N $7000 Sprite 32x32
+b $6C00 Per-tile top-row selector table (128 x 8 bytes), used by $8CF0
+N $6C00 One 8-byte row per tile ($8202, 0-127), spanning exactly $6C00-$6FFF (128*8=1024 bytes, ending precisely at $7000 where the sprite/mask data begins). Same selector-byte format as the paged-bank table at $C000 (#R$8C00): bit0=variant, bits1-5=tile index (0-31), source addr=$E0+((byte>>1)&$1F):(bit0?$80:0), tiles at $E000-$FFFF. Read by #R$8CF0 to draw one extra background row directly onto the live screen (bypassing the shadow buffer, unlike #R$8C00's rows). Decode spot-checked against tile $7B's row ($6FD8-$6FDF): bytes $21/$20/$16 all decode to plausible $E000-$FFFF addresses.
+B $6C00,1024,8
+b $7000 Soldier sprites and masks
+N $7000 Soldier sprite 1
 B $7000,128,8 #HTML[#UDGARRAY4,7,4,4,,($7000-$707F-1-32)(spr7000)]
-N $7080 Sprite 32x32
+N $7080 Soldier sprite 2
 B $7080,128,8 #HTML[#UDGARRAY4,7,4,4,,($7080-$70FF-1-32)(spr7080)]
-N $7100 Sprite 32x32
+N $7100 Soldier sprite 3
 B $7100,128,8 #HTML[#UDGARRAY4,7,4,4,,($7100-$717F-1-32)(spr7100)]
-N $7180 Sprite 32x32
+N $7180 Soldier sprite 4
 B $7180,128,8 #HTML[#UDGARRAY4,7,4,4,,($7180-$71FF-1-32)(spr7180)]
-N $7200 Sprite 32x32
+N $7200 Soldier sprite 5
 B $7200,128,8 #HTML[#UDGARRAY4,7,4,4,,($7200-$727F-1-32)(spr7200)]
-N $7280 Sprite 32x32
+N $7280 Soldier sprite 6
 B $7280,128,8 #HTML[#UDGARRAY4,7,4,4,,($7280-$72FF-1-32)(spr7280)]
-N $7300 Sprite 32x32
+N $7300 Soldier sprite 7
 B $7300,128,8 #HTML[#UDGARRAY4,7,4,4,,($7300-$737F-1-32)(spr7300)]
-N $7380 Sprite 32x32
+N $7380 Soldier sprite 8
 B $7380,128,8 #HTML[#UDGARRAY4,7,4,4,,($7380-$73FF-1-32)(spr7380)]
-N $7400 Mask 32x32
+N $7400 Soldier mask 1
 B $7400,128,8 #HTML[#UDGARRAY4,7,4,4,,($7400-$747F-1-32)(msk7400)]
-N $7480 Mask 32x32
+N $7480 Soldier mask 2
 B $7480,128,8 #HTML[#UDGARRAY4,7,4,4,,($7480-$74FF-1-32)(msk7480)]
-N $7500 Mask 32x32
+N $7500 Soldier mask 3
 B $7500,128,8 #HTML[#UDGARRAY4,7,4,4,,($7500-$757F-1-32)(msk7500)]
-N $7580 Mask 32x32
+N $7580 Soldier mask 4
 B $7580,128,8 #HTML[#UDGARRAY4,7,4,4,,($7580-$75FF-1-32)(msk7580)]
-N $7600 Mask 32x32
+N $7600 Soldier mask 5
 B $7600,128,8 #HTML[#UDGARRAY4,7,4,4,,($7600-$767F-1-32)(msk7600)]
-N $7680 Mask 32x32
+N $7680 Soldier mask 6
 B $7680,128,8 #HTML[#UDGARRAY4,7,4,4,,($7680-$76FF-1-32)(msk7680)]
-N $7700 Mask 32x32
+N $7700 Soldier mask 7
 B $7700,128,8 #HTML[#UDGARRAY4,7,4,4,,($7700-$777F-1-32)(msk7700)]
-N $7780 Mask 32x32
+N $7780 Soldier mask 8
 B $7780,128,8 #HTML[#UDGARRAY4,7,4,4,,($7780-$77FF-1-32)(msk7780)]
 c $7800 Level-exit handler: clear screen, message, hand off to $8EB4
 N $7800 Reached only from #R$8D3C's edge-tile check - NOT a room-to-room flip. Clears the top two-thirds of the screen bitmap, draws a message, waits for a key, checks a 5-slot control-selection area at $7B05-$7B09, then falls into #R$78E7 (attribute fill + IX setup), redraws two more strings, waits for a key with timeout, and jumps to #R$8EB4 - which either returns to the main menu (#R$8B37, if $8210=5) or drops into the high-score display (#R$9580). Effectively an end-of-level/game-over screen, not a level continuation.
 C $7809,3 Wait for a key or timeout
 C $7809,3 Wait for a key or timeout
+C $781E,3 Control-options screen
+C $7821,3 Control-options screen
+C $7824,3 Control-options screen
 C $7853,3 Draw string IX
 C $7859,3 Draw string IX
 C $7862,3 Wait for a key or timeout
@@ -211,8 +103,12 @@ C $7877,5 Not mid-shot: bail unless $7B10 already set
 C $787C,11 Mark $7B10 active; check $820B direction
 C $7887,3 get Joe X
 C $7892,3 get Joe X
-c $789D Soldier hit/reaction animation, gated on $7B10
-N $789D Called from #R$8E64 (per-frame soldier update). If $7B10 is set (see #R$7869), updates the soldier's screen/sprite position ($8FA4/$8FA7 <-> $7B11/$7B12) - likely the "soldier reacts to being shot" animation step.
+c $789D Kill-sparkle animation, gated on $7B10
+N $789D Called from #R$8E64 (per-frame soldier update). While $7B10 is non-zero (set by #R$7869 on a hit): first hit ($7B10=1) snapshots the soldier's screen/mask address into $7B11/$7B12 as the sparkle anchor; each following frame picks a sparkle sprite frame (the $6400+ bank) from that anchor plus the $8206 counter, and $7B10 counts up to $1E (~30 frames) before resetting to 0.
+C $789D,5 Check $7B10; return if inactive
+C $78A2,7 First tick ($7B10=1)?
+C $78A9,12 Snapshot $8FA7/$8FA4 into $7B11/$7B12 (sparkle anchor)
+C $78D3,9 Advance $7B10; done at $1E?
 c $78E7
 b $78F6
 b $7900 Per-tile threshold table, indexed by $8202
@@ -225,7 +121,12 @@ C $7A2B,3 get input state
 C $7A37,3 get input state
 C $7A4E,3 get input state
 C $7A65,3 get input state
-c $7A78
+c $7A78 Control-options screen: draw selection-cursor highlight
+N $7A78 Part of the control-options screen ($7800/$7A28): clears an attribute row, then highlights the currently selected option using the cursor position from $7B09/$7B0A.
+C $7A78,6 Clear attribute row $5960
+C $7A82,12 HL = highlight position from cursor row $7B09
+C $7A8E,5 B = 3 rows, DE = row stride
+C $7A93,11 Fill 3 cells per row with attribute $44
 b $7AB6
 c $7AE5
 C $7AE8,3 Copy shadow screen to real screen
@@ -245,6 +146,7 @@ C $7B48,10 Swap Joe's sprite to the soldier costume
 C $7B54,3 disguise active
 C $7B57,3 Draw black box on the screen
 C $7B61,3 Draw string IX
+C $7B64,3 Pickup/beep sound effect
 C $7B6A,6 Reset disguise duration timer $7B06
 b $7B73
 c $7B84 Disguise duration timer: auto-expire and revert
@@ -253,13 +155,39 @@ C $7B84,5 Check disguise flag $7B08; return if not disguised
 C $7B89,10 Increment timer $7B06; not yet expired -> return
 C $7B94,14 Expired: clear $7B08, restore normal sprite
 b $7BA8
-c $7BC4
-c $7BE8
+c $7BC4 Draw a small 3x3-block icon (used by control-options screen)
+C $7BC4,3 Outer loop: 3 columns
+C $7BC7,5 Inner loop: 8 pixel rows
+C $7BCC,16 Copy 3 bytes/row (DE->HL)
+C $7BE3,5 HL += 6 (advance past icon)
+c $7BE8 Control-options screen: clear/redraw, pick a random default key preset
+N $7BE8 Clears the bitmap third at $4800, fills the top/bottom attribute strips, draws the instructions text, resets the cursor state ($7B00/$7B0B), then picks one of 8 5-byte presets from the table at $7A00 using the R register as a pseudo-random index, copying it into $7B01-$7B05 as the current key assignment.
+C $7BE8,12 Clear bitmap third at $4800
+C $7BF4,10 Fill 64 bytes at $5900 with attribute $45
+C $7BFE,7 Fill 192 bytes with attribute $41
+C $7C1D,7 E = R register & 7 (pseudo-random 0-7)
+C $7C24,8 HL = $7A00 + E*5 (random 5-byte preset)
+C $7C31,6 Copy 5 bytes into $7B01 (current key assignment)
+C $7C38,7 $7B09 = $0103 (init cursor position)
 C $7C0C,3 Draw string IX
-c $7C3F
-c $7C65
+c $7C3F Control-options screen: draw the 5 assigned-key icons
+N $7C3F For each of the 5 key slots ($7B01-$7B05), looks up a symbol in a 72-byte-stride table at $6250 by key code and draws it via #R$7BC4.
+C $7C3F,4 IX = $7B01 (key assignment slots); B = 5
+C $7C4A,10 HL = $6250 + key_code*72 (symbol lookup)
+C $7C5C,3 Draw a small 3x3-block icon
+c $7C65 Control-options screen: cursor blink timer + scanline effect
+N $7C65 Per-frame tick for the control-options screen. Increments the blink timer $7B0B, and every 48 frames (wrap at $30) advances the displayed key/symbol ($7B00/$7B0D wrap $09-$FF) and redraws via #R$7CA4. Then runs a 6-column left-rotate ("running line") effect over the block at $491F, independent of the blink timer.
+C $7C65,9 Increment blink timer $7B0B; wrap at 48 frames?
+C $7C6E,7 Advance displayed key index ($7B00)
+C $7C83,3 Control-options screen
+C $7C86,5 HL = $491F; B = 6 columns (scanline effect)
 s $7CA0
-c $7CA4
+c $7CA4 Control-options screen: draw the two symbol-preview columns
+N $7CA4 Draws two 7-byte columns onto the screen (at $48xx, column from $7B00) from two lookup tables at $A700+ (indexed by $7B0C) and a second at $48xx-1 (indexed by $7B0D) - the currently-selected key's symbol, split across two source tables.
+C $7CA4,14 DE = $A700 + $7B0C*8 (symbol source, column 1)
+C $7CB5,6 Draw 7-byte column 1
+C $7CBD,10 DE = $7B0D*8 (symbol source, column 2)
+C $7CC7,6 Draw 7-byte column 2
 c $7CD4
 c $7CDA
 c $7CE1
@@ -346,9 +274,10 @@ c $7FD2
 b $7FD8
 c $7FDC
 b $7FE2
-t $7FE3
 c $7FE6 Jump timer tick; clears $8209 on wrap
 N $7FE6 Increments the jump timer $820D; when it wraps at $30 (48), resets both $820D and $8209 to 0. Called from #R$7E32 and the jump-arc routines #R$7FD2/#R$7FDC.
+C $7FEA,3 set jump counter
+C $7FF6,3 set jump counter
 b $7FFD
 c $8032 Read input into $820A: Kempston, digit-key, or redefinable-key scheme
 N $8032 Writes a 5-bit direction/fire mask to #R$820A. If $820E==1, reads Kempston joystick (port $1F) and uses it directly if non-zero, skipping the keyboard entirely. Otherwise tries a fixed digit-key scheme (row $F7FE, keys 1-5) first; if that row is idle, falls back to the redefinable keyboard scheme matching the control-options text (#R$8400 signs): row $FDFE (A-G) = down, row $FBFE (Q-T) = up, row $7FFE (B/space) = fire, row $DFFE bits0-1 (O/P) = left/right.
@@ -364,6 +293,7 @@ C $808D,10 Read row $7FFE (B/space); non-zero -> result bit4 (fire)
 C $809A,3 set input state
 b $809E
 c $80A0 Draw Joe sprite
+C $80A9,3 get jump counter
 N $80CC HL = destination addr
 C $80CD,3 !!MUT-ARG!! Joe sprites base address
 C $80D0,5 $8209 bits0/1/7: use alt sprite bank $D0 (climbing costume)
@@ -395,7 +325,11 @@ C $817D,10 C = soldier X; pick sprite by $8212 sign, continue at #R$9028
 b $8193
 t $819D
 b $81A1
-c $81AA
+c $81AA Draw sprite 32x32 with mask (masked blit)
+N $81AA BC=sprite addr, DE=mask addr, HL=dest. Standard AND-mask/OR-pixels blit, 4 rows x 8 rows x 4 bytes = 32x32. Used by #R$8F8C (draw soldier) and #R$9118 (draw collectible icon).
+C $81AA,2 Outer loop: 4 column-groups
+C $81AE,2 Inner loop: 8 rows
+C $81B2,6 AND mask, OR pixels, write (one 8-pixel strip)
 c $81E6
 C $81ED,3 Wait for a key or timeout
 b $81F8
@@ -420,7 +354,10 @@ B $8225,1,1 ammo/bullet count (+=10 via #R$A328, consumed 1/shot via #R$A798); i
 W $8223,2,2 current Joe sprite mask address
 b $8228 Variables initial values, 40 bytes
 B $8228,40,8
-c $8250
+c $8250 Fill status-bar decoration from fixed data $82BE
+N $8250 Called from #R$828C. Copies the fixed (non-paged) tile data at $82BE into the bottom-screen HUD/border area starting $5000, in a 4x2x8 nested-loop pattern (8 columns x 2 rows x 4-byte strips). Same shared for every room - see the Draw pipeline section in docs/Room-Format.md.
+C $8250,8 HL = $5000, DE = $82BE (fixed source data)
+C $8264,6 Copy a 4-byte strip
 b $8280
 c $828C
 b $82B7
@@ -469,13 +406,22 @@ B $84EF,1,1
 b $84F0
 t $8502
 b $8509
-c $850E
+c $850E Rolling-digit counter increment (pending tick from $820F)
+N $850E Called every frame from #R$8F00. If $820F (a pending-increment countdown, scheduled by #R$855B) is non-zero, decrements it and increments the counter selected by $8210 (row of 16 bytes at $89xx: a 16-bit value plus its ASCII digit string), carrying '9'->'0' through the digits, then continues into #R$8982 for the redraw if $8210's counter is active.
+C $850E,9 Check pending tick $820F; return if none
+C $8517,11 HL = counter row at $89xx (selected by $8210)
+C $8522,8 Increment the 16-bit counter value
+C $852A,17 Roll the ASCII digit string ('9'->'0' carry)
 s $8544
 c $8546
 C $8558,3 => Draw string IX
 c $855B
 s $8567
-c $856E
+c $856E Pickup/beep sound effect (descending pitch sweep)
+N $856E Generic short beep played whenever a counter changes (called from the collectible-pickup routines, #R$9650, etc). Border-toggle (`OUT ($FE)`) sweep from $2E00 down to $24xx.
+C $856E,7 HL/DE = sweep start/rate
+C $8580,5 Toggle border, delay
+C $858D,7 HL reached $24xx? loop or return
 b $8594
 c $8596 Draw string IX and play sound
 C $8596,3 Draw string IX
@@ -491,10 +437,15 @@ b $8642
 t $865F
 b $8662
 c $8680 Wait for a key or timeout
+N $8680 Busy-waits for HL*BC ticks (both caller-supplied), flashing the border on two independent countdowns (BC = fast, DE = slow) as a "waiting" indicator. Does not itself poll the keyboard - callers check for a keypress separately and just use this for the timed pause/flash.
+C $8680,15 Save BC and BC+1 as two independent countdowns
+C $8690,5 Fast tick: flash border when BC reaches 0
+C $86AD,6 HL reached 0? loop or return (EI)
 s $86B3
 c $86C0
 C $86D2,3 Draw string IX
 C $86D8,3 Draw string IX
+C $86DB,3 Pickup/beep sound effect
 b $86E1
 c $86E4 Collect a hostage tile: mark, count, redraw
 N $86E4 Called by #R$926E when Joe touches a $9D24-table tile at the screen edge. Marks the tile visited ($FF), increments the hostage counter $8214, draws the updated digit, and rebuilds the room background (the collected tile disappears).
@@ -525,6 +476,8 @@ t $8952
 b $8959
 c $8964
 C $896E,3 get Joe X
+C $8975,3 get current room-tile index = room + 8*subtile
+C $8979,3 Pickup/beep sound effect
 b $897D
 c $8982
 b $89AE
@@ -670,6 +623,10 @@ c $8C5A Draw back sprite 32x32
 N $8C5A Stamps one 32x32 "back sprite" (a pre-made room-background block) into the shadow/real screen. DE = back sprite source addr, HL = destination addr.
 c $8C78 Copy shadow screen to real screen
 N $8C78 Pops the stack-built shadow buffer at $B800 and writes it into the real screen bitmap starting at $4800, restoring SP afterwards.
+C $8C7A,6 save SP to IX
+C $8C80,3 buffer start address
+C $8C83,3 screen address
+C $8CDA,2 restore SP from IX
 b $8CDF
 c $8CF0 Draw one more background row directly onto the real screen
 N $8CF0 Unlike #R$8C00, this draws straight to the live screen at $4080 instead of the shadow buffer, using a separate per-column selector table at $6C00 indexed by $8202 - purpose of the split (top HUD-adjacent strip?) unconfirmed.
@@ -729,6 +686,7 @@ s $8EE7
 c $8F00 Main game loop
 N $8F00 Reached from #R$7D00 via #R$8114/#R$FFAD/#R$7D96 when 'S' starts the game. One iteration per HALT: runs room/collision/energy/door subsystems, redraws Joe and the soldier, then polls the '0' key on row $EFFE - loop back to itself while not pressed, otherwise reset the stack and jump to #R$8EB4 (back to the menu/game-over flow).
 C $8F09,3 Uniform pickup
+C $8F0F,3 Rolling-digit counter increment
 C $8F12,3 Disguise duration timer
 C $8F15,3 Per-frame collectible scan
 C $8F1B,3 Read input into $820A
@@ -757,6 +715,9 @@ c $8F8C Draw soldier ??
 C $8F8C,3 !!MUT-ARG!! Soldier mask
 C $8F8F,3 !!MUT-ARG!! Soldier sprite
 C $8F92,3 !!MUT-ARG!! screen address
+C $8F95,3 Draw sprite 32x32 with mask
+C $8FA0,3 !!MUT-ARG!! Soldier mask
+C $8FA9,3 Draw sprite 32x32 with mask
 b $8FB1
 c $8FB4
 b $8FC1
@@ -795,6 +756,10 @@ N $9118 Called by #R$912C once a collectible tile has been matched (DE/other reg
 s $912B
 c $912C Detect collectible tile under Joe, draw its icon
 N $912C Scans the same 4 tile-ID tables used by #R$926E/#R$92A0/#R$9300/#R$9328 for a match against the current tile ($8202): $9D00 (15 entries, keys), $9D0F (6 entries, food), $9D18 (6 entries, bombs - also checked by #R$8D3C's level-exit test), $9D24 (6 entries, hostages). On a match, sets up the item's sprite/mask data and draws it via #R$9118. No match in any table -> falls through to #R$A2F6, which checks ammo ($9D20) and uniform ($9D2B - see #R$A328/#R$7B1E).
+C $9134,3 get current room-tile index = room + 8*subtile
+C $914C,3 get current room-tile index = room + 8*subtile
+C $9163,3 get current room-tile index = room + 8*subtile
+C $917F,3 get current room-tile index = room + 8*subtile
 s $9191
 c $9196 Draw string IX
 C $91B6,1 read character pixels
@@ -888,10 +853,12 @@ b $9500 Per-room event/object flags, indexed by $8202
 N $9500 One byte per room-tile ($8202, 0-127). Read by #R$9602 each frame; each bit conditionally draws a door/object graphic (see #R$9602 for the bit map).
 c $9580
 C $9582,3 set Joe X
+C $9585,3 set current room-tile index = room + 8*subtile
 C $9588,3 Read input into $820A
 C $958B,3 get input state
 C $959F,3 get input state
 C $95B1,3 get input state
+C $95D0,3 get current room-tile index = room + 8*subtile
 s $95E1
 c $95E6
 s $9601
@@ -910,15 +877,26 @@ s $964C
 c $9650
 C $968F,3 Draw black box on the screen
 C $9699,3 Draw string IX
+C $969C,3 Pickup/beep sound effect
+C $969F,3 Pickup/beep sound effect
+C $96A2,3 Pickup/beep sound effect
+C $96A5,3 Pickup/beep sound effect
+C $96A8,3 Pickup/beep sound effect
+C $96AB,3 Pickup/beep sound effect
+C $96AE,3 Pickup/beep sound effect
+C $96B1,3 Pickup/beep sound effect
+C $96B4,3 Pickup/beep sound effect
+C $96B7,3 Pickup/beep sound effect
+C $96BA,3 Pickup/beep sound effect
 b $96C0
 c $96CC Soldier presence/movement-pattern dispatch for the current tile
-N $96CC The even (low) byte of #R$9700's word pair for the current tile ($8202) is a soldier movement-pattern selector, not unused padding: 0 = no soldier (clears the soldier screen address $8F93 and returns), 1-6 select one of 6 movement routines (#R$900A/#R$9464/#R$8164/#R$7D64/#R$7D82/#R$7D8C). Confirmed 4/4 against known room layout: tiles $71/$7A (have a soldier) hold pattern 2/1; tiles $72/$7B (no soldier) hold pattern 0 - see docs/Room-Format.md.
+N $96CC The even (low) byte of #R$9700's word pair for the current tile ($8202) is a soldier movement-pattern selector, not unused padding: 0 = no soldier (clears the soldier screen address $8F93 and returns), 1-6 select one of 6 movement routines (#R$900A/#R$9464/#R$8164/#R$7D64/#R$7D82/#R$7D8C). Confirmed 4/4 against known room layout: tiles $71/$7A (have a soldier) hold pattern 2/1; tiles $72/$7B (no soldier) hold pattern 0 - see docs/Actors.md.
 C $96CC,10 IX = #R$9700 entry for current tile ($8202)
 C $96D6,3 A = movement-pattern byte (0 = no soldier)
 C $96F7,6 No/unknown pattern: clear soldier screen address $8F93
 b $96FE
 b $9700 Per-tile soldier movement pattern (low byte) + boundary value (high byte)
-N $9700 Word pairs indexed by $8202 (low byte at $9700+2*idx, high byte at +2*idx+1 - the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier movement-pattern selector (0 = no soldier, 1-6 = a movement routine) - see #R$96CC. Confirmed 4/4 against known room layout - see docs/Room-Format.md. Array proper is 128 words (256 bytes, index range 0-127); the trailing 128 bytes are unaccounted for.
+N $9700 Word pairs indexed by $8202 (low byte at $9700+2*idx, high byte at +2*idx+1 - the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier movement-pattern selector (0 = no soldier, 1-6 = a movement routine) - see #R$96CC and docs/Actors.md. Confirmed 4/4 against known room layout. Array proper is 128 words (256 bytes, index range 0-127); the trailing 128 bytes are unaccounted for.
 W $9700,256,2
 B $9800,128,8 Unidentified trailing bytes
 c $9880 Key-gated staircase: consume a key to climb, or block the UP input
@@ -1064,6 +1042,8 @@ N $A2BE First stage of the gunshot sound: OUT ($FE) sweep from $3200 down to $2E
 b $A2F1
 c $A2F6 Detect ammo or uniform tile under Joe, draw its icon
 N $A2F6 Same pattern as #R$912C but for two more collectibles: ammo (table $9D20, sprite/mask $A500/$A580) and uniform (table $9D2B, sprite/mask $A400/$A480). Pickup is handled separately by #R$A328 (ammo) and #R$7B1E (uniform).
+C $A2FE,3 get current room-tile index = room + 8*subtile
+C $A315,3 get current room-tile index = room + 8*subtile
 c $A328 Ammo pickup: check $9D20 tile at screen edge
 N $A328 Same edge-triggered pattern as #R$926E, for the ammo tile table $9D20. On match: marks the tile visited, rebuilds the background, shows a message (#R$A370, undeciphered) and a black-box popup, adds 10 to the ammo count $8225, then continues at #R$9296.
 C $A328,5 HL = $9D20 (ammo tile table); B = 2
@@ -1075,6 +1055,7 @@ C $A350,2 Mark tile visited ($FF)
 C $A352,3 Build room background into shadow buffer $B800
 C $A355,3 Draw black box on the screen
 C $A35F,3 Draw string IX
+C $A362,3 Pickup/beep sound effect
 C $A365,5 $8225 += 10 (ammo)
 b $A370
 t $A390
@@ -1136,6 +1117,7 @@ B $A748,8,8 '9'
 c $A750
 b $A775
 c $A77C
+C $A782,3 Rolling-digit counter increment
 c $A78A
 s $A797
 c $A798 Shoot: fire button consumes one round of ammo ($8225)
@@ -1145,6 +1127,7 @@ C $A79E,6 $8225 (ammo count): none left -> #R$A7DC
 C $A7A4,4 Consume one round
 C $A7A8,3 Play gunshot sound effect
 C $A7AB,3 Shot hit check
+C $A7B0,3 get current room-tile index = room + 8*subtile
 C $A7B9,5 Set $8226=1
 C $A7BF,3 get Joe's facing direction
 C $A7C5,3 get Joe X
@@ -1223,102 +1206,103 @@ b $B800 Shadow screen, 64 lines
 B $B800,32,32*64
 b $C000
 B $C7B0,16,8
-b $C800 Sprites and masks
-N $C800 Sprite 32x32
+b $C800 Inmate sprites and masks
+N $C800 Inmate sprite 1
 B $C800,128,8 #HTML[#UDGARRAY4,7,4,4,,($C800-$C87F-1-32)(sprC800)]
-N $C880 Sprite 32x32
+N $C880 Inmate sprite 2
 B $C880,128,8 #HTML[#UDGARRAY4,7,4,4,,($C880-$C8FF-1-32)(sprC880)]
-N $C900 Sprite 32x32
+N $C900 Inmate sprite 3
 B $C900,128,8 #HTML[#UDGARRAY4,7,4,4,,($C900-$C97F-1-32)(sprC900)]
-N $C980 Sprite 32x32
+N $C980 Inmate sprite 4
 B $C980,128,8 #HTML[#UDGARRAY4,7,4,4,,($C980-$C9FF-1-32)(sprC980)]
-N $CA00 Sprite 32x32
+N $CA00 Inmate sprite 5
 B $CA00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CA00-$CA7F-1-32)(sprCA00)]
-N $CA80 Sprite 32x32
+N $CA80 Inmate sprite 6
 B $CA80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CA80-$CAFF-1-32)(sprCA80)]
-N $CB00 Sprite 32x32
+N $CB00 Inmate sprite 7
 B $CB00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CB00-$CB7F-1-32)(sprCB00)]
-N $CB80 Sprite 32x32
+N $CB80 Inmate sprite 8
 B $CB80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CB80-$CBFF-1-32)(sprCB80)]
-N $CC00 Mask 32x32
+N $CC00 Inmate mask 1
 B $CC00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CC00-$CC7F-1-32)(mskCC00)]
-N $CC80 Mask 32x32
+N $CC80 Inmate mask 2
 B $CC80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CC80-$CCFF-1-32)(mskCC80)]
-N $CD00 Mask 32x32
+N $CD00 Inmate mask 3
 B $CD00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CD00-$CD7F-1-32)(mskCD00)]
-N $CD80 Mask 32x32
+N $CD80 Inmate mask 4
 B $CD80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CD80-$CDFF-1-32)(mskCD80)]
-N $CE00 Mask 32x32
+N $CE00 Inmate mask 5
 B $CE00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CE00-$CE7F-1-32)(mskCE00)]
-N $CE80 Mask 32x32
+N $CE80 Inmate mask 6
 B $CE80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CE80-$CEFF-1-32)(mskCE80)]
-N $CF00 Mask 32x32
+N $CF00 Inmate mask 7
 B $CF00,128,8 #HTML[#UDGARRAY4,7,4,4,,($CF00-$CF7F-1-32)(mskCF00)]
-N $CF80 Mask 32x32
+N $CF80 Inmate mask 8
 B $CF80,128,8 #HTML[#UDGARRAY4,7,4,4,,($CF80-$CFFF-1-32)(mskCF80)]
-N $D000 Sprite 32x32
+b $D000 Joe sprites and masks
+N $D000 Joe sprite 1
 B $D000,128,8 #HTML[#UDGARRAY4,7,4,4,,($D000-$D07F-1-32)(sprD000)]
-N $D080 Sprite 32x32
+N $D080 Joe sprite 2
 B $D080,128,8 #HTML[#UDGARRAY4,7,4,4,,($D080-$D0FF-1-32)(sprD080)]
-N $D100 Sprite 32x32
+N $D100 Joe sprite 3
 B $D100,128,8 #HTML[#UDGARRAY4,7,4,4,,($D100-$D17F-1-32)(sprD100)]
-N $D180 Sprite 32x32
+N $D180 Joe sprite 4
 B $D180,128,8 #HTML[#UDGARRAY4,7,4,4,,($D180-$D1FF-1-32)(sprD180)]
-N $D200 Sprite 32x32
+N $D200 Joe sprite 5
 B $D200,128,8 #HTML[#UDGARRAY4,7,4,4,,($D200-$D27F-1-32)(sprD200)]
-N $D280 Sprite 32x32
+N $D280 Joe sprite 6
 B $D280,128,8 #HTML[#UDGARRAY4,7,4,4,,($D280-$D2FF-1-32)(sprD280)]
-N $D300 Sprite 32x32
+N $D300 Joe sprite 7
 B $D300,128,8 #HTML[#UDGARRAY4,7,4,4,,($D300-$D37F-1-32)(sprD300)]
-N $D380 Sprite 32x32
+N $D380 Joe sprite 8
 B $D380,128,8 #HTML[#UDGARRAY4,7,4,4,,($D380-$D3FF-1-32)(sprD380)]
-N $D400 Mask 32x32
+N $D400 Joe mask 1
 B $D400,128,8 #HTML[#UDGARRAY4,7,4,4,,($D400-$D47F-1-32)(mskD400)]
-N $D480 Mask 32x32
+N $D480 Joe mask 2
 B $D480,128,8 #HTML[#UDGARRAY4,7,4,4,,($D480-$D4FF-1-32)(mskD480)]
-N $D500 Mask 32x32
+N $D500 Joe mask 3
 B $D500,128,8 #HTML[#UDGARRAY4,7,4,4,,($D500-$D57F-1-32)(mskD500)]
-N $D580 Mask 32x32
+N $D580 Joe mask 4
 B $D580,128,8 #HTML[#UDGARRAY4,7,4,4,,($D580-$D5FF-1-32)(mskD580)]
-N $D600 Mask 32x32
+N $D600 Joe mask 5
 B $D600,128,8 #HTML[#UDGARRAY4,7,4,4,,($D600-$D67F-1-32)(mskD600)]
-N $D680 Mask 32x32
+N $D680 Joe mask 6
 B $D680,128,8 #HTML[#UDGARRAY4,7,4,4,,($D680-$D6FF-1-32)(mskD680)]
-N $D700 Mask 32x32
+N $D700 Joe mask 7
 B $D700,128,8 #HTML[#UDGARRAY4,7,4,4,,($D700-$D77F-1-32)(mskD700)]
-N $D780 Mask 32x32
+N $D780 Joe mask 8
 B $D780,128,8 #HTML[#UDGARRAY4,7,4,4,,($D780-$D7FF-1-32)(mskD780)]
-N $D800 Sprite 32x32
+N $D800 Joe sprite 9
 B $D800,128,8 #HTML[#UDGARRAY4,7,4,4,,($D800-$D87F-1-32)(sprD800)]
-N $D880 Sprite 32x32
+N $D880 Joe sprite 10
 B $D880,128,8 #HTML[#UDGARRAY4,7,4,4,,($D880-$D8FF-1-32)(sprD880)]
-N $D900 Sprite 32x32
+N $D900 Joe sprite 11
 B $D900,128,8 #HTML[#UDGARRAY4,7,4,4,,($D900-$D97F-1-32)(sprD900)]
-N $D980 Sprite 32x32
+N $D980 Joe sprite 12
 B $D980,128,8 #HTML[#UDGARRAY4,7,4,4,,($D980-$D9FF-1-32)(sprD980)]
-N $DA00 Sprite 32x32
+N $DA00 Joe sprite 13
 B $DA00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DA00-$DA7F-1-32)(sprDA00)]
-N $DA80 Sprite 32x32
+N $DA80 Joe sprite 14
 B $DA80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DA80-$DAFF-1-32)(sprDA80)]
-N $DB00 Sprite 32x32
+N $DB00 Joe sprite 15
 B $DB00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DB00-$DB7F-1-32)(sprDB00)]
-N $DB80 Sprite 32x32
+N $DB80 Joe sprite 16
 B $DB80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DB80-$DBFF-1-32)(sprDB80)]
-N $DC00 Mask 32x32
+N $DC00 Joe mask 9
 B $DC00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DC00-$DC7F-1-32)(mskDC00)]
-N $DC80 Mask 32x32
+N $DC80 Joe mask 10
 B $DC80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DC80-$DCFF-1-32)(mskDC80)]
-N $DD00 Mask 32x32
+N $DD00 Joe mask 11
 B $DD00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DD00-$DD7F-1-32)(mskDD00)]
-N $DD80 Mask 32x32
+N $DD80 Joe mask 12
 B $DD80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DD80-$DDFF-1-32)(mskDD80)]
-N $DE00 Mask 32x32
+N $DE00 Joe mask 13
 B $DE00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DE00-$DE7F-1-32)(mskDE00)]
-N $DE80 Mask 32x32
+N $DE80 Joe mask 14
 B $DE80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DE80-$DEFF-1-32)(mskDE80)]
-N $DF00 Mask 32x32
+N $DF00 Joe mask 15
 B $DF00,128,8 #HTML[#UDGARRAY4,7,4,4,,($DF00-$DF7F-1-32)(mskDF00)]
-N $DF80 Mask 32x32
+N $DF80 Joe mask 16
 B $DF80,128,8 #HTML[#UDGARRAY4,7,4,4,,($DF80-$DFFF-1-32)(mskDF80)]
 b $E000 Background sprites
 N $E000 Back 32x32 wall

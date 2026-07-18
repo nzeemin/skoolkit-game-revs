@@ -75,7 +75,6 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 Status: Work in progress (66K .ctl file).
 
 Follow-up projects:
-[spectrum-scubadive-rev](https://github.com/nzeemin/spectrum-scubadive-rev) •
 [vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive)
 
 
@@ -91,7 +90,6 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/saboteur1-zx/saboteur/
 Status: Have pretty good progress (189K .ctl file).
 
 Follow-up projects:
-[spectrum-saboteur1-rev](https://github.com/nzeemin/spectrum-saboteur1-rev) •
 [uknc-saboteur1](https://github.com/nzeemin/uknc-saboteur1) •
 [bk0011m-saboteur1](https://github.com/nzeemin/bk0011m-saboteur1) •
 [vector06c-saboteur1](https://github.com/nzeemin/vector06c-saboteur1) •
@@ -116,11 +114,11 @@ Status: Work in progress (43K .ctl file).
 
 Original: for ZX Spectrum, 1987, Players.
 
-Volume: about 4500 code instructions.
+Volume: about 3200 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/joeblade-zx/joeblade/
 
-Status: just started (63K .ctl file).
+Status: just started (70K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)

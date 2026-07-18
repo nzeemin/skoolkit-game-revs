@@ -142,20 +142,46 @@ The Plug object's own per-frame handler (not just its spawn routine)
 This is the actual per-room win-condition trigger — the moment a Plug
 Room's plug visibly pops after the 4th item is delivered.
 
-## 6. Open questions
+## 7. Combat: attack, projectile, and score (resolved)
 
-- What sets bit 2 of `+0x0D` (the creature "just hit" flag) — the actual
-  weapon-attack code (`$8D8D`, reached from `$8AFB` when a weapon is
-  held) isn't traced.
+`$8D8D` (attack, reached from `$8AFB` when a weapon is held) calls
+`$9923`, which spawns a **projectile object** (handler `$9963`), sprite =
+the weapon's own sprite, position = the player's, facing = `$8DC1`. `$8D8D`
+then calls `$68C1` (consume one shot of ammo from `$619E`; auto-drops the
+weapon via the `$788A` sentinel once it hits 0), plays a firing animation,
+and restores the normal player handler.
+
+`$9963` is the actual hit detector, running asynchronously over the next
+few frames: it moves the projectile at **double speed** (two `$8ABE`
+steps per call), testing collision after each. On hitting another object,
+it **sets bit 2 of that object's `+0x0D`** — the "just hit" flag consumed
+by `$9341`/`$9401` — and writes its own (masked) sprite into that object's
+offset `+9`, so `$9401`'s reward lookup can identify which weapon scored
+the hit. On hitting plain terrain, it just stops. Either way it animates
+briefly then self-destructs.
+
+**Score** lives at `$611B`-`$611F` (5-digit BCD): `$8879` adds, `$8894`
+subtracts (resetting from a fixed `$5C92` block if the score can't cover
+the cost), `$888E` adds a bonus then redraws, and `$885A` redraws the
+score HUD (last 4 digits, via `$8523`).
+
+**Oil cans** (kind `$6E`, handled by `$6622` — not the same system as
+Gnomes or weapons): resets the rust/oil timer `$6501` to 0, decrements the
+oil-can count `$6198`, plays sound `$09`. Matches the game's own
+instructions ("rusting commences on contact with water ... reversed by an
+intake of oil").
+
+## 8. Open questions
+
 - The `$7C89` room/position/reward-sprite hit table's exact byte layout.
 - How a carried item's sprite gets linked to the Plug Room delivery
   detector's own sprite field (`+0x08` in `$9341`'s object) — the gap
   between "player is holding the right item" and "delivery detector
   notices."
-- What kind `$6E` represents (handled via `$6622`, distinct from both
-  Gnomes and weapons).
-- The weapon lookup table at `$7C83`'s format, and what `$6895`/`$888E`/
-  `$88D7` actually do.
+- Why `$9923` returning Carry sends `$8D8D` straight to `$8C35`
+  (hit-response text) before the asynchronous projectile (`$9963`) could
+  possibly have hit anything — meaning is unclear (spawn failure?).
+- The weapon lookup table at `$7C83`'s format.
 - The exact Y/X bit-packing used when dropping an item (§2.2).
 - Whether all 4 Plug Rooms need to be completed simultaneously/in-order,
   or independently — a live session found door access to a Plug Room

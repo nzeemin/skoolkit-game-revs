@@ -1424,6 +1424,8 @@ c $C072 Draw current room on the shadow screen
 C $C075,3 Set room types block base address
 C $C07B,3 World map address
 C $C07F,1 get room byte
+C $C096,3 Draw given room type on the shadow screen
+C $C0AA,3 Draw given room type on the shadow screen
 c $C0AF Draw given room type on the shadow screen
 C $C0AF,3 Calculate address for token sequence
 C $C0B2,1 get length
@@ -1447,6 +1449,7 @@ c $C4B6
 c $C4D2
 C $C4ED,3 Clear the shadow screen
 C $C4F0,3 Draw current room on the shadow screen
+C $C510,3 Clear E500 area
 c $C517
 c $C53B
 b $C547
@@ -1500,6 +1503,7 @@ C $CD6C,2 Delay for sound procedure
 C $CD7A,3 Sound
 C $CD7D,3 Clear screen pixels
 C $CD82,3 Clear screen attributes
+C $CD86,3 Clear E500 area
 C $CD95,3 Branched antlers, left part
 C $CD98,3 Print string
 C $CD9B,3 Branched antlers, right part
@@ -1520,6 +1524,7 @@ C $CE4E,3 Draw current room on the shadow screen
 C $CE5F,3 Draw Robin and others on the shadow screen
 C $CE62,3 Sound of evil laughter
 C $CE65,3 Sliding to the sides opens the game screen
+C $CE69,3 Clear E500 area
 c $CE6D
 c $CE81
 c $CF4A

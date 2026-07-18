@@ -923,7 +923,7 @@ c$6896 LD A,H        ;
  $6898 SRL H         ;
  $689A SLA L         ;
  $689C SLA L         ;
- $689E CALL $98D9    ;
+ $689E CALL $98D9    ; -> $98F5
  $68A1 POP AF        ;
  $68A2 RRCA          ;
  $68A3 RET NC        ;
@@ -980,7 +980,7 @@ c$68CA LD A,($FDBC)   ;
  $68ED XOR $0F        ;
  $68EF JR Z,$68F7     ;
  $68F1 LD B,A         ;
-*$68F2 CALL $98DC     ;
+*$68F2 CALL $98DC     ; -> $9904 - DOWN HL
  $68F5 DJNZ $68F2     ;
 *$68F7 POP AF         ;
  $68F8 PUSH AF        ;
@@ -1120,7 +1120,7 @@ c$69B4 LD A,$1F      ;
  $69C3 SUB E         ;
  $69C4 LD E,A        ;
  $69C5 LD H,C        ;
- $69C6 CALL $800C    ;
+ $69C6 CALL $800C    ; -> $8E92
  $69C9 EXX           ;
  $69CA PUSH DE       ;
  $69CB EXX           ;
@@ -1268,7 +1268,7 @@ c$6AE1 LD HL,$5805    ;
  $6B09 INC L          ;
  $6B0A DJNZ $6B06     ;
  $6B0C POP HL         ;
- $6B0D CALL $98DC     ;
+ $6B0D CALL $98DC     ; -> $9904 - DOWN HL
  $6B10 DEC C          ;
  $6B11 JR NZ,$6B03    ;
  $6B13 RET            ;
@@ -1312,7 +1312,7 @@ c$6B4C SLA C         ;
  $6B50 SLA C         ;
  $6B52 ADD HL,HL     ;
  $6B53 ADD HL,HL     ;
- $6B54 CALL $98D9    ;
+ $6B54 CALL $98D9    ; -> $98F5
  $6B57 LD D,B        ;
 *$6B58 PUSH HL       ;
  $6B59 LD B,D        ;
@@ -1320,7 +1320,7 @@ c$6B4C SLA C         ;
  $6B5C INC L         ;
  $6B5D DJNZ $6B5A    ;
  $6B5F POP HL        ;
- $6B60 CALL $98DC    ;
+ $6B60 CALL $98DC    ; -> $9904 - DOWN HL
  $6B63 DEC C         ;
  $6B64 JR NZ,$6B58   ;
  $6B66 RET           ;
@@ -1491,7 +1491,7 @@ c$6CAE CALL $70F8                           ; Find a place in Top Score table
  $6CB9 LD ($FDB9),A                         ;
  $6CBC XOR A                                ;
  $6CBD LD ($FDBA),A                         ;
- $6CC0 CALL $7274                           ;
+ $6CC0 CALL $7274                           ; Print Score Table
  $6CC3 CALL $6AE1                           ;
  $6CC6 CALL $7615                           ; Print immediate string
  $6CC9 DEFB $16,$0C,$01,$13,$01,$1F         ;
@@ -1528,13 +1528,13 @@ c$6CAE CALL $70F8                           ; Find a place in Top Score table
  $6D28 LD A,($70B6)                         ;
  $6D2B XOR $0F                              ;
  $6D2D LD ($70B6),A                         ;
-*$6D30 CALL $98D0                           ;
+*$6D30 CALL $98D0                           ; -> $9922
  $6D33 HALT                                 ;
  $6D34 POP BC                               ;
  $6D35 DJNZ $6D1F                           ;
  $6D37 XOR A                                ;
  $6D38 LD ($70B6),A                         ;
- $6D3B CALL $98D0                           ;
+ $6D3B CALL $98D0                           ; -> $9922
  $6D3E CALL $70EC                           ; Copy 64 bytes $66D1 to $6711
  $6D41 LD A,$14                             ;
  $6D43 LD ($FDB2),A                         ;
@@ -1550,8 +1550,8 @@ c$6CAE CALL $70F8                           ; Find a place in Top Score table
 *$6D5A CALL $7615                           ; Print immediate string
  $6D5D DEFB $16,$20,$01,$03,$0F,$20,$18,$03 ;
  $6D65 DEFB $1F                             ;
- $6D66 CALL $6FC7                           ;
- $6D69 CALL $6F46                           ;
+ $6D66 CALL $6FC7                           ; Prepare records at $6FD9
+ $6D69 CALL $6F46                           ; Prepare records at $6FE5
  $6D6C LD (IY+$38),$01                      ;
 *$6D70 HALT                                 ;
  $6D71 BIT 4,(IY+$05)                       ; Check bit 4 (Fire) of Last
@@ -1569,7 +1569,7 @@ c$6CAE CALL $70F8                           ; Find a place in Top Score table
  $6D90 CALL $6E11                           ;
 *$6D93 HALT                                 ;
  $6D94 LD IX,$70AF                          ;
- $6D98 CALL $98D0                           ;
+ $6D98 CALL $98D0                           ; -> $9922
  $6D9B CALL $70BD                           ;
  $6D9E LD A,($FD85)                         ; Get last joystick/keyboard bits
  $6DA1 AND $0C                              ;
@@ -1882,7 +1882,7 @@ c$6F79 LD A,$FF      ;
  $6FB3 SLA L         ;
  $6FB5 SLA L         ;
  $6FB7 LD H,(IX+$01) ;
- $6FBA CALL $98D9    ;
+ $6FBA CALL $98D9    ; -> $98F5
  $6FBD LD A,(HL)     ;
  $6FBE XOR $30       ;
  $6FC0 LD (HL),A     ;
@@ -2036,7 +2036,7 @@ c$70BD LD A,($70B3)  ;
  $70C3 LD A,($FDB2)  ;
  $70C6 ADD A,$02     ;
  $70C8 LD H,A        ;
- $70C9 CALL $98D9    ;
+ $70C9 CALL $98D9    ; -> $98F5
  $70CC LD B,$10      ;
  $70CE LD DE,$6711   ;
 *$70D1 LD C,L        ;
@@ -2060,7 +2060,7 @@ c$70BD LD A,($70B3)  ;
  $70E3 XOR (HL)      ;
  $70E4 LD (HL),A     ;
  $70E5 LD L,C        ;
- $70E6 CALL $98DC    ;
+ $70E6 CALL $98DC    ; -> $9904 - DOWN HL
  $70E9 DJNZ $70D1    ;
  $70EB RET           ;
 
@@ -2900,7 +2900,7 @@ c$7637 PUSH HL        ;
  $76C2 LD HL,($FDA5)  ;
  $76C5 ADD HL,HL      ;
  $76C6 SLA L          ;
- $76C8 CALL $98D9     ;
+ $76C8 CALL $98D9     ; -> $98F5
  $76CB PUSH HL        ;
  $76CC LD B,$07       ;
  $76CE LD A,($FDB0)   ;
@@ -2913,7 +2913,7 @@ c$7637 PUSH HL        ;
  $76DC INC DE         ;
  $76DD XOR (HL)       ;
  $76DE LD (HL),A      ;
- $76DF CALL $98DC     ;
+ $76DF CALL $98DC     ; -> $9904 - DOWN HL
  $76E2 DJNZ $76DB     ;
  $76E4 JR $771E       ;
 *$76E6 LD A,(DE)      ;
@@ -2937,7 +2937,7 @@ c$7637 PUSH HL        ;
  $7700 LD A,(HL)      ;
  $7701 XOR C          ;
  $7702 LD (HL),A      ;
- $7703 CALL $98DC     ;
+ $7703 CALL $98DC     ; -> $9904 - DOWN HL
  $7706 DJNZ $76E6     ;
  $7708 JR $771E       ;
 *$770A LD A,(DE)      ;
@@ -2945,13 +2945,13 @@ c$7637 PUSH HL        ;
  $770C LD (HL),A      ;
  $770D INC H          ;
  $770E LD (HL),A      ;
- $770F CALL $98DC     ;
+ $770F CALL $98DC     ; -> $9904 - DOWN HL
  $7712 DJNZ $770A     ;
  $7714 JR $771E       ;
 *$7716 LD A,(DE)      ;
  $7717 INC DE         ;
  $7718 LD (HL),A      ;
- $7719 CALL $98DC     ;
+ $7719 CALL $98DC     ; -> $9904 - DOWN HL
  $771C DJNZ $7716     ;
 *$771E LD HL,$FDAF    ;
  $7721 BIT 1,(HL)     ;
@@ -3175,7 +3175,7 @@ c$786E PUSH BC              ;
  $786F LD HL,$FDB0          ;
  $7872 LD B,(HL)            ;
  $7873 LD (HL),$00          ;
- $7875 CALL $7615           ;
+ $7875 CALL $7615           ; Print immediate string
  $7878 DEFB $08,$20,$08,$1F ;
  $787C LD (HL),B            ;
  $787D JR $78C8             ;
@@ -4509,13 +4509,13 @@ c$85AB LD HL,$FDC3   ;
  $85F6 LD H,A        ;
  $85F7 XOR A         ;
  $85F8 PUSH HL       ;
- $85F9 CALL $642A    ;
+ $85F9 CALL $642A    ; -> $6600
  $85FC POP HL        ;
  $85FD INC L         ;
  $85FE INC L         ;
  $85FF INC L         ;
  $8600 XOR A         ;
- $8601 CALL $642A    ;
+ $8601 CALL $642A    ; -> $6600
  $8604 POP HL        ;
 *$8605 LD E,(HL)     ;
  $8606 LD (HL),$FF   ;
@@ -4716,13 +4716,13 @@ c$86F5 LD A,D        ;
  $871D LD H,A        ;
  $871E LD A,$02      ;
  $8720 PUSH HL       ;
- $8721 CALL $642A    ;
+ $8721 CALL $642A    ; -> $6600
  $8724 POP HL        ;
  $8725 LD A,$02      ;
  $8727 INC L         ;
  $8728 INC L         ;
  $8729 INC L         ;
- $872A CALL $642A    ;
+ $872A CALL $642A    ; -> $6600
  $872D SCF           ;
  $872E RET           ;
 
@@ -10148,7 +10148,7 @@ c$DCAF LD A,($FDFB)   ;
  $DCB4 DEC (IY+$7D)   ;
  $DCB7 RET NZ         ;
  $DCB8 LD ($FDFD),A   ;
- $DCBB CALL $DF16     ;
+ $DCBB CALL $DF16     ; Get random byte??
  $DCBE LD B,$04       ;
  $DCC0 LD L,$FF       ;
  $DCC2 BIT 7,A        ;
@@ -10303,7 +10303,7 @@ c$DD8D LD A,(IX+$0C)   ;
  $DDEF CP $60          ;
  $DDF1 JR NC,$DE08     ;
  $DDF3 LD L,$3B        ;
- $DDF5 CALL $98D9      ;
+ $DDF5 CALL $98D9      ; -> $98F5
  $DDF8 LD BC,$05AA     ;
 *$DDFB LD (HL),C       ;
  $DDFC INC L           ;
@@ -10653,7 +10653,7 @@ c$E01B BIT 1,(IX+$0B)  ;
  $E05B JR Z,$E061      ;
  $E05D CP $0C          ;
  $E05F JR NZ,$E075     ;
-*$E061 CALL $E112      ;
+*$E061 CALL $E112      ; -> $E1AC
  $E064 ADD A,(IX+$13)  ;
  $E067 XOR $08         ;
  $E069 AND $0F         ;
@@ -10663,7 +10663,7 @@ c$E01B BIT 1,(IX+$0B)  ;
  $E070 INC B           ;
 *$E071 LD (IX+$13),B   ;
  $E074 RET             ;
-*$E075 CALL $E112      ;
+*$E075 CALL $E112      ; -> $E1AC
  $E078 ADD A,(IX+$0C)  ;
  $E07B ADD A,$04       ;
  $E07D AND $0F         ;
@@ -11111,16 +11111,16 @@ c$E2EA CALL $E1B5      ;
  $E41D LD C,$04        ;
  $E41F SRL (IY+$5D)    ;
  $E423 JR $E42C        ;
-*$E425 CALL $DC83      ;
+*$E425 CALL $DC83      ; -> $DF16 - Get random byte??
  $E428 AND $0E         ;
  $E42A JR NZ,$E438     ;
-*$E42C CALL $DC83      ;
+*$E42C CALL $DC83      ; -> $DF16 - Get random byte??
  $E42F LD C,$04        ;
  $E431 BIT 7,A         ;
  $E433 JR Z,$E448      ;
  $E435 INC C           ;
  $E436 JR $E448        ;
-*$E438 CALL $DC83      ;
+*$E438 CALL $DC83      ; -> $DF16 - Get random byte??
  $E43B AND $1E         ;
  $E43D LD L,A          ;
  $E43E LD H,$FF        ;
@@ -11174,7 +11174,7 @@ c$E2EA CALL $E1B5      ;
  $E489 LD A,H          ;
  $E48A ADD A,$06       ;
  $E48C LD H,A          ;
- $E48D CALL $DC92      ;
+ $E48D CALL $DC92      ; -> $DF33
  $E490 POP HL          ;
  $E491 POP BC          ;
  $E492 JR NC,$E4A7     ;
@@ -11727,7 +11727,7 @@ c$E86B LD A,$02        ;
 ; Routine at E881
 c$E881 CALL $EBE1      ;
  $E884 LD (IX+$0C),A   ;
- $E887 CALL $DC83      ;
+ $E887 CALL $DC83      ; -> $DF16 - Get random byte??
  $E88A RRA             ;
  $E88B JR C,$E86B      ;
  $E88D AND $0C         ;
@@ -11756,7 +11756,7 @@ c$E8A0 DEC (IX+$11)   ;
  $E8BC JR $E8D6       ;
 *$E8BE CALL $EBE1     ;
  $E8C1 LD (IX+$0C),A  ;
- $E8C4 CALL $DC83     ;
+ $E8C4 CALL $DC83     ; -> $DF16 - Get random byte??
  $E8C7 BIT 6,A        ;
  $E8C9 PUSH AF        ;
  $E8CA PUSH BC        ;
@@ -11771,7 +11771,7 @@ c$E8A0 DEC (IX+$11)   ;
  $E8D9 LD (IX+$13),A  ;
  $E8DC LD D,A         ;
  $E8DD LD BC,$0113    ;
- $E8E0 CALL $DC83     ;
+ $E8E0 CALL $DC83     ; -> $DF16 - Get random byte??
  $E8E3 AND $1F        ;
  $E8E5 ADD A,C        ;
  $E8E6 LD C,A         ;
@@ -11833,7 +11833,7 @@ c$E90A LD L,(IX+$04)   ;
  $E957 DEC (IX+$11)    ;
  $E95A JR NZ,$E96F     ;
  $E95C LD (IX+$11),$19 ;
- $E960 CALL $DC83      ;
+ $E960 CALL $DC83      ; -> $DF16 - Get random byte??
  $E963 AND $03         ;
  $E965 JR Z,$E96C      ;
  $E967 LD A,B          ;
@@ -11952,7 +11952,7 @@ c$EB13 LD B,$10      ;
  $EB1A JR C,$EB1E    ;
  $EB1C LD B,$09      ;
 *$EB1E LD (IX+$11),B ;
- $EB21 CALL $DC83    ;
+ $EB21 CALL $DC83    ; -> $DF16 - Get random byte??
  $EB24 AND $01       ;
  $EB26 JR Z,$EB5F    ;
  $EB28 CALL $EBE1    ;
@@ -11977,7 +11977,7 @@ c$EB13 LD B,$10      ;
  $EB50 CP $07        ;
  $EB52 JR C,$EB55    ;
  $EB54 DEC B         ;
-*$EB55 CALL $DC83    ;
+*$EB55 CALL $DC83    ; -> $DF16 - Get random byte??
  $EB58 AND B         ;
  $EB59 CALL Z,$EC1B  ;
  $EB5C JP $E992      ;
@@ -12010,7 +12010,7 @@ c$EB7B INC (IX+$0D)    ;
 ; Routine at EB96
 c$EB96 BIT 7,(IX+$0B)  ;
  $EB9A JR NZ,$EBB4     ;
- $EB9C CALL $DC83      ;
+ $EB9C CALL $DC83      ; -> $DF16 - Get random byte??
  $EB9F AND $0F         ;
  $EBA1 LD D,A          ;
  $EBA2 ADD A,$19       ;
@@ -12024,7 +12024,7 @@ c$EB96 BIT 7,(IX+$0B)  ;
  $EBB7 LD (IX+$0C),B   ;
  $EBBA BIT 7,(IX+$0B)  ;
  $EBBE JR NZ,$EBC9     ;
- $EBC0 CALL $DC83      ;
+ $EBC0 CALL $DC83      ; -> $DF16 - Get random byte??
  $EBC3 RRA             ;
  $EBC4 JR C,$EBDB      ;
  $EBC6 JP Z,$E992      ;
@@ -12188,7 +12188,7 @@ c$ECC1 LD A,($5BE6)   ;
  $ED22 LD A,($5BE6)   ;
  $ED25 LD B,A         ;
  $ED26 CALL $ED31     ;
- $ED29 CALL $F20C     ;
+ $ED29 CALL $F20C     ; -> $F24A
  $ED2C LD A,$06       ;
  $ED2E JP $642D       ; -> $6456
 
@@ -12344,7 +12344,7 @@ c$EDD6 LD C,(HL)       ;
  $EDE9 JR $EE0E        ;
 *$EDEB DEC (HL)        ;
  $EDEC JR NZ,$EE0E     ;
- $EDEE CALL $DC83      ;
+ $EDEE CALL $DC83      ; -> $DF16 - Get random byte??
  $EDF1 AND $0F         ;
  $EDF3 ADD A,$14       ;
  $EDF5 LD (HL),A       ;
@@ -12544,7 +12544,7 @@ c$EFDD INC L         ;
 *$EFEF DEC (HL)      ;
  $EFF0 JP NZ,$ED5C   ;
  $EFF3 LD (HL),$0C   ;
- $EFF5 CALL $DC83    ;
+ $EFF5 CALL $DC83    ; -> $DF16 - Get random byte??
  $EFF8 AND $07       ;
  $EFFA ADD A,B       ;
  $EFFB SUB $30       ;
@@ -12592,7 +12592,7 @@ c$EFDD INC L         ;
  $F040 PUSH AF       ;
  $F041 CALL $E44D    ;
  $F044 POP DE        ;
- $F045 CALL $DC83    ;
+ $F045 CALL $DC83    ; -> $DF16 - Get random byte??
  $F048 AND $07       ;
  $F04A ADD A,D       ;
  $F04B LD (IX+$11),A ;
@@ -13011,7 +13011,7 @@ c$F26E LD IX,$F82D     ;
  $F30E PUSH DE         ;
  $F30F LD BC,$1302     ;
  $F312 PUSH IX         ;
- $F314 CALL $E10F      ;
+ $F314 CALL $E10F      ; -> $E44D
  $F317 JR Z,$F321      ;
  $F319 LD (IX+$11),$12 ;
  $F31D SET 6,(IX+$0B)  ;
@@ -13023,7 +13023,7 @@ c$F26E LD IX,$F82D     ;
  $F32E POP DE          ;
 *$F32F EX DE,HL        ;
  $F330 INC L           ;
- $F331 CALL $DC86      ;
+ $F331 CALL $DC86      ; -> $DF37
  $F334 DEC L           ;
  $F335 JR C,$F344      ;
  $F337 CALL $F5C6      ;
@@ -13229,7 +13229,7 @@ c$F381 LD IX,$F73C    ;
  $F4C3 LD A,($F8D4)   ;
  $F4C6 LD H,A         ;
  $F4C7 LD A,($F8D5)   ;
- $F4CA CALL $642A     ;
+ $F4CA CALL $642A     ; -> $6600
  $F4CD LD A,$04       ;
  $F4CF CALL $642D     ; -> $6456
  $F4D2 JR $F4D7       ;
@@ -13344,7 +13344,7 @@ c$F582 CALL $F5CD    ;
  $F586 EX DE,HL      ;
  $F587 LD A,L        ;
  $F588 PUSH AF       ;
- $F589 CALL $98D9    ;
+ $F589 CALL $98D9    ; -> $98F5
  $F58C POP AF        ;
  $F58D AND $03       ;
  $F58F LD B,A        ;
@@ -13370,7 +13370,7 @@ c$F5A0 CALL $F5CD    ;
  $F5A4 EX DE,HL      ;
  $F5A5 LD A,L        ;
  $F5A6 PUSH AF       ;
- $F5A7 CALL $98D9    ;
+ $F5A7 CALL $98D9    ; -> $98F5
  $F5AA POP AF        ;
  $F5AB AND $03       ;
  $F5AD LD B,A        ;
@@ -13478,7 +13478,7 @@ c$F5DD EX DE,HL        ;
  $F645 LD A,($F8D0)    ;
  $F648 SUB $04         ;
  $F64A LD ($F8D4),A    ;
- $F64D CALL $98D0      ;
+ $F64D CALL $98D0      ; -> $9922
  $F650 POP AF          ;
  $F651 INC A           ;
  $F652 LD B,A          ;
@@ -13496,7 +13496,7 @@ c$F5DD EX DE,HL        ;
  $F666 LD A,($F8D0)    ;
  $F669 ADD A,$04       ;
  $F66B LD ($F8D4),A    ;
- $F66E CALL $98D0      ;
+ $F66E CALL $98D0      ; -> $9922
  $F671 POP AF          ;
  $F672 INC A           ;
  $F673 LD B,A          ;
@@ -13508,7 +13508,7 @@ c$F5DD EX DE,HL        ;
  $F67D LD A,$05        ;
  $F67F JR $F661        ;
 *$F681 LD (IX+$05),C   ;
- $F684 CALL $98D0      ;
+ $F684 CALL $98D0      ; -> $9922
  $F687 POP IX          ;
  $F689 RET             ;
 

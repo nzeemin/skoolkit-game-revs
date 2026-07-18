@@ -1,7 +1,3 @@
-b $4000 Screen
-D $4000 #UDGTABLE { #SCR(menuscr) } TABLE#
-B $4000,6144,32 Pixels
-B $5800,768,32 Attributes
 @ $5B00 start
 @ $5B00 org
 t $5CEB

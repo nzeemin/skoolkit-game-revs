@@ -6,6 +6,7 @@ W $610A,2
 W $610C,2
 W $610E,2 Active object list HEAD pointer: points at the most recently spawned object record; each record's +0/+1 links to the next, ending in the fixed records #R$8DB6 (player) -> $8DCF -> $8DEF -> $0000. Passed as IX into #R$84AE, which head-inserts the new object here. Other insertion points exist (e.g. $8DEF for creatures -- see #R$6663), placing objects later in the list.
 W $6110,2 Currently-held item: pointer to its 4-byte item-table record (room,Y,X,sprite). Equals the fixed "empty hands" sentinel record at $788A when nothing is held. Set by #R$8AFB on pickup; the pointed-to record's room byte is zeroed on pickup and restored (to the current room, at the player's position) on drop.
+B $611B,5 SCORE (5-digit BCD, most-significant byte first). Added to by #R$8879, subtracted by #R$8894, displayed (last 4 digits) by #R$885A via #R$8523.
 B $6122,1 "Gnomes Gnabbed" end-game stat counter (BCD), printed by #R$86CC via #R$854F
 B $6123,1 "Goodies Gathered" end-game stat counter (BCD), printed by #R$86CC via #R$854F; incremented by #R$9341 on each successful item delivery to a Plug Room corner cube
 B $6124,1 "Plugs Pulled" end-game stat counter (BCD), printed by #R$86CC via #R$854F
@@ -41,12 +42,12 @@ B $6190 Current sprite: width, in 8px columns, bit 7 = flip-flop flag (copied fr
 B $6193,1
 W $6194,2
 W $6196,2
-B $6198,1
-B $6199,1
+B $6198,1 Oil cans remaining (BCD), decremented by #R$6622 on pickup/use
+B $6199,1 Flag, set to 1 by #R$6622 (oil can used) -- purpose of the flag itself not confirmed
 B $619A,1 Room number copy
 W $619B,2
 B $619D,1
-B $619E,1 Weapon-held flag, tested by #R$8AFB on fire/pick-up to decide attack vs. pick-up/drop
+B $619E,1 Weapon ammo count (BCD-ish, decremented by #R$68C1 per shot), also acts as the weapon-held flag: tested by #R$8AFB on fire/pick-up to decide attack vs. pick-up/drop; hitting 0 auto-drops the weapon
 B $619F,1
 B $61A0,1
 B $61A1,1
@@ -102,7 +103,7 @@ C $64DC,3 Draw sprite C with its mask at screen position DE
 c $64F3
 b $64FF
 B $6500 Oil level??
-B $6501 Oil level??
+B $6501 Rust/oil timer -- reset to 0 (full oil) by #R$6622 on using an oil can; per the game instructions, rust accumulates on contact with water and is reversed by oil
 B $6502 Oil level??
 c $6503 Routine ?? Oil
 C $6507,1 POKE 201 (RET) here for infinite Oil
@@ -127,7 +128,8 @@ C $65F6,3 "  DEATHBOWL  "
 C $65FD,3 Print string: room/creature title, indexed by room type (#R$73B5 table)
 C $6603,3 Print string: position cursor for message window line 2 (row $B4)
 C $6614,3 Print string: current clue/joke message, rotating through the #R$7441 table
-c $6622
+c $6622 Use an oil can (kind $6E pickup, see #R$8AFB): resets rust timer, decrements oil-can count, plays sound
+N $6622 Sets $6199=1, resets the rust/oil timer $6501 to 0 (full), decrements oil-can count $6198 (BCD), calls $6646 (unidentified), plays sound effect $09.
 c $663B
 C $6643,3 Draw sprite C with its mask at screen position DE
 C $6646,3 print inline string, then resume after it
@@ -168,6 +170,8 @@ C $67C5,3 Draw message window
 C $67CE,3 Prepare room with color 0
 C $67D1,3 Get room color from room description and store to 6175
 C $67D4,3 Re-initialize the state blocks of the two fixed object records at $8DCF and $8DEF
+C $67D7,3 HUD
+C $67DA,3 HUD
 N $67E0 Special-room path for rooms $01/$02: skips walls/doors/message-window/most creature calls; room $01 additionally calls #R$86CC (likely the end-game stats overlay)
 C $67E3,3 get Room number
 C $67E8,3 Draw the end-game stats screen
@@ -185,14 +189,16 @@ C $685E,2 change room number: +6 (row+1, move SOUTH)
 C $6876,3 get room number
 C $6879,1 change room number: -1 (col-1, move WEST)
 c $6880
-c $6895
+c $6895 HUD: draw the currently-held item's icon, and its ammo count if it's a weapon
+N $6895 Draws the sprite from the held-item record (#R$6110, offset +3) at fixed HUD position $D4F8 via #R$8128, then checks (via #R$88E3) whether it's a weapon; if so also prints its ammo count (#R$619E, BCD) via #R$854F.
 C $68A4,3 Draw sprite C with its mask at screen position DE
 C $68A8,3 Search the buffer at $7C83 for byte A
 C $68B1,3 print inline string, then resume after it
 T $68B4,4 cursor position only, no visible text
 C $68B8,3 get Weapon-held flag
 C $68BB,3 Print BCD byte A as two digits, high digit blanked to a space if zero
-c $68C1
+c $68C1 Consume one shot of ammo; auto-drop the weapon when empty
+N $68C1 Decrements #R$619E (ammo, BCD); if still nonzero, just redraws the HUD ammo count. If it reached 0: clears the HUD digits, resets #R$6110 (held item) to the "empty hands" sentinel #R$788A, and redraws the HUD icon via #R$6895.
 C $68CC,3 print inline string, then resume after it
 T $68CF,6 two spaces at cursor position
 b $68DE
@@ -867,14 +873,15 @@ T $8800,25 line 1
 T $8819,24 line 2
 T $8831,20 line 3
 T $8845,20 line 4
-c $885A
+c $885A HUD: redraw the score display (last 4 BCD digits of #R$611B via #R$8523)
 C $885C,3 Print engine entry point
 C $8861,3 Print engine entry point
 C $8866,3 Print engine entry point
 s $8874
-c $8879
-c $888E
-c $8894
+c $8879 Add a 5-digit BCD value at #R$8874 to the score (#R$611B)
+c $888E Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
+c $8894 Subtract a 5-digit BCD value at #R$8874 from the score (#R$611B); if the score can't cover it, resets $611B-$611F from a fixed 5-byte block at $5C92 instead
+N $8894 Whether the $5C92 fallback is a genuine "reset score" or coincidentally reuses the same default-state bytes seen elsewhere (see #R$A900) is unconfirmed.
 c $88B9
 c $88D7
 c $88DD
@@ -933,15 +940,19 @@ C $8B01,3 get Weapon-held flag
 C $8B0C,3 Save continuation
 C $8B25,3 set player behaviour-handler pointer
 C $8B3F,3 Dynamic object finalizer
+C $8B7F,3 Use an oil can
+C $8B8B,3 Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
 C $8B8E,3 get "Gnomes Gnabbed" end-game stat counter
 C $8B94,3 set "Gnomes Gnabbed" end-game stat counter
 C $8B9A,3 Search the buffer at $7C83 for byte A
 C $8BAA,3 set Weapon-held flag
+C $8BB1,3 HUD
 C $8BB6,3 Request sound effect A
 C $8BC7,3 get room number
 C $8BE9,3 Spawn the room's creature
 C $8BEC,3 Collision test
 C $8BF1,3 get room number
+C $8C02,3 HUD
 C $8C07,3 Request sound effect A
 c $8C35
 b $8C48
@@ -956,7 +967,10 @@ C $8D43,3 Save continuation
 C $8D75,3 Save continuation
 C $8D7B,3 Sprite-animation stepper
 C $8D87,3 set player behaviour-handler pointer
-c $8D8D
+c $8D8D Attack: fire the held weapon (reached from #R$8AFB when a weapon is held)
+N $8D8D Calls #R$9923 (spawns the weapon projectile); if it returns Carry (meaning not fully confirmed -- possibly "could not spawn"), jumps to #R$8C35 (hit-response/reward text) directly. Otherwise calls #R$68C1 (consume ammo, auto-drop if empty), plays a firing animation via the $8956 table, then restores the normal player handler #R$8968. The actual hit detection happens later, asynchronously, in the projectile's own per-frame handler (#R$9963).
+C $8D92,3 Spawn the weapon projectile object (thrown from the player's position, facing $8DC1), handler #R$9963
+C $8D9A,3 Consume one shot of ammo
 C $8DA1,3 Save continuation
 C $8DB2,3 set player behaviour-handler pointer
 b $8DB6 PLAYER object record + 2 more fixed object records
@@ -1062,6 +1076,7 @@ C $9397,3 Request sound effect A
 C $939A,3 Save continuation
 C $93A0,3 Sprite-animation stepper
 C $93C1,3 Save continuation
+C $93C8,3 Creature hit/defeat sequence, called from #R$9341 when the "just hit" flag (bit 2 of +0x0D) is set
 C $93DC,3 Collision test
 c $9401 Creature hit/defeat sequence, called from #R$9341 when the "just hit" flag (bit 2 of +0x0D) is set
 N $9401 CONFIRMED structure (trigger not yet traced): clears the hit flag, then only proceeds if the creature's current sprite (+0x08) is $44 (a shared "vulnerable" pose -- creatures presumably must be in this pose to register a hit). Searches a (room, position, reward-sprite) triple table at $7C89 (count from $7C97) for an entry matching the current room and this object's position field (+0x09); on a match, swaps the reward sprite into +0x09 and into offset +3 of a linked record (via +0x0E/+0x0F), plays sound effect $01 (the same "success" sound as item delivery), steps through the #R$919A animation table to transform the sprite, then finalizes (+0x08 = reward sprite, #R$9AAB kind lookup into +0x0A, #R$9A60) and resumes normal behaviour at #R$93C1. Likely how a creature is "defeated" and turns into a collectible (a Gnome?).
@@ -1138,13 +1153,15 @@ C $987E,3 get room number
 c $9900 Draw all queued objects: walk the record-pointer list at $60EC (count at $60EB), drawing each via #R$97BA
 C $9912,3 Draw an object's sprite
 b $991A
-c $9923
+c $9923 Spawn the weapon projectile object (thrown from the player's position, facing $8DC1), handler #R$9963
+N $9923 Plays sound effect $08, allocates an object at the active list head, sets its sprite to the weapon's own sprite (A), position from the player, kind $0D, and facing from $8DC1, then calls #R$9A60 to finalize.
 C $9926,3 Request sound effect A
 C $992D,3 Dynamic object allocator
 W $9930,2 Dynamic object handler address
 C $9955,3 Dynamic object finalizer
 b $995E
-c $9963
+c $9963 Weapon projectile per-frame handler: move (double step) and detect a hit on collision
+N $9963 Applies the facing delta twice via #R$8ABE (see #R$8ABB), testing collision (#R$9BF0) after each step -- a fast-moving shot. On collision with terrain (no target object, DE unset): just stops. On collision with another object (DE = that object's record): SETS bit 2 of its (+0x0D) -- the "just hit" flag consumed by #R$9341/#R$9401 -- and writes the projectile's own sprite (masked to 7 bits) into that object's offset +9, presumably so #R$9401's reward lookup can identify which weapon scored the hit. Animates briefly via the #R$995E table, then self-destructs.
 C $9967,3 Collision test
 C $996D,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
 C $9971,3 Collision test

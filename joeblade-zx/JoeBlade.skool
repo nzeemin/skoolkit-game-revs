@@ -1154,13 +1154,23 @@ b$7000 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($7000-$7
  $77F0 DEFB $FC,$00,$3E,$01,$FC,$00,$7F,$03 ;
  $77F8 DEFB $FE,$0F,$FF,$87,$FF,$1F,$FF,$FF ; }
 
-; Routine at 7800
+; Level-exit handler: clear screen, message, hand off to $8EB4
 ;
 ; Used by the routine at #R$8D3C.
+;
+; .
+;
+; Reached only from #R$8D3C's edge-tile check - NOT a room-to-room flip. Clears
+; the top two-thirds of the screen bitmap, draws a message, waits for a key,
+; checks a 5-slot control-selection area at $7B05-$7B09, then falls into
+; #R$78E7 (attribute fill + IX setup), redraws two more strings, waits for a
+; key with timeout, and jumps to #R$8EB4 - which either returns to the main
+; menu (#R$8B37, if $8210=5) or drops into the high-score display (#R$9580).
+; Effectively an end-of-level/game-over screen, not a level continuation.
 c$7800 CALL $7CE1    ;
  $7803 LD HL,$00C8   ;
  $7806 LD BC,$00C8   ;
- $7809 CALL $8680    ;
+ $7809 CALL $8680    ; Wait for a key or timeout
 *$780C NOP           ;
  $780D NOP           ;
  $780E NOP           ;
@@ -1201,50 +1211,65 @@ c$7800 CALL $7CE1    ;
  $784C LD (HL),$00   ;
  $784E LDIR          ;
  $7850 LD HL,$4864   ;
- $7853 CALL $9196    ;
+ $7853 CALL $9196    ; Draw string IX
  $7856 LD HL,$48A7   ;
- $7859 CALL $9196    ;
+ $7859 CALL $9196    ; Draw string IX
  $785C LD HL,$01FA   ;
  $785F LD BC,$01FA   ;
- $7862 CALL $8680    ;
+ $7862 CALL $8680    ; Wait for a key or timeout
  $7865 POP BC        ;
  $7866 JP $8EB4      ;
 
-; Routine at 7869
+; Shot hit check: compare Joe X against #R$7900 threshold, set $7B10
 ;
 ; Used by the routine at #R$A798.
-c$7869 LD H,$79      ;
+;
+; .
+;
+; Called by #R$A798 when Joe fires. Looks up the #R$7900 entry for the current
+; tile ($8202) and compares it against Joe's X (not a Y value, despite
+; #R$7900's "ceiling" label - see that table's note) to decide which side of
+; the threshold Joe is on, setting $7B10 accordingly (also gated by $8209 and
+; $820B). $7B10 is read back by #R$789D to trigger a soldier hit/reaction
+; animation - likely "is a soldier within range of this shot".
+c$7869 LD H,$79      ; {HL = #R$7900 entry for current tile ($8202)
  $786B LD A,($8202)  ;
  $786E RLCA          ;
- $786F LD L,A        ;
- $7870 INC HL        ;
+ $786F LD L,A        ; }
+ $7870 INC HL        ; {$8209 non-zero? skip the $7B10 idle-check
  $7871 LD A,($8209)  ;
  $7874 OR A          ;
- $7875 JR NZ,$787C   ;
- $7877 LD A,($7B10)  ;
+ $7875 JR NZ,$787C   ; }
+ $7877 LD A,($7B10)  ; {Not mid-shot: bail unless $7B10 already set
  $787A OR A          ;
- $787B RET NZ        ;
-*$787C LD A,$01      ;
+ $787B RET NZ        ; }
+*$787C LD A,$01      ; {Mark $7B10 active; check $820B direction
  $787E LD ($7B10),A  ;
  $7881 LD A,($820B)  ;
  $7884 OR A          ;
- $7885 JR NZ,$7892   ;
- $7887 LD A,($8201)  ;
+ $7885 JR NZ,$7892   ; }
+ $7887 LD A,($8201)  ; get Joe X
  $788A SUB (HL)      ;
  $788B RET C         ;
  $788C LD A,$00      ;
  $788E LD ($7B10),A  ;
  $7891 RET           ;
-*$7892 LD A,($8201)  ;
+*$7892 LD A,($8201)  ; get Joe X
  $7895 SUB (HL)      ;
  $7896 RET NC        ;
  $7897 LD A,$00      ;
  $7899 LD ($7B10),A  ;
  $789C RET           ;
 
-; Routine at 789D
+; Soldier hit/reaction animation, gated on $7B10
 ;
 ; Used by the routine at #R$8E64.
+;
+; .
+;
+; Called from #R$8E64 (per-frame soldier update). If $7B10 is set (see
+; #R$7869), updates the soldier's screen/sprite position ($8FA4/$8FA7 <->
+; $7B11/$7B12) - likely the "soldier reacts to being shot" animation step.
 c$789D LD A,($7B10)  ;
  $78A0 OR A          ;
  $78A1 RET Z         ;
@@ -1294,56 +1319,174 @@ c$78E7 LD HL,$5900   ;
 
 ; Data block at 78F6
 b$78F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $78FE DEFB $00,$00,$02,$66,$03,$12,$03,$69
- $7906 DEFB $02,$20,$00,$80,$00,$9D,$00,$9D
- $790E DEFB $00,$4E,$00,$4E,$00,$4E,$00,$4E
- $7916 DEFB $00,$4E,$00,$4E,$00,$00,$03,$B6
- $791E DEFB $00,$4E,$03,$9F,$00,$9D,$00,$4E
- $7926 DEFB $06,$7A,$00,$4E,$00,$00,$00,$00
- $792E DEFB $00,$4E,$02,$5D,$03,$BB,$01,$A7
- $7936 DEFB $00,$4E,$00,$4E,$00,$4E,$00,$4E
- $793E DEFB $00,$4E,$00,$9D,$00,$9D,$00,$9D
- $7946 DEFB $03,$2C,$00,$80,$00,$4E,$03,$1F
- $794E DEFB $00,$4E,$00,$4E,$00,$9D,$00,$9D
- $7956 DEFB $03,$80,$00,$4E,$03,$AA,$00,$4E
- $795E DEFB $00,$4E,$00,$4E,$00,$4E,$02,$B3
- $7966 DEFB $00,$4E,$05,$74,$00,$00,$00,$C8
- $796E DEFB $02,$80,$00,$4E,$03,$27,$00,$9D
- $7976 DEFB $00,$9D,$00,$9D,$00,$C8,$00,$00
- $797E DEFB $03,$C8,$00,$4E,$00,$4E,$00,$4E
- $7986 DEFB $00,$4E,$02,$0C,$00,$4E,$00,$4E
- $798E DEFB $00,$00,$00,$4E,$00,$4E,$00,$4E
- $7996 DEFB $00,$4E,$06,$66,$00,$4E,$00,$4E
- $799E DEFB $00,$00,$00,$4E,$00,$4E,$02,$33
- $79A6 DEFB $00,$4E,$00,$4E,$00,$4E,$00,$4E
- $79AE DEFB $00,$9D,$06,$2A,$06,$58,$00,$80
- $79B6 DEFB $02,$BB,$02,$24,$00,$4E,$00,$4E
- $79BE DEFB $00,$9D,$00,$4E,$03,$2B,$02,$2A
- $79C6 DEFB $02,$A5,$00,$9D,$04,$4A,$00,$4E
- $79CE DEFB $00,$4E,$00,$4E,$03,$D0,$00,$9D
- $79D6 DEFB $00,$4E,$02,$45,$02,$1C,$00,$4E
- $79DE DEFB $00,$4E,$00,$4E,$00,$9D,$00,$4E
- $79E6 DEFB $00,$4E,$03,$D1,$00,$9D,$00,$9D
- $79EE DEFB $00,$9D,$00,$9D,$00,$4E,$00,$4E
- $79F6 DEFB $00,$9D,$06,$04,$00,$9D,$03,$BB
- $79FE DEFB $00,$4E,$01,$05,$02,$04,$03,$03
- $7A06 DEFB $04,$02,$05,$01,$04,$03,$05,$01
- $7A0E DEFB $02,$02,$01,$05,$03,$04,$03,$01
- $7A16 DEFB $02,$05,$04,$05,$04,$02,$01,$03
- $7A1E DEFB $04,$02,$03,$01,$05,$02,$03,$04
- $7A26 DEFB $05,$01
+ $78FE DEFB $00,$00
+
+; Per-tile threshold table, indexed by $8202
+;
+; .
+;
+; .
+;
+; Word pairs indexed by 2*$8202+1 (current room-tile index, see #R$8114).
+; #R$7D96 clamps the odd byte of each pair into $4E-$9D each frame; even byte
+; is untouched, purpose unclear. $8202 is used all over the movement/collision
+; code ($8CF0, $9134+, $9602, $A2FE etc.), so this table likely holds a
+; per-tile boundary alongside #R$9700 - unconfirmed, needs live tracing. $8202
+; ranges 0-127 (room 0-7 + 8*subtile 0-15), so the array proper is 128 words
+; (256 bytes); the trailing 40 bytes are unaccounted for.
+; .
+; Originally guessed as a per-tile ceiling Y-bound. #R$7869 (the shot-hit
+; check, called from #R$A798 when firing) compares this table's entry against
+; Joe's X, not Y - so it may instead (or also) be a per-tile X threshold, e.g.
+; a soldier post/wall position used for hit detection. The two uses aren't
+; necessarily contradictory (same stored value reused as a generic "boundary
+; coordinate" by different consumers) but the "ceiling" label is now uncertain
+; - needs live tracing to settle.
+b$7900 DEFW $6602
+ $7902 DEFW $1203
+ $7904 DEFW $6903
+ $7906 DEFW $2002
+ $7908 DEFW $8000
+ $790A DEFW $9D00
+ $790C DEFW $9D00
+ $790E DEFW $4E00
+ $7910 DEFW $4E00
+ $7912 DEFW $4E00
+ $7914 DEFW $4E00
+ $7916 DEFW $4E00
+ $7918 DEFW $4E00
+ $791A DEFW $0000
+ $791C DEFW $B603
+ $791E DEFW $4E00
+ $7920 DEFW $9F03
+ $7922 DEFW $9D00
+ $7924 DEFW $4E00
+ $7926 DEFW $7A06
+ $7928 DEFW $4E00
+ $792A DEFW $0000
+ $792C DEFW $0000
+ $792E DEFW $4E00
+ $7930 DEFW $5D02
+ $7932 DEFW $BB03
+ $7934 DEFW $A701
+ $7936 DEFW $4E00
+ $7938 DEFW $4E00
+ $793A DEFW $4E00
+ $793C DEFW $4E00
+ $793E DEFW $4E00
+ $7940 DEFW $9D00
+ $7942 DEFW $9D00
+ $7944 DEFW $9D00
+ $7946 DEFW $2C03
+ $7948 DEFW $8000
+ $794A DEFW $4E00
+ $794C DEFW $1F03
+ $794E DEFW $4E00
+ $7950 DEFW $4E00
+ $7952 DEFW $9D00
+ $7954 DEFW $9D00
+ $7956 DEFW $8003
+ $7958 DEFW $4E00
+ $795A DEFW $AA03
+ $795C DEFW $4E00
+ $795E DEFW $4E00
+ $7960 DEFW $4E00
+ $7962 DEFW $4E00
+ $7964 DEFW $B302
+ $7966 DEFW $4E00
+ $7968 DEFW $7405
+ $796A DEFW $0000
+ $796C DEFW $C800
+ $796E DEFW $8002
+ $7970 DEFW $4E00
+ $7972 DEFW $2703
+ $7974 DEFW $9D00
+ $7976 DEFW $9D00
+ $7978 DEFW $9D00
+ $797A DEFW $C800
+ $797C DEFW $0000
+ $797E DEFW $C803
+ $7980 DEFW $4E00
+ $7982 DEFW $4E00
+ $7984 DEFW $4E00
+ $7986 DEFW $4E00
+ $7988 DEFW $0C02
+ $798A DEFW $4E00
+ $798C DEFW $4E00
+ $798E DEFW $0000
+ $7990 DEFW $4E00
+ $7992 DEFW $4E00
+ $7994 DEFW $4E00
+ $7996 DEFW $4E00
+ $7998 DEFW $6606
+ $799A DEFW $4E00
+ $799C DEFW $4E00
+ $799E DEFW $0000
+ $79A0 DEFW $4E00
+ $79A2 DEFW $4E00
+ $79A4 DEFW $3302
+ $79A6 DEFW $4E00
+ $79A8 DEFW $4E00
+ $79AA DEFW $4E00
+ $79AC DEFW $4E00
+ $79AE DEFW $9D00
+ $79B0 DEFW $2A06
+ $79B2 DEFW $5806
+ $79B4 DEFW $8000
+ $79B6 DEFW $BB02
+ $79B8 DEFW $2402
+ $79BA DEFW $4E00
+ $79BC DEFW $4E00
+ $79BE DEFW $9D00
+ $79C0 DEFW $4E00
+ $79C2 DEFW $2B03
+ $79C4 DEFW $2A02
+ $79C6 DEFW $A502
+ $79C8 DEFW $9D00
+ $79CA DEFW $4A04
+ $79CC DEFW $4E00
+ $79CE DEFW $4E00
+ $79D0 DEFW $4E00
+ $79D2 DEFW $D003
+ $79D4 DEFW $9D00
+ $79D6 DEFW $4E00
+ $79D8 DEFW $4502
+ $79DA DEFW $1C02
+ $79DC DEFW $4E00
+ $79DE DEFW $4E00
+ $79E0 DEFW $4E00
+ $79E2 DEFW $9D00
+ $79E4 DEFW $4E00
+ $79E6 DEFW $4E00
+ $79E8 DEFW $D103
+ $79EA DEFW $9D00
+ $79EC DEFW $9D00
+ $79EE DEFW $9D00
+ $79F0 DEFW $9D00
+ $79F2 DEFW $4E00
+ $79F4 DEFW $4E00
+ $79F6 DEFW $9D00
+ $79F8 DEFW $0406
+ $79FA DEFW $9D00
+ $79FC DEFW $BB03
+ $79FE DEFW $4E00
+ $7A00 DEFB $01,$05,$02,$04,$03,$03,$04,$02 ; {Unidentified trailing bytes
+ $7A08 DEFB $05,$01,$04,$03,$05,$01,$02,$02 ;
+ $7A10 DEFB $01,$05,$03,$04,$03,$01,$02,$05 ;
+ $7A18 DEFB $04,$05,$04,$02,$01,$03,$04,$02 ;
+ $7A20 DEFB $03,$01,$05,$02,$03,$04,$05,$01 ; }
 
 ; Routine at 7A28
 ;
 ; Used by the routine at #R$7800.
 c$7A28 CALL $8032    ;
- $7A2B LD A,($820A)  ;
+ $7A2B LD A,($820A)  ; get input state
  $7A2E LD HL,$7B0F   ;
  $7A31 CP (HL)       ;
  $7A32 RET Z         ;
  $7A33 LD (HL),A     ;
  $7A34 LD HL,$7B09   ;
- $7A37 LD A,($820A)  ;
+ $7A37 LD A,($820A)  ; get input state
  $7A3A AND $01       ;
  $7A3C JR Z,$7A4E    ;
  $7A3E INC (HL)      ;
@@ -1357,7 +1500,7 @@ c$7A28 CALL $8032    ;
  $7A49 JR NZ,$7A4D   ;
  $7A4B LD (HL),$01   ;
 *$7A4D RET           ;
-*$7A4E LD A,($820A)  ;
+*$7A4E LD A,($820A)  ; get input state
  $7A51 AND $02       ;
  $7A53 JR Z,$7A65    ;
  $7A55 LD A,$00      ;
@@ -1371,7 +1514,7 @@ c$7A28 CALL $8032    ;
  $7A60 JR NZ,$7A64   ;
  $7A62 LD (HL),$05   ;
 *$7A64 RET           ;
-*$7A65 LD A,($820A)  ;
+*$7A65 LD A,($820A)  ; get input state
  $7A68 AND $1C       ;
  $7A6A RET Z         ;
  $7A6B LD E,(HL)     ;
@@ -1444,55 +1587,66 @@ b$7AB6 DEFB $12,$04,$0B,$05,$1C,$03,$04,$12
 c$7AE5 CALL $FDB0    ;
  $7AE8 CALL $8C78    ; Copy shadow screen to real screen
  $7AEB CALL $80A0    ; Draw Joe sprite
- $7AEE CALL $8F8C    ;
+ $7AEE CALL $8F8C    ; Draw soldier ??
  $7AF1 RET           ;
 
 ; Data block at 7AF2
 b$7AF2 DEFB $D7,$88,$25,$83,$8B,$EF,$FF,$FF
  $7AFA DEFB $FE,$BA,$2D,$65,$F7,$87,$02,$01
  $7B02 DEFB $02,$03,$04,$05,$00,$00
- $7B08 DEFB $00                             ; $00 = allowed to reduce energy
+ $7B08 DEFB $00                             ; uniform/disguise active flag
+                                            ; ($00=normal, $01=disguised -
+                                            ; suspends energy loss);
+                                            ; auto-cleared by #R$7B84's timer
  $7B09 DEFB $04,$02,$2E,$02,$02,$47,$08,$00
  $7B11 DEFB $00,$80,$AA,$8B,$C5,$BF,$8B,$A5
  $7B19 DEFB $BD,$8A,$25,$81,$88
 
-; Routine at 7B1E
+; Uniform pickup: check $9D2B tile at screen edge
 ;
 ; Used by the routine at #R$8F00.
-c$7B1E LD HL,$9D2B   ;
- $7B21 LD B,$02      ;
-*$7B23 LD A,($8202)  ;
+;
+; .
+;
+; Same edge-triggered pattern as #R$926E, for the uniform tile table $9D2B. On
+; match: marks the tile visited, swaps Joe's sprite to the soldier costume
+; ($80CF/$80D8 -> $A8/$70), sets the disguise flag $7B08=1, shows a message
+; (#R$7B73, undeciphered), resets the duration timer $7B06, and rebuilds the
+; background. Disguise is time-limited, not fire-consumed - see #R$7B84.
+c$7B1E LD HL,$9D2B   ; {HL = $9D2B (uniform tile table); B = 2
+ $7B21 LD B,$02      ; }
+*$7B23 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $7B26 CP (HL)       ;
- $7B27 JR NZ,$7B42   ;
- $7B29 LD A,($820C)  ;
- $7B2C AND $30       ;
+ $7B27 JR NZ,$7B42   ; }
+ $7B29 LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $7B2C AND $30       ; }
  $7B2E JR NZ,$7B39   ;
- $7B30 LD A,($8201)  ;
+ $7B30 LD A,($8201)  ; get Joe X
  $7B33 CP $20        ;
  $7B35 JP Z,$7B46    ;
  $7B38 RET           ;
-*$7B39 LD A,($8201)  ;
+*$7B39 LD A,($8201)  ; get Joe X
  $7B3C CP $C0        ;
  $7B3E JP Z,$7B46    ;
  $7B41 RET           ;
 *$7B42 INC HL        ;
  $7B43 DJNZ $7B23    ;
  $7B45 RET           ;
-*$7B46 LD (HL),$FF   ;
- $7B48 LD A,$70      ;
+*$7B46 LD (HL),$FF   ; Mark tile visited ($FF)
+ $7B48 LD A,$70      ; {Swap Joe's sprite to the soldier costume
  $7B4A LD ($80D8),A  ;
  $7B4D LD A,$A8      ;
- $7B4F LD ($80CF),A  ;
+ $7B4F LD ($80CF),A  ; }
  $7B52 LD A,$01      ;
- $7B54 LD ($7B08),A  ; disallow to reduce energy
- $7B57 CALL $923C    ;
+ $7B54 LD ($7B08),A  ; disguise active
+ $7B57 CALL $923C    ; Draw black box on the screen
  $7B5A LD IX,$7B73   ;
  $7B5E LD HL,$4868   ;
- $7B61 CALL $9196    ;
+ $7B61 CALL $9196    ; Draw string IX
  $7B64 CALL $856E    ;
  $7B67 CALL $9296    ;
- $7B6A LD HL,$0000   ;
- $7B6D LD ($7B06),HL ;
+ $7B6A LD HL,$0000   ; {Reset disguise duration timer $7B06
+ $7B6D LD ($7B06),HL ; }
  $7B70 JP $8C00      ;
 
 ; Data block at 7B73
@@ -1500,25 +1654,32 @@ b$7B73 DEFB $00,$0D,$1F,$04,$0D,$04,$0C,$18
  $7B7B DEFB $1F,$14,$0D,$08,$05,$0E,$11,$0C
  $7B83 DEFB $FF
 
-; Routine at 7B84
+; Disguise duration timer: auto-expire and revert
 ;
 ; Used by the routine at #R$8F00.
-c$7B84 LD A,($7B08)  ;
+;
+; .
+;
+; Called every frame from #R$8F00. While disguised ($7B08<>0), increments the
+; 16-bit timer $7B06; once its high byte reaches 5 (~1280 frames), clears $7B08
+; and restores Joe's normal sprite ($80CF/$80D8 -> $D8/$D0). No player input
+; involved - the disguise just runs out.
+c$7B84 LD A,($7B08)  ; {Check disguise flag $7B08; return if not disguised
  $7B87 OR A          ;
- $7B88 RET Z         ;
- $7B89 LD HL,($7B06) ;
+ $7B88 RET Z         ; }
+ $7B89 LD HL,($7B06) ; {Increment timer $7B06; not yet expired -> return
  $7B8C INC HL        ;
  $7B8D LD A,H        ;
  $7B8E LD ($7B06),HL ;
- $7B91 CP $05        ;
+ $7B91 CP $05        ; }
  $7B93 RET NZ        ;
- $7B94 XOR A         ;
+ $7B94 XOR A         ; {Expired: clear $7B08, restore normal sprite
  $7B95 LD H,A        ;
  $7B96 LD L,A        ;
  $7B97 LD ($7B08),A  ;
  $7B9A LD ($7B06),HL ;
  $7B9D LD A,$D8      ;
- $7B9F LD ($80CF),A  ;
+ $7B9F LD ($80CF),A  ; }
  $7BA2 LD A,$D0      ;
  $7BA4 LD ($80D8),A  ;
  $7BA7 RET           ;
@@ -1582,7 +1743,7 @@ c$7BE8 LD HL,$4800   ;
  $7C03 DJNZ $7C00    ;
  $7C05 LD IX,$7BA8   ;
  $7C09 LD HL,$4801   ;
- $7C0C CALL $9196    ;
+ $7C0C CALL $9196    ; Draw string IX
  $7C0F LD A,$12      ;
  $7C11 LD ($7B00),A  ;
  $7C14 XOR A         ;
@@ -1753,9 +1914,15 @@ c$7CF7 LD A,($7B08)  ;
 ; Data block at 7CFF
 b$7CFF DEFB $3E
 
-; Routine at 7D00
+; Start game: draw sign, reset variables, drop into game loop
 ;
 ; Used by the routine at #R$8B37.
+;
+; .
+;
+; Entered from #R$8B37 when 'S' is pressed on the main menu. Redraws the "JOE
+; BLADE" sign and title strings, resets game variables to their initial values,
+; then re-enables energy loss ($7D45) before falling into the main game loop.
 c$7D00 CALL $A3CB    ;
  $7D03 NOP           ;
  $7D04 NOP           ;
@@ -1801,81 +1968,97 @@ c$7D00 CALL $A3CB    ;
  $7D60 NOP           ;
  $7D61 JP $8114      ;
 
-; Routine at 7D64
+; Soldier pattern 4: chase + slow vertical drift
 ;
 ; Used by the routine at #R$96CC.
+;
+; .
+;
+; #R$900A (horizontal chase of Joe's X) plus a fixed vertical drift: adds $0800
+; to the 16-bit fine-position accumulator $8F8D every frame, deriving the
+; coarse row address $8F90 from it (H-4). Shared tail #R$7D6A also used by
+; patterns 5/6.
 c$7D64 CALL $900A    ;
- $7D67 LD BC,$0800   ;
+ $7D67 LD BC,$0800   ; BC = $0800 (slow drift rate)
 ; This entry point is used by the routines at #R$7D82 and #R$7D8C.
-*$7D6A LD HL,($8F8D) ;
+*$7D6A LD HL,($8F8D) ; {$8F8D += BC; derive coarse row $8F90 from it
  $7D6D ADD HL,BC     ;
  $7D6E LD ($8F8D),HL ;
  $7D71 DEC H         ;
  $7D72 DEC H         ;
  $7D73 DEC H         ;
  $7D74 DEC H         ;
- $7D75 LD ($8F90),HL ;
+ $7D75 LD ($8F90),HL ; }
  $7D78 RET           ;
 
 ; Data block at 7D79
 b$7D79 DEFB $40,$59,$11,$FF,$00,$00,$00,$00
  $7D81 DEFB $00
 
-; Routine at 7D82
+; Soldier pattern 5: chase + fast vertical drift
 ;
 ; Used by the routine at #R$96CC.
-c$7D82 CALL $900A    ;
+;
+; .
+;
+; Same as #R$7D64 but BC=$2000 (4x the drift rate).
+c$7D82 CALL $900A    ; BC = $2000 (fast drift rate)
  $7D85 LD BC,$2000   ;
  $7D88 JP $7D6A      ;
 
 ; Unused
 s$7D8B DEFS $01
 
-; Routine at 7D8C
+; Soldier pattern 6: patrol (group B) + slow vertical drift
 ;
 ; Used by the routine at #R$96CC.
+;
+; .
+;
+; #R$8164 (synchronized left-right patrol, group B) plus the same slow vertical
+; drift as pattern 4.
 c$7D8C CALL $8164    ;
- $7D8F LD BC,$0800   ;
+ $7D8F LD BC,$0800   ; BC = $0800 (slow drift rate)
  $7D92 JP $7D6A      ;
 
 ; Unused
 s$7D95 DEFS $01
 
-; Routine at 7D96
+; Clamp room-tile pointers, hand off to game loop $8F00
 ;
 ; Used by the routine at #R$FFAD.
-c$7D96 LD A,($8202)  ;
+c$7D96 LD A,($8202)  ; {Clamp tile pointer at $9700+ to range $40-$A5
  $7D99 LD H,$97      ;
  $7D9B RLCA          ;
  $7D9C INC A         ;
  $7D9D LD L,A        ;
  $7D9E LD A,(HL)     ;
  $7D9F SUB $40       ;
- $7DA1 JR NC,$7DA5   ;
+ $7DA1 JR NC,$7DA5   ; }
  $7DA3 LD (HL),$46   ;
 *$7DA5 LD A,(HL)     ;
  $7DA6 SUB $A5       ;
  $7DA8 JR C,$7DAC    ;
  $7DAA LD (HL),$A5   ;
 *$7DAC NOP           ;
- $7DAD LD A,($8202)  ;
+ $7DAD LD A,($8202)  ; {Clamp tile pointer at $7900+ to range $40-$A5
  $7DB0 LD H,$79      ;
  $7DB2 RLCA          ;
  $7DB3 INC A         ;
  $7DB4 LD L,A        ;
  $7DB5 LD A,(HL)     ;
  $7DB6 SUB $40       ;
- $7DB8 JR NC,$7DBC   ;
+ $7DB8 JR NC,$7DBC   ; }
  $7DBA LD (HL),$4E   ;
 *$7DBC LD A,(HL)     ;
  $7DBD SUB $A5       ;
  $7DBF JR C,$7DC3    ;
  $7DC1 LD (HL),$9D   ;
-*$7DC3 XOR A         ;
- $7DC4 LD ($7B10),A  ;
- $7DC7 NOP           ;
+*$7DC3 XOR A         ; {Clear $7B10 flag
+ $7DC4 LD ($7B10),A  ; }
+ $7DC7 NOP           ; {Continue at #R$8F00
  $7DC8 NOP           ;
- $7DC9 JP $8F00      ;
+ $7DC9 JP $8F00      ; }
 
 ; Routine at 7DCC
 ;
@@ -1887,10 +2070,10 @@ c$7DCC LD A,($8201)  ;
  $7DD4 LD A,($8209)  ;
  $7DD7 OR A          ;
  $7DD8 RET NZ        ;
- $7DD9 LD A,($820A)  ;
+ $7DD9 LD A,($820A)  ; get input state
  $7DDC AND $03       ;
  $7DDE RET Z         ;
- $7DDF LD A,($8201)  ;
+ $7DDF LD A,($8201)  ; get Joe X
  $7DE2 AND $07       ;
  $7DE4 ADD A,$05     ;
  $7DE6 LD B,$06      ;
@@ -1917,19 +2100,28 @@ b$7DFB DEFB $00,$00,$00,$00,$00,$F3,$11,$01
  $7E23 DEFB $02,$16,$00,$10,$E4,$C1,$10,$DE
  $7E2B DEFB $FB,$C9,$00,$00,$00,$00,$00
 
-; Routine at 7E32
+; Movement/collision: jump dispatch, then level (row) edge transitions
 ;
 ; Used by the routine at #R$8F00.
-c$7E32 LD A,($8209)  ;
- $7E35 LD C,A        ;
- $7E36 AND $01       ;
+;
+; .
+;
+; Dispatches on $8209 first (bit0 -> #R$7FD2 -> #R$7F6E, a rightward jump-arc;
+; bit1 -> #R$7FDC -> #R$7FA0, a leftward jump-arc - these handle horizontal
+; room changes; bit7 -> jump timer #R$7FE6), then checks the 4 up/down x
+; left/right edge combos below to change the current level/row ($8204). Room
+; (column, $8203) changes are not handled here directly - they happen inside
+; the jump-arc routines when a jump carries Joe past the screen edge.
+c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
+ $7E35 LD C,A        ; #R$7FDC (jump left)
+ $7E36 AND $01       ; }
  $7E38 JP NZ,$7FD2   ;
  $7E3B LD A,C        ;
  $7E3C AND $02       ;
  $7E3E JP NZ,$7FDC   ;
- $7E41 LD A,C        ;
+ $7E41 LD A,C        ; {Dispatch: $8209 bit7 -> #R$7FE6 (jump timer)
  $7E42 AND $80       ;
- $7E44 JP NZ,$7FE6   ;
+ $7E44 JP NZ,$7FE6   ; }
  $7E47 NOP           ;
  $7E48 NOP           ;
  $7E49 NOP           ;
@@ -1943,22 +2135,22 @@ c$7E32 LD A,($8209)  ;
  $7E51 NOP           ;
  $7E52 NOP           ;
  $7E53 NOP           ;
- $7E54 LD A,($820A)  ;
+ $7E54 LD A,($820A)  ; {UP input + 'stair' tile ($820C bit4)?
  $7E57 LD C,A        ;
  $7E58 AND $08       ;
  $7E5A JR Z,$7E7E    ;
  $7E5C LD A,($820C)  ;
  $7E5F AND $10       ;
- $7E61 JR Z,$7E7E    ;
- $7E63 LD A,($8201)  ;
+ $7E61 JR Z,$7E7E    ; }
+ $7E63 LD A,($8201)  ; {At left edge (X&$E0=$20)?
  $7E66 ADD A,$10     ;
  $7E68 AND $E0       ;
  $7E6A CP $20        ;
- $7E6C JR NZ,$7E7E   ;
- $7E6E LD A,($8204)  ;
+ $7E6C JR NZ,$7E7E   ; }
+ $7E6E LD A,($8204)  ; {level++ ($8204, wraps 0-15)
  $7E71 INC A         ;
  $7E72 AND $0F       ;
- $7E74 LD ($8204),A  ;
+ $7E74 LD ($8204),A  ; }
  $7E77 POP BC        ;
  $7E78 CALL $7F64    ;
  $7E7B JP $8114      ;
@@ -1967,21 +2159,21 @@ c$7E32 LD A,($8209)  ;
  $7E80 NOP           ;
  $7E81 NOP           ;
  $7E82 NOP           ;
- $7E83 LD A,C        ;
+ $7E83 LD A,C        ; {DOWN input + 'stair' tile ($820C bit5)?
  $7E84 AND $04       ;
  $7E86 JR Z,$7EAA    ;
  $7E88 LD A,($820C)  ;
  $7E8B AND $20       ;
- $7E8D JR Z,$7EAA    ;
- $7E8F LD A,($8201)  ;
+ $7E8D JR Z,$7EAA    ; }
+ $7E8F LD A,($8201)  ; {At left edge (X&$E0=$20)?
  $7E92 ADD A,$10     ;
  $7E94 AND $E0       ;
  $7E96 CP $20        ;
- $7E98 JR NZ,$7EAA   ;
- $7E9A LD A,($8204)  ;
+ $7E98 JR NZ,$7EAA   ; }
+ $7E9A LD A,($8204)  ; {level-- ($8204, wraps 0-15)
  $7E9D DEC A         ;
  $7E9E AND $0F       ;
- $7EA0 LD ($8204),A  ;
+ $7EA0 LD ($8204),A  ; }
  $7EA3 POP BC        ;
  $7EA4 CALL $7F64    ;
  $7EA7 JP $8114      ;
@@ -1990,21 +2182,21 @@ c$7E32 LD A,($8209)  ;
  $7EAC NOP           ;
  $7EAD NOP           ;
  $7EAE NOP           ;
- $7EAF LD A,C        ;
+ $7EAF LD A,C        ; {UP input + 'stair' tile ($820C bit2)?
  $7EB0 AND $08       ;
  $7EB2 JR Z,$7ED6    ;
  $7EB4 LD A,($820C)  ;
  $7EB7 AND $04       ;
- $7EB9 JR Z,$7ED6    ;
- $7EBB LD A,($8201)  ;
+ $7EB9 JR Z,$7ED6    ; }
+ $7EBB LD A,($8201)  ; {At right edge (X&$E0=$C0)?
  $7EBE ADD A,$10     ;
  $7EC0 AND $E0       ;
  $7EC2 CP $C0        ;
- $7EC4 JR NZ,$7ED6   ;
- $7EC6 LD A,($8204)  ;
+ $7EC4 JR NZ,$7ED6   ; }
+ $7EC6 LD A,($8204)  ; {level++ ($8204, wraps 0-15)
  $7EC9 INC A         ;
  $7ECA AND $0F       ;
- $7ECC LD ($8204),A  ;
+ $7ECC LD ($8204),A  ; }
  $7ECF POP BC        ;
  $7ED0 CALL $7F64    ;
  $7ED3 JP $8114      ;
@@ -2013,39 +2205,39 @@ c$7E32 LD A,($8209)  ;
  $7ED8 NOP           ;
  $7ED9 NOP           ;
  $7EDA NOP           ;
- $7EDB LD A,C        ;
+ $7EDB LD A,C        ; {DOWN input + 'stair' tile ($820C bit3)?
  $7EDC AND $04       ;
  $7EDE JR Z,$7F02    ;
  $7EE0 LD A,($820C)  ;
  $7EE3 AND $08       ;
- $7EE5 JR Z,$7F02    ;
- $7EE7 LD A,($8201)  ;
+ $7EE5 JR Z,$7F02    ; }
+ $7EE7 LD A,($8201)  ; {At right edge (X&$E0=$C0)?
  $7EEA ADD A,$10     ;
  $7EEC AND $E0       ;
  $7EEE CP $C0        ;
- $7EF0 JR NZ,$7F02   ;
- $7EF2 LD A,($8204)  ;
+ $7EF0 JR NZ,$7F02   ; }
+ $7EF2 LD A,($8204)  ; {level-- ($8204, wraps 0-15)
  $7EF5 DEC A         ;
  $7EF6 AND $0F       ;
- $7EF8 LD ($8204),A  ;
+ $7EF8 LD ($8204),A  ; }
  $7EFB POP BC        ;
  $7EFC CALL $7F64    ;
  $7EFF JP $8114      ;
 *$7F02 NOP           ;
  $7F03 NOP           ;
  $7F04 NOP           ;
- $7F05 LD A,($820A)  ;
- $7F08 LD C,A        ;
+ $7F05 LD A,($820A)  ; {UP+RIGHT combo ($820A&$0B=$09, bit0=right/bit3=up) ->
+ $7F08 LD C,A        ; $8209=1, retry #R$7E32
  $7F09 AND $0B       ;
  $7F0B CP $09        ;
  $7F0D JR NZ,$7F17   ;
  $7F0F LD A,$01      ;
- $7F11 LD ($8209),A  ;
+ $7F11 LD ($8209),A  ; }
  $7F14 JP $7E32      ;
-*$7F17 CP $0A        ;
- $7F19 JR NZ,$7F23   ;
+*$7F17 CP $0A        ; {UP+LEFT combo (else &$0B=$0A, bit1=left/bit3=up) ->
+ $7F19 JR NZ,$7F23   ; $8209=2, retry #R$7E32
  $7F1B LD A,$02      ;
- $7F1D LD ($8209),A  ;
+ $7F1D LD ($8209),A  ; }
  $7F20 JP $7E32      ;
 *$7F23 AND $08       ;
  $7F25 JR Z,$7F2F    ;
@@ -2079,60 +2271,75 @@ c$7F64 JP $91C8      ;
 ; Data block at 7F67
 b$7F67 DEFB $01,$64,$00,$C3,$80,$86,$00
 
-; Routine at 7F6E
+; Jump-arc step (right): room change when Joe reaches X=$E6
 ;
 ; Used by the routines at #R$7E32 and #R$7FD2.
+;
+; .
+;
+; Called every frame during a rightward jump-arc (#R$7FD2, triggered by
+; UP+RIGHT). X increases by 2/frame; once it reaches $E6 (right edge), room++
+; ($8203, wraps 0-7) and X resets to $00 - i.e. this is where horizontal ROOM
+; (column) transitions actually happen, as a side effect of completing a jump
+; off the edge. Blocked (no room change, X still clamped) if $820C bit0 is set
+; - see that variable's bit map.
 c$7F6E LD A,$00      ;
- $7F70 LD ($820B),A  ;
+ $7F70 LD ($820B),A  ; set Joe's facing direction
  $7F73 LD A,($820C)  ;
  $7F76 AND $01       ;
  $7F78 LD C,A        ;
- $7F79 LD A,($8201)  ;
+ $7F79 LD A,($8201)  ; get Joe X
  $7F7C CP $E6        ;
  $7F7E JR NZ,$7F95   ;
  $7F80 LD A,C        ;
  $7F81 OR A          ;
  $7F82 RET NZ        ;
  $7F83 LD A,$00      ;
- $7F85 LD ($8201),A  ;
- $7F88 LD A,($8203)  ;
+ $7F85 LD ($8201),A  ; set Joe X
+ $7F88 LD A,($8203)  ; get room number
  $7F8B INC A         ;
  $7F8C AND $07       ;
- $7F8E LD ($8203),A  ;
+ $7F8E LD ($8203),A  ; set room number
  $7F91 POP BC        ;
  $7F92 JP $8114      ;
-*$7F95 LD A,($8201)  ;
+*$7F95 LD A,($8201)  ; get Joe X
  $7F98 INC A         ;
  $7F99 INC A         ;
- $7F9A LD ($8201),A  ;
+ $7F9A LD ($8201),A  ; set Joe X
  $7F9D RET           ;
 
 ; Data block at 7F9E
 b$7F9E DEFB $59,$58
 
-; Routine at 7FA0
+; Jump-arc step (left): room change when Joe reaches X=$00
 ;
 ; Used by the routines at #R$7E32 and #R$7FDC.
+;
+; .
+;
+; Mirror of #R$7F6E for a leftward jump-arc (#R$7FDC, triggered by UP+LEFT): X
+; decreases by 2/frame; once it reaches $00 (left edge), room-- ($8203, wraps
+; 0-7) and X resets to $E6. Blocked if $820C bit1 is set.
 c$7FA0 LD A,$01      ;
- $7FA2 LD ($820B),A  ;
- $7FA5 LD A,($8201)  ;
+ $7FA2 LD ($820B),A  ; set Joe's facing direction
+ $7FA5 LD A,($8201)  ; get Joe X
  $7FA8 CP $00        ;
  $7FAA JR NZ,$7FC4   ;
  $7FAC LD A,($820C)  ;
  $7FAF AND $02       ;
  $7FB1 RET NZ        ;
  $7FB2 LD A,$E6      ;
- $7FB4 LD ($8201),A  ;
- $7FB7 LD A,($8203)  ;
+ $7FB4 LD ($8201),A  ; set Joe X
+ $7FB7 LD A,($8203)  ; get room number
  $7FBA DEC A         ;
  $7FBB AND $07       ;
- $7FBD LD ($8203),A  ;
+ $7FBD LD ($8203),A  ; set room number
  $7FC0 POP BC        ;
  $7FC1 JP $8114      ;
-*$7FC4 LD A,($8201)  ;
+*$7FC4 LD A,($8201)  ; get Joe X
  $7FC7 DEC A         ;
  $7FC8 DEC A         ;
- $7FC9 LD ($8201),A  ;
+ $7FC9 LD ($8201),A  ; set Joe X
  $7FCC RET           ;
 
 ; Data block at 7FCD
@@ -2159,9 +2366,15 @@ b$7FE2 DEFB $06
 ; Message at 7FE3
 t$7FE3 DEFM "+6C"
 
-; Routine at 7FE6
+; Jump timer tick; clears $8209 on wrap
 ;
 ; Used by the routines at #R$7E32, #R$7FD2 and #R$7FDC.
+;
+; .
+;
+; Increments the jump timer $820D; when it wraps at $30 (48), resets both $820D
+; and $8209 to 0. Called from #R$7E32 and the jump-arc routines
+; #R$7FD2/#R$7FDC.
 c$7FE6 LD A,($820D)  ;
  $7FE9 INC A         ;
  $7FEA LD ($820D),A  ;
@@ -2184,11 +2397,21 @@ b$7FFD DEFB $00,$00,$00,$20,$1C,$18,$16,$14
  $8025 DEFB $09,$0A,$0B,$0C,$0E,$10,$12,$14
  $802D DEFB $16,$18,$1C,$20,$20
 
-; Routine at 8032
+; Read input into $820A: Kempston, digit-key, or redefinable-key scheme
 ;
 ; Used by the routines at #R$7A28, #R$8F00 and #R$9580.
-c$8032 LD A,($820E)  ;
- $8035 CP $01        ;
+;
+; .
+;
+; Writes a 5-bit direction/fire mask to #R$820A. If $820E==1, reads Kempston
+; joystick (port $1F) and uses it directly if non-zero, skipping the keyboard
+; entirely. Otherwise tries a fixed digit-key scheme (row $F7FE, keys 1-5)
+; first; if that row is idle, falls back to the redefinable keyboard scheme
+; matching the control-options text (#R$8400 signs): row $FDFE (A-G) = down,
+; row $FBFE (Q-T) = up, row $7FFE (B/space) = fire, row $DFFE bits0-1 (O/P) =
+; left/right.
+c$8032 LD A,($820E)  ; {$820E==1? (Kempston mode selected)
+ $8035 CP $01        ; }
  $8037 NOP           ;
  $8038 NOP           ;
  $8039 NOP           ;
@@ -2198,55 +2421,55 @@ c$8032 LD A,($820E)  ;
  $803D NOP           ;
  $803E JR NZ,$804B   ;
  $8040 NOP           ;
- $8041 IN A,($1F)    ;
- $8043 AND $1F       ;
+ $8041 IN A,($1F)    ; {Read Kempston joystick (port $1F); use directly if
+ $8043 AND $1F       ; non-zero
  $8045 JR Z,$804B    ;
- $8047 LD ($820A),A  ;
+ $8047 LD ($820A),A  ; }
  $804A RET           ;
-*$804B LD BC,$F7FE   ;
- $804E IN A,(C)      ;
+*$804B LD BC,$F7FE   ; {Read digit-key row $F7FE (keys 1-5)
+ $804E IN A,(C)      ; }
  $8050 CPL           ;
  $8051 AND $1F       ;
  $8053 JR Z,$806C    ;
- $8055 LD C,A        ;
- $8056 AND $1C       ;
+ $8055 LD C,A        ; {Remap digit-row bits into result: bits2-4 passthrough,
+ $8056 AND $1C       ; bit1->bit0, bit0->bit1
  $8058 LD B,A        ;
  $8059 LD A,C        ;
  $805A AND $02       ;
- $805C JR Z,$8060    ;
+ $805C JR Z,$8060    ; }
  $805E SET 0,B       ;
 *$8060 LD A,C        ;
  $8061 AND $01       ;
  $8063 JR Z,$8067    ;
  $8065 SET 1,B       ;
 *$8067 LD A,B        ;
- $8068 LD ($820A),A  ;
+ $8068 LD ($820A),A  ; set input state
  $806B RET           ;
-*$806C LD BC,$DFFE   ;
- $806F IN A,(C)      ;
+*$806C LD BC,$DFFE   ; {Read row $DFFE (O/P); bits0-1 -> result bits0-1
+ $806F IN A,(C)      ; (left/right)
  $8071 CPL           ;
  $8072 AND $03       ;
- $8074 LD E,A        ;
- $8075 LD BC,$FDFE   ;
+ $8074 LD E,A        ; }
+ $8075 LD BC,$FDFE   ; {Read row $FDFE (A-G); non-zero -> result bit2 (down)
  $8078 IN A,(C)      ;
  $807A CPL           ;
  $807B AND $1F       ;
- $807D JR Z,$8081    ;
+ $807D JR Z,$8081    ; }
  $807F SET 2,E       ;
-*$8081 LD BC,$FBFE   ;
+*$8081 LD BC,$FBFE   ; {Read row $FBFE (Q-T); non-zero -> result bit3 (up)
  $8084 IN A,(C)      ;
  $8086 CPL           ;
  $8087 AND $1F       ;
- $8089 JR Z,$808D    ;
+ $8089 JR Z,$808D    ; }
  $808B SET 3,E       ;
-*$808D LD BC,$7FFE   ;
- $8090 IN A,(C)      ;
+*$808D LD BC,$7FFE   ; {Read row $7FFE (B/space); non-zero -> result bit4
+ $8090 IN A,(C)      ; (fire)
  $8092 CPL           ;
  $8093 AND $1F       ;
- $8095 JR Z,$8099    ;
+ $8095 JR Z,$8099    ; }
  $8097 SET 4,E       ;
 *$8099 LD A,E        ;
- $809A LD ($820A),A  ;
+ $809A LD ($820A),A  ; set input state
  $809D RET           ;
 
 ; Data block at 809E
@@ -2292,14 +2515,14 @@ c$80A0 LD A,($8201)  ;
 ; HL = destination addr
  $80CC NOP           ;
  $80CD LD BC,$D800   ; !!MUT-ARG!! Joe sprites base address
- $80D0 LD A,($8209)  ;
- $80D3 AND $83       ;
+ $80D0 LD A,($8209)  ; {$8209 bits0/1/7: use alt sprite bank $D0 (climbing
+ $80D3 AND $83       ; costume)}
  $80D5 JR Z,$80D9    ;
  $80D7 LD B,$D0      ;
-*$80D9 LD A,($820B)  ;
- $80DC LD C,A        ;
- $80DD LD A,($8209)  ;
- $80E0 AND $20       ;
+*$80D9 LD A,($820B)  ; {C = $820B (Joe's facing direction: 0/1)
+ $80DC LD C,A        ; }
+ $80DD LD A,($8209)  ; {$8209 bit5: flip facing (C ^= 1) - dead code, nothing
+ $80E0 AND $20       ; ever sets this bit}
  $80E2 JR Z,$80E8    ;
  $80E4 LD A,C        ;
  $80E5 XOR $01       ;
@@ -2310,11 +2533,11 @@ c$80A0 LD A,($8201)  ;
  $80EC INC B         ;
  $80ED INC B         ;
 *$80EE LD C,$00      ;
- $80F0 LD A,($8201)  ;
+ $80F0 LD A,($8201)  ; get Joe X
  $80F3 AND $02       ;
  $80F5 JR Z,$80F9    ;
  $80F7 LD C,$80      ;
-*$80F9 LD A,($8201)  ;
+*$80F9 LD A,($8201)  ; get Joe X
  $80FC AND $04       ;
  $80FE JR Z,$8101    ;
  $8100 INC B         ;
@@ -2332,42 +2555,50 @@ c$80A0 LD A,($8201)  ;
 ; Unused
 s$810D DEFS $07
 
-; Routine at 8114
+; Per-frame room-tile lookup, then hand off to game loop
 ;
 ; Used by the routines at #R$7D00, #R$7E32, #R$7F6E and #R$7FA0.
-c$8114 LD A,($8204)  ;
+;
+; .
+;
+; Bridges #R$7D00 into the game loop: computes the current room-tile offset
+; from $8203/$8204, looks it up in the table at $8300, stores it as the
+; terrain-flags byte $820C (bit map documented at that variable), redraws the
+; status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD,
+; #R$7D96 into #R$8F00.
+c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
  $8117 RLCA          ;
  $8118 RLCA          ;
  $8119 RLCA          ;
  $811A LD B,A        ;
  $811B LD A,($8203)  ;
  $811E ADD A,B       ;
- $811F LD ($8202),A  ;
+ $811F LD ($8202),A  ; }
  $8122 ADD A,$00     ;
  $8124 LD H,$83      ;
  $8126 LD L,A        ;
- $8127 LD A,(HL)     ;
- $8128 LD ($820C),A  ;
- $812B CALL $8C00    ;
- $812E LD A,($820C)  ;
- $8131 AND $C0       ;
+ $8127 LD A,(HL)     ; {Store tile byte in $820C
+ $8128 LD ($820C),A  ; }
+ $812B CALL $8C00    ; Build room background into shadow buffer $B800
+ $812E LD A,($820C)  ; {Attribute byte = (($820C>>6)&3) + $44: bright
+ $8131 AND $C0       ; green/cyan/yellow/white ink on black, by room zone
  $8133 RRCA          ;
  $8134 RRCA          ;
  $8135 RRCA          ;
  $8136 RRCA          ;
  $8137 RRCA          ;
  $8138 RRCA          ;
- $8139 ADD A,$44     ;
- $813B LD HL,$5880   ;
- $813E LD (HL),A     ;
+ $8139 ADD A,$44     ; }
+ $813B LD HL,$5880   ; {Fill 14 attribute rows at $5880 (0x1C0 bytes) - most of
+ $813E LD (HL),A     ; the play area, not just a status bar
  $813F LD DE,$5881   ;
  $8142 LD BC,$01C0   ;
- $8145 LDIR          ;
- $8147 CALL $912C    ;
+ $8145 LDIR          ; }
+ $8147 CALL $912C    ; Detect collectible tile under Joe, draw its icon
  $814A CALL $828C    ;
- $814D LD A,$00      ;
+ $814D LD A,$00      ; {Clear $587F and $5860
  $814F LD ($587F),A  ;
- $8152 LD ($5860),A  ;
+ $8152 LD ($5860),A  ; }
  $8155 NOP           ;
  $8156 NOP           ;
  $8157 JP $FFAD      ;
@@ -2376,23 +2607,31 @@ c$8114 LD A,($8204)  ;
 b$815A DEFB $48,$CD,$96,$91,$CD,$C8,$91,$C3
  $8162 DEFB $00,$7D
 
-; Routine at 8164
+; Soldier pattern 3: synchronized left-right patrol (group B)
 ;
 ; Used by the routines at #R$7D8C and #R$96CC.
-c$8164 LD A,($8212)   ;
+;
+; .
+;
+; Adds a shared direction step ($8212, +2 or -2) to the soldier's X (IX+1); on
+; hitting X=2 or X=$E6, flips $8212's sign - so every soldier using this
+; pattern shares one direction byte and turns around in lockstep. Picks
+; left/right-facing sprite from the sign of $8212, then builds the
+; screen/sprite address via #R$9028 (shared with #R$900A/#R$9464).
+c$8164 LD A,($8212)   ; {X += $8212 (shared step); hit X=2 or $E6?
  $8167 ADD A,(IX+$01) ;
  $816A LD (IX+$01),A  ;
  $816D CP $02         ;
  $816F JR Z,$8175     ;
  $8171 CP $E6         ;
- $8173 JR NZ,$817D    ;
-*$8175 LD A,($8212)   ;
+ $8173 JR NZ,$817D    ; }
+*$8175 LD A,($8212)   ; {Flip $8212's sign
  $8178 XOR $FE        ;
- $817A LD ($8212),A   ;
-*$817D LD C,(IX+$01)  ;
- $8180 LD A,($8212)   ;
+ $817A LD ($8212),A   ; }
+*$817D LD C,(IX+$01)  ; {C = soldier X; pick sprite by $8212 sign, continue at
+ $8180 LD A,($8212)   ; #R$9028
  $8183 AND $80        ;
- $8185 JR NZ,$818D    ;
+ $8185 JR NZ,$818D    ; }
  $8187 LD DE,$AA00    ;
  $818A JP $9028       ;
 *$818D LD DE,$A800    ;
@@ -2474,7 +2713,7 @@ c$81AA LD A,$04      ;
 c$81E6 LD BC,$0141   ;
  $81E9 LD HL,$0100   ;
  $81EC DI            ;
- $81ED CALL $8680    ;
+ $81ED CALL $8680    ; Wait for a key or timeout
  $81F0 EI            ;
  $81F1 LD A,$00      ;
  $81F3 OUT ($FE),A   ;
@@ -2486,20 +2725,64 @@ b$81F8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; Variables
 b$8200 DEFB $00
  $8201 DEFB $3C                             ; Joe X; initial = $3C
- $8202 DEFB $7B
- $8203 DEFB $03                             ; room number; initial = 3
- $8204 DEFB $0F,$00
+ $8202 DEFB $7B                             ; current room-tile index = room +
+                                            ; 8*subtile; indexes $8300, $9700,
+                                            ; $7900
+ $8203 DEFB $03                             ; room number: 0..7; initial = 3
+ $8204 DEFB $0F                             ; room level: $00..$0F, initial =
+                                            ; $0F
+ $8205 DEFB $00
  $8206 DEFB $0B                             ; counter
- $8207 DEFB $04,$00,$00,$00,$00,$C1
+ $8207 DEFB $04,$00
+ $8209 DEFB $00                             ; Joe orientation/special-move
+                                            ; state: bit0/1 set by
+                                            ; #R$7F0F/#R$7F1D (jump-arc
+                                            ; direction), bit5 flips facing in
+                                            ; #R$80A0 (dead code, never
+                                            ; written), bits0/1/7 select alt
+                                            ; sprite bank $D0. Cleared to 0 by
+                                            ; #R$7FE6's timer.
+ $820A DEFB $00                             ; input state FUDLR: bit0=right,
+                                            ; bit1=left, bit2=down, bit3=up,
+                                            ; bit4=fire
+ $820B DEFB $00                             ; Joe's facing direction (0/1), set
+                                            ; in #R$7F6E/#R$7FA0; drawn via
+                                            ; #R$80A0
+ $820C DEFB $C1                             ; current tile's terrain flags
+                                            ; (from $8300, set at $8114):
+                                            ; bit0=blocks rightward room-jump,
+                                            ; bit1=blocks leftward room-jump,
+                                            ; bit2=up-stair right,
+                                            ; bit3=down-stair right,
+                                            ; bit4=up-stair left,
+                                            ; bit5=down-stair left,
+                                            ; bits6-7=room colour zone (0-3,
+                                            ; picks INK 4-7 =
+                                            ; green/cyan/yellow/white
+                                            ; bright-on-black for most of the
+                                            ; attribute file). All 8 bits
+                                            ; confirmed against known room
+                                            ; layout and observed room colours
+                                            ; (see docs/Room-Format.md).
  $820D DEFB $00                             ; jump counter
- $820E DEFB $00,$00,$05,$00,$01,$FF,$00,$00
- $8216 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $821E DEFB $00
+ $820E DEFB $00,$00,$05,$00,$01,$FF
+ $8214 DEFB $00                             ; hostage counter (collected via
+                                            ; #R$86E4)
+ $8215 DEFB $00                             ; key counter (collected via
+                                            ; #R$92A0); also spent 1/climb on
+                                            ; key-gated staircases (#R$9880,
+                                            ; gated by $9500 bit5)
+ $8216 DEFB $00                             ; bomb counter (collected via
+                                            ; #R$92DE)
+ $8217 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $821F DEFB $16                             ; counter
  $8220 DEFB $02                             ; slower counter
  $8221 DEFW $4887                           ; current Joe screen address
  $8223 DEFW $DF00                           ; current Joe sprite mask address
- $8225 DEFB $14,$00,$00
+ $8225 DEFB $14                             ; ammo/bullet count (+=10 via
+                                            ; #R$A328, consumed 1/shot via
+                                            ; #R$A798); initial=$14
+ $8226 DEFB $00,$00
 
 ; Variables initial values, 40 bytes
 b$8228 DEFB $00,$3C,$0D,$03,$0F,$00,$00,$00
@@ -2639,7 +2922,7 @@ b$83D9 DEFB $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
 c$83E1 LD BC,$0141   ;
  $83E4 LD HL,$0100   ;
  $83E7 DI            ;
- $83E8 CALL $8680    ;
+ $83E8 CALL $8680    ; Wait for a key or timeout
  $83EB EI            ;
  $83EC LD A,$00      ;
  $83EE OUT ($FE),A   ;
@@ -2885,7 +3168,7 @@ b$8662 DEFB $0E,$16,$65,$B8,$1D,$A6,$6B,$BB
 
 ; Wait for a key or timeout
 ;
-; Used by the routines at #R$7800, #R$81E6, #R$83E1 and #R$FFD5.
+; Used by the routines at #R$7800, #R$81E6, #R$83E1, #R$8E96 and #R$FFD5.
 c$8680 DI            ;
  $8681 LD A,$00      ;
  $8683 EX AF,AF'     ;
@@ -2947,16 +3230,23 @@ c$86C0 CALL $923C    ;
 ; Data block at 86E1
 b$86E1 DEFB $C9,$7C,$8F
 
-; Routine at 86E4
+; Collect a hostage tile: mark, count, redraw
 ;
 ; Used by the routine at #R$926E.
-c$86E4 LD (HL),$FF   ;
- $86E6 LD HL,$8214   ;
+;
+; .
+;
+; Called by #R$926E when Joe touches a $9D24-table tile at the screen edge.
+; Marks the tile visited ($FF), increments the hostage counter $8214, draws the
+; updated digit, and rebuilds the room background (the collected tile
+; disappears).
+c$86E4 LD (HL),$FF   ; {Mark tile visited ($FF); increment hostage counter
+ $86E6 LD HL,$8214   ; $8214
  $86E9 INC (HL)      ;
- $86EA LD C,(HL)     ;
+ $86EA LD C,(HL)     ; }
  $86EB LD HL,$507E   ;
  $86EE CALL $925C    ;
- $86F1 CALL $8C00    ;
+ $86F1 CALL $8C00    ; Build room background into shadow buffer $B800
  $86F4 LD C,$01      ;
  $86F6 CALL $86C0    ;
  $86F9 RET           ;
@@ -3096,7 +3386,7 @@ c$8964 LD A,($8210)  ;
  $896A RLCA          ;
  $896B ADD A,$0A     ;
  $896D LD C,A        ;
- $896E LD A,($8201)  ;
+ $896E LD A,($8201)  ; get Joe X
  $8971 ADD A,C       ;
  $8972 LD L,A        ;
  $8973 LD H,$89      ;
@@ -3150,211 +3440,283 @@ b$89AE DEFB $36,$45,$23,$10,$F6,$CD
 ; Show main menu
 ;
 ; Used by the routine at #R$8A12.
+;
+; .
+;
+; Draws title screen (big "JOE BLADE" sign, credits, copyright), sets 3 rows of
+; attributes, then waits for all keys to be released before returning. Does not
+; wait for a keypress itself; the wait-for-keypress loop is elsewhere ($8A12
+; group).
 c$89B4 CALL $83C0    ;
- $89B7 CALL $8B02    ;
+ $89B7 CALL $8B02    ; Show "JOE BLADE" big sign on the screen
  $89BA LD IX,$8400   ; 'WRITTEN BY ' - start of title signs
  $89BE LD HL,$4802   ;
- $89C1 CALL $9196    ;
+ $89C1 CALL $9196    ; Draw string IX
  $89C4 LD HL,$4847   ;
- $89C7 CALL $9196    ;
+ $89C7 CALL $9196    ; Draw string IX
  $89CA LD HL,$48CC   ;
- $89CD CALL $9196    ;
- $89D0 LD HL,$59CC   ;
- $89D3 LD B,$07      ;
+ $89CD CALL $9196    ; Draw string IX
+ $89D0 LD HL,$59CC   ; {Fill 7 attribute bytes at $59CC with $57 (INK 7, PAPER
+ $89D3 LD B,$07      ; 2, BRIGHT)
 *$89D5 LD (HL),$57   ;
  $89D7 INC HL        ;
- $89D8 DJNZ $89D5    ;
+ $89D8 DJNZ $89D5    ; }
  $89DA LD HL,$5025   ;
- $89DD CALL $9196    ;
+ $89DD CALL $9196    ; Draw string IX
  $89E0 LD HL,$506A   ;
- $89E3 CALL $9196    ;
+ $89E3 CALL $9196    ; Draw string IX
  $89E6 LD HL,$50A4   ;
- $89E9 CALL $9196    ;
- $89EC LD A,$57      ;
+ $89E9 CALL $9196    ; Draw string IX
+ $89EC LD A,$57      ; {Set attribute byte $57 at $5A25, $5A6A and $5AA4
  $89EE LD ($5A25),A  ;
  $89F1 LD ($5A6A),A  ;
- $89F4 LD ($5AA4),A  ;
-*$89F7 XOR A         ;
+ $89F4 LD ($5AA4),A  ; }
+*$89F7 XOR A         ; {Wait until no key is pressed
  $89F8 IN A,($FE)    ;
  $89FA CPL           ;
  $89FB AND $1F       ;
  $89FD JR NZ,$89F7   ;
- $89FF RET           ;
+ $89FF RET           ; }
 
 ; Show main menu => $8A12
 ;
 ; Used by the routine at #R$8B37.
+;
+; .
+;
+; Entry-point trampoline (one-instruction JP) used by callers outside this
+; module; the real routine is at $8A12.
 c$8A00 JP $8A12      ;
 
-; Routine at 8A03
+; Poll main menu state => $8A3C
 ;
 ; Used by the routine at #R$8B37.
+;
+; .
+;
+; Entry-point trampoline; real routine at $8A3C.
 c$8A03 JP $8A3C      ;
 
-; Routine at 8A06
+; Poll main menu state => $8A44
 ;
 ; Used by the routine at #R$9498.
+;
+; .
+;
+; Entry-point trampoline; real routine at $8A44.
 c$8A06 JP $8A44      ;
 
-; Routine at 8A09
+; Poll main menu state => $8A5E
 ;
 ; Used by the routine at #R$935E.
+;
+; .
+;
+; Entry-point trampoline; real routine at $8A5E.
 c$8A09 JP $8A5E      ;
 
-; Routine at 8A0C
+; Poll main menu state => $8AAE
 ;
 ; Used by the routine at #R$8DBE.
+;
+; .
+;
+; Entry-point trampoline; real routine at $8AAE.
 c$8A0C JP $8AAE      ;
 
-; Routine at 8A0F
+; Poll main menu state => $8AD0
 ;
 ; Used by the routine at #R$8DBE.
+;
+; .
+;
+; Entry-point trampoline; real routine at $8AD0.
 c$8A0F JP $8AD0      ;
 
-; Routine at 8A12
+; Show main menu and wait for start
 ;
 ; Used by the routine at #R$8A00.
-c$8A12 XOR A         ;
- $8A13 LD ($8AFF),A  ;
+;
+; .
+;
+; Draws title screen, then pages in RAM bank 1 and checks a condition byte at
+; $C000. $8AFF is a "menu done" flag read by the other routines in this group
+; ($8A3C-$8AD0). $C000/$C003/$C006 in bank 1 look like a 3-entry vector table
+; (init/step/finish) for code resident in that bank; not yet identified
+; further.
+c$8A12 XOR A         ; {Clear $8AFF menu-done flag
+ $8A13 LD ($8AFF),A  ; }
  $8A16 CALL $89B4    ; Show main menu
- $8A19 DI            ;
- $8A1A LD A,$11      ;
- $8A1C LD BC,$7FFD   ;
- $8A1F OUT (C),A     ;
- $8A21 LD A,($C000)  ;
+ $8A19 DI            ; {DI; select bank 1
+ $8A1A LD A,$11      ; }
+ $8A1C LD BC,$7FFD   ; {Page in RAM bank 1
+ $8A1F OUT (C),A     ; }
+ $8A21 LD A,($C000)  ; {Check byte at $C000 (bank 1) against $26
  $8A24 CP $26        ;
- $8A26 JR Z,$8A35    ;
- $8A28 CALL $8A94    ;
- $8A2B DI            ;
- $8A2C LD BC,$7FFD   ;
- $8A2F LD A,$10      ;
- $8A31 OUT (C),A     ;
+ $8A26 JR Z,$8A35    ; }
+ $8A28 CALL $8A94    ; Run paged-bank routine, wait for keypress
+ $8A2B DI            ; {DI; prepare port $7FFD
+ $8A2C LD BC,$7FFD   ; }
+ $8A2F LD A,$10      ; {Restore bank 0 paging
+ $8A31 OUT (C),A     ; }
  $8A33 EI            ;
  $8A34 RET           ;
-*$8A35 LD A,$01      ;
- $8A37 LD ($8AFF),A  ;
+*$8A35 LD A,$01      ; {Set $8AFF=1 (menu done); bank 1 stays paged in
+ $8A37 LD ($8AFF),A  ; }
  $8A3A EI            ;
  $8A3B RET           ;
 
-; Routine at 8A3C
+; Check menu-done flag, dispatch to $8E96
 ;
 ; Used by the routine at #R$8A03.
-c$8A3C LD A,($8AFF)  ;
+;
+; .
+;
+; Once the menu is done ($8AFF<>0), hands off to $8E96.
+c$8A3C LD A,($8AFF)  ; {Check $8AFF flag; return if menu not done
  $8A3F OR A          ;
- $8A40 RET Z         ;
- $8A41 JP $8E96      ;
+ $8A40 RET Z         ; }
+ $8A41 JP $8E96      ; Hand off to $8E96
 
-; Routine at 8A44
+; Check menu-done flag, run paged-bank routine at $C006
 ;
 ; Used by the routine at #R$8A06.
-c$8A44 LD A,($8AFF)  ;
+;
+; .
+;
+; Runs the bank-1 "finish" entry ($C006) once, while the menu is still active
+; ($8AFF=0).
+c$8A44 LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
  $8A47 OR A          ;
- $8A48 RET NZ        ;
- $8A49 DI            ;
- $8A4A LD A,$11      ;
- $8A4C LD BC,$7FFD   ;
- $8A4F OUT (C),A     ;
- $8A51 CALL $C006    ;
- $8A54 DI            ;
- $8A55 LD A,$10      ;
- $8A57 LD BC,$7FFD   ;
- $8A5A OUT (C),A     ;
+ $8A48 RET NZ        ; }
+ $8A49 DI            ; {DI; select bank 1
+ $8A4A LD A,$11      ; }
+ $8A4C LD BC,$7FFD   ; {Page in RAM bank 1
+ $8A4F OUT (C),A     ; }
+ $8A51 CALL $C006    ; Call bank-1 finish entry ($C006)
+ $8A54 DI            ; {DI; select bank 0
+ $8A55 LD A,$10      ; }
+ $8A57 LD BC,$7FFD   ; {Restore bank 0 paging
+ $8A5A OUT (C),A     ; }
  $8A5C EI            ;
  $8A5D RET           ;
 
-; Routine at 8A5E
+; Check menu-done flag, run paged-bank routine at $8A7A
 ;
 ; Used by the routine at #R$8A09.
-c$8A5E LD A,($8AFF)  ;
- $8A61 OR A          ;
- $8A62 JP NZ,$FFD5   ;
- $8A65 DI            ;
- $8A66 LD A,$11      ;
- $8A68 LD BC,$7FFD   ;
- $8A6B OUT (C),A     ;
- $8A6D CALL $8A7A    ;
- $8A70 DI            ;
- $8A71 LD A,$10      ;
- $8A73 LD BC,$7FFD   ;
- $8A76 OUT (C),A     ;
+;
+; .
+;
+; While the menu is active, runs #R$8A7A in bank 1; once done, hands off into
+; ROM at #R$FFD5 (unconfirmed).
+c$8A5E LD A,($8AFF)  ; {Check $8AFF flag
+ $8A61 OR A          ; }
+ $8A62 JP NZ,$FFD5   ; Jump to #R$FFD5 if menu done
+ $8A65 DI            ; {DI; select bank 1
+ $8A66 LD A,$11      ; }
+ $8A68 LD BC,$7FFD   ; {Page in RAM bank 1
+ $8A6B OUT (C),A     ; }
+ $8A6D CALL $8A7A    ; Run paged-bank routine, wait ~3 frames polling $C003
+ $8A70 DI            ; {DI; select bank 0
+ $8A71 LD A,$10      ; }
+ $8A73 LD BC,$7FFD   ; {Restore bank 0 paging
+ $8A76 OUT (C),A     ; }
  $8A78 EI            ;
  $8A79 RET           ;
 
-; Routine at 8A7A
+; Run paged-bank routine, wait ~3 frames polling $C003
 ;
 ; Used by the routine at #R$8A5E.
-c$8A7A LD A,$03      ;
- $8A7C LD ($C009),A  ;
- $8A7F CALL $C000    ;
- $8A82 LD BC,$0300   ;
-*$8A85 EI            ;
- $8A86 HALT          ;
- $8A87 DI            ;
- $8A88 CALL $C003    ;
- $8A8B DEC BC        ;
+;
+; .
+;
+; Drives the bank-1 vector table (init/step/finish) for a fixed 768-frame
+; duration.
+c$8A7A LD A,$03      ; {Set $C009=3
+ $8A7C LD ($C009),A  ; }
+ $8A7F CALL $C000    ; Call bank-1 init entry ($C000)
+ $8A82 LD BC,$0300   ; BC = 768 frame counter
+*$8A85 EI            ; {Wait a frame (EI; HALT)
+ $8A86 HALT          ; }
+ $8A87 DI            ; {Call bank-1 step entry ($C003)
+ $8A88 CALL $C003    ; }
+ $8A8B DEC BC        ; {Loop until counter=0
  $8A8C LD A,B        ;
  $8A8D OR C          ;
- $8A8E JR NZ,$8A85   ;
- $8A90 CALL $C006    ;
+ $8A8E JR NZ,$8A85   ; }
+ $8A90 CALL $C006    ; Call bank-1 finish entry ($C006)
  $8A93 RET           ;
 
-; Routine at 8A94
+; Run paged-bank routine, wait for keypress
 ;
 ; Used by the routine at #R$8A12.
-c$8A94 XOR A         ;
- $8A95 LD ($C009),A  ;
- $8A98 CALL $C000    ;
-*$8A9B EI            ;
- $8A9C HALT          ;
- $8A9D DI            ;
- $8A9E CALL $C003    ;
- $8AA1 XOR A         ;
+;
+; .
+;
+; Drives the bank-1 vector table (init/step/finish) until a key is pressed.
+c$8A94 XOR A         ; {Set $C009=0
+ $8A95 LD ($C009),A  ; }
+ $8A98 CALL $C000    ; Call bank-1 init entry ($C000)
+*$8A9B EI            ; {Wait a frame (EI; HALT)
+ $8A9C HALT          ; }
+ $8A9D DI            ; {Call bank-1 step entry ($C003)
+ $8A9E CALL $C003    ; }
+ $8AA1 XOR A         ; {Poll keyboard
  $8AA2 IN A,($FE)    ;
  $8AA4 CPL           ;
- $8AA5 AND $1F       ;
- $8AA7 JR Z,$8A9B    ;
- $8AA9 CALL $C006    ;
+ $8AA5 AND $1F       ; }
+ $8AA7 JR Z,$8A9B    ; Loop until a key is pressed
+ $8AA9 CALL $C006    ; Call bank-1 finish entry ($C006)
  $8AAC DI            ;
  $8AAD RET           ;
 
-; Routine at 8AAE
+; Check menu-done flag, run paged-bank routine ($C009=1)
 ;
 ; Used by the routine at #R$8A0C.
-c$8AAE LD A,($8AFF)  ;
+;
+; .
+;
+; While the menu is active, runs the bank-1 finish entry then the init entry
+; with $C009=1.
+c$8AAE LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
  $8AB1 OR A          ;
- $8AB2 RET NZ        ;
- $8AB3 DI            ;
- $8AB4 LD A,$11      ;
- $8AB6 LD BC,$7FFD   ;
- $8AB9 OUT (C),A     ;
- $8ABB CALL $C006    ;
- $8ABE LD A,$01      ;
- $8AC0 LD ($C009),A  ;
- $8AC3 CALL $C000    ;
- $8AC6 DI            ;
- $8AC7 LD A,$10      ;
- $8AC9 LD BC,$7FFD   ;
- $8ACC OUT (C),A     ;
+ $8AB2 RET NZ        ; }
+ $8AB3 DI            ; {DI; select bank 1
+ $8AB4 LD A,$11      ; }
+ $8AB6 LD BC,$7FFD   ; {Page in RAM bank 1
+ $8AB9 OUT (C),A     ; }
+ $8ABB CALL $C006    ; Call bank-1 finish entry ($C006)
+ $8ABE LD A,$01      ; {Set $C009=1
+ $8AC0 LD ($C009),A  ; }
+ $8AC3 CALL $C000    ; Call bank-1 init entry ($C000)
+ $8AC6 DI            ; {DI; select bank 0
+ $8AC7 LD A,$10      ; }
+ $8AC9 LD BC,$7FFD   ; {Restore bank 0 paging
+ $8ACC OUT (C),A     ; }
  $8ACE EI            ;
  $8ACF RET           ;
 
-; Routine at 8AD0
+; Check menu-done flag, run paged-bank routine via HALT+$C003
 ;
 ; Used by the routine at #R$8A0F.
-c$8AD0 LD A,($8AFF)  ;
+;
+; .
+;
+; While the menu is active, waits a frame and runs the bank-1 step entry once.
+c$8AD0 LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
  $8AD3 OR A          ;
- $8AD4 RET NZ        ;
- $8AD5 DI            ;
- $8AD6 LD A,$11      ;
- $8AD8 LD BC,$7FFD   ;
- $8ADB OUT (C),A     ;
- $8ADD EI            ;
- $8ADE HALT          ;
- $8ADF CALL $C003    ;
- $8AE2 DI            ;
- $8AE3 LD A,$10      ;
- $8AE5 LD BC,$7FFD   ;
- $8AE8 OUT (C),A     ;
+ $8AD4 RET NZ        ; }
+ $8AD5 DI            ; {DI; select bank 1
+ $8AD6 LD A,$11      ; }
+ $8AD8 LD BC,$7FFD   ; {Page in RAM bank 1
+ $8ADB OUT (C),A     ; }
+ $8ADD EI            ; {Wait a frame (EI; HALT)
+ $8ADE HALT          ; }
+ $8ADF CALL $C003    ; Call bank-1 step entry ($C003)
+ $8AE2 DI            ; {DI; select bank 0
+ $8AE3 LD A,$10      ; }
+ $8AE5 LD BC,$7FFD   ; {Restore bank 0 paging
+ $8AE8 OUT (C),A     ; }
  $8AEA EI            ;
  $8AEB RET           ;
 
@@ -3403,27 +3765,34 @@ c$8B02 LD HL,$4040   ; Address on the screen
 ; Data block at 8B33
 b$8B33 DEFB $47,$D7,$70,$77
 
-; Routine at 8B37
+; Main menu loop: poll keys, dispatch to Control/Start/High-scores
 ;
 ; Used by the routines at #R$83E1, #R$8DBE and #R$8EB4.
-c$8B37 CALL $8A00    ; Show main menu
-*$8B3A CALL $8A03    ;
- $8B3D LD BC,$FEFE   ;
- $8B40 IN A,(C)      ;
+;
+; .
+;
+; Draws the menu once, then polls C/S/H each frame (matches the "C FOR CONTROL
+; OPTIONS", "S TO START", "H FOR HIGH SCORES" prompts): C enters #R$8BB4
+; (control options), S jumps into #R$7D00 (start the game), H jumps into
+; #R$8DBE (high scores).
+c$8B37 CALL $8A00    ; Show #R$8A00(main menu)
+*$8B3A CALL $8A03    ; Poll main menu state => $8A3C
+ $8B3D LD BC,$FEFE   ; {Read keyboard row $FEFE (CAPS,Z,X,C,V)
+ $8B40 IN A,(C)      ; }
  $8B42 CPL           ;
  $8B43 AND $08       ;
- $8B45 JP NZ,$8BB4   ;
- $8B48 LD BC,$FDFE   ;
- $8B4B IN A,(C)      ;
+ $8B45 JP NZ,$8BB4   ; 'C' pressed => #R$8BB4 (control options)
+ $8B48 LD BC,$FDFE   ; {Read keyboard row $FDFE (A,S,D,F,G)
+ $8B4B IN A,(C)      ; }
  $8B4D CPL           ;
  $8B4E AND $02       ;
- $8B50 JP NZ,$7D00   ;
- $8B53 LD BC,$BFFE   ;
- $8B56 IN A,(C)      ;
+ $8B50 JP NZ,$7D00   ; 'S' pressed => #R$7D00 (start game)
+ $8B53 LD BC,$BFFE   ; {Read keyboard row $BFFE (B,N,M,SS,SPACE)
+ $8B56 IN A,(C)      ; }
  $8B58 CPL           ;
  $8B59 AND $10       ;
- $8B5B JP NZ,$8DBE   ;
- $8B5E JP $8B3A      ;
+ $8B5B JP NZ,$8DBE   ; 'H' pressed => #R$8DBE (high scores)
+ $8B5E JP $8B3A      ; Loop back and poll again
 
 ; Data block at 8B61
 b$8B61 DEFB $00,$0C,$07
@@ -3481,13 +3850,13 @@ s$8BB3 DEFS $01
 c$8BB4 CALL $83C0    ;
  $8BB7 LD IX,$846E   ;
  $8BBB LD HL,$40CC   ;
- $8BBE CALL $9196    ;
+ $8BBE CALL $9196    ; Draw string IX
  $8BC1 LD HL,$4829   ;
- $8BC4 CALL $9196    ;
+ $8BC4 CALL $9196    ; Draw string IX
  $8BC7 LD HL,$4865   ;
- $8BCA CALL $9196    ;
+ $8BCA CALL $9196    ; Draw string IX
  $8BCD LD HL,$48A9   ;
- $8BD0 CALL $9196    ;
+ $8BD0 CALL $9196    ; Draw string IX
  $8BD3 LD A,$57      ;
  $8BD5 LD HL,$58CC   ;
  $8BD8 LD B,$07      ;
@@ -3504,60 +3873,78 @@ b$8BEA DEFB $EC,$7F,$FB,$1F,$EC,$7F,$FB,$1F
  $8BF2 DEFB $EC,$7F,$FB,$1F,$EC,$7F,$FB,$1F
  $8BFA DEFB $EC,$7F,$FB,$1F,$EC,$7F
 
-; Routine at 8C00
+; Build room background into shadow buffer $B800
 ;
 ; Used by the routines at #R$7B1E, #R$8114, #R$86E4, #R$92A0, #R$9328 and
 ; #R$A328.
-c$8C00 LD IX,$C000   ;
- $8C04 LD A,($8203)  ;
+;
+; .
+;
+; Reads room-layout selector bytes from the paged RAM bank at $C000+offset
+; (offset from room number $8203 and subtile $8204 - same 128K bank paged in
+; around #R$8A12). Each selector byte is decoded into the source address of a
+; pre-made 32x32 "back sprite" (#R$8C5A) and a 2x8 grid of them is stamped into
+; the shadow buffer at $B800. Falls through to #R$8CF0 for one more row. The
+; shadow buffer is later copied to the real screen by #R$8C78.
+; .
+; Offset = level*128 + room*16 (level=$8204&$0F, room=$8203&$07). Selector
+; byte: bit0 = tile variant, bits1-5 = tile index; decodes to source addr
+; $E0+((byte>>1)&$1F) : (bit0?$80:0) - tiles live at $E000-$FFFF, 64 tiles x
+; 128 bytes (32x32 1bpp). Full details, confirmation method and open questions
+; in joeblade-zx/docs/Room-Format.md - in short: only the first 3 room-slots in
+; the one bank sampled decode to real tile data, the rest of that region is
+; code, and which bank is actually paged in during gameplay is still
+; unconfirmed.
+c$8C00 LD IX,$C000   ; IX = $C000 (paged-bank tile-selector table)
+ $8C04 LD A,($8203)  ; {E = (room $8203 & 7) * 16
  $8C07 AND $07       ;
  $8C09 RLCA          ;
  $8C0A RLCA          ;
  $8C0B RLCA          ;
- $8C0C RLCA          ;
+ $8C0C RLCA          ; }
  $8C0D LD E,A        ;
- $8C0E LD A,($8204)  ;
+ $8C0E LD A,($8204)  ; {D = (subtile $8204 & $0E) >> 1
  $8C11 AND $0E       ;
  $8C13 RRA           ;
- $8C14 LD D,A        ;
- $8C15 LD A,($8204)  ;
+ $8C14 LD D,A        ; }
+ $8C15 LD A,($8204)  ; {If subtile bit0 set, E += $80
  $8C18 AND $01       ;
  $8C1A JR Z,$8C20    ;
  $8C1C LD A,E        ;
- $8C1D ADD A,$80     ;
+ $8C1D ADD A,$80     ; }
  $8C1F LD E,A        ;
-*$8C20 ADD IX,DE     ;
- $8C22 LD HL,$B800   ;
- $8C25 LD B,$02      ;
+*$8C20 ADD IX,DE     ; IX += DE (selector-table offset for this room/subtile)
+ $8C22 LD HL,$B800   ; {HL = $B800 (shadow buffer); outer loop, 2 rows
+ $8C25 LD B,$02      ; }
 *$8C27 PUSH BC       ;
  $8C28 PUSH HL       ;
- $8C29 LD B,$08      ;
+ $8C29 LD B,$08      ; {Inner loop, 8 columns; DE = 0
 *$8C2B PUSH BC       ;
- $8C2C PUSH HL       ;
+ $8C2C PUSH HL       ; }
  $8C2D LD DE,$0000   ;
- $8C30 LD A,(IX+$00) ;
+ $8C30 LD A,(IX+$00) ; {If selector byte bit0 set, E = $80
  $8C33 AND $01       ;
- $8C35 JR Z,$8C39    ;
+ $8C35 JR Z,$8C39    ; }
  $8C37 LD E,$80      ;
-*$8C39 LD A,(IX+$00) ;
- $8C3C AND $3E       ;
+*$8C39 LD A,(IX+$00) ; {D = $E0 + ((selector byte >> 1) & $1F): back-sprite
+ $8C3C AND $3E       ; source address
  $8C3E RRA           ;
- $8C3F ADD A,$E0     ;
+ $8C3F ADD A,$E0     ; }
  $8C41 LD D,A        ;
- $8C42 INC IX        ;
- $8C44 CALL $8C5A    ; Draw back sprite 32x32; DE = back sprite, HL = dest
- $8C47 POP HL        ;
+ $8C42 INC IX        ; Advance to next selector byte
+ $8C44 CALL $8C5A    ; Draw back sprite 32x32
+ $8C47 POP HL        ; {HL += 4 (advance dest column)
  $8C48 INC HL        ;
  $8C49 INC HL        ;
  $8C4A INC HL        ;
- $8C4B INC HL        ;
+ $8C4B INC HL        ; }
  $8C4C POP BC        ;
  $8C4D DJNZ $8C2B    ;
- $8C4F POP HL        ;
+ $8C4F POP HL        ; {Restore HL row start, advance to next row (L += $80)
  $8C50 POP BC        ;
- $8C51 LD L,$80      ;
+ $8C51 LD L,$80      ; }
  $8C53 DJNZ $8C27    ;
- $8C55 JP $8CF0      ;
+ $8C55 JP $8CF0      ; Continue at #R$8CF0
 
 ; Unused
 s$8C58 DEFS $02
@@ -3568,7 +3955,8 @@ s$8C58 DEFS $02
 ;
 ; .
 ;
-; DE = back sprite addr, HL = destination addr
+; Stamps one 32x32 "back sprite" (a pre-made room-background block) into the
+; shadow/real screen. DE = back sprite source addr, HL = destination addr.
 c$8C5A LD B,$04      ;
 *$8C5C PUSH BC       ;
  $8C5D PUSH HL       ;
@@ -3596,6 +3984,11 @@ c$8C5A LD B,$04      ;
 ; Copy shadow screen to real screen
 ;
 ; Used by the routines at #R$7AE5 and #R$8F00.
+;
+; .
+;
+; Pops the stack-built shadow buffer at $B800 and writes it into the real
+; screen bitmap starting at $4800, restoring SP afterwards.
 c$8C78 DI            ;
  $8C79 NOP           ;
  $8C7A LD IX,$0000   ;
@@ -3694,18 +4087,25 @@ b$8CDF DEFB $C9,$00,$00,$00,$00,$00,$00,$01
  $8CE7 DEFB $FF,$FF,$0B,$78,$B7,$20,$FB,$C9
  $8CEF DEFB $36
 
-; Routine at 8CF0
+; Draw one more background row directly onto the real screen
 ;
 ; Used by the routine at #R$8C00.
-c$8CF0 LD A,($8202)  ;
+;
+; .
+;
+; Unlike #R$8C00, this draws straight to the live screen at $4080 instead of
+; the shadow buffer, using a separate per-column selector table at $6C00
+; indexed by $8202 - purpose of the split (top HUD-adjacent strip?)
+; unconfirmed.
+c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
  $8CF3 LD H,$00      ;
  $8CF5 LD L,A        ;
  $8CF6 ADD HL,HL     ;
  $8CF7 ADD HL,HL     ;
- $8CF8 ADD HL,HL     ;
- $8CF9 LD IX,$6C00   ;
- $8CFD EX DE,HL      ;
- $8CFE ADD IX,DE     ;
+ $8CF8 ADD HL,HL     ; }
+ $8CF9 LD IX,$6C00   ; {IX = $6C00 + offset (one selector byte per screen
+ $8CFD EX DE,HL      ; column)
+ $8CFE ADD IX,DE     ; }
  $8D00 NOP           ;
  $8D01 NOP           ;
  $8D02 NOP           ;
@@ -3724,48 +4124,56 @@ c$8CF0 LD A,($8202)  ;
  $8D0F NOP           ;
  $8D10 NOP           ;
  $8D11 NOP           ;
- $8D12 LD HL,$4080   ;
- $8D15 LD B,$08      ;
+ $8D12 LD HL,$4080   ; {HL = $4080 (top strip of the real screen); 8 columns
+ $8D15 LD B,$08      ; }
 *$8D17 PUSH BC       ;
  $8D18 PUSH HL       ;
- $8D19 LD DE,$0000   ;
- $8D1C LD A,(IX+$00) ;
+ $8D19 LD DE,$0000   ; DE = 0
+ $8D1C LD A,(IX+$00) ; {If selector byte bit0 set, E = $80
  $8D1F AND $01       ;
- $8D21 JR Z,$8D25    ;
+ $8D21 JR Z,$8D25    ; }
  $8D23 LD E,$80      ;
-*$8D25 LD A,(IX+$00) ;
- $8D28 AND $3E       ;
+*$8D25 LD A,(IX+$00) ; {D = $E0 + ((selector byte >> 1) & $1F): back-sprite
+ $8D28 AND $3E       ; source address
  $8D2A RRA           ;
- $8D2B ADD A,$E0     ;
+ $8D2B ADD A,$E0     ; }
  $8D2D LD D,A        ;
- $8D2E INC IX        ;
- $8D30 CALL $8C5A    ; Draw back sprite 32x32; DE = back sprite, HL = dest
- $8D33 POP HL        ;
+ $8D2E INC IX        ; Advance to next selector byte
+ $8D30 CALL $8C5A    ; Draw back sprite 32x32
+ $8D33 POP HL        ; {HL += 4 (advance dest column)
  $8D34 INC HL        ;
  $8D35 INC HL        ;
  $8D36 INC HL        ;
- $8D37 INC HL        ;
+ $8D37 INC HL        ; }
  $8D38 POP BC        ;
  $8D39 DJNZ $8D17    ;
  $8D3B RET           ;
 
-; Routine at 8D3C
+; Check for room-edge tile, trigger transition/control screen
 ;
 ; Used by the routine at #R$8F00.
-c$8D3C LD HL,$9D18   ;
- $8D3F LD B,$06      ;
-*$8D41 LD A,($8202)  ;
+;
+; .
+;
+; Scans a small table of 6 tile IDs at $9D18; if the current room-tile ($8202)
+; matches one of them AND $820C bits 4-5 are clear AND Joe's X is at the screen
+; edge ($20 or $C0), jumps to #R$7800. Not a room-to-room transition (see
+; #R$7800) - more likely a level-exit/level-complete trigger on specific tagged
+; edge tiles.
+c$8D3C LD HL,$9D18   ; {HL = $9D18 (table of 6 edge-tile IDs); B = 6
+ $8D3F LD B,$06      ; }
+*$8D41 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $8D44 CP (HL)       ;
- $8D45 JR NZ,$8D60   ;
- $8D47 LD A,($820C)  ;
+ $8D45 JR NZ,$8D60   ; }
+ $8D47 LD A,($820C)  ; {Check $820C bits 4-5 (tile flags)
  $8D4A AND $30       ;
- $8D4C JR NZ,$8D57   ;
- $8D4E LD A,($8201)  ;
- $8D51 CP $20        ;
+ $8D4C JR NZ,$8D57   ; }
+ $8D4E LD A,($8201)  ; {Joe at left edge (X=$20)? => #R$7800
+ $8D51 CP $20        ; }
  $8D53 JP Z,$7800    ;
  $8D56 RET           ;
-*$8D57 LD A,($8201)  ;
- $8D5A CP $C0        ;
+*$8D57 LD A,($8201)  ; {Joe at right edge (X=$C0)? => #R$7800
+ $8D5A CP $C0        ; }
  $8D5C JP Z,$7800    ;
  $8D5F RET           ;
 *$8D60 INC HL        ;
@@ -3867,7 +4275,7 @@ b$8DB7 DEFB $DD,$09,$C3,$96,$85,$3E,$00
 c$8DBE CALL $83C0    ;
  $8DC1 LD IX,$8E0A   ;
  $8DC5 LD HL,$40CB   ;
- $8DC8 CALL $9196    ;
+ $8DC8 CALL $9196    ; Draw string IX
  $8DCB LD HL,$58C8   ;
  $8DCE LD B,$11      ;
 *$8DD0 LD (HL),$57   ;
@@ -3875,7 +4283,7 @@ c$8DBE CALL $83C0    ;
  $8DD3 DJNZ $8DD0    ;
  $8DD5 LD IX,$8902   ;
  $8DD9 LD HL,$482A   ;
- $8DDC CALL $8596    ;
+ $8DDC CALL $8596    ; Draw string IX and play sound
  $8DDF LD HL,$486A   ;
  $8DE2 CALL $8DB4    ;
  $8DE5 LD HL,$48AA   ;
@@ -3884,9 +4292,9 @@ c$8DBE CALL $83C0    ;
  $8DEE CALL $8DB4    ;
  $8DF1 LD HL,$502A   ;
  $8DF4 CALL $8DB4    ;
- $8DF7 CALL $8A0C    ;
+ $8DF7 CALL $8A0C    ; Poll main menu state => $8AAE
  $8DFA NOP           ;
-*$8DFB CALL $8A0F    ;
+*$8DFB CALL $8A0F    ; Poll main menu state => $8AD0
  $8DFE NOP           ;
  $8DFF CALL $91FA    ;
  $8E02 JR Z,$8DFB    ;
@@ -3920,9 +4328,15 @@ t$8E45 DEFM "!)P"
 b$8E48 DEFB $CD,$96,$91,$CD,$FA,$91,$28,$FB
  $8E50 DEFB $C3,$37,$8B
 
-; Routine at 8E53
+; Copy soldier sprite template to working area
 ;
 ; Used by the routine at #R$8E64.
+;
+; .
+;
+; Calls #R$96CE (checks the current tile's soldier movement pattern), then
+; copies 13 bytes from the soldier sprite template at $8F8C to the working area
+; $8FA0.
 c$8E53 LD H,$79      ;
  $8E55 CALL $96CE    ;
  $8E58 LD HL,$8F8C   ;
@@ -3931,11 +4345,18 @@ c$8E53 LD H,$79      ;
  $8E61 LDIR          ;
  $8E63 RET           ;
 
-; Routine at 8E64
+; Per-frame soldier update
 ;
 ; Used by the routine at #R$FF96.
+;
+; .
+;
+; Called from #R$FF96 (via #R$8F0C in the main loop). Refreshes the soldier's
+; movement pattern (#R$8E53/#R$96CC), draws it (#R$8F5A/#R$FF3E), then reacts
+; to a shot hit via #R$789D.
 c$8E64 CALL $8E53    ;
- $8E67 CALL $96CC    ;
+ $8E67 CALL $96CC    ; Soldier presence/movement-pattern dispatch for the
+                     ; current tile
  $8E6A CALL $8F5A    ;
  $8E6D CALL $FF3E    ;
  $8E70 JP $789D      ;
@@ -3945,20 +4366,32 @@ b$8E73 DEFB $00,$00,$00,$00,$00,$3E,$00,$32
  $8E7B DEFB $00,$82,$3A,$00,$82,$B7,$28,$FA
  $8E83 DEFB $C9,$00,$00,$00,$00,$00,$00,$00
  $8E8B DEFB $00,$11,$00,$C9,$64,$8F,$00,$82
- $8E93 DEFB $C9,$F1,$C9,$3A,$07,$82
+ $8E93 DEFB $C9,$F1,$C9
 
-; Message at 8E99
-t$8E99 DEFM "<<2"
-
-; Data block at 8E9C
-b$8E9C DEFB $07,$82,$FE,$FC,$20,$05,$3E,$00
- $8EA4 DEFB $32,$07,$82,$26,$9F
-
-; Message at 8EA9
-t$8EA9 DEFM "oN,n&"
-
-; Data block at 8EAE
-b$8EAE DEFB $00,$44,$C3,$80,$86,$00
+; Dispatch target from $8A41
+;
+; Used by the routine at #R$8A3C.
+;
+; .
+;
+; Reached via #R$8A3C (JP $8E96) once the main menu is done.
+c$8E96 LD A,($8207)  ;
+ $8E99 INC A         ;
+ $8E9A INC A         ;
+ $8E9B LD ($8207),A  ;
+ $8E9E CP $FC        ;
+ $8EA0 JR NZ,$8EA7   ;
+ $8EA2 LD A,$00      ;
+ $8EA4 LD ($8207),A  ;
+*$8EA7 LD H,$9F      ;
+ $8EA9 LD L,A        ;
+ $8EAA LD C,(HL)     ;
+ $8EAB INC L         ;
+ $8EAC LD L,(HL)     ;
+ $8EAD LD H,$00      ;
+ $8EAF LD B,H        ;
+ $8EB0 JP $8680      ;
+ $8EB3 NOP           ;
 
 ; Routine at 8EB4
 ;
@@ -3969,11 +4402,11 @@ c$8EB4 CALL $83C0    ;
  $8EBC JP Z,$8B37    ;
  $8EBF LD IX,$85A0   ; 'GOOD SCORING'
  $8EC3 LD HL,$480A   ;
- $8EC6 CALL $9196    ;
+ $8EC6 CALL $9196    ; Draw string IX
  $8EC9 LD HL,$486C   ;
- $8ECC CALL $9196    ;
+ $8ECC CALL $9196    ; Draw string IX
  $8ECF LD HL,$5022   ;
- $8ED2 CALL $9196    ;
+ $8ED2 CALL $9196    ; Draw string IX
  $8ED5 LD HL,$5909   ;
  $8ED8 LD B,$0E      ;
 *$8EDA LD (HL),$57   ;
@@ -3986,44 +4419,53 @@ c$8EB4 CALL $83C0    ;
 ; Unused
 s$8EE7 DEFS $19
 
-; Game loop ??
+; Main game loop
 ;
 ; Used by the routine at #R$7D96.
+;
+; .
+;
+; Reached from #R$7D00 via #R$8114/#R$FFAD/#R$7D96 when 'S' starts the game.
+; One iteration per HALT: runs room/collision/energy/door subsystems, redraws
+; Joe and the soldier, then polls the '0' key on row $EFFE - loop back to
+; itself while not pressed, otherwise reset the stack and jump to #R$8EB4 (back
+; to the menu/game-over flow).
 c$8F00 CALL $8D3C    ;
  $8F03 CALL $A750    ;
  $8F06 CALL $9650    ;
- $8F09 CALL $7B1E    ;
+ $8F09 CALL $7B1E    ; Uniform pickup
  $8F0C CALL $FF96    ;
  $8F0F CALL $850E    ;
- $8F12 CALL $7B84    ;
- $8F15 CALL $A3BA    ;
+ $8F12 CALL $7B84    ; Disguise duration timer
+ $8F15 CALL $A3BA    ; Per-frame collectible scan
  $8F18 CALL $7DCC    ;
- $8F1B CALL $8032    ;
- $8F1E CALL $9602    ; Something with door ??
- $8F21 LD HL,$8206   ;
- $8F24 INC (HL)      ;
- $8F25 CALL $7E32    ;
+ $8F1B CALL $8032    ; Read input into $820A
+ $8F1E CALL $9602    ; Draw per-room door/object graphics from event-flags
+                     ; table
+ $8F21 LD HL,$8206   ; {Increment room counter at $8206
+ $8F24 INC (HL)      ; }
+ $8F25 CALL $7E32    ; Movement/collision
  $8F28 NOP           ;
- $8F29 EI            ;
- $8F2A HALT          ;
+ $8F29 EI            ; {Wait a frame (EI; HALT)
+ $8F2A HALT          ; }
  $8F2B CALL $905A    ; Running line of symbols
- $8F2E CALL $FF14    ;
- $8F31 CALL $8546    ;
+ $8F2E CALL $FF14    ; Call $FF14
+ $8F31 CALL $8546    ; Call $8546
  $8F34 CALL $8F78    ; Pause
  $8F37 CALL $905A    ; Running line of symbols
  $8F3A CALL $8C78    ; Copy shadow screen to real screen
  $8F3D NOP           ;
- $8F3E CALL $80A0    ; Draw Joe
- $8F41 CALL $8F8C    ; Draw soldier
+ $8F3E CALL $80A0    ; Draw Joe sprite
+ $8F41 CALL $8F8C    ; Draw soldier ??
  $8F44 CALL $93DC    ; Something with energy ??
  $8F47 NOP           ;
- $8F48 EI            ;
+ $8F48 EI            ; {Poll '0' key (row $EFFE)
  $8F49 LD BC,$EFFE   ;
- $8F4C IN A,(C)      ; read keyboard
- $8F4E AND $01       ; check for '0' key
- $8F50 JP NZ,$8F00   ;
- $8F53 LD SP,$6200   ;
- $8F56 JP $8EB4      ;
+ $8F4C IN A,(C)      ;
+ $8F4E AND $01       ; }
+ $8F50 JP NZ,$8F00   ; Loop back to #R$8F00 unless '0' pressed
+ $8F53 LD SP,$6200   ; {'0' pressed: reset stack, jump to #R$8EB4
+ $8F56 JP $8EB4      ; }
 
 ; Data block at 8F59
 b$8F59 DEFB $C3
@@ -4111,48 +4553,57 @@ b$8FC1 DEFB $50,$06,$06,$C5,$E5,$06,$08,$C5
  $9001 DEFB $F5,$C9,$00,$00,$00,$00,$00,$00
  $9009 DEFB $00
 
-; Routine at 900A
+; Soldier pattern 1: chase Joe's X; shared screen/sprite-address builder
 ;
 ; Used by the routines at #R$7D64, #R$7D82 and #R$96CC.
-c$900A LD A,($8201)  ;
+;
+; .
+;
+; Compares Joe's X against the soldier's X (IX+1); moves the soldier one step
+; toward Joe (INC/DEC), picking a left/right-facing sprite (DE=$A800/$AA00)
+; accordingly. Falls into $9028 (also entered directly by #R$8164/#R$9464)
+; which turns the soldier's X (C) into a screen address (HL, $8F93) and
+; sprite/mask address (DE, $8F90/$8F8D) - bit1 of X selects sprite half, bit2
+; selects sprite row.
+c$900A LD A,($8201)  ; {Compare Joe X vs soldier X (IX+1); step toward Joe
  $900D SUB (IX+$01)  ;
  $9010 JR Z,$9017    ;
  $9012 JR C,$901C    ;
- $9014 INC (IX+$01)  ;
-*$9017 LD DE,$AA00   ;
- $901A JR $9022      ;
-*$901C DEC (IX+$01)  ;
- $901F LD DE,$A800   ;
-*$9022 LD C,(IX+$01) ;
+ $9014 INC (IX+$01)  ; }
+*$9017 LD DE,$AA00   ; {Moving right: DE = $AA00 (right-facing sprite)
+ $901A JR $9022      ; }
+*$901C DEC (IX+$01)  ; {Moving left: DE = $A800 (left-facing sprite)
+ $901F LD DE,$A800   ; }
+*$9022 LD C,(IX+$01) ; C = soldier X
  $9025 NOP           ;
  $9026 NOP           ;
  $9027 NOP           ;
 ; This entry point is used by the routines at #R$8164 and #R$9464.
-*$9028 LD HL,$4880   ;
+*$9028 LD HL,$4880   ; {HL = screen address from soldier X
  $902B LD A,C        ;
  $902C AND $F8       ;
  $902E RRCA          ;
  $902F RRCA          ;
  $9030 RRCA          ;
  $9031 ADD A,L       ;
- $9032 LD L,A        ;
- $9033 LD A,C        ;
+ $9032 LD L,A        ; }
+ $9033 LD A,C        ; {Bit1 of X: E = $80 (sprite half)
  $9034 AND $02       ;
  $9036 JR Z,$903A    ;
- $9038 LD E,$80      ;
-*$903A LD A,C        ;
+ $9038 LD E,$80      ; }
+*$903A LD A,C        ; {Bit2 of X: D += 1 (sprite row)
  $903B AND $04       ;
  $903D JR Z,$9041    ;
  $903F INC D         ;
- $9040 NOP           ;
-*$9041 LD ($8F90),DE ;
+ $9040 NOP           ; }
+*$9041 LD ($8F90),DE ; {Store $8F90 = DE, $8F93 = HL; D += 4
  $9045 LD ($8F93),HL ;
  $9048 INC D         ;
  $9049 INC D         ;
  $904A INC D         ;
- $904B INC D         ;
- $904C LD ($8F8D),DE ;
- $9050 RET           ;
+ $904B INC D         ; }
+ $904C LD ($8F8D),DE ; {Store $8F8D = DE
+ $9050 RET           ; }
 
 ; Unused
 s$9051 DEFS $09
@@ -4287,9 +4738,16 @@ b$9106 DEFB $FF,$02,$0B,$0E,$02,$0A,$1F,$1F
  $910E DEFB $1F,$1F,$FF,$22,$20,$1D,$20,$20
  $9116 DEFB $FF,$FF
 
-; Routine at 9118
+; Draw a collectible-item sprite, left or right variant
 ;
 ; Used by the routines at #R$912C and #R$A2F6.
+;
+; .
+;
+; Called by #R$912C once a collectible tile has been matched (DE/other regs
+; already set up by the caller for #R$81AA). Picks between two destination
+; columns in the shadow buffer ($B898 or $B884) based on $820C bits4-5, then
+; draws via #R$81AA.
 c$9118 LD A,($820C)  ;
  $911B AND $30       ;
  $911D JR Z,$9125    ;
@@ -4301,9 +4759,19 @@ c$9118 LD A,($820C)  ;
 ; Unused
 s$912B DEFS $01
 
-; Routine at 912C
+; Detect collectible tile under Joe, draw its icon
 ;
 ; Used by the routine at #R$8114.
+;
+; .
+;
+; Scans the same 4 tile-ID tables used by #R$926E/#R$92A0/#R$9300/#R$9328 for a
+; match against the current tile ($8202): $9D00 (15 entries, keys), $9D0F (6
+; entries, food), $9D18 (6 entries, bombs - also checked by #R$8D3C's
+; level-exit test), $9D24 (6 entries, hostages). On a match, sets up the item's
+; sprite/mask data and draws it via #R$9118. No match in any table -> falls
+; through to #R$A2F6, which checks ammo ($9D20) and uniform ($9D2B - see
+; #R$A328/#R$7B1E).
 c$912C LD HL,$9D00   ;
  $912F LD DE,$9A80   ;
  $9132 LD B,$0F      ;
@@ -4517,22 +4985,28 @@ c$925C CALL $855B    ;
  $926B DJNZ $9267    ;
  $926D RET           ;
 
-; Routine at 926E
+; Hostage pickup: check $9D24 tile at screen edge
 ;
 ; Used by the routine at #R$A3BA.
-c$926E LD HL,$9D24   ;
- $9271 LD B,$06      ;
-*$9273 LD A,($8202)  ;
+;
+; .
+;
+; Scans the 6-entry hostage tile table $9D24; on a match, checks $820C bits4-5
+; to pick which screen edge to test Joe's X against ($20 or $C0), and if Joe is
+; there, collects it via #R$86E4.
+c$926E LD HL,$9D24   ; {HL = $9D24 (hostage tile table); B = 6
+ $9271 LD B,$06      ; }
+*$9273 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9276 CP (HL)       ;
- $9277 JR NZ,$9292   ;
- $9279 LD A,($820C)  ;
- $927C AND $30       ;
+ $9277 JR NZ,$9292   ; }
+ $9279 LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $927C AND $30       ; }
  $927E JR NZ,$9289   ;
- $9280 LD A,($8201)  ;
+ $9280 LD A,($8201)  ; get Joe X
  $9283 CP $20        ;
  $9285 JP Z,$86E4    ;
  $9288 RET           ;
-*$9289 LD A,($8201)  ;
+*$9289 LD A,($8201)  ; get Joe X
  $928C CP $C0        ;
  $928E JP Z,$86E4    ;
  $9291 RET           ;
@@ -4548,46 +5022,59 @@ c$9296 JP $A78A      ;
 ; Data block at 9299
 b$9299 DEFB $0B,$78,$B1,$20,$F9,$C9,$00
 
-; Routine at 92A0
+; Key pickup: check $9D00 tile at screen edge
 ;
 ; Used by the routine at #R$A3BA.
-c$92A0 LD HL,$9D00   ;
- $92A3 LD B,$0F      ;
-*$92A5 LD A,($8202)  ;
+;
+; .
+;
+; Same pattern as #R$926E but for the 15-entry key tile table $9D00; collects
+; directly inline at $92C8 (mark tile $FF, increment key counter $8215, redraw
+; digit, rebuild background).
+c$92A0 LD HL,$9D00   ; {HL = $9D00 (key tile table); B = 15
+ $92A3 LD B,$0F      ; }
+*$92A5 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $92A8 CP (HL)       ;
- $92A9 JR NZ,$92C4   ;
- $92AB LD A,($820C)  ;
- $92AE AND $30       ;
+ $92A9 JR NZ,$92C4   ; }
+ $92AB LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $92AE AND $30       ; }
  $92B0 JR NZ,$92BB   ;
- $92B2 LD A,($8201)  ;
+ $92B2 LD A,($8201)  ; get Joe X
  $92B5 CP $20        ;
  $92B7 JP Z,$92C8    ;
  $92BA RET           ;
-*$92BB LD A,($8201)  ;
+*$92BB LD A,($8201)  ; get Joe X
  $92BE CP $C0        ;
  $92C0 JP Z,$92C8    ;
  $92C3 RET           ;
 *$92C4 INC HL        ;
  $92C5 DJNZ $92A5    ;
  $92C7 RET           ;
-*$92C8 LD (HL),$FF   ;
+*$92C8 LD (HL),$FF   ; {Mark tile visited ($FF); increment key counter $8215
  $92CA LD HL,$8215   ;
  $92CD INC (HL)      ;
- $92CE LD C,(HL)     ;
+ $92CE LD C,(HL)     ; }
  $92CF LD HL,$50BE   ;
  $92D2 CALL $925C    ;
- $92D5 CALL $8C00    ;
+ $92D5 CALL $8C00    ; Build room background into shadow buffer $B800
  $92D8 LD C,$00      ;
  $92DA CALL $86C0    ;
  $92DD RET           ;
 
-; Routine at 92DE
+; Bomb pickup: mark tile, count, rebuild
 ;
 ; Used by the routine at #R$9300.
-c$92DE LD A,(HL)     ;
+;
+; .
+;
+; Called by #R$9300 when Joe touches a $9D18-table tile at the screen edge.
+; Sets bit7 on the tile's byte (rather than $FF like the other 3 pickups),
+; increments the bomb counter $8216, redraws the digit, and does an extra
+; countdown-timer tick at $85F9 (shared with #R$9650) before rebuilding.
+c$92DE LD A,(HL)     ; {Set bit7 on tile byte; increment bomb counter $8216
  $92DF ADD A,$80     ;
  $92E1 LD (HL),A     ;
- $92E2 LD HL,$8216   ;
+ $92E2 LD HL,$8216   ; }
  $92E5 INC (HL)      ;
  $92E6 LD C,(HL)     ;
  $92E7 LD HL,$50FE   ;
@@ -4604,22 +5091,28 @@ c$92DE LD A,(HL)     ;
 ; Data block at 92FA
 b$92FA DEFB $FF,$C0,$AF,$32,$F9,$85
 
-; Routine at 9300
+; Bomb pickup: check $9D18 tile at screen edge
 ;
 ; Used by the routine at #R$A3BA.
-c$9300 LD HL,$9D18   ;
- $9303 LD B,$06      ;
-*$9305 LD A,($8202)  ;
+;
+; .
+;
+; Same pattern as #R$926E, for the 6-entry bomb tile table $9D18 (also scanned
+; by #R$8D3C's level-exit check - collecting the last bomb at the edge may be
+; what triggers that). On match, hands off to #R$92DE.
+c$9300 LD HL,$9D18   ; {HL = $9D18 (bomb tile table); B = 6
+ $9303 LD B,$06      ; }
+*$9305 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9308 CP (HL)       ;
- $9309 JR NZ,$9324   ;
- $930B LD A,($820C)  ;
- $930E AND $30       ;
+ $9309 JR NZ,$9324   ; }
+ $930B LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $930E AND $30       ; }
  $9310 JR NZ,$931B   ;
- $9312 LD A,($8201)  ;
+ $9312 LD A,($8201)  ; get Joe X
  $9315 CP $20        ;
  $9317 JP Z,$92DE    ;
  $931A RET           ;
-*$931B LD A,($8201)  ;
+*$931B LD A,($8201)  ; get Joe X
  $931E CP $C0        ;
  $9320 JP Z,$92DE    ;
  $9323 RET           ;
@@ -4627,44 +5120,51 @@ c$9300 LD HL,$9D18   ;
  $9325 DJNZ $9305    ;
  $9327 RET           ;
 
-; Routine at 9328
+; Food pickup: check $9D0F tile at screen edge
 ;
 ; Used by the routine at #R$A3BA.
-c$9328 LD HL,$9D0F   ;
- $932B LD B,$06      ;
-*$932D LD A,($8202)  ;
+;
+; .
+;
+; Same pattern as #R$926E, for the 6-entry food tile table $9D0F. Collects
+; inline at $9350 (mark tile $FF, rebuild background, then #R$9456 - refills
+; the energy gauge via #R$A23C). No dedicated on-screen counter byte like the
+; other pickups (it's consumed immediately as a health refill, not stockpiled).
+c$9328 LD HL,$9D0F   ; {HL = $9D0F (food tile table); B = 6
+ $932B LD B,$06      ; }
+*$932D LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9330 CP (HL)       ;
- $9331 JR NZ,$934C   ;
- $9333 LD A,($820C)  ;
- $9336 AND $30       ;
+ $9331 JR NZ,$934C   ; }
+ $9333 LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $9336 AND $30       ; }
  $9338 JR NZ,$9343   ;
- $933A LD A,($8201)  ;
+ $933A LD A,($8201)  ; get Joe X
  $933D CP $20        ;
  $933F JP Z,$9350    ;
  $9342 RET           ;
-*$9343 LD A,($8201)  ;
+*$9343 LD A,($8201)  ; get Joe X
  $9346 CP $C0        ;
  $9348 JP Z,$9350    ;
  $934B RET           ;
 *$934C INC HL        ;
  $934D DJNZ $932D    ;
  $934F RET           ;
-*$9350 LD (HL),$FF   ;
- $9352 CALL $8C00    ;
+*$9350 LD (HL),$FF   ; Mark tile visited ($FF)
+ $9352 CALL $8C00    ; Build room background into shadow buffer $B800
  $9355 LD C,$03      ;
  $9357 CALL $86C0    ;
- $935A CALL $9456    ;
+ $935A CALL $9456    ; Refill energy gauge
  $935D RET           ;
 
 ; Routine at 935E
 ;
 ; Used by the routines at #R$93A0 and #R$9650.
 c$935E POP BC        ;
- $935F CALL $923C    ; Draw black box
+ $935F CALL $923C    ; Draw black box on the screen
  $9362 LD IX,$9382   ; '  YOU ARE DEAD'
  $9366 LD HL,$4868   ; screen address
  $9369 CALL $9196    ; Draw string IX
- $936C CALL $8A09    ;
+ $936C CALL $8A09    ; Poll main menu state => $8A5E
  $936F CALL $91FA    ;
  $9372 NOP           ;
  $9373 NOP           ;
@@ -4686,7 +5186,7 @@ b$9377 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; DE = mask addr, HL = destination addr
 c$9396 LD ($8221),HL ;
- $9399 LD ($8223),DE ;
+ $9399 LD ($8223),DE ; set current Joe sprite mask address
  $939D RET           ;
 
 ; Unused
@@ -4722,7 +5222,7 @@ b$93C2 DEFB $00,$00,$00,$00,$19,$19,$19,$19
 ;
 ; Used by the routine at #R$8F00.
 c$93DC LD HL,($8221) ;
- $93DF LD DE,($8223) ;
+ $93DF LD DE,($8223) ; get current Joe sprite mask address
  $93E3 CALL $9446    ; B = D - 4
  $93E6 LD C,E        ; now BC = Joe sprite addr, DE = mask addr, HL = screen
                      ; addr
@@ -4818,9 +5318,14 @@ c$9446 LD B,D        ;
 b$944C DEFB $06,$08,$1A,$77,$13,$23,$10,$FA
  $9454 DEFB $C9,$00
 
-; Routine at 9456
+; Refill energy gauge (food pickup effect)
 ;
 ; Used by the routine at #R$9328.
+;
+; .
+;
+; Calls #R$A23C to refill the energy gauge $A228-$A239 back to full, then
+; clears $8205.
 c$9456 CALL $A23C    ; Energy gauge initial fill
  $9459 LD A,$00      ;
  $945B LD ($8205),A  ;
@@ -4829,23 +5334,28 @@ c$9456 CALL $A23C    ; Energy gauge initial fill
 ; Unused
 s$945F DEFS $05
 
-; Routine at 9464
+; Soldier pattern 2: synchronized left-right patrol (group A)
 ;
 ; Used by the routine at #R$96CC.
-c$9464 LD A,($8213)   ;
+;
+; .
+;
+; Byte-identical to #R$8164 but uses $8213 as the shared direction step instead
+; of $8212 - a second, independent synchronized patrol group.
+c$9464 LD A,($8213)   ; {X += $8213 (shared step); hit X=2 or $E6?
  $9467 ADD A,(IX+$01) ;
  $946A LD (IX+$01),A  ;
  $946D CP $02         ;
  $946F JR Z,$9475     ;
  $9471 CP $E6         ;
- $9473 JR NZ,$947D    ;
-*$9475 LD A,($8213)   ;
+ $9473 JR NZ,$947D    ; }
+*$9475 LD A,($8213)   ; {Flip $8213's sign
  $9478 XOR $FE        ;
- $947A LD ($8213),A   ;
-*$947D LD C,(IX+$01)  ;
- $9480 LD A,($8213)   ;
+ $947A LD ($8213),A   ; }
+*$947D LD C,(IX+$01)  ; {C = soldier X; pick sprite by $8213 sign, continue at
+ $9480 LD A,($8213)   ; #R$9028
  $9483 AND $80        ;
- $9485 JR NZ,$948D    ;
+ $9485 JR NZ,$948D    ; }
  $9487 LD DE,$AA00    ;
  $948A JP $9028       ;
 *$948D LD DE,$A800    ;
@@ -4866,7 +5376,7 @@ c$9498 LD BC,$0028   ;
  $94A7 LD HL,$9D80   ;
  $94AA LD DE,$9DE4   ;
  $94AD LDIR          ;
- $94AF CALL $8A06    ;
+ $94AF CALL $8A06    ; Poll main menu state => $8A44
  $94B2 LD DE,$9D80   ;
  $94B5 LD HL,$9D85   ;
  $94B8 LD BC,$0069   ;
@@ -4910,7 +5420,14 @@ c$9498 LD BC,$0028   ;
  $94FE NOP           ;
  $94FF RET           ;
 
-; Data block at 9500
+; Per-room event/object flags, indexed by $8202
+;
+; .
+;
+; .
+;
+; One byte per room-tile ($8202, 0-127). Read by #R$9602 each frame; each bit
+; conditionally draws a door/object graphic (see #R$9602 for the bit map).
 b$9500 DEFB $00,$00,$08,$20,$08,$08,$00,$00
  $9508 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $9510 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -4932,10 +5449,10 @@ b$9500 DEFB $00,$00,$08,$20,$08,$08,$00,$00
 ;
 ; Used by the routine at #R$8EB4.
 c$9580 LD A,$00      ;
- $9582 LD ($8201),A  ;
+ $9582 LD ($8201),A  ; set Joe X
  $9585 LD ($8202),A  ;
-*$9588 CALL $8032    ;
- $958B LD A,($820A)  ;
+*$9588 CALL $8032    ; Read input into $820A
+ $958B LD A,($820A)  ; get input state
  $958E AND $10       ;
  $9590 JR Z,$959F    ;
  $9592 CALL $8964    ;
@@ -4944,7 +5461,7 @@ c$9580 LD A,$00      ;
  $9599 LD A,(HL)     ;
  $959A CP $05        ;
  $959C JP Z,$8DBE    ;
-*$959F LD A,($820A)  ;
+*$959F LD A,($820A)  ; get input state
  $95A2 AND $01       ;
  $95A4 JR Z,$95B1    ;
  $95A6 LD HL,$8202   ;
@@ -4953,7 +5470,7 @@ c$9580 LD A,$00      ;
  $95AB CP $1B        ;
  $95AD JR NZ,$95B1   ;
  $95AF LD (HL),$00   ;
-*$95B1 LD A,($820A)  ;
+*$95B1 LD A,($820A)  ; get input state
  $95B4 AND $02       ;
  $95B6 JR Z,$95C3    ;
  $95B8 LD HL,$8202   ;
@@ -5004,43 +5521,55 @@ c$95E6 LD A,($8206)  ;
 ; Unused
 s$9601 DEFS $01
 
-; Something with door key ??
+; Draw per-room door/object graphics from event-flags table
 ;
 ; Used by the routine at #R$8F00.
-c$9602 LD A,($8202)  ;
+;
+; .
+;
+; Not room-transition code (that appears to be #R$8D3C, unconfirmed) - this
+; draws animated door/object graphics for the current room-tile. IX = #R$9500 +
+; $8202 (the current room-tile's event-flags byte). Bits 0,1,6,7 are NOPed out
+; in this build (disabled/unused). Bits 2,3,4 each draw a different column of a
+; door graphic (#R$90AA, #R$85DC, #R$95E6 - all index the same per-frame
+; animation table at $8600+ via counter $8206, just at different destination
+; columns in the shadow buffer: $B884/$B890, $B888/$B894, $B88C/$B898). Bit 5
+; (#R$FFE8) is gated on $8209==0 and leads into #R$9880: a key-gated staircase
+; check - marks this tile as requiring a key to climb.
+c$9602 LD A,($8202)  ; {IX = $9500 + $8202 (this room's event-flags byte)
  $9605 LD L,A        ;
- $9606 LD H,$95      ;
+ $9606 LD H,$95      ; }
  $9608 PUSH HL       ;
  $9609 POP IX        ;
- $960B LD A,(IX+$00) ;
- $960E AND $01       ;
+ $960B LD A,(IX+$00) ; {Bit0: unused (NOPed out)
+ $960E AND $01       ; }
  $9610 NOP           ;
  $9611 NOP           ;
  $9612 NOP           ;
- $9613 LD A,(IX+$00) ;
- $9616 AND $02       ;
+ $9613 LD A,(IX+$00) ; {Bit1: unused (NOPed out)
+ $9616 AND $02       ; }
  $9618 NOP           ;
  $9619 NOP           ;
  $961A NOP           ;
- $961B LD A,(IX+$00) ;
+ $961B LD A,(IX+$00) ; {Bit2: draw door column 1 (#R$90AA)
  $961E AND $04       ;
- $9620 CALL NZ,$90AA ;
- $9623 LD A,(IX+$00) ;
+ $9620 CALL NZ,$90AA ; }
+ $9623 LD A,(IX+$00) ; {Bit3: draw door column 2 (#R$85DC)
  $9626 AND $08       ;
- $9628 CALL NZ,$85DC ;
- $962B LD A,(IX+$00) ;
+ $9628 CALL NZ,$85DC ; }
+ $962B LD A,(IX+$00) ; {Bit4: draw door column 3 (#R$95E6)
  $962E AND $10       ;
- $9630 CALL NZ,$95E6 ;
- $9633 LD A,(IX+$00) ;
+ $9630 CALL NZ,$95E6 ; }
+ $9633 LD A,(IX+$00) ; {Bit5: key-gated staircase check (#R$FFE8)
  $9636 AND $20       ;
- $9638 CALL NZ,$FFE8 ;
- $963B LD A,(IX+$00) ;
- $963E AND $40       ;
+ $9638 CALL NZ,$FFE8 ; }
+ $963B LD A,(IX+$00) ; {Bit6: unused (NOPed out)
+ $963E AND $40       ; }
  $9640 NOP           ;
  $9641 NOP           ;
  $9642 NOP           ;
- $9643 LD A,(IX+$00) ;
- $9646 AND $80       ;
+ $9643 LD A,(IX+$00) ; {Bit7: unused (NOPed out)
+ $9646 AND $80       ; }
  $9648 NOP           ;
  $9649 NOP           ;
  $964A NOP           ;
@@ -5088,10 +5617,10 @@ c$9650 LD HL,$85F9   ;
  $9685 LD IX,$85FA   ;
  $9689 LD HL,$50E8   ;
  $968C JP $9196      ;
-*$968F CALL $923C    ; Draw black box
+*$968F CALL $923C    ; Draw black box on the screen
  $9692 LD IX,$96C0   ;
  $9696 LD HL,$486A   ;
- $9699 CALL $9196    ;
+ $9699 CALL $9196    ; Draw string IX
  $969C CALL $856E    ;
  $969F CALL $856E    ;
  $96A2 CALL $856E    ;
@@ -5109,17 +5638,26 @@ c$9650 LD HL,$85F9   ;
 b$96C0 DEFB $0E,$14,$13,$1F,$0E,$05,$1F,$13
  $96C8 DEFB $08,$0C,$04,$FF
 
-; Routine at 96CC
+; Soldier presence/movement-pattern dispatch for the current tile
 ;
 ; Used by the routine at #R$8E64.
-c$96CC LD H,$97      ;
+;
+; .
+;
+; The even (low) byte of #R$9700's word pair for the current tile ($8202) is a
+; soldier movement-pattern selector, not unused padding: 0 = no soldier (clears
+; the soldier screen address $8F93 and returns), 1-6 select one of 6 movement
+; routines (#R$900A/#R$9464/#R$8164/#R$7D64/#R$7D82/#R$7D8C). Confirmed 4/4
+; against known room layout: tiles $71/$7A (have a soldier) hold pattern 2/1;
+; tiles $72/$7B (no soldier) hold pattern 0 - see docs/Room-Format.md.
+c$96CC LD H,$97      ; {IX = #R$9700 entry for current tile ($8202)
 ; This entry point is used by the routine at #R$8E53.
 *$96CE LD A,($8202)  ;
  $96D1 RLCA          ;
  $96D2 LD L,A        ;
  $96D3 PUSH HL       ;
- $96D4 POP IX        ;
- $96D6 LD A,(IX+$00) ;
+ $96D4 POP IX        ; }
+ $96D6 LD A,(IX+$00) ; A = movement-pattern byte (0 = no soldier)
  $96D9 CP $01        ;
  $96DB JP Z,$900A    ;
  $96DE CP $02        ;
@@ -5132,110 +5670,230 @@ c$96CC LD H,$97      ;
  $96EF JP Z,$7D82    ;
  $96F2 CP $06        ;
  $96F4 JP Z,$7D8C    ;
- $96F7 LD HL,$0000   ;
- $96FA LD ($8F93),HL ;
+ $96F7 LD HL,$0000   ; {No/unknown pattern: clear soldier screen address $8F93
+ $96FA LD ($8F93),HL ; }
  $96FD RET           ;
 
 ; Data block at 96FE
-b$96FE DEFB $00,$00,$00,$46,$02,$0E,$02,$BC
- $9706 DEFB $00,$46,$03,$7A,$03,$B4,$00,$46
- $970E DEFB $00,$80,$01,$51,$00,$46,$01,$75
- $9716 DEFB $00,$46,$02,$CA,$00,$A4,$02,$60
- $971E DEFB $01,$74,$02,$66,$03,$23,$02,$05
- $9726 DEFB $04,$82,$04,$26,$00,$A5,$05,$93
- $972E DEFB $02,$0B,$01,$78,$00,$46,$01,$8F
- $9736 DEFB $00,$46,$00,$46,$00,$80,$02,$3F
- $973E DEFB $00,$80,$01,$39,$01,$80,$00,$46
- $9746 DEFB $02,$E2,$00,$80,$03,$CA,$02,$8C
- $974E DEFB $01,$35,$01,$5E,$03,$1B,$02,$BA
- $9756 DEFB $02,$47,$02,$1D,$02,$39,$01,$86
- $975E DEFB $00,$46,$00,$46,$01,$62,$03,$30
- $9766 DEFB $04,$51,$04,$57,$00,$46,$01,$32
- $976E DEFB $00,$46,$02,$C3,$02,$CC,$00,$46
- $9776 DEFB $02,$BA,$03,$33,$01,$32,$02,$32
- $977E DEFB $02,$32,$01,$5A,$00,$46,$01,$60
- $9786 DEFB $00,$46,$03,$31,$01,$54,$01,$4F
- $978E DEFB $00,$46,$00,$46,$04,$8C,$02,$24
- $9796 DEFB $00,$46,$04,$13,$01,$86,$04,$B3
- $979E DEFB $04,$3E,$01,$B5,$00,$46,$01,$84
- $97A6 DEFB $02,$3D,$00,$46,$01,$AD,$01,$5C
- $97AE DEFB $06,$C5,$04,$51,$05,$0E,$00,$46
- $97B6 DEFB $03,$31,$03,$2C,$00,$46,$04,$87
- $97BE DEFB $05,$7F,$01,$B1,$02,$28,$03,$B3
- $97C6 DEFB $00,$46,$04,$4E,$06,$99,$01,$66
- $97CE DEFB $01,$36,$00,$46,$01,$55,$03,$85
- $97D6 DEFB $01,$92,$03,$93,$03,$24,$02,$51
- $97DE DEFB $02,$5B,$03,$A5,$02,$43,$00,$46
- $97E6 DEFB $02,$CA,$02,$05,$02,$80,$03,$B3
- $97EE DEFB $03,$AE,$00,$46,$04,$14,$01,$C4
- $97F6 DEFB $00,$46,$04,$6E,$01,$9D,$02,$BA
- $97FE DEFB $01,$84,$18,$0E,$14,$1F,$07,$00
- $9806 DEFB $15,$04,$1F,$05,$0E,$14,$0D,$03
- $980E DEFB $1F,$FF,$1F,$1F,$00,$1F,$02,$04
- $9816 DEFB $0B,$0B,$1F,$0A,$04,$18,$1D,$1F
- $981E DEFB $1F,$FF,$18,$0E,$14,$1F,$07,$00
- $9826 DEFB $15,$04,$1F,$05,$0E,$14,$0D,$03
- $982E DEFB $1F,$FF,$1F,$1F,$1F,$00,$1F,$07
- $9836 DEFB $0E,$12,$13,$00,$06,$04,$1F,$FF
- $983E DEFB $1F,$FF,$1F,$1F,$1F,$04,$17,$0F
- $9846 DEFB $0B,$0E,$12,$08,$15,$04,$1F,$1F
- $984E DEFB $1F,$FF,$1F,$1F,$1F,$00,$02,$13
- $9856 DEFB $08,$15,$00,$13,$04,$03,$1D,$1F
- $985E DEFB $1F,$FF,$1F,$18,$0E,$14,$1F,$07
- $9866 DEFB $00,$15,$04,$1F,$05,$0E,$14,$0D
- $986E DEFB $03,$FF,$1F,$1F,$1F,$12,$0E,$0C
- $9876 DEFB $04,$1F,$05,$0E,$0E,$03,$1D,$1F
- $987E DEFB $1F,$FF
+b$96FE DEFB $00,$00
 
-; Routine at 9880
+; Per-tile soldier movement pattern (low byte) + boundary value (high byte)
+;
+; .
+;
+; .
+;
+; Word pairs indexed by $8202 (low byte at $9700+2*idx, high byte at +2*idx+1 -
+; the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier
+; movement-pattern selector (0 = no soldier, 1-6 = a movement routine) - see
+; #R$96CC. Confirmed 4/4 against known room layout - see docs/Room-Format.md.
+; Array proper is 128 words (256 bytes, index range 0-127); the trailing 128
+; bytes are unaccounted for.
+b$9700 DEFW $4600
+ $9702 DEFW $0E02
+ $9704 DEFW $BC02
+ $9706 DEFW $4600
+ $9708 DEFW $7A03
+ $970A DEFW $B403
+ $970C DEFW $4600
+ $970E DEFW $8000
+ $9710 DEFW $5101
+ $9712 DEFW $4600
+ $9714 DEFW $7501
+ $9716 DEFW $4600
+ $9718 DEFW $CA02
+ $971A DEFW $A400
+ $971C DEFW $6002
+ $971E DEFW $7401
+ $9720 DEFW $6602
+ $9722 DEFW $2303
+ $9724 DEFW $0502
+ $9726 DEFW $8204
+ $9728 DEFW $2604
+ $972A DEFW $A500
+ $972C DEFW $9305
+ $972E DEFW $0B02
+ $9730 DEFW $7801
+ $9732 DEFW $4600
+ $9734 DEFW $8F01
+ $9736 DEFW $4600
+ $9738 DEFW $4600
+ $973A DEFW $8000
+ $973C DEFW $3F02
+ $973E DEFW $8000
+ $9740 DEFW $3901
+ $9742 DEFW $8001
+ $9744 DEFW $4600
+ $9746 DEFW $E202
+ $9748 DEFW $8000
+ $974A DEFW $CA03
+ $974C DEFW $8C02
+ $974E DEFW $3501
+ $9750 DEFW $5E01
+ $9752 DEFW $1B03
+ $9754 DEFW $BA02
+ $9756 DEFW $4702
+ $9758 DEFW $1D02
+ $975A DEFW $3902
+ $975C DEFW $8601
+ $975E DEFW $4600
+ $9760 DEFW $4600
+ $9762 DEFW $6201
+ $9764 DEFW $3003
+ $9766 DEFW $5104
+ $9768 DEFW $5704
+ $976A DEFW $4600
+ $976C DEFW $3201
+ $976E DEFW $4600
+ $9770 DEFW $C302
+ $9772 DEFW $CC02
+ $9774 DEFW $4600
+ $9776 DEFW $BA02
+ $9778 DEFW $3303
+ $977A DEFW $3201
+ $977C DEFW $3202
+ $977E DEFW $3202
+ $9780 DEFW $5A01
+ $9782 DEFW $4600
+ $9784 DEFW $6001
+ $9786 DEFW $4600
+ $9788 DEFW $3103
+ $978A DEFW $5401
+ $978C DEFW $4F01
+ $978E DEFW $4600
+ $9790 DEFW $4600
+ $9792 DEFW $8C04
+ $9794 DEFW $2402
+ $9796 DEFW $4600
+ $9798 DEFW $1304
+ $979A DEFW $8601
+ $979C DEFW $B304
+ $979E DEFW $3E04
+ $97A0 DEFW $B501
+ $97A2 DEFW $4600
+ $97A4 DEFW $8401
+ $97A6 DEFW $3D02
+ $97A8 DEFW $4600
+ $97AA DEFW $AD01
+ $97AC DEFW $5C01
+ $97AE DEFW $C506
+ $97B0 DEFW $5104
+ $97B2 DEFW $0E05
+ $97B4 DEFW $4600
+ $97B6 DEFW $3103
+ $97B8 DEFW $2C03
+ $97BA DEFW $4600
+ $97BC DEFW $8704
+ $97BE DEFW $7F05
+ $97C0 DEFW $B101
+ $97C2 DEFW $2802
+ $97C4 DEFW $B303
+ $97C6 DEFW $4600
+ $97C8 DEFW $4E04
+ $97CA DEFW $9906
+ $97CC DEFW $6601
+ $97CE DEFW $3601
+ $97D0 DEFW $4600
+ $97D2 DEFW $5501
+ $97D4 DEFW $8503
+ $97D6 DEFW $9201
+ $97D8 DEFW $9303
+ $97DA DEFW $2403
+ $97DC DEFW $5102
+ $97DE DEFW $5B02
+ $97E0 DEFW $A503
+ $97E2 DEFW $4302
+ $97E4 DEFW $4600
+ $97E6 DEFW $CA02
+ $97E8 DEFW $0502
+ $97EA DEFW $8002
+ $97EC DEFW $B303
+ $97EE DEFW $AE03
+ $97F0 DEFW $4600
+ $97F2 DEFW $1404
+ $97F4 DEFW $C401
+ $97F6 DEFW $4600
+ $97F8 DEFW $6E04
+ $97FA DEFW $9D01
+ $97FC DEFW $BA02
+ $97FE DEFW $8401
+ $9800 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {Unidentified trailing bytes
+ $9808 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ;
+ $9810 DEFB $1F,$1F,$00,$1F,$02,$04,$0B,$0B ;
+ $9818 DEFB $1F,$0A,$04,$18,$1D,$1F,$1F,$FF ;
+ $9820 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ;
+ $9828 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ;
+ $9830 DEFB $1F,$1F,$1F,$00,$1F,$07,$0E,$12 ;
+ $9838 DEFB $13,$00,$06,$04,$1F,$FF,$1F,$FF ;
+ $9840 DEFB $1F,$1F,$1F,$04,$17,$0F,$0B,$0E ;
+ $9848 DEFB $12,$08,$15,$04,$1F,$1F,$1F,$FF ;
+ $9850 DEFB $1F,$1F,$1F,$00,$02,$13,$08,$15 ;
+ $9858 DEFB $00,$13,$04,$03,$1D,$1F,$1F,$FF ;
+ $9860 DEFB $1F,$18,$0E,$14,$1F,$07,$00,$15 ;
+ $9868 DEFB $04,$1F,$05,$0E,$14,$0D,$03,$FF ;
+ $9870 DEFB $1F,$1F,$1F,$12,$0E,$0C,$04,$1F ;
+ $9878 DEFB $05,$0E,$0E,$03,$1D,$1F,$1F,$FF ; }
+
+; Key-gated staircase: consume a key to climb, or block the UP input
 ;
 ; Used by the routine at #R$FFE8.
-c$9880 LD A,($820A)  ;
+;
+; .
+;
+; Called (via #R$FFE8) whenever Joe isn't mid-jump ($8209=0) and the current
+; tile has an up-stair flag set in $820C (bit4=left side, bit2=right side). If
+; Joe is standing at that stair's screen edge with UP pressed: with keys in
+; stock ($8215), consumes one and redraws the key-count digit (#R$925C); with
+; none, clears the UP bit in $820A before #R$7E32 processes it - blocking the
+; level-up transition outright. Confirms $8215's "key" role extends beyond a
+; simple pickup counter: keys are also the toll for certain staircases.
+; Left-edge and right-edge halves are otherwise identical.
+c$9880 LD A,($820A)  ; {UP pressed?
  $9883 AND $08       ;
- $9885 JR Z,$98B4    ;
- $9887 LD A,($8201)  ;
+ $9885 JR Z,$98B4    ; }
+ $9887 LD A,($8201)  ; {Joe at left edge (X&$E0=$20)?
  $988A ADD A,$10     ;
  $988C AND $E0       ;
  $988E CP $20        ;
- $9890 JR NZ,$98B4   ;
- $9892 LD A,($820C)  ;
+ $9890 JR NZ,$98B4   ; }
+ $9892 LD A,($820C)  ; {$820C bit4 (up-stair-left) set?
  $9895 AND $10       ;
- $9897 JR Z,$98B4    ;
- $9899 LD A,($8215)  ;
+ $9897 JR Z,$98B4    ; }
+ $9899 LD A,($8215)  ; {Have keys ($8215)?
  $989C OR A          ;
- $989D JR NZ,$98A9   ;
- $989F LD A,($820A)  ;
+ $989D JR NZ,$98A9   ; }
+ $989F LD A,($820A)  ; get input state
  $98A2 AND $F7       ;
- $98A4 LD ($820A),A  ;
+ $98A4 LD ($820A),A  ; set input state
  $98A7 JR $98B4      ;
-*$98A9 LD HL,$8215   ;
+*$98A9 LD HL,$8215   ; {Have a key: decrement $8215, redraw digit
  $98AC DEC (HL)      ;
  $98AD LD C,(HL)     ;
  $98AE LD HL,$50BE   ;
- $98B1 JP $925C      ;
-*$98B4 LD A,($820A)  ;
+ $98B1 JP $925C      ; }
+*$98B4 LD A,($820A)  ; get input state
  $98B7 AND $08       ;
  $98B9 RET Z         ;
- $98BA LD A,($8201)  ;
+ $98BA LD A,($8201)  ; get Joe X
  $98BD ADD A,$10     ;
  $98BF AND $E0       ;
  $98C1 CP $C0        ;
  $98C3 RET NZ        ;
- $98C4 LD A,($820C)  ;
+ $98C4 LD A,($820C)  ; {$820C bit2 (up-stair-right) set?
  $98C7 AND $04       ;
- $98C9 RET Z         ;
- $98CA LD A,($8215)  ;
+ $98C9 RET Z         ; }
+ $98CA LD A,($8215)  ; {Have keys ($8215)?
  $98CD OR A          ;
- $98CE JR NZ,$98DA   ;
- $98D0 LD A,($820A)  ;
+ $98CE JR NZ,$98DA   ; }
+ $98D0 LD A,($820A)  ; get input state
  $98D3 AND $F7       ;
- $98D5 LD ($820A),A  ;
+ $98D5 LD ($820A),A  ; set input state
  $98D8 RET           ;
 
 ; Unused
 s$98D9 DEFS $01
 
-; Routine at 98DA
+; Have a key (right-side stair): decrement $8215, redraw digit
 ;
 ; Used by the routine at #R$9880.
 c$98DA LD HL,$8215   ;
@@ -5273,7 +5931,7 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
  $9968 DEFB $02,$00,$16,$80,$01,$00,$05,$00 ;
  $9970 DEFB $01,$00,$2D,$00,$00,$80,$1A,$00 ;
  $9978 DEFB $00,$40,$64,$00,$00,$30,$18,$00 ; }
-; Mask 32x32
+; Mask 32x32 bomb
  $9980 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,56,4,4,,($9980-$99FF-1-32)(msk9980)]
  $9988 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $9990 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
@@ -5307,7 +5965,7 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
  $9A68 DEFB $00,$00,$37,$80,$00,$00,$0F,$00 ;
  $9A70 DEFB $00,$00,$0E,$00,$00,$00,$00,$00 ;
  $9A78 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 key
  $9A80 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,56,4,4,,($9A80-$9AFF-1-32)(msk9A80)]
  $9A88 DEFB $FF,$FF,$FF,$FF,$FE,$0F,$FF,$FF ;
  $9A90 DEFB $F9,$F3,$FF,$FF,$F7,$FD,$FF,$FF ;
@@ -5341,7 +5999,7 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
  $9B68 DEFB $00,$00,$00,$40,$02,$FF,$FE,$40 ;
  $9B70 DEFB $00,$00,$00,$40,$00,$FF,$FE,$00 ;
  $9B78 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 food
  $9B80 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$F8,$FF ; {#HTML[#UDGARRAY4,56,4,4,,($9B80-$9BFF-1-32)(msk9B80)]
  $9B88 DEFB $FF,$FF,$F7,$7F,$FF,$FF,$F8,$FF ;
  $9B90 DEFB $FF,$FF,$F5,$7F,$FF,$FF,$F5,$7F ;
@@ -5375,7 +6033,7 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
  $9C68 DEFB $7D,$FF,$FF,$BE,$7D,$FF,$FF,$BE ;
  $9C70 DEFB $3E,$FF,$FF,$7C,$1E,$EF,$F7,$78 ;
  $9C78 DEFB $0E,$80,$01,$70,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 hostage
  $9C80 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,56,4,4,,($9C80-$9CFF-1-32)(msk9C80)]
  $9C88 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $9C90 DEFB $FF,$C3,$0F,$FF,$FF,$BC,$F7,$FF ;
@@ -5392,49 +6050,44 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
  $9CE8 DEFB $7D,$FF,$FF,$BE,$7D,$FF,$FF,$BE ;
  $9CF0 DEFB $BE,$FF,$FF,$7D,$DE,$EF,$F7,$7B ;
  $9CF8 DEFB $EE,$90,$09,$77,$F0,$7F,$FE,$0F ; }
- $9D00 DEFB $0C,$31,$4F,$5E,$7D,$0D
 
-; Message at 9D06
-t$9D06 DEFM "2Qi"
-
-; Data block at 9D09
-b$9D09 DEFB $7C,$11
-
-; Message at 9D0B
-t$9D0B DEFM "3Raz"
-
-; Data block at 9D0F
-b$9D0F DEFB $01,$13
-
-; Message at 9D11
-t$9D11 DEFM "5Td"
-
-; Data block at 9D14
-b$9D14 DEFB $02
-
-; Message at 9D15
-t$9D15 DEFM " BUe"
-
-; Data block at 9D19
-b$9D19 DEFB $04
-
-; Message at 9D1A
-t$9D1A DEFM "\"CYg"
-
-; Data block at 9D1E
-b$9D1E DEFB $05
-
-; Message at 9D1F
-t$9D1F DEFM "$IZj"
-
-; Data block at 9D23
-b$9D23 DEFB $06
-
-; Message at 9D24
-t$9D24 DEFM "&J[l"
-
-; Data block at 9D28
-b$9D28 DEFB $07,$29,$4C,$5C,$71,$08
+; Collectible tile-ID tables (keys/food/bombs/ammo/hostages/uniform)
+;
+; .
+;
+; .
+;
+; Flat byte arrays of raw room-tile indices ($8202-space, 0-127), one byte per
+; collectible instance, not sorted. No count/header stored in the data - the
+; scanning code (#R$912C/#R$926E/#R$92A0/#R$9300/#R$9328 for the first 4,
+; #R$A2F6/#R$A328/#R$7B1E for ammo/uniform) has the entry count hardcoded.
+; 2-byte gaps between some tables (e.g. $9D1E-$9D1F, $9D22-$9D23) are
+; unaccounted for - not yet part of any known table.
+b$9D00 DEFB $0C,$31,$4F,$5E,$7D,$0D,$32,$51,$69,$7C,$11,$33,$52,$61,$7A ; Keys (15
+                                                                        ; tiles)
+ $9D0F DEFB $01,$13,$35,$54,$64,$02                                     ; Food (6
+                                                                        ; tiles) -
+                                                                        ; refills
+                                                                        ; energy,
+                                                                        ; see
+                                                                        ; #R$9328/#R$9456
+ $9D15 DEFB $20,$42,$55
+ $9D18 DEFB $65,$04,$22,$43,$59,$67                                     ; Bombs (6
+                                                                        ; tiles)
+ $9D1E DEFB $05,$24
+ $9D20 DEFB $49,$5A                                                     ; Ammo (2
+                                                                        ; tiles) -
+                                                                        ; see
+                                                                        ; #R$A2F6/#R$A328/#R$A798
+ $9D22 DEFB $6A,$06
+ $9D24 DEFB $26,$4A,$5B,$6C,$07,$29                                     ; Hostages
+                                                                        ; (6 tiles)
+ $9D2A DEFB $4C
+ $9D2B DEFB $5C,$71                                                     ; Uniform/disguise
+                                                                        ; (2 tiles)
+                                                                        ; - see
+                                                                        ; #R$A2F6/#R$7B1E
+ $9D2D DEFB $08
 
 ; Message at 9D2E
 t$9D2E DEFM "/N]y"
@@ -5779,9 +6432,14 @@ c$A23C LD HL,$A228   ;
 ; Unused
 s$A28B DEFS $01
 
-; Routine at A28C
+; Descending-pitch beeper sweep (2nd stage)
 ;
 ; Used by the routine at #R$A2BE.
+;
+; .
+;
+; Border/speaker OUT ($FE) sweep, shorter duration (E=5) than #R$A2BE - second
+; stage of the gunshot sound played by #R$FFF0.
 c$A28C NOP           ;
  $A28D LD HL,$3200   ;
  $A290 LD E,$05      ;
@@ -5823,9 +6481,14 @@ c$A28C NOP           ;
 ; Unused
 s$A2BD DEFS $01
 
-; Routine at A2BE
+; Descending-pitch beeper sweep (1st stage), falls into #R$A28C
 ;
 ; Used by the routine at #R$FFF0.
+;
+; .
+;
+; First stage of the gunshot sound: OUT ($FE) sweep from $3200 down to $2Exx,
+; then falls into #R$A28C for a second, shorter sweep.
 c$A2BE NOP           ;
  $A2BF LD HL,$3200   ;
  $A2C2 LD E,$1E      ;
@@ -5867,9 +6530,15 @@ c$A2BE NOP           ;
 ; Data block at A2F1
 b$A2F1 DEFB $3C,$06,$0F,$C0,$C0
 
-; Routine at A2F6
+; Detect ammo or uniform tile under Joe, draw its icon
 ;
 ; Used by the routine at #R$912C.
+;
+; .
+;
+; Same pattern as #R$912C but for two more collectibles: ammo (table $9D20,
+; sprite/mask $A500/$A580) and uniform (table $9D2B, sprite/mask $A400/$A480).
+; Pickup is handled separately by #R$A328 (ammo) and #R$7B1E (uniform).
 c$A2F6 LD HL,$9D20   ;
  $A2F9 LD DE,$A580   ;
  $A2FC LD B,$02      ;
@@ -5893,41 +6562,48 @@ c$A2F6 LD HL,$9D20   ;
 *$A321 INC HL        ;
  $A322 DJNZ $A315    ;
  $A324 RET           ;
+ $A325 XOR D         ;
+ $A326 AND E         ;
+ $A327 NOP           ;
 
-; Data block at A325
-b$A325 DEFB $AA,$A3,$00
-
-; Routine at A328
+; Ammo pickup: check $9D20 tile at screen edge
 ;
 ; Used by the routine at #R$A3BA.
-c$A328 LD HL,$9D20   ;
- $A32B LD B,$02      ;
-*$A32D LD A,($8202)  ;
+;
+; .
+;
+; Same edge-triggered pattern as #R$926E, for the ammo tile table $9D20. On
+; match: marks the tile visited, rebuilds the background, shows a message
+; (#R$A370, undeciphered) and a black-box popup, adds 10 to the ammo count
+; $8225, then continues at #R$9296.
+c$A328 LD HL,$9D20   ; {HL = $9D20 (ammo tile table); B = 2
+ $A32B LD B,$02      ; }
+*$A32D LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $A330 CP (HL)       ;
- $A331 JR NZ,$A34C   ;
- $A333 LD A,($820C)  ;
- $A336 AND $30       ;
+ $A331 JR NZ,$A34C   ; }
+ $A333 LD A,($820C)  ; {$820C bits4-5: pick which edge to check
+ $A336 AND $30       ; }
  $A338 JR NZ,$A343   ;
- $A33A LD A,($8201)  ;
+ $A33A LD A,($8201)  ; get Joe X
  $A33D CP $20        ;
  $A33F JP Z,$A350    ;
  $A342 RET           ;
-*$A343 LD A,($8201)  ;
+*$A343 LD A,($8201)  ; get Joe X
  $A346 CP $C0        ;
  $A348 JP Z,$A350    ;
  $A34B RET           ;
 *$A34C INC HL        ;
  $A34D DJNZ $A32D    ;
  $A34F RET           ;
-*$A350 LD (HL),$FF   ;
- $A352 CALL $8C00    ;
- $A355 CALL $923C    ; Draw black box
+*$A350 LD (HL),$FF   ; Mark tile visited ($FF)
+ $A352 CALL $8C00    ; Build room background into shadow buffer $B800
+ $A355 CALL $923C    ; Draw black box on the screen
  $A358 LD IX,$A370   ;
  $A35C LD HL,$4868   ;
- $A35F CALL $9196    ;
+ $A35F CALL $9196    ; Draw string IX
  $A362 CALL $856E    ;
- $A365 LD A,($8225)  ;
- $A368 ADD A,$0A     ;
+ $A365 LD A,($8225)  ; {$8225 += 10 (ammo)
+ $A368 ADD A,$0A     ; }
  $A36A LD ($8225),A  ;
  $A36D JP $9296      ;
 
@@ -5956,14 +6632,14 @@ c$A3AA LD A,($7B0E)  ;
  $A3B7 LDIR          ;
  $A3B9 RET           ;
 
-; Routine at A3BA
+; Per-frame collectible scan: ammo, food, bombs, keys, hostages
 ;
 ; Used by the routine at #R$8F00.
 c$A3BA CALL $A328    ;
- $A3BD CALL $9328    ;
- $A3C0 CALL $9300    ;
- $A3C3 CALL $92A0    ;
- $A3C6 CALL $926E    ;
+ $A3BD CALL $9328    ; Food pickup
+ $A3C0 CALL $9300    ; Bomb pickup
+ $A3C3 CALL $92A0    ; Key pickup
+ $A3C6 CALL $926E    ; Hostage pickup
  $A3C9 RET           ;
 
 ; Data block at A3CA
@@ -6006,7 +6682,7 @@ b$A400 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A400-$A
  $A468 DEFB $00,$07,$FC,$B0,$00,$38,$03,$10 ;
  $A470 DEFB $00,$7F,$E1,$C0,$00,$40,$18,$78 ;
  $A478 DEFB $00,$7F,$E0,$00,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 uniform
  $A480 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($A480-$A4FF-1-32)(mskA480)]
  $A488 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $A490 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
@@ -6040,7 +6716,7 @@ b$A400 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A400-$A
  $A568 DEFB $10,$00,$00,$80,$17,$FF,$FE,$80 ;
  $A570 DEFB $13,$FF,$FC,$80,$10,$00,$00,$80 ;
  $A578 DEFB $1F,$FF,$FF,$80,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 ammo
  $A580 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($A580-$A5FF-1-32)(mskA580)]
  $A588 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $A590 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
@@ -6167,38 +6843,47 @@ c$A78A LD HL,$8000   ;
 ; Unused
 s$A797 DEFS $01
 
-; Routine at A798
+; Shoot: fire button consumes one round of ammo ($8225)
 ;
 ; Used by the routine at #R$8F5A.
-c$A798 LD A,($820A)  ;
- $A79B AND $10       ;
+;
+; .
+;
+; Checked from #R$8F5A (called from #R$8E64). If fire is pressed ($820A bit4)
+; and $8225 (ammo count) is non-zero, consumes one round, calls #R$FFF0 and
+; #R$7869 (soldier hit/reaction logic), then sets $8226 based on Joe's X
+; relative to a $9700-table entry for the current tile (bullet range/collision
+; against the current room?). Out of ammo -> #R$A7DC (draw an "out of ammo"
+; message, #R$A7EC).
+c$A798 LD A,($820A)  ; {Check fire button ($820A bit4)
+ $A79B AND $10       ; }
  $A79D RET Z         ;
- $A79E LD A,($8225)  ;
+ $A79E LD A,($8225)  ; {$8225 (ammo count): none left -> #R$A7DC
  $A7A1 OR A          ;
- $A7A2 JR Z,$A7DC    ;
- $A7A4 DEC A         ;
- $A7A5 LD ($8225),A  ;
- $A7A8 CALL $FFF0    ;
- $A7AB CALL $7869    ;
+ $A7A2 JR Z,$A7DC    ; }
+ $A7A4 DEC A         ; {Consume one round
+ $A7A5 LD ($8225),A  ; }
+ $A7A8 CALL $FFF0    ; Play gunshot sound effect
+ $A7AB CALL $7869    ; Shot hit check
  $A7AE LD H,$97      ;
  $A7B0 LD A,($8202)  ;
  $A7B3 RLCA          ;
  $A7B4 LD L,A        ;
  $A7B5 INC HL        ;
  $A7B6 CALL $FFA0    ;
- $A7B9 LD A,$01      ;
- $A7BB LD ($8226),A  ;
+ $A7B9 LD A,$01      ; {Set $8226=1
+ $A7BB LD ($8226),A  ; }
  $A7BE NOP           ;
- $A7BF LD A,($820B)  ;
+ $A7BF LD A,($820B)  ; get Joe's facing direction
  $A7C2 OR A          ;
  $A7C3 JR NZ,$A7D0   ;
- $A7C5 LD A,($8201)  ;
+ $A7C5 LD A,($8201)  ; get Joe X
  $A7C8 SUB (HL)      ;
  $A7C9 RET C         ;
  $A7CA LD A,$00      ;
  $A7CC LD ($8226),A  ;
  $A7CF RET           ;
-*$A7D0 LD A,($8201)  ;
+*$A7D0 LD A,($8201)  ; get Joe X
  $A7D3 SUB (HL)      ;
  $A7D4 RET NC        ;
  $A7D5 LD A,$00      ;
@@ -6214,7 +6899,7 @@ s$A7DB DEFS $01
 c$A7DC CALL $923C    ; Draw black box
  $A7DF LD IX,$A7EC   ;
  $A7E3 LD HL,$4868   ;
- $A7E6 CALL $9196    ;
+ $A7E6 CALL $9196    ; Draw string IX
  $A7E9 JP $A78A      ;
 
 ; Data block at A7EC
@@ -6228,7 +6913,7 @@ b$A7EC DEFB $18,$0E,$14,$11,$1F,$06,$14,$0D
 ;
 ; .
 ;
-; Sprite 32x32
+; Sprite 32x32 soldier goes left
 b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A87F-1-32)(sprA800)]
  $A808 DEFB $01,$D5,$C0,$00,$03,$AA,$E0,$00 ;
  $A810 DEFB $03,$55,$60,$00,$00,$02,$A0,$00 ;
@@ -6245,7 +6930,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $A868 DEFB $00,$00,$00,$00,$0D,$E1,$E0,$00 ;
  $A870 DEFB $0F,$C3,$C0,$00,$07,$C7,$C0,$00 ;
  $A878 DEFB $03,$87,$00,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes left
  $A880 DEFB $00,$00,$00,$00,$00,$3F,$E0,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A880-$A8FF-1-32)(sprA880)]
  $A888 DEFB $00,$75,$70,$00,$00,$EA,$B8,$00 ;
  $A890 DEFB $00,$D5,$58,$00,$00,$00,$A8,$00 ;
@@ -6262,7 +6947,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $A8E8 DEFB $00,$00,$00,$00,$00,$0F,$80,$00 ;
  $A8F0 DEFB $00,$07,$80,$00,$00,$3F,$80,$00 ;
  $A8F8 DEFB $00,$3F,$80,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes left
  $A900 DEFB $00,$00,$00,$00,$00,$0F,$F8,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A900-$A97F-1-32)(sprA900)]
  $A908 DEFB $00,$1D,$5C,$00,$00,$3A,$AE,$00 ;
  $A910 DEFB $00,$35,$56,$00,$00,$00,$2A,$00 ;
@@ -6279,7 +6964,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $A968 DEFB $00,$00,$00,$00,$00,$DE,$1E,$00 ;
  $A970 DEFB $00,$FC,$3C,$00,$00,$7C,$7C,$00 ;
  $A978 DEFB $00,$38,$70,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes left
  $A980 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A980-$A9FF-1-32)(sprA980)]
  $A988 DEFB $00,$03,$FE,$00,$00,$07,$57,$00 ;
  $A990 DEFB $00,$0E,$AB,$80,$00,$0D,$55,$80 ;
@@ -6296,7 +6981,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $A9E8 DEFB $01,$84,$7E,$E0,$01,$DA,$01,$E0 ;
  $A9F0 DEFB $01,$FC,$01,$E0,$00,$F8,$01,$E0 ;
  $A9F8 DEFB $00,$78,$01,$C0,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes right
  $AA00 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($AA00-$AA7F-1-32)(sprAA00)]
  $AA08 DEFB $00,$7F,$C0,$00,$00,$EA,$E0,$00 ;
  $AA10 DEFB $01,$D5,$70,$00,$01,$AA,$B0,$00 ;
@@ -6313,7 +6998,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AA68 DEFB $06,$FE,$51,$80,$07,$00,$1B,$80 ;
  $AA70 DEFB $07,$80,$3F,$80,$07,$80,$1F,$00 ;
  $AA78 DEFB $03,$80,$1E,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes right
  $AA80 DEFB $00,$00,$00,$00,$00,$1F,$F0,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($AA80-$AAFF-1-32)(sprAA80)]
  $AA88 DEFB $00,$3A,$B8,$00,$00,$75,$5C,$00 ;
  $AA90 DEFB $00,$6A,$AC,$00,$00,$54,$00,$00 ;
@@ -6330,7 +7015,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AAE8 DEFB $00,$00,$00,$00,$00,$78,$7B,$00 ;
  $AAF0 DEFB $00,$3C,$3F,$00,$00,$3E,$3E,$00 ;
  $AAF8 DEFB $00,$0E,$1C,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes right
  $AB00 DEFB $00,$00,$00,$00,$00,$07,$FC,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($AB00-$AB7F-1-32)(sprAB00)]
  $AB08 DEFB $00,$0E,$AE,$00,$00,$1D,$57,$00 ;
  $AB10 DEFB $00,$1A,$AB,$00,$00,$15,$00,$00 ;
@@ -6347,7 +7032,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AB68 DEFB $00,$00,$00,$00,$00,$01,$F0,$00 ;
  $AB70 DEFB $00,$01,$E0,$00,$00,$01,$FC,$00 ;
  $AB78 DEFB $00,$01,$FC,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 soldier goes right
  $AB80 DEFB $00,$00,$00,$00,$00,$01,$FF,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($AB80-$ABFF-1-32)(sprAB80)]
  $AB88 DEFB $00,$03,$AB,$80,$00,$07,$55,$C0 ;
  $AB90 DEFB $00,$06,$AA,$C0,$00,$05,$40,$00 ;
@@ -6364,7 +7049,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $ABE8 DEFB $00,$00,$00,$00,$00,$07,$87,$B0 ;
  $ABF0 DEFB $00,$03,$C3,$F0,$00,$03,$E3,$E0 ;
  $ABF8 DEFB $00,$00,$E1,$C0,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 soldier goes left
  $AC00 DEFB $FF,$00,$7F,$FF,$FE,$00,$3F,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AC00-$AC7F-1-32)(mskAC00)]
  $AC08 DEFB $FC,$00,$1F,$FF,$F8,$00,$0F,$FF ;
  $AC10 DEFB $F8,$00,$0F,$FF,$E0,$00,$0F,$FF ;
@@ -6381,7 +7066,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AC68 DEFB $E0,$00,$0F,$FF,$E0,$0C,$0F,$FF ;
  $AC70 DEFB $E0,$08,$1F,$FF,$E0,$10,$1F,$FF ;
  $AC78 DEFB $F0,$10,$3F,$FF,$F8,$30,$7F,$FF ; }
-; Mask 32x32
+; Mask 32x32 soldier goes left
  $AC80 DEFB $FF,$C0,$0F,$FF,$FF,$80,$07,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AC80-$ACFF-1-32)(mskAC80)]
  $AC88 DEFB $FF,$00,$07,$FF,$FE,$00,$03,$FF ;
  $AC90 DEFB $FE,$00,$03,$FF,$FC,$00,$03,$FF ;
@@ -6398,7 +7083,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $ACE8 DEFB $FF,$00,$03,$FF,$FF,$E0,$3F,$FF ;
  $ACF0 DEFB $FF,$C0,$3F,$FF,$FF,$80,$3F,$FF ;
  $ACF8 DEFB $FF,$80,$3F,$FF,$FF,$80,$7F,$FF ; }
-; Mask 32x32
+; Mask 32x32 soldier goes left
  $AD00 DEFB $FF,$F0,$07,$FF,$FF,$E0,$03,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AD00-$AD7F-1-32)(mskAD00)]
  $AD08 DEFB $FF,$C0,$01,$FF,$FF,$80,$00,$FF ;
  $AD10 DEFB $FF,$80,$00,$FF,$FF,$00,$00,$FF ;
@@ -6415,7 +7100,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AD68 DEFB $FF,$00,$00,$FF,$FE,$00,$80,$FF ;
  $AD70 DEFB $FE,$01,$01,$FF,$FF,$01,$01,$FF ;
  $AD78 DEFB $FF,$83,$03,$FF,$FF,$C7,$0F,$FF ; }
-; Mask 32x32
+; Mask 32x32 soldier goes left
  $AD80 DEFB $FF,$FF,$FF,$FF,$FF,$F8,$01,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AD80-$ADFF-1-32)(mskAD80)]
  $AD88 DEFB $FF,$F0,$00,$FF,$FF,$E0,$00,$7F ;
  $AD90 DEFB $FF,$E0,$00,$3F,$FF,$E0,$00,$3F ;
@@ -6432,7 +7117,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $ADE8 DEFB $FC,$20,$00,$0F,$FC,$00,$00,$0F ;
  $ADF0 DEFB $FC,$00,$C0,$0F,$FE,$01,$FC,$0F ;
  $ADF8 DEFB $FF,$03,$FC,$0F,$FF,$83,$FC,$1F ; }
-; Mask 32x32
+; Mask 32x32 32x32 soldier goes right
  $AE00 DEFB $FF,$FF,$FF,$FF,$FF,$80,$3F,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AE00-$AE7F-1-32)(mskAE00)]
  $AE08 DEFB $FF,$00,$1F,$FF,$FE,$00,$0F,$FF ;
  $AE10 DEFB $FC,$00,$07,$FF,$FC,$00,$07,$FF ;
@@ -6449,7 +7134,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AE68 DEFB $F0,$00,$00,$3F,$F0,$00,$00,$3F ;
  $AE70 DEFB $F0,$00,$00,$3F,$F0,$3F,$80,$7F ;
  $AE78 DEFB $F8,$3F,$C0,$FF,$FC,$3F,$E1,$FF ; }
-; Mask 32x32
+; Mask 32x32 32x32 soldier goes right
  $AE80 DEFB $FF,$E0,$0F,$FF,$FF,$C0,$07,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AE80-$AEFF-1-32)(mskAE80)]
  $AE88 DEFB $FF,$80,$03,$FF,$FF,$00,$01,$FF ;
  $AE90 DEFB $FF,$00,$01,$FF,$FF,$00,$00,$7F ;
@@ -6466,7 +7151,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AEE8 DEFB $FF,$00,$00,$FF,$FF,$01,$00,$7F ;
  $AEF0 DEFB $FF,$80,$80,$7F,$FF,$80,$80,$FF ;
  $AEF8 DEFB $FF,$C0,$81,$FF,$FF,$F0,$E3,$FF ; }
-; Mask 32x32
+; Mask 32x32 32x32 soldier goes right
  $AF00 DEFB $FF,$F8,$03,$FF,$FF,$F0,$01,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($AF00-$AF7F-1-32)(mskAF00)]
  $AF08 DEFB $FF,$E0,$00,$FF,$FF,$C0,$00,$7F ;
  $AF10 DEFB $FF,$C0,$00,$7F,$FF,$C0,$00,$3F ;
@@ -6483,7 +7168,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AF68 DEFB $FF,$C0,$00,$FF,$FF,$FC,$07,$FF ;
  $AF70 DEFB $FF,$FC,$01,$FF,$FF,$FC,$01,$FF ;
  $AF78 DEFB $FF,$FC,$01,$FF,$FF,$FC,$03,$FF ; }
-; Mask 32x32
+; Mask 32x32 32x32 soldier goes right
  $AF80 DEFB $FF,$FE,$00,$FF,$FF,$FC,$00,$7F ; {#HTML[#UDGARRAY4,7,4,4,,($AF80-$AFFF-1-32)(mskAF80)]
  $AF88 DEFB $FF,$F8,$00,$3F,$FF,$F0,$00,$1F ;
  $AF90 DEFB $FF,$F0,$00,$1F,$FF,$F0,$00,$0F ;
@@ -6500,7 +7185,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $AFE8 DEFB $FF,$F0,$00,$0F,$FF,$F0,$30,$07 ;
  $AFF0 DEFB $FF,$F8,$18,$07,$FF,$F8,$08,$0F ;
  $AFF8 DEFB $FF,$FC,$0C,$1F,$FF,$FF,$1E,$3F ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes left
  $B000 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B000-$B07F-1-32)(sprB000)]
  $B008 DEFB $00,$00,$00,$00,$00,$03,$F0,$00 ;
  $B010 DEFB $01,$3D,$E8,$00,$01,$7E,$D4,$00 ;
@@ -6517,7 +7202,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B068 DEFB $00,$1E,$7E,$00,$00,$DE,$1E,$00 ;
  $B070 DEFB $00,$FC,$3C,$00,$00,$7C,$7C,$00 ;
  $B078 DEFB $00,$38,$70,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes left
  $B080 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B080-$B0FF-1-32)(sprB080)]
  $B088 DEFB $00,$00,$1C,$00,$00,$09,$EA,$00 ;
  $B090 DEFB $00,$0B,$F5,$00,$01,$EB,$F2,$80 ;
@@ -6534,7 +7219,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B0E8 DEFB $00,$00,$F8,$00,$00,$00,$78,$00 ;
  $B0F0 DEFB $00,$03,$F8,$00,$00,$03,$F8,$00 ;
  $B0F8 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes left
  $B100 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B100-$B17F-1-32)(sprB100)]
  $B108 DEFB $00,$00,$00,$00,$00,$00,$3F,$00 ;
  $B110 DEFB $00,$13,$DE,$80,$00,$17,$ED,$40 ;
@@ -6551,7 +7236,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B168 DEFB $00,$01,$E7,$E0,$00,$0D,$E1,$E0 ;
  $B170 DEFB $00,$0F,$C3,$C0,$00,$07,$C7,$C0 ;
  $B178 DEFB $00,$03,$87,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes left
  $B180 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B180-$B1FF-1-32)(sprB180)]
  $B188 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ;
  $B190 DEFB $00,$00,$0F,$C0,$00,$9E,$3F,$A0 ;
@@ -6568,7 +7253,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B1E8 DEFB $00,$19,$FF,$FE,$00,$1D,$F3,$FE ;
  $B1F0 DEFB $00,$1F,$C0,$1E,$00,$0F,$80,$3E ;
  $B1F8 DEFB $00,$07,$80,$3C,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes right
  $B200 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B200-$B27F-1-32)(sprB200)]
  $B208 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ;
  $B210 DEFB $03,$F0,$00,$00,$05,$FC,$79,$00 ;
@@ -6585,7 +7270,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B268 DEFB $43,$FF,$98,$00,$7F,$CF,$B8,$00 ;
  $B270 DEFB $78,$03,$F8,$00,$7C,$01,$F0,$00 ;
  $B278 DEFB $3C,$01,$E0,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes right
  $B280 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B280-$B2FF-1-32)(sprB280)]
  $B288 DEFB $00,$00,$00,$00,$00,$FC,$00,$00 ;
  $B290 DEFB $01,$7F,$04,$00,$02,$BF,$B4,$00 ;
@@ -6602,7 +7287,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B2E8 DEFB $07,$E7,$80,$00,$07,$87,$B0,$00 ;
  $B2F0 DEFB $03,$C3,$F0,$00,$03,$E3,$E0,$00 ;
  $B2F8 DEFB $00,$E1,$C0,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes right
  $B300 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B300-$B37F-1-32)(sprB300)]
  $B308 DEFB $00,$3F,$00,$00,$00,$5F,$C8,$00 ;
  $B310 DEFB $00,$AF,$E8,$00,$01,$57,$37,$80 ;
@@ -6619,7 +7304,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B368 DEFB $00,$1F,$00,$00,$00,$1E,$00,$00 ;
  $B370 DEFB $00,$1F,$C0,$00,$00,$1F,$C0,$00 ;
  $B378 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
-; Sprite 32x32
+; Sprite 32x32 Inmate with knife goes right
  $B380 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($B380-$B3FF-1-32)(sprB380)]
  $B388 DEFB $00,$00,$00,$00,$00,$0F,$C0,$00 ;
  $B390 DEFB $00,$17,$F0,$80,$00,$2B,$FA,$80 ;
@@ -6636,7 +7321,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B3E8 DEFB $00,$7E,$78,$00,$00,$78,$7B,$00 ;
  $B3F0 DEFB $00,$3C,$3F,$00,$00,$3E,$3E,$00 ;
  $B3F8 DEFB $00,$0E,$1C,$00,$00,$00,$00,$00 ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes left
  $B400 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B400-$B47F-1-32)(mskB400)]
  $B408 DEFB $FF,$FC,$0F,$FF,$FE,$C3,$F7,$FF ;
  $B410 DEFB $FD,$3D,$EB,$FF,$C1,$7E,$D5,$FF ;
@@ -6653,7 +7338,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B468 DEFB $FF,$1E,$7E,$FF,$FE,$DE,$9E,$FF ;
  $B470 DEFB $FE,$FC,$BD,$FF,$FF,$7D,$7D,$FF ;
  $B478 DEFB $FF,$BB,$73,$FF,$FF,$C7,$8F,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes left
  $B480 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$E1,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B480-$B4FF-1-32)(mskB480)]
  $B488 DEFB $FF,$F6,$1C,$FF,$FF,$E9,$EA,$7F ;
  $B490 DEFB $FE,$0B,$F5,$3F,$FD,$EB,$F2,$BF ;
@@ -6670,7 +7355,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B4E8 DEFB $FF,$FE,$FB,$FF,$FF,$FC,$7B,$FF ;
  $B4F0 DEFB $FF,$FB,$FB,$FF,$FF,$FB,$FB,$FF ;
  $B4F8 DEFB $FF,$FC,$03,$FF,$FF,$FF,$FF,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes left
  $B500 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B500-$B57F-1-32)(mskB500)]
  $B508 DEFB $FF,$FF,$C0,$FF,$FF,$EC,$3F,$7F ;
  $B510 DEFB $FF,$D3,$DE,$BF,$FC,$17,$ED,$5F ;
@@ -6687,7 +7372,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B568 DEFB $FF,$F1,$E7,$EF,$FF,$ED,$E9,$EF ;
  $B570 DEFB $FF,$EF,$CB,$DF,$FF,$F7,$D7,$DF ;
  $B578 DEFB $FF,$FB,$B7,$3F,$FF,$FC,$78,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes left
  $B580 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B580-$B5FF-1-32)(mskB580)]
  $B588 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$F0,$1F ;
  $B590 DEFB $FF,$61,$EF,$DF,$FE,$9E,$BF,$AF ;
@@ -6704,7 +7389,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B5E8 DEFB $FF,$D9,$FF,$FE,$FF,$DD,$F3,$FE ;
  $B5F0 DEFB $FF,$DF,$CC,$1E,$FF,$EF,$BF,$BE ;
  $B5F8 DEFB $FF,$F7,$BF,$BD,$FF,$F8,$7F,$C3 ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes right
  $B600 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B600-$B67F-1-32)(mskB600)]
  $B608 DEFB $FF,$FF,$FF,$FF,$FC,$0F,$FF,$FF ;
  $B610 DEFB $FB,$F3,$86,$FF,$F5,$FD,$79,$7F ;
@@ -6721,7 +7406,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B668 DEFB $43,$FF,$9B,$FF,$7F,$CF,$BB,$FF ;
  $B670 DEFB $78,$33,$FB,$FF,$7D,$F9,$F3,$FF ;
  $B678 DEFB $BD,$FD,$E7,$FF,$C3,$FC,$0F,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes right
  $B680 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B680-$B6FF-1-32)(mskB680)]
  $B688 DEFB $FF,$03,$FF,$FF,$FE,$FC,$FB,$FF ;
  $B690 DEFB $FD,$7F,$55,$FF,$FA,$BF,$B4,$1F ;
@@ -6738,7 +7423,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B6E8 DEFB $F7,$E7,$8F,$FF,$F7,$97,$B7,$FF ;
  $B6F0 DEFB $FB,$DB,$F7,$FF,$FB,$EB,$EF,$FF ;
  $B6F8 DEFB $FC,$ED,$DF,$FF,$FF,$1E,$3F,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes right
  $B700 DEFB $FF,$FF,$FF,$FF,$FF,$C0,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B700-$B77F-1-32)(mskB700)]
  $B708 DEFB $FF,$BF,$37,$FF,$FF,$5F,$CB,$FF ;
  $B710 DEFB $FE,$AF,$E8,$7F,$FD,$57,$37,$BF ;
@@ -6755,7 +7440,7 @@ b$A800 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($A800-$A
  $B768 DEFB $FF,$DF,$7F,$FF,$FF,$DE,$3F,$FF ;
  $B770 DEFB $FF,$DF,$DF,$FF,$FF,$DF,$DF,$FF ;
  $B778 DEFB $FF,$C0,$3F,$FF,$FF,$FF,$FF,$FF ; }
-; Mask 32x32
+; Mask 32x32 Inmate with knife goes right
  $B780 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($B780-$B7FF-1-32)(mskB780)]
  $B788 DEFB $FF,$F0,$3F,$FF,$FF,$EF,$CF,$3F ;
  $B790 DEFB $FF,$D7,$F4,$BF,$FF,$AB,$FA,$83 ;
@@ -6839,1491 +7524,265 @@ b$B800 DEFB $FF,$FF,$FF,$FF,$F7,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$F7,$FF,$FF,$FF,$FF,
  $BFC0 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$55,$55,$55,$55,$6F,$F8,$7F,$F6,$55,$55,$55,$52
  $BFE0 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FC
 
-; Routine at C000
+; Data block at C000
 ;
 ; Used by the routines at #R$8A7A, #R$8A94 and #R$8AAE.
-c$C000 LD H,$11      ;
- $C002 DEC C         ;
-; This entry point is used by the routines at #R$8A7A, #R$8A94 and #R$8AD0.
-*$C003 DEC C         ;
- $C004 DEC C         ;
- $C005 DEC C         ;
-; This entry point is used by the routines at #R$8A44, #R$8A7A, #R$8A94 and
-; #R$8AAE.
-*$C006 DEC D         ;
- $C007 DEC C         ;
- $C008 DAA           ;
- $C009 LD A,(BC)     ;
- $C00A INC (HL)      ;
- $C00B INC (HL)      ;
- $C00C RLCA          ;
- $C00D EX AF,AF'     ;
- $C00E LD C,$07      ;
- $C010 DEC C         ;
- $C011 LD DE,$0D0D   ;
- $C014 DEC C         ;
- $C015 DEC C         ;
- $C016 DEC D         ;
- $C017 INC H         ;
- $C018 EX AF,AF'     ;
- $C019 LD A,(BC)     ;
- $C01A LD C,$34      ;
- $C01C INC (HL)      ;
- $C01D LD ($250E),A  ;
- $C020 LD H,$0D      ;
- $C022 LD ($0D0D),HL ;
- $C025 LD ($0D0D),HL ;
- $C028 DAA           ;
- $C029 INC SP        ;
- $C02A INC HL        ;
- $C02B LD C,$0E      ;
- $C02D INC HL        ;
- $C02E LD ($0D0E),A  ;
- $C031 ADD HL,DE     ;
- $C032 DEC C         ;
- $C033 DEC D         ;
- $C034 DEC C         ;
- $C035 DEC C         ;
- $C036 DEC D         ;
- $C037 DEC C         ;
- $C038 LD C,$1A      ;
- $C03A LD C,$0E      ;
- $C03C LD ($0E0E),A  ;
- $C03F LD C,$0D      ;
- $C041 DEC C         ;
- $C042 LD ($0D0D),HL ;
- $C045 LD ($240D),HL ;
- $C048 LD ($230E),A  ;
- $C04B INC SP        ;
- $C04C LD C,$23      ;
- $C04E LD C,$25      ;
- $C050 LD H,$0D      ;
- $C052 LD ($0D0D),HL ;
- $C055 LD ($150D),HL ;
- $C058 DAA           ;
- $C059 LD C,$23      ;
- $C05B LD C,$0E      ;
- $C05D INC HL        ;
- $C05E LD C,$0E      ;
- $C060 DEC C         ;
- $C061 LD DE,$150D   ;
- $C064 DEC C         ;
- $C065 DEC C         ;
- $C066 DEC D         ;
- $C067 INC H         ;
- $C068 LD C,$0A      ;
- $C06A LD C,$0E      ;
- $C06C LD C,$33      ;
- $C06E LD C,$25      ;
- $C070 LD H,$11      ;
- $C072 DEC C         ;
- $C073 DEC D         ;
- $C074 DEC C         ;
- $C075 DEC C         ;
- $C076 DEC D         ;
- $C077 INC H         ;
- $C078 DAA           ;
- $C079 LD A,(BC)     ;
- $C07A LD C,$34      ;
- $C07C INC (HL)      ;
- $C07D LD C,$34      ;
- $C07F DEC H         ;
- $C080 INC E         ;
- $C081 INC BC        ;
- $C082 INC BC        ;
- $C083 INC BC        ;
- $C084 INC D         ;
- $C085 NOP           ;
- $C086 DEC B         ;
- $C087 DEC E         ;
- $C088 RRA           ;
- $C089 LD (BC),A     ;
- $C08A LD (BC),A     ;
- $C08B LD (BC),A     ;
- $C08C LD (DE),A     ;
- $C08D INC DE        ;
- $C08E LD BC,$1C1E   ;
- $C091 DJNZ $C0A3    ;
- $C093 NOP           ;
- $C094 DEC BC        ;
- $C095 DEC BC        ;
- $C096 DEC BC        ;
- $C097 DEC BC        ;
- $C098 RRA           ;
- $C099 RRCA          ;
- $C09A RRCA          ;
- $C09B LD BC,$0C0C   ;
- $C09E INC C         ;
- $C09F INC C         ;
- $C0A0 DJNZ $C0B2    ;
- $C0A2 DJNZ $C0B4    ;
- $C0A4 NOP           ;
- $C0A5 INC D         ;
- $C0A6 ADD HL,BC     ;
- $C0A7 DEC E         ;
- $C0A8 RRCA          ;
- $C0A9 RRCA          ;
- $C0AA RRCA          ;
- $C0AB RRCA          ;
- $C0AC LD BC,$0A01   ;
- $C0AF LD E,$26      ;
- $C0B1 DEC C         ;
-*$C0B2 DEC D         ;
- $C0B3 DEC C         ;
-*$C0B4 DEC C         ;
- $C0B5 DEC C         ;
- $C0B6 LD DE,$270D   ;
- $C0B9 INC SP        ;
- $C0BA LD C,$0E      ;
- $C0BC LD ($0A0E),A  ;
- $C0BF LD C,$0D      ;
- $C0C1 DEC D         ;
- $C0C2 DEC C         ;
- $C0C3 DEC C         ;
- $C0C4 DEC C         ;
- $C0C5 DEC C         ;
- $C0C6 JR C,$C0EC    ;
- $C0C8 LD C,$0E      ;
- $C0CA LD C,$0E      ;
- $C0CC LD ($3232),A  ;
- $C0CF DEC H         ;
- $C0D0 LD H,$0D      ;
- $C0D2 DEC C         ;
- $C0D3 DEC C         ;
- $C0D4 DEC C         ;
- $C0D5 DEC C         ;
- $C0D6 DEC C         ;
- $C0D7 INC H         ;
- $C0D8 DAA           ;
- $C0D9 LD C,$0E      ;
- $C0DB INC SP        ;
- $C0DC LD ($170E),A  ;
- $C0DF DEC H         ;
- $C0E0 LD H,$15      ;
- $C0E2 DEC C         ;
- $C0E3 DEC C         ;
- $C0E4 DEC C         ;
- $C0E5 DEC C         ;
- $C0E6 DEC D         ;
- $C0E7 DEC C         ;
- $C0E8 DAA           ;
- $C0E9 LD ($0E32),A  ;
-*$C0EC LD C,$32      ;
- $C0EE LD C,$0E      ;
- $C0F0 DEC C         ;
- $C0F1 DEC D         ;
- $C0F2 DEC C         ;
- $C0F3 DEC C         ;
- $C0F4 DEC D         ;
- $C0F5 DEC C         ;
- $C0F6 LD DE,$0E24   ;
- $C0F9 LD C,$32      ;
- $C0FB LD C,$33      ;
- $C0FD LD ($250A),A  ;
- $C100 INC E         ;
- $C101 INC BC        ;
- $C102 NOP           ;
- $C103 INC BC        ;
- $C104 INC D         ;
- $C105 INC BC        ;
- $C106 ADD HL,BC     ;
- $C107 INC BC        ;
- $C108 RRA           ;
- $C109 LD (BC),A     ;
- $C10A LD (DE),A     ;
- $C10B LD (BC),A     ;
- $C10C LD BC,$0A02   ;
- $C10F LD (BC),A     ;
- $C110 INC BC        ;
- $C111 INC D         ;
- $C112 NOP           ;
- $C113 NOP           ;
- $C114 INC BC        ;
- $C115 NOP           ;
- $C116 INC BC        ;
- $C117 INC BC        ;
- $C118 LD (BC),A     ;
- $C119 LD BC,$1312   ;
- $C11C LD (BC),A     ;
- $C11D INC DE        ;
- $C11E LD (BC),A     ;
- $C11F LD (BC),A     ;
- $C120 INC BC        ;
- $C121 INC D         ;
- $C122 INC BC        ;
- $C123 INC BC        ;
- $C124 NOP           ;
- $C125 INC D         ;
- $C126 NOP           ;
- $C127 DEC E         ;
- $C128 LD (BC),A     ;
- $C129 LD (DE),A     ;
- $C12A LD (BC),A     ;
- $C12B LD (BC),A     ;
- $C12C LD (DE),A     ;
- $C12D LD (DE),A     ;
- $C12E INC DE        ;
- $C12F LD E,$26      ;
- $C131 DEC D         ;
- $C132 DEC C         ;
- $C133 DEC C         ;
- $C134 DEC C         ;
- $C135 DEC C         ;
- $C136 DEC D         ;
- $C137 INC H         ;
- $C138 DAA           ;
- $C139 LD C,$0E      ;
- $C13B LD C,$33      ;
- $C13D LD C,$0E      ;
- $C13F DEC H         ;
- $C140 LD H,$38      ;
- $C142 DEC C         ;
- $C143 DEC D         ;
- $C144 DEC C         ;
- $C145 DEC D         ;
- $C146 DEC C         ;
- $C147 INC H         ;
- $C148 DAA           ;
- $C149 LD ($3232),A  ;
- $C14C INC SP        ;
- $C14D LD C,$32      ;
- $C14F DEC H         ;
- $C150 LD H,$15      ;
- $C152 DEC C         ;
- $C153 DEC C         ;
- $C154 DEC C         ;
- $C155 DEC D         ;
- $C156 DEC C         ;
- $C157 DEC C         ;
- $C158 DAA           ;
- $C159 LD C,$33      ;
- $C15B LD ($0E0E),A  ;
- $C15E LD ($0D32),A  ;
- $C161 DEC C         ;
- $C162 DEC D         ;
- $C163 DEC C         ;
- $C164 DEC C         ;
- $C165 DEC C         ;
- $C166 JR C,$C18C    ;
- $C168 LD C,$32      ;
- $C16A INC (HL)      ;
- $C16B LD ($3232),A  ;
- $C16E LD ($2625),A  ;
- $C171 LD DE,$150D   ;
- $C174 DEC C         ;
- $C175 DEC C         ;
- $C176 DEC D         ;
- $C177 INC H         ;
- $C178 DAA           ;
- $C179 LD A,(BC)     ;
- $C17A INC SP        ;
- $C17B LD C,$0E      ;
- $C17D LD ($250E),A  ;
- $C180 DEC C         ;
- $C181 LD DE,$280D   ;
- $C184 LD A,($3A31)  ;
- $C187 LD SP,$0A0E   ;
- $C18A LD ($3929),A  ;
- $C18D JR NC,$C1C8   ;
- $C18F JR NC,$C1C2   ;
- $C191 LD A,($3A31)  ;
- $C194 LD SP,$313A   ;
- $C197 LD A,($3930)  ;
- $C19A JR NC,$C1D5   ;
- $C19C JR NC,$C1D7   ;
- $C19E JR NC,$C1D9   ;
- $C1A0 LD A,($3A31)  ;
- $C1A3 LD SP,$2A3A   ;
- $C1A6 ADD HL,DE     ;
- $C1A7 DEC C         ;
- $C1A8 ADD HL,SP     ;
- $C1A9 JR NC,$C1E4   ;
- $C1AB JR NC,$C1E6   ;
- $C1AD DEC HL        ;
- $C1AE LD A,(DE)     ;
- $C1AF LD C,$0D      ;
- $C1B1 ADD HL,DE     ;
- $C1B2 DEC C         ;
- $C1B3 DEC D         ;
- $C1B4 DEC C         ;
- $C1B5 JR Z,$C1F1    ;
- $C1B7 LD SP,$1A0E   ;
- $C1BA LD C,$0E      ;
- $C1BC LD ($3929),A  ;
- $C1BF JR NC,$C1F2   ;
- $C1C1 LD A,($3A31)  ;
- $C1C4 LD SP,$313A   ;
- $C1C7 LD A,($3930)  ;
- $C1CA JR NC,$C205   ;
- $C1CC JR NC,$C207   ;
- $C1CE JR NC,$C209   ;
- $C1D0 LD A,($3A31)  ;
- $C1D3 LD SP,$313A   ;
- $C1D6 LD A,($3931)  ;
-*$C1D9 JR NC,$C214   ;
- $C1DB JR NC,$C216   ;
- $C1DD JR NC,$C218   ;
- $C1DF JR NC,$C212   ;
- $C1E1 LD A,($3A31)  ;
-*$C1E4 LD SP,$313A   ;
- $C1E7 LD A,($3930)  ;
- $C1EA JR NC,$C225   ;
- $C1EC JR NC,$C227   ;
- $C1EE JR NC,$C229   ;
- $C1F0 LD A,($3A31)  ;
- $C1F3 LD SP,$313A   ;
- $C1F6 LD A,($392A)  ;
- $C1F9 JR NC,$C234   ;
- $C1FB JR NC,$C236   ;
- $C1FD JR NC,$C238   ;
- $C1FF DEC HL        ;
- $C200 INC E         ;
- $C201 DEC B         ;
- $C202 INC D         ;
- $C203 INC BC        ;
- $C204 INC BC        ;
-*$C205 INC BC        ;
- $C206 DEC B         ;
-*$C207 DEC E         ;
- $C208 RRA           ;
-*$C209 LD (DE),A     ;
- $C20A INC DE        ;
- $C20B LD (BC),A     ;
- $C20C LD (BC),A     ;
- $C20D LD (BC),A     ;
- $C20E LD BC,$261E   ;
- $C211 DEC C         ;
-*$C212 DEC D         ;
- $C213 DEC C         ;
-*$C214 DEC C         ;
- $C215 DEC C         ;
-*$C216 DEC D         ;
- $C217 DEC C         ;
-*$C218 DAA           ;
- $C219 RLA           ;
- $C21A LD C,$34      ;
- $C21C RLCA          ;
- $C21D EX AF,AF'     ;
- $C21E LD C,$07      ;
- $C220 DEC C         ;
- $C221 DEC D         ;
- $C222 DEC C         ;
- $C223 DEC C         ;
- $C224 DEC C         ;
-*$C225 DEC D         ;
- $C226 DEC C         ;
-*$C227 INC H         ;
- $C228 EX AF,AF'     ;
-*$C229 INC (HL)      ;
- $C22A INC (HL)      ;
- $C22B RLCA          ;
- $C22C EX AF,AF'     ;
- $C22D RLCA          ;
- $C22E EX AF,AF'     ;
- $C22F DEC H         ;
- $C230 LD H,$15      ;
- $C232 DEC C         ;
- $C233 DEC C         ;
-*$C234 DEC C         ;
- $C235 DEC C         ;
-*$C236 JR C,$C25C    ;
-*$C238 DAA           ;
- $C239 INC (HL)      ;
- $C23A INC (HL)      ;
- $C23B RLCA          ;
- $C23C EX AF,AF'     ;
- $C23D INC (HL)      ;
- $C23E LD C,$25      ;
- $C240 LD H,$38      ;
- $C242 DEC C         ;
- $C243 DEC C         ;
- $C244 DEC D         ;
- $C245 DEC C         ;
- $C246 DEC C         ;
- $C247 DEC D         ;
- $C248 DAA           ;
- $C249 LD C,$0E      ;
- $C24B LD C,$0E      ;
- $C24D LD C,$0E      ;
- $C24F LD C,$0D      ;
- $C251 DEC C         ;
- $C252 DEC D         ;
- $C253 DEC C         ;
- $C254 DEC C         ;
- $C255 DEC C         ;
- $C256 LD DE,$0E0D   ;
- $C259 LD C,$0E      ;
- $C25B LD C,$0E      ;
- $C25D LD C,$0A      ;
- $C25F LD C,$0D      ;
- $C261 DEC C         ;
- $C262 DEC C         ;
- $C263 DEC C         ;
- $C264 DEC C         ;
- $C265 DEC D         ;
- $C266 DEC C         ;
- $C267 DEC C         ;
- $C268 LD C,$32      ;
- $C26A LD C,$33      ;
- $C26C LD C,$0E      ;
- $C26E LD C,$0E      ;
- $C270 DEC C         ;
- $C271 DEC C         ;
- $C272 DEC D         ;
- $C273 DEC C         ;
- $C274 DEC C         ;
- $C275 DEC C         ;
- $C276 DEC D         ;
- $C277 INC H         ;
- $C278 LD C,$17      ;
- $C27A LD C,$0E      ;
- $C27C LD C,$33      ;
- $C27E LD C,$25      ;
- $C280 DEC C         ;
- $C281 DEC D         ;
- $C282 DEC C         ;
- $C283 DEC C         ;
- $C284 DEC D         ;
- $C285 DEC C         ;
- $C286 LD DE,$0E24   ;
- $C289 LD C,$0E      ;
- $C28B LD C,$0E      ;
- $C28D LD C,$0A      ;
- $C28F DEC H         ;
- $C290 LD H,$0D      ;
- $C292 LD ($0D0D),HL ;
- $C295 LD ($0D0D),HL ;
- $C298 DAA           ;
- $C299 LD ($0E23),A  ;
- $C29C LD C,$23      ;
- $C29E LD C,$0E      ;
- $C2A0 DEC C         ;
- $C2A1 LD ($0D0D),HL ;
- $C2A4 LD ($0D0D),HL ;
- $C2A7 DEC C         ;
- $C2A8 LD C,$23      ;
- $C2AA LD C,$0E      ;
- $C2AC INC HL        ;
- $C2AD LD C,$32      ;
- $C2AF LD C,$0D      ;
- $C2B1 ADD HL,DE     ;
- $C2B2 DEC C         ;
- $C2B3 LD ($0D0D),HL ;
- $C2B6 LD ($0E0D),HL ;
- $C2B9 LD A,(DE)     ;
- $C2BA LD C,$23      ;
- $C2BC LD C,$0E      ;
- $C2BE INC HL        ;
- $C2BF LD C,$0D      ;
- $C2C1 LD ($0D0D),HL ;
- $C2C4 LD ($190D),HL ;
- $C2C7 INC H         ;
- $C2C8 LD C,$23      ;
- $C2CA LD C,$0E      ;
- $C2CC INC HL        ;
- $C2CD LD C,$1A      ;
- $C2CF DEC H         ;
- $C2D0 INC E         ;
- $C2D1 DEC B         ;
- $C2D2 NOP           ;
- $C2D3 INC BC        ;
- $C2D4 DEC B         ;
- $C2D5 INC BC        ;
- $C2D6 INC BC        ;
- $C2D7 INC BC        ;
- $C2D8 RRA           ;
- $C2D9 LD (DE),A     ;
- $C2DA INC DE        ;
- $C2DB LD (BC),A     ;
- $C2DC LD BC,$0202   ;
- $C2DF LD (BC),A     ;
- $C2E0 INC BC        ;
- $C2E1 INC BC        ;
- $C2E2 DEC B         ;
- $C2E3 INC BC        ;
- $C2E4 INC BC        ;
- $C2E5 INC D         ;
- $C2E6 LD B,$1D      ;
- $C2E8 LD (BC),A     ;
- $C2E9 LD (BC),A     ;
- $C2EA LD BC,$0202   ;
- $C2ED LD (DE),A     ;
- $C2EE INC DE        ;
- $C2EF LD E,$26      ;
- $C2F1 DEC D         ;
- $C2F2 DEC C         ;
- $C2F3 DEC C         ;
- $C2F4 DEC C         ;
- $C2F5 DEC D         ;
- $C2F6 DEC C         ;
- $C2F7 DEC C         ;
- $C2F8 DAA           ;
- $C2F9 LD C,$0E      ;
- $C2FB INC SP        ;
- $C2FC LD C,$0E      ;
- $C2FE LD C,$0E      ;
- $C300 DEC L         ;
- $C301 LD (HL),$2D   ;
- $C303 LD (HL),$2D   ;
- $C305 LD (HL),$2D   ;
- $C307 LD (HL),$2E   ;
- $C309 SCF           ;
- $C30A LD L,$2B      ;
- $C30C LD C,$0E      ;
- $C30E LD C,$0E      ;
- $C310 LD (HL),$2D   ;
- $C312 LD (HL),$2D   ;
- $C314 LD (HL),$2A   ;
- $C316 ADD HL,DE     ;
- $C317 DEC C         ;
- $C318 LD C,$0E      ;
- $C31A LD C,$0E      ;
- $C31C LD C,$32      ;
- $C31E LD A,(DE)     ;
- $C31F LD C,$0D      ;
- $C321 DEC C         ;
- $C322 DEC C         ;
- $C323 DEC C         ;
- $C324 DEC C         ;
- $C325 DEC C         ;
- $C326 DEC C         ;
- $C327 INC H         ;
- $C328 LD C,$0E      ;
- $C32A LD C,$0E      ;
- $C32C LD ($3232),A  ;
- $C32F DEC H         ;
- $C330 LD H,$15      ;
- $C332 DEC C         ;
- $C333 DEC C         ;
- $C334 DEC C         ;
- $C335 DEC C         ;
- $C336 DEC D         ;
- $C337 INC H         ;
- $C338 DAA           ;
- $C339 LD C,$07      ;
- $C33B EX AF,AF'     ;
- $C33C LD ($0E0E),A  ;
- $C33F DEC H         ;
- $C340 LD H,$38      ;
- $C342 DEC C         ;
- $C343 DEC C         ;
- $C344 DEC C         ;
- $C345 DEC C         ;
- $C346 DEC D         ;
- $C347 INC H         ;
- $C348 DAA           ;
- $C349 LD C,$0E      ;
- $C34B LD C,$34      ;
- $C34D INC (HL)      ;
- $C34E LD C,$25      ;
- $C350 LD H,$38      ;
- $C352 DEC C         ;
- $C353 DEC C         ;
- $C354 DEC C         ;
- $C355 DEC D         ;
- $C356 DEC C         ;
- $C357 DEC C         ;
- $C358 DAA           ;
- $C359 LD ($0E32),A  ;
- $C35C LD ($0E0E),A  ;
- $C35F LD C,$0D      ;
- $C361 DEC D         ;
- $C362 DEC C         ;
- $C363 JR Z,$C392    ;
- $C365 LD (HL),$2D   ;
- $C367 LD (HL),$32   ;
- $C369 LD C,$0E      ;
- $C36B ADD HL,HL     ;
- $C36C LD L,$37      ;
- $C36E LD L,$37      ;
- $C370 LD (HL),$2D   ;
- $C372 LD (HL),$2D   ;
- $C374 LD (HL),$2D   ;
- $C376 LD (HL),$2D   ;
- $C378 SCF           ;
- $C379 LD L,$37      ;
- $C37B LD L,$37      ;
- $C37D LD L,$37      ;
- $C37F LD L,$26      ;
- $C381 LD DE,$280D   ;
- $C384 LD L,$37      ;
- $C386 LD L,$37      ;
- $C388 DAA           ;
- $C389 LD A,(BC)     ;
- $C38A LD C,$29      ;
- $C38C JR $C3A6      ;
-
-; Routine at C38E
-c$C38E JR $C3A8      ;
-
-; Data block at C390
-b$C390 DEFB $2E
-
-; Routine at C391
-c$C391 SCF           ;
-; This entry point is used by the routine at #R$C000.
-*$C392 LD L,$37      ;
- $C394 LD L,$2B      ;
- $C396 LD C,$0E      ;
- $C398 JR $C3B2      ;
-
-; Data block at C39A
-b$C39A DEFB $18
-
-; Routine at C39B
-c$C39B JR $C3B5      ;
-
-; Routine at C39D
-c$C39D JR $C3B7      ;
-
-; Data block at C39F
-b$C39F DEFB $18
-
-; Routine at C3A0
-c$C3A0 LD C,$0A      ;
- $C3A2 LD C,$32      ;
- $C3A4 LD C,$0E      ;
-; This entry point is used by the routine at #R$C000.
-*$C3A6 LD ($180E),A  ;
- $C3A9 JR $C3C3      ;
-
-; Routine at C3AB
-c$C3AB JR $C3C5      ;
-
-; Routine at C3AD
-c$C3AD JR $C3C7      ;
-
-; Routine at C3AF
-c$C3AF JR $C3BF      ;
-
-; Routine at C3B1
-c$C3B1 LD C,$29      ;
- $C3B3 LD L,$37      ;
-; This entry point is used by the routine at #R$C39B.
-*$C3B5 LD L,$37      ;
-; This entry point is used by the routine at #R$C39D.
-*$C3B7 LD L,$18      ;
- $C3B9 JR $C3D3      ;
-
-; Data block at C3BB
-b$C3BB DEFB $18,$18
-
-; Routine at C3BD
-c$C3BD JR $C3D7      ;
-
-; Routine at C3BF
-;
-; Used by the routine at #R$C3AF.
-c$C3BF JR $C3EF      ;
-
-; Message at C3C1
-t$C3C1 DEFM "7.7.7.7"
-
-; Data block at C3C8
-b$C3C8 DEFB $18,$18
-
-; Routine at C3CA
-c$C3CA JR $C3E4      ;
-
-; Routine at C3CC
-c$C3CC JR $C3E6      ;
-
-; Data block at C3CE
-b$C3CE DEFB $18
-
-; Routine at C3CF
-c$C3CF JR $C408      ;
-
-; Data block at C3D1
-b$C3D1 DEFB $2E
-
-; Routine at C3D2
-c$C3D2 SCF           ;
-; This entry point is used by the routine at #R$C3B1.
-*$C3D3 DEC HL        ;
- $C3D4 LD C,$29      ;
- $C3D6 LD A,(DE)     ;
-; This entry point is used by the routine at #R$C3BD.
-*$C3D7 LD C,$18      ;
- $C3D9 JR $C3F3      ;
-
-; Routine at C3DB
-c$C3DB JR $C3F5      ;
-
-; Data block at C3DD
-b$C3DD DEFB $18
-
-; Routine at C3DE
-c$C3DE JR $C3F8      ;
-
-; Routine at C3E0
-c$C3E0 LD C,$0E      ;
- $C3E2 LD C,$32      ;
-; This entry point is used by the routine at #R$C3CA.
-*$C3E4 LD ($0A0E),A  ;
- $C3E7 DEC H         ;
- $C3E8 JR $C402      ;
-
-; Data block at C3EA
-b$C3EA DEFB $18
-
-; Routine at C3EB
-c$C3EB JR $C405      ;
-
-; Data block at C3ED
-b$C3ED DEFB $18
-
-; Routine at C3EE
-c$C3EE JR $C408      ;
-
-; Data block at C3F0
-b$C3F0 DEFB $27,$0A
-
-; Routine at C3F2
-c$C3F2 LD ($2A0E),A  ;
-; This entry point is used by the routine at #R$C3DB.
-*$C3F5 DEC C         ;
- $C3F6 LD DE,$1824   ;
- $C3F9 JR $C413      ;
-
-; Data block at C3FB
-b$C3FB DEFB $18
-
-; Routine at C3FC
-c$C3FC DEC HL                               ;
- $C3FD LD ($250A),A                         ;
- $C400 LD H,$19                             ;
-; This entry point is used by the routine at #R$C3E0.
-*$C402 JR Z,$C43A                           ;
- $C404 DEC L                                ;
-; This entry point is used by the routine at #R$C3EB.
-*$C405 LD (HL),$2D                          ;
- $C407 LD (HL),$27                          ;
- $C409 LD A,(DE)                            ;
- $C40A ADD HL,HL                            ;
- $C40B SCF                                  ;
- $C40C LD L,$37                             ;
- $C40E LD L,$37                             ;
- $C410 DEC L                                ;
- $C411 LD (HL),$2D                          ;
-; This entry point is used by the routine at #R$C3F2.
-*$C413 LD (HL),$2D                          ;
- $C415 LD HL,($0D0D)                        ;
- $C418 LD L,$37                             ;
- $C41A LD L,$37                             ;
- $C41C LD L,$2B                             ;
- $C41E LD C,$0E                             ;
- $C420 DEC C                                ;
- $C421 LD DE,$0D0D                          ;
- $C424 DEC C                                ;
- $C425 DEC C                                ;
- $C426 DEC C                                ;
- $C427 DEC C                                ;
- $C428 LD C,$0A                             ;
- $C42A LD C,$32                             ;
- $C42C LD C,$0E                             ;
- $C42E LD ($0D0E),A                         ;
- $C431 DEC C                                ;
- $C432 JR Z,$C461                           ;
- $C434 LD (HL),$2D                          ;
- $C436 LD (HL),$2D                          ;
- $C438 LD C,$0E                             ;
-*$C43A ADD HL,HL                            ;
- $C43B LD L,$37                             ;
- $C43D LD L,$37                             ;
- $C43F LD L,$2D                             ;
- $C441 LD (HL),$2D                          ;
- $C443 LD (HL),$2D                          ;
- $C445 LD (HL),$2D                          ;
- $C447 LD (HL),$2E                          ;
- $C449 SCF                                  ;
- $C44A LD L,$37                             ;
- $C44C LD L,$37                             ;
- $C44E LD L,$37                             ;
- $C450 LD (HL),$2D                          ;
- $C452 LD (HL),$2A                          ;
- $C454 DEC D                                ;
- $C455 DEC C                                ;
- $C456 ADD HL,DE                            ;
- $C457 DEC C                                ;
- $C458 SCF                                  ;
- $C459 LD L,$37                             ;
- $C45B DEC HL                               ;
- $C45C LD C,$0E                             ;
- $C45E LD A,(DE)                            ;
- $C45F LD C,$0D                             ;
-*$C461 DEC D                                ;
- $C462 DEC C                                ;
- $C463 DEC C                                ;
- $C464 DEC C                                ;
- $C465 DEC C                                ;
- $C466 LD DE,$0E24                          ;
- $C469 LD C,$0E                             ;
- $C46B LD ($0E32),A                         ;
- $C46E LD A,(BC)                            ;
- $C46F DEC H                                ;
- $C470 LD H,$11                             ;
- $C472 DEC C                                ;
- $C473 DEC C                                ;
- $C474 DEC C                                ;
- $C475 DEC C                                ;
- $C476 DEC C                                ;
- $C477 INC H                                ;
- $C478 DAA                                  ;
- $C479 LD A,(BC)                            ;
- $C47A LD ($320E),A                         ;
- $C47D LD ($2532),A                         ;
- $C480 LD H,$15                             ;
- $C482 DEC C                                ;
- $C483 DEC C                                ;
- $C484 DEC D                                ;
- $C485 DEC C                                ;
- $C486 LD DE,$2724                          ;
- $C489 LD C,$0E                             ;
- $C48B LD C,$0E                             ;
- $C48D LD C,$0A                             ;
- $C48F DEC H                                ;
- $C490 LD H,$0D                             ;
- $C492 DEC C                                ;
- $C493 DEC C                                ;
- $C494 DEC C                                ;
- $C495 DEC C                                ;
- $C496 ADD HL,DE                            ;
- $C497 INC H                                ;
- $C498 DAA                                  ;
- $C499 RLCA                                 ;
- $C49A EX AF,AF'                            ;
- $C49B RLCA                                 ;
- $C49C EX AF,AF'                            ;
- $C49D LD C,$1A                             ;
- $C49F DEC H                                ;
- $C4A0 LD H,$0D                             ;
- $C4A2 LD ($0D0D),HL                        ;
- $C4A5 LD ($0D0D),HL                        ;
- $C4A8 DAA                                  ;
- $C4A9 INC SP                               ;
- $C4AA INC HL                               ;
- $C4AB LD C,$0E                             ;
- $C4AD INC HL                               ;
- $C4AE LD C,$33                             ;
- $C4B0 DEC D                                ;
- $C4B1 DEC C                                ;
- $C4B2 DEC C                                ;
- $C4B3 LD ($0D0D),HL                        ;
- $C4B6 LD ($0E24),HL                        ;
- $C4B9 RLA                                  ;
- $C4BA LD C,$23                             ;
- $C4BC LD ($2333),A                         ;
- $C4BF DEC H                                ;
- $C4C0 LD H,$0D                             ;
- $C4C2 DEC C                                ;
- $C4C3 DEC C                                ;
- $C4C4 DEC C                                ;
- $C4C5 DEC C                                ;
- $C4C6 DEC C                                ;
- $C4C7 INC H                                ;
- $C4C8 DAA                                  ;
- $C4C9 RLA                                  ;
- $C4CA RLCA                                 ;
- $C4CB EX AF,AF'                            ;
- $C4CC RLCA                                 ;
- $C4CD EX AF,AF'                            ;
- $C4CE LD C,$25                             ;
- $C4D0 LD H,$0D                             ;
- $C4D2 DEC D                                ;
- $C4D3 DEC C                                ;
- $C4D4 DEC C                                ;
- $C4D5 DEC C                                ;
- $C4D6 DEC D                                ;
- $C4D7 INC H                                ;
- $C4D8 DAA                                  ;
- $C4D9 RLA                                  ;
- $C4DA LD C,$0E                             ;
- $C4DC INC (HL)                             ;
- $C4DD LD C,$0E                             ;
- $C4DF DEC H                                ;
- $C4E0 LD H,$15                             ;
- $C4E2 DEC C                                ;
- $C4E3 DEC C                                ;
- $C4E4 DEC C                                ;
- $C4E5 DEC C                                ;
- $C4E6 DEC D                                ;
- $C4E7 INC H                                ;
- $C4E8 DAA                                  ;
- $C4E9 RLCA                                 ;
- $C4EA EX AF,AF'                            ;
- $C4EB RLCA                                 ;
- $C4EC EX AF,AF'                            ;
- $C4ED RLCA                                 ;
- $C4EE EX AF,AF'                            ;
- $C4EF DEC H                                ;
- $C4F0 LD H,$15                             ;
- $C4F2 DEC C                                ;
- $C4F3 DEC C                                ;
- $C4F4 DEC C                                ;
- $C4F5 DEC C                                ;
- $C4F6 DEC D                                ;
- $C4F7 INC H                                ;
- $C4F8 DAA                                  ;
- $C4F9 LD C,$07                             ;
- $C4FB EX AF,AF'                            ;
- $C4FC RLCA                                 ;
- $C4FD EX AF,AF'                            ;
- $C4FE LD C,$25                             ;
- $C500 LD H,$0D                             ;
- $C502 LD ($0D0D),HL                        ;
- $C505 LD ($0D0D),HL                        ;
- $C508 DAA                                  ;
- $C509 LD C,$23                             ;
- $C50B LD ($230E),A                         ;
- $C50E LD C,$0E                             ;
- $C510 DEC C                                ;
- $C511 LD ($0D0D),HL                        ;
- $C514 LD ($150D),HL                        ;
- $C517 INC H                                ;
- $C518 LD C,$23                             ;
- $C51A LD C,$0E                             ;
- $C51C INC HL                               ;
- $C51D INC SP                               ;
- $C51E LD C,$25                             ;
- $C520 LD H,$15                             ;
- $C522 DEC C                                ;
- $C523 DEC C                                ;
- $C524 DEC C                                ;
- $C525 DEC C                                ;
- $C526 LD DE,$2724                          ;
- $C529 LD C,$07                             ;
- $C52B EX AF,AF'                            ;
- $C52C RLCA                                 ;
- $C52D EX AF,AF'                            ;
- $C52E LD A,(BC)                            ;
- $C52F DEC H                                ;
- $C530 LD H,$0D                             ;
- $C532 LD ($0D0D),HL                        ;
- $C535 LD ($0D0D),HL                        ;
- $C538 DAA                                  ;
- $C539 LD C,$23                             ;
- $C53B INC SP                               ;
- $C53C LD C,$23                             ;
- $C53E LD C,$0E                             ;
- $C540 DEC C                                ;
- $C541 LD ($0D0D),HL                        ;
- $C544 LD ($150D),HL                        ;
- $C547 INC H                                ;
- $C548 LD C,$23                             ;
- $C54A LD ($230E),A                         ;
- $C54D INC SP                               ;
- $C54E LD C,$25                             ;
- $C550 LD H,$0D                             ;
- $C552 DEC C                                ;
- $C553 DEC C                                ;
- $C554 DEC D                                ;
- $C555 DEC C                                ;
- $C556 LD DE,$270D                          ;
- $C559 RLCA                                 ;
- $C55A EX AF,AF'                            ;
- $C55B RLCA                                 ;
- $C55C EX AF,AF'                            ;
- $C55D LD C,$0A                             ;
- $C55F LD C,$0D                             ;
- $C561 DEC D                                ;
- $C562 DEC C                                ;
- $C563 DEC C                                ;
- $C564 DEC C                                ;
- $C565 DEC D                                ;
- $C566 DEC C                                ;
- $C567 DEC C                                ;
- $C568 LD C,$07                             ;
- $C56A EX AF,AF'                            ;
- $C56B RLCA                                 ;
- $C56C EX AF,AF'                            ;
- $C56D RLCA                                 ;
- $C56E EX AF,AF'                            ;
- $C56F RLCA                                 ;
- $C570 DEC C                                ;
- $C571 DEC C                                ;
- $C572 DEC D                                ;
- $C573 DEC C                                ;
- $C574 DEC C                                ;
- $C575 DEC C                                ;
- $C576 ADD HL,DE                            ;
- $C577 INC H                                ;
- $C578 EX AF,AF'                            ;
- $C579 LD ($070E),A                         ;
- $C57C EX AF,AF'                            ;
- $C57D LD C,$1A                             ;
- $C57F DEC H                                ;
- $C580 DEC C                                ;
- $C581 DEC C                                ;
- $C582 DEC C                                ;
- $C583 LD ($0D0D),HL                        ;
- $C586 LD ($070D),HL                        ;
- $C589 EX AF,AF'                            ;
- $C58A INC SP                               ;
- $C58B INC HL                               ;
- $C58C LD C,$0E                             ;
- $C58E INC HL                               ;
- $C58F LD C,$0D                             ;
- $C591 DEC C                                ;
- $C592 LD ($0D0D),HL                        ;
- $C595 LD ($240D),HL                        ;
- $C598 INC (HL)                             ;
- $C599 LD C,$23                             ;
- $C59B RLCA                                 ;
- $C59C EX AF,AF'                            ;
- $C59D INC HL                               ;
- $C59E LD C,$25                             ;
- $C5A0 LD H,$0D                             ;
- $C5A2 LD ($0D0D),HL                        ;
- $C5A5 LD ($0D0D),HL                        ;
- $C5A8 DAA                                  ;
- $C5A9 LD C,$23                             ;
- $C5AB LD C,$32                             ;
- $C5AD INC HL                               ;
- $C5AE LD C,$0E                             ;
- $C5B0 DEC C                                ;
- $C5B1 DEC D                                ;
- $C5B2 DEC C                                ;
- $C5B3 DEC C                                ;
- $C5B4 DEC C                                ;
- $C5B5 DEC C                                ;
- $C5B6 LD DE,$0E0D                          ;
- $C5B9 LD C,$0E                             ;
- $C5BB LD C,$32                             ;
- $C5BD LD C,$0A                             ;
- $C5BF LD C,$0D                             ;
- $C5C1 LD DE,$0D0D                          ;
- $C5C4 DEC C                                ;
- $C5C5 DEC C                                ;
- $C5C6 DEC C                                ;
- $C5C7 DEC C                                ;
- $C5C8 LD C,$0A                             ;
- $C5CA LD C,$32                             ;
- $C5CC LD C,$32                             ;
- $C5CE INC SP                               ;
- $C5CF LD C,$0D                             ;
- $C5D1 DEC D                                ;
- $C5D2 DEC C                                ;
- $C5D3 DEC C                                ;
- $C5D4 DEC C                                ;
- $C5D5 DEC C                                ;
- $C5D6 DEC D                                ;
- $C5D7 INC H                                ;
- $C5D8 LD C,$0E                             ;
- $C5DA LD C,$33                             ;
- $C5DC LD C,$0E                             ;
- $C5DE LD C,$25                             ;
- $C5E0 LD H,$0D                             ;
- $C5E2 DEC C                                ;
- $C5E3 DEC C                                ;
- $C5E4 DEC C                                ;
- $C5E5 DEC C                                ;
- $C5E6 LD DE,$2724                          ;
- $C5E9 RLCA                                 ;
- $C5EA EX AF,AF'                            ;
- $C5EB RLCA                                 ;
- $C5EC EX AF,AF'                            ;
- $C5ED LD C,$0A                             ;
- $C5EF DEC H                                ;
- $C5F0 LD H,$15                             ;
- $C5F2 DEC C                                ;
- $C5F3 DEC C                                ;
- $C5F4 DEC C                                ;
- $C5F5 DEC C                                ;
- $C5F6 DEC D                                ;
- $C5F7 DEC C                                ;
- $C5F8 DAA                                  ;
- $C5F9 RLCA                                 ;
- $C5FA EX AF,AF'                            ;
- $C5FB LD ($0807),A                         ;
- $C5FE RLCA                                 ;
- $C5FF EX AF,AF'                            ;
- $C600 LD H,$19                             ;
- $C602 DEC C                                ;
- $C603 DEC C                                ;
- $C604 DEC D                                ;
- $C605 DEC C                                ;
- $C606 DEC C                                ;
- $C607 DEC C                                ;
- $C608 DAA                                  ;
- $C609 LD A,(DE)                            ;
- $C60A RLCA                                 ;
- $C60B EX AF,AF'                            ;
- $C60C INC SP                               ;
- $C60D RLCA                                 ;
- $C60E EX AF,AF'                            ;
- $C60F RLCA                                 ;
- $C610 DEC C                                ;
- $C611 DEC D                                ;
- $C612 DEC C                                ;
- $C613 DEC C                                ;
- $C614 DEC C                                ;
- $C615 DEC C                                ;
- $C616 DEC D                                ;
- $C617 DEC C                                ;
- $C618 EX AF,AF'                            ;
- $C619 INC (HL)                             ;
- $C61A RLCA                                 ;
- $C61B EX AF,AF'                            ;
- $C61C RLCA                                 ;
- $C61D EX AF,AF'                            ;
- $C61E INC (HL)                             ;
- $C61F LD C,$0D                             ;
- $C621 DEC C                                ;
- $C622 LD ($0D0D),HL                        ;
- $C625 LD ($0D0D),HL                        ;
- $C628 LD C,$33                             ;
- $C62A INC HL                               ;
- $C62B LD C,$0E                             ;
- $C62D INC HL                               ;
- $C62E LD C,$0E                             ;
- $C630 DEC D                                ;
- $C631 DEC C                                ;
- $C632 DEC C                                ;
- $C633 LD ($0D0D),HL                        ;
- $C636 LD ($0E24),HL                        ;
- $C639 LD C,$0E                             ;
- $C63B INC HL                               ;
- $C63C LD C,$0E                             ;
- $C63E INC HL                               ;
- $C63F DEC H                                ;
- $C640 LD H,$0D                             ;
- $C642 DEC C                                ;
- $C643 DEC C                                ;
- $C644 DEC D                                ;
- $C645 DEC C                                ;
- $C646 DEC C                                ;
- $C647 DEC C                                ;
- $C648 DAA                                  ;
- $C649 RLCA                                 ;
- $C64A EX AF,AF'                            ;
- $C64B RLCA                                 ;
- $C64C EX AF,AF'                            ;
- $C64D RLCA                                 ;
- $C64E EX AF,AF'                            ;
- $C64F RLCA                                 ;
- $C650 DEC C                                ;
- $C651 DEC D                                ;
- $C652 DEC C                                ;
- $C653 DEC C                                ;
- $C654 DEC C                                ;
- $C655 DEC C                                ;
- $C656 DEC D                                ;
- $C657 INC H                                ;
- $C658 EX AF,AF'                            ;
- $C659 RLCA                                 ;
- $C65A EX AF,AF'                            ;
- $C65B RLCA                                 ;
- $C65C EX AF,AF'                            ;
- $C65D RLCA                                 ;
- $C65E EX AF,AF'                            ;
- $C65F DEC H                                ;
- $C660 LD H,$38                             ;
- $C662 DEC C                                ;
- $C663 DEC C                                ;
- $C664 DEC C                                ;
- $C665 DEC C                                ;
- $C666 DEC D                                ;
- $C667 DEC C                                ;
- $C668 DAA                                  ;
- $C669 INC (HL)                             ;
- $C66A RLCA                                 ;
- $C66B EX AF,AF'                            ;
- $C66C INC (HL)                             ;
- $C66D INC SP                               ;
- $C66E INC (HL)                             ;
- $C66F RLCA                                 ;
- $C670 DEC C                                ;
- $C671 DEC D                                ;
- $C672 DEC C                                ;
- $C673 DEC C                                ;
- $C674 DEC C                                ;
- $C675 DEC C                                ;
- $C676 LD DE,$0824                          ;
- $C679 RLCA                                 ;
- $C67A EX AF,AF'                            ;
- $C67B RLCA                                 ;
- $C67C EX AF,AF'                            ;
- $C67D LD C,$0A                             ;
- $C67F DEC H                                ;
- $C680 LD H,$0D                             ;
- $C682 DEC D                                ;
- $C683 DEC C                                ;
- $C684 DEC C                                ;
- $C685 DEC C                                ;
- $C686 ADD HL,DE                            ;
- $C687 DEC C                                ;
- $C688 DAA                                  ;
- $C689 INC SP                               ;
- $C68A LD C,$33                             ;
- $C68C LD C,$32                             ;
- $C68E LD A,(DE)                            ;
- $C68F LD ($0D0D),A                         ;
- $C692 DEC C                                ;
- $C693 DEC C                                ;
- $C694 DEC C                                ;
- $C695 DEC C                                ;
- $C696 ADD HL,DE                            ;
- $C697 INC H                                ;
- $C698 LD C,$0E                             ;
- $C69A LD C,$0E                             ;
- $C69C LD ($1A33),A                         ;
- $C69F DEC H                                ;
- $C6A0 LD H,$0D                             ;
- $C6A2 DEC D                                ;
- $C6A3 DEC C                                ;
- $C6A4 DEC C                                ;
- $C6A5 DEC D                                ;
- $C6A6 DEC C                                ;
- $C6A7 DEC C                                ;
- $C6A8 DAA                                  ;
- $C6A9 RLCA                                 ;
- $C6AA EX AF,AF'                            ;
- $C6AB RLCA                                 ;
- $C6AC EX AF,AF'                            ;
- $C6AD RLCA                                 ;
- $C6AE EX AF,AF'                            ;
- $C6AF RLCA                                 ;
- $C6B0 DEC C                                ;
- $C6B1 LD DE,$0D0D                          ;
- $C6B4 DEC D                                ;
- $C6B5 DEC C                                ;
- $C6B6 DEC C                                ;
- $C6B7 DEC C                                ;
- $C6B8 EX AF,AF'                            ;
- $C6B9 LD A,(BC)                            ;
- $C6BA RLCA                                 ;
- $C6BB EX AF,AF'                            ;
- $C6BC LD C,$07                             ;
- $C6BE EX AF,AF'                            ;
- $C6BF LD C,$0D                             ;
- $C6C1 DEC D                                ;
- $C6C2 DEC C                                ;
- $C6C3 DEC C                                ;
- $C6C4 DEC C                                ;
- $C6C5 DEC C                                ;
- $C6C6 DEC D                                ;
- $C6C7 DEC C                                ;
- $C6C8 LD C,$34                             ;
- $C6CA INC (HL)                             ;
- $C6CB LD C,$33                             ;
- $C6CD LD C,$32                             ;
- $C6CF LD C,$0D                             ;
- $C6D1 DEC D                                ;
- $C6D2 DEC C                                ;
- $C6D3 DEC C                                ;
- $C6D4 DEC C                                ;
- $C6D5 DEC C                                ;
- $C6D6 LD DE,$0E24                          ;
- $C6D9 INC (HL)                             ;
- $C6DA LD C,$32                             ;
- $C6DC LD ($0A0E),A                         ;
- $C6DF DEC H                                ;
- $C6E0 LD H,$0D                             ;
- $C6E2 DEC C                                ;
- $C6E3 DEC C                                ;
- $C6E4 DEC C                                ;
- $C6E5 DEC C                                ;
- $C6E6 LD DE,$2724                          ;
- $C6E9 RLCA                                 ;
- $C6EA EX AF,AF'                            ;
- $C6EB RLCA                                 ;
- $C6EC EX AF,AF'                            ;
- $C6ED LD C,$0A                             ;
- $C6EF DEC H                                ;
- $C6F0 LD H,$11                             ;
- $C6F2 DEC C                                ;
- $C6F3 DEC C                                ;
- $C6F4 DEC C                                ;
- $C6F5 DEC D                                ;
- $C6F6 DEC C                                ;
- $C6F7 INC H                                ;
- $C6F8 DAA                                  ;
- $C6F9 LD A,(BC)                            ;
- $C6FA LD C,$34                             ;
- $C6FC LD C,$0E                             ;
- $C6FE INC (HL)                             ;
- $C6FF DEC H                                ;
- $C700 DEC C                                ;
- $C701 ADD HL,DE                            ;
- $C702 DEC C                                ;
- $C703 LD ($0D0D),HL                        ;
- $C706 LD ($0E24),HL                        ;
- $C709 LD A,(DE)                            ;
- $C70A LD ($0E23),A                         ;
- $C70D INC SP                               ;
- $C70E INC HL                               ;
- $C70F DEC H                                ;
- $C710 LD H,$0D                             ;
- $C712 LD ($0D0D),HL                        ;
- $C715 LD ($0D0D),HL                        ;
- $C718 DAA                                  ;
- $C719 INC SP                               ;
- $C71A INC HL                               ;
- $C71B LD C,$0E                             ;
- $C71D INC HL                               ;
- $C71E LD C,$32                             ;
- $C720 DEC C                                ;
- $C721 LD DE,$0D0D                          ;
- $C724 DEC D                                ;
- $C725 DEC C                                ;
- $C726 DEC C                                ;
- $C727 INC H                                ;
- $C728 LD C,$0A                             ;
- $C72A LD C,$34                             ;
- $C72C INC (HL)                             ;
- $C72D RLCA                                 ;
- $C72E EX AF,AF'                            ;
- $C72F DEC H                                ;
- $C730 LD H,$0D                             ;
- $C732 DEC C                                ;
- $C733 DEC C                                ;
- $C734 DEC C                                ;
- $C735 DEC D                                ;
- $C736 DEC C                                ;
- $C737 DEC C                                ;
- $C738 DAA                                  ;
- $C739 INC (HL)                             ;
- $C73A INC (HL)                             ;
- $C73B RLCA                                 ;
- $C73C EX AF,AF'                            ;
- $C73D LD C,$33                             ;
- $C73F RLCA                                 ;
- $C740 DEC C                                ;
- $C741 ADD HL,DE                            ;
- $C742 DEC C                                ;
- $C743 DEC C                                ;
- $C744 DEC D                                ;
- $C745 DEC C                                ;
- $C746 DEC C                                ;
- $C747 INC H                                ;
- $C748 EX AF,AF'                            ;
- $C749 LD A,(DE)                            ;
- $C74A INC SP                               ;
- $C74B LD C,$34                             ;
- $C74D RLCA                                 ;
- $C74E EX AF,AF'                            ;
- $C74F DEC H                                ;
- $C750 LD H,$15                             ;
- $C752 DEC C                                ;
- $C753 DEC C                                ;
- $C754 DEC C                                ;
- $C755 DEC C                                ;
- $C756 DEC D                                ;
- $C757 DEC C                                ;
- $C758 DAA                                  ;
- $C759 RLCA                                 ;
- $C75A EX AF,AF'                            ;
- $C75B LD C,$0E                             ;
- $C75D INC SP                               ;
- $C75E LD C,$0E                             ;
- $C760 DEC C                                ;
- $C761 DEC D                                ;
- $C762 DEC C                                ;
- $C763 DEC C                                ;
- $C764 DEC C                                ;
- $C765 DEC C                                ;
- $C766 DEC D                                ;
- $C767 DEC C                                ;
- $C768 LD C,$33                             ;
- $C76A LD C,$0E                             ;
- $C76C INC (HL)                             ;
- $C76D LD C,$0E                             ;
- $C76F LD C,$0D                             ;
- $C771 DEC D                                ;
- $C772 DEC C                                ;
- $C773 DEC C                                ;
- $C774 DEC C                                ;
- $C775 DEC C                                ;
- $C776 LD DE,$0E0D                          ;
- $C779 LD C,$32                             ;
- $C77B LD C,$0E                             ;
- $C77D LD ($0E0A),A                         ;
- $C780 LD H,$0D                             ;
- $C782 LD ($0D0D),HL                        ;
- $C785 LD ($150D),HL                        ;
- $C788 DAA                                  ;
- $C789 LD C,$23                             ;
- $C78B LD C,$32                             ;
- $C78D INC HL                               ;
- $C78E LD C,$0E                             ;
- $C790 DEC C                                ;
- $C791 LD ($0D0D),HL                        ;
- $C794 LD ($150D),HL                        ;
- $C797 INC H                                ;
- $C798 LD C,$23                             ;
- $C79A INC SP                               ;
- $C79B LD C,$23                             ;
- $C79D LD ($250E),A                         ;
- $C7A0 LD H,$0D                             ;
- $C7A2 DEC D                                ;
- $C7A3 JR Z,$C7D2                           ;
- $C7A5 LD (HL),$2D                          ;
- $C7A7 LD (HL),$27                          ;
- $C7A9 LD C,$33                             ;
- $C7AB ADD HL,HL                            ;
- $C7AC LD L,$37                             ;
- $C7AE LD L,$37                             ;
- $C7B0 DEFB $36,$2D,$36,$2D,$36,$2A,$35,$24 ;
- $C7B8 DEFB $37,$2E,$37,$2E,$37,$2B,$0A,$25 ;
- $C7C0 LD H,$15                             ;
- $C7C2 DEC C                                ;
- $C7C3 DEC C                                ;
- $C7C4 DEC C                                ;
- $C7C5 DEC C                                ;
- $C7C6 DEC D                                ;
- $C7C7 INC H                                ;
- $C7C8 DAA                                  ;
- $C7C9 INC (HL)                             ;
- $C7CA INC (HL)                             ;
- $C7CB RLCA                                 ;
- $C7CC EX AF,AF'                            ;
- $C7CD INC SP                               ;
- $C7CE INC (HL)                             ;
- $C7CF DEC H                                ;
- $C7D0 LD H,$15                             ;
-*$C7D2 DEC C                                ;
- $C7D3 DEC C                                ;
- $C7D4 DEC D                                ;
- $C7D5 DEC C                                ;
- $C7D6 DEC C                                ;
- $C7D7 DEC D                                ;
- $C7D8 DAA                                  ;
- $C7D9 LD C,$07                             ;
- $C7DB EX AF,AF'                            ;
- $C7DC RLCA                                 ;
- $C7DD EX AF,AF'                            ;
- $C7DE INC (HL)                             ;
- $C7DF RLCA                                 ;
- $C7E0 DEC C                                ;
- $C7E1 DEC C                                ;
- $C7E2 DEC D                                ;
- $C7E3 DEC C                                ;
- $C7E4 DEC C                                ;
- $C7E5 DEC D                                ;
- $C7E6 DEC C                                ;
- $C7E7 DEC C                                ;
- $C7E8 EX AF,AF'                            ;
- $C7E9 RLCA                                 ;
- $C7EA EX AF,AF'                            ;
- $C7EB LD C,$32                             ;
- $C7ED INC (HL)                             ;
- $C7EE INC (HL)                             ;
- $C7EF INC (HL)                             ;
- $C7F0 DEC D                                ;
- $C7F1 DEC C                                ;
- $C7F2 DEC C                                ;
- $C7F3 DEC D                                ;
- $C7F4 DEC C                                ;
- $C7F5 DEC C                                ;
- $C7F6 DEC D                                ;
- $C7F7 INC H                                ;
- $C7F8 INC (HL)                             ;
- $C7F9 INC (HL)                             ;
- $C7FA INC (HL)                             ;
- $C7FB INC (HL)                             ;
- $C7FC LD ($330E),A                         ;
- $C7FF DEC H                                ;
+b$C000 DEFB $26,$11,$0D,$0D,$0D,$0D,$15,$0D
+ $C008 DEFB $27,$0A,$34,$34,$07,$08,$0E,$07
+ $C010 DEFB $0D,$11,$0D,$0D,$0D,$0D,$15,$24
+ $C018 DEFB $08,$0A,$0E,$34,$34,$32,$0E,$25
+ $C020 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C028 DEFB $27,$33,$23,$0E,$0E,$23,$32,$0E
+ $C030 DEFB $0D,$19,$0D,$15,$0D,$0D,$15,$0D
+ $C038 DEFB $0E,$1A,$0E,$0E,$32,$0E,$0E,$0E
+ $C040 DEFB $0D,$0D,$22,$0D,$0D,$22,$0D,$24
+ $C048 DEFB $32,$0E,$23,$33,$0E,$23,$0E,$25
+ $C050 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$15
+ $C058 DEFB $27,$0E,$23,$0E,$0E,$23,$0E,$0E
+ $C060 DEFB $0D,$11,$0D,$15,$0D,$0D,$15,$24
+ $C068 DEFB $0E,$0A,$0E,$0E,$0E,$33,$0E,$25
+ $C070 DEFB $26,$11,$0D,$15,$0D,$0D,$15,$24
+ $C078 DEFB $27,$0A,$0E,$34,$34,$0E,$34,$25
+ $C080 DEFB $1C,$03,$03,$03,$14,$00,$05,$1D
+ $C088 DEFB $1F,$02,$02,$02,$12,$13,$01,$1E
+ $C090 DEFB $1C,$10,$10,$00,$0B,$0B,$0B,$0B
+ $C098 DEFB $1F,$0F,$0F,$01,$0C,$0C,$0C,$0C
+ $C0A0 DEFB $10,$10,$10,$10,$00,$14,$09,$1D
+ $C0A8 DEFB $0F,$0F,$0F,$0F,$01,$01,$0A,$1E
+ $C0B0 DEFB $26,$0D,$15,$0D,$0D,$0D,$11,$0D
+ $C0B8 DEFB $27,$33,$0E,$0E,$32,$0E,$0A,$0E
+ $C0C0 DEFB $0D,$15,$0D,$0D,$0D,$0D,$38,$24
+ $C0C8 DEFB $0E,$0E,$0E,$0E,$32,$32,$32,$25
+ $C0D0 DEFB $26,$0D,$0D,$0D,$0D,$0D,$0D,$24
+ $C0D8 DEFB $27,$0E,$0E,$33,$32,$0E,$17,$25
+ $C0E0 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C0E8 DEFB $27,$32,$32,$0E,$0E,$32,$0E,$0E
+ $C0F0 DEFB $0D,$15,$0D,$0D,$15,$0D,$11,$24
+ $C0F8 DEFB $0E,$0E,$32,$0E,$33,$32,$0A,$25
+ $C100 DEFB $1C,$03,$00,$03,$14,$03,$09,$03
+ $C108 DEFB $1F,$02,$12,$02,$01,$02,$0A,$02
+ $C110 DEFB $03,$14,$00,$00,$03,$00,$03,$03
+ $C118 DEFB $02,$01,$12,$13,$02,$13,$02,$02
+ $C120 DEFB $03,$14,$03,$03,$00,$14,$00,$1D
+ $C128 DEFB $02,$12,$02,$02,$12,$12,$13,$1E
+ $C130 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C138 DEFB $27,$0E,$0E,$0E,$33,$0E,$0E,$25
+ $C140 DEFB $26,$38,$0D,$15,$0D,$15,$0D,$24
+ $C148 DEFB $27,$32,$32,$32,$33,$0E,$32,$25
+ $C150 DEFB $26,$15,$0D,$0D,$0D,$15,$0D,$0D
+ $C158 DEFB $27,$0E,$33,$32,$0E,$0E,$32,$32
+ $C160 DEFB $0D,$0D,$15,$0D,$0D,$0D,$38,$24
+ $C168 DEFB $0E,$32,$34,$32,$32,$32,$32,$25
+ $C170 DEFB $26,$11,$0D,$15,$0D,$0D,$15,$24
+ $C178 DEFB $27,$0A,$33,$0E,$0E,$32,$0E,$25
+ $C180 DEFB $0D,$11,$0D,$28,$3A,$31,$3A,$31
+ $C188 DEFB $0E,$0A,$32,$29,$39,$30,$39,$30
+ $C190 DEFB $31,$3A,$31,$3A,$31,$3A,$31,$3A
+ $C198 DEFB $30,$39,$30,$39,$30,$39,$30,$39
+ $C1A0 DEFB $3A,$31,$3A,$31,$3A,$2A,$19,$0D
+ $C1A8 DEFB $39,$30,$39,$30,$39,$2B,$1A,$0E
+ $C1B0 DEFB $0D,$19,$0D,$15,$0D,$28,$3A,$31
+ $C1B8 DEFB $0E,$1A,$0E,$0E,$32,$29,$39,$30
+ $C1C0 DEFB $31,$3A,$31,$3A,$31,$3A,$31,$3A
+ $C1C8 DEFB $30,$39,$30,$39,$30,$39,$30,$39
+ $C1D0 DEFB $3A,$31,$3A,$31,$3A,$31,$3A,$31
+ $C1D8 DEFB $39,$30,$39,$30,$39,$30,$39,$30
+ $C1E0 DEFB $31,$3A,$31,$3A,$31,$3A,$31,$3A
+ $C1E8 DEFB $30,$39,$30,$39,$30,$39,$30,$39
+ $C1F0 DEFB $3A,$31,$3A,$31,$3A,$31,$3A,$2A
+ $C1F8 DEFB $39,$30,$39,$30,$39,$30,$39,$2B
+ $C200 DEFB $1C,$05,$14,$03,$03,$03,$05,$1D
+ $C208 DEFB $1F,$12,$13,$02,$02,$02,$01,$1E
+ $C210 DEFB $26,$0D,$15,$0D,$0D,$0D,$15,$0D
+ $C218 DEFB $27,$17,$0E,$34,$07,$08,$0E,$07
+ $C220 DEFB $0D,$15,$0D,$0D,$0D,$15,$0D,$24
+ $C228 DEFB $08,$34,$34,$07,$08,$07,$08,$25
+ $C230 DEFB $26,$15,$0D,$0D,$0D,$0D,$38,$24
+ $C238 DEFB $27,$34,$34,$07,$08,$34,$0E,$25
+ $C240 DEFB $26,$38,$0D,$0D,$15,$0D,$0D,$15
+ $C248 DEFB $27,$0E,$0E,$0E,$0E,$0E,$0E,$0E
+ $C250 DEFB $0D,$0D,$15,$0D,$0D,$0D,$11,$0D
+ $C258 DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0A,$0E
+ $C260 DEFB $0D,$0D,$0D,$0D,$0D,$15,$0D,$0D
+ $C268 DEFB $0E,$32,$0E,$33,$0E,$0E,$0E,$0E
+ $C270 DEFB $0D,$0D,$15,$0D,$0D,$0D,$15,$24
+ $C278 DEFB $0E,$17,$0E,$0E,$0E,$33,$0E,$25
+ $C280 DEFB $0D,$15,$0D,$0D,$15,$0D,$11,$24
+ $C288 DEFB $0E,$0E,$0E,$0E,$0E,$0E,$0A,$25
+ $C290 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C298 DEFB $27,$32,$23,$0E,$0E,$23,$0E,$0E
+ $C2A0 DEFB $0D,$22,$0D,$0D,$22,$0D,$0D,$0D
+ $C2A8 DEFB $0E,$23,$0E,$0E,$23,$0E,$32,$0E
+ $C2B0 DEFB $0D,$19,$0D,$22,$0D,$0D,$22,$0D
+ $C2B8 DEFB $0E,$1A,$0E,$23,$0E,$0E,$23,$0E
+ $C2C0 DEFB $0D,$22,$0D,$0D,$22,$0D,$19,$24
+ $C2C8 DEFB $0E,$23,$0E,$0E,$23,$0E,$1A,$25
+ $C2D0 DEFB $1C,$05,$00,$03,$05,$03,$03,$03
+ $C2D8 DEFB $1F,$12,$13,$02,$01,$02,$02,$02
+ $C2E0 DEFB $03,$03,$05,$03,$03,$14,$06,$1D
+ $C2E8 DEFB $02,$02,$01,$02,$02,$12,$13,$1E
+ $C2F0 DEFB $26,$15,$0D,$0D,$0D,$15,$0D,$0D
+ $C2F8 DEFB $27,$0E,$0E,$33,$0E,$0E,$0E,$0E
+ $C300 DEFB $2D,$36,$2D,$36,$2D,$36,$2D,$36
+ $C308 DEFB $2E,$37,$2E,$2B,$0E,$0E,$0E,$0E
+ $C310 DEFB $36,$2D,$36,$2D,$36,$2A,$19,$0D
+ $C318 DEFB $0E,$0E,$0E,$0E,$0E,$32,$1A,$0E
+ $C320 DEFB $0D,$0D,$0D,$0D,$0D,$0D,$0D,$24
+ $C328 DEFB $0E,$0E,$0E,$0E,$32,$32,$32,$25
+ $C330 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C338 DEFB $27,$0E,$07,$08,$32,$0E,$0E,$25
+ $C340 DEFB $26,$38,$0D,$0D,$0D,$0D,$15,$24
+ $C348 DEFB $27,$0E,$0E,$0E,$34,$34,$0E,$25
+ $C350 DEFB $26,$38,$0D,$0D,$0D,$15,$0D,$0D
+ $C358 DEFB $27,$32,$32,$0E,$32,$0E,$0E,$0E
+ $C360 DEFB $0D,$15,$0D,$28,$2D,$36,$2D,$36
+ $C368 DEFB $32,$0E,$0E,$29,$2E,$37,$2E,$37
+ $C370 DEFB $36,$2D,$36,$2D,$36,$2D,$36,$2D
+ $C378 DEFB $37,$2E,$37,$2E,$37,$2E,$37,$2E
+ $C380 DEFB $26,$11,$0D,$28,$2E,$37,$2E,$37
+ $C388 DEFB $27,$0A,$0E,$29,$18,$18,$18,$18
+ $C390 DEFB $2E,$37,$2E,$37,$2E,$2B,$0E,$0E
+ $C398 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3A0 DEFB $0E,$0A,$0E,$32,$0E,$0E,$32,$0E
+ $C3A8 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3B0 DEFB $0E,$0E,$29,$2E,$37,$2E,$37,$2E
+ $C3B8 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3C0 DEFB $2E,$37,$2E,$37,$2E,$37,$2E,$37
+ $C3C8 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3D0 DEFB $37,$2E,$37,$2B,$0E,$29,$1A,$0E
+ $C3D8 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3E0 DEFB $0E,$0E,$0E,$32,$32,$0E,$0A,$25
+ $C3E8 DEFB $18,$18,$18,$18,$18,$18,$18,$18
+ $C3F0 DEFB $27,$0A,$32,$0E,$2A,$0D,$11,$24
+ $C3F8 DEFB $18,$18,$18,$18,$2B,$32,$0A,$25
+ $C400 DEFB $26,$19,$28,$36,$2D,$36,$2D,$36
+ $C408 DEFB $27,$1A,$29,$37,$2E,$37,$2E,$37
+ $C410 DEFB $2D,$36,$2D,$36,$2D,$2A,$0D,$0D
+ $C418 DEFB $2E,$37,$2E,$37,$2E,$2B,$0E,$0E
+ $C420 DEFB $0D,$11,$0D,$0D,$0D,$0D,$0D,$0D
+ $C428 DEFB $0E,$0A,$0E,$32,$0E,$0E,$32,$0E
+ $C430 DEFB $0D,$0D,$28,$2D,$36,$2D,$36,$2D
+ $C438 DEFB $0E,$0E,$29,$2E,$37,$2E,$37,$2E
+ $C440 DEFB $2D,$36,$2D,$36,$2D,$36,$2D,$36
+ $C448 DEFB $2E,$37,$2E,$37,$2E,$37,$2E,$37
+ $C450 DEFB $36,$2D,$36,$2A,$15,$0D,$19,$0D
+ $C458 DEFB $37,$2E,$37,$2B,$0E,$0E,$1A,$0E
+ $C460 DEFB $0D,$15,$0D,$0D,$0D,$0D,$11,$24
+ $C468 DEFB $0E,$0E,$0E,$32,$32,$0E,$0A,$25
+ $C470 DEFB $26,$11,$0D,$0D,$0D,$0D,$0D,$24
+ $C478 DEFB $27,$0A,$32,$0E,$32,$32,$32,$25
+ $C480 DEFB $26,$15,$0D,$0D,$15,$0D,$11,$24
+ $C488 DEFB $27,$0E,$0E,$0E,$0E,$0E,$0A,$25
+ $C490 DEFB $26,$0D,$0D,$0D,$0D,$0D,$19,$24
+ $C498 DEFB $27,$07,$08,$07,$08,$0E,$1A,$25
+ $C4A0 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C4A8 DEFB $27,$33,$23,$0E,$0E,$23,$0E,$33
+ $C4B0 DEFB $15,$0D,$0D,$22,$0D,$0D,$22,$24
+ $C4B8 DEFB $0E,$17,$0E,$23,$32,$33,$23,$25
+ $C4C0 DEFB $26,$0D,$0D,$0D,$0D,$0D,$0D,$24
+ $C4C8 DEFB $27,$17,$07,$08,$07,$08,$0E,$25
+ $C4D0 DEFB $26,$0D,$15,$0D,$0D,$0D,$15,$24
+ $C4D8 DEFB $27,$17,$0E,$0E,$34,$0E,$0E,$25
+ $C4E0 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C4E8 DEFB $27,$07,$08,$07,$08,$07,$08,$25
+ $C4F0 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C4F8 DEFB $27,$0E,$07,$08,$07,$08,$0E,$25
+ $C500 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C508 DEFB $27,$0E,$23,$32,$0E,$23,$0E,$0E
+ $C510 DEFB $0D,$22,$0D,$0D,$22,$0D,$15,$24
+ $C518 DEFB $0E,$23,$0E,$0E,$23,$33,$0E,$25
+ $C520 DEFB $26,$15,$0D,$0D,$0D,$0D,$11,$24
+ $C528 DEFB $27,$0E,$07,$08,$07,$08,$0A,$25
+ $C530 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C538 DEFB $27,$0E,$23,$33,$0E,$23,$0E,$0E
+ $C540 DEFB $0D,$22,$0D,$0D,$22,$0D,$15,$24
+ $C548 DEFB $0E,$23,$32,$0E,$23,$33,$0E,$25
+ $C550 DEFB $26,$0D,$0D,$0D,$15,$0D,$11,$0D
+ $C558 DEFB $27,$07,$08,$07,$08,$0E,$0A,$0E
+ $C560 DEFB $0D,$15,$0D,$0D,$0D,$15,$0D,$0D
+ $C568 DEFB $0E,$07,$08,$07,$08,$07,$08,$07
+ $C570 DEFB $0D,$0D,$15,$0D,$0D,$0D,$19,$24
+ $C578 DEFB $08,$32,$0E,$07,$08,$0E,$1A,$25
+ $C580 DEFB $0D,$0D,$0D,$22,$0D,$0D,$22,$0D
+ $C588 DEFB $07,$08,$33,$23,$0E,$0E,$23,$0E
+ $C590 DEFB $0D,$0D,$22,$0D,$0D,$22,$0D,$24
+ $C598 DEFB $34,$0E,$23,$07,$08,$23,$0E,$25
+ $C5A0 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C5A8 DEFB $27,$0E,$23,$0E,$32,$23,$0E,$0E
+ $C5B0 DEFB $0D,$15,$0D,$0D,$0D,$0D,$11,$0D
+ $C5B8 DEFB $0E,$0E,$0E,$0E,$32,$0E,$0A,$0E
+ $C5C0 DEFB $0D,$11,$0D,$0D,$0D,$0D,$0D,$0D
+ $C5C8 DEFB $0E,$0A,$0E,$32,$0E,$32,$33,$0E
+ $C5D0 DEFB $0D,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C5D8 DEFB $0E,$0E,$0E,$33,$0E,$0E,$0E,$25
+ $C5E0 DEFB $26,$0D,$0D,$0D,$0D,$0D,$11,$24
+ $C5E8 DEFB $27,$07,$08,$07,$08,$0E,$0A,$25
+ $C5F0 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C5F8 DEFB $27,$07,$08,$32,$07,$08,$07,$08
+ $C600 DEFB $26,$19,$0D,$0D,$15,$0D,$0D,$0D
+ $C608 DEFB $27,$1A,$07,$08,$33,$07,$08,$07
+ $C610 DEFB $0D,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C618 DEFB $08,$34,$07,$08,$07,$08,$34,$0E
+ $C620 DEFB $0D,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C628 DEFB $0E,$33,$23,$0E,$0E,$23,$0E,$0E
+ $C630 DEFB $15,$0D,$0D,$22,$0D,$0D,$22,$24
+ $C638 DEFB $0E,$0E,$0E,$23,$0E,$0E,$23,$25
+ $C640 DEFB $26,$0D,$0D,$0D,$15,$0D,$0D,$0D
+ $C648 DEFB $27,$07,$08,$07,$08,$07,$08,$07
+ $C650 DEFB $0D,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C658 DEFB $08,$07,$08,$07,$08,$07,$08,$25
+ $C660 DEFB $26,$38,$0D,$0D,$0D,$0D,$15,$0D
+ $C668 DEFB $27,$34,$07,$08,$34,$33,$34,$07
+ $C670 DEFB $0D,$15,$0D,$0D,$0D,$0D,$11,$24
+ $C678 DEFB $08,$07,$08,$07,$08,$0E,$0A,$25
+ $C680 DEFB $26,$0D,$15,$0D,$0D,$0D,$19,$0D
+ $C688 DEFB $27,$33,$0E,$33,$0E,$32,$1A,$32
+ $C690 DEFB $0D,$0D,$0D,$0D,$0D,$0D,$19,$24
+ $C698 DEFB $0E,$0E,$0E,$0E,$32,$33,$1A,$25
+ $C6A0 DEFB $26,$0D,$15,$0D,$0D,$15,$0D,$0D
+ $C6A8 DEFB $27,$07,$08,$07,$08,$07,$08,$07
+ $C6B0 DEFB $0D,$11,$0D,$0D,$15,$0D,$0D,$0D
+ $C6B8 DEFB $08,$0A,$07,$08,$0E,$07,$08,$0E
+ $C6C0 DEFB $0D,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C6C8 DEFB $0E,$34,$34,$0E,$33,$0E,$32,$0E
+ $C6D0 DEFB $0D,$15,$0D,$0D,$0D,$0D,$11,$24
+ $C6D8 DEFB $0E,$34,$0E,$32,$32,$0E,$0A,$25
+ $C6E0 DEFB $26,$0D,$0D,$0D,$0D,$0D,$11,$24
+ $C6E8 DEFB $27,$07,$08,$07,$08,$0E,$0A,$25
+ $C6F0 DEFB $26,$11,$0D,$0D,$0D,$15,$0D,$24
+ $C6F8 DEFB $27,$0A,$0E,$34,$0E,$0E,$34,$25
+ $C700 DEFB $0D,$19,$0D,$22,$0D,$0D,$22,$24
+ $C708 DEFB $0E,$1A,$32,$23,$0E,$33,$23,$25
+ $C710 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$0D
+ $C718 DEFB $27,$33,$23,$0E,$0E,$23,$0E,$32
+ $C720 DEFB $0D,$11,$0D,$0D,$15,$0D,$0D,$24
+ $C728 DEFB $0E,$0A,$0E,$34,$34,$07,$08,$25
+ $C730 DEFB $26,$0D,$0D,$0D,$0D,$15,$0D,$0D
+ $C738 DEFB $27,$34,$34,$07,$08,$0E,$33,$07
+ $C740 DEFB $0D,$19,$0D,$0D,$15,$0D,$0D,$24
+ $C748 DEFB $08,$1A,$33,$0E,$34,$07,$08,$25
+ $C750 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C758 DEFB $27,$07,$08,$0E,$0E,$33,$0E,$0E
+ $C760 DEFB $0D,$15,$0D,$0D,$0D,$0D,$15,$0D
+ $C768 DEFB $0E,$33,$0E,$0E,$34,$0E,$0E,$0E
+ $C770 DEFB $0D,$15,$0D,$0D,$0D,$0D,$11,$0D
+ $C778 DEFB $0E,$0E,$32,$0E,$0E,$32,$0A,$0E
+ $C780 DEFB $26,$0D,$22,$0D,$0D,$22,$0D,$15
+ $C788 DEFB $27,$0E,$23,$0E,$32,$23,$0E,$0E
+ $C790 DEFB $0D,$22,$0D,$0D,$22,$0D,$15,$24
+ $C798 DEFB $0E,$23,$33,$0E,$23,$32,$0E,$25
+ $C7A0 DEFB $26,$0D,$15,$28,$2D,$36,$2D,$36
+ $C7A8 DEFB $27,$0E,$33,$29,$2E,$37,$2E,$37
+ $C7B0 DEFB $36,$2D,$36,$2D,$36,$2A,$35,$24
+ $C7B8 DEFB $37,$2E,$37,$2E,$37,$2B,$0A,$25
+ $C7C0 DEFB $26,$15,$0D,$0D,$0D,$0D,$15,$24
+ $C7C8 DEFB $27,$34,$34,$07,$08,$33,$34,$25
+ $C7D0 DEFB $26,$15,$0D,$0D,$15,$0D,$0D,$15
+ $C7D8 DEFB $27,$0E,$07,$08,$07,$08,$34,$07
+ $C7E0 DEFB $0D,$0D,$15,$0D,$0D,$15,$0D,$0D
+ $C7E8 DEFB $08,$07,$08,$0E,$32,$34,$34,$34
+ $C7F0 DEFB $15,$0D,$0D,$15,$0D,$0D,$15,$24
+ $C7F8 DEFB $34,$34,$34,$34,$32,$0E,$33,$25
 
 ; Sprites and masks
 ;
@@ -10140,7 +9599,7 @@ b$E000 DEFB $AA,$AA,$AA,$AA,$55,$55,$55,$55 ; {#HTML[#UDGARRAY4,7,4,4,,($E000-$E
  $FCE8 DEFB $00,$00,$00,$00,$FF,$FF,$FF,$FF ;
  $FCF0 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $FCF8 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; }
-; Back 32x32
+; Back 32x32 Wire
  $FD00 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; {#HTML[#UDGARRAY4,7,4,4,,($FD00-$FD7F-1-32)(bckFD00)]
  $FD08 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $FD10 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
@@ -10157,7 +9616,9 @@ b$E000 DEFB $AA,$AA,$AA,$AA,$55,$55,$55,$55 ; {#HTML[#UDGARRAY4,7,4,4,,($E000-$E
  $FD68 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $FD70 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ;
  $FD78 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ; }
- $FD80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+
+; Data block at FD80
+b$FD80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FD88 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FD90 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FD98 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -10244,22 +9705,22 @@ c$FEB4 CALL $83C0    ;
  $FEC1 CALL $8B02    ; Show "JOE BLADE" big sign on the screen
  $FEC4 LD IX,$FE00   ;
  $FEC8 LD HL,$4809   ;
- $FECB CALL $9196    ;
+ $FECB CALL $9196    ; Draw string IX
  $FECE LD HL,$5908   ;
  $FED1 LD B,$11      ;
 *$FED3 LD (HL),$57   ;
  $FED5 INC HL        ;
  $FED6 DJNZ $FED3    ;
  $FED8 LD HL,$4866   ;
- $FEDB CALL $9196    ;
+ $FEDB CALL $9196    ; Draw string IX
  $FEDE LD HL,$48A5   ;
- $FEE1 CALL $9196    ;
+ $FEE1 CALL $9196    ; Draw string IX
  $FEE4 LD HL,$48E4   ;
- $FEE7 CALL $9196    ;
+ $FEE7 CALL $9196    ; Draw string IX
  $FEEA LD HL,$5042   ;
- $FEED CALL $9196    ;
+ $FEED CALL $9196    ; Draw string IX
  $FEF0 LD HL,$5082   ;
- $FEF3 CALL $9196    ;
+ $FEF3 CALL $9196    ; Draw string IX
  $FEF6 LD A,$28      ;
 *$FEF8 PUSH AF       ;
  $FEF9 CALL $A77C    ;
@@ -10376,12 +9837,12 @@ c$FFA0 LD A,($8209)  ;
 *$FFAB POP BC        ;
  $FFAC RET           ;
 
-; Routine at FFAD
+; Clear $8226, hand off to $7D96
 ;
 ; Used by the routine at #R$8114.
-c$FFAD LD A,$00      ;
- $FFAF LD ($8226),A  ;
- $FFB2 JP $7D96      ;
+c$FFAD LD A,$00      ; {Clear $8226 flag
+ $FFAF LD ($8226),A  ; }
+ $FFB2 JP $7D96      ; Continue at #R$7D96
 
 ; Routine at FFB5
 ;
@@ -10421,19 +9882,29 @@ c$FFD5 LD HL,$0200   ;
 b$FFDE DEFB $0F,$00,$14,$12,$04,$FF,$00,$00
  $FFE6 DEFB $00,$00
 
-; Routine at FFE8
+; Key-gated staircase check, if not mid-jump
 ;
 ; Used by the routine at #R$9602.
+;
+; .
+;
+; Skips #R$9880 while $8209<>0 (Joe mid-jump/climb).
 c$FFE8 LD A,($8209)  ;
  $FFEB OR A          ;
  $FFEC RET NZ        ;
  $FFED JP $9880      ;
 
-; Routine at FFF0
+; Play gunshot sound effect (3x)
 ;
 ; Used by the routine at #R$A798.
+;
+; .
+;
+; Called by #R$A798 when firing. Plays the descending-pitch beeper sweep
+; #R$A2BE three times in a row.
 c$FFF0 CALL $A2BE    ;
- $FFF3 CALL $A2BE    ;
+ $FFF3 CALL $A2BE    ; Descending-pitch beeper sweep (1st stage), falls into
+                     ; #R$A28C
  $FFF6 JP $A2BE      ;
 
 ; Data block at FFF9

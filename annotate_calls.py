@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Annotate CALL sites in a SkoolKit .ctl with the target routine's title.
+"""Annotate CALL and JP sites in a SkoolKit .ctl with the target routine's title.
 
 For every `CALL $XXXX` (conditional or not) found in the .skool disassembly
 whose target routine has a title on its `c $XXXX <title>` line in the .ctl,
 add a `C $addr,3 <short title>` sub-block comment at the call site -- unless
 that address already has a C-line (existing comments are never touched).
+
+`JP $XXXX` (conditional or not) sites are annotated the same way, but with
+an "=> " prefix on the comment text (e.g. `C $addr,3 => <short title>`) to
+mark them as a jump/handoff rather than a call-and-return.
 
 The title is shortened for the call-site comment: cut at the first ': ' or
 '; ' outside parentheses, and a trailing parenthetical is dropped -- so
@@ -78,26 +82,31 @@ for i, line in enumerate(ctl_lines):
         have_c.update(range(start, start + length))
         c_line_idx[start] = i
 
-# 3. CALL sites from the skool
-calls = []  # (site_addr, target_addr)
+# 3. CALL and JP sites from the skool
+calls = []  # (site_addr, target_addr, prefix)
 for line in open(SKOOL, encoding='utf-8').read().splitlines():
-    m = re.match(r'^[\* ]\$([0-9A-F]{4}) CALL (?:(?:NZ|Z|NC|C|PO|PE|P|M),)?\$([0-9A-F]{4})\b', line)
+    m = re.match(r'^(?:[\* ]|[a-zA-Z])\$([0-9A-F]{4}) CALL (?:(?:NZ|Z|NC|C|PO|PE|P|M),)?\$([0-9A-F]{4})\b', line)
     if m:
-        calls.append((int(m.group(1), 16), int(m.group(2), 16)))
+        calls.append((int(m.group(1), 16), int(m.group(2), 16), ''))
+        continue
+    m = re.match(r'^(?:[\* ]|[a-zA-Z])\$([0-9A-F]{4}) JP (?:(?:NZ|Z|NC|C|PO|PE|P|M),)?\$([0-9A-F]{4})\b', line)
+    if m:
+        calls.append((int(m.group(1), 16), int(m.group(2), 16), '=> '))
 
 # 4. Build the new C-lines, and (with --force) text-only rewrites of existing ones
 new_lines = {}  # addr -> line
 rewrites = {}  # addr -> (ctl_line_index, new_line)
-for site, target in calls:
+for site, target, prefix in calls:
     if target not in titles or not titles[target]:
         continue
+    text = prefix + titles[target]
     if site not in have_c:
-        new_lines[site] = 'C ${:04X},3 {}'.format(site, titles[target])
+        new_lines[site] = 'C ${:04X},3 {}'.format(site, text)
     elif FORCE and site in c_line_idx:
         old = ctl_lines[c_line_idx[site]]
         m = re.match(r'^(C \$[0-9A-F]{4}(?:,\d+)? )(\S.*)$', old)
-        if m and m.group(2) != titles[target]:
-            rewrites[site] = (c_line_idx[site], m.group(1) + titles[target])
+        if m and m.group(2) != text:
+            rewrites[site] = (c_line_idx[site], m.group(1) + text)
 
 # 5. Insert each new line at its address-sorted position in the ctl
 def line_addr(line):
@@ -117,7 +126,7 @@ for addr in sorted(new_lines):
     out.insert(idx, new_lines[addr])
 
 open(CTL, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
-print('titled routines: {}, call sites found: {}, C-lines added: {}, rewritten: {}'.format(
+print('titled routines: {}, call/jp sites found: {}, C-lines added: {}, rewritten: {}'.format(
     len(titles), len(calls), len(new_lines), len(rewrites)))
 for addr in sorted(new_lines):
     print('  ' + new_lines[addr])

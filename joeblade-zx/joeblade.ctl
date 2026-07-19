@@ -85,14 +85,13 @@ N $7700 Soldier mask 7
 B $7700,128,8 #HTML[#UDGARRAY4,7,4,4,,($7700-$777F-1-32)(msk7700)]
 N $7780 Soldier mask 8
 B $7780,128,8 #HTML[#UDGARRAY4,7,4,4,,($7780-$77FF-1-32)(msk7780)]
-c $7800 Level-exit handler: clear screen, message, hand off to $8EB4
-N $7800 Reached only from #R$8D3C's edge-tile check - NOT a room-to-room flip. Clears the top two-thirds of the screen bitmap, draws a message, waits for a key, checks a 5-slot control-selection area at $7B05-$7B09, then falls into #R$78E7 (attribute fill + IX setup), redraws two more strings, waits for a key with timeout, and jumps to #R$8EB4 - which either returns to the main menu (#R$8B37, if $8210=5) or drops into the high-score display (#R$9580). Effectively an end-of-level/game-over screen, not a level continuation.
+c $7800 Bomb deactivation minigame: sort 5 letters, "SELF DESTRUCT IN 30 SECONDS"
+N $7800 Reached only from #R$8D3C's edge-tile check on a bomb tile ($9D18) - NOT a room-to-room flip or level-exit. Clears the screen, plays the "SELF DESTRUCT IN 30 SECONDS" message (#R$78E7 scrolling text + #R$7BA8/#R$7BE8 setup), then loops #R$7A28 (letter-swap cursor input) while checking a 5-slot letter array at $7B01-$7B05 against sorted order ($7B05 down to $7B01, comparing against B=5..1) - fails back to #R$780C to keep playing until the 5 letters (2 of them swappable via the two cursors $7B09/$7B0A) are in alphabetical order. On success, falls through to #R$8EB4 (menu or high-score entry) - what happens on running out of time (30s) is not yet traced.
 C $7809,3 Wait for a key or timeout
-C $7809,3 Wait for a key or timeout
-C $781B,3 Control-options screen
-C $781E,3 Control-options screen
-C $7821,3 Control-options screen
-C $7824,3 Control-options screen
+C $781B,3 Bomb minigame
+C $781E,3 Bomb minigame
+C $7821,3 Bomb minigame
+C $7824,3 Bomb minigame
 C $7853,3 Draw string IX
 C $7859,3 Draw string IX
 C $7862,3 Wait for a key or timeout
@@ -117,15 +116,16 @@ b $7900 Per-tile threshold table, indexed by $8202
 N $7900 Word pairs indexed by 2*$8202+1 (current room-tile index, see #R$8114). #R$7D96 clamps the odd byte of each pair into $4E-$9D each frame; even byte is untouched, purpose unclear. $8202 is used all over the movement/collision code ($8CF0, $9134+, $9602, $A2FE etc.), so this table likely holds a per-tile boundary alongside #R$9700 - unconfirmed, needs live tracing. $8202 ranges 0-127 (room 0-7 + 8*subtile 0-15), so the array proper is 128 words (256 bytes); the trailing 40 bytes are unaccounted for.
 N $7900 Originally guessed as a per-tile ceiling Y-bound. #R$7869 (the shot-hit check, called from #R$A798 when firing) compares this table's entry against Joe's X, not Y - so it may instead (or also) be a per-tile X threshold, e.g. a soldier post/wall position used for hit detection. The two uses aren't necessarily contradictory (same stored value reused as a generic "boundary coordinate" by different consumers) but the "ceiling" label is now uncertain - needs live tracing to settle.
 W $7900,256,2
-B $7A00,40,8 Unidentified trailing bytes
-c $7A28 Control-options screen: cursor/key-redefinition input handler
+B $7A00,40,8 8 preset 5-letter scrambles for the bomb-deactivation minigame (see #R$7BE8)
+c $7A28 Bomb minigame: letter-swap cursor input handler
+N $7A28 Edge-detects new key presses ($7B0F). Right/left move cursor 1 ($7B09, wraps 1-5); some other input moves cursor 2 ($7B0A, wraps 1-5); a third input swaps the letters at $7B00+cursor1 and $7B00+cursor2 - the two cursor positions are the "green, exchangeable" letters.
 C $7A28,3 Read input into $820A
 C $7A2B,3 get input state
 C $7A37,3 get input state
 C $7A4E,3 get input state
 C $7A65,3 get input state
-c $7A78 Control-options screen: draw selection-cursor highlight
-N $7A78 Part of the control-options screen ($7800/$7A28): clears an attribute row, then highlights the currently selected option using the cursor position from $7B09/$7B0A.
+c $7A78 Bomb minigame: highlight the two swap-cursor letters (green)
+N $7A78 Part of the bomb-deactivation minigame ($7800/$7A28): clears an attribute row, then highlights the two letters currently selected for swapping (green), using cursor positions $7B09/$7B0A.
 C $7A78,6 Clear attribute row $5960
 C $7A82,12 HL = highlight position from cursor row $7B09
 C $7A8E,5 B = 3 rows, DE = row stride
@@ -137,7 +137,9 @@ C $7AEB,3 Draw Joe sprite
 C $7AEE,3 Draw soldier ??
 b $7AF2
 B $7B08,1,1 uniform/disguise active flag ($00=normal, $01=disguised - suspends energy loss); auto-cleared by #R$7B84's timer
+B $7B0E,1,1
 c $7B1E Uniform pickup: check $9D2B tile at screen edge
+@ $7B1E label=PickupUniform
 N $7B1E Same edge-triggered pattern as #R$926E, for the uniform tile table $9D2B. On match: marks the tile visited, swaps Joe's sprite to the soldier costume ($80CF/$80D8 -> $A8/$70), sets the disguise flag $7B08=1, shows a message (#R$7B73, undeciphered), resets the duration timer $7B06, and rebuilds the background. Disguise is time-limited, not fire-consumed - see #R$7B84.
 C $7B1E,5 HL = $9D2B (uniform tile table); B = 2
 C $7B23,6 Compare current tile ($8202) against table entry
@@ -155,18 +157,19 @@ C $7B6A,6 Reset disguise duration timer $7B06
 C $7B70,3 => Build room background into shadow buffer $B800
 b $7B73
 c $7B84 Disguise duration timer: auto-expire and revert
+@ $7B84 label=UniformTime
 N $7B84 Called every frame from #R$8F00. While disguised ($7B08<>0), increments the 16-bit timer $7B06; once its high byte reaches 5 (~1280 frames), clears $7B08 and restores Joe's normal sprite ($80CF/$80D8 -> $D8/$D0). No player input involved - the disguise just runs out.
 C $7B84,5 Check disguise flag $7B08; return if not disguised
 C $7B89,10 Increment timer $7B06; not yet expired -> return
 C $7B94,14 Expired: clear $7B08, restore normal sprite
-b $7BA8
-c $7BC4 Draw a small 3x3-block icon (used by control-options screen)
+b $7BA8 "SELF DESTRUCT IN 30 SECONDS" (bomb minigame message)
+c $7BC4 Draw a small 3x3-block icon (used by the bomb-deactivation minigame)
 C $7BC4,3 Outer loop: 3 columns
 C $7BC7,5 Inner loop: 8 pixel rows
 C $7BCC,16 Copy 3 bytes/row (DE->HL)
 C $7BE3,5 HL += 6 (advance past icon)
-c $7BE8 Control-options screen: clear/redraw, pick a random default key preset
-N $7BE8 Clears the bitmap third at $4800, fills the top/bottom attribute strips, draws the instructions text, resets the cursor state ($7B00/$7B0B), then picks one of 8 5-byte presets from the table at $7A00 using the R register as a pseudo-random index, copying it into $7B01-$7B05 as the current key assignment.
+c $7BE8 Bomb minigame: clear/redraw, scramble the 5 letters
+N $7BE8 Clears the bitmap third at $4800, fills the top/bottom attribute strips, draws the "SELF DESTRUCT IN 30 SECONDS" instructions text, resets the cursor state ($7B00/$7B0B), then picks one of 8 5-letter scrambles from the table at $7A00 using the R register as a pseudo-random index, copying it into $7B01-$7B05 as the letters to sort.
 C $7BE8,12 Clear bitmap third at $4800
 C $7BF4,10 Fill 64 bytes at $5900 with attribute $45
 C $7BFE,7 Fill 192 bytes with attribute $41
@@ -175,20 +178,20 @@ C $7C24,8 HL = $7A00 + E*5 (random 5-byte preset)
 C $7C31,6 Copy 5 bytes into $7B01 (current key assignment)
 C $7C38,7 $7B09 = $0103 (init cursor position)
 C $7C0C,3 Draw string IX
-c $7C3F Control-options screen: draw the 5 assigned-key icons
-N $7C3F For each of the 5 key slots ($7B01-$7B05), looks up a symbol in a 72-byte-stride table at $6250 by key code and draws it via #R$7BC4.
+c $7C3F Bomb minigame: draw the 5 big letters
+N $7C3F For each of the 5 letter slots ($7B01-$7B05), looks up a glyph in a 72-byte-stride table at $6250 by letter code and draws it via #R$7BC4.
 C $7C3F,4 IX = $7B01 (key assignment slots); B = 5
 C $7C4A,10 HL = $6250 + key_code*72 (symbol lookup)
 C $7C5C,3 Draw a small 3x3-block icon
-c $7C65 Control-options screen: cursor blink timer + scanline effect
-N $7C65 Per-frame tick for the control-options screen. Increments the blink timer $7B0B, and every 48 frames (wrap at $30) advances the displayed key/symbol ($7B00/$7B0D wrap $09-$FF) and redraws via #R$7CA4. Then runs a 6-column left-rotate ("running line") effect over the block at $491F, independent of the blink timer.
+c $7C65 Bomb minigame: cursor blink timer + scanline effect
+N $7C65 Per-frame tick for the bomb-deactivation minigame. Increments the blink timer $7B0B, and every 48 frames (wrap at $30) advances a displayed symbol ($7B00/$7B0D wrap $09-$FF) and redraws via #R$7CA4. Then runs a 6-column left-rotate ("running line") effect over the block at $491F, independent of the blink timer.
 C $7C65,9 Increment blink timer $7B0B; wrap at 48 frames?
 C $7C6E,7 Advance displayed key index ($7B00)
-C $7C83,3 Control-options screen
+C $7C83,3 Bomb minigame
 C $7C86,5 HL = $491F; B = 6 columns (scanline effect)
 s $7CA0
-c $7CA4 Control-options screen: draw the two symbol-preview columns
-N $7CA4 Draws two 7-byte columns onto the screen (at $48xx, column from $7B00) from two lookup tables at $A700+ (indexed by $7B0C) and a second at $48xx-1 (indexed by $7B0D) - the currently-selected key's symbol, split across two source tables.
+c $7CA4 Bomb minigame: draw the two symbol-preview columns
+N $7CA4 Draws two 7-byte columns onto the screen (at $48xx, column from $7B00) from two lookup tables at $A700+ (indexed by $7B0C) and a second at $48xx-1 (indexed by $7B0D) - split across two source tables.
 C $7CA4,14 DE = $A700 + $7B0C*8 (symbol source, column 1)
 C $7CB5,6 Draw 7-byte column 1
 C $7CBD,10 DE = $7B0D*8 (symbol source, column 2)
@@ -196,11 +199,12 @@ C $7CC7,6 Draw 7-byte column 2
 c $7CD4
 c $7CDA
 c $7CE1
-C $7CF4,3 => Control-options screen
+C $7CF4,3 => Bomb minigame
 c $7CF7 Reduce energy, if allowed
 C $7CFC,3 => Reduce energy
 b $7CFF
 c $7D00 Start game: draw sign, reset variables, drop into game loop
+@ $7D00 label=StartGame
 N $7D00 Entered from #R$8B37 when 'S' is pressed on the main menu. Redraws the "JOE BLADE" sign and title strings, resets game variables to their initial values, then re-enables energy loss ($7D45) before falling into the main game loop.
 C $7D00,3 Entry-point trampoline
 C $7D06,3 Clear screen, border to black
@@ -307,6 +311,7 @@ C $7FEA,3 set jump counter
 C $7FF6,3 set jump counter
 b $7FFD
 c $8032 Read input into $820A: Kempston, digit-key, or redefinable-key scheme
+@ $8032 label=ReadInput
 N $8032 Writes a 5-bit direction/fire mask to #R$820A. If $820E==1, reads Kempston joystick (port $1F) and uses it directly if non-zero, skipping the keyboard entirely. Otherwise tries a fixed digit-key scheme (row $F7FE, keys 1-5) first; if that row is idle, falls back to the redefinable keyboard scheme matching the control-options text (#R$8400 signs): row $FDFE (A-G) = down, row $FBFE (Q-T) = up, row $7FFE (B/space) = fire, row $DFFE bits0-1 (O/P) = left/right.
 C $8032,5 $820E==1? (Kempston mode selected)
 C $8041,9 Read Kempston joystick (port $1F); use directly if non-zero
@@ -320,6 +325,7 @@ C $808D,10 Read row $7FFE (B/space); non-zero -> result bit4 (fire)
 C $809A,3 set input state
 b $809E
 c $80A0 Draw Joe sprite
+@ $80A0 label=DrawJoe
 C $80A9,3 get jump counter
 N $80CC HL = destination addr
 C $80CD,3 !!MUT-ARG!! Joe sprites base address
@@ -354,6 +360,7 @@ C $8175,8 Flip $8212's sign
 C $817D,10 C = soldier X; pick sprite by $8212 sign, continue at #R$9028
 b $8193
 c $81AA Draw sprite 32x32 with mask (masked blit)
+@ $81AA label=DrawSpriteMasked
 N $81AA BC=sprite addr, DE=mask addr, HL=dest. Standard AND-mask/OR-pixels blit, 4 rows x 8 rows x 4 bytes = 32x32. Used by #R$8F8C (draw soldier) and #R$9118 (draw collectible icon).
 C $81AA,2 Outer loop: 4 column-groups
 C $81AE,2 Inner loop: 8 rows
@@ -398,6 +405,7 @@ C $82A3,5 $820C bit3 (down-stair-right)?
 b $82B7
 b $8300
 c $83C0 Clear screen, border to black
+@ $83C0 label=ClearScreen
 N $83C0 Clears the full bitmap ($4000-$57FF), fills attributes ($5800-$5AFF) with bright white-on-black, and sets the border black.
 C $83C0,11 Clear bitmap $4000-$57FF
 C $83CD,5 Fill attributes with bright white-on-black
@@ -458,6 +466,7 @@ C $8558,3 => Draw string IX
 c $855B
 s $8567
 c $856E Pickup/beep sound effect (descending pitch sweep)
+@ $856E label=SFX_pickup
 N $856E Generic short beep played whenever a counter changes (called from the collectible-pickup routines, #R$9650, etc). Border-toggle (`OUT ($FE)`) sweep from $2E00 down to $24xx.
 C $856E,7 HL/DE = sweep start/rate
 C $8580,5 Toggle border, delay
@@ -476,6 +485,7 @@ b $85FA Countdown timer display "20:00" (digit,digit,separator,digit,digit)
 N $85FA Digit glyphs are $20-$29 ('0'-'9', confirmed from #R$9650's underflow check `CP $1F`->reset and #R$850E's overflow check `CP $2A`->reset). #R$9650's decrement cascade only touches $85FE/$85FD/$85FB (not $85FC) confirming $85FC ($1D) is a separator glyph, not a digit. Init bytes $22,$20,$1D,$20,$20 decode to "20:00". $85FB wraps to $25 ('5') on underflow instead of $29 ('9') like the other two - that digit position is capped 0-5, consistent with a MM:SS-style seconds-tens digit.
 b $8600
 c $8680 Wait for a key or timeout
+@ $8680 label=WaitKeyTimeout
 N $8680 Busy-waits for HL*BC ticks (both caller-supplied), flashing the border on two independent countdowns (BC = fast, DE = slow) as a "waiting" indicator. Does not itself poll the keyboard - callers check for a keypress separately and just use this for the timed pause/flash.
 C $8680,15 Save BC and BC+1 as two independent countdowns
 C $8690,5 Fast tick: flash border when BC reaches 0
@@ -489,6 +499,7 @@ C $86DB,3 Pickup/beep sound effect
 C $86DE,3 => Delay
 b $86E1
 c $86E4 Collect a hostage tile: mark, count, redraw
+@ $86E4 label=PickupHostage
 N $86E4 Called by #R$926E when Joe touches a $9D24-table tile at the screen edge. Marks the tile visited ($FF), increments the hostage counter $8214, draws the updated digit, and rebuilds the room background (the collected tile disappears).
 C $86E4,7 Mark tile visited ($FF); increment hostage counter $8214
 C $86EE,3 Draw one digit/character glyph
@@ -522,6 +533,7 @@ C $898F,15 Swap the two 16-byte rows
 C $899E,16 Decrement row index $8210; loop
 b $89AE
 c $89B4 Show main menu
+@ $89B4 label=ShowMainMenu
 N $89B4 Draws title screen (big "JOE BLADE" sign, credits, copyright), sets 3 rows of attributes, then waits for all keys to be released before returning. Does not wait for a keypress itself; the wait-for-keypress loop is elsewhere ($8A12 group).
 C $89B4,3 Clear screen, border to black
 C $89B7,3 Show "JOE BLADE" big sign on the screen
@@ -624,11 +636,13 @@ C $8AE2,3 DI; select bank 0
 C $8AE5,5 Restore bank 0 paging
 b $8AEC
 c $8B02 Show "JOE BLADE" big sign on the screen
+@ $8B02 label=ShowJoeBladeSign
 C $8B02,3 Address on the screen
 N $8B05 Show "JOE BLADE" big sign; HL = screen address
 C $8B28,3 Address in screen attributes
 b $8B33
 c $8B37 Main menu loop: poll keys, dispatch to Control/Start/High-scores
+@ $8B37 label=MainMenu
 N $8B37 Draws the menu once, then polls C/S/H each frame (matches the "C FOR CONTROL OPTIONS", "S TO START", "H FOR HIGH SCORES" prompts): C enters #R$8BB4 (control options), S jumps into #R$7D00 (start the game), H jumps into #R$8DBE (high scores).
 C $8B37,3 Show main menu => $8A12
 C $8B3A,3 Poll main menu state => $8A3C
@@ -655,6 +669,7 @@ C $8BD0,3 Draw string IX
 C $8BE7,3 => Control-options screen
 b $8BEA
 c $8C00 Build room background into shadow buffer $B800
+@ $8C00 label=BuildRoom
 N $8C00 Reads room-layout selector bytes from the paged RAM bank at $C000+offset (offset from room number $8203 and subtile $8204 - same 128K bank paged in around #R$8A12). Each selector byte is decoded into the source address of a pre-made 32x32 "back sprite" (#R$8C5A) and a 2x8 grid of them is stamped into the shadow buffer at $B800. Falls through to #R$8CF0 for one more row. The shadow buffer is later copied to the real screen by #R$8C78.
 N $8C00 Offset = level*128 + room*16 (level=$8204&$0F, room=$8203&$07). Selector byte: bit0 = tile variant, bits1-5 = tile index; decodes to source addr $E0+((byte>>1)&$1F) : (bit0?$80:0) - tiles live at $E000-$FFFF, 64 tiles x 128 bytes (32x32 1bpp). Full details, confirmation method and open questions in joeblade-zx/docs/Room-Format.md - in short: only the first 3 room-slots in the one bank sampled decode to real tile data, the rest of that region is code, and which bank is actually paged in during gameplay is still unconfirmed.
 C $8C00,4 IX = $C000 (paged-bank tile-selector table)
@@ -673,11 +688,13 @@ C $8C4F,4 Restore HL row start, advance to next row (L += $80)
 C $8C55,3 => Draw one more background row directly onto the real screen
 s $8C58
 c $8C5A Draw back sprite 32x32
+@ $8C5A label=DrawBackTile
 N $8C5A Stamps one 32x32 "back sprite" (a pre-made room-background block) into the shadow/real screen. DE = back sprite source addr, HL = destination addr.
 C $8C5A,2 Outer loop: 4 column-groups
 C $8C5E,2 Inner loop: 8 rows
 C $8C64,6 Copy 4 bytes/row (DE->HL)
 c $8C78 Copy shadow screen to real screen
+@ $8C78 label=ShowScreen
 N $8C78 Pops the stack-built shadow buffer at $B800 and writes it into the real screen bitmap starting at $4800, restoring SP afterwards.
 C $8C7A,6 save SP to IX
 C $8C80,3 buffer start address
@@ -712,14 +729,14 @@ C $8D2E,2 Advance to next selector byte
 C $8D30,3 Draw back sprite 32x32
 C $8D33,5 HL += 4 (advance dest column)
 c $8D3C Check for room-edge tile, trigger transition/control screen
-N $8D3C Scans a small table of 6 tile IDs at $9D18; if the current room-tile ($8202) matches one of them AND $820C bits 4-5 are clear AND Joe's X is at the screen edge ($20 or $C0), jumps to #R$7800. Not a room-to-room transition (see #R$7800) - more likely a level-exit/level-complete trigger on specific tagged edge tiles.
+N $8D3C Scans the bomb tile table $9D18 (same table used for bomb pickup, see docs/Actors.md); if the current room-tile ($8202) matches one of them AND $820C bits 4-5 are clear AND Joe's X is at the screen edge ($20 or $C0), jumps to #R$7800 - the bomb-deactivation minigame ("SELF DESTRUCT IN 30 SECONDS", sort 5 letters). Not a room-to-room transition.
 C $8D3C,5 HL = $9D18 (table of 6 edge-tile IDs); B = 6
 C $8D41,6 Compare current tile ($8202) against table entry
 C $8D47,7 Check $820C bits 4-5 (tile flags)
 C $8D4E,5 Joe at left edge (X=$20)? => #R$7800
-C $8D53,3 => Level-exit handler
+C $8D53,3 => Bomb deactivation minigame
 C $8D57,5 Joe at right edge (X=$C0)? => #R$7800
-C $8D5C,3 => Level-exit handler
+C $8D5C,3 => Bomb deactivation minigame
 b $8D64
 B $8D64,10,1
 c $8D6E Draw sprite 32x32 with mask
@@ -740,15 +757,20 @@ C $8DFF,3 Wait until every key on the keyboard is released
 C $8E04,3 => Main menu loop
 b $8E07
 B $8E0D,7,7 ' SCORES'
-t $8E2D
-b $8E30
-t $8E33
-b $8E36
-t $8E45
-b $8E48
+c $8E16
+C $8E1A,3 Clear screen, border to black
+C $8E20,3 Draw string IX
+C $8E30,3 Draw string IX
+C $8E36,3 Draw string IX
+C $8E3C,3 Draw string IX
+C $8E42,3 Draw string IX
+C $8E48,3 Draw string IX
+C $8E4B,3 Wait until every key on the keyboard is released
+C $8E50,3 => Main menu loop
 c $8E53 Copy soldier sprite template to working area
 N $8E53 Calls #R$96CE (checks the current tile's soldier movement pattern), then copies 13 bytes from the soldier sprite template at $8F8C to the working area $8FA0.
 c $8E64 Per-frame soldier update
+@ $8E64 label=ProcessSoldier
 N $8E64 Called from #R$FF96 (via #R$8F0C in the main loop). Refreshes the soldier's movement pattern (#R$8E53/#R$96CC), draws it (#R$8F5A/#R$FF3E), then reacts to a shot hit via #R$789D.
 C $8E64,3 Copy soldier sprite template to working area
 C $8E67,3 Soldier presence/movement-pattern dispatch for the current tile
@@ -759,6 +781,7 @@ c $8E96 Dispatch target from $8A41
 N $8E96 Reached via #R$8A3C (JP $8E96) once the main menu is done.
 C $8EB0,3 => Wait for a key or timeout
 c $8EB4 Post-game hub: menu, or high-score name entry
+@ $8EB4 label=FinalizeGame
 C $8EB4,3 Clear screen, border to black
 C $8EBC,3 => Main menu loop
 C $8EBF,4 'GOOD SCORING'
@@ -769,6 +792,7 @@ C $8EDF,3 Wait until every key on the keyboard is released
 C $8EE4,3 => High-score name entry
 s $8EE7
 c $8F00 Main game loop
+@ $8F00 label=GameLoop
 N $8F00 Reached from #R$7D00 via #R$8114/#R$FFAD/#R$7D96 when 'S' starts the game. One iteration per HALT: runs room/collision/energy/door subsystems, redraws Joe and the soldier, then polls the '0' key on row $EFFE - loop back to itself while not pressed, otherwise reset the stack and jump to #R$8EB4 (back to the menu/game-over flow).
 C $8F00,3 Check for room-edge tile, trigger transition/control screen
 C $8F03,3 Jump sound effect, gated on jump counter $820D
@@ -851,11 +875,13 @@ B $90FB,5,5 'SCORE'
 t $9101
 b $9106
 c $9118 Draw a collectible-item sprite, left or right variant
+@ $9118 label=DrawItemSprite
 N $9118 Called by #R$912C once a collectible tile has been matched (DE/other regs already set up by the caller for #R$81AA). Picks between two destination columns in the shadow buffer ($B898 or $B884) based on $820C bits4-5, then draws via #R$81AA.
 C $9122,3 => Draw sprite 32x32 with mask
 C $9128,3 => Draw sprite 32x32 with mask
 s $912B
 c $912C Detect collectible tile under Joe, draw its icon
+@ $912C label=DetectItem
 N $912C Scans the same 4 tile-ID tables used by #R$926E/#R$92A0/#R$9300/#R$9328 for a match against the current tile ($8202): $9D00 (15 entries, keys), $9D0F (6 entries, food), $9D18 (6 entries, bombs - also checked by #R$8D3C's level-exit test), $9D24 (6 entries, hostages). On a match, sets up the item's sprite/mask data and draws it via #R$9118. No match in any table -> falls through to #R$A2F6, which checks ammo ($9D20) and uniform ($9D2B - see #R$A328/#R$7B1E).
 C $9134,3 get current room-tile index = room + 8*subtile
 C $913D,3 => Draw a collectible-item sprite, left or right variant
@@ -868,6 +894,7 @@ C $9188,3 => Draw a collectible-item sprite, left or right variant
 C $918E,3 => Detect ammo or uniform tile under Joe, draw its icon
 s $9191
 c $9196 Draw string IX
+@ $9196 label=DrawStringIX
 C $91B6,1 read character pixels
 C $91B7,1 write character pixels
 C $91BE,3 => Draw string IX
@@ -878,17 +905,20 @@ C $91C8,6 HL/E = sweep start/rate
 C $91D8,5 Toggle border, delay
 C $91DD,16 HL -= 16
 c $91FA Wait until every key on the keyboard is released
+@ $91FA label=WaitKeyUp
 N $91FA Reads and ANDs all 8 keyboard half-rows together, returning non-zero only when nothing at all is pressed - a full-keyboard version of the single-row "no key pressed" checks used elsewhere.
 C $91FA,5 Read row $FEFE
 C $9229,3 Invert and mask result
 s $922E
 c $923C Draw black box on the screen
+@ $923C label=DrawPopupBox
 N $923C Clears a 4x8-column, 20-byte-tall bitmap rectangle starting at $4846 - the popup box background behind pickup/message text (called before drawing item-collected messages and similar dialogs).
 C $923C,5 HL = $4846; B = 4 columns
 C $9243,3 B = 8 groups
 C $9247,7 B = $14 (20); clear a byte strip
 c $925C Draw one digit/character glyph
 c $926E Hostage pickup: check $9D24 tile at screen edge
+@ $926E label=CheckHostage
 N $926E Scans the 6-entry hostage tile table $9D24; on a match, checks $820C bits4-5 to pick which screen edge to test Joe's X against ($20 or $C0), and if Joe is there, collects it via #R$86E4.
 C $926E,5 HL = $9D24 (hostage tile table); B = 6
 C $9273,6 Compare current tile ($8202) against table entry
@@ -901,12 +931,14 @@ c $9296 Delay (redirect)
 C $9296,3 => Delay
 b $9299
 c $92A0 Key pickup: check $9D00 tile at screen edge
+@ $92A0 label=CheckKey
 N $92A0 Same pattern as #R$926E but for the 15-entry key tile table $9D00; collects directly inline at $92C8 (mark tile $FF, increment key counter $8215, redraw digit, rebuild background).
 C $92A0,5 HL = $9D00 (key tile table); B = 15
 C $92A5,6 Compare current tile ($8202) against table entry
 C $92AB,5 $820C bits4-5: pick which edge to check
 C $92B2,3 get Joe X
 C $92BB,3 get Joe X
+N $92C8 Pickup the key
 C $92C8,7 Mark tile visited ($FF); increment key counter $8215
 C $92D2,3 Draw one digit/character glyph
 C $92D5,3 Build room background into shadow buffer $B800
@@ -916,6 +948,7 @@ C $92DE,7 Set bit7 on tile byte; increment bomb counter $8216
 C $92EA,3 Draw one digit/character glyph
 b $92FA
 c $9300 Bomb pickup: check $9D18 tile at screen edge
+@ $9300 label=CheckBomb
 N $9300 Same pattern as #R$926E, for the 6-entry bomb tile table $9D18 (also scanned by #R$8D3C's level-exit check - collecting the last bomb at the edge may be what triggers that). On match, hands off to #R$92DE.
 C $9300,5 HL = $9D18 (bomb tile table); B = 6
 C $9305,6 Compare current tile ($8202) against table entry
@@ -925,16 +958,19 @@ C $9317,3 => Bomb pickup
 C $931B,3 get Joe X
 C $9320,3 => Bomb pickup
 c $9328 Food pickup: check $9D0F tile at screen edge
+@ $9328 label=CheckFood
 N $9328 Same pattern as #R$926E, for the 6-entry food tile table $9D0F. Collects inline at $9350 (mark tile $FF, rebuild background, then #R$9456 - refills the energy gauge via #R$A23C). No dedicated on-screen counter byte like the other pickups (it's consumed immediately as a health refill, not stockpiled).
 C $9328,5 HL = $9D0F (food tile table); B = 6
 C $932D,6 Compare current tile ($8202) against table entry
 C $9333,5 $820C bits4-5: pick which edge to check
 C $933A,3 get Joe X
 C $9343,3 get Joe X
+N $9350 Pickup the food
 C $9350,2 Mark tile visited ($FF)
 C $9352,3 Build room background into shadow buffer $B800
 C $935A,3 Refill energy gauge
 c $935E "YOU ARE DEAD" message and finalize the game
+@ $935E label=JoeDead
 C $935F,3 Draw black box on the screen
 C $9362,4 '  YOU ARE DEAD'
 C $9366,3 screen address
@@ -1175,6 +1211,7 @@ b $A000 "JOE BLADE" sign
 b $A200
 B $A228,18,10 Energy gauge
 c $A23C Energy gauge initial fill
+@ $A23C label=EnergyFill
 N $A23C Refills the 18-byte gauge array $A228-$A239 to full ($04 each), redraws its attribute/border strips, then draws the gauge via #R$FFB5. Used both at game-start init and by the food pickup (#R$9456).
 C $A23C,5 HL = $A228 (energy gauge); B = 18
 C $A246,5 Fill gauge attribute strip $5AA1
@@ -1199,18 +1236,22 @@ C $A2E3,4 L reached 0? adjust E
 C $A2E9,8 H reached $2E? loop, else continue into #R$A28C
 b $A2F1
 c $A2F6 Detect ammo or uniform tile under Joe, draw its icon
+@ $A2F6 label=DetectAmmoUniform
 N $A2F6 Same pattern as #R$912C but for two more collectibles: ammo (table $9D20, sprite/mask $A500/$A580) and uniform (table $9D2B, sprite/mask $A400/$A480). Pickup is handled separately by #R$A328 (ammo) and #R$7B1E (uniform).
 C $A2FE,3 get current room-tile index = room + 8*subtile
 C $A307,3 => Draw a collectible-item sprite, left or right variant
 C $A315,3 get current room-tile index = room + 8*subtile
 C $A31E,3 => Draw a collectible-item sprite, left or right variant
 c $A328 Ammo pickup: check $9D20 tile at screen edge
+@ $A328 label=CheckAmmo
 N $A328 Same edge-triggered pattern as #R$926E, for the ammo tile table $9D20. On match: marks the tile visited, rebuilds the background, shows a message (#R$A370, undeciphered) and a black-box popup, adds 10 to the ammo count $8225, then continues at #R$9296.
 C $A328,5 HL = $9D20 (ammo tile table); B = 2
 C $A32D,6 Compare current tile ($8202) against table entry
 C $A333,5 $820C bits4-5: pick which edge to check
 C $A33A,3 get Joe X
 C $A343,3 get Joe X
+@ $A350 label=PickupAmmo
+N $A350 Pickup the ammo
 C $A350,2 Mark tile visited ($FF)
 C $A352,3 Build room background into shadow buffer $B800
 C $A355,3 Draw black box on the screen
@@ -1220,7 +1261,7 @@ C $A365,5 $8225 += 10 (ammo)
 C $A36D,3 => Delay
 b $A370
 B $A370,16 "SOME AMMUNITION" (ammo pickup message)
-c $A3AA
+c $A3AA Fill screen attributes with room attribute
 c $A3BA Per-frame collectible items scan
 C $A3BA,3 Ammo pickup
 C $A3BD,3 Food pickup
@@ -1241,6 +1282,7 @@ B $A500,128,8 #HTML[#UDGARRAY4,7,4,4,,($A500-$A57F-1-32)(sprA500)]
 N $A580 Mask 32x32 ammo
 B $A580,128,8 #HTML[#UDGARRAY4,7,4,4,,($A580-$A5FF-1-32)(mskA580)]
 b $A600 Font
+@ $A600 label=Font
 N $A600 #HTML[#UDGARRAY16($A600-$A67F-8)(font0.png)]
 B $A600,8,8 'A' = $00
 B $A608,8,8 'B' = $01
@@ -1287,8 +1329,10 @@ C $A77C,5 $820F = $FA (250 ticks)
 C $A786,3 Loop until A (tick count) reaches 0
 C $A782,3 Rolling-digit counter increment
 c $A78A Delay
+@ $A78A label=Delay
 s $A797
 c $A798 Shoot: fire button consumes one round of ammo ($8225)
+@ $A798 label=Shoot
 N $A798 Checked from #R$8F5A (called from #R$8E64). If fire is pressed ($820A bit4) and $8225 (ammo count) is non-zero, consumes one round, calls #R$FFF0 and #R$7869 (soldier hit/reaction logic), then sets $8226 based on Joe's X relative to a $9700-table entry for the current tile (bullet range/collision against the current room?). Out of ammo -> #R$A7DC (draw an "out of ammo" message, #R$A7EC).
 C $A798,5 Check fire button ($820A bit4)
 C $A79E,6 $8225 (ammo count): none left -> #R$A7DC
@@ -1304,6 +1348,7 @@ C $A7D0,3 get Joe X
 C $A7D7,3 set kill-sparkle animation counter
 s $A7DB
 c $A7DC Out of ammo
+@ $A7DC label=OutOfAmmo
 C $A7DC,3 Draw black box on the screen
 C $A7DF,4 "YOUR GUN'S EMPTY"
 C $A7E6,3 Draw string IX
@@ -1597,6 +1642,7 @@ N $FD00 Back 32x32 Wire
 B $FD00,128,8 #HTML[#UDGARRAY4,7,4,4,,($FD00-$FD7F-1-32)(bckFD00)]
 b $FD80
 c $FDB0
+C $FDBA,3 => Fill screen attributes with room attribute
 b $FDBD
 b $FE00
 c $FDCE
@@ -1650,6 +1696,7 @@ c $FFE8 Key-gated staircase check, if not mid-jump
 N $FFE8 Skips #R$9880 while $8209<>0 (Joe mid-jump/climb).
 C $FFED,3 => Key-gated staircase
 c $FFF0 Play gunshot sound effect (3x)
+@ $FFF0 label=SFX_shoot
 N $FFF0 Called by #R$A798 when firing. Plays the descending-pitch beeper sweep #R$A2BE three times in a row.
 C $FFF0,3 Descending-pitch beeper sweep (1st stage), falls into #R$A28C
 C $FFF3,3 Descending-pitch beeper sweep (1st stage), falls into #R$A28C

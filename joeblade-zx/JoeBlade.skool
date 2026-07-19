@@ -938,7 +938,7 @@ b$7000 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($7000-$7
  $77F0 DEFB $FC,$00,$3E,$01,$FC,$00,$7F,$03 ;
  $77F8 DEFB $FE,$0F,$FF,$87,$FF,$1F,$FF,$FF ; }
 
-; Bomb deactivation minigame: sort 5 letters, "SELF DESTRUCT IN 30 SECONDS"
+; Bomb deactivation minigame: sort access code, "SELF DESTRUCT IN 30 SECONDS"
 ;
 ; Used by the routine at #R$8D3C.
 ;
@@ -947,13 +947,15 @@ b$7000 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($7000-$7
 ; Reached only from #R$8D3C's edge-tile check on a bomb tile ($9D18) - NOT a
 ; room-to-room flip or level-exit. Clears the screen, plays the "SELF DESTRUCT
 ; IN 30 SECONDS" message (#R$78E7 scrolling text + #R$7BA8/#R$7BE8 setup), then
-; loops #R$7A28 (letter-swap cursor input) while checking a 5-slot letter array
-; at $7B01-$7B05 against sorted order ($7B05 down to $7B01, comparing against
-; B=5..1) - fails back to #R$780C to keep playing until the 5 letters (2 of
-; them swappable via the two cursors $7B09/$7B0A) are in alphabetical order. On
-; success, falls through to #R$8EB4 (menu or high-score entry) - what happens
-; on running out of time (30s) is not yet traced.
-c$7800 CALL $7CE1    ;
+; loops #R$7A28 (access-code letter-swap cursor input) while checking the
+; 5-letter access code at $7B01-$7B05 against sorted order ($7B05 down to
+; $7B01, comparing against B=5..1) - fails back to #R$780C to keep playing
+; until the access code (2 of its letters swappable via the two cursors
+; $7B09/$7B0A) is in alphabetical order. On success, falls through to #R$8EB4
+; (menu or high-score entry) - what happens on running out of time (30s) is not
+; yet traced.
+@label=PickupBomb
+c$7800 CALL $7CE1    ; Bomb minigame entry
  $7803 LD HL,$00C8   ;
  $7806 LD BC,$00C8   ;
  $7809 CALL $8680    ; Wait for a key or timeout
@@ -972,10 +974,11 @@ c$7800 CALL $7CE1    ;
  $7818 NOP           ;
  $7819 NOP           ;
  $781A NOP           ;
- $781B CALL $7A28    ; Bomb minigame
- $781E CALL $7C65    ; Bomb minigame
- $7821 CALL $7C3F    ; Bomb minigame
- $7824 CALL $7A78    ; Bomb minigame
+ $781B CALL $7A28    ; Bomb minigame - access-code swap cursor input handler
+ $781E CALL $7C65    ; Bomb minigame - cursor blink timer + scanline effect
+ $7821 CALL $7C3F    ; Bomb minigame - draw the access code
+ $7824 CALL $7A78    ; Bomb minigame - highlight the two swap-cursor
+                     ; access-code letters
  $7827 LD HL,$7B0C   ;
  $782A LD A,(HL)     ;
  $782B INC HL        ;
@@ -988,8 +991,9 @@ c$7800 CALL $7CE1    ;
  $7836 JP NZ,$780C   ;
  $7839 DEC HL        ;
  $783A DJNZ $7834    ;
- $783C JP $7AE5      ;
-*$783F CALL $78E7    ;
+ $783C JP $7AE5      ; => Restore normal gameplay view (attrs + shadow flush +
+                     ; sprites) after Bomb minigame
+*$783F CALL $78E7    ; Bomb minigame
  $7842 NOP           ;
  $7843 LD HL,$4800   ;
  $7846 LD DE,$4801   ;
@@ -1018,6 +1022,7 @@ c$7800 CALL $7CE1    ;
 ; the threshold Joe is on, setting $7B10 accordingly (also gated by $8209 and
 ; $820B). $7B10 is read back by #R$789D to trigger a soldier hit/reaction
 ; animation - likely "is a soldier within range of this shot".
+@label=ShotHitTest
 c$7869 LD H,$79      ; {HL = #R$7900 entry for current tile ($8202)
  $786B LD A,($8202)  ;
  $786E RLCA          ;
@@ -1094,15 +1099,21 @@ c$789D LD A,($7B10)  ; {Check $7B10; return if inactive
  $78E3 LD ($8FA8),A  ;
  $78E6 RET           ;
 
-; Routine at 78E7
+; Bomb minigame: fill screen attributes, set text pointer
 ;
 ; Used by the routine at #R$7800.
-c$78E7 LD HL,$5900   ;
- $78EA LD B,$00      ;
+;
+; .
+;
+; Called from #R$7800. Fills 256 bytes at $5900 (8 attribute rows) with $47
+; (bright white-on-black), then sets IX=$7AB6 - likely the scrolling "SELF
+; DESTRUCT..." text source.
+c$78E7 LD HL,$5900   ; {HL = $5900; B = 0 (256 iterations)
+ $78EA LD B,$00      ; }
 *$78EC LD (HL),$47   ;
  $78EE INC HL        ;
  $78EF DJNZ $78EC    ;
- $78F1 LD IX,$7AB6   ;
+ $78F1 LD IX,$7AB6   ; IX = $7AB6
  $78F5 RET           ;
 
 ; Data block at 78F6
@@ -1130,141 +1141,50 @@ b$78F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; necessarily contradictory (same stored value reused as a generic "boundary
 ; coordinate" by different consumers) but the "ceiling" label is now uncertain
 ; - needs live tracing to settle.
-b$7900 DEFW $6602
- $7902 DEFW $1203
- $7904 DEFW $6903
- $7906 DEFW $2002
- $7908 DEFW $8000
- $790A DEFW $9D00
- $790C DEFW $9D00
- $790E DEFW $4E00
- $7910 DEFW $4E00
- $7912 DEFW $4E00
- $7914 DEFW $4E00
- $7916 DEFW $4E00
- $7918 DEFW $4E00
- $791A DEFW $0000
- $791C DEFW $B603
- $791E DEFW $4E00
- $7920 DEFW $9F03
- $7922 DEFW $9D00
- $7924 DEFW $4E00
- $7926 DEFW $7A06
- $7928 DEFW $4E00
- $792A DEFW $0000
- $792C DEFW $0000
- $792E DEFW $4E00
- $7930 DEFW $5D02
- $7932 DEFW $BB03
- $7934 DEFW $A701
- $7936 DEFW $4E00
- $7938 DEFW $4E00
- $793A DEFW $4E00
- $793C DEFW $4E00
- $793E DEFW $4E00
- $7940 DEFW $9D00
- $7942 DEFW $9D00
- $7944 DEFW $9D00
- $7946 DEFW $2C03
- $7948 DEFW $8000
- $794A DEFW $4E00
- $794C DEFW $1F03
- $794E DEFW $4E00
- $7950 DEFW $4E00
- $7952 DEFW $9D00
- $7954 DEFW $9D00
- $7956 DEFW $8003
- $7958 DEFW $4E00
- $795A DEFW $AA03
- $795C DEFW $4E00
- $795E DEFW $4E00
- $7960 DEFW $4E00
- $7962 DEFW $4E00
- $7964 DEFW $B302
- $7966 DEFW $4E00
- $7968 DEFW $7405
- $796A DEFW $0000
- $796C DEFW $C800
- $796E DEFW $8002
- $7970 DEFW $4E00
- $7972 DEFW $2703
- $7974 DEFW $9D00
- $7976 DEFW $9D00
- $7978 DEFW $9D00
- $797A DEFW $C800
- $797C DEFW $0000
- $797E DEFW $C803
- $7980 DEFW $4E00
- $7982 DEFW $4E00
- $7984 DEFW $4E00
- $7986 DEFW $4E00
- $7988 DEFW $0C02
- $798A DEFW $4E00
- $798C DEFW $4E00
- $798E DEFW $0000
- $7990 DEFW $4E00
- $7992 DEFW $4E00
- $7994 DEFW $4E00
- $7996 DEFW $4E00
- $7998 DEFW $6606
- $799A DEFW $4E00
- $799C DEFW $4E00
- $799E DEFW $0000
- $79A0 DEFW $4E00
- $79A2 DEFW $4E00
- $79A4 DEFW $3302
- $79A6 DEFW $4E00
- $79A8 DEFW $4E00
- $79AA DEFW $4E00
- $79AC DEFW $4E00
- $79AE DEFW $9D00
- $79B0 DEFW $2A06
- $79B2 DEFW $5806
- $79B4 DEFW $8000
- $79B6 DEFW $BB02
- $79B8 DEFW $2402
- $79BA DEFW $4E00
- $79BC DEFW $4E00
- $79BE DEFW $9D00
- $79C0 DEFW $4E00
- $79C2 DEFW $2B03
- $79C4 DEFW $2A02
- $79C6 DEFW $A502
- $79C8 DEFW $9D00
- $79CA DEFW $4A04
- $79CC DEFW $4E00
- $79CE DEFW $4E00
- $79D0 DEFW $4E00
- $79D2 DEFW $D003
- $79D4 DEFW $9D00
- $79D6 DEFW $4E00
- $79D8 DEFW $4502
- $79DA DEFW $1C02
- $79DC DEFW $4E00
- $79DE DEFW $4E00
- $79E0 DEFW $4E00
- $79E2 DEFW $9D00
- $79E4 DEFW $4E00
- $79E6 DEFW $4E00
- $79E8 DEFW $D103
- $79EA DEFW $9D00
- $79EC DEFW $9D00
- $79EE DEFW $9D00
- $79F0 DEFW $9D00
- $79F2 DEFW $4E00
- $79F4 DEFW $4E00
- $79F6 DEFW $9D00
- $79F8 DEFW $0406
- $79FA DEFW $9D00
- $79FC DEFW $BB03
- $79FE DEFW $4E00
- $7A00 DEFB $01,$05,$02,$04,$03,$03,$04,$02 ; {8 preset 5-letter scrambles for
- $7A08 DEFB $05,$01,$04,$03,$05,$01,$02,$02 ; the bomb-deactivation minigame
- $7A10 DEFB $01,$05,$03,$04,$03,$01,$02,$05 ; (see #R$7BE8)
- $7A18 DEFB $04,$05,$04,$02,$01,$03,$04,$02 ;
- $7A20 DEFB $03,$01,$05,$02,$03,$04,$05,$01 ; }
+b$7900 DEFW $6602,$1203,$6903,$2002
+ $7908 DEFW $8000,$9D00,$9D00,$4E00
+ $7910 DEFW $4E00,$4E00,$4E00,$4E00
+ $7918 DEFW $4E00,$0000,$B603,$4E00
+ $7920 DEFW $9F03,$9D00,$4E00,$7A06
+ $7928 DEFW $4E00,$0000,$0000,$4E00
+ $7930 DEFW $5D02,$BB03,$A701,$4E00
+ $7938 DEFW $4E00,$4E00,$4E00,$4E00
+ $7940 DEFW $9D00,$9D00,$9D00,$2C03
+ $7948 DEFW $8000,$4E00,$1F03,$4E00
+ $7950 DEFW $4E00,$9D00,$9D00,$8003
+ $7958 DEFW $4E00,$AA03,$4E00,$4E00
+ $7960 DEFW $4E00,$4E00,$B302,$4E00
+ $7968 DEFW $7405,$0000,$C800,$8002
+ $7970 DEFW $4E00,$2703,$9D00,$9D00
+ $7978 DEFW $9D00,$C800,$0000,$C803
+ $7980 DEFW $4E00,$4E00,$4E00,$4E00
+ $7988 DEFW $0C02,$4E00,$4E00,$0000
+ $7990 DEFW $4E00,$4E00,$4E00,$4E00
+ $7998 DEFW $6606,$4E00,$4E00,$0000
+ $79A0 DEFW $4E00,$4E00,$3302,$4E00
+ $79A8 DEFW $4E00,$4E00,$4E00,$9D00
+ $79B0 DEFW $2A06,$5806,$8000,$BB02
+ $79B8 DEFW $2402,$4E00,$4E00,$9D00
+ $79C0 DEFW $4E00,$2B03,$2A02,$A502
+ $79C8 DEFW $9D00,$4A04,$4E00,$4E00
+ $79D0 DEFW $4E00,$D003,$9D00,$4E00
+ $79D8 DEFW $4502,$1C02,$4E00,$4E00
+ $79E0 DEFW $4E00,$9D00,$4E00,$4E00
+ $79E8 DEFW $D103,$9D00,$9D00,$9D00
+ $79F0 DEFW $9D00,$4E00,$4E00,$9D00
+ $79F8 DEFW $0406,$9D00,$BB03,$4E00
 
-; Bomb minigame: letter-swap cursor input handler
+; Data block at 7A00
+b$7A00 DEFB $01,$05,$02,$04,$03 ; {8 preset access-code scrambles for the
+ $7A05 DEFB $03,$04,$02,$05,$01 ; bomb-deactivation minigame (see #R$7BE8)
+ $7A0A DEFB $04,$03,$05,$01,$02 ;
+ $7A0F DEFB $02,$01,$05,$03,$04 ;
+ $7A14 DEFB $03,$01,$02,$05,$04 ;
+ $7A19 DEFB $05,$04,$02,$01,$03 ;
+ $7A1E DEFB $04,$02,$03,$01,$05 ;
+ $7A23 DEFB $02,$03,$04,$05,$01 ; }
+
+; Bomb minigame - access-code swap cursor input handler
 ;
 ; Used by the routine at #R$7800.
 ;
@@ -1272,8 +1192,9 @@ b$7900 DEFW $6602
 ;
 ; Edge-detects new key presses ($7B0F). Right/left move cursor 1 ($7B09, wraps
 ; 1-5); some other input moves cursor 2 ($7B0A, wraps 1-5); a third input swaps
-; the letters at $7B00+cursor1 and $7B00+cursor2 - the two cursor positions are
-; the "green, exchangeable" letters.
+; the access-code letters at $7B00+cursor1 and $7B00+cursor2 - the two cursor
+; positions are the "green, exchangeable" letters.
+@label=BombGameSwap
 c$7A28 CALL $8032    ; Read input into $820A
  $7A2B LD A,($820A)  ; get input state
  $7A2E LD HL,$7B0F   ;
@@ -1325,15 +1246,16 @@ c$7A28 CALL $8032    ; Read input into $820A
  $7A76 LD (HL),C     ;
  $7A77 RET           ;
 
-; Bomb minigame: highlight the two swap-cursor letters (green)
+; Bomb minigame - highlight the two swap-cursor access-code letters (green)
 ;
 ; Used by the routine at #R$7800.
 ;
 ; .
 ;
 ; Part of the bomb-deactivation minigame ($7800/$7A28): clears an attribute
-; row, then highlights the two letters currently selected for swapping (green),
-; using cursor positions $7B09/$7B0A.
+; row, then highlights the two access-code letters currently selected for
+; swapping (green), using cursor positions $7B09/$7B0A.
+@label=BombGameHighlt
 c$7A78 LD HL,$5960   ; {Clear attribute row $5960
  $7A7B LD A,$42      ;
  $7A7D LD B,L        ; }
@@ -1382,24 +1304,37 @@ b$7AB6 DEFB $12,$04,$0B,$05,$1C,$03,$04,$12
  $7AD6 DEFB $18,$0E,$14,$1F,$00,$11,$04,$1F
  $7ADE DEFB $03,$04,$00,$03,$1F,$1A,$FF
 
-; Routine at 7AE5
+; Restore normal gameplay view (attrs + shadow flush + sprites) after Bomb
+; minigame
 ;
 ; Used by the routine at #R$7800.
-c$7AE5 CALL $FDB0    ;
+;
+; .
+;
+; Called only from #R$7800 (bomb-deactivation minigame). Restores the
+; status-bar/room attributes (#R$FDB0), flushes the shadow buffer to the real
+; screen (#R$8C78), and redraws Joe and the soldier (#R$80A0/#R$8F8C) - the
+; standard "return to gameplay" screen refresh after a full-screen overlay.
+c$7AE5 CALL $FDB0    ; Fill status-bar attribute strip, then room attribute
  $7AE8 CALL $8C78    ; Copy shadow screen to real screen
  $7AEB CALL $80A0    ; Draw Joe sprite
- $7AEE CALL $8F8C    ; Draw soldier ??
+ $7AEE CALL $8F8C    ; Draw soldier
  $7AF1 RET           ;
 
 ; Data block at 7AF2
 b$7AF2 DEFB $D7,$88,$25,$83,$8B,$EF,$FF,$FF
- $7AFA DEFB $FE,$BA,$2D,$65,$F7,$87,$02,$01
- $7B02 DEFB $02,$03,$04,$05,$00,$00
+ $7AFA DEFB $FE,$BA,$2D,$65,$F7,$87
+ $7B00 DEFB $02
+ $7B01 DEFB $01,$02,$03,$04,$05             ; Bomb minigame access code (5
+                                            ; letters)
+ $7B06 DEFB $00,$00
  $7B08 DEFB $00                             ; uniform/disguise active flag
                                             ; ($00=normal, $01=disguised -
                                             ; suspends energy loss);
                                             ; auto-cleared by #R$7B84's timer
- $7B09 DEFB $04,$02,$2E,$02,$02
+ $7B09 DEFB $04
+ $7B0A DEFB $02
+ $7B0B DEFB $2E,$02,$02
  $7B0E DEFB $47
  $7B0F DEFB $08,$00,$00,$80,$AA,$8B,$C5,$BF
  $7B17 DEFB $8B,$A5,$BD,$8A,$25,$81,$88
@@ -1413,8 +1348,8 @@ b$7AF2 DEFB $D7,$88,$25,$83,$8B,$EF,$FF,$FF
 ; Same edge-triggered pattern as #R$926E, for the uniform tile table $9D2B. On
 ; match: marks the tile visited, swaps Joe's sprite to the soldier costume
 ; ($80CF/$80D8 -> $A8/$70), sets the disguise flag $7B08=1, shows a message
-; (#R$7B73, undeciphered), resets the duration timer $7B06, and rebuilds the
-; background. Disguise is time-limited, not fire-consumed - see #R$7B84.
+; (#R$7B73, "AN ENEMY UNIFORM"), resets the duration timer $7B06, and rebuilds
+; the background. Disguise is time-limited, not fire-consumed - see #R$7B84.
 @label=PickupUniform
 c$7B1E LD HL,$9D2B   ; {HL = $9D2B (uniform tile table); B = 2
  $7B21 LD B,$02      ; }
@@ -1452,10 +1387,10 @@ c$7B1E LD HL,$9D2B   ; {HL = $9D2B (uniform tile table); B = 2
  $7B6D LD ($7B06),HL ; }
  $7B70 JP $8C00      ; => Build room background into shadow buffer $B800
 
-; Data block at 7B73
-b$7B73 DEFB $00,$0D,$1F,$04,$0D,$04,$0C,$18
- $7B7B DEFB $1F,$14,$0D,$08,$05,$0E,$11,$0C
- $7B83 DEFB $FF
+; "AN ENEMY UNIFORM" (disguise pickup message)
+b$7B73 DEFB $00,$0D,$1F,$04,$0D,$04,$0C,$18 ; {"AN ENEMY UNIFORM" (disguise
+ $7B7B DEFB $1F,$14,$0D,$08,$05,$0E,$11,$0C ; pickup message)
+ $7B83 DEFB $FF                             ; }
 
 ; Disguise duration timer: auto-expire and revert
 ;
@@ -1497,6 +1432,7 @@ b$7BA8 DEFB $12,$04,$0B,$05,$1F,$03,$04,$12
 ; Draw a small 3x3-block icon (used by the bomb-deactivation minigame)
 ;
 ; Used by the routine at #R$7C3F.
+@label=BombGameDrawLetter
 c$7BC4 PUSH HL       ; {Outer loop: 3 columns
  $7BC5 LD B,$03      ; }
 *$7BC7 PUSH BC       ; {Inner loop: 8 pixel rows
@@ -1528,7 +1464,7 @@ c$7BC4 PUSH HL       ; {Outer loop: 3 columns
  $7BE6 ADD HL,BC     ;
  $7BE7 RET           ; }
 
-; Bomb minigame: clear/redraw, scramble the 5 letters
+; Bomb minigame: clear/redraw, scramble the access code
 ;
 ; Used by the routine at #R$7CE1.
 ;
@@ -1536,9 +1472,10 @@ c$7BC4 PUSH HL       ; {Outer loop: 3 columns
 ;
 ; Clears the bitmap third at $4800, fills the top/bottom attribute strips,
 ; draws the "SELF DESTRUCT IN 30 SECONDS" instructions text, resets the cursor
-; state ($7B00/$7B0B), then picks one of 8 5-letter scrambles from the table at
-; $7A00 using the R register as a pseudo-random index, copying it into
-; $7B01-$7B05 as the letters to sort.
+; state ($7B00/$7B0B), then picks one of 8 access-code scrambles from the table
+; at $7A00 using the R register as a pseudo-random index, copying it into
+; $7B01-$7B05 as the access code to sort.
+@label=BombGameSetup
 c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
  $7BEB LD DE,$4801   ;
  $7BEE LD BC,$07FF   ;
@@ -1553,7 +1490,7 @@ c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
 *$7C00 LD (HL),$41   ;
  $7C02 INC HL        ;
  $7C03 DJNZ $7C00    ; }
- $7C05 LD IX,$7BA8   ;
+ $7C05 LD IX,$7BA8   ; "SELF DESTRUCT IN 30 SECONDS"
  $7C09 LD HL,$4801   ;
  $7C0C CALL $9196    ; Draw string IX
  $7C0F LD A,$12      ;
@@ -1585,14 +1522,15 @@ c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
  $7C3B LD ($7B09),HL ;
  $7C3E RET           ; }
 
-; Bomb minigame: draw the 5 big letters
+; Bomb minigame - draw the access code (5 big letters)
 ;
 ; Used by the routine at #R$7800.
 ;
 ; .
 ;
-; For each of the 5 letter slots ($7B01-$7B05), looks up a glyph in a
-; 72-byte-stride table at $6250 by letter code and draws it via #R$7BC4.
+; For each of the access code's 5 letter slots ($7B01-$7B05), looks up a glyph
+; in a 72-byte-stride table at $6250 by letter code and draws it via #R$7BC4.
+@label=BombGameDrawLetters
 c$7C3F LD IX,$7B01   ; IX = $7B01 (key assignment slots); B = 5
  $7C43 LD HL,$4862   ;
  $7C46 LD B,$05      ;
@@ -1614,7 +1552,7 @@ c$7C3F LD IX,$7B01   ; IX = $7B01 (key assignment slots); B = 5
  $7C62 DJNZ $7C48    ;
  $7C64 RET           ;
 
-; Bomb minigame: cursor blink timer + scanline effect
+; Bomb minigame - cursor blink timer + scanline effect
 ;
 ; Used by the routine at #R$7800.
 ;
@@ -1642,7 +1580,7 @@ c$7C65 LD HL,$7B0B   ; {Increment blink timer $7B0B; wrap at 48 frames?
  $7C7F LD (HL),$09   ;
  $7C81 INC HL        ;
  $7C82 DEC (HL)      ;
-*$7C83 CALL $7CA4    ; Bomb minigame
+*$7C83 CALL $7CA4    ; Bomb minigame - draw the two symbol-preview columns
 *$7C86 LD HL,$491F   ; {HL = $491F; B = 6 columns (scanline effect)
  $7C89 LD B,$06      ; }
 *$7C8B PUSH BC       ;
@@ -1664,7 +1602,7 @@ c$7C65 LD HL,$7B0B   ; {Increment blink timer $7B0B; wrap at 48 frames?
 ; Unused
 s$7CA0 DEFS $04
 
-; Bomb minigame: draw the two symbol-preview columns
+; Bomb minigame - draw the two symbol-preview columns
 ;
 ; Used by the routine at #R$7C65.
 ;
@@ -1722,14 +1660,21 @@ c$7CDA LD HL,$0300   ;
  $7CDD LD ($7B0C),HL ;
  $7CE0 RET           ;
 
-; Routine at 7CE1
+; Bomb minigame entry: save screen state, clear status area
 ;
 ; Used by the routine at #R$7800.
-c$7CE1 LD A,($5900)  ;
- $7CE4 LD ($7B0E),A  ;
- $7CE7 LD HL,$5860   ;
+;
+; .
+;
+; Called only from #R$7800, right at the start. Saves the current attribute
+; byte at $5900 into $7B0E (for later restoration), clears 480 bytes of
+; status-bar attributes at $5860, then hands off to #R$7BE8 to set up the
+; access-code sort puzzle.
+c$7CE1 LD A,($5900)  ; {Save current attribute ($5900) to $7B0E
+ $7CE4 LD ($7B0E),A  ; }
+ $7CE7 LD HL,$5860   ; {Clear 480 bytes at $5860
  $7CEA LD DE,$5861   ;
- $7CED LD (HL),$00   ;
+ $7CED LD (HL),$00   ; }
  $7CEF LD BC,$01E0   ;
  $7CF2 LDIR          ;
  $7CF4 JP $7BE8      ; => Bomb minigame
@@ -1737,6 +1682,7 @@ c$7CE1 LD A,($5900)  ;
 ; Reduce energy, if allowed
 ;
 ; Used by the routine at #R$93DC.
+@label=TryReduceEnergy
 c$7CF7 LD A,($7B08)  ;
  $7CFA OR A          ;
  $7CFB RET NZ        ;
@@ -1811,6 +1757,7 @@ c$7D00 CALL $A3CB    ; Entry-point trampoline
 ; to the 16-bit fine-position accumulator $8F8D every frame, deriving the
 ; coarse row address $8F90 from it (H-4). Shared tail #R$7D6A also used by
 ; patterns 5/6.
+@label=SoldierPattern4
 c$7D64 CALL $900A    ; Soldier pattern 1
  $7D67 LD BC,$0800   ; BC = $0800 (slow drift rate)
 ; This entry point is used by the routines at #R$7D82 and #R$7D8C.
@@ -1835,6 +1782,7 @@ b$7D79 DEFB $40,$59,$11,$FF,$00,$00,$00,$00
 ; .
 ;
 ; Same as #R$7D64 but BC=$2000 (4x the drift rate).
+@label=SoldierPattern5
 c$7D82 CALL $900A    ; Soldier pattern 1
  $7D85 LD BC,$2000   ;
  $7D88 JP $7D6A      ;
@@ -1850,6 +1798,7 @@ s$7D8B DEFS $01
 ;
 ; #R$8164 (synchronized left-right patrol, group B) plus the same slow vertical
 ; drift as pattern 4.
+@label=SoldierPattern6
 c$7D8C CALL $8164    ; Soldier pattern 3
  $7D8F LD BC,$0800   ; BC = $0800 (slow drift rate)
  $7D92 JP $7D6A      ;
@@ -1893,16 +1842,23 @@ c$7D96 LD A,($8202)  ; {Clamp tile pointer at $9700+ to range $40-$A5
  $7DC8 NOP           ;
  $7DC9 JP $8F00      ; }
 
-; Routine at 7DCC
+; Footstep sound effect
 ;
 ; Used by the routine at #R$8F00.
-c$7DCC LD A,($8201)  ;
+;
+; .
+;
+; Called every frame from #R$8F00. If Joe is grid-aligned (X&$07==4), not
+; mid-jump ($8209=0), and left/right is pressed, plays a 6-step
+; alternating-pitch border click - the walking footstep sound.
+@label=SFX_footstep
+c$7DCC LD A,($8201)  ; {Grid-aligned (X&$07==4)?
  $7DCF AND $07       ;
  $7DD1 CP $04        ;
- $7DD3 RET NZ        ;
- $7DD4 LD A,($8209)  ;
+ $7DD3 RET NZ        ; }
+ $7DD4 LD A,($8209)  ; {Not mid-jump ($8209=0)?
  $7DD7 OR A          ;
- $7DD8 RET NZ        ;
+ $7DD8 RET NZ        ; }
  $7DD9 LD A,($820A)  ; get input state
  $7DDC AND $03       ;
  $7DDE RET Z         ;
@@ -1948,10 +1904,10 @@ b$7DFB DEFB $00,$00,$00,$00,$00,$F3,$11,$01
 c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E35 LD C,A        ; #R$7FDC (jump left)
  $7E36 AND $01       ; }
- $7E38 JP NZ,$7FD2   ;
+ $7E38 JP NZ,$7FD2   ; => Jump timer tick + Jump-arc step, right
  $7E3B LD A,C        ;
  $7E3C AND $02       ;
- $7E3E JP NZ,$7FDC   ;
+ $7E3E JP NZ,$7FDC   ; => Jump timer tick + Jump-arc step, left
  $7E41 LD A,C        ; {Dispatch: $8209 bit7 -> #R$7FE6 (jump timer)
  $7E42 AND $80       ;
  $7E44 JP NZ,$7FE6   ; }
@@ -1985,7 +1941,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E72 AND $0F       ;
  $7E74 LD ($8204),A  ; }
  $7E77 POP BC        ;
- $7E78 CALL $7F64    ;
+ $7E78 CALL $7F64    ; Sound effect - descending pitch sweep
  $7E7B JP $8114      ; => Per-frame room-tile lookup, then hand off to game
                      ; loop
 *$7E7E NOP           ;
@@ -2009,7 +1965,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E9E AND $0F       ;
  $7EA0 LD ($8204),A  ; }
  $7EA3 POP BC        ;
- $7EA4 CALL $7F64    ;
+ $7EA4 CALL $7F64    ; Sound effect - descending pitch sweep
  $7EA7 JP $8114      ; => Per-frame room-tile lookup, then hand off to game
                      ; loop
 *$7EAA NOP           ;
@@ -2033,7 +1989,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7ECA AND $0F       ;
  $7ECC LD ($8204),A  ; }
  $7ECF POP BC        ;
- $7ED0 CALL $7F64    ;
+ $7ED0 CALL $7F64    ; Sound effect - descending pitch sweep
  $7ED3 JP $8114      ; => Per-frame room-tile lookup, then hand off to game
                      ; loop
 *$7ED6 NOP           ;
@@ -2057,7 +2013,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7EF6 AND $0F       ;
  $7EF8 LD ($8204),A  ; }
  $7EFB POP BC        ;
- $7EFC CALL $7F64    ;
+ $7EFC CALL $7F64    ; Sound effect - descending pitch sweep
  $7EFF JP $8114      ; => Per-frame room-tile lookup, then hand off to game
                      ; loop
 *$7F02 NOP           ;
@@ -2087,10 +2043,10 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7F32 NOP           ;
  $7F33 LD A,C        ;
  $7F34 AND $01       ;
- $7F36 JP NZ,$7F6E   ; => Jump-arc step
+ $7F36 JP NZ,$7F6E   ; => Jump-arc step, right
  $7F39 LD A,C        ;
  $7F3A AND $02       ;
- $7F3C JP NZ,$7FA0   ; => Jump-arc step
+ $7F3C JP NZ,$7FA0   ; => Jump-arc step, left
  $7F3F NOP           ;
  $7F40 NOP           ;
  $7F41 NOP           ;
@@ -2100,16 +2056,16 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
 ; Unused
 s$7F44 DEFS $20
 
-; Routine at 7F64
+; Sound effect - descending pitch sweep (redirect)
 ;
 ; Used by the routine at #R$7E32.
 c$7F64 JP $91C8      ; => Sound effect (descending pitch sweep), used at a room
                      ; edge
 
-; Data block at 7F67
+; Unused code?
 b$7F67 DEFB $01,$64,$00,$C3,$80,$86,$00
 
-; Jump-arc step (right): room change when Joe reaches X=$E6
+; Jump-arc step, right: room change when Joe reaches X=$E6
 ;
 ; Used by the routines at #R$7E32 and #R$7FD2.
 ;
@@ -2121,6 +2077,7 @@ b$7F67 DEFB $01,$64,$00,$C3,$80,$86,$00
 ; (column) transitions actually happen, as a side effect of completing a jump
 ; off the edge. Blocked (no room change, X still clamped) if $820C bit0 is set
 ; - see that variable's bit map.
+@label=JumpStepRight
 c$7F6E LD A,$00      ;
  $7F70 LD ($820B),A  ; set Joe's facing direction
  $7F73 LD A,($820C)  ;
@@ -2150,7 +2107,7 @@ c$7F6E LD A,$00      ;
 ; Data block at 7F9E
 b$7F9E DEFB $59,$58
 
-; Jump-arc step (left): room change when Joe reaches X=$00
+; Jump-arc step, left: room change when Joe reaches X=$00
 ;
 ; Used by the routines at #R$7E32 and #R$7FDC.
 ;
@@ -2159,6 +2116,7 @@ b$7F9E DEFB $59,$58
 ; Mirror of #R$7F6E for a leftward jump-arc (#R$7FDC, triggered by UP+LEFT): X
 ; decreases by 2/frame; once it reaches $00 (left edge), room-- ($8203, wraps
 ; 0-7) and X resets to $E6. Blocked if $820C bit1 is set.
+@label=JumpStepLeft
 c$7FA0 LD A,$01      ;
  $7FA2 LD ($820B),A  ; set Joe's facing direction
  $7FA5 LD A,($8201)  ; get Joe X
@@ -2185,20 +2143,20 @@ c$7FA0 LD A,$01      ;
 ; Data block at 7FCD
 b$7FCD DEFB $5A,$11,$20,$00,$06
 
-; Routine at 7FD2
+; Jump timer tick + Jump-arc step, right
 ;
 ; Used by the routine at #R$7E32.
 c$7FD2 CALL $7FE6    ; Jump timer tick
- $7FD5 JP $7F6E      ; => Jump-arc step
+ $7FD5 JP $7F6E      ; => Jump-arc step, right
 
 ; Data block at 7FD8
 b$7FD8 DEFB $19,$36,$43,$19
 
-; Routine at 7FDC
+; Jump timer tick + Jump-arc step, left
 ;
 ; Used by the routine at #R$7E32.
 c$7FDC CALL $7FE6    ; Jump timer tick
- $7FDF JP $7FA0      ; => Jump-arc step
+ $7FDF JP $7FA0      ; => Jump-arc step, left
 
 ; Data block at 7FE2
 b$7FE2 DEFB $06,$2B,$36,$43
@@ -2212,6 +2170,7 @@ b$7FE2 DEFB $06,$2B,$36,$43
 ; Increments the jump timer $820D; when it wraps at $30 (48), resets both $820D
 ; and $8209 to 0. Called from #R$7E32 and the jump-arc routines
 ; #R$7FD2/#R$7FDC.
+@label=JumpTimerTick
 c$7FE6 LD A,($820D)  ;
  $7FE9 INC A         ;
  $7FEA LD ($820D),A  ; set jump counter
@@ -2389,7 +2348,7 @@ c$80A0 LD A,($8201)  ;
  $8106 INC D         ; }
 ; BC = sprite addr, DE = mask addr, HL = destination
  $8107 CALL $9396    ; Set Joe's screen address HL and sprite mask DE
- $810A JP $8D6E      ; => Draw sprite 32x32 with mask
+ $810A JP $8D6E      ; => Draw Joe sprite 32x32 with mask
 
 ; Unused
 s$810D DEFS $07
@@ -2405,6 +2364,7 @@ s$810D DEFS $07
 ; terrain-flags byte $820C (bit map documented at that variable), redraws the
 ; status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD,
 ; #R$7D96 into #R$8F00.
+@label=RoomFrame
 c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
  $8117 RLCA          ;
  $8118 RLCA          ;
@@ -2442,7 +2402,7 @@ c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
  $8156 NOP           ;
  $8157 JP $FFAD      ; => Clear $8226, hand off to $7D96
 
-; Data block at 815A
+; Unused code?
 b$815A DEFB $48,$CD,$96,$91,$CD,$C8,$91,$C3
  $8162 DEFB $00,$7D
 
@@ -2457,6 +2417,7 @@ b$815A DEFB $48,$CD,$96,$91,$CD,$C8,$91,$C3
 ; pattern shares one direction byte and turns around in lockstep. Picks
 ; left/right-facing sprite from the sign of $8212, then builds the
 ; screen/sprite address via #R$9028 (shared with #R$900A/#R$9464).
+@label=SoldierPattern3
 c$8164 LD A,($8212)   ; {X += $8212 (shared step); hit X=2 or $E6?
  $8167 ADD A,(IX+$01) ;
  $816A LD (IX+$01),A  ;
@@ -2497,7 +2458,7 @@ c$81AA LD A,$04      ; Outer loop: 4 column-groups
  $81AE LD A,$08      ; Inner loop: 8 rows
 *$81B0 PUSH AF       ;
  $81B1 PUSH HL       ;
- $81B2 LD A,(DE)     ; {AND mask, OR pixels, write (one 8-pixel strip)
+ $81B2 LD A,(DE)     ; {0: AND mask, OR pixels, write (one 8-pixel strip)
  $81B3 AND (HL)      ;
  $81B4 LD (HL),A     ;
  $81B5 LD A,(BC)     ;
@@ -2506,30 +2467,30 @@ c$81AA LD A,$04      ; Outer loop: 4 column-groups
  $81B8 INC BC        ;
  $81B9 INC DE        ;
  $81BA INC HL        ;
- $81BB LD A,(DE)     ;
+ $81BB LD A,(DE)     ; {1
  $81BC AND (HL)      ;
  $81BD LD (HL),A     ;
  $81BE LD A,(BC)     ;
  $81BF OR (HL)       ;
- $81C0 LD (HL),A     ;
+ $81C0 LD (HL),A     ; }
  $81C1 INC BC        ;
  $81C2 INC DE        ;
  $81C3 INC HL        ;
- $81C4 LD A,(DE)     ;
+ $81C4 LD A,(DE)     ; {2
  $81C5 AND (HL)      ;
  $81C6 LD (HL),A     ;
  $81C7 LD A,(BC)     ;
  $81C8 OR (HL)       ;
- $81C9 LD (HL),A     ;
+ $81C9 LD (HL),A     ; }
  $81CA INC BC        ;
  $81CB INC DE        ;
  $81CC INC HL        ;
- $81CD LD A,(DE)     ;
+ $81CD LD A,(DE)     ; {3
  $81CE AND (HL)      ;
  $81CF LD (HL),A     ;
  $81D0 LD A,(BC)     ;
  $81D1 OR (HL)       ;
- $81D2 LD (HL),A     ;
+ $81D2 LD (HL),A     ; }
  $81D3 INC BC        ;
  $81D4 INC DE        ;
  $81D5 NOP           ;
@@ -2547,17 +2508,22 @@ c$81AA LD A,$04      ; Outer loop: 4 column-groups
  $81E3 JR NZ,$81AC   ;
  $81E5 RET           ;
 
-; Routine at 81E6
+; 'K' (keyboard) chosen: brief pause, then instructions screen
 ;
 ; Used by the routine at #R$8B64.
-c$81E6 LD BC,$0141   ;
+;
+; .
+;
+; Tail of #R$8B64's 'K' (keyboard) branch. Waits a fixed timeout (#R$8680),
+; silences the border, then falls into #R$8E16 (instructions/help screen).
+c$81E6 LD BC,$0141   ; {BC/HL = timeout params
  $81E9 LD HL,$0100   ;
- $81EC DI            ;
+ $81EC DI            ; }
  $81ED CALL $8680    ; Wait for a key or timeout
- $81F0 EI            ;
+ $81F0 EI            ; {Silence border
  $81F1 LD A,$00      ;
- $81F3 OUT ($FE),A   ;
- $81F5 JP $8E16      ;
+ $81F3 OUT ($FE),A   ; }
+ $81F5 JP $8E16      ; => Instructions/help screen
 
 ; Data block at 81F8
 b$81F8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -2781,16 +2747,22 @@ c$83C0 LD HL,$4000   ; {Clear bitmap $4000-$57FF
 ; Data block at 83D9
 b$83D9 DEFB $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
 
-; Routine at 83E1
+; 'J' (Kempston) chosen: brief pause, back to main menu
 ;
 ; Used by the routine at #R$8B64.
-c$83E1 LD BC,$0141   ;
+;
+; .
+;
+; Tail of #R$8B64's 'J' (Kempston) branch. Byte-identical to #R$81E6 but
+; returns straight to the main menu ($8B37) instead of showing the instructions
+; screen - Kempston needs no keyboard-layout explanation.
+c$83E1 LD BC,$0141   ; {BC/HL = timeout params
  $83E4 LD HL,$0100   ;
- $83E7 DI            ;
+ $83E7 DI            ; }
  $83E8 CALL $8680    ; Wait for a key or timeout
- $83EB EI            ;
+ $83EB EI            ; {Silence border
  $83EC LD A,$00      ;
- $83EE OUT ($FE),A   ;
+ $83EE OUT ($FE),A   ; }
  $83F0 JP $8B37      ; => Main menu loop
 
 ; Data block at 83F3
@@ -2909,10 +2881,17 @@ c$850E LD A,($820F)  ; {Check pending tick $820F; return if none
 ; Unused
 s$8544 DEFS $02
 
-; Routine at 8546
+; Redraw the current score/counter digit string on screen
 ;
 ; Used by the routine at #R$8F00.
-c$8546 LD A,($8210)  ;
+;
+; .
+;
+; Called every frame from #R$8F00. IX = $8900 + $8210*16 + 2 (the digit-string
+; field of the current high-score row - same row addressing as #R$850E), drawn
+; at $5068. Keeps the on-screen counter for the active row up to date every
+; frame.
+c$8546 LD A,($8210)  ; {IX = high-score row digit field ($8210-selected)
  $8549 RLCA          ;
  $854A RLCA          ;
  $854B RLCA          ;
@@ -2921,17 +2900,23 @@ c$8546 LD A,($8210)  ;
  $854F LD L,A        ;
  $8550 LD H,$89      ;
  $8552 PUSH HL       ;
- $8553 POP IX        ;
+ $8553 POP IX        ; }
  $8555 LD HL,$5068   ;
  $8558 JP $9196      ; => Draw string IX
 
-; Routine at 855B
+; Glyph-draw preamble: schedule tick, set glyph table high byte
 ;
 ; Used by the routine at #R$925C.
-c$855B LD A,($820F)  ;
+;
+; .
+;
+; Called first thing by #R$925C. Bumps $820F by $87 (schedules a delayed
+; effect/tick), and sets D=$A7 - the fixed high byte of the $A700+ glyph tables
+; used by #R$7CA4 and friends.
+c$855B LD A,($820F)  ; {$820F += $87
  $855E ADD A,$87     ;
- $8560 LD ($820F),A  ;
- $8563 LD D,$A7      ;
+ $8560 LD ($820F),A  ; }
+ $8563 LD D,$A7      ; D = $A7 (glyph table high byte)
  $8565 LD A,C        ;
  $8566 RET           ;
 
@@ -2977,7 +2962,7 @@ c$856E DI            ; {HL/DE = sweep start/rate
 ; Data block at 8594
 b$8594 DEFB $03,$00
 
-; Draw string IX and play sound
+; Draw string IX and play sound (Unused?)
 ;
 ; Used by the routines at #R$8DBE and #R$FDCE.
 c$8596 CALL $9196    ; Draw string IX
@@ -2993,17 +2978,22 @@ b$859C DEFB $00,$00,$00,$00
  $85CC DEFB $04,$0B,$04,$02,$13,$FF,$00,$00
  $85D4 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at 85DC
+; Draw door graphic column 2 (animated, via $8206)
 ;
 ; Used by the routine at #R$9602.
-c$85DC LD A,($8206)  ;
+;
+; .
+;
+; Same pattern as #R$90AA (one of #R$9602's 3 door-graphic columns): animation
+; frame from $8206, source table at $8600+, drawn at $B888/$B894.
+c$85DC LD A,($8206)  ; {HL = $8600 + frame*16 (animation source)
  $85DF AND $06       ;
  $85E1 RLCA          ;
  $85E2 RLCA          ;
  $85E3 RLCA          ;
  $85E4 RLCA          ;
  $85E5 LD L,A        ;
- $85E6 LD H,$86      ;
+ $85E6 LD H,$86      ; }
  $85E8 PUSH HL       ;
  $85E9 EX DE,HL      ;
  $85EA LD HL,$B888   ;
@@ -3015,7 +3005,8 @@ c$85DC LD A,($8206)  ;
                      ; door-drawing routines
 
 ; Data block at 85F7
-b$85F7 DEFB $00,$00,$FF
+b$85F7 DEFB $00,$00
+ $85F9 DEFB $FF
 
 ; Countdown timer display "20:00" (digit,digit,separator,digit,digit)
 ;
@@ -3098,17 +3089,26 @@ c$8680 DI            ; {Save BC and BC+1 as two independent countdowns
 ; Unused
 s$86B3 DEFS $0D
 
-; Routine at 86C0
+; Show pickup message popup (type in C)
 ;
 ; Used by the routines at #R$86E4, #R$92A0, #R$92DE and #R$9328.
+;
+; .
+;
+; Called by the hostage/key/bomb/food pickup routines with C = pickup-type
+; index (0-3). Draws a black popup box, then two message strings looked up in a
+; per-type table at $9800 + C*32 (resolves that region's earlier "unidentified
+; trailing bytes" flag - it's 4 pickup messages, 32 bytes each), plays the
+; pickup beep, and delays.
+@label=ShowPickupMsg
 c$86C0 CALL $923C    ; Draw black box on the screen
- $86C3 LD A,C        ;
+ $86C3 LD A,C        ; {IX = $9800 + C*32 (message table)
  $86C4 RLCA          ;
  $86C5 RLCA          ;
  $86C6 RLCA          ;
  $86C7 RLCA          ;
  $86C8 RLCA          ;
- $86C9 LD L,A        ;
+ $86C9 LD L,A        ; }
  $86CA LD H,$98      ;
  $86CC PUSH HL       ;
  $86CD POP IX        ;
@@ -3141,7 +3141,7 @@ c$86E4 LD (HL),$FF   ; {Mark tile visited ($FF); increment hostage counter
  $86EE CALL $925C    ; Draw one digit/character glyph
  $86F1 CALL $8C00    ; Build room background into shadow buffer $B800
  $86F4 LD C,$01      ;
- $86F6 CALL $86C0    ;
+ $86F6 CALL $86C0    ; Show pickup message popup
  $86F9 RET           ;
 
 ; Unused
@@ -3252,10 +3252,12 @@ b$8901 DEFB $3A,$20,$21,$25,$20,$20,$20,$20
  $8931 DEFB $18,$20,$20,$26,$20,$20,$20,$20
  $8939 DEFB $1F,$12,$08,$0C,$0E,$0D,$FF,$01
  $8941 DEFB $00,$20,$20,$20,$20,$20,$21,$20
- $8949 DEFB $1F,$09,$00,$01,$01,$00,$FF,$00
- $8951 DEFB $00,$20,$20,$20,$20,$20,$20,$20
- $8959 DEFB $1F,$1F,$1F,$1F,$1F,$1F,$FF,$36
- $8961 DEFB $36,$23,$10
+ $8949 DEFB $1F,$09,$00,$01,$01,$00,$FF
+
+; Data block at 8950
+b$8950 DEFB $00,$00,$20,$20,$20,$20,$20,$20
+ $8958 DEFB $20,$1F,$1F,$1F,$1F,$1F,$1F,$FF
+ $8960 DEFB $36,$36,$23,$10
 
 ; High-score name entry: store selected character
 ;
@@ -3285,7 +3287,7 @@ c$8964 LD A,($8210)  ; {HL = row + $0A + cursor column ($8201)
  $8979 CALL $856E    ; Pickup/beep sound effect
  $897C RET           ;
 
-; Data block at 897D
+; Unused?
 b$897D DEFB $CD,$96,$91,$21,$61
 
 ; High-score table: bubble the current row into sorted order
@@ -3302,6 +3304,7 @@ b$897D DEFB $CD,$96,$91,$21,$61
 ; text (same encoding as HUD strings, $1F-padded) terminated by $FF, followed
 ; by a numeric score field - not yet given clean ctl boundaries (still
 ; fragmented by the same text-heuristic issue fixed elsewhere for $9D00/$6C00).
+@label=HiScoreSort
 c$8982 LD D,H        ; {DE = HL - $10 (previous table row)
  $8983 LD A,L        ;
  $8984 SUB $10       ;
@@ -3479,7 +3482,7 @@ c$8A12 XOR A         ; {Clear $8AFF menu-done flag
 c$8A3C LD A,($8AFF)  ; {Check $8AFF flag; return if menu not done
  $8A3F OR A          ;
  $8A40 RET Z         ; }
- $8A41 JP $8E96      ; => Dispatch target from $8A41
+ $8A41 JP $8E96      ; => Menu idle
 
 ; Check menu-done flag, run paged-bank routine at $C006
 ;
@@ -3634,7 +3637,7 @@ b$8AEC DEFB $79,$FB,$C9,$79,$FB,$C9,$10,$01
 @label=ShowJoeBladeSign
 c$8B02 LD HL,$4040   ; Address on the screen
 ; Show "JOE BLADE" big sign; HL = screen address
-*$8B05 LD DE,$A000   ;
+*$8B05 LD DE,$A000   ; "JOE BLADE" big sign address
  $8B08 LD B,$02      ;
 *$8B0A PUSH BC       ;
  $8B0B PUSH HL       ;
@@ -3686,7 +3689,7 @@ c$8B37 CALL $8A00    ; Show main menu => $8A12
  $8B40 IN A,(C)      ; }
  $8B42 CPL           ;
  $8B43 AND $08       ;
- $8B45 JP NZ,$8BB4   ; 'C' pressed => #R$8BB4 (control options)
+ $8B45 JP NZ,$8BB4   ; => Control-options screen entry
  $8B48 LD BC,$FDFE   ; {Read keyboard row $FDFE (A,S,D,F,G)
  $8B4B IN A,(C)      ; }
  $8B4D CPL           ;
@@ -3696,7 +3699,7 @@ c$8B37 CALL $8A00    ; Show main menu => $8A12
  $8B56 IN A,(C)      ; }
  $8B58 CPL           ;
  $8B59 AND $10       ;
- $8B5B JP NZ,$8DBE   ; 'H' pressed => #R$8DBE (high scores)
+ $8B5B JP NZ,$8DBE   ; => High scores screen
  $8B5E JP $8B3A      ; Loop back and poll again
 
 ; Data block at 8B61
@@ -3729,7 +3732,7 @@ c$8B64 LD BC,$BFFE   ; {Read row $BFFE bit3 (J = Kempston)
  $8B80 NOP           ;
  $8B81 NOP           ;
  $8B82 NOP           ;
- $8B83 JP $83E1      ;
+ $8B83 JP $83E1      ; => 'J' (Kempston) chosen
 *$8B86 LD A,$00      ;
  $8B88 LD ($FFFF),A  ;
  $8B8B LD B,$FD      ; {Read row $FDFE bit1 (S = Sinclair)
@@ -3750,14 +3753,22 @@ c$8B64 LD BC,$BFFE   ; {Read row $BFFE bit3 (J = Kempston)
 *$8BAB LD (HL),$57   ;
  $8BAD INC HL        ;
  $8BAE DJNZ $8BAB    ;
- $8BB0 JP $81E6      ;
+ $8BB0 JP $81E6      ; => 'K' (keyboard) chosen
 
 ; Unused
 s$8BB3 DEFS $01
 
-; Routine at 8BB4
+; Control-options screen entry ('C' from the main menu)
 ;
 ; Used by the routine at #R$8B37.
+;
+; .
+;
+; Clears the screen, draws the "CONTROL OPTIONS" instructions (IX=$846E, the "K
+; FOR KEYBOARD"/"J FOR KEMPSTON"/"S FOR SINCLAIR" text), highlights 3 attribute
+; cells, then falls into #R$8B64 (J/S/K input-method selector). The real
+; control-options screen - unrelated to the bomb-deactivation minigame cluster,
+; despite superficial similarity.
 c$8BB4 CALL $83C0    ; Clear screen, border to black
  $8BB7 LD IX,$846E   ;
  $8BBB LD HL,$40CC   ;
@@ -4074,7 +4085,7 @@ c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
 ; docs/Actors.md); if the current room-tile ($8202) matches one of them AND
 ; $820C bits 4-5 are clear AND Joe's X is at the screen edge ($20 or $C0),
 ; jumps to #R$7800 - the bomb-deactivation minigame ("SELF DESTRUCT IN 30
-; SECONDS", sort 5 letters). Not a room-to-room transition.
+; SECONDS", sort the access code). Not a room-to-room transition.
 c$8D3C LD HL,$9D18   ; {HL = $9D18 (table of 6 edge-tile IDs); B = 6
  $8D3F LD B,$06      ; }
 *$8D41 LD A,($8202)  ; {Compare current tile ($8202) against table entry
@@ -4107,16 +4118,17 @@ b$8D64 DEFB $00
  $8D6C DEFB $00
  $8D6D DEFB $00
 
-; Draw sprite 32x32 with mask
+; Draw Joe sprite 32x32 with mask
 ;
 ; Used by the routine at #R$80A0.
 ;
 ; .
 ;
 ; BC = sprite addr, DE = mask addr, HL = destination
+@label=DrawJoeSprite
 c$8D6E LD A,$20      ;
 *$8D70 PUSH AF       ;
- $8D71 LD A,(DE)     ; get mask byte
+ $8D71 LD A,(DE)     ; 0: get mask byte
  $8D72 AND (HL)      ; apply mask
  $8D73 LD (HL),A     ;
  $8D74 LD A,(BC)     ; get pixels byte
@@ -4125,7 +4137,7 @@ c$8D6E LD A,$20      ;
  $8D77 INC BC        ;
  $8D78 INC DE        ;
  $8D79 INC HL        ;
- $8D7A LD A,(DE)     ;
+ $8D7A LD A,(DE)     ; 1
  $8D7B AND (HL)      ;
  $8D7C LD (HL),A     ;
  $8D7D LD A,(BC)     ;
@@ -4134,7 +4146,7 @@ c$8D6E LD A,$20      ;
  $8D80 INC BC        ;
  $8D81 INC DE        ;
  $8D82 INC HL        ;
- $8D83 LD A,(DE)     ;
+ $8D83 LD A,(DE)     ; 2
  $8D84 AND (HL)      ;
  $8D85 LD (HL),A     ;
  $8D86 LD A,(BC)     ;
@@ -4143,7 +4155,7 @@ c$8D6E LD A,$20      ;
  $8D89 INC BC        ;
  $8D8A INC DE        ;
  $8D8B INC HL        ;
- $8D8C LD A,(DE)     ;
+ $8D8C LD A,(DE)     ; 3
  $8D8D AND (HL)      ;
  $8D8E LD (HL),A     ;
  $8D8F LD A,(BC)     ;
@@ -4176,17 +4188,26 @@ c$8D6E LD A,$20      ;
  $8DB1 JR NZ,$8D70   ;
  $8DB3 RET           ;
 
-; Routine at 8DB4
+; Entry-point trampoline; real routine at $FDCE
 ;
 ; Used by the routine at #R$8DBE.
-c$8DB4 JP $FDCE      ;
+c$8DB4 JP $FDCE      ; => Advance IX to the next high-score message row, draw +
+                     ; beep
 
 ; Data block at 8DB7
 b$8DB7 DEFB $DD,$09,$C3,$96,$85,$3E,$00
 
-; Routine at 8DBE
+; High scores screen
 ;
 ; Used by the routines at #R$8B37 and #R$9580.
+;
+; .
+;
+; Reached from the main menu ('H') and from #R$9580 after high-score name
+; entry. Clears the screen, draws the "HIGH SCORES" title and column headers,
+; then reveals 4 more table rows one at a time via #R$8DB4 (a 5th row is drawn
+; directly beforehand) - each draw triggers a beep. Waits for all keys
+; released, then returns to the menu ($8B37).
 c$8DBE CALL $83C0    ; Clear screen, border to black
  $8DC1 LD IX,$8E0A   ;
  $8DC5 LD HL,$40CB   ;
@@ -4200,13 +4221,13 @@ c$8DBE CALL $83C0    ; Clear screen, border to black
  $8DD9 LD HL,$482A   ;
  $8DDC CALL $8596    ; Draw string IX and play sound
  $8DDF LD HL,$486A   ;
- $8DE2 CALL $8DB4    ;
+ $8DE2 CALL $8DB4    ; Entry-point trampoline
  $8DE5 LD HL,$48AA   ;
- $8DE8 CALL $8DB4    ;
+ $8DE8 CALL $8DB4    ; Entry-point trampoline
  $8DEB LD HL,$48EA   ;
- $8DEE CALL $8DB4    ;
+ $8DEE CALL $8DB4    ; Entry-point trampoline
  $8DF1 LD HL,$502A   ;
- $8DF4 CALL $8DB4    ;
+ $8DF4 CALL $8DB4    ; Entry-point trampoline
  $8DF7 CALL $8A0C    ; Poll main menu state => $8AAE
  $8DFA NOP           ;
 *$8DFB CALL $8A0F    ; Poll main menu state => $8AD0
@@ -4220,9 +4241,15 @@ b$8E07 DEFB $00,$00,$00,$1F,$07,$08
  $8E0D DEFB $1F,$12,$02,$0E,$11,$04,$12 ; ' SCORES'
  $8E14 DEFB $FF,$FF
 
-; Routine at 8E16
+; Instructions/help screen ('K' or similar from the main menu)
 ;
 ; Used by the routine at #R$81E6.
+;
+; .
+;
+; Reached from #R$81E6. Clears the screen, draws a title string (IX=$84AC) and
+; 5 more static instruction lines, waits for all keys released, then returns to
+; the menu ($8B37). No interactivity beyond dismissal - a straight text screen.
 c$8E16 LD IX,$84AC   ;
  $8E1A CALL $83C0    ; Clear screen, border to black
  $8E1D LD HL,$40CC   ;
@@ -4276,7 +4303,7 @@ c$8E53 LD H,$79      ;
 c$8E64 CALL $8E53    ; Copy soldier sprite template to working area
  $8E67 CALL $96CC    ; Soldier presence/movement-pattern dispatch for the
                      ; current tile
- $8E6A CALL $8F5A    ;
+ $8E6A CALL $8F5A    ; Shoot gate
  $8E6D CALL $FF3E    ; Kill-sparkle animation, 2nd slot
  $8E70 JP $789D      ; => Kill-sparkle animation, gated on $7B10
 
@@ -4287,22 +4314,29 @@ b$8E73 DEFB $00,$00,$00,$00,$00,$3E,$00,$32
  $8E8B DEFB $00,$11,$00,$C9,$64,$8F,$00,$82
  $8E93 DEFB $C9,$F1,$C9
 
-; Dispatch target from $8A41
+; Menu idle: variable-duration border-flash effect
 ;
 ; Used by the routine at #R$8A3C.
 ;
 ; .
 ;
+; Reached every frame via #R$8A3C once the menu has settled (waiting for 'S').
+; Advances the counter $8207 by 2 (wrapping at $FC), reads a (HL,BC) duration
+; pair from a table at $9F00 indexed by it, and calls #R$8680 to wait that long
+; - since $8680 flashes the border while waiting, this drives a decorative
+; twinkle effect that cycles through a preset sequence of wait-durations
+; instead of a fixed rate.
+; .
 ; Reached via #R$8A3C (JP $8E96) once the main menu is done.
-c$8E96 LD A,($8207)  ;
+c$8E96 LD A,($8207)  ; {Advance $8207; wrap at $FC
  $8E99 INC A         ;
  $8E9A INC A         ;
  $8E9B LD ($8207),A  ;
- $8E9E CP $FC        ;
+ $8E9E CP $FC        ; }
  $8EA0 JR NZ,$8EA7   ;
  $8EA2 LD A,$00      ;
  $8EA4 LD ($8207),A  ;
-*$8EA7 LD H,$9F      ;
+*$8EA7 LD H,$9F      ; $9F00 table
  $8EA9 LD L,A        ;
  $8EAA LD C,(HL)     ;
  $8EAB INC L         ;
@@ -4360,7 +4394,7 @@ c$8F00 CALL $8D3C    ; Check for room-edge tile, trigger transition/control
  $8F0F CALL $850E    ; Rolling-digit counter increment
  $8F12 CALL $7B84    ; Disguise duration timer
  $8F15 CALL $A3BA    ; Per-frame collectible items scan
- $8F18 CALL $7DCC    ;
+ $8F18 CALL $7DCC    ; Footstep sound effect
  $8F1B CALL $8032    ; Read input into $820A
  $8F1E CALL $9602    ; Draw per-room door/object graphics from event-flags
                      ; table
@@ -4372,13 +4406,13 @@ c$8F00 CALL $8D3C    ; Check for room-edge tile, trigger transition/control
  $8F2A HALT          ; }
  $8F2B CALL $905A    ; Running line of symbols
  $8F2E CALL $FF14    ; Win-condition check
- $8F31 CALL $8546    ; Call $8546
+ $8F31 CALL $8546    ; Redraw the current score/counter digit string on screen
  $8F34 CALL $8F78    ; Pause
  $8F37 CALL $905A    ; Running line of symbols
  $8F3A CALL $8C78    ; Copy shadow screen to real screen
  $8F3D NOP           ;
  $8F3E CALL $80A0    ; Draw Joe sprite
- $8F41 CALL $8F8C    ; Draw soldier ??
+ $8F41 CALL $8F8C    ; Draw soldier
  $8F44 CALL $93DC    ; Something with energy ??
  $8F47 NOP           ;
  $8F48 EI            ; {Poll '0' key (row $EFFE)
@@ -4392,12 +4426,17 @@ c$8F00 CALL $8D3C    ; Check for room-edge tile, trigger transition/control
 ; Data block at 8F59
 b$8F59 DEFB $C3
 
-; Routine at 8F5A
+; Shoot gate: allow firing only while not mid-jump
 ;
 ; Used by the routine at #R$8E64.
-c$8F5A LD A,($8209)  ;
+;
+; .
+;
+; Called every frame from #R$8E64. Blocks #R$A798 (shoot) while Joe is
+; mid-jump/climb ($8209<>0).
+c$8F5A LD A,($8209)  ; {Check $8209; return if mid-jump
  $8F5D OR A          ;
- $8F5E RET NZ        ;
+ $8F5E RET NZ        ; }
  $8F5F JP $A798      ; => Shoot
 
 ; Data block at 8F62
@@ -4420,9 +4459,18 @@ c$8F78 DI            ;
 b$8F82 DEFB $C9,$00,$00,$00,$00,$00,$00,$00
  $8F8A DEFB $00,$00
 
-; Draw soldier ??
+; Draw soldier
 ;
 ; Used by the routines at #R$7AE5 and #R$8F00.
+;
+; .
+;
+; Self-modifying: DE/BC/HL patched by the caller with the soldier's live
+; mask/sprite/screen addr (e.g. #R$9041/#R$904C/#R$FF56) before falling into
+; #R$81AA. Same pattern as #R$80A0 (draw Joe). Called once per frame from the
+; main loop ($8F41) and once from the post-bomb-minigame refresh ($7AEE) - only
+; one soldier per room, not two.
+@label=DrawSoldier
 c$8F8C LD DE,$AF00   ; !!MUT-ARG!! Soldier mask
  $8F8F LD BC,$AB00   ; !!MUT-ARG!! Soldier sprite
  $8F92 LD HL,$0000   ; !!MUT-ARG!! screen address
@@ -4493,6 +4541,7 @@ b$8FC1 DEFB $50,$06,$06,$C5,$E5,$06,$08,$C5
 ; which turns the soldier's X (C) into a screen address (HL, $8F93) and
 ; sprite/mask address (DE, $8F90/$8F8D) - bit1 of X selects sprite half, bit2
 ; selects sprite row.
+@label=SoldierPattern1
 c$900A LD A,($8201)  ; {Compare Joe X vs soldier X (IX+1); step toward Joe
  $900D SUB (IX+$01)  ;
  $9010 JR Z,$9017    ;
@@ -4866,28 +4915,28 @@ c$91C8 NOP           ; {HL/E = sweep start/rate
 ; when nothing at all is pressed - a full-keyboard version of the single-row
 ; "no key pressed" checks used elsewhere.
 @label=WaitKeyUp
-c$91FA LD BC,$FEFE   ; {Read row $FEFE
+c$91FA LD BC,$FEFE   ; {Read row $FEFE (CAPS,Z-V)
  $91FD IN A,(C)      ; }
- $91FF LD BC,$FDFE   ;
- $9202 IN D,(C)      ;
+ $91FF LD BC,$FDFE   ; {Read row $FDFE (A-G)
+ $9202 IN D,(C)      ; }
  $9204 AND D         ;
- $9205 LD BC,$FBFE   ;
- $9208 IN D,(C)      ;
+ $9205 LD BC,$FBFE   ; {Read row $FBFE (Q-T)
+ $9208 IN D,(C)      ; }
  $920A AND D         ;
- $920B LD BC,$F7FE   ;
- $920E IN D,(C)      ;
+ $920B LD BC,$F7FE   ; {Read row $F7FE (1-5)
+ $920E IN D,(C)      ; }
  $9210 AND D         ;
- $9211 LD BC,$EFFE   ;
- $9214 IN D,(C)      ;
+ $9211 LD BC,$EFFE   ; {Read row $EFFE (6-0)
+ $9214 IN D,(C)      ; }
  $9216 AND D         ;
- $9217 LD BC,$DFFE   ;
- $921A IN D,(C)      ;
+ $9217 LD BC,$DFFE   ; {Read row $DFFE (O-Y)
+ $921A IN D,(C)      ; }
  $921C AND D         ;
- $921D LD BC,$BFFE   ;
- $9220 IN D,(C)      ;
+ $921D LD BC,$BFFE   ; {Read row $BFFE (Enter,L-H)
+ $9220 IN D,(C)      ; }
  $9222 AND D         ;
- $9223 LD BC,$7FFE   ;
- $9226 IN D,(C)      ;
+ $9223 LD BC,$7FFE   ; {Read row $7FFE (Space,Sym,M-B)
+ $9226 IN D,(C)      ; }
  $9228 AND D         ;
  $9229 CPL           ; {Invert and mask result
  $922A AND $1F       ; }
@@ -4933,7 +4982,8 @@ c$923C LD HL,$4846   ; {HL = $4846; B = 4 columns
 ; Draw one digit/character glyph
 ;
 ; Used by the routines at #R$86E4, #R$92A0, #R$92DE, #R$9880 and #R$98DA.
-c$925C CALL $855B    ;
+@label=DrawGlyph
+c$925C CALL $855B    ; Glyph-draw preamble
 ; This entry point is used by the routine at #R$9580.
 *$925F AND $1F       ;
  $9261 RLCA          ;
@@ -5024,7 +5074,7 @@ c$92A0 LD HL,$9D00   ; {HL = $9D00 (key tile table); B = 15
  $92D2 CALL $925C    ; Draw one digit/character glyph
  $92D5 CALL $8C00    ; Build room background into shadow buffer $B800
  $92D8 LD C,$00      ;
- $92DA CALL $86C0    ;
+ $92DA CALL $86C0    ; Show pickup message popup
  $92DD RET           ;
 
 ; Bomb pickup: mark tile, count, rebuild
@@ -5046,7 +5096,7 @@ c$92DE LD A,(HL)     ; {Set bit7 on tile byte; increment bomb counter $8216
  $92E7 LD HL,$50FE   ;
  $92EA CALL $925C    ; Draw one digit/character glyph
  $92ED LD C,$02      ;
- $92EF CALL $86C0    ;
+ $92EF CALL $86C0    ; Show pickup message popup
  $92F2 LD HL,$85F9   ;
  $92F5 LD A,(HL)     ;
  $92F6 INC A         ;
@@ -5121,7 +5171,7 @@ c$9328 LD HL,$9D0F   ; {HL = $9D0F (food tile table); B = 6
 *$9350 LD (HL),$FF   ; Mark tile visited ($FF)
  $9352 CALL $8C00    ; Build room background into shadow buffer $B800
  $9355 LD C,$03      ;
- $9357 CALL $86C0    ;
+ $9357 CALL $86C0    ; Show pickup message popup
  $935A CALL $9456    ; Refill energy gauge
  $935D RET           ;
 
@@ -5165,6 +5215,7 @@ s$939E DEFS $02
 ; Reduce energy
 ;
 ; Used by the routine at #R$7CF7.
+@label=ReduceEnergy
 c$93A0 LD HL,$A239   ;
  $93A3 LD B,$12      ;
 *$93A5 DEC (HL)      ;
@@ -5312,6 +5363,7 @@ s$945F DEFS $05
 ;
 ; Byte-identical to #R$8164 but uses $8213 as the shared direction step instead
 ; of $8212 - a second, independent synchronized patrol group.
+@label=SoldierPattern2
 c$9464 LD A,($8213)   ; {X += $8213 (shared step); hit X=2 or $E6?
  $9467 ADD A,(IX+$01) ;
  $946A LD (IX+$01),A  ;
@@ -5365,16 +5417,16 @@ c$9498 LD BC,$0028   ;
  $94D8 LD HL,$85F9   ;
  $94DB LD (HL),$FF   ;
  $94DD INC HL        ;
- $94DE LD (HL),$22   ;
+ $94DE LD (HL),$22   ; {"20" -> $85FA/$85B
  $94E0 INC HL        ;
  $94E1 LD (HL),$20   ;
- $94E3 INC HL        ;
- $94E4 LD (HL),$1D   ;
+ $94E3 INC HL        ; }
+ $94E4 LD (HL),$1D   ; ":"
  $94E6 INC HL        ;
- $94E7 LD (HL),$20   ;
+ $94E7 LD (HL),$20   ; {"00"
  $94E9 INC HL        ;
  $94EA LD (HL),$20   ;
- $94EC INC HL        ;
+ $94EC INC HL        ; }
  $94ED LD (HL),$FF   ;
  $94EF NOP           ;
  $94F0 LD A,($FFFF)  ;
@@ -5437,7 +5489,7 @@ c$9580 LD A,$00      ;
  $9598 INC (HL)      ;
  $9599 LD A,(HL)     ;
  $959A CP $05        ;
- $959C JP Z,$8DBE    ;
+ $959C JP Z,$8DBE    ; => High scores screen
 *$959F LD A,($820A)  ; get input state
  $95A2 AND $01       ;
  $95A4 JR Z,$95B1    ;
@@ -5476,17 +5528,22 @@ c$9580 LD A,$00      ;
 ; Unused
 s$95E1 DEFS $05
 
-; Routine at 95E6
+; Draw door graphic column 3 (animated, via $8206)
 ;
 ; Used by the routine at #R$9602.
-c$95E6 LD A,($8206)  ;
+;
+; .
+;
+; Same pattern as #R$90AA/#R$85DC (the 3rd of #R$9602's door-graphic columns):
+; animation frame from $8206, source table at $8600+, drawn at $B88C/$B898.
+c$95E6 LD A,($8206)  ; {HL = $8600 + frame*16 (animation source)
  $95E9 AND $06       ;
  $95EB RLCA          ;
  $95EC RLCA          ;
  $95ED RLCA          ;
  $95EE RLCA          ;
  $95EF LD L,A        ;
- $95F0 LD H,$86      ;
+ $95F0 LD H,$86      ; }
  $95F2 PUSH HL       ;
  $95F3 EX DE,HL      ;
  $95F4 LD HL,$B88C   ;
@@ -5796,9 +5853,9 @@ b$9700 DEFW $4600
  $97FA DEFW $9D01
  $97FC DEFW $BA02
  $97FE DEFW $8401
- $9800 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {Unidentified trailing bytes
- $9808 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ;
- $9810 DEFB $1F,$1F,$00,$1F,$02,$04,$0B,$0B ;
+ $9800 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {4 pickup messages, 32 bytes each
+ $9808 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ; (indexed by pickup-type C in
+ $9810 DEFB $1F,$1F,$00,$1F,$02,$04,$0B,$0B ; #R$86C0)
  $9818 DEFB $1F,$0A,$04,$18,$1D,$1F,$1F,$FF ;
  $9820 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ;
  $9828 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ;
@@ -6292,70 +6349,54 @@ b$9F00 DEFB $8C,$12,$C8,$12,$A0,$12,$C8,$12
  $9FF8 DEFB $82,$12,$B4,$14,$8C,$12,$B4,$14
 
 ; "JOE BLADE" sign
-b$A000 DEFB $00,$00,$1F,$E1,$FF,$FF,$FE,$1F
- $A008 DEFB $FF,$FF,$F0,$00,$00,$00,$1F,$FF
- $A010 DEFB $FF,$E0,$FF,$00,$00,$0F,$FF,$FF
- $A018 DEFB $FC,$7F,$FF,$FE,$07,$FF,$FF,$FE
- $A020 DEFB $00,$00,$30,$33,$00,$00,$03,$30
- $A028 DEFB $00,$00,$18,$00,$00,$00,$10,$00
- $A030 DEFB $00,$31,$81,$80,$00,$18,$00,$00
- $A038 DEFB $06,$C0,$00,$03,$8C,$00,$00,$03
- $A040 DEFB $00,$00,$2F,$D6,$FF,$FF,$FD,$AF
- $A048 DEFB $FF,$FF,$E8,$00,$00,$00,$17,$FF
- $A050 DEFB $FF,$D9,$7E,$80,$00,$17,$FF,$FF
- $A058 DEFB $FA,$BF,$FF,$FC,$CB,$FF,$FF,$FD
- $A060 DEFB $00,$00,$2F,$D5,$FF,$FF,$FE,$AF
- $A068 DEFB $FF,$FF,$E8,$00,$00,$00,$17,$FF
- $A070 DEFB $FF,$E9,$7E,$80,$00,$17,$FF,$FF
- $A078 DEFB $FA,$BF,$FF,$FF,$6B,$FF,$FF,$FD
- $A080 DEFB $00,$00,$2F,$D5,$FF,$FF,$FE,$AF
- $A088 DEFB $80,$00,$18,$00,$00,$00,$17,$80
- $A090 DEFB $07,$E9,$7E,$80,$00,$17,$E0,$01
- $A098 DEFB $FA,$BC,$00,$1F,$AB,$E0,$00,$03
- $A0A0 DEFB $00,$00,$2F,$D5,$F0,$00,$3E,$AF
- $A0A8 DEFB $7F,$FF,$F0,$00,$FE,$00,$17,$BF
- $A0B0 DEFB $FB,$E9,$7E,$80,$00,$17,$DF,$FE
- $A0B8 DEFB $FA,$BD,$FF,$E7,$AB,$DF,$FF,$FE
- $A0C0 DEFB $00,$00,$2F,$D5,$EF,$FF,$DE,$AF
- $A0C8 DEFB $80,$00,$18,$01,$01,$00,$17,$80
- $A0D0 DEFB $07,$D9,$7E,$80,$00,$17,$E0,$01
- $A0D8 DEFB $FA,$BD,$00,$1B,$AB,$E0,$00,$03
- $A0E0 DEFB $00,$00,$6F,$D5,$E8,$00,$5E,$AF
- $A0E8 DEFB $FF,$FF,$E8,$01,$7D,$00,$17,$FF
- $A0F0 DEFB $FF,$B1,$7E,$80,$00,$17,$FF,$FF
- $A0F8 DEFB $FA,$BD,$00,$0B,$AB,$FF,$FF,$FD
- $A100 DEFB $7F,$FF,$DF,$D5,$E8,$00,$5E,$AF
- $A108 DEFB $FF,$FF,$E8,$01,$7D,$00,$17,$FF
- $A110 DEFB $FF,$D9,$7E,$FF,$FF,$17,$FF,$FF
- $A118 DEFB $FA,$BD,$00,$0B,$AB,$FF,$FF,$FD
- $A120 DEFB $C0,$00,$3F,$D5,$EF,$FF,$DE,$AF
- $A128 DEFB $80,$00,$18,$01,$7D,$00,$17,$80
- $A130 DEFB $01,$ED,$7F,$00,$00,$D7,$E0,$01
- $A138 DEFB $FA,$BD,$00,$1B,$AB,$F0,$00,$01
- $A140 DEFB $BF,$FF,$FF,$D5,$F0,$00,$3E,$AF
- $A148 DEFB $7F,$FF,$F0,$01,$01,$00,$17,$BF
- $A150 DEFB $FE,$F5,$7F,$FF,$FF,$57,$DF,$FE
- $A158 DEFB $FA,$BD,$FF,$E7,$AB,$EF,$FF,$FE
- $A160 DEFB $BF,$FF,$FF,$D5,$FF,$FF,$FE,$AF
- $A168 DEFB $80,$00,$18,$00,$FE,$00,$17,$80
- $A170 DEFB $01,$F5,$7F,$FF,$FF,$57,$D0,$02
- $A178 DEFB $FA,$BC,$00,$1F,$AB,$F0,$00,$03
- $A180 DEFB $BF,$FF,$FF,$D5,$FF,$FF,$FE,$AF
- $A188 DEFB $FF,$FF,$E8,$00,$00,$00,$17,$FF
- $A190 DEFB $FF,$F5,$7F,$FF,$FF,$57,$D0,$02
- $A198 DEFB $FA,$BF,$FF,$FF,$6B,$FF,$FF,$FD
- $A1A0 DEFB $BF,$FF,$FF,$B6,$FF,$FF,$FD,$AF
- $A1A8 DEFB $FF,$FF,$E8,$00,$00,$00,$17,$FF
- $A1B0 DEFB $FF,$ED,$7F,$FF,$FF,$57,$D0,$02
- $A1B8 DEFB $FA,$BF,$FF,$FC,$CB,$FF,$FF,$FD
- $A1C0 DEFB $C0,$00,$00,$73,$00,$00,$03,$30
- $A1C8 DEFB $00,$00,$18,$00,$00,$00,$10,$00
- $A1D0 DEFB $00,$19,$80,$00,$00,$D8,$30,$03
- $A1D8 DEFB $06,$80,$00,$03,$8C,$00,$00,$03
- $A1E0 DEFB $7F,$FF,$FF,$E1,$FF,$FF,$FE,$1F
- $A1E8 DEFB $FF,$FF,$F0,$00,$00,$00,$1F,$FF
- $A1F0 DEFB $FF,$F0,$FF,$FF,$FF,$8F,$E0,$01
- $A1F8 DEFB $FC,$FF,$FF,$FE,$07,$FF,$FF,$FE
+;
+; .
+;
+; .
+;
+; 256x16px image (32 chars x 2 chars), drawn by #R$8B05 (DE=$A000, straight
+; sequential copy). Stored in raster-scanline order - 32 bytes per scanline, 16
+; scanlines - NOT the per-8x8-cell order the other sprite blocks use.
+; Reconstructing one UDG cell needs 8 bytes at stride 32 (one byte per
+; scanline), not the usual stride 1. Confirmed correct by rendering the raw
+; bytes directly with PIL first ("JOE BLADE" reads clean) before writing this
+; macro; the UDGARRAY macro's grammar (width,attr,scale,step then an
+; address-range in parens with horizontal/vertical step) was checked against
+; docs/skool-macros.html.
+; .
+; #HTML[#UDGARRAY32,7,2,32($A000-$A11F-1-256)(signA000)]
+b$A000 DEFB $00,$00,$1F,$E1,$FF,$FF,$FE,$1F,$FF,$FF,$F0,$00,$00,$00,$1F,$FF
+ $A010 DEFB $FF,$E0,$FF,$00,$00,$0F,$FF,$FF,$FC,$7F,$FF,$FE,$07,$FF,$FF,$FE
+ $A020 DEFB $00,$00,$30,$33,$00,$00,$03,$30,$00,$00,$18,$00,$00,$00,$10,$00
+ $A030 DEFB $00,$31,$81,$80,$00,$18,$00,$00,$06,$C0,$00,$03,$8C,$00,$00,$03
+ $A040 DEFB $00,$00,$2F,$D6,$FF,$FF,$FD,$AF,$FF,$FF,$E8,$00,$00,$00,$17,$FF
+ $A050 DEFB $FF,$D9,$7E,$80,$00,$17,$FF,$FF,$FA,$BF,$FF,$FC,$CB,$FF,$FF,$FD
+ $A060 DEFB $00,$00,$2F,$D5,$FF,$FF,$FE,$AF,$FF,$FF,$E8,$00,$00,$00,$17,$FF
+ $A070 DEFB $FF,$E9,$7E,$80,$00,$17,$FF,$FF,$FA,$BF,$FF,$FF,$6B,$FF,$FF,$FD
+ $A080 DEFB $00,$00,$2F,$D5,$FF,$FF,$FE,$AF,$80,$00,$18,$00,$00,$00,$17,$80
+ $A090 DEFB $07,$E9,$7E,$80,$00,$17,$E0,$01,$FA,$BC,$00,$1F,$AB,$E0,$00,$03
+ $A0A0 DEFB $00,$00,$2F,$D5,$F0,$00,$3E,$AF,$7F,$FF,$F0,$00,$FE,$00,$17,$BF
+ $A0B0 DEFB $FB,$E9,$7E,$80,$00,$17,$DF,$FE,$FA,$BD,$FF,$E7,$AB,$DF,$FF,$FE
+ $A0C0 DEFB $00,$00,$2F,$D5,$EF,$FF,$DE,$AF,$80,$00,$18,$01,$01,$00,$17,$80
+ $A0D0 DEFB $07,$D9,$7E,$80,$00,$17,$E0,$01,$FA,$BD,$00,$1B,$AB,$E0,$00,$03
+ $A0E0 DEFB $00,$00,$6F,$D5,$E8,$00,$5E,$AF,$FF,$FF,$E8,$01,$7D,$00,$17,$FF
+ $A0F0 DEFB $FF,$B1,$7E,$80,$00,$17,$FF,$FF,$FA,$BD,$00,$0B,$AB,$FF,$FF,$FD
+ $A100 DEFB $7F,$FF,$DF,$D5,$E8,$00,$5E,$AF,$FF,$FF,$E8,$01,$7D,$00,$17,$FF
+ $A110 DEFB $FF,$D9,$7E,$FF,$FF,$17,$FF,$FF,$FA,$BD,$00,$0B,$AB,$FF,$FF,$FD
+ $A120 DEFB $C0,$00,$3F,$D5,$EF,$FF,$DE,$AF,$80,$00,$18,$01,$7D,$00,$17,$80
+ $A130 DEFB $01,$ED,$7F,$00,$00,$D7,$E0,$01,$FA,$BD,$00,$1B,$AB,$F0,$00,$01
+ $A140 DEFB $BF,$FF,$FF,$D5,$F0,$00,$3E,$AF,$7F,$FF,$F0,$01,$01,$00,$17,$BF
+ $A150 DEFB $FE,$F5,$7F,$FF,$FF,$57,$DF,$FE,$FA,$BD,$FF,$E7,$AB,$EF,$FF,$FE
+ $A160 DEFB $BF,$FF,$FF,$D5,$FF,$FF,$FE,$AF,$80,$00,$18,$00,$FE,$00,$17,$80
+ $A170 DEFB $01,$F5,$7F,$FF,$FF,$57,$D0,$02,$FA,$BC,$00,$1F,$AB,$F0,$00,$03
+ $A180 DEFB $BF,$FF,$FF,$D5,$FF,$FF,$FE,$AF,$FF,$FF,$E8,$00,$00,$00,$17,$FF
+ $A190 DEFB $FF,$F5,$7F,$FF,$FF,$57,$D0,$02,$FA,$BF,$FF,$FF,$6B,$FF,$FF,$FD
+ $A1A0 DEFB $BF,$FF,$FF,$B6,$FF,$FF,$FD,$AF,$FF,$FF,$E8,$00,$00,$00,$17,$FF
+ $A1B0 DEFB $FF,$ED,$7F,$FF,$FF,$57,$D0,$02,$FA,$BF,$FF,$FC,$CB,$FF,$FF,$FD
+ $A1C0 DEFB $C0,$00,$00,$73,$00,$00,$03,$30,$00,$00,$18,$00,$00,$00,$10,$00
+ $A1D0 DEFB $00,$19,$80,$00,$00,$D8,$30,$03,$06,$80,$00,$03,$8C,$00,$00,$03
+ $A1E0 DEFB $7F,$FF,$FF,$E1,$FF,$FF,$FE,$1F,$FF,$FF,$F0,$00,$00,$00,$1F,$FF
+ $A1F0 DEFB $FF,$F0,$FF,$FF,$FF,$8F,$E0,$01,$FC,$FF,$FF,$FE,$07,$FF,$FF,$FE
 
 ; Data block at A200
 b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -6363,6 +6404,7 @@ b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $A210 DEFB $00,$FF,$FF,$FF,$FF,$00,$FF,$00
  $A218 DEFB $0F,$EF,$EF,$EF,$EF,$0F,$E0,$0F
  $A220 DEFB $78,$7B,$7B,$7B,$7B,$78,$03,$78
+@label=EnergyGauge
  $A228 DEFB $04,$04,$04,$04,$04,$04,$04,$04,$04,$04 ; {Energy gauge
  $A232 DEFB $04,$04,$04,$04,$04,$04,$04,$04         ; }
  $A23A DEFB $FF,$FF
@@ -6426,6 +6468,7 @@ s$A28B DEFS $01
 ;
 ; Border/speaker OUT ($FE) sweep, shorter duration (E=5) than #R$A2BE - second
 ; stage of the gunshot sound played by #R$FFF0.
+@label=SFX_descent2
 c$A28C NOP           ; {HL = $3200, E = 5 (short sweep)
  $A28D LD HL,$3200   ;
  $A290 LD E,$05      ; }
@@ -6475,6 +6518,7 @@ s$A2BD DEFS $01
 ;
 ; First stage of the gunshot sound: OUT ($FE) sweep from $3200 down to $2Exx,
 ; then falls into #R$A28C for a second, shorter sweep.
+@label=SFX_descent1
 c$A2BE NOP           ; {HL = $3200, E = $1E (long sweep)
  $A2BF LD HL,$3200   ;
  $A2C2 LD E,$1E      ; }
@@ -6561,7 +6605,7 @@ c$A2F6 LD HL,$9D20   ;
 ;
 ; Same edge-triggered pattern as #R$926E, for the ammo tile table $9D20. On
 ; match: marks the tile visited, rebuilds the background, shows a message
-; (#R$A370, undeciphered) and a black-box popup, adds 10 to the ammo count
+; (#R$A370, "SOME AMMUNITION") and a black-box popup, adds 10 to the ammo count
 ; $8225, then continues at #R$9296.
 @label=CheckAmmo
 c$A328 LD HL,$9D20   ; {HL = $9D20 (ammo tile table); B = 2
@@ -6781,6 +6825,7 @@ b$A600 DEFB $00,$00,$5C,$C6,$DE,$C6,$C6,$00 ; 'A' = $00
 ;
 ; While Joe is jumping ($820D <> 0), looks up a tone period from the table at
 ; $8000+ (indexed by $820D) and toggles the border 3 times at that pitch.
+@label=SFX_jump
 c$A750 LD A,($820D)  ; {Check jump counter $820D; return if not jumping
  $A753 OR A          ;
  $A754 RET Z         ; }
@@ -6871,7 +6916,7 @@ c$A798 LD A,($820A)  ; {Check fire button ($820A bit4)
  $A7B3 RLCA          ;
  $A7B4 LD L,A        ;
  $A7B5 INC HL        ;
- $A7B6 CALL $FFA0    ;
+ $A7B6 CALL $FFA0    ; Shot reentry guard
  $A7B9 LD A,$01      ; {Set $8226=1
  $A7BB LD ($8226),A  ; }
  $A7BE NOP           ;
@@ -9634,9 +9679,14 @@ b$FD80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDA0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDA8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at FDB0
+; Fill status-bar attribute strip, then room attribute
 ;
 ; Used by the routine at #R$7AE5.
+;
+; .
+;
+; Fills 30 bytes at $5861 with attribute $46, then falls into #R$A3AA to fill
+; the rest with the current room's attribute.
 c$FDB0 LD HL,$5861   ;
  $FDB3 LD B,$1E      ;
 *$FDB5 LD (HL),$46   ;
@@ -9649,9 +9699,15 @@ b$FDBD DEFB $00,$00,$00,$20,$20,$20,$20,$20
  $FDC5 DEFB $20,$20,$1F,$1F,$1F,$1F,$1F,$1F
  $FDCD DEFB $FF
 
-; Routine at FDCE
+; Advance IX to the next high-score message row, draw + beep
 ;
 ; Used by the routine at #R$8DB4.
+;
+; .
+;
+; Rounds IX's low byte up to the next 16-byte row boundary (+2), then jumps
+; into #R$8596 to draw that row's string and play the pickup beep. Called
+; repeatedly by #R$8DB4/#R$8DBE to reveal the high-score table row by row.
 c$FDCE LD A,IXl      ;
  $FDD0 ADD A,$04     ;
  $FDD2 AND $F0       ;
@@ -9845,22 +9901,31 @@ c$FF3E LD A,($8226)  ; {Check $8226; return if inactive
 ; Per-frame soldier update (redirect)
 ;
 ; Used by the routine at #R$8F00.
+@label=jp_ProcessSoldier
 c$FF96 JP $8E64      ; => Per-frame soldier update
 
-; Data block at FF99
+; Unused code?
 b$FF99 DEFB $CD,$98,$A7,$C3,$3E,$FF,$00
 
-; Routine at FFA0
+; Shot reentry guard: skip #R$A798's caller if mid-jump or sparkle busy
 ;
 ; Used by the routine at #R$A798.
-c$FFA0 LD A,($8209)  ;
+;
+; .
+;
+; Called from #R$A798 mid-shot. If Joe is mid-jump ($8209<>0) or the 2nd
+; kill-sparkle slot is still playing ($8226<>0), pops its own return address
+; and returns - a double-return that aborts the rest of #R$A798 too (skips
+; setting $8226 and the facing-direction/range logic), preventing a new shot
+; from stomping the still-active sparkle.
+c$FFA0 LD A,($8209)  ; {Check $8209 (mid-jump)
  $FFA3 OR A          ;
- $FFA4 JR NZ,$FFAB   ;
+ $FFA4 JR NZ,$FFAB   ; }
  $FFA6 LD A,($8226)  ; get kill-sparkle animation counter
  $FFA9 OR A          ;
  $FFAA RET Z         ;
-*$FFAB POP BC        ;
- $FFAC RET           ;
+*$FFAB POP BC        ; {Double-return: abort #R$A798 too
+ $FFAC RET           ; }
 
 ; Clear $8226, hand off to $7D96
 ;
@@ -9878,6 +9943,7 @@ c$FFAD LD A,$00      ; {Clear $8226 flag
 ; IX = byte string (each byte a glyph index, $FF-terminated), HL = destination.
 ; Each glyph is an 8-byte (8x8 1bpp) block at $A200+index*8. Used by #R$93A0
 ; (energy loss) and #R$A23C (gauge fill) to draw the energy-gauge bar.
+@label=DrawStringGlyphs
 c$FFB5 LD C,(IX+$00) ; {C = glyph index; $FF terminates
  $FFB8 LD A,C        ;
  $FFB9 INC IX        ;

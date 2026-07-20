@@ -118,7 +118,7 @@ Volume: about 3200 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/joeblade-zx/joeblade/
 
-Status: just started (85K .ctl file).
+Status: just started (115K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)

@@ -1,240 +1,98 @@
-; Message at 5CEB
-t$5CEB DEFM "32767"
+@start
+@org
+; Bomb minigame instructions text
+;
+; .
+;
+; .
+;
+; Decoded via the game's font-code table (A-Z=$00-$19, space=$1F,
+; digits=$20-$29, ':'=$1D, '-'=$1C, terminator $FF between lines): "[?]PLOSIVE
+; DEVICES" / "USING LEFT[Z] RIGHT AND FIRE YOU" / " MUST UNSCRAMBLE THE
+; DETONATION" / " CODE: YOU HAVE 30 SECONDS TILL" / " THE SELF-DESTRUCT IS
+; ACTIVATED" - clearly the bomb-minigame's instruction text (matches the "SELF
+; DESTRUCT IN 30 SECONDS" theme). $6200/$6201 ($04,$3E) don't decode cleanly as
+; text ('E' then an out-of-range byte where 'X' of "EXPLOSIVE" would go) -
+; likely a 2-byte header, or "EX" sits just before this block's #R$6200 org
+; boundary and isn't disassembled. The "Z" in "LEFT[Z] RIGHT" ($19) decodes as
+; a literal valid letter code but reads oddly mid-sentence - possibly meant as
+; a comma, unconfirmed. #R$7C4A's "HL = $6250 + key_code*72" icon-table trace
+; is reconciled: letter codes run 1-5 (never 0), so the lowest address actually
+; read is $6250+72 = $6298 - the icon set at #R$6298 - and the text here at
+; $6250-$6297 is never read as icon data.
+t$6200 DEFB $04,$3E,$0F,$0B,$0E,$12,$08,$15 ; {"[?]PLOSIVE DEVICES"
+ $6208 DEFB $04,$1F,$03,$04,$15,$08,$02,$04 ;
+ $6210 DEFB $12,$FF                         ; }
+ $6212 DEFB $14,$12,$08,$0D,$06,$1F,$0B,$04 ; {"USING LEFT[Z] RIGHT AND FIRE
+ $621A DEFB $05,$13,$19,$1F,$11,$08,$06,$07 ; YOU"
+ $6222 DEFB $13,$1F,$00,$0D,$03,$1F,$05,$08 ;
+ $622A DEFB $11,$04,$1F,$18,$0E,$14,$FF     ; }
+ $6231 DEFB $1F,$0C,$14,$12,$13,$1F,$14,$0D ; {"MUST UNSCRAMBLE THE DETONATION"
+ $6239 DEFB $12,$02,$11,$00,$0C,$01,$0B,$04 ;
+ $6241 DEFB $1F,$13,$07,$04,$1F,$03,$04,$13 ;
+ $6249 DEFB $0E,$0D,$00,$13,$08,$0E,$0D,$FF ; }
+ $6251 DEFB $1F,$02,$0E,$03,$04,$1D,$1F,$18 ; {"CODE: YOU HAVE 30 SECONDS TILL"
+ $6259 DEFB $0E,$14,$1F,$07,$00,$15,$04,$1F ;
+ $6261 DEFB $23,$20,$1F,$12,$04,$02,$0E,$0D ;
+ $6269 DEFB $03,$12,$1F,$13,$08,$0B,$0B,$FF ; }
+ $6271 DEFB $1F,$13,$07,$04,$1F,$12,$04,$0B ; {"THE SELF-DESTRUCT IS ACTIVATED"
+ $6279 DEFB $05,$1C,$03,$04,$12,$13,$11,$14 ;
+ $6281 DEFB $02,$13,$1F,$08,$12,$1F,$00,$02 ;
+ $6289 DEFB $13,$08,$15,$00,$13,$04,$03,$FF ; }
+ $6291 DEFM $00,$00,$00,$00,$00,$00,$00
 
-; Data block at 5CF0
-b$5CF0 DEFB $0E,$00,$00,$FF,$7F,$00,$0D,$00
- $5CF8 DEFB $0B,$6F,$00,$F5
-
-; Message at 5CFC
-t$5CFC DEFM "'''\"  Players Present : Joe Blade\"'''\"BY COLIN,KEVIN,CHRIS,STEVE,"
- $5D3D DEFM "ANDY,JABBA,GARY,SIMON,ZOE,LEONARD ANDFLUFFY\""
-
-; Data block at 5D69
-b$5D69 DEFB $0D,$00,$0C,$7D,$00,$F5
-
-; Message at 5D6F
-t$5D6F DEFM "''''''''\"PLEASE NOTE PEOPLE WITH SPECTRUM128,PLUS 2 OR PLUS 3'S U"
- $5DB0 DEFM "SE THE  TAPE LOADER OPTION FOR THE      EXPANDED VERSION.\""
-
-; Data block at 5DEA
-b$5DEA DEFB $0D,$00,$0E,$26,$00,$F5,$AC,$31
- $5DF2 DEFB $33,$0E,$00,$00,$0D,$00,$00,$2C
- $5DFA DEFB $30,$0E,$00,$00,$00,$00,$00,$3B
- $5E02 DEFB $3A,$DA,$30,$0E,$00,$00,$00,$00
- $5E0A DEFB $00,$3A,$D9,$30,$0E,$00,$00,$00
- $5E12 DEFB $00,$00,$0D,$00,$0F,$1E,$00,$EF
- $5E1A DEFB $22,$22,$AF
-
-; Message at 5E1D
-t$5E1D DEFM "65088"
-
-; Data block at 5E22
-b$5E22 DEFB $0E,$00,$00,$40,$FE,$00,$3A,$F9
- $5E2A DEFB $C0
-
-; Message at 5E2B
-t$5E2B DEFM "65088"
-
-; Data block at 5E30
-b$5E30 DEFB $0E,$00,$00,$40,$FE,$00,$0D,$00
- $5E38 DEFB $14,$14,$00,$F8,$22,$10,$07
-
-; Message at 5E3F
-t$5E3F DEFM "Jabb"
-
-; Data block at 5E43
-b$5E43 DEFB $10,$00,$22,$CA,$30,$0E,$00,$00
- $5E4B DEFB $00,$00,$00,$0D,$00,$1E,$04,$00
- $5E53 DEFB $EF,$22,$22,$0D,$80,$EF,$22,$22
- $5E5B DEFB $0D,$80,$00,$00,$40,$FE,$00
-
-; Message at 5E62
-t$5E62 DEFM "      "
-
-; Data block at 5E68
-b$5E68 DEFB $00,$00,$40,$FE,$00,$00,$03
-
-; Message at 5E6F
-t$5E6F DEFM "load      "
-
-; Data block at 5E79
-b$5E79 DEFB $C0,$01,$40,$FE,$65,$80,$00,$00
- $5E81 DEFB $40,$FE,$00,$00,$00,$00,$00,$00
- $5E89 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5E91 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5E99 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EA1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EA9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EB1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EB9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EC1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EC9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5ED1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5ED9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EE1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EE9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EF1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5EF9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F01 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F09 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F11 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F19 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F21 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F29 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F31 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F39 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F41 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F49 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F51 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F59 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F61 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F69 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F71 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F79 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F81 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F89 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F91 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5F99 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FA1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FA9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FB1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FB9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FC1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FC9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FD1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FD9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FE1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FE9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FF1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $5FF9 DEFB $00,$00,$00,$00,$00,$00,$00,$F3
- $6001 DEFB $01,$FD,$7F,$21,$00,$C0,$3E,$11
- $6009 DEFB $ED,$79,$77,$3E,$10,$ED,$79,$7E
- $6011 DEFB $36,$26,$FE,$26,$20,$15,$3E,$11
- $6019 DEFB $ED,$79,$C5,$21,$00,$40,$11,$00
- $6021 DEFB $C0,$01,$00,$0A,$ED,$B0,$C1,$3E
- $6029 DEFB $10,$ED,$79,$21,$00,$4A,$11,$00
- $6031 DEFB $FE,$01,$00,$02,$ED,$B0,$C3,$37
- $6039 DEFB $8B,$00,$00,$00,$00,$00,$00,$00
- $6041 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6049 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6051 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6059 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6061 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6069 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6071 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6079 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6081 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6089 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6091 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6099 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60A1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60A9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60B1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60B9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60C1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60C9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60D1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60D9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60E1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60E9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60F1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $60F9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6101 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6109 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6111 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6119 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6121 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6129 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6131 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6139 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6141 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6149 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6151 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6159 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6161 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6169 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6171 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6179 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6181 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6189 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6191 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6199 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61A1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61A9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61B1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61B9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61C1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61C9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61D1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61D9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61E1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $61E9 DEFB $00,$00,$00,$00,$00,$00,$00,$60
- $61F1 DEFB $47,$00,$01,$60,$40,$BA,$50,$EC
- $61F9 DEFB $89,$19,$8A,$3D,$8B,$00,$00,$04
- $6201 DEFB $3E,$0F,$0B,$0E,$12,$08,$15,$04
- $6209 DEFB $1F,$03,$04,$15,$08,$02,$04,$12
- $6211 DEFB $FF,$14,$12,$08,$0D,$06,$1F,$0B
- $6219 DEFB $04,$05,$13,$19,$1F,$11,$08,$06
- $6221 DEFB $07,$13,$1F,$00,$0D,$03,$1F,$05
- $6229 DEFB $08,$11,$04,$1F,$18,$0E,$14,$FF
- $6231 DEFB $1F,$0C,$14,$12,$13,$1F,$14,$0D
- $6239 DEFB $12,$02,$11,$00,$0C,$01,$0B,$04
- $6241 DEFB $1F,$13,$07,$04,$1F,$03,$04,$13
- $6249 DEFB $0E,$0D,$00,$13,$08,$0E,$0D,$FF
- $6251 DEFB $1F,$02,$0E,$03,$04,$1D,$1F,$18
- $6259 DEFB $0E,$14,$1F,$07,$00,$15,$04,$1F
- $6261 DEFB $23,$20,$1F,$12,$04,$02,$0E,$0D
- $6269 DEFB $03,$12,$1F,$13,$08,$0B,$0B,$FF
- $6271 DEFB $1F,$13,$07,$04,$1F,$12,$04,$0B
- $6279 DEFB $05,$1C,$03,$04,$12,$13,$11,$14
- $6281 DEFB $02,$13,$1F,$08,$12,$1F,$00,$02
- $6289 DEFB $13,$08,$15,$00,$13,$04,$03,$FF
- $6291 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6299 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $62A1 DEFB $00,$00,$00,$7F,$FF,$FE,$C0,$00
- $62A9 DEFB $03,$BF,$FF,$FD,$BF,$FF,$FD,$BF
- $62B1 DEFB $00,$FD,$BE,$FF,$7D,$BE,$00,$7D
- $62B9 DEFB $BF,$FF,$FD,$BF,$FF,$FD,$BF,$00
- $62C1 DEFB $FD,$BE,$FF,$7D,$BE,$81,$7D,$BE
- $62C9 DEFB $81,$7D,$BE,$81,$7D,$C0,$81,$83
- $62D1 DEFB $7F,$00,$FE,$00,$00,$00,$00,$00
- $62D9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $62E1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $62E9 DEFB $00,$00,$00,$FF,$FF,$FC,$80,$00
- $62F1 DEFB $06,$BF,$FF,$FB,$BF,$FF,$FD,$B0
- $62F9 DEFB $00,$FD,$B7,$FF,$7D,$B0,$00,$FB
- $6301 DEFB $BF,$FF,$F6,$BF,$FF,$FB,$B0,$00
- $6309 DEFB $3D,$B7,$FF,$DD,$B0,$00,$3D,$BF
- $6311 DEFB $FF,$FD,$BF,$FF,$FB,$80,$00,$06
- $6319 DEFB $FF,$FF,$FC,$00,$00,$00,$00,$00
- $6321 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6329 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6331 DEFB $00,$00,$00,$7F,$FF,$FE,$C0,$00
- $6339 DEFB $03,$BF,$FF,$FD,$BF,$FF,$FD,$BC
- $6341 DEFB $00,$03,$BB,$FF,$FE,$B6,$00,$00
- $6349 DEFB $B4,$00,$00,$B4,$00,$00,$B6,$00
- $6351 DEFB $00,$BB,$FF,$FE,$BC,$00,$03,$BF
- $6359 DEFB $FF,$FD,$BF,$FF,$FD,$C0,$00,$03
- $6361 DEFB $7F,$FF,$FE,$00,$00,$00,$00,$00
- $6369 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6371 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $6379 DEFB $00,$00,$00,$FF,$FF,$F0,$80,$00
- $6381 DEFB $1C,$BF,$FF,$E6,$BF,$FF,$FB,$B0
- $6389 DEFB $00,$FD,$B7,$FF,$3D,$B4,$00,$DD
- $6391 DEFB $B4,$00,$5D,$B4,$00,$5D,$B4,$00
- $6399 DEFB $DD,$B7,$FF,$3D,$B0,$00,$FD,$BF
- $63A1 DEFB $FF,$FB,$BF,$FF,$E6,$80,$00,$0C
- $63A9 DEFB $FF,$FF,$F0,$00,$00,$00,$00,$00
- $63B1 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $63B9 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $63C1 DEFB $00,$00,$00,$FF,$FF,$FE,$80,$00
- $63C9 DEFB $03,$BF,$FF,$FD,$BF,$FF,$FD,$B8
- $63D1 DEFB $00,$03,$B7,$FF,$FE,$B8,$00,$03
- $63D9 DEFB $BF,$FF,$FD,$BF,$FF,$FD,$B8,$00
- $63E1 DEFB $01,$B7,$FF,$FE,$B8,$00,$03,$BF
- $63E9 DEFB $FF,$FD,$BF,$FF,$FD,$80,$00,$03
- $63F1 DEFB $FF,$FF,$FE,$00,$00,$00,$00,$00
- $63F9 DEFB $00,$00,$00,$00,$00,$00,$00
+; Bomb-minigame access-code letter icons
+;
+; .
+;
+; .
+;
+; 24x24 letter icons (3 UDGs x 3 UDGs each), confirmed live via emulator Sprite
+; View. Indexed by #R$7C4A as $6250 + key_code*72 with letter codes 1-5
+; ('A'=1..'E'=5), so 'A' lands here at $6298 = $6250+72 and 'E' ends flush at
+; $63FF, right against the sparkle sprites at #R$6400 - reconciling the table
+; base $6250 with the icon data (codes start at 1, not 0; $6250-$6297 holds the
+; tail of the instructions text, never read as icon data).
+b$6298 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY3,7,2,3,,($6298-$62DF-1-24)(letterA)]
+ $62A1 DEFB $00,$00,$00,$7F,$FF,$FE,$C0,$00,$03 ; 'A'
+ $62AA DEFB $BF,$FF,$FD,$BF,$FF,$FD,$BF,$00,$FD ;
+ $62B3 DEFB $BE,$FF,$7D,$BE,$00,$7D,$BF,$FF,$FD ;
+ $62BC DEFB $BF,$FF,$FD,$BF,$00,$FD,$BE,$FF,$7D ;
+ $62C5 DEFB $BE,$81,$7D,$BE,$81,$7D,$BE,$81,$7D ;
+ $62CE DEFB $C0,$81,$83,$7F,$00,$FE,$00,$00,$00 ;
+ $62D7 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
+ $62E0 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY3,7,2,3,,($62E0-$6327-1-24)(letterB)]
+ $62E9 DEFB $00,$00,$00,$FF,$FF,$FC,$80,$00,$06 ; 'B'
+ $62F2 DEFB $BF,$FF,$FB,$BF,$FF,$FD,$B0,$00,$FD ;
+ $62FB DEFB $B7,$FF,$7D,$B0,$00,$FB,$BF,$FF,$F6 ;
+ $6304 DEFB $BF,$FF,$FB,$B0,$00,$3D,$B7,$FF,$DD ;
+ $630D DEFB $B0,$00,$3D,$BF,$FF,$FD,$BF,$FF,$FB ;
+ $6316 DEFB $80,$00,$06,$FF,$FF,$FC,$00,$00,$00 ;
+ $631F DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
+ $6328 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY3,7,2,3,,($6328-$636F-1-24)(letterC)]
+ $6331 DEFB $00,$00,$00,$7F,$FF,$FE,$C0,$00,$03 ; 'C'
+ $633A DEFB $BF,$FF,$FD,$BF,$FF,$FD,$BC,$00,$03 ;
+ $6343 DEFB $BB,$FF,$FE,$B6,$00,$00,$B4,$00,$00 ;
+ $634C DEFB $B4,$00,$00,$B6,$00,$00,$BB,$FF,$FE ;
+ $6355 DEFB $BC,$00,$03,$BF,$FF,$FD,$BF,$FF,$FD ;
+ $635E DEFB $C0,$00,$03,$7F,$FF,$FE,$00,$00,$00 ;
+ $6367 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
+ $6370 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY3,7,2,3,,($6370-$63B7-1-24)(letterD)]
+ $6379 DEFB $00,$00,$00,$FF,$FF,$F0,$80,$00,$1C ; 'D'
+ $6382 DEFB $BF,$FF,$E6,$BF,$FF,$FB,$B0,$00,$FD ;
+ $638B DEFB $B7,$FF,$3D,$B4,$00,$DD,$B4,$00,$5D ;
+ $6394 DEFB $B4,$00,$5D,$B4,$00,$DD,$B7,$FF,$3D ;
+ $639D DEFB $B0,$00,$FD,$BF,$FF,$FB,$BF,$FF,$E6 ;
+ $63A6 DEFB $80,$00,$0C,$FF,$FF,$F0,$00,$00,$00 ;
+ $63AF DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
+ $63B8 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY3,7,2,3,,($63B8-$63FF-1-24)(letterE)]
+ $63C1 DEFB $00,$00,$00,$FF,$FF,$FE,$80,$00,$03 ; 'E'
+ $63CA DEFB $BF,$FF,$FD,$BF,$FF,$FD,$B8,$00,$03 ;
+ $63D3 DEFB $B7,$FF,$FE,$B8,$00,$03,$BF,$FF,$FD ;
+ $63DC DEFB $BF,$FF,$FD,$B8,$00,$01,$B7,$FF,$FE ;
+ $63E5 DEFB $B8,$00,$03,$BF,$FF,$FD,$BF,$FF,$FD ;
+ $63EE DEFB $80,$00,$03,$FF,$FF,$FE,$00,$00,$00 ;
+ $63F7 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
 
 ; Sparkle (kill effect) sprites and masks
 ;
@@ -521,15 +379,15 @@ b$6400 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($6400-$6
 ;
 ; .
 ;
-; One 8-byte row per tile ($8202, 0-127), spanning exactly $6C00-$6FFF
-; (128*8=1024 bytes, ending precisely at $7000 where the sprite/mask data
-; begins). Same selector-byte format as the paged-bank table at $C000
+; One 8-byte row per tile ($8202, 0-127), spanning exactly #R$6C00-$6FFF
+; (128*8=1024 bytes, ending precisely at #R$7000 where the sprite/mask data
+; begins). Same selector-byte format as the paged-bank table at #R$C000
 ; (#R$8C00): bit0=variant, bits1-5=tile index (0-31), source
-; addr=$E0+((byte>>1)&$1F):(bit0?$80:0), tiles at $E000-$FFFF. Read by #R$8CF0
-; to draw one extra background row directly onto the live screen (bypassing the
-; shadow buffer, unlike #R$8C00's rows). Decode spot-checked against tile $7B's
-; row ($6FD8-$6FDF): bytes $21/$20/$16 all decode to plausible $E000-$FFFF
-; addresses.
+; addr=$E0+((byte>>1)&$1F):(bit0?$80:0), tiles at #R$E000-$FFFF. Read by
+; #R$8CF0 to draw one extra background row directly onto the live screen
+; (bypassing the shadow buffer, unlike #R$8C00's rows). Decode spot-checked
+; against tile $7B's row ($6FD8-$6FDF): bytes $21/$20/$16 all decode to
+; plausible #R$E000-$FFFF addresses.
 b$6C00 DEFB $04,$2F,$2F,$2F,$2F,$2F,$2F,$2F
  $6C08 DEFB $2F,$2F,$2F,$2F,$2F,$2F,$2F,$1B
  $6C10 DEFB $04,$2F,$2F,$2F,$2F,$2F,$2F,$2F
@@ -949,12 +807,13 @@ b$7000 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($7000-$7
 ; IN 30 SECONDS" message (#R$78E7 scrolling text + #R$7BA8/#R$7BE8 setup), then
 ; loops #R$7A28 (access-code letter-swap cursor input) while checking the
 ; 5-letter access code at $7B01-$7B05 against sorted order ($7B05 down to
-; $7B01, comparing against B=5..1) - fails back to #R$780C to keep playing
-; until the access code (2 of its letters swappable via the two cursors
-; $7B09/$7B0A) is in alphabetical order. On success, falls through to #R$8EB4
-; (menu or high-score entry) - what happens on running out of time (30s) is not
-; yet traced.
-@label=PickupBomb
+; $7B01, comparing against B=5..1), and the 16-bit timer at $7B0C/$7B0D for
+; expiry - fails back to #R$780C to keep playing until either the access code
+; (2 of its letters swappable via the two cursors $7B09/$7B0A) is in
+; alphabetical order (success, falls through to #R$7AE5 - back to normal
+; gameplay), or the timer hits zero (failure, falls into #R$783F - "SELF
+; DESTRUCT ACTIVATED" message, then #R$8EB4 - post-game hub, i.e. game over).
+@label=BombGame
 c$7800 CALL $7CE1    ; Bomb minigame entry
  $7803 LD HL,$00C8   ;
  $7806 LD BC,$00C8   ;
@@ -975,15 +834,15 @@ c$7800 CALL $7CE1    ; Bomb minigame entry
  $7819 NOP           ;
  $781A NOP           ;
  $781B CALL $7A28    ; Bomb minigame - access-code swap cursor input handler
- $781E CALL $7C65    ; Bomb minigame - cursor blink timer + scanline effect
+ $781E CALL $7C65    ; Bomb minigame - cursor blink
  $7821 CALL $7C3F    ; Bomb minigame - draw the access code
  $7824 CALL $7A78    ; Bomb minigame - highlight the two swap-cursor
                      ; access-code letters
- $7827 LD HL,$7B0C   ;
+ $7827 LD HL,$7B0C   ; {Timer $7B0C/$7B0D expired? -> #R$783F (timeout/failure)
  $782A LD A,(HL)     ;
  $782B INC HL        ;
  $782C OR (HL)       ;
- $782D JR Z,$783F    ;
+ $782D JR Z,$783F    ; }
  $782F LD HL,$7B05   ;
  $7832 LD B,$05      ;
 *$7834 LD A,B        ;
@@ -995,14 +854,14 @@ c$7800 CALL $7CE1    ; Bomb minigame entry
                      ; sprites) after Bomb minigame
 *$783F CALL $78E7    ; Bomb minigame
  $7842 NOP           ;
- $7843 LD HL,$4800   ;
+ $7843 LD HL,$4800   ; HL = screen row 8 col 0
  $7846 LD DE,$4801   ;
  $7849 LD BC,$07FF   ;
  $784C LD (HL),$00   ;
  $784E LDIR          ;
- $7850 LD HL,$4864   ;
+ $7850 LD HL,$4864   ; HL = screen row 11 col 4
  $7853 CALL $9196    ; Draw string IX
- $7856 LD HL,$48A7   ;
+ $7856 LD HL,$48A7   ; HL = screen row 13 col 7
  $7859 CALL $9196    ; Draw string IX
  $785C LD HL,$01FA   ;
  $785F LD BC,$01FA   ;
@@ -1034,9 +893,9 @@ c$7869 LD H,$79      ; {HL = #R$7900 entry for current tile ($8202)
  $7877 LD A,($7B10)  ; {Not mid-shot: bail unless $7B10 already set
  $787A OR A          ;
  $787B RET NZ        ; }
-*$787C LD A,$01      ; {Mark $7B10 active; check $820B direction
- $787E LD ($7B10),A  ;
- $7881 LD A,($820B)  ;
+*$787C LD A,$01      ; {Mark $7B10 active
+ $787E LD ($7B10),A  ; }
+ $7881 LD A,($820B)  ; {Check $820B direction, branch
  $7884 OR A          ;
  $7885 JR NZ,$7892   ; }
  $7887 LD A,($8201)  ; get Joe X
@@ -1061,11 +920,12 @@ c$7869 LD H,$79      ; {HL = #R$7900 entry for current tile ($8202)
 ; Called from #R$8E64 (per-frame soldier update). While $7B10 is non-zero (set
 ; by #R$7869 on a hit): first hit ($7B10=1) snapshots the soldier's screen/mask
 ; address into $7B11/$7B12 as the sparkle anchor; each following frame picks a
-; sparkle sprite frame (the $6400+ bank) from that anchor plus the $8206
+; sparkle sprite frame (the #R$6400+ bank) from that anchor plus the $8206
 ; counter, and $7B10 counts up to $1E (~30 frames) before resetting to 0.
-c$789D LD A,($7B10)  ; {Check $7B10; return if inactive
- $78A0 OR A          ;
- $78A1 RET Z         ; }
+@label=SparkleAnim
+c$789D LD A,($7B10)  ; {Check $7B10
+ $78A0 OR A          ; }
+ $78A1 RET Z         ; Return if inactive
  $78A2 LD A,($7B10)  ; {First tick ($7B10=1)?
  $78A5 CP $01        ;
  $78A7 JR NZ,$78B5   ; }
@@ -1073,7 +933,7 @@ c$789D LD A,($7B10)  ; {Check $7B10; return if inactive
  $78AC LD ($7B11),A  ;
  $78AF LD HL,($8FA4) ;
  $78B2 LD ($7B12),HL ; }
-*$78B5 LD A,($7B11)  ;
+*$78B5 LD A,($7B11)  ; {Pick sparkle sprite frame from anchor + $8206 counter
  $78B8 LD ($8FA7),A  ;
  $78BB LD HL,($7B12) ;
  $78BE LD A,H        ;
@@ -1087,17 +947,17 @@ c$789D LD A,($7B10)  ; {Check $7B10; return if inactive
  $78CB LD ($8FA4),HL ;
  $78CE INC H         ;
  $78CF INC H         ;
- $78D0 LD ($8FA1),HL ;
- $78D3 LD A,($7B10)  ; {Advance $7B10; done at $1E?
+ $78D0 LD ($8FA1),HL ; }
+ $78D3 LD A,($7B10)  ; {Advance $7B10
  $78D6 INC A         ;
- $78D7 LD ($7B10),A  ;
- $78DA CP $1E        ; }
+ $78D7 LD ($7B10),A  ; }
+ $78DA CP $1E        ; Done at $1E?
  $78DC RET NZ        ;
- $78DD DEC A         ;
+ $78DD DEC A         ; {Freeze at $1D, clear done-flag $8FA8
  $78DE LD ($7B10),A  ;
  $78E1 LD A,$00      ;
  $78E3 LD ($8FA8),A  ;
- $78E6 RET           ;
+ $78E6 RET           ; }
 
 ; Bomb minigame: fill screen attributes, set text pointer
 ;
@@ -1106,14 +966,15 @@ c$789D LD A,($7B10)  ; {Check $7B10; return if inactive
 ; .
 ;
 ; Called from #R$7800. Fills 256 bytes at $5900 (8 attribute rows) with $47
-; (bright white-on-black), then sets IX=$7AB6 - likely the scrolling "SELF
+; (bright white-on-black), then sets IX=#R$7AB6 - likely the scrolling "SELF
 ; DESTRUCT..." text source.
-c$78E7 LD HL,$5900   ; {HL = $5900; B = 0 (256 iterations)
- $78EA LD B,$00      ; }
+@label=BombGamePrepAttr
+c$78E7 LD HL,$5900   ; HL = $5900
+ $78EA LD B,$00      ; B = 0 (256 iterations)
 *$78EC LD (HL),$47   ;
  $78EE INC HL        ;
  $78EF DJNZ $78EC    ;
- $78F1 LD IX,$7AB6   ; IX = $7AB6
+ $78F1 LD IX,$7AB6   ; IX = #R$7AB6
  $78F5 RET           ;
 
 ; Data block at 78F6
@@ -1126,13 +987,12 @@ b$78F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; .
 ;
-; Word pairs indexed by 2*$8202+1 (current room-tile index, see #R$8114).
-; #R$7D96 clamps the odd byte of each pair into $4E-$9D each frame; even byte
-; is untouched, purpose unclear. $8202 is used all over the movement/collision
-; code ($8CF0, $9134+, $9602, $A2FE etc.), so this table likely holds a
-; per-tile boundary alongside #R$9700 - unconfirmed, needs live tracing. $8202
-; ranges 0-127 (room 0-7 + 8*subtile 0-15), so the array proper is 128 words
-; (256 bytes); the trailing 40 bytes are unaccounted for.
+; Word pairs indexed by 2*$8202 (current room-tile index, see #R$8114). #R$7D96
+; clamps the odd (high) byte of each pair into $4E-$9D each frame; the even
+; (low) byte is a second soldier movement-pattern selector sharing #R$96CC's
+; dispatch code via #R$8E53 (see docs/Actors.md). $8202 ranges 0-127 (room 0-7
+; + 8*level 0-15), so the array proper is 128 words (256 bytes); the trailing
+; 40 bytes are unaccounted for.
 ; .
 ; Originally guessed as a per-tile ceiling Y-bound. #R$7869 (the shot-hit
 ; check, called from #R$A798 when firing) compares this table's entry against
@@ -1197,18 +1057,18 @@ b$7A00 DEFB $01,$05,$02,$04,$03 ; {8 preset access-code scrambles for the
 @label=BombGameSwap
 c$7A28 CALL $8032    ; Read input into $820A
  $7A2B LD A,($820A)  ; get input state
- $7A2E LD HL,$7B0F   ;
+ $7A2E LD HL,$7B0F   ; {Edge-detect new key press ($7B0F)
  $7A31 CP (HL)       ;
  $7A32 RET Z         ;
- $7A33 LD (HL),A     ;
- $7A34 LD HL,$7B09   ;
+ $7A33 LD (HL),A     ; }
+ $7A34 LD HL,$7B09   ; HL = cursor1 addr $7B09
  $7A37 LD A,($820A)  ; get input state
  $7A3A AND $01       ;
  $7A3C JR Z,$7A4E    ;
- $7A3E INC (HL)      ;
+ $7A3E INC (HL)      ; {cursor1++, wrap 6->1
  $7A3F LD A,$06      ;
  $7A41 CP (HL)       ;
- $7A42 JR NZ,$7A46   ;
+ $7A42 JR NZ,$7A46   ; }
  $7A44 LD (HL),$01   ;
 *$7A46 INC HL        ;
  $7A47 INC (HL)      ;
@@ -1219,10 +1079,10 @@ c$7A28 CALL $8032    ; Read input into $820A
 *$7A4E LD A,($820A)  ; get input state
  $7A51 AND $02       ;
  $7A53 JR Z,$7A65    ;
- $7A55 LD A,$00      ;
+ $7A55 LD A,$00      ; {cursor2--, wrap 0->5
  $7A57 DEC (HL)      ;
  $7A58 CP (HL)       ;
- $7A59 JR NZ,$7A5D   ;
+ $7A59 JR NZ,$7A5D   ; }
  $7A5B LD (HL),$05   ;
 *$7A5D INC HL        ;
  $7A5E DEC (HL)      ;
@@ -1233,7 +1093,7 @@ c$7A28 CALL $8032    ; Read input into $820A
 *$7A65 LD A,($820A)  ; get input state
  $7A68 AND $1C       ;
  $7A6A RET Z         ;
- $7A6B LD E,(HL)     ;
+ $7A6B LD E,(HL)     ; {Swap access-code letters at cursor1/cursor2
  $7A6C LD D,$7B      ;
  $7A6E LD A,(DE)     ;
  $7A6F LD C,A        ;
@@ -1244,7 +1104,7 @@ c$7A28 CALL $8032    ; Read input into $820A
  $7A74 NOP           ;
  $7A75 LD (DE),A     ;
  $7A76 LD (HL),C     ;
- $7A77 RET           ;
+ $7A77 RET           ; }
 
 ; Bomb minigame - highlight the two swap-cursor access-code letters (green)
 ;
@@ -1252,7 +1112,7 @@ c$7A28 CALL $8032    ; Read input into $820A
 ;
 ; .
 ;
-; Part of the bomb-deactivation minigame ($7800/$7A28): clears an attribute
+; Part of the bomb-deactivation minigame (#R$7800/#R$7A28): clears an attribute
 ; row, then highlights the two access-code letters currently selected for
 ; swapping (green), using cursor positions $7B09/$7B0A.
 @label=BombGameHighlt
@@ -1279,21 +1139,21 @@ c$7A78 LD HL,$5960   ; {Clear attribute row $5960
  $7A99 LD (HL),$44   ;
  $7A9B ADD HL,DE     ;
  $7A9C DJNZ $7A93    ; }
- $7A9E LD A,($7B0A)  ;
+ $7A9E LD A,($7B0A)  ; {HL = highlight position from cursor row $7B0A
  $7AA1 LD B,A        ;
  $7AA2 ADD A,B       ;
  $7AA3 ADD A,B       ;
  $7AA4 ADD A,A       ;
  $7AA5 ADD A,$5C     ;
- $7AA7 LD L,A        ;
- $7AA8 LD B,$03      ;
-*$7AAA LD (HL),$44   ;
+ $7AA7 LD L,A        ; }
+ $7AA8 LD B,$03      ; B = 3 rows
+*$7AAA LD (HL),$44   ; {Fill 3 cells per row with attribute $44
  $7AAC INC HL        ;
  $7AAD LD (HL),$44   ;
  $7AAF INC HL        ;
  $7AB0 LD (HL),$44   ;
  $7AB2 ADD HL,DE     ;
- $7AB3 DJNZ $7AAA    ;
+ $7AB3 DJNZ $7AAA    ; }
  $7AB5 RET           ;
 
 ; Data block at 7AB6
@@ -1315,7 +1175,8 @@ b$7AB6 DEFB $12,$04,$0B,$05,$1C,$03,$04,$12
 ; status-bar/room attributes (#R$FDB0), flushes the shadow buffer to the real
 ; screen (#R$8C78), and redraws Joe and the soldier (#R$80A0/#R$8F8C) - the
 ; standard "return to gameplay" screen refresh after a full-screen overlay.
-c$7AE5 CALL $FDB0    ; Fill status-bar attribute strip, then room attribute
+@label=RestoreGameplay
+c$7AE5 CALL $FDB0    ; Fill HUD attribute strip, then room attribute
  $7AE8 CALL $8C78    ; Copy shadow screen to real screen
  $7AEB CALL $80A0    ; Draw Joe sprite
  $7AEE CALL $8F8C    ; Draw soldier
@@ -1351,8 +1212,8 @@ b$7AF2 DEFB $D7,$88,$25,$83,$8B,$EF,$FF,$FF
 ; (#R$7B73, "AN ENEMY UNIFORM"), resets the duration timer $7B06, and rebuilds
 ; the background. Disguise is time-limited, not fire-consumed - see #R$7B84.
 @label=PickupUniform
-c$7B1E LD HL,$9D2B   ; {HL = $9D2B (uniform tile table); B = 2
- $7B21 LD B,$02      ; }
+c$7B1E LD HL,$9D2B   ; Uniform tile table
+ $7B21 LD B,$02      ; B = 2
 *$7B23 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $7B26 CP (HL)       ;
  $7B27 JR NZ,$7B42   ; }
@@ -1379,7 +1240,7 @@ c$7B1E LD HL,$9D2B   ; {HL = $9D2B (uniform tile table); B = 2
  $7B54 LD ($7B08),A  ; disguise active
  $7B57 CALL $923C    ; Draw black box on the screen
  $7B5A LD IX,$7B73   ;
- $7B5E LD HL,$4868   ;
+ $7B5E LD HL,$4868   ; HL = screen row 11 col 8
  $7B61 CALL $9196    ; Draw string IX
  $7B64 CALL $856E    ; Pickup/beep sound effect
  $7B67 CALL $9296    ; Delay
@@ -1403,14 +1264,14 @@ b$7B73 DEFB $00,$0D,$1F,$04,$0D,$04,$0C,$18 ; {"AN ENEMY UNIFORM" (disguise
 ; and restores Joe's normal sprite ($80CF/$80D8 -> $D8/$D0). No player input
 ; involved - the disguise just runs out.
 @label=UniformTime
-c$7B84 LD A,($7B08)  ; {Check disguise flag $7B08; return if not disguised
- $7B87 OR A          ;
- $7B88 RET Z         ; }
- $7B89 LD HL,($7B06) ; {Increment timer $7B06; not yet expired -> return
+c$7B84 LD A,($7B08)  ; {Check disguise flag $7B08
+ $7B87 OR A          ; }
+ $7B88 RET Z         ; Return if not disguised
+ $7B89 LD HL,($7B06) ; {Increment timer $7B06
  $7B8C INC HL        ;
  $7B8D LD A,H        ;
- $7B8E LD ($7B06),HL ;
- $7B91 CP $05        ; }
+ $7B8E LD ($7B06),HL ; }
+ $7B91 CP $05        ; Not yet expired? (CP $05)
  $7B93 RET NZ        ;
  $7B94 XOR A         ; {Expired: clear $7B08, restore normal sprite
  $7B95 LD H,A        ;
@@ -1432,6 +1293,14 @@ b$7BA8 DEFB $12,$04,$0B,$05,$1F,$03,$04,$12
 ; Draw a small 3x3-block icon (used by the bomb-deactivation minigame)
 ;
 ; Used by the routine at #R$7C3F.
+;
+; .
+;
+; DE=source, HL=destination (both caller-supplied). Blits a 24x24 block as 3
+; columns of 8 rows x 3 bytes, advancing HL by one screen-row per pixel row and
+; shifting to the next column after each. Only caller is #R$7C3F (draw the
+; access code) - draws each of the 5 access-code letter icons (see #R$6298's
+; confirmed letter-icon set: $6250 + key_code*72 with codes 1-5).
 @label=BombGameDrawLetter
 c$7BC4 PUSH HL       ; {Outer loop: 3 columns
  $7BC5 LD B,$03      ; }
@@ -1473,10 +1342,10 @@ c$7BC4 PUSH HL       ; {Outer loop: 3 columns
 ; Clears the bitmap third at $4800, fills the top/bottom attribute strips,
 ; draws the "SELF DESTRUCT IN 30 SECONDS" instructions text, resets the cursor
 ; state ($7B00/$7B0B), then picks one of 8 access-code scrambles from the table
-; at $7A00 using the R register as a pseudo-random index, copying it into
+; at #R$7A00 using the R register as a pseudo-random index, copying it into
 ; $7B01-$7B05 as the access code to sort.
 @label=BombGameSetup
-c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
+c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800 (HL = screen row 8 col 0)
  $7BEB LD DE,$4801   ;
  $7BEE LD BC,$07FF   ;
  $7BF1 LD (HL),L     ;
@@ -1491,20 +1360,20 @@ c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
  $7C02 INC HL        ;
  $7C03 DJNZ $7C00    ; }
  $7C05 LD IX,$7BA8   ; "SELF DESTRUCT IN 30 SECONDS"
- $7C09 LD HL,$4801   ;
+ $7C09 LD HL,$4801   ; HL = screen row 8 col 1
  $7C0C CALL $9196    ; Draw string IX
  $7C0F LD A,$12      ;
  $7C11 LD ($7B00),A  ;
  $7C14 XOR A         ;
  $7C15 LD HL,$7B0B   ;
  $7C18 LD (HL),A     ;
- $7C19 CALL $7CDA    ;
+ $7C19 CALL $7CDA    ; Set bomb-minigame timer to $0300
  $7C1C NOP           ;
  $7C1D LD A,R        ; {E = R register & 7 (pseudo-random 0-7)
  $7C1F AND $07       ;
  $7C21 LD E,A        ;
  $7C22 LD D,$00      ; }
- $7C24 LD HL,$7A00   ; {HL = $7A00 + E*5 (random 5-byte preset)
+ $7C24 LD HL,$7A00   ; {HL = #R$7A00 + E*5 (random 5-byte preset)
  $7C27 ADD HL,DE     ;
  $7C28 ADD HL,DE     ;
  $7C29 ADD HL,DE     ;
@@ -1531,9 +1400,9 @@ c$7BE8 LD HL,$4800   ; {Clear bitmap third at $4800
 ; For each of the access code's 5 letter slots ($7B01-$7B05), looks up a glyph
 ; in a 72-byte-stride table at $6250 by letter code and draws it via #R$7BC4.
 @label=BombGameDrawLetters
-c$7C3F LD IX,$7B01   ; IX = $7B01 (key assignment slots); B = 5
- $7C43 LD HL,$4862   ;
- $7C46 LD B,$05      ;
+c$7C3F LD IX,$7B01   ; IX = $7B01 (key assignment slots)
+ $7C43 LD HL,$4862   ; HL = screen row 11 col 2
+ $7C46 LD B,$05      ; B = 5
 *$7C48 PUSH BC       ;
  $7C49 PUSH HL       ;
  $7C4A LD B,(IX+$00) ; {HL = $6250 + key_code*72 (symbol lookup)
@@ -1552,26 +1421,31 @@ c$7C3F LD IX,$7B01   ; IX = $7B01 (key assignment slots); B = 5
  $7C62 DJNZ $7C48    ;
  $7C64 RET           ;
 
-; Bomb minigame - cursor blink timer + scanline effect
+; Bomb minigame - cursor blink; drives the 30s timer $7B0C/$7B0D
 ;
 ; Used by the routine at #R$7800.
 ;
 ; .
 ;
 ; Per-frame tick for the bomb-deactivation minigame. Increments the blink timer
-; $7B0B, and every 48 frames (wrap at $30) advances a displayed symbol
-; ($7B00/$7B0D wrap $09-$FF) and redraws via #R$7CA4. Then runs a 6-column
-; left-rotate ("running line") effect over the block at $491F, independent of
-; the blink timer.
-c$7C65 LD HL,$7B0B   ; {Increment blink timer $7B0B; wrap at 48 frames?
- $7C68 INC (HL)      ;
- $7C69 LD A,(HL)     ;
+; $7B0B, and every 48 frames (wrap at $30) advances a displayed symbol AND
+; decrements the countdown $7B0C/$7B0D (a base-10 digit pair: low byte cycles
+; 9-0 repeating, high byte drops once per full low-digit cycle), redrawing the
+; symbol preview via #R$7CA4. Live-confirmed: starting from $7B0C=0/$7B0D=3
+; (set by #R$7CDA), it takes exactly 30 ticks (30*48=1440 frames, ~28.8s @50Hz)
+; to reach 0/0 - matching the "30 SECONDS" message and the exact value #R$7800
+; checks for timeout. Then runs a 6-column left-rotate ("running line") effect
+; over the block at $491F, independent of the blink timer.
+@label=BombGameTick
+c$7C65 LD HL,$7B0B   ; {Increment blink timer $7B0B
+ $7C68 INC (HL)      ; }
+ $7C69 LD A,(HL)     ; {Wrap at 48 frames? branch
  $7C6A CP $30        ;
  $7C6C JR NZ,$7C86   ; }
  $7C6E LD (HL),$00   ; {Advance displayed key index ($7B00)
  $7C70 LD A,($7B00)  ;
  $7C73 SUB $06       ; }
- $7C75 CALL $7CD4    ;
+ $7C75 CALL $7CD4    ; Wrap displayed key index into $7B00
  $7C78 INC HL        ;
  $7C79 DEC (HL)      ;
  $7C7A LD A,(HL)     ;
@@ -1581,8 +1455,8 @@ c$7C65 LD HL,$7B0B   ; {Increment blink timer $7B0B; wrap at 48 frames?
  $7C81 INC HL        ;
  $7C82 DEC (HL)      ;
 *$7C83 CALL $7CA4    ; Bomb minigame - draw the two symbol-preview columns
-*$7C86 LD HL,$491F   ; {HL = $491F; B = 6 columns (scanline effect)
- $7C89 LD B,$06      ; }
+*$7C86 LD HL,$491F   ; Screen row 8 col 31
+ $7C89 LD B,$06      ; B = 6 columns (scanline effect)
 *$7C8B PUSH BC       ;
  $7C8C LD D,H        ;
  $7C8D LD E,$00      ;
@@ -1640,22 +1514,36 @@ c$7CA4 LD D,$A7      ; {DE = $A700 + $7B0C*8 (symbol source, column 1)
  $7CCB INC H         ;
  $7CCC INC DE        ; }
  $7CCD DJNZ $7CC9    ;
- $7CCF NOP           ;
+ $7CCF NOP           ; {Unused padding (4x NOP)
  $7CD0 NOP           ;
  $7CD1 NOP           ;
- $7CD2 NOP           ;
+ $7CD2 NOP           ; }
  $7CD3 RET           ;
 
-; Routine at 7CD4
+; Wrap displayed key index into $7B00
 ;
 ; Used by the routine at #R$7C65.
+;
+; .
+;
+; Masks A to 0-31 (AND $1F) and stores it back into $7B00 - called only from
+; #R$7C65's blink-timer tick (A = $7B00-6 beforehand) to keep the "displayed
+; key index" wrapped in range as it cycles.
+@label=WrapKeyIndex
 c$7CD4 AND $1F       ;
  $7CD6 LD ($7B00),A  ;
  $7CD9 RET           ;
 
-; Routine at 7CDA
+; Set bomb-minigame timer to $0300
 ;
 ; Used by the routine at #R$7BE8.
+;
+; .
+;
+; Called from #R$7BE8 (bomb minigame setup). Sets $7B0C/$7B0D = $0300 - the
+; starting value for the 30-second countdown driven by #R$7C65 (live-confirmed
+; to take ~28.8s to expire, see docs/Actors.md).
+@label=SetBombTimer
 c$7CDA LD HL,$0300   ;
  $7CDD LD ($7B0C),HL ;
  $7CE0 RET           ;
@@ -1670,6 +1558,7 @@ c$7CDA LD HL,$0300   ;
 ; byte at $5900 into $7B0E (for later restoration), clears 480 bytes of
 ; status-bar attributes at $5860, then hands off to #R$7BE8 to set up the
 ; access-code sort puzzle.
+@label=BombGameEntry
 c$7CE1 LD A,($5900)  ; {Save current attribute ($5900) to $7B0E
  $7CE4 LD ($7B0E),A  ; }
  $7CE7 LD HL,$5860   ; {Clear 480 bytes at $5860
@@ -1709,22 +1598,22 @@ c$7D00 CALL $A3CB    ; Entry-point trampoline
  $7D09 NOP           ;
  $7D0A NOP           ;
  $7D0B NOP           ;
- $7D0C LD HL,$4000   ; Address on the screen
+ $7D0C LD HL,$4000   ; Address on the screen (HL = screen row 0 col 0)
  $7D0F CALL $8B05    ; Show "JOE BLADE" big sign; HL = screen address
  $7D12 LD IX,$90E0   ;
- $7D16 LD HL,$5074   ;
+ $7D16 LD HL,$5074   ; HL = screen row 19 col 20
  $7D19 CALL $9196    ; Draw string IX
- $7D1C LD HL,$50B9   ;
+ $7D1C LD HL,$50B9   ; HL = screen row 21 col 25
  $7D1F CALL $9196    ; Draw string IX
- $7D22 LD HL,$50F8   ;
+ $7D22 LD HL,$50F8   ; HL = screen row 23 col 24
  $7D25 CALL $9196    ; Draw string IX
- $7D28 LD HL,$5061   ;
+ $7D28 LD HL,$5061   ; HL = screen row 19 col 1
  $7D2B CALL $9196    ; Draw string IX
  $7D2E LD HL,$0000   ;
  $7D31 CALL $9196    ; Draw string IX
- $7D34 LD HL,$50E1   ;
+ $7D34 LD HL,$50E1   ; HL = screen row 23 col 1
  $7D37 CALL $9196    ; Draw string IX
- $7D3A LD HL,$50E8   ;
+ $7D3A LD HL,$50E8   ; HL = screen row 23 col 8
  $7D3D CALL $9196    ; Draw string IX
  $7D40 CALL $9498    ; Set initial values
  $7D43 LD A,$00      ;
@@ -1761,10 +1650,10 @@ c$7D00 CALL $A3CB    ; Entry-point trampoline
 c$7D64 CALL $900A    ; Soldier pattern 1
  $7D67 LD BC,$0800   ; BC = $0800 (slow drift rate)
 ; This entry point is used by the routines at #R$7D82 and #R$7D8C.
-*$7D6A LD HL,($8F8D) ; {$8F8D += BC; derive coarse row $8F90 from it
+*$7D6A LD HL,($8F8D) ; {$8F8D += BC
  $7D6D ADD HL,BC     ;
- $7D6E LD ($8F8D),HL ;
- $7D71 DEC H         ;
+ $7D6E LD ($8F8D),HL ; }
+ $7D71 DEC H         ; {Derive coarse row $8F90 from it
  $7D72 DEC H         ;
  $7D73 DEC H         ;
  $7D74 DEC H         ;
@@ -1809,7 +1698,17 @@ s$7D95 DEFS $01
 ; Clamp room-tile pointers, hand off to game loop $8F00
 ;
 ; Used by the routine at #R$FFAD.
-c$7D96 LD A,($8202)  ; {Clamp tile pointer at $9700+ to range $40-$A5
+;
+; .
+;
+; Called from #R$FFAD every time the room-tile ($8202) changes. Checks the
+; current tile's high byte in #R$9700 against $40/$A5 and clamps out-of-range
+; values to $46/$A5, then does the same check for #R$7900 but clamps to $4E/$9D
+; instead - so the two threshold tables always hold sane, table-specific values
+; for the new tile even if the raw data byte was out of range. Also clears the
+; shot-hit flag $7B10 before falling into #R$8F00, the main game loop.
+@label=ClampTilePtrs
+c$7D96 LD A,($8202)  ; {Clamp tile pointer at #R$9700+ to range $40-$A5
  $7D99 LD H,$97      ;
  $7D9B RLCA          ;
  $7D9C INC A         ;
@@ -1817,13 +1716,13 @@ c$7D96 LD A,($8202)  ; {Clamp tile pointer at $9700+ to range $40-$A5
  $7D9E LD A,(HL)     ;
  $7D9F SUB $40       ;
  $7DA1 JR NC,$7DA5   ; }
- $7DA3 LD (HL),$46   ;
+ $7DA3 LD (HL),$46   ; {Clamp low bound, check/clamp high bound
 *$7DA5 LD A,(HL)     ;
  $7DA6 SUB $A5       ;
  $7DA8 JR C,$7DAC    ;
  $7DAA LD (HL),$A5   ;
-*$7DAC NOP           ;
- $7DAD LD A,($8202)  ; {Clamp tile pointer at $7900+ to range $40-$A5
+*$7DAC NOP           ; }
+ $7DAD LD A,($8202)  ; {Clamp tile pointer at #R$7900+ to range $40-$A5
  $7DB0 LD H,$79      ;
  $7DB2 RLCA          ;
  $7DB3 INC A         ;
@@ -1831,11 +1730,11 @@ c$7D96 LD A,($8202)  ; {Clamp tile pointer at $9700+ to range $40-$A5
  $7DB5 LD A,(HL)     ;
  $7DB6 SUB $40       ;
  $7DB8 JR NC,$7DBC   ; }
- $7DBA LD (HL),$4E   ;
+ $7DBA LD (HL),$4E   ; {Clamp low bound, check/clamp high bound
 *$7DBC LD A,(HL)     ;
  $7DBD SUB $A5       ;
  $7DBF JR C,$7DC3    ;
- $7DC1 LD (HL),$9D   ;
+ $7DC1 LD (HL),$9D   ; }
 *$7DC3 XOR A         ; {Clear $7B10 flag
  $7DC4 LD ($7B10),A  ; }
  $7DC7 NOP           ; {Continue at #R$8F00
@@ -1901,6 +1800,7 @@ b$7DFB DEFB $00,$00,$00,$00,$00,$F3,$11,$01
 ; left/right edge combos below to change the current level/row ($8204). Room
 ; (column, $8203) changes are not handled here directly - they happen inside
 ; the jump-arc routines when a jump carries Joe past the screen edge.
+@label=MoveJoe
 c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E35 LD C,A        ; #R$7FDC (jump left)
  $7E36 AND $01       ; }
@@ -1924,7 +1824,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E51 NOP           ;
  $7E52 NOP           ;
  $7E53 NOP           ;
- $7E54 LD A,($820A)  ; {UP input + 'stair' tile ($820C bit4)?
+ $7E54 LD A,($820A)  ; {UP input + 'door' tile ($820C bit4)?
  $7E57 LD C,A        ;
  $7E58 AND $08       ;
  $7E5A JR Z,$7E7E    ;
@@ -1949,7 +1849,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7E80 NOP           ;
  $7E81 NOP           ;
  $7E82 NOP           ;
- $7E83 LD A,C        ; {DOWN input + 'stair' tile ($820C bit5)?
+ $7E83 LD A,C        ; {DOWN input + 'door' tile ($820C bit5)?
  $7E84 AND $04       ;
  $7E86 JR Z,$7EAA    ;
  $7E88 LD A,($820C)  ;
@@ -1973,7 +1873,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7EAC NOP           ;
  $7EAD NOP           ;
  $7EAE NOP           ;
- $7EAF LD A,C        ; {UP input + 'stair' tile ($820C bit2)?
+ $7EAF LD A,C        ; {UP input + 'door' tile ($820C bit2)?
  $7EB0 AND $08       ;
  $7EB2 JR Z,$7ED6    ;
  $7EB4 LD A,($820C)  ;
@@ -1997,7 +1897,7 @@ c$7E32 LD A,($8209)  ; {Dispatch: $8209 bit0 -> #R$7FD2 (jump right), bit1 ->
  $7ED8 NOP           ;
  $7ED9 NOP           ;
  $7EDA NOP           ;
- $7EDB LD A,C        ; {DOWN input + 'stair' tile ($820C bit3)?
+ $7EDB LD A,C        ; {DOWN input + 'door' tile ($820C bit3)?
  $7EDC AND $04       ;
  $7EDE JR Z,$7F02    ;
  $7EE0 LD A,($820C)  ;
@@ -2059,6 +1959,7 @@ s$7F44 DEFS $20
 ; Sound effect - descending pitch sweep (redirect)
 ;
 ; Used by the routine at #R$7E32.
+@label=jp_SFX_roomedge
 c$7F64 JP $91C8      ; => Sound effect (descending pitch sweep), used at a room
                      ; edge
 
@@ -2146,6 +2047,7 @@ b$7FCD DEFB $5A,$11,$20,$00,$06
 ; Jump timer tick + Jump-arc step, right
 ;
 ; Used by the routine at #R$7E32.
+@label=JumpTimerRight
 c$7FD2 CALL $7FE6    ; Jump timer tick
  $7FD5 JP $7F6E      ; => Jump-arc step, right
 
@@ -2155,6 +2057,7 @@ b$7FD8 DEFB $19,$36,$43,$19
 ; Jump timer tick + Jump-arc step, left
 ;
 ; Used by the routine at #R$7E32.
+@label=JumpTimerLeft
 c$7FDC CALL $7FE6    ; Jump timer tick
  $7FDF JP $7FA0      ; => Jump-arc step, left
 
@@ -2171,17 +2074,17 @@ b$7FE2 DEFB $06,$2B,$36,$43
 ; and $8209 to 0. Called from #R$7E32 and the jump-arc routines
 ; #R$7FD2/#R$7FDC.
 @label=JumpTimerTick
-c$7FE6 LD A,($820D)  ;
- $7FE9 INC A         ;
+c$7FE6 LD A,($820D)  ; {Increment jump timer $820D
+ $7FE9 INC A         ; }
  $7FEA LD ($820D),A  ; set jump counter
- $7FED CP $30        ;
- $7FEF JR NZ,$7FF9   ;
- $7FF1 LD A,$00      ;
- $7FF3 LD ($8209),A  ;
+ $7FED CP $30        ; {Wrap at 48? branch
+ $7FEF JR NZ,$7FF9   ; }
+ $7FF1 LD A,$00      ; A = 0
+ $7FF3 LD ($8209),A  ; Clear $8209
  $7FF6 LD ($820D),A  ; set jump counter
-*$7FF9 NOP           ;
+*$7FF9 NOP           ; {Unused padding (3x NOP)
  $7FFA NOP           ;
- $7FFB NOP           ;
+ $7FFB NOP           ; }
  $7FFC RET           ;
 
 ; Data block at 7FFD
@@ -2218,9 +2121,9 @@ c$8032 LD A,($820E)  ; {$820E==1? (Kempston mode selected)
  $803D NOP           ;
  $803E JR NZ,$804B   ;
  $8040 NOP           ;
- $8041 IN A,($1F)    ; {Read Kempston joystick (port $1F); use directly if
- $8043 AND $1F       ; non-zero
- $8045 JR Z,$804B    ;
+ $8041 IN A,($1F)    ; {Read Kempston joystick (port $1F)
+ $8043 AND $1F       ; }
+ $8045 JR Z,$804B    ; {Use directly if non-zero
  $8047 LD ($820A),A  ; }
  $804A RET           ;
 *$804B LD BC,$F7FE   ; {Read digit-key row $F7FE (keys 1-5)
@@ -2242,26 +2145,26 @@ c$8032 LD A,($820E)  ; {$820E==1? (Kempston mode selected)
 *$8067 LD A,B        ;
  $8068 LD ($820A),A  ; set input state
  $806B RET           ;
-*$806C LD BC,$DFFE   ; {Read row $DFFE (O/P); bits0-1 -> result bits0-1
- $806F IN A,(C)      ; (left/right)
- $8071 CPL           ;
+*$806C LD BC,$DFFE   ; {Read row $DFFE (O/P)
+ $806F IN A,(C)      ; }
+ $8071 CPL           ; {Bits0-1 -> result bits0-1 (left/right)
  $8072 AND $03       ;
  $8074 LD E,A        ; }
- $8075 LD BC,$FDFE   ; {Read row $FDFE (A-G); non-zero -> result bit2 (down)
- $8078 IN A,(C)      ;
- $807A CPL           ;
+ $8075 LD BC,$FDFE   ; {Read row $FDFE (A-G)
+ $8078 IN A,(C)      ; }
+ $807A CPL           ; {Non-zero -> result bit2 (down)? branch
  $807B AND $1F       ;
  $807D JR Z,$8081    ; }
  $807F SET 2,E       ;
-*$8081 LD BC,$FBFE   ; {Read row $FBFE (Q-T); non-zero -> result bit3 (up)
- $8084 IN A,(C)      ;
- $8086 CPL           ;
+*$8081 LD BC,$FBFE   ; {Read row $FBFE (Q-T)
+ $8084 IN A,(C)      ; }
+ $8086 CPL           ; {Non-zero -> result bit3 (up)? branch
  $8087 AND $1F       ;
  $8089 JR Z,$808D    ; }
  $808B SET 3,E       ;
-*$808D LD BC,$7FFE   ; {Read row $7FFE (B/space); non-zero -> result bit4
- $8090 IN A,(C)      ; (fire)
- $8092 CPL           ;
+*$808D LD BC,$7FFE   ; {Read row $7FFE (B/space)
+ $8090 IN A,(C)      ; }
+ $8092 CPL           ; {Non-zero -> result bit4 (fire)? branch
  $8093 AND $1F       ;
  $8095 JR Z,$8099    ; }
  $8097 SET 4,E       ;
@@ -2275,6 +2178,13 @@ b$809E DEFB $0C,$77
 ; Draw Joe sprite
 ;
 ; Used by the routines at #R$7AE5 and #R$8F00.
+;
+; .
+;
+; Turns Joe's X ($8201) and jump counter ($820D, indexing a table at $8080)
+; into a screen address, and his facing/costume state ($8209 bits0/1/7, $820B)
+; into a sprite/mask source, then falls into #R$81AA to blit the 32x32 masked
+; sprite. Same overall shape as #R$8F8C (draw soldier).
 @label=DrawJoe
 c$80A0 LD A,($8201)  ;
  $80A3 AND $F8       ;
@@ -2360,12 +2270,12 @@ s$810D DEFS $07
 ; .
 ;
 ; Bridges #R$7D00 into the game loop: computes the current room-tile offset
-; from $8203/$8204, looks it up in the table at $8300, stores it as the
+; from $8203/$8204, looks it up in the table at #R$8300, stores it as the
 ; terrain-flags byte $820C (bit map documented at that variable), redraws the
 ; status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD,
 ; #R$7D96 into #R$8F00.
 @label=RoomFrame
-c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
+c$8114 LD A,($8204)  ; {Look up current room tile from table at #R$8300
  $8117 RLCA          ;
  $8118 RLCA          ;
  $8119 RLCA          ;
@@ -2394,7 +2304,7 @@ c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
  $8142 LD BC,$01C0   ;
  $8145 LDIR          ; }
  $8147 CALL $912C    ; Detect collectible tile under Joe, draw its icon
- $814A CALL $828C    ; Draw down-stair indicator icons in the HUD
+ $814A CALL $828C    ; Draw bottom-door graphics
  $814D LD A,$00      ; {Clear $587F and $5860
  $814F LD ($587F),A  ;
  $8152 LD ($5860),A  ; }
@@ -2418,18 +2328,18 @@ b$815A DEFB $48,$CD,$96,$91,$CD,$C8,$91,$C3
 ; left/right-facing sprite from the sign of $8212, then builds the
 ; screen/sprite address via #R$9028 (shared with #R$900A/#R$9464).
 @label=SoldierPattern3
-c$8164 LD A,($8212)   ; {X += $8212 (shared step); hit X=2 or $E6?
+c$8164 LD A,($8212)   ; {X += $8212 (shared step)
  $8167 ADD A,(IX+$01) ;
- $816A LD (IX+$01),A  ;
- $816D CP $02         ;
+ $816A LD (IX+$01),A  ; }
+ $816D CP $02         ; {Hit X=2 or $E6?
  $816F JR Z,$8175     ;
  $8171 CP $E6         ;
  $8173 JR NZ,$817D    ; }
 *$8175 LD A,($8212)   ; {Flip $8212's sign
  $8178 XOR $FE        ;
  $817A LD ($8212),A   ; }
-*$817D LD C,(IX+$01)  ; {C = soldier X; pick sprite by $8212 sign, continue at
- $8180 LD A,($8212)   ; #R$9028
+*$817D LD C,(IX+$01)  ; C = soldier X
+ $8180 LD A,($8212)   ; {Pick sprite by $8212 sign, continue at #R$9028
  $8183 AND $80        ;
  $8185 JR NZ,$818D    ; }
  $8187 LD DE,$AA00    ;
@@ -2491,21 +2401,21 @@ c$81AA LD A,$04      ; Outer loop: 4 column-groups
  $81D0 LD A,(BC)     ;
  $81D1 OR (HL)       ;
  $81D2 LD (HL),A     ; }
- $81D3 INC BC        ;
+ $81D3 INC BC        ; {Advance strip pointers, loop 8 rows
  $81D4 INC DE        ;
- $81D5 NOP           ;
- $81D6 POP HL        ;
+ $81D5 NOP           ; }
+ $81D6 POP HL        ; {Restore row group, loop 4 groups
  $81D7 POP AF        ;
  $81D8 INC H         ;
  $81D9 DEC A         ;
- $81DA JR NZ,$81B0   ;
- $81DC POP HL        ;
- $81DD LD A,L        ;
+ $81DA JR NZ,$81B0   ; }
+ $81DC POP HL        ; Restore HL
+ $81DD LD A,L        ; {Advance X by $20
  $81DE ADD A,$20     ;
- $81E0 LD L,A        ;
- $81E1 POP AF        ;
+ $81E0 LD L,A        ; }
+ $81E1 POP AF        ; {Restore AF, loop 2 rows
  $81E2 DEC A         ;
- $81E3 JR NZ,$81AC   ;
+ $81E3 JR NZ,$81AC   ; }
  $81E5 RET           ;
 
 ; 'K' (keyboard) chosen: brief pause, then instructions screen
@@ -2516,6 +2426,7 @@ c$81AA LD A,$04      ; Outer loop: 4 column-groups
 ;
 ; Tail of #R$8B64's 'K' (keyboard) branch. Waits a fixed timeout (#R$8680),
 ; silences the border, then falls into #R$8E16 (instructions/help screen).
+@label=MenuKeyboard
 c$81E6 LD BC,$0141   ; {BC/HL = timeout params
  $81E9 LD HL,$0100   ;
  $81EC DI            ; }
@@ -2558,12 +2469,11 @@ b$8200 DEFB $00
                                             ; (from $8300, set at $8114):
                                             ; bit0=blocks rightward room-jump,
                                             ; bit1=blocks leftward room-jump,
-                                            ; bit2=up-stair right,
-                                            ; bit3=down-stair right,
-                                            ; bit4=up-stair left,
-                                            ; bit5=down-stair left,
-                                            ; bits6-7=room colour zone (0-3,
-                                            ; picks INK 4-7 =
+                                            ; bit2=up-door right,
+                                            ; bit3=down-door right,
+                                            ; bit4=up-door left, bit5=down-door
+                                            ; left, bits6-7=room colour zone
+                                            ; (0-3, picks INK 4-7 =
                                             ; green/cyan/yellow/white
                                             ; bright-on-black for most of the
                                             ; attribute file). All 8 bits
@@ -2575,9 +2485,9 @@ b$8200 DEFB $00
  $8214 DEFB $00                             ; hostage counter (collected via
                                             ; #R$86E4)
  $8215 DEFB $00                             ; key counter (collected via
-                                            ; #R$92A0); also spent 1/climb on
-                                            ; key-gated staircases (#R$9880,
-                                            ; gated by $9500 bit5)
+                                            ; #R$92A0); also spent 1/use
+                                            ; key-gated doors (#R$9880, gated
+                                            ; by $9500 bit5)
  $8216 DEFB $00                             ; bomb counter (collected via
                                             ; #R$92DE)
  $8217 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -2602,22 +2512,23 @@ b$8228 DEFB $00,$3C,$0D,$03,$0F,$00,$00,$00
  $8240 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $8248 DEFB $00,$00,$00,$00,$00,$14,$00,$00
 
-; Fill status-bar decoration from fixed data $82BE
+; Fill bottom-screen fixed graphics from data at $82BE
 ;
 ; Used by the routine at #R$828C.
 ;
 ; .
 ;
 ; Called from #R$828C. Copies the fixed (non-paged) tile data at $82BE into the
-; bottom-screen HUD/border area starting $5000, in a 4x2x8 nested-loop pattern
-; (8 columns x 2 rows x 4-byte strips). Same shared for every room - see the
-; Draw pipeline section in docs/Room-Format.md.
-c$8250 LD HL,$5000   ; {HL = $5000, DE = $82BE (fixed source data)
- $8253 LD B,$08      ;
+; bottom-screen area starting $5000 (row 16), in a 4x2x8 nested-loop pattern (8
+; columns x 2 rows x 4-byte strips). Same shared for every room - see the Draw
+; pipeline section in docs/Room-Format.md.
+@label=DrawBottomDoor
+c$8250 LD HL,$5000   ; {HL = $5000, DE = $82BE (fixed source data) (HL = screen
+ $8253 LD B,$08      ; row 16 col 0)
  $8255 LD DE,$82BE   ; }
 ; This entry point is used by the routine at #R$828C.
 *$8258 PUSH BC       ; {Shared entry point (B/DE/HL from caller) - used by
- $8259 PUSH HL       ; #R$828C to draw a single icon of arbitrary
+ $8259 PUSH HL       ; #R$828C to draw a single graphic of arbitrary
                      ; size/source/destination}
  $825A LD B,$02      ;
  $825C PUSH BC       ;
@@ -2631,57 +2542,58 @@ c$8250 LD HL,$5000   ; {HL = $5000, DE = $82BE (fixed source data)
  $8266 INC DE        ;
  $8267 INC HL        ;
  $8268 DJNZ $8264    ; }
- $826A POP HL        ;
- $826B POP BC        ;
- $826C INC H         ;
- $826D DJNZ $8260    ;
- $826F POP HL        ;
- $8270 POP BC        ;
- $8271 LD A,L        ;
+ $826A POP HL        ; {Restore HL/BC
+ $826B POP BC        ; }
+ $826C INC H         ; {Advance to next screen row (INC H)
+ $826D DJNZ $8260    ; }
+ $826F POP HL        ; {Restore HL/BC
+ $8270 POP BC        ; }
+ $8271 LD A,L        ; {Advance column X by $20
  $8272 ADD A,$20     ;
  $8274 LD L,A        ;
- $8275 DJNZ $825B    ;
- $8277 POP HL        ;
- $8278 POP BC        ;
- $8279 INC HL        ;
+ $8275 DJNZ $825B    ; }
+ $8277 POP HL        ; {Restore HL/BC
+ $8278 POP BC        ; }
+ $8279 INC HL        ; {Advance source HL by 4
  $827A INC HL        ;
  $827B INC HL        ;
  $827C INC HL        ;
- $827D DJNZ $8254    ;
+ $827D DJNZ $8254    ; }
  $827F RET           ;
 
 ; Data block at 8280
 b$8280 DEFB $23,$10,$D5,$C9,$00,$00,$00,$00
  $8288 DEFB $00,$00,$00,$00
 
-; Draw down-stair indicator icons in the HUD
+; Draw bottom-door graphics
 ;
 ; Used by the routine at #R$8114.
 ;
 ; .
 ;
-; Called from #R$8114 after #R$8250. Checks $820C bits 5/3 (down-stair
-; left/right) and draws a small icon (source $8380, via #R$8258) at $5004
-; (left) or $5018 (right) when the current tile has that stair.
-c$828C CALL $8250    ; Fill status-bar decoration from fixed data $82BE
- $828F LD A,($820C)  ; {$820C bit5 (down-stair-left)?
+; Called from #R$8114 after #R$8250. Checks $820C bits 5/3 (down-door
+; left/right) and draws a small door graphic (source $8380, via #R$8258) at
+; $5004 (left) or $5018 (right) - screen row 16, right above the HUD - when the
+; current tile has that door.
+c$828C CALL $8250    ; Fill bottom-screen fixed graphics from data at $82BE
+ $828F LD A,($820C)  ; {$820C bit5 (down-door-left)?
  $8292 AND $20       ; }
  $8294 JR Z,$82A3    ;
- $8296 LD B,$01      ;
+ $8296 LD B,$01      ; {Left door dest, screen row 16 col 4
  $8298 NOP           ;
  $8299 NOP           ;
  $829A LD DE,$8380   ;
- $829D LD HL,$5004   ;
- $82A0 CALL $8258    ;
-*$82A3 LD A,($820C)  ; {$820C bit3 (down-stair-right)?
+ $829D LD HL,$5004   ; }
+ $82A0 CALL $8258    ; Draw left down-door graphic
+*$82A3 LD A,($820C)  ; {$820C bit3 (down-door-right)?
  $82A6 AND $08       ; }
  $82A8 RET Z         ;
- $82A9 LD B,$01      ;
+ $82A9 LD B,$01      ; {Right door dest, screen row 16 col 24
  $82AB NOP           ;
  $82AC NOP           ;
  $82AD LD DE,$8380   ;
- $82B0 LD HL,$5018   ;
- $82B3 CALL $8258    ;
+ $82B0 LD HL,$5018   ; }
+ $82B3 CALL $8258    ; Draw right down-door graphic
  $82B6 RET           ;
 
 ; Data block at 82B7
@@ -2732,7 +2644,7 @@ b$8300 DEFB $12,$11,$02,$10,$01,$02,$11,$53
 ; Clears the full bitmap ($4000-$57FF), fills attributes ($5800-$5AFF) with
 ; bright white-on-black, and sets the border black.
 @label=ClearScreen
-c$83C0 LD HL,$4000   ; {Clear bitmap $4000-$57FF
+c$83C0 LD HL,$4000   ; {Clear bitmap $4000-$57FF (HL = screen row 0 col 0)
  $83C3 LD DE,$4001   ;
  $83C6 LD BC,$1800   ;
  $83C9 LD (HL),$00   ; }
@@ -2754,8 +2666,9 @@ b$83D9 DEFB $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
 ; .
 ;
 ; Tail of #R$8B64's 'J' (Kempston) branch. Byte-identical to #R$81E6 but
-; returns straight to the main menu ($8B37) instead of showing the instructions
-; screen - Kempston needs no keyboard-layout explanation.
+; returns straight to the main menu (#R$8B37) instead of showing the
+; instructions screen - Kempston needs no keyboard-layout explanation.
+@label=MenuKempston
 c$83E1 LD BC,$0141   ; {BC/HL = timeout params
  $83E4 LD HL,$0100   ;
  $83E7 DI            ; }
@@ -2841,10 +2754,11 @@ b$8509 DEFB $1F,$1F,$1F,$1F,$1F
 ; selected by $8210 (row of 16 bytes at $89xx: a 16-bit value plus its ASCII
 ; digit string), carrying '9'->'0' through the digits, then continues into
 ; #R$8982 for the redraw if $8210's counter is active.
-c$850E LD A,($820F)  ; {Check pending tick $820F; return if none
- $8511 OR A          ;
- $8512 RET Z         ;
- $8513 DEC A         ;
+@label=DigitTick
+c$850E LD A,($820F)  ; {Check pending tick $820F
+ $8511 OR A          ; }
+ $8512 RET Z         ; Return if none
+ $8513 DEC A         ; {Decrement $820F
  $8514 LD ($820F),A  ; }
  $8517 LD H,$89      ; {HL = counter row at $89xx (selected by $8210)
  $8519 LD A,($8210)  ;
@@ -2891,6 +2805,7 @@ s$8544 DEFS $02
 ; field of the current high-score row - same row addressing as #R$850E), drawn
 ; at $5068. Keeps the on-screen counter for the active row up to date every
 ; frame.
+@label=RedrawScore
 c$8546 LD A,($8210)  ; {IX = high-score row digit field ($8210-selected)
  $8549 RLCA          ;
  $854A RLCA          ;
@@ -2901,7 +2816,7 @@ c$8546 LD A,($8210)  ; {IX = high-score row digit field ($8210-selected)
  $8550 LD H,$89      ;
  $8552 PUSH HL       ;
  $8553 POP IX        ; }
- $8555 LD HL,$5068   ;
+ $8555 LD HL,$5068   ; Screen dest, row 19 col 8
  $8558 JP $9196      ; => Draw string IX
 
 ; Glyph-draw preamble: schedule tick, set glyph table high byte
@@ -2917,7 +2832,7 @@ c$855B LD A,($820F)  ; {$820F += $87
  $855E ADD A,$87     ;
  $8560 LD ($820F),A  ; }
  $8563 LD D,$A7      ; D = $A7 (glyph table high byte)
- $8565 LD A,C        ;
+ $8565 LD A,C        ; A = C
  $8566 RET           ;
 
 ; Unused
@@ -2946,13 +2861,13 @@ c$856E DI            ; {HL/DE = sweep start/rate
  $8580 LD B,(HL)     ; {Toggle border, delay
  $8581 RES 7,B       ;
 *$8583 DJNZ $8583    ; }
- $8585 DEC HL        ;
+ $8585 DEC HL        ; {HL -= 2, wrap column? branch
  $8586 DEC HL        ;
  $8587 LD A,L        ;
  $8588 OR A          ;
- $8589 JR NZ,$858D   ;
- $858B NOP           ;
- $858C DEC E         ;
+ $8589 JR NZ,$858D   ; }
+ $858B NOP           ; {Dec sweep-rate E
+ $858C DEC E         ; }
 *$858D LD A,H        ; {HL reached $24xx? loop or return
  $858E CP $24        ;
  $8590 JR NZ,$8575   ;
@@ -2985,8 +2900,8 @@ b$859C DEFB $00,$00,$00,$00
 ; .
 ;
 ; Same pattern as #R$90AA (one of #R$9602's 3 door-graphic columns): animation
-; frame from $8206, source table at $8600+, drawn at $B888/$B894.
-c$85DC LD A,($8206)  ; {HL = $8600 + frame*16 (animation source)
+; frame from $8206, source table at #R$8600+, drawn at $B888/$B894.
+c$85DC LD A,($8206)  ; {HL = #R$8600 + frame*16 (animation source)
  $85DF AND $06       ;
  $85E1 RLCA          ;
  $85E2 RLCA          ;
@@ -3071,7 +2986,7 @@ c$8680 DI            ; {Save BC and BC+1 as two independent countdowns
  $869B OUT ($FE),A   ;
  $869D EX AF,AF'     ;
  $869E DEC HL        ;
-*$869F DEC DE        ;
+*$869F DEC DE        ; {Slow tick: flash border when DE reaches 0
  $86A0 LD A,D        ;
  $86A1 OR E          ;
  $86A2 JR NZ,$86AD   ;
@@ -3079,7 +2994,7 @@ c$8680 DI            ; {Save BC and BC+1 as two independent countdowns
  $86A7 EX AF,AF'     ;
  $86A8 ADD A,$10     ;
  $86AA OUT ($FE),A   ;
- $86AC EX AF,AF'     ;
+ $86AC EX AF,AF'     ; }
 *$86AD LD A,H        ; {HL reached 0? loop or return (EI)
  $86AE OR L          ;
  $86AF JR NZ,$8690   ;
@@ -3112,9 +3027,9 @@ c$86C0 CALL $923C    ; Draw black box on the screen
  $86CA LD H,$98      ;
  $86CC PUSH HL       ;
  $86CD POP IX        ;
- $86CF LD HL,$4869   ;
+ $86CF LD HL,$4869   ; HL = screen row 11 col 9
  $86D2 CALL $9196    ; Draw string IX
- $86D5 LD HL,$4889   ;
+ $86D5 LD HL,$4889   ; HL = screen row 12 col 9
  $86D8 CALL $9196    ; Draw string IX
  $86DB CALL $856E    ; Pickup/beep sound effect
  $86DE JP $9296      ; => Delay
@@ -3133,11 +3048,11 @@ b$86E1 DEFB $C9,$7C,$8F
 ; updated digit, and rebuilds the room background (the collected tile
 ; disappears).
 @label=PickupHostage
-c$86E4 LD (HL),$FF   ; {Mark tile visited ($FF); increment hostage counter
- $86E6 LD HL,$8214   ; $8214
- $86E9 INC (HL)      ;
+c$86E4 LD (HL),$FF   ; {Mark tile visited ($FF)
+ $86E6 LD HL,$8214   ; }
+ $86E9 INC (HL)      ; {Increment hostage counter $8214
  $86EA LD C,(HL)     ; }
- $86EB LD HL,$507E   ;
+ $86EB LD HL,$507E   ; HL = screen row 19 col 30
  $86EE CALL $925C    ; Draw one digit/character glyph
  $86F1 CALL $8C00    ; Build room background into shadow buffer $B800
  $86F4 LD C,$01      ;
@@ -3237,12 +3152,12 @@ b$8799 DEFB $CD,$AA,$88,$CD,$82,$9A,$C3,$D2
 ; Read/written by #R$850E/#R$8982 as `$8900 + $8210*16` (16-byte rows). Each
 ; visible row looks like: name text (same font encoding as the HUD strings,
 ; terminated $FF) followed by a numeric score field. Row boundaries don't
-; cleanly divide the observed $8901-$8963 span into fixed 16-byte chunks though
-; (name lengths vary 7-8 chars) - the $8210*16 stride from the code doesn't
-; match what's visible here byte-for-byte, so exact row layout is unconfirmed;
-; needs live tracing (watch $8210 and this region during an actual high-score
-; entry). Was previously fragmented into ~13 spurious t/b blocks by the same
-; sna2skool text-detection heuristic fixed for $9D00/$6C00.
+; cleanly divide the observed #R$8901-$8963 span into fixed 16-byte chunks
+; though (name lengths vary 7-8 chars) - the $8210*16 stride from the code
+; doesn't match what's visible here byte-for-byte, so exact row layout is
+; unconfirmed; needs live tracing (watch $8210 and this region during an actual
+; high-score entry). Was previously fragmented into ~13 spurious t/b blocks by
+; the same sna2skool text-detection heuristic fixed for #R$9D00/#R$6C00.
 b$8901 DEFB $3A,$20,$21,$25,$20,$20,$20,$20
  $8909 DEFB $1F,$02,$0E,$0B,$08,$0D,$FF,$98
  $8911 DEFB $3A,$20,$21,$20,$20,$20,$20,$20
@@ -3271,6 +3186,7 @@ b$8950 DEFB $00,$00,$20,$20,$20,$20,$20,$20
 ; $8210*16 + $0A + cursor column ($8201), then plays a beep (#R$856E). Part of
 ; the same cluster as #R$850E/#R$8982 (digit-roll + sort) - together they
 ; implement entering initials for a new high score.
+@label=HiScoreStoreChar
 c$8964 LD A,($8210)  ; {HL = row + $0A + cursor column ($8201)
  $8967 RLCA          ;
  $8968 RLCA          ;
@@ -3303,7 +3219,8 @@ b$897D DEFB $CD,$96,$91,$21,$61
 ; in sorted order. The $8900+ data itself looks like a name+score table: name
 ; text (same encoding as HUD strings, $1F-padded) terminated by $FF, followed
 ; by a numeric score field - not yet given clean ctl boundaries (still
-; fragmented by the same text-heuristic issue fixed elsewhere for $9D00/$6C00).
+; fragmented by the same text-heuristic issue fixed elsewhere for
+; #R$9D00/#R$6C00).
 @label=HiScoreSort
 c$8982 LD D,H        ; {DE = HL - $10 (previous table row)
  $8983 LD A,L        ;
@@ -3330,10 +3247,10 @@ c$8982 LD D,H        ; {DE = HL - $10 (previous table row)
  $899A INC DE        ;
  $899B INC HL        ;
  $899C DJNZ $8994    ; }
- $899E LD A,($8210)  ; {Decrement row index $8210; loop
+ $899E LD A,($8210)  ; {Decrement row index $8210
  $89A1 DEC A         ;
- $89A2 LD ($8210),A  ;
- $89A5 LD BC,$0010   ;
+ $89A2 LD ($8210),A  ; }
+ $89A5 LD BC,$0010   ; {Loop back to #R$8982
  $89A8 POP HL        ;
  $89A9 SBC HL,BC     ;
  $89AB JP $8982      ; }
@@ -3349,28 +3266,28 @@ b$89AE DEFB $36,$45,$23,$10,$F6,$CD
 ;
 ; Draws title screen (big "JOE BLADE" sign, credits, copyright), sets 3 rows of
 ; attributes, then waits for all keys to be released before returning. Does not
-; wait for a keypress itself; the wait-for-keypress loop is elsewhere ($8A12
+; wait for a keypress itself; the wait-for-keypress loop is elsewhere (#R$8A12
 ; group).
 @label=ShowMainMenu
 c$89B4 CALL $83C0    ; Clear screen, border to black
  $89B7 CALL $8B02    ; Show "JOE BLADE" big sign on the screen
  $89BA LD IX,$8400   ; 'WRITTEN BY ' - start of title signs
- $89BE LD HL,$4802   ;
+ $89BE LD HL,$4802   ; HL = screen row 8 col 2
  $89C1 CALL $9196    ; Draw string IX
- $89C4 LD HL,$4847   ;
+ $89C4 LD HL,$4847   ; HL = screen row 10 col 7
  $89C7 CALL $9196    ; Draw string IX
- $89CA LD HL,$48CC   ;
+ $89CA LD HL,$48CC   ; HL = screen row 14 col 12
  $89CD CALL $9196    ; Draw string IX
  $89D0 LD HL,$59CC   ; {Fill 7 attribute bytes at $59CC with $57 (INK 7, PAPER
  $89D3 LD B,$07      ; 2, BRIGHT)
 *$89D5 LD (HL),$57   ;
  $89D7 INC HL        ;
  $89D8 DJNZ $89D5    ; }
- $89DA LD HL,$5025   ;
+ $89DA LD HL,$5025   ; HL = screen row 17 col 5
  $89DD CALL $9196    ; Draw string IX
- $89E0 LD HL,$506A   ;
+ $89E0 LD HL,$506A   ; HL = screen row 19 col 10
  $89E3 CALL $9196    ; Draw string IX
- $89E6 LD HL,$50A4   ;
+ $89E6 LD HL,$50A4   ; HL = screen row 21 col 4
  $89E9 CALL $9196    ; Draw string IX
  $89EC LD A,$57      ; {Set attribute byte $57 at $5A25, $5A6A and $5AA4
  $89EE LD ($5A25),A  ;
@@ -3383,59 +3300,65 @@ c$89B4 CALL $83C0    ; Clear screen, border to black
  $89FD JR NZ,$89F7   ;
  $89FF RET           ; }
 
-; Show main menu => $8A12
+; Show main menu (redirect)
 ;
 ; Used by the routine at #R$8B37.
 ;
 ; .
 ;
 ; Entry-point trampoline (one-instruction JP) used by callers outside this
-; module; the real routine is at $8A12.
+; module; the real routine is at #R$8A12.
+@label=jp_MenuWait
 c$8A00 JP $8A12      ; => Show main menu and wait for start
 
-; Poll main menu state => $8A3C
+; Poll main menu state (redirect)
 ;
 ; Used by the routine at #R$8B37.
 ;
 ; .
 ;
-; Entry-point trampoline; real routine at $8A3C.
+; Entry-point trampoline; real routine at #R$8A3C.
+@label=jp_MenuPollFlash
 c$8A03 JP $8A3C      ; => Check menu-done flag, dispatch to $8E96
 
-; Poll main menu state => $8A44
+; Poll main menu state (redirect)
 ;
 ; Used by the routine at #R$9498.
 ;
 ; .
 ;
-; Entry-point trampoline; real routine at $8A44.
+; Entry-point trampoline; real routine at #R$8A44.
+@label=jp_MenuPollFin
 c$8A06 JP $8A44      ; => Check menu-done flag, run paged-bank routine at $C006
 
-; Poll main menu state => $8A5E
+; Poll main menu state (redirect)
 ;
 ; Used by the routine at #R$935E.
 ;
 ; .
 ;
-; Entry-point trampoline; real routine at $8A5E.
+; Entry-point trampoline; real routine at #R$8A5E.
+@label=jp_MenuPollRun
 c$8A09 JP $8A5E      ; => Check menu-done flag, run paged-bank routine at $8A7A
 
-; Poll main menu state => $8AAE
+; Poll main menu state (redirect)
 ;
 ; Used by the routine at #R$8DBE.
 ;
 ; .
 ;
-; Entry-point trampoline; real routine at $8AAE.
+; Entry-point trampoline; real routine at #R$8AAE.
+@label=jp_MenuPollFinInit
 c$8A0C JP $8AAE      ; => Check menu-done flag, run paged-bank routine
 
-; Poll main menu state => $8AD0
+; Poll main menu state (redirect)
 ;
 ; Used by the routine at #R$8DBE.
 ;
 ; .
 ;
-; Entry-point trampoline; real routine at $8AD0.
+; Entry-point trampoline; real routine at #R$8AD0.
+@label=jp_MenuPollStep
 c$8A0F JP $8AD0      ; => Check menu-done flag, run paged-bank routine via
                      ; HALT+$C003
 
@@ -3446,10 +3369,11 @@ c$8A0F JP $8AD0      ; => Check menu-done flag, run paged-bank routine via
 ; .
 ;
 ; Draws title screen, then pages in RAM bank 1 and checks a condition byte at
-; $C000. $8AFF is a "menu done" flag read by the other routines in this group
-; ($8A3C-$8AD0). $C000/$C003/$C006 in bank 1 look like a 3-entry vector table
-; (init/step/finish) for code resident in that bank; not yet identified
+; #R$C000. $8AFF is a "menu done" flag read by the other routines in this group
+; (#R$8A3C-#R$8AD0). #R$C000/$C003/$C006 in bank 1 look like a 3-entry vector
+; table (init/step/finish) for code resident in that bank; not yet identified
 ; further.
+@label=MenuWait
 c$8A12 XOR A         ; {Clear $8AFF menu-done flag
  $8A13 LD ($8AFF),A  ; }
  $8A16 CALL $89B4    ; Show main menu
@@ -3457,11 +3381,11 @@ c$8A12 XOR A         ; {Clear $8AFF menu-done flag
  $8A1A LD A,$11      ; }
  $8A1C LD BC,$7FFD   ; {Page in RAM bank 1
  $8A1F OUT (C),A     ; }
- $8A21 LD A,($C000)  ; {Check byte at $C000 (bank 1) against $26
+ $8A21 LD A,($C000)  ; {Check byte at #R$C000 (bank 1) against $26
  $8A24 CP $26        ;
  $8A26 JR Z,$8A35    ; }
  $8A28 CALL $8A94    ; Run paged-bank routine, wait for keypress
- $8A2B DI            ; {DI; prepare port $7FFD
+ $8A2B DI            ; {DI; prepare port #R$7FFD
  $8A2C LD BC,$7FFD   ; }
  $8A2F LD A,$10      ; {Restore bank 0 paging
  $8A31 OUT (C),A     ; }
@@ -3478,10 +3402,11 @@ c$8A12 XOR A         ; {Clear $8AFF menu-done flag
 ;
 ; .
 ;
-; Once the menu is done ($8AFF<>0), hands off to $8E96.
-c$8A3C LD A,($8AFF)  ; {Check $8AFF flag; return if menu not done
- $8A3F OR A          ;
- $8A40 RET Z         ; }
+; Once the menu is done ($8AFF<>0), hands off to #R$8E96.
+@label=MenuPollFlash
+c$8A3C LD A,($8AFF)  ; {Check $8AFF flag
+ $8A3F OR A          ; }
+ $8A40 RET Z         ; Return if menu not done
  $8A41 JP $8E96      ; => Menu idle
 
 ; Check menu-done flag, run paged-bank routine at $C006
@@ -3492,9 +3417,10 @@ c$8A3C LD A,($8AFF)  ; {Check $8AFF flag; return if menu not done
 ;
 ; Runs the bank-1 "finish" entry ($C006) once, while the menu is still active
 ; ($8AFF=0).
-c$8A44 LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
- $8A47 OR A          ;
- $8A48 RET NZ        ; }
+@label=MenuPollFin
+c$8A44 LD A,($8AFF)  ; {Check $8AFF flag
+ $8A47 OR A          ; }
+ $8A48 RET NZ        ; Return if menu already done
  $8A49 DI            ; {DI; select bank 1
  $8A4A LD A,$11      ; }
  $8A4C LD BC,$7FFD   ; {Page in RAM bank 1
@@ -3513,11 +3439,12 @@ c$8A44 LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
 ;
 ; .
 ;
-; While the menu is active, runs #R$8A7A in bank 1; once done, hands off into
-; ROM at #R$FFD5 (unconfirmed).
+; While the menu is active, runs #R$8A7A in bank 1; once done, hands off to
+; #R$FFD5 (MenuDoneWait - local code, not ROM).
+@label=MenuPollRun
 c$8A5E LD A,($8AFF)  ; {Check $8AFF flag
  $8A61 OR A          ; }
- $8A62 JP NZ,$FFD5   ; Jump to #R$FFD5 if menu done
+ $8A62 JP NZ,$FFD5   ; => Menu-done delay, then wait for a key or timeout
  $8A65 DI            ; {DI; select bank 1
  $8A66 LD A,$11      ; }
  $8A68 LD BC,$7FFD   ; {Page in RAM bank 1
@@ -3538,9 +3465,10 @@ c$8A5E LD A,($8AFF)  ; {Check $8AFF flag
 ;
 ; Drives the bank-1 vector table (init/step/finish) for a fixed 768-frame
 ; duration.
+@label=MenuRunTimed
 c$8A7A LD A,$03      ; {Set $C009=3
  $8A7C LD ($C009),A  ; }
- $8A7F CALL $C000    ; Call bank-1 init entry ($C000)
+ $8A7F CALL $C000    ; Call bank-1 init entry (#R$C000)
  $8A82 LD BC,$0300   ; BC = 768 frame counter
 *$8A85 EI            ; {Wait a frame (EI; HALT)
  $8A86 HALT          ; }
@@ -3560,9 +3488,10 @@ c$8A7A LD A,$03      ; {Set $C009=3
 ; .
 ;
 ; Drives the bank-1 vector table (init/step/finish) until a key is pressed.
+@label=MenuRunUntilKey
 c$8A94 XOR A         ; {Set $C009=0
  $8A95 LD ($C009),A  ; }
- $8A98 CALL $C000    ; Call bank-1 init entry ($C000)
+ $8A98 CALL $C000    ; Call bank-1 init entry (#R$C000)
 *$8A9B EI            ; {Wait a frame (EI; HALT)
  $8A9C HALT          ; }
  $8A9D DI            ; {Call bank-1 step entry ($C003)
@@ -3584,9 +3513,10 @@ c$8A94 XOR A         ; {Set $C009=0
 ;
 ; While the menu is active, runs the bank-1 finish entry then the init entry
 ; with $C009=1.
-c$8AAE LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
- $8AB1 OR A          ;
- $8AB2 RET NZ        ; }
+@label=MenuPollFinInit
+c$8AAE LD A,($8AFF)  ; {Check $8AFF flag
+ $8AB1 OR A          ; }
+ $8AB2 RET NZ        ; Return if menu already done
  $8AB3 DI            ; {DI; select bank 1
  $8AB4 LD A,$11      ; }
  $8AB6 LD BC,$7FFD   ; {Page in RAM bank 1
@@ -3594,7 +3524,7 @@ c$8AAE LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
  $8ABB CALL $C006    ; Call bank-1 finish entry ($C006)
  $8ABE LD A,$01      ; {Set $C009=1
  $8AC0 LD ($C009),A  ; }
- $8AC3 CALL $C000    ; Call bank-1 init entry ($C000)
+ $8AC3 CALL $C000    ; Call bank-1 init entry (#R$C000)
  $8AC6 DI            ; {DI; select bank 0
  $8AC7 LD A,$10      ; }
  $8AC9 LD BC,$7FFD   ; {Restore bank 0 paging
@@ -3609,9 +3539,10 @@ c$8AAE LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
 ; .
 ;
 ; While the menu is active, waits a frame and runs the bank-1 step entry once.
-c$8AD0 LD A,($8AFF)  ; {Check $8AFF flag; return if menu already done
- $8AD3 OR A          ;
- $8AD4 RET NZ        ; }
+@label=MenuPollStep
+c$8AD0 LD A,($8AFF)  ; {Check $8AFF flag
+ $8AD3 OR A          ; }
+ $8AD4 RET NZ        ; Return if menu already done
  $8AD5 DI            ; {DI; select bank 1
  $8AD6 LD A,$11      ; }
  $8AD8 LD BC,$7FFD   ; {Page in RAM bank 1
@@ -3634,8 +3565,15 @@ b$8AEC DEFB $79,$FB,$C9,$79,$FB,$C9,$10,$01
 ; Show "JOE BLADE" big sign on the screen
 ;
 ; Used by the routines at #R$89B4 and #R$FEB4.
+;
+; .
+;
+; HL=$4040 (screen address), DE=#R$A000 (the "JOE BLADE" sign bitmap), stamped
+; via a nested-loop copy (2 rows x 8 columns of 32-byte strips), then fills a
+; 64-byte attribute strip at $5840 with $42 (bright cyan-on-black). Used both
+; by the title screen (#R$7D00) and the win screen (#R$FEB4).
 @label=ShowJoeBladeSign
-c$8B02 LD HL,$4040   ; Address on the screen
+c$8B02 LD HL,$4040   ; Address on the screen (HL = screen row 2 col 0)
 ; Show "JOE BLADE" big sign; HL = screen address
 *$8B05 LD DE,$A000   ; "JOE BLADE" big sign address
  $8B08 LD B,$02      ;
@@ -3645,20 +3583,20 @@ c$8B02 LD HL,$4040   ; Address on the screen
 *$8B0E PUSH BC       ;
  $8B0F PUSH HL       ;
  $8B10 LD B,$20      ;
-*$8B12 LD A,(DE)     ;
+*$8B12 LD A,(DE)     ; {Copy a 32-byte column (DE->HL)
  $8B13 LD (HL),A     ;
  $8B14 INC DE        ;
  $8B15 INC HL        ;
- $8B16 DJNZ $8B12    ;
- $8B18 POP HL        ;
- $8B19 POP BC        ;
- $8B1A INC H         ;
- $8B1B DJNZ $8B0E    ;
- $8B1D POP HL        ;
- $8B1E LD BC,$0020   ;
- $8B21 ADD HL,BC     ;
- $8B22 POP BC        ;
- $8B23 DJNZ $8B0A    ;
+ $8B16 DJNZ $8B12    ; }
+ $8B18 POP HL        ; {Restore HL/BC
+ $8B19 POP BC        ; }
+ $8B1A INC H         ; {Advance to next screen row (INC H)
+ $8B1B DJNZ $8B0E    ; }
+ $8B1D POP HL        ; Restore HL
+ $8B1E LD BC,$0020   ; {Advance column by $20
+ $8B21 ADD HL,BC     ; }
+ $8B22 POP BC        ; Restore BC
+ $8B23 DJNZ $8B0A    ; Loop 2 rows
  $8B25 NOP           ;
  $8B26 NOP           ;
  $8B27 NOP           ;
@@ -3683,8 +3621,8 @@ b$8B33 DEFB $47,$D7,$70,$77
 ; (control options), S jumps into #R$7D00 (start the game), H jumps into
 ; #R$8DBE (high scores).
 @label=MainMenu
-c$8B37 CALL $8A00    ; Show main menu => $8A12
-*$8B3A CALL $8A03    ; Poll main menu state => $8A3C
+c$8B37 CALL $8A00    ; Show main menu
+*$8B3A CALL $8A03    ; Poll main menu state
  $8B3D LD BC,$FEFE   ; {Read keyboard row $FEFE (CAPS,Z,X,C,V)
  $8B40 IN A,(C)      ; }
  $8B42 CPL           ;
@@ -3711,48 +3649,49 @@ b$8B61 DEFB $00,$0C,$07
 ;
 ; .
 ;
-; Part of the control-options screen ($8BB4). Polls J (Kempston), S (Sinclair),
-; K (keyboard) and highlights the chosen option, setting $FFFF as a persisted
-; "input method" flag (read back into $820E at init - see #R$8032).
+; Part of the control-options screen (#R$8BB4). Polls J (Kempston), S
+; (Sinclair), K (keyboard) and highlights the chosen option, setting $FFFF as a
+; persisted "input method" flag (read back into $820E at init - see #R$8032).
+@label=ControlOptionsScreen
 c$8B64 LD BC,$BFFE   ; {Read row $BFFE bit3 (J = Kempston)
  $8B67 IN A,(C)      ;
  $8B69 CPL           ;
  $8B6A AND $08       ;
  $8B6C JR Z,$8B86    ; }
- $8B6E LD A,$01      ;
- $8B70 LD ($FFFF),A  ;
- $8B73 LD HL,$5964   ;
- $8B76 LD B,$19      ;
-*$8B78 LD (HL),$57   ;
+ $8B6E LD A,$01      ; {Set input-method flag $FFFF=1
+ $8B70 LD ($FFFF),A  ; }
+ $8B73 LD HL,$5964   ; Highlight row
+ $8B76 LD B,$19      ; B = $19
+*$8B78 LD (HL),$57   ; {Highlight 'J' row
  $8B7A INC HL        ;
- $8B7B DJNZ $8B78    ;
- $8B7D NOP           ;
+ $8B7B DJNZ $8B78    ; }
+ $8B7D NOP           ; {Unused padding (6x NOP)
  $8B7E NOP           ;
  $8B7F NOP           ;
  $8B80 NOP           ;
  $8B81 NOP           ;
- $8B82 NOP           ;
+ $8B82 NOP           ; }
  $8B83 JP $83E1      ; => 'J' (Kempston) chosen
-*$8B86 LD A,$00      ;
- $8B88 LD ($FFFF),A  ;
+*$8B86 LD A,$00      ; {Clear input-method flag $FFFF=0
+ $8B88 LD ($FFFF),A  ; }
  $8B8B LD B,$FD      ; {Read row $FDFE bit1 (S = Sinclair)
  $8B8D IN A,(C)      ;
  $8B8F CPL           ;
  $8B90 AND $02       ;
  $8B92 JR Z,$8B9C    ; }
- $8B94 LD HL,$59A8   ;
+ $8B94 LD HL,$59A8   ; {'S' chosen: HL=$59A8, B=$10, reuse 'J' highlight loop
  $8B97 LD B,$10      ;
- $8B99 JP $8B78      ;
+ $8B99 JP $8B78      ; }
 *$8B9C LD B,$BF      ; {Read row $BFFE bit2 (K = keyboard)
  $8B9E IN A,(C)      ;
  $8BA0 CPL           ;
  $8BA1 AND $04       ;
  $8BA3 JP Z,$8B64    ; }
- $8BA6 LD HL,$5928   ;
- $8BA9 LD B,$10      ;
-*$8BAB LD (HL),$57   ;
+ $8BA6 LD HL,$5928   ; Highlight row
+ $8BA9 LD B,$10      ; B = $10
+*$8BAB LD (HL),$57   ; {Highlight 'K' row
  $8BAD INC HL        ;
- $8BAE DJNZ $8BAB    ;
+ $8BAE DJNZ $8BAB    ; }
  $8BB0 JP $81E6      ; => 'K' (keyboard) chosen
 
 ; Unused
@@ -3769,15 +3708,16 @@ s$8BB3 DEFS $01
 ; cells, then falls into #R$8B64 (J/S/K input-method selector). The real
 ; control-options screen - unrelated to the bomb-deactivation minigame cluster,
 ; despite superficial similarity.
+@label=ControlOptionsEntry
 c$8BB4 CALL $83C0    ; Clear screen, border to black
  $8BB7 LD IX,$846E   ;
- $8BBB LD HL,$40CC   ;
+ $8BBB LD HL,$40CC   ; HL = screen row 6 col 12
  $8BBE CALL $9196    ; Draw string IX
- $8BC1 LD HL,$4829   ;
+ $8BC1 LD HL,$4829   ; HL = screen row 9 col 9
  $8BC4 CALL $9196    ; Draw string IX
- $8BC7 LD HL,$4865   ;
+ $8BC7 LD HL,$4865   ; HL = screen row 11 col 5
  $8BCA CALL $9196    ; Draw string IX
- $8BCD LD HL,$48A9   ;
+ $8BCD LD HL,$48A9   ; HL = screen row 13 col 9
  $8BD0 CALL $9196    ; Draw string IX
  $8BD3 LD A,$57      ;
  $8BD5 LD HL,$58CC   ;
@@ -3802,23 +3742,22 @@ b$8BEA DEFB $EC,$7F,$FB,$1F,$EC,$7F,$FB,$1F
 ;
 ; .
 ;
-; Reads room-layout selector bytes from the paged RAM bank at $C000+offset
+; Reads room-layout selector bytes from the paged RAM bank at #R$C000+offset
 ; (offset from room number $8203 and subtile $8204 - same 128K bank paged in
 ; around #R$8A12). Each selector byte is decoded into the source address of a
 ; pre-made 32x32 "back sprite" (#R$8C5A) and a 2x8 grid of them is stamped into
-; the shadow buffer at $B800. Falls through to #R$8CF0 for one more row. The
+; the shadow buffer at #R$B800. Falls through to #R$8CF0 for one more row. The
 ; shadow buffer is later copied to the real screen by #R$8C78.
 ; .
 ; Offset = level*128 + room*16 (level=$8204&$0F, room=$8203&$07). Selector
 ; byte: bit0 = tile variant, bits1-5 = tile index; decodes to source addr
-; $E0+((byte>>1)&$1F) : (bit0?$80:0) - tiles live at $E000-$FFFF, 64 tiles x
-; 128 bytes (32x32 1bpp). Full details, confirmation method and open questions
-; in joeblade-zx/docs/Room-Format.md - in short: only the first 3 room-slots in
-; the one bank sampled decode to real tile data, the rest of that region is
-; code, and which bank is actually paged in during gameplay is still
-; unconfirmed.
+; $E0+((byte>>1)&$1F) : (bit0?$80:0) - tiles live at #R$E000-$FFFF, 64 tiles x
+; 128 bytes (32x32 1bpp). Full details and confirmation method in
+; joeblade-zx/docs/Room-Format.md - in short: live-confirmed a flat 16-level x
+; 8-room x 16-byte table filling $C000-$C7FF in bank0, the only RAM bank the
+; game ever pages in at $C000 (no per-level bank switching exists).
 @label=BuildRoom
-c$8C00 LD IX,$C000   ; IX = $C000 (paged-bank tile-selector table)
+c$8C00 LD IX,$C000   ; IX = #R$C000 (paged-bank tile-selector table)
  $8C04 LD A,($8203)  ; {E = (room $8203 & 7) * 16
  $8C07 AND $07       ;
  $8C09 RLCA          ;
@@ -3837,14 +3776,14 @@ c$8C00 LD IX,$C000   ; IX = $C000 (paged-bank tile-selector table)
  $8C1D ADD A,$80     ; }
  $8C1F LD E,A        ;
 *$8C20 ADD IX,DE     ; IX += DE (selector-table offset for this room/subtile)
- $8C22 LD HL,$B800   ; {HL = $B800 (shadow buffer); outer loop, 2 rows
- $8C25 LD B,$02      ; }
+ $8C22 LD HL,$B800   ; HL = #R$B800 (shadow buffer)
+ $8C25 LD B,$02      ; Outer loop, 2 rows
 *$8C27 PUSH BC       ;
  $8C28 PUSH HL       ;
- $8C29 LD B,$08      ; {Inner loop, 8 columns; DE = 0
+ $8C29 LD B,$08      ; {Inner loop, 8 columns
 *$8C2B PUSH BC       ;
  $8C2C PUSH HL       ; }
- $8C2D LD DE,$0000   ;
+ $8C2D LD DE,$0000   ; DE = 0
  $8C30 LD A,(IX+$00) ; {If selector byte bit0 set, E = $80
  $8C33 AND $01       ;
  $8C35 JR Z,$8C39    ; }
@@ -3894,16 +3833,16 @@ c$8C5A LD B,$04      ; Outer loop: 4 column-groups
  $8C66 INC DE        ;
  $8C67 INC HL        ;
  $8C68 DJNZ $8C64    ; }
- $8C6A POP HL        ;
- $8C6B POP BC        ;
- $8C6C INC H         ;
- $8C6D DJNZ $8C60    ;
- $8C6F POP HL        ;
- $8C70 LD A,L        ;
+ $8C6A POP HL        ; {Restore HL/BC
+ $8C6B POP BC        ; }
+ $8C6C INC H         ; {Advance to next screen row (INC H)
+ $8C6D DJNZ $8C60    ; }
+ $8C6F POP HL        ; Restore HL
+ $8C70 LD A,L        ; {Advance column by $20
  $8C71 ADD A,$20     ;
- $8C73 LD L,A        ;
- $8C74 POP BC        ;
- $8C75 DJNZ $8C5C    ;
+ $8C73 LD L,A        ; }
+ $8C74 POP BC        ; {Restore BC, loop 4 groups
+ $8C75 DJNZ $8C5C    ; }
  $8C77 RET           ;
 
 ; Copy shadow screen to real screen
@@ -3912,7 +3851,7 @@ c$8C5A LD B,$04      ; Outer loop: 4 column-groups
 ;
 ; .
 ;
-; Pops the stack-built shadow buffer at $B800 and writes it into the real
+; Pops the stack-built shadow buffer at #R$B800 and writes it into the real
 ; screen bitmap starting at $4800, restoring SP afterwards.
 @label=ShowScreen
 c$8C78 DI            ;
@@ -3920,7 +3859,7 @@ c$8C78 DI            ;
  $8C7A LD IX,$0000   ; {save SP to IX
  $8C7E ADD IX,SP     ; }
  $8C80 LD SP,$B800   ; buffer start address
- $8C83 LD HL,$4800   ; screen address
+ $8C83 LD HL,$4800   ; screen address (HL = screen row 8 col 0)
  $8C86 LD B,$40      ;
 *$8C88 POP DE        ; 0
  $8C89 LD (HL),E     ;
@@ -4020,16 +3959,19 @@ b$8CDF DEFB $C9,$00,$00,$00,$00,$00,$00,$01
 ; .
 ;
 ; Unlike #R$8C00, this draws straight to the live screen at $4080 instead of
-; the shadow buffer, using a separate per-column selector table at $6C00
-; indexed by $8202 - purpose of the split (top HUD-adjacent strip?)
-; unconfirmed.
-c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
+; the shadow buffer, using a separate per-column selector table at #R$6C00
+; indexed by $8202. Reason for the split: the shadow buffer only covers the
+; 2-tile-tall band that changes frame-to-frame (Joe/soldier movement + jump
+; height); this row is static per-room, so it's drawn once directly to the
+; screen.
+@label=DrawTopRow
+c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at #R$6C00)
  $8CF3 LD H,$00      ;
  $8CF5 LD L,A        ;
  $8CF6 ADD HL,HL     ;
  $8CF7 ADD HL,HL     ;
  $8CF8 ADD HL,HL     ; }
- $8CF9 LD IX,$6C00   ; {IX = $6C00 + offset (one selector byte per screen
+ $8CF9 LD IX,$6C00   ; {IX = #R$6C00 + offset (one selector byte per screen
  $8CFD EX DE,HL      ; column)
  $8CFE ADD IX,DE     ; }
  $8D00 NOP           ;
@@ -4050,8 +3992,8 @@ c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
  $8D0F NOP           ;
  $8D10 NOP           ;
  $8D11 NOP           ;
- $8D12 LD HL,$4080   ; {HL = $4080 (top strip of the real screen); 8 columns
- $8D15 LD B,$08      ; }
+ $8D12 LD HL,$4080   ; Top strip of the real screen, row 4 col 0
+ $8D15 LD B,$08      ; B = 8 columns
 *$8D17 PUSH BC       ;
  $8D18 PUSH HL       ;
  $8D19 LD DE,$0000   ; DE = 0
@@ -4075,7 +4017,7 @@ c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
  $8D39 DJNZ $8D17    ;
  $8D3B RET           ;
 
-; Check for room-edge tile, trigger transition/control screen
+; Check for bomb tile at screen edge, trigger bomb minigame
 ;
 ; Used by the routine at #R$8F00.
 ;
@@ -4086,8 +4028,9 @@ c$8CF0 LD A,($8202)  ; {HL = $8202 * 8 (byte offset into table at $6C00)
 ; $820C bits 4-5 are clear AND Joe's X is at the screen edge ($20 or $C0),
 ; jumps to #R$7800 - the bomb-deactivation minigame ("SELF DESTRUCT IN 30
 ; SECONDS", sort the access code). Not a room-to-room transition.
-c$8D3C LD HL,$9D18   ; {HL = $9D18 (table of 6 edge-tile IDs); B = 6
- $8D3F LD B,$06      ; }
+@label=CheckRoomEdge
+c$8D3C LD HL,$9D18   ; Table of 6 edge-tile IDs
+ $8D3F LD B,$06      ; B = 6
 *$8D41 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $8D44 CP (HL)       ;
  $8D45 JR NZ,$8D60   ; }
@@ -4126,8 +4069,8 @@ b$8D64 DEFB $00
 ;
 ; BC = sprite addr, DE = mask addr, HL = destination
 @label=DrawJoeSprite
-c$8D6E LD A,$20      ;
-*$8D70 PUSH AF       ;
+c$8D6E LD A,$20      ; {A = $20 (loop counter, 32 rows)
+*$8D70 PUSH AF       ; }
  $8D71 LD A,(DE)     ; 0: get mask byte
  $8D72 AND (HL)      ; apply mask
  $8D73 LD (HL),A     ;
@@ -4163,15 +4106,15 @@ c$8D6E LD A,$20      ;
  $8D91 LD (HL),A     ;
  $8D92 INC BC        ;
  $8D93 INC DE        ;
- $8D94 NOP           ;
+ $8D94 NOP           ; {Advance to next screen row
  $8D95 NOP           ;
  $8D96 DEC HL        ;
  $8D97 DEC HL        ;
  $8D98 DEC HL        ;
- $8D99 INC H         ;
- $8D9A LD A,H        ;
+ $8D99 INC H         ; }
+ $8D9A LD A,H        ; {Row wrapped past 8 lines?
  $8D9B AND $07       ;
- $8D9D JR NZ,$8DAF   ;
+ $8D9D JR NZ,$8DAF   ; }
  $8D9F LD A,H        ;
  $8DA0 SUB $08       ;
  $8DA2 LD H,A        ;
@@ -4188,9 +4131,10 @@ c$8D6E LD A,$20      ;
  $8DB1 JR NZ,$8D70   ;
  $8DB3 RET           ;
 
-; Entry-point trampoline; real routine at $FDCE
+; Advance IX to the next high-score message row, draw + beep (redirect)
 ;
 ; Used by the routine at #R$8DBE.
+@label=jp_HiScoreNextIX
 c$8DB4 JP $FDCE      ; => Advance IX to the next high-score message row, draw +
                      ; beep
 
@@ -4207,10 +4151,11 @@ b$8DB7 DEFB $DD,$09,$C3,$96,$85,$3E,$00
 ; entry. Clears the screen, draws the "HIGH SCORES" title and column headers,
 ; then reveals 4 more table rows one at a time via #R$8DB4 (a 5th row is drawn
 ; directly beforehand) - each draw triggers a beep. Waits for all keys
-; released, then returns to the menu ($8B37).
+; released, then returns to the menu (#R$8B37).
+@label=HiScoreScreen
 c$8DBE CALL $83C0    ; Clear screen, border to black
  $8DC1 LD IX,$8E0A   ;
- $8DC5 LD HL,$40CB   ;
+ $8DC5 LD HL,$40CB   ; HL = screen row 6 col 11
  $8DC8 CALL $9196    ; Draw string IX
  $8DCB LD HL,$58C8   ;
  $8DCE LD B,$11      ;
@@ -4218,19 +4163,23 @@ c$8DBE CALL $83C0    ; Clear screen, border to black
  $8DD2 INC HL        ;
  $8DD3 DJNZ $8DD0    ;
  $8DD5 LD IX,$8902   ;
- $8DD9 LD HL,$482A   ;
+ $8DD9 LD HL,$482A   ; HL = screen row 9 col 10
  $8DDC CALL $8596    ; Draw string IX and play sound
- $8DDF LD HL,$486A   ;
- $8DE2 CALL $8DB4    ; Entry-point trampoline
- $8DE5 LD HL,$48AA   ;
- $8DE8 CALL $8DB4    ; Entry-point trampoline
- $8DEB LD HL,$48EA   ;
- $8DEE CALL $8DB4    ; Entry-point trampoline
- $8DF1 LD HL,$502A   ;
- $8DF4 CALL $8DB4    ; Entry-point trampoline
- $8DF7 CALL $8A0C    ; Poll main menu state => $8AAE
+ $8DDF LD HL,$486A   ; HL = screen row 11 col 10
+ $8DE2 CALL $8DB4    ; Advance IX to the next high-score message row, draw +
+                     ; beep
+ $8DE5 LD HL,$48AA   ; HL = screen row 13 col 10
+ $8DE8 CALL $8DB4    ; Advance IX to the next high-score message row, draw +
+                     ; beep
+ $8DEB LD HL,$48EA   ; HL = screen row 15 col 10
+ $8DEE CALL $8DB4    ; Advance IX to the next high-score message row, draw +
+                     ; beep
+ $8DF1 LD HL,$502A   ; HL = screen row 17 col 10
+ $8DF4 CALL $8DB4    ; Advance IX to the next high-score message row, draw +
+                     ; beep
+ $8DF7 CALL $8A0C    ; Poll main menu state
  $8DFA NOP           ;
-*$8DFB CALL $8A0F    ; Poll main menu state => $8AD0
+*$8DFB CALL $8A0F    ; Poll main menu state
  $8DFE NOP           ;
  $8DFF CALL $91FA    ; Wait until every key on the keyboard is released
  $8E02 JR Z,$8DFB    ;
@@ -4249,25 +4198,27 @@ b$8E07 DEFB $00,$00,$00,$1F,$07,$08
 ;
 ; Reached from #R$81E6. Clears the screen, draws a title string (IX=$84AC) and
 ; 5 more static instruction lines, waits for all keys released, then returns to
-; the menu ($8B37). No interactivity beyond dismissal - a straight text screen.
+; the menu (#R$8B37). No interactivity beyond dismissal - a straight text
+; screen.
+@label=InfoScreen
 c$8E16 LD IX,$84AC   ;
  $8E1A CALL $83C0    ; Clear screen, border to black
- $8E1D LD HL,$40CC   ;
+ $8E1D LD HL,$40CC   ; HL = screen row 6 col 12
  $8E20 CALL $9196    ; Draw string IX
  $8E23 LD HL,$58CA   ;
  $8E26 LD B,$0C      ;
 *$8E28 LD (HL),$57   ;
  $8E2A INC HL        ;
  $8E2B DJNZ $8E28    ;
- $8E2D LD HL,$482B   ;
+ $8E2D LD HL,$482B   ; HL = screen row 9 col 11
  $8E30 CALL $9196    ; Draw string IX
- $8E33 LD HL,$486B   ;
+ $8E33 LD HL,$486B   ; HL = screen row 11 col 11
  $8E36 CALL $9196    ; Draw string IX
- $8E39 LD HL,$48AB   ;
+ $8E39 LD HL,$48AB   ; HL = screen row 13 col 11
  $8E3C CALL $9196    ; Draw string IX
- $8E3F LD HL,$48EB   ;
+ $8E3F LD HL,$48EB   ; HL = screen row 15 col 11
  $8E42 CALL $9196    ; Draw string IX
- $8E45 LD HL,$5029   ;
+ $8E45 LD HL,$5029   ; HL = screen row 17 col 9
  $8E48 CALL $9196    ; Draw string IX
 *$8E4B CALL $91FA    ; Wait until every key on the keyboard is released
  $8E4E JR Z,$8E4B    ;
@@ -4280,8 +4231,9 @@ c$8E16 LD IX,$84AC   ;
 ; .
 ;
 ; Calls #R$96CE (checks the current tile's soldier movement pattern), then
-; copies 13 bytes from the soldier sprite template at $8F8C to the working area
-; $8FA0.
+; copies 13 bytes from the soldier sprite template at #R$8F8C to the working
+; area $8FA0.
+@label=CopySoldierData
 c$8E53 LD H,$79      ;
  $8E55 CALL $96CE    ;
  $8E58 LD HL,$8F8C   ;
@@ -4322,21 +4274,22 @@ b$8E73 DEFB $00,$00,$00,$00,$00,$3E,$00,$32
 ;
 ; Reached every frame via #R$8A3C once the menu has settled (waiting for 'S').
 ; Advances the counter $8207 by 2 (wrapping at $FC), reads a (HL,BC) duration
-; pair from a table at $9F00 indexed by it, and calls #R$8680 to wait that long
-; - since $8680 flashes the border while waiting, this drives a decorative
-; twinkle effect that cycles through a preset sequence of wait-durations
-; instead of a fixed rate.
+; pair from a table at #R$9F00 indexed by it, and calls #R$8680 to wait that
+; long - since #R$8680 flashes the border while waiting, this drives a
+; decorative twinkle effect that cycles through a preset sequence of
+; wait-durations instead of a fixed rate.
 ; .
-; Reached via #R$8A3C (JP $8E96) once the main menu is done.
-c$8E96 LD A,($8207)  ; {Advance $8207; wrap at $FC
+; Reached via #R$8A3C (JP #R$8E96) once the main menu is done.
+@label=MenuIdleFlash
+c$8E96 LD A,($8207)  ; {Advance $8207
  $8E99 INC A         ;
  $8E9A INC A         ;
- $8E9B LD ($8207),A  ;
- $8E9E CP $FC        ; }
+ $8E9B LD ($8207),A  ; }
+ $8E9E CP $FC        ; Wrap at $FC
  $8EA0 JR NZ,$8EA7   ;
  $8EA2 LD A,$00      ;
  $8EA4 LD ($8207),A  ;
-*$8EA7 LD H,$9F      ; $9F00 table
+*$8EA7 LD H,$9F      ; #R$9F00 table
  $8EA9 LD L,A        ;
  $8EAA LD C,(HL)     ;
  $8EAB INC L         ;
@@ -4349,17 +4302,25 @@ c$8E96 LD A,($8207)  ; {Advance $8207; wrap at $FC
 ; Post-game hub: menu, or high-score name entry
 ;
 ; Used by the routines at #R$7800, #R$8F00, #R$935E, #R$FEB4 and #R$FF14.
+;
+; .
+;
+; Reached after death, winning, or a bomb-minigame timeout
+; (#R$7800/#R$8F00/#R$935E/#R$FF14/#R$FEB4). If $8210=5 (no new high score in
+; progress), returns straight to the main menu; otherwise shows "GOOD SCORING"
+; text, beeps out a status line, waits for all keys released, then drops into
+; #R$9580 for high-score name entry.
 @label=FinalizeGame
 c$8EB4 CALL $83C0    ; Clear screen, border to black
  $8EB7 LD A,($8210)  ;
  $8EBA CP $05        ;
  $8EBC JP Z,$8B37    ; => Main menu loop
  $8EBF LD IX,$85A0   ; 'GOOD SCORING'
- $8EC3 LD HL,$480A   ;
+ $8EC3 LD HL,$480A   ; HL = screen row 8 col 10
  $8EC6 CALL $9196    ; Draw string IX
- $8EC9 LD HL,$486C   ;
+ $8EC9 LD HL,$486C   ; HL = screen row 11 col 12
  $8ECC CALL $9196    ; Draw string IX
- $8ECF LD HL,$5022   ;
+ $8ECF LD HL,$5022   ; HL = screen row 17 col 2
  $8ED2 CALL $9196    ; Draw string IX
  $8ED5 LD HL,$5909   ;
  $8ED8 LD B,$0E      ;
@@ -4385,8 +4346,8 @@ s$8EE7 DEFS $19
 ; itself while not pressed, otherwise reset the stack and jump to #R$8EB4 (back
 ; to the menu/game-over flow).
 @label=GameLoop
-c$8F00 CALL $8D3C    ; Check for room-edge tile, trigger transition/control
-                     ; screen
+c$8F00 CALL $8D3C    ; Check for bomb tile at screen edge, trigger bomb
+                     ; minigame
  $8F03 CALL $A750    ; Jump sound effect, gated on jump counter $820D
  $8F06 CALL $9650    ; Countdown timer tick, MM:SS-style display at $85FA
  $8F09 CALL $7B1E    ; Uniform pickup
@@ -4413,7 +4374,7 @@ c$8F00 CALL $8D3C    ; Check for room-edge tile, trigger transition/control
  $8F3D NOP           ;
  $8F3E CALL $80A0    ; Draw Joe sprite
  $8F41 CALL $8F8C    ; Draw soldier
- $8F44 CALL $93DC    ; Something with energy ??
+ $8F44 CALL $93DC    ; Contact check
  $8F47 NOP           ;
  $8F48 EI            ; {Poll '0' key (row $EFFE)
  $8F49 LD BC,$EFFE   ;
@@ -4434,9 +4395,10 @@ b$8F59 DEFB $C3
 ;
 ; Called every frame from #R$8E64. Blocks #R$A798 (shoot) while Joe is
 ; mid-jump/climb ($8209<>0).
-c$8F5A LD A,($8209)  ; {Check $8209; return if mid-jump
- $8F5D OR A          ;
- $8F5E RET NZ        ; }
+@label=ShootGate
+c$8F5A LD A,($8209)  ; {Check $8209
+ $8F5D OR A          ; }
+ $8F5E RET NZ        ; Return if mid-jump
  $8F5F JP $A798      ; => Shoot
 
 ; Data block at 8F62
@@ -4447,6 +4409,7 @@ b$8F62 DEFB $00,$00,$22,$1D,$82,$21,$00,$82
 ; Pause
 ;
 ; Used by the routine at #R$8F00.
+@label=Pause
 c$8F78 DI            ;
  $8F79 LD BC,$0300   ;
 *$8F7C DEC BC        ;
@@ -4505,16 +4468,17 @@ b$8FB1 DEFB $C9,$C9,$00
 ; Called once at game start via #R$A3CB. Sets I=$8A - would only matter under
 ; IM2, but no `IM 2` instruction exists anywhere in the currently-disassembled
 ; 64K, so this may be vestigial/defensive rather than load-bearing.
-c$8FB4 NOP           ;
+@label=SetIntVector
+c$8FB4 NOP           ; {Unused padding (8x NOP)
  $8FB5 NOP           ;
  $8FB6 NOP           ;
  $8FB7 NOP           ;
  $8FB8 NOP           ;
  $8FB9 NOP           ;
  $8FBA NOP           ;
- $8FBB NOP           ;
- $8FBC LD A,$8A      ;
- $8FBE LD I,A        ;
+ $8FBB NOP           ; }
+ $8FBC LD A,$8A      ; A = $8A
+ $8FBE LD I,A        ; Set I register
  $8FC0 RET           ;
 
 ; Data block at 8FC1
@@ -4536,28 +4500,28 @@ b$8FC1 DEFB $50,$06,$06,$C5,$E5,$06,$08,$C5
 ; .
 ;
 ; Compares Joe's X against the soldier's X (IX+1); moves the soldier one step
-; toward Joe (INC/DEC), picking a left/right-facing sprite (DE=$A800/$AA00)
-; accordingly. Falls into $9028 (also entered directly by #R$8164/#R$9464)
+; toward Joe (INC/DEC), picking a left/right-facing sprite (DE=#R$A800/$AA00)
+; accordingly. Falls into #R$9028 (also entered directly by #R$8164/#R$9464)
 ; which turns the soldier's X (C) into a screen address (HL, $8F93) and
 ; sprite/mask address (DE, $8F90/$8F8D) - bit1 of X selects sprite half, bit2
 ; selects sprite row.
 @label=SoldierPattern1
-c$900A LD A,($8201)  ; {Compare Joe X vs soldier X (IX+1); step toward Joe
+c$900A LD A,($8201)  ; {Compare Joe X vs soldier X (IX+1)
  $900D SUB (IX+$01)  ;
- $9010 JR Z,$9017    ;
- $9012 JR C,$901C    ;
+ $9010 JR Z,$9017    ; }
+ $9012 JR C,$901C    ; {Step toward Joe
  $9014 INC (IX+$01)  ; }
 *$9017 LD DE,$AA00   ; {Moving right: DE = $AA00 (right-facing sprite)
  $901A JR $9022      ; }
-*$901C DEC (IX+$01)  ; {Moving left: DE = $A800 (left-facing sprite)
+*$901C DEC (IX+$01)  ; {Moving left: DE = #R$A800 (left-facing sprite)
  $901F LD DE,$A800   ; }
 *$9022 LD C,(IX+$01) ; C = soldier X
  $9025 NOP           ;
  $9026 NOP           ;
  $9027 NOP           ;
 ; This entry point is used by the routines at #R$8164 and #R$9464.
-*$9028 LD HL,$4880   ; {HL = screen address from soldier X
- $902B LD A,C        ;
+*$9028 LD HL,$4880   ; {HL = screen address from soldier X (HL = screen row 12
+ $902B LD A,C        ; col 0)
  $902C AND $F8       ;
  $902E RRCA          ;
  $902F RRCA          ;
@@ -4573,9 +4537,9 @@ c$900A LD A,($8201)  ; {Compare Joe X vs soldier X (IX+1); step toward Joe
  $903D JR Z,$9041    ;
  $903F INC D         ;
  $9040 NOP           ; }
-*$9041 LD ($8F90),DE ; {Store $8F90 = DE, $8F93 = HL; D += 4
- $9045 LD ($8F93),HL ;
- $9048 INC D         ;
+*$9041 LD ($8F90),DE ; {Store $8F90 = DE, $8F93 = HL
+ $9045 LD ($8F93),HL ; }
+ $9048 INC D         ; {D += 4
  $9049 INC D         ;
  $904A INC D         ;
  $904B INC D         ; }
@@ -4593,9 +4557,11 @@ s$9051 DEFS $09
 ;
 ; Called every frame from #R$8F00. Bit-rotates 5 rows of pixels at $407F left
 ; through carry (a scrolling decorative border effect), then advances a slower
-; secondary animation frame ($821F/$8220-gated) sourced from a table at $9E00.
-c$905A LD HL,$407F   ; {HL = $407F; C = 5 rows
- $905D LD C,$05      ; }
+; secondary animation frame ($821F/$8220-gated) sourced from a table at
+; #R$9E00.
+@label=RunningLine
+c$905A LD HL,$407F   ; Screen row 3 col 31
+ $905D LD C,$05      ; C = 5 rows
 *$905F PUSH HL       ;
  $9060 LD B,$20      ;
 *$9062 RL (HL)       ;
@@ -4606,20 +4572,20 @@ c$905A LD HL,$407F   ; {HL = $407F; C = 5 rows
  $9069 DEC C         ;
  $906A JR NZ,$905F   ;
  $906C LD A,($821F)  ; {Advance frame counter $821F
- $906F INC A         ; }
+ $906F INC A         ;
  $9070 LD ($821F),A  ;
  $9073 AND $07       ;
- $9075 RET NZ        ;
- $9076 LD HL,$8220   ;
+ $9075 RET NZ        ; }
+ $9076 LD HL,$8220   ; {Advance secondary frame counter $8220, wrap at 0
  $9079 INC (HL)      ;
  $907A LD A,(HL)     ;
  $907B CP $00        ;
- $907D JR NZ,$9084   ;
+ $907D JR NZ,$9084   ; }
  $907F LD A,$00      ;
  $9081 LD ($8220),A  ;
-*$9084 LD H,$9E      ;
+*$9084 LD H,$9E      ; #R$9E00 block
  $9086 LD L,A        ;
- $9087 LD A,(HL)     ;
+ $9087 LD A,(HL)     ; get symbol code
  $9088 AND $E0       ;
  $908A RRCA          ;
  $908B RRCA          ;
@@ -4651,21 +4617,29 @@ s$90A7 DEFS $03
 ; Draw door graphic column 1 (animated, via $8206)
 ;
 ; Used by the routine at #R$9602.
-c$90AA LD A,($8206)  ;
+;
+; .
+;
+; Picks an animation frame from $8600+ using $8206 bits1-2 (4 frames), then
+; copies that frame's two 8x4-byte columns (via #R$90C8) into the shadow buffer
+; at $B884/$B890 - the two halves of door-graphic column 1. Sibling routines
+; #R$85DC/#R$95E6 draw columns 2/3 the same way; all three are gated by
+; #R$9500's per-tile event flags (bits 2/3/4).
+c$90AA LD A,($8206)  ; {DE = $8600 + frame*16 (animation source)
  $90AD AND $06       ;
  $90AF RLCA          ;
  $90B0 RLCA          ;
  $90B1 RLCA          ;
  $90B2 RLCA          ;
  $90B3 LD L,A        ;
- $90B4 LD H,$86      ;
- $90B6 PUSH HL       ;
- $90B7 EX DE,HL      ;
- $90B8 LD HL,$B884   ;
+ $90B4 LD H,$86      ; }
+ $90B6 PUSH HL       ; {Save DE, swap to source
+ $90B7 EX DE,HL      ; }
+ $90B8 LD HL,$B884   ; Dest column 1 (shadow buffer)
  $90BB CALL $90C8    ; Copy an 8x4-byte column (DE->HL), used by the
                      ; door-drawing routines
- $90BE POP DE        ;
- $90BF LD HL,$B890   ;
+ $90BE POP DE        ; Restore DE
+ $90BF LD HL,$B890   ; Dest column 2 (shadow buffer)
  $90C2 JP $90C8      ; => Copy an 8x4-byte column (DE->HL), used by the
                      ; door-drawing routines
 
@@ -4680,8 +4654,9 @@ s$90C5 DEFS $03
 ;
 ; Shared column-copy primitive for #R$85DC/#R$90AA/#R$95E6 (the 3 door-graphic
 ; columns in #R$9602).
+@label=CopyColumn
 c$90C8 LD B,$08      ; B = 8 lines
-*$90CA LD A,(DE)     ;
+*$90CA LD A,(DE)     ; {Copy 4 bytes (DE->HL)
  $90CB INC DE        ;
  $90CC LD (HL),A     ;
  $90CD INC HL        ;
@@ -4695,12 +4670,12 @@ c$90C8 LD B,$08      ; B = 8 lines
  $90D5 INC HL        ;
  $90D6 LD A,(DE)     ;
  $90D7 INC DE        ;
- $90D8 LD (HL),A     ;
- $90D9 DEC HL        ;
+ $90D8 LD (HL),A     ; }
+ $90D9 DEC HL        ; {HL -= 3 (net +1 after the 4-byte copy)
  $90DA DEC HL        ;
- $90DB DEC HL        ;
+ $90DB DEC HL        ; }
  $90DC INC H         ; next line
- $90DD DJNZ $90CA    ;
+ $90DD DJNZ $90CA    ; Loop 8 lines
  $90DF RET           ;
 
 ; Data block at 90E0
@@ -4757,11 +4732,11 @@ s$912B DEFS $01
 ; .
 ;
 ; Scans the same 4 tile-ID tables used by #R$926E/#R$92A0/#R$9300/#R$9328 for a
-; match against the current tile ($8202): $9D00 (15 entries, keys), $9D0F (6
+; match against the current tile ($8202): #R$9D00 (15 entries, keys), $9D0F (6
 ; entries, food), $9D18 (6 entries, bombs - also checked by #R$8D3C's
-; level-exit test), $9D24 (6 entries, hostages). On a match, sets up the item's
-; sprite/mask data and draws it via #R$9118. No match in any table -> falls
-; through to #R$A2F6, which checks ammo ($9D20) and uniform ($9D2B - see
+; bomb-minigame trigger), $9D24 (6 entries, hostages). On a match, sets up the
+; item's sprite/mask data and draws it via #R$9118. No match in any table ->
+; falls through to #R$A2F6, which checks ammo ($9D20) and uniform ($9D2B - see
 ; #R$A328/#R$7B1E).
 @label=DetectItem
 c$912C LD HL,$9D00   ;
@@ -4823,13 +4798,21 @@ s$9191 DEFS $05
 ; Used by the routines at #R$7800, #R$7B1E, #R$7BE8, #R$7D00, #R$8546, #R$8596,
 ; #R$86C0, #R$89B4, #R$8BB4, #R$8DBE, #R$8E16, #R$8EB4, #R$935E, #R$9650,
 ; #R$A328, #R$A7DC and #R$FEB4.
+;
+; .
+;
+; IX = string address ($FF-terminated char codes), HL = screen address. Draws
+; one 8x8 glyph per call and re-enters itself (via #R$91BE) for the next
+; character until it hits the $FF terminator - the game's general-purpose
+; text-drawing primitive, used throughout menus, HUD counters, and message
+; screens.
 @label=DrawStringIX
-c$9196 LD C,(IX+$00) ;
+c$9196 LD C,(IX+$00) ; {C = char code (IX+0)
  $9199 LD A,(IX+$00) ;
- $919C INC IX        ;
- $919E CP $FF        ;
- $91A0 RET Z         ;
- $91A1 LD A,C        ;
+ $919C INC IX        ; }
+ $919E CP $FF        ; {Terminate at $FF
+ $91A0 RET Z         ; }
+ $91A1 LD A,C        ; {Decode char row (D = $A6 + code>>5)
  $91A2 AND $E0       ;
  $91A4 RRA           ;
  $91A5 RRA           ;
@@ -4837,22 +4820,22 @@ c$9196 LD C,(IX+$00) ;
  $91A7 RRA           ;
  $91A8 RRA           ;
  $91A9 ADD A,$A6     ;
- $91AB LD D,A        ;
- $91AC LD A,C        ;
+ $91AB LD D,A        ; }
+ $91AC LD A,C        ; {Decode char column (E = (code&$1F)*8)
  $91AD AND $1F       ;
  $91AF RLA           ;
  $91B0 RLA           ;
  $91B1 RLA           ;
- $91B2 LD E,A        ;
- $91B3 LD B,$08      ;
- $91B5 PUSH HL       ;
+ $91B2 LD E,A        ; }
+ $91B3 LD B,$08      ; B = 8 rows
+ $91B5 PUSH HL       ; Save HL
 *$91B6 LD A,(DE)     ; read character pixels
  $91B7 LD (HL),A     ; write character pixels
- $91B8 INC H         ;
- $91B9 INC DE        ;
- $91BA DJNZ $91B6    ;
- $91BC POP HL        ;
- $91BD INC HL        ;
+ $91B8 INC H         ; {Advance dest row/source ptr
+ $91B9 INC DE        ; }
+ $91BA DJNZ $91B6    ; Loop 8
+ $91BC POP HL        ; Restore HL
+ $91BD INC HL        ; Advance to next char
  $91BE JP $9196      ; => Draw string IX
 
 ; Unused
@@ -4866,6 +4849,7 @@ s$91C1 DEFS $07
 ;
 ; Called from #R$7F64 (a jump-arc edge case in #R$7E32). Same border-toggle
 ; (`OUT ($FE)`) sweep pattern as #R$856E/#R$A2BE, from $3800 down to $28xx.
+@label=SFX_roomedge
 c$91C8 NOP           ; {HL/E = sweep start/rate
  $91C9 LD HL,$3800   ;
  $91CC LD E,$12      ; }
@@ -4886,24 +4870,24 @@ c$91C8 NOP           ; {HL/E = sweep start/rate
  $91E2 DEC HL        ;
  $91E3 DEC HL        ;
  $91E4 DEC HL        ;
- $91E5 DEC HL        ;
+ $91E5 DEC HL        ; }
  $91E6 DEC HL        ;
  $91E7 DEC HL        ;
  $91E8 DEC HL        ;
  $91E9 DEC HL        ;
  $91EA DEC HL        ;
  $91EB DEC HL        ;
- $91EC DEC HL        ; }
- $91ED LD A,L        ;
- $91EE OR A          ;
- $91EF JR NZ,$91F3   ;
+ $91EC DEC HL        ;
+ $91ED LD A,L        ; {L = 0 ?
+ $91EE OR A          ; }
+ $91EF JR NZ,$91F3   ; {Wrap column? skip if not, else dec sweep-rate E
  $91F1 NOP           ;
- $91F2 DEC E         ;
-*$91F3 LD A,H        ;
+ $91F2 DEC E         ; }
+*$91F3 LD A,H        ; {HL reached $28xx? loop or return
  $91F4 CP $28        ;
  $91F6 JR NZ,$91CE   ;
  $91F8 NOP           ;
- $91F9 RET           ;
+ $91F9 RET           ; }
 
 ; Wait until every key on the keyboard is released
 ;
@@ -4957,15 +4941,15 @@ s$922E DEFS $0E
 ; popup box background behind pickup/message text (called before drawing
 ; item-collected messages and similar dialogs).
 @label=DrawPopupBox
-c$923C LD HL,$4846   ; {HL = $4846; B = 4 columns
- $923F LD B,$04      ; }
+c$923C LD HL,$4846   ; Screen row 10 col 6
+ $923F LD B,$04      ; B = 4 columns
 *$9241 PUSH BC       ;
  $9242 PUSH HL       ;
  $9243 LD B,$08      ; {B = 8 groups
 *$9245 PUSH BC       ; }
  $9246 PUSH HL       ;
- $9247 LD B,$14      ; {B = $14 (20); clear a byte strip
-*$9249 LD (HL),$00   ;
+ $9247 LD B,$14      ; B = $14 (20)
+*$9249 LD (HL),$00   ; {Clear a byte strip
  $924B INC HL        ;
  $924C DJNZ $9249    ; }
  $924E POP HL        ;
@@ -4981,18 +4965,18 @@ c$923C LD HL,$4846   ; {HL = $4846; B = 4 columns
 
 ; Draw one digit/character glyph
 ;
-; Used by the routines at #R$86E4, #R$92A0, #R$92DE, #R$9880 and #R$98DA.
+; Used by the routines at #R$86E4, #R$92A0, #R$92DE and #R$9880.
 @label=DrawGlyph
 c$925C CALL $855B    ; Glyph-draw preamble
 ; This entry point is used by the routine at #R$9580.
-*$925F AND $1F       ;
+*$925F AND $1F       ; {E = glyph offset (A&$1F)*8
  $9261 RLCA          ;
  $9262 RLCA          ;
  $9263 RLCA          ;
- $9264 LD E,A        ;
- $9265 LD B,$08      ;
+ $9264 LD E,A        ; }
+ $9265 LD B,$08      ; {Copy 8-byte glyph column (DE->HL)
 *$9267 LD A,(DE)     ;
- $9268 INC DE        ;
+ $9268 INC DE        ; }
  $9269 LD (HL),A     ;
  $926A INC H         ;
  $926B DJNZ $9267    ;
@@ -5008,8 +4992,8 @@ c$925C CALL $855B    ; Glyph-draw preamble
 ; to pick which screen edge to test Joe's X against ($20 or $C0), and if Joe is
 ; there, collects it via #R$86E4.
 @label=CheckHostage
-c$926E LD HL,$9D24   ; {HL = $9D24 (hostage tile table); B = 6
- $9271 LD B,$06      ; }
+c$926E LD HL,$9D24   ; Hostage tile table
+ $9271 LD B,$06      ; B = 6
 *$9273 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9276 CP (HL)       ;
  $9277 JR NZ,$9292   ; }
@@ -5031,6 +5015,8 @@ c$926E LD HL,$9D24   ; {HL = $9D24 (hostage tile table); B = 6
 ; Delay (redirect)
 ;
 ; Used by the routines at #R$7B1E, #R$86C0 and #R$A328.
+@label=jp_Delay
+@label=jp_Delay
 c$9296 JP $A78A      ; => Delay
 
 ; Data block at 9299
@@ -5042,12 +5028,12 @@ b$9299 DEFB $0B,$78,$B1,$20,$F9,$C9,$00
 ;
 ; .
 ;
-; Same pattern as #R$926E but for the 15-entry key tile table $9D00; collects
-; directly inline at $92C8 (mark tile $FF, increment key counter $8215, redraw
-; digit, rebuild background).
+; Same pattern as #R$926E but for the 15-entry key tile table #R$9D00; collects
+; directly inline at #R$92C8 (mark tile $FF, increment key counter $8215,
+; redraw digit, rebuild background).
 @label=CheckKey
-c$92A0 LD HL,$9D00   ; {HL = $9D00 (key tile table); B = 15
- $92A3 LD B,$0F      ; }
+c$92A0 LD HL,$9D00   ; HL = #R$9D00 (key tile table)
+ $92A3 LD B,$0F      ; B = 15
 *$92A5 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $92A8 CP (HL)       ;
  $92A9 JR NZ,$92C4   ; }
@@ -5066,11 +5052,12 @@ c$92A0 LD HL,$9D00   ; {HL = $9D00 (key tile table); B = 15
  $92C5 DJNZ $92A5    ;
  $92C7 RET           ;
 ; Pickup the key
-*$92C8 LD (HL),$FF   ; {Mark tile visited ($FF); increment key counter $8215
- $92CA LD HL,$8215   ;
- $92CD INC (HL)      ;
+@label=PickupKey
+*$92C8 LD (HL),$FF   ; {Mark tile visited ($FF)
+ $92CA LD HL,$8215   ; }
+ $92CD INC (HL)      ; {Increment key counter $8215
  $92CE LD C,(HL)     ; }
- $92CF LD HL,$50BE   ;
+ $92CF LD HL,$50BE   ; HL = screen row 21 col 30
  $92D2 CALL $925C    ; Draw one digit/character glyph
  $92D5 CALL $8C00    ; Build room background into shadow buffer $B800
  $92D8 LD C,$00      ;
@@ -5087,13 +5074,14 @@ c$92A0 LD HL,$9D00   ; {HL = $9D00 (key tile table); B = 15
 ; Sets bit7 on the tile's byte (rather than $FF like the other 3 pickups),
 ; increments the bomb counter $8216, redraws the digit, and does an extra
 ; countdown-timer tick at $85F9 (shared with #R$9650) before rebuilding.
-c$92DE LD A,(HL)     ; {Set bit7 on tile byte; increment bomb counter $8216
+@label=PickupBomb
+c$92DE LD A,(HL)     ; {Set bit7 on tile byte
  $92DF ADD A,$80     ;
  $92E1 LD (HL),A     ;
  $92E2 LD HL,$8216   ; }
- $92E5 INC (HL)      ;
- $92E6 LD C,(HL)     ;
- $92E7 LD HL,$50FE   ;
+ $92E5 INC (HL)      ; {Increment bomb counter $8216
+ $92E6 LD C,(HL)     ; }
+ $92E7 LD HL,$50FE   ; HL = screen row 23 col 30
  $92EA CALL $925C    ; Draw one digit/character glyph
  $92ED LD C,$02      ;
  $92EF CALL $86C0    ; Show pickup message popup
@@ -5114,11 +5102,11 @@ b$92FA DEFB $FF,$C0,$AF,$32,$F9,$85
 ; .
 ;
 ; Same pattern as #R$926E, for the 6-entry bomb tile table $9D18 (also scanned
-; by #R$8D3C's level-exit check - collecting the last bomb at the edge may be
-; what triggers that). On match, hands off to #R$92DE.
+; by #R$8D3C, which routes edge-touches into the bomb minigame instead). On
+; match, hands off to #R$92DE.
 @label=CheckBomb
-c$9300 LD HL,$9D18   ; {HL = $9D18 (bomb tile table); B = 6
- $9303 LD B,$06      ; }
+c$9300 LD HL,$9D18   ; Bomb tile table
+ $9303 LD B,$06      ; B = 6
 *$9305 LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9308 CP (HL)       ;
  $9309 JR NZ,$9324   ; }
@@ -5144,12 +5132,12 @@ c$9300 LD HL,$9D18   ; {HL = $9D18 (bomb tile table); B = 6
 ; .
 ;
 ; Same pattern as #R$926E, for the 6-entry food tile table $9D0F. Collects
-; inline at $9350 (mark tile $FF, rebuild background, then #R$9456 - refills
+; inline at #R$9350 (mark tile $FF, rebuild background, then #R$9456 - refills
 ; the energy gauge via #R$A23C). No dedicated on-screen counter byte like the
 ; other pickups (it's consumed immediately as a health refill, not stockpiled).
 @label=CheckFood
-c$9328 LD HL,$9D0F   ; {HL = $9D0F (food tile table); B = 6
- $932B LD B,$06      ; }
+c$9328 LD HL,$9D0F   ; Food tile table
+ $932B LD B,$06      ; B = 6
 *$932D LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $9330 CP (HL)       ;
  $9331 JR NZ,$934C   ; }
@@ -5168,6 +5156,7 @@ c$9328 LD HL,$9D0F   ; {HL = $9D0F (food tile table); B = 6
  $934D DJNZ $932D    ;
  $934F RET           ;
 ; Pickup the food
+@label=PickupFood
 *$9350 LD (HL),$FF   ; Mark tile visited ($FF)
  $9352 CALL $8C00    ; Build room background into shadow buffer $B800
  $9355 LD C,$03      ;
@@ -5178,13 +5167,20 @@ c$9328 LD HL,$9D0F   ; {HL = $9D0F (food tile table); B = 6
 ; "YOU ARE DEAD" message and finalize the game
 ;
 ; Used by the routines at #R$93A0 and #R$9650.
+;
+; .
+;
+; Called from #R$93A0 once the energy gauge is fully depleted. Draws a black
+; popup box and the "YOU ARE DEAD" message, polls the main menu state and waits
+; for all keys released, then falls into #R$8EB4 (post-game hub - menu or
+; high-score entry).
 @label=JoeDead
 c$935E POP BC        ;
  $935F CALL $923C    ; Draw black box on the screen
  $9362 LD IX,$9382   ; '  YOU ARE DEAD'
- $9366 LD HL,$4868   ; screen address
+ $9366 LD HL,$4868   ; HL = screen row 11 col 8
  $9369 CALL $9196    ; Draw string IX
- $936C CALL $8A09    ; Poll main menu state => $8A5E
+ $936C CALL $8A09    ; Poll main menu state
  $936F CALL $91FA    ; Wait until every key on the keyboard is released
  $9372 NOP           ;
  $9373 NOP           ;
@@ -5205,6 +5201,7 @@ b$9377 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; .
 ;
 ; DE = mask addr, HL = destination addr
+@label=SetJoeAddrMask
 c$9396 LD ($8221),HL ;
  $9399 LD ($8223),DE ; set current Joe sprite mask address
  $939D RET           ;
@@ -5215,18 +5212,26 @@ s$939E DEFS $02
 ; Reduce energy
 ;
 ; Used by the routine at #R$7CF7.
+;
+; .
+;
+; Called whenever contact damage is due (e.g. #R$93DC). Decrements one segment
+; of the 18-byte energy-gauge array ($A228+), rippling the borrow into earlier
+; segments as each one empties ($FF wraps to $00, decrement continues into the
+; previous segment). Redraws the gauge via #R$FFB5, then falls into #R$935E
+; ("YOU ARE DEAD") once the gauge byte at $A228 itself reaches 0.
 @label=ReduceEnergy
-c$93A0 LD HL,$A239   ;
- $93A3 LD B,$12      ;
-*$93A5 DEC (HL)      ;
+c$93A0 LD HL,$A239   ; Energy gauge tail
+ $93A3 LD B,$12      ; B = $12
+*$93A5 DEC (HL)      ; {Deplete one gauge segment, carry borrow to next
  $93A6 LD A,(HL)     ;
  $93A7 CP $FF        ;
  $93A9 JR NZ,$93B0   ;
  $93AB LD (HL),$00   ;
  $93AD DEC HL        ;
- $93AE DJNZ $93A5    ;
-*$93B0 LD IX,$A228   ;
- $93B4 LD HL,$50A1   ;
+ $93AE DJNZ $93A5    ; }
+*$93B0 LD IX,$A228   ; Glyph string
+ $93B4 LD HL,$50A1   ; Screen row 21 col 1
  $93B7 CALL $FFB5    ; Draw a string of 8x8 glyphs
  $93BA LD A,($A228)  ;
  $93BD OR A          ;
@@ -5239,9 +5244,19 @@ b$93C2 DEFB $00,$00,$00,$00,$19,$19,$19,$19
  $93D2 DEFB $05,$82,$34,$7E,$FE,$40,$CA,$5E
  $93DA DEFB $93,$C9
 
-; Something with energy ??
+; Contact check: Joe sprite vs screen pixels -> reduce energy
 ;
 ; Used by the routine at #R$8F00.
+;
+; .
+;
+; Compares Joe's sprite bytes ($8221/$8223) against what's already on the live
+; screen (NOT mask AND screen byte) row by row, 29 scanlines (standard Spectrum
+; row-advance with wraparound). Any mismatch means a solid pixel (e.g. the
+; just-drawn soldier) sits under Joe's own sprite -> #R$7CF7 (reduce energy).
+; Called once per frame right after DrawJoe/DrawSoldier - pixel-perfect touch
+; detection, not a coordinate-box test.
+@label=CheckContact
 c$93DC LD HL,($8221) ;
  $93DF LD DE,($8223) ; get current Joe sprite mask address
  $93E3 CALL $9446    ; B = D - 4
@@ -5256,9 +5271,9 @@ c$93DC LD HL,($8221) ;
  $93EE LD A,(BC)     ;
  $93EF CP E          ;
  $93F0 JP NZ,$7CF7   ; => Reduce energy, if allowed
- $93F3 INC BC        ;
+ $93F3 INC BC        ; {Row1: advance sprite/screen pointers
  $93F4 LD E,C        ;
- $93F5 INC HL        ;
+ $93F5 INC HL        ; }
  $93F6 LD A,(DE)     ;
  $93F7 CPL           ;
  $93F8 AND (HL)      ;
@@ -5276,9 +5291,9 @@ c$93DC LD HL,($8221) ;
  $9406 LD A,(BC)     ;
  $9407 CP E          ;
  $9408 JP NZ,$7CF7   ; => Reduce energy, if allowed
- $940B INC BC        ;
+ $940B INC BC        ; {Row2: advance sprite/screen pointers
  $940C LD E,C        ;
- $940D INC HL        ;
+ $940D INC HL        ; }
  $940E LD A,(DE)     ;
  $940F CPL           ;
  $9410 AND (HL)      ;
@@ -5286,26 +5301,26 @@ c$93DC LD HL,($8221) ;
  $9412 LD A,(BC)     ;
  $9413 CP E          ;
  $9414 JP NZ,$7CF7   ; => Reduce energy, if allowed
- $9417 INC BC        ;
+ $9417 INC BC        ; {Row3 done: advance pointers, bump column
  $9418 LD E,C        ;
  $9419 INC HL        ;
- $941A INC H         ;
- $941B NOP           ;
+ $941A INC H         ; }
+ $941B NOP           ; {Unused padding (NOP + 4x DEC HL)
  $941C DEC HL        ;
  $941D DEC HL        ;
  $941E DEC HL        ;
- $941F DEC HL        ;
- $9420 NOP           ;
+ $941F DEC HL        ; }
+ $9420 NOP           ; {Unused padding (8x NOP)
  $9421 NOP           ;
  $9422 NOP           ;
  $9423 NOP           ;
  $9424 NOP           ;
  $9425 NOP           ;
  $9426 NOP           ;
- $9427 NOP           ;
- $9428 LD A,H        ;
+ $9427 NOP           ; }
+ $9428 LD A,H        ; {Row wrapped past 8 lines? advance to next block
  $9429 AND $07       ;
- $942B JR NZ,$943D   ;
+ $942B JR NZ,$943D   ; }
  $942D LD A,H        ;
  $942E SUB $08       ;
  $9430 LD H,A        ;
@@ -5347,6 +5362,7 @@ b$944C DEFB $06,$08,$1A,$77,$13,$23,$10,$FA
 ;
 ; Calls #R$A23C to refill the energy gauge $A228-$A239 back to full, then
 ; clears $8205.
+@label=ConsumeFood
 c$9456 CALL $A23C    ; Energy gauge initial fill
  $9459 LD A,$00      ;
  $945B LD ($8205),A  ;
@@ -5364,18 +5380,18 @@ s$945F DEFS $05
 ; Byte-identical to #R$8164 but uses $8213 as the shared direction step instead
 ; of $8212 - a second, independent synchronized patrol group.
 @label=SoldierPattern2
-c$9464 LD A,($8213)   ; {X += $8213 (shared step); hit X=2 or $E6?
+c$9464 LD A,($8213)   ; {X += $8213 (shared step)
  $9467 ADD A,(IX+$01) ;
- $946A LD (IX+$01),A  ;
- $946D CP $02         ;
+ $946A LD (IX+$01),A  ; }
+ $946D CP $02         ; {Hit X=2 or $E6?
  $946F JR Z,$9475     ;
  $9471 CP $E6         ;
  $9473 JR NZ,$947D    ; }
 *$9475 LD A,($8213)   ; {Flip $8213's sign
  $9478 XOR $FE        ;
  $947A LD ($8213),A   ; }
-*$947D LD C,(IX+$01)  ; {C = soldier X; pick sprite by $8213 sign, continue at
- $9480 LD A,($8213)   ; #R$9028
+*$947D LD C,(IX+$01)  ; C = soldier X
+ $9480 LD A,($8213)   ; {Pick sprite by $8213 sign, continue at #R$9028
  $9483 AND $80        ;
  $9485 JR NZ,$948D    ; }
  $9487 LD DE,$AA00    ;
@@ -5389,25 +5405,35 @@ b$9493 DEFB $B2,$C3,$28,$90,$00
 ; Set initial values
 ;
 ; Used by the routine at #R$7D00.
+;
+; .
+;
+; Also rotates the item-placement scratch table #R$9D80 by 5 bytes in place
+; (backs up 5 bytes to $9DE4, shifts the rest down, copies the result into
+; #R$9D00) - live-confirmed deterministic, no RNG: repeated "Start Game"
+; presses within one power-on session drift the item layout further each time,
+; but a cold restart always reproduces the same starting phase (see
+; docs/Actors.md).
+@label=SetInitialValues
 c$9498 LD BC,$0028   ;
  $949B LD HL,$8228   ;
  $949E LD DE,$8200   ;
  $94A1 LDIR          ; set variables initial values
  $94A3 NOP           ;
- $94A4 LD BC,$0005   ;
- $94A7 LD HL,$9D80   ;
- $94AA LD DE,$9DE4   ;
- $94AD LDIR          ;
- $94AF CALL $8A06    ; Poll main menu state => $8A44
- $94B2 LD DE,$9D80   ;
+ $94A4 LD BC,$0005   ; BC = 5 (rotate amount)
+ $94A7 LD HL,$9D80   ; {HL=#R$9D80, DE=$9DE4 (backup src/dst)
+ $94AA LD DE,$9DE4   ; }
+ $94AD LDIR          ; => backup first 5 bytes of #R$9D80
+ $94AF CALL $8A06    ; Poll main menu state
+ $94B2 LD DE,$9D80   ; {DE=#R$9D80, HL=$9D85, BC=$69 (shift setup)
  $94B5 LD HL,$9D85   ;
- $94B8 LD BC,$0069   ;
- $94BB LDIR          ;
+ $94B8 LD BC,$0069   ; }
+ $94BB LDIR          ; => shift remaining 105 bytes down by 5
  $94BD CALL $A23C    ; Energy gauge initial fill
- $94C0 LD BC,$0080   ;
+ $94C0 LD BC,$0080   ; {BC=$80, HL=#R$9D80, DE=#R$9D00 (final copy setup)
  $94C3 LD HL,$9D80   ;
- $94C6 LD DE,$9D00   ;
- $94C9 LDIR          ;
+ $94C6 LD DE,$9D00   ; }
+ $94C9 LDIR          ; => copy rotated buffer into #R$9D00
  $94CB LD DE,$8950   ;
  $94CE LD HL,$FDBE   ;
  $94D1 LD BC,$0010   ;
@@ -5417,7 +5443,7 @@ c$9498 LD BC,$0028   ;
  $94D8 LD HL,$85F9   ;
  $94DB LD (HL),$FF   ;
  $94DD INC HL        ;
- $94DE LD (HL),$22   ; {"20" -> $85FA/$85B
+ $94DE LD (HL),$22   ; {"20" -> #R$85FA/$85B
  $94E0 INC HL        ;
  $94E1 LD (HL),$20   ;
  $94E3 INC HL        ; }
@@ -5477,6 +5503,7 @@ b$9500 DEFB $00,$00,$08,$20,$08,$08,$00,$00
 ; entering initials into a new high-score row. Up/down cycles the character
 ; (#R$8964 stores it), left/right likely moves the cursor (unconfirmed in
 ; detail) - reached from #R$8EB4 when $8210=5.
+@label=HiScoreNameEntry
 c$9580 LD A,$00      ;
  $9582 LD ($8201),A  ; set Joe X
  $9585 LD ($8202),A  ; set current room-tile index = room + 8*subtile
@@ -5535,8 +5562,8 @@ s$95E1 DEFS $05
 ; .
 ;
 ; Same pattern as #R$90AA/#R$85DC (the 3rd of #R$9602's door-graphic columns):
-; animation frame from $8206, source table at $8600+, drawn at $B88C/$B898.
-c$95E6 LD A,($8206)  ; {HL = $8600 + frame*16 (animation source)
+; animation frame from $8206, source table at #R$8600+, drawn at $B88C/$B898.
+c$95E6 LD A,($8206)  ; {HL = #R$8600 + frame*16 (animation source)
  $95E9 AND $06       ;
  $95EB RLCA          ;
  $95EC RLCA          ;
@@ -5563,16 +5590,17 @@ s$9601 DEFS $01
 ;
 ; .
 ;
-; Not room-transition code (that appears to be #R$8D3C, unconfirmed) - this
-; draws animated door/object graphics for the current room-tile. IX = #R$9500 +
+; Draws animated door/object graphics for the current room-tile (not
+; room-transition code - that lives in #R$7E32/#R$7F6E/#R$7FA0). IX = #R$9500 +
 ; $8202 (the current room-tile's event-flags byte). Bits 0,1,6,7 are NOPed out
 ; in this build (disabled/unused). Bits 2,3,4 each draw a different column of a
 ; door graphic (#R$90AA, #R$85DC, #R$95E6 - all index the same per-frame
-; animation table at $8600+ via counter $8206, just at different destination
+; animation table at #R$8600+ via counter $8206, just at different destination
 ; columns in the shadow buffer: $B884/$B890, $B888/$B894, $B88C/$B898). Bit 5
-; (#R$FFE8) is gated on $8209==0 and leads into #R$9880: a key-gated staircase
-; check - marks this tile as requiring a key to climb.
-c$9602 LD A,($8202)  ; {IX = $9500 + $8202 (this room's event-flags byte)
+; (#R$FFE8) is gated on $8209==0 and leads into #R$9880: a key-gated door check
+; - marks this tile as requiring a key to open.
+@label=DrawDoor
+c$9602 LD A,($8202)  ; {IX = #R$9500 + $8202 (this room's event-flags byte)
  $9605 LD L,A        ;
  $9606 LD H,$95      ; }
  $9608 PUSH HL       ;
@@ -5596,7 +5624,7 @@ c$9602 LD A,($8202)  ; {IX = $9500 + $8202 (this room's event-flags byte)
  $962B LD A,(IX+$00) ; {Bit4: draw door column 3 (#R$95E6)
  $962E AND $10       ;
  $9630 CALL NZ,$95E6 ; }
- $9633 LD A,(IX+$00) ; {Bit5: key-gated staircase check (#R$FFE8)
+ $9633 LD A,(IX+$00) ; {Bit5: key-gated door check (#R$FFE8)
  $9636 AND $20       ;
  $9638 CALL NZ,$FFE8 ; }
  $963B LD A,(IX+$00) ; {Bit6: unused (NOPed out)
@@ -5617,6 +5645,16 @@ s$964C DEFS $04
 ; Countdown timer tick, MM:SS-style display at $85FA
 ;
 ; Used by the routine at #R$8F00.
+;
+; .
+;
+; Called every frame from #R$8F00. No-op while the gate byte $85F9 is $FF (see
+; #R$92DE, which releases it on first bomb contact). Otherwise decrements $85F9
+; each frame, and once it wraps past 0 (every 25 frames), decrements the
+; "MM:SS"-style digit string at $85FA-$85FE (seconds ones, seconds tens with a
+; 0-5 wrap, minutes with a 0-1 wrap), redrawing it via #R$9196 unless it's
+; already at "00:00".
+@label=CountdownTick
 c$9650 LD HL,$85F9   ;
  $9653 LD A,(HL)     ;
  $9654 CP $FF        ;
@@ -5651,11 +5689,11 @@ c$9650 LD HL,$85F9   ;
  $9681 CP $1F        ;
  $9683 JR Z,$968F    ;
  $9685 LD IX,$85FA   ;
- $9689 LD HL,$50E8   ;
+ $9689 LD HL,$50E8   ; HL = screen row 23 col 8
  $968C JP $9196      ; => Draw string IX
 *$968F CALL $923C    ; Draw black box on the screen
  $9692 LD IX,$96C0   ;
- $9696 LD HL,$486A   ;
+ $9696 LD HL,$486A   ; HL = screen row 11 col 10
  $9699 CALL $9196    ; Draw string IX
  $969C CALL $856E    ; Pickup/beep sound effect
  $969F CALL $856E    ; Pickup/beep sound effect
@@ -5686,6 +5724,7 @@ b$96C0 DEFB $0E,$14,$13,$1F,$0E,$05,$1F,$13
 ; routines (#R$900A/#R$9464/#R$8164/#R$7D64/#R$7D82/#R$7D8C). Confirmed 4/4
 ; against known room layout: tiles $71/$7A (have a soldier) hold pattern 2/1;
 ; tiles $72/$7B (no soldier) hold pattern 0 - see docs/Actors.md.
+@label=SoldierDispatch
 c$96CC LD H,$97      ; {IX = #R$9700 entry for current tile ($8202)
 ; This entry point is used by the routine at #R$8E53.
 *$96CE LD A,($8202)  ;
@@ -5719,8 +5758,8 @@ b$96FE DEFB $00,$00
 ;
 ; .
 ;
-; Word pairs indexed by $8202 (low byte at $9700+2*idx, high byte at +2*idx+1 -
-; the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier
+; Word pairs indexed by $8202 (low byte at #R$9700+2*idx, high byte at +2*idx+1
+; - the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier
 ; movement-pattern selector (0 = no soldier, 1-6 = a movement routine) - see
 ; #R$96CC and docs/Actors.md. Confirmed 4/4 against known room layout. Array
 ; proper is 128 words (256 bytes, index range 0-127); the trailing 128 bytes
@@ -5870,20 +5909,21 @@ b$9700 DEFW $4600
  $9870 DEFB $1F,$1F,$1F,$12,$0E,$0C,$04,$1F ;
  $9878 DEFB $05,$0E,$0E,$03,$1D,$1F,$1F,$FF ; }
 
-; Key-gated staircase: consume a key to climb, or block the UP input
+; Key-gated door: consume a key to open, or block the UP input
 ;
 ; Used by the routine at #R$FFE8.
 ;
 ; .
 ;
 ; Called (via #R$FFE8) whenever Joe isn't mid-jump ($8209=0) and the current
-; tile has an up-stair flag set in $820C (bit4=left side, bit2=right side). If
-; Joe is standing at that stair's screen edge with UP pressed: with keys in
+; tile has an up-door flag set in $820C (bit4=left side, bit2=right side). If
+; Joe is standing at that door's screen edge with UP pressed: with keys in
 ; stock ($8215), consumes one and redraws the key-count digit (#R$925C); with
 ; none, clears the UP bit in $820A before #R$7E32 processes it - blocking the
-; level-up transition outright. Confirms $8215's "key" role extends beyond a
-; simple pickup counter: keys are also the toll for certain staircases.
-; Left-edge and right-edge halves are otherwise identical.
+; level transition outright. Confirms $8215's "key" role extends beyond a
+; simple pickup counter: keys are also the toll for certain doors. Left-edge
+; and right-edge halves are otherwise identical.
+@label=KeyDoorGate
 c$9880 LD A,($820A)  ; {UP pressed?
  $9883 AND $08       ;
  $9885 JR Z,$98B4    ; }
@@ -5892,7 +5932,7 @@ c$9880 LD A,($820A)  ; {UP pressed?
  $988C AND $E0       ;
  $988E CP $20        ;
  $9890 JR NZ,$98B4   ; }
- $9892 LD A,($820C)  ; {$820C bit4 (up-stair-left) set?
+ $9892 LD A,($820C)  ; {$820C bit4 (up-door-left) set?
  $9895 AND $10       ;
  $9897 JR Z,$98B4    ; }
  $9899 LD A,($8215)  ; {Have keys ($8215)?
@@ -5902,10 +5942,11 @@ c$9880 LD A,($820A)  ; {UP pressed?
  $98A2 AND $F7       ;
  $98A4 LD ($820A),A  ; set input state
  $98A7 JR $98B4      ;
-*$98A9 LD HL,$8215   ; {Have a key: decrement $8215, redraw digit
+; Open left-side door: decrement $8215, redraw digit
+*$98A9 LD HL,$8215   ; {Decrement $8215
  $98AC DEC (HL)      ;
- $98AD LD C,(HL)     ;
- $98AE LD HL,$50BE   ;
+ $98AD LD C,(HL)     ; }
+ $98AE LD HL,$50BE   ; {Redraw digit, screen row 21 col 30
  $98B1 JP $925C      ; }
 *$98B4 LD A,($820A)  ; get input state
  $98B7 AND $08       ;
@@ -5915,7 +5956,7 @@ c$9880 LD A,($820A)  ; {UP pressed?
  $98BF AND $E0       ;
  $98C1 CP $C0        ;
  $98C3 RET NZ        ;
- $98C4 LD A,($820C)  ; {$820C bit2 (up-stair-right) set?
+ $98C4 LD A,($820C)  ; {$820C bit2 (up-door-right) set?
  $98C7 AND $04       ;
  $98C9 RET Z         ; }
  $98CA LD A,($8215)  ; {Have keys ($8215)?
@@ -5925,17 +5966,12 @@ c$9880 LD A,($820A)  ; {UP pressed?
  $98D3 AND $F7       ;
  $98D5 LD ($820A),A  ; set input state
  $98D8 RET           ;
-
-; Unused
-s$98D9 DEFS $01
-
-; Have a key (right-side stair): decrement $8215, redraw digit
-;
-; Used by the routine at #R$9880.
-c$98DA LD HL,$8215   ;
+ $98D9 NOP           ;
+; Open right-side door: decrement $8215, redraw digit
+*$98DA LD HL,$8215   ;
  $98DD DEC (HL)      ;
  $98DE LD C,(HL)     ;
- $98DF LD HL,$50BE   ;
+ $98DF LD HL,$50BE   ; HL = screen row 21 col 30
  $98E2 JP $925C      ; => Draw one digit/character glyph
 
 ; Data block at 98E5
@@ -6099,182 +6135,52 @@ b$9900 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($9900-$9
 ; #R$A2F6/#R$A328/#R$7B1E for ammo/uniform) has the entry count hardcoded.
 ; 2-byte gaps between some tables (e.g. $9D1E-$9D1F, $9D22-$9D23) are
 ; unaccounted for - not yet part of any known table.
-b$9D00 DEFB $0C,$31,$4F,$5E,$7D,$0D,$32,$51,$69,$7C,$11,$33,$52,$61,$7A ; Keys (15
-                                                                        ; tiles)
- $9D0F DEFB $01,$13,$35,$54,$64,$02                                     ; Food (6
-                                                                        ; tiles) -
-                                                                        ; refills
-                                                                        ; energy,
-                                                                        ; see
-                                                                        ; #R$9328/#R$9456
+b$9D00 DEFB $0C,$31,$4F,$5E,$7D,$0D,$32,$51 ; {Keys (15 tiles)
+ $9D08 DEFB $69,$7C,$11,$33,$52,$61,$7A     ; }
+ $9D0F DEFB $01,$13,$35,$54,$64,$02         ; Food (6 tiles) - refills energy,
+                                            ; see #R$9328/#R$9456
  $9D15 DEFB $20,$42,$55
- $9D18 DEFB $65,$04,$22,$43,$59,$67                                     ; Bombs (6
-                                                                        ; tiles)
+ $9D18 DEFB $65,$04,$22,$43,$59,$67         ; Bombs (6 tiles)
  $9D1E DEFB $05,$24
- $9D20 DEFB $49,$5A                                                     ; Ammo (2
-                                                                        ; tiles) -
-                                                                        ; see
-                                                                        ; #R$A2F6/#R$A328/#R$A798
+ $9D20 DEFB $49,$5A                         ; Ammo (2 tiles) - see
+                                            ; #R$A2F6/#R$A328/#R$A798
  $9D22 DEFB $6A,$06
- $9D24 DEFB $26,$4A,$5B,$6C,$07,$29                                     ; Hostages
-                                                                        ; (6 tiles)
+ $9D24 DEFB $26,$4A,$5B,$6C,$07,$29         ; Hostages (6 tiles)
  $9D2A DEFB $4C
- $9D2B DEFB $5C,$71                                                     ; Uniform/disguise
-                                                                        ; (2 tiles)
-                                                                        ; - see
-                                                                        ; #R$A2F6/#R$7B1E
+ $9D2B DEFB $5C,$71                         ; Uniform/disguise (2 tiles) - see
+                                            ; #R$A2F6/#R$7B1E
  $9D2D DEFB $08
 
-; Message at 9D2E
-t$9D2E DEFM "/N]y"
+; Data block at 9D2E
+b$9D2E DEFB $2F,$4E,$5D,$79,$0C,$31,$4F,$5E
+ $9D36 DEFB $7D,$0D,$32,$51,$69,$7C,$11,$33
+ $9D3E DEFB $52,$61,$7A,$01,$13,$35,$54,$64
+ $9D46 DEFB $02,$20,$42,$55,$65,$04,$22,$43
+ $9D4E DEFB $59,$67,$05,$24,$49,$5A,$6A,$06
+ $9D56 DEFB $26,$4A,$5B,$6C,$07,$29,$4C,$5C
+ $9D5E DEFB $71,$08,$2F,$4E,$5D,$79,$69,$6A
+ $9D66 DEFB $6B,$6C,$6D,$69,$6A,$6B,$6C,$6D
+ $9D6E DEFB $6E,$6F,$70,$71,$72,$73,$74,$75
+ $9D76 DEFB $76,$77,$78,$79,$7A,$7B,$7C,$7D
+ $9D7E DEFB $7E,$7F
 
-; Data block at 9D32
-b$9D32 DEFB $0C,$31,$4F,$5E,$7D,$0D
-
-; Message at 9D38
-t$9D38 DEFM "2Qi"
-
-; Data block at 9D3B
-b$9D3B DEFB $7C,$11
-
-; Message at 9D3D
-t$9D3D DEFM "3Raz"
-
-; Data block at 9D41
-b$9D41 DEFB $01,$13
-
-; Message at 9D43
-t$9D43 DEFM "5Td"
-
-; Data block at 9D46
-b$9D46 DEFB $02
-
-; Message at 9D47
-t$9D47 DEFM " BUe"
-
-; Data block at 9D4B
-b$9D4B DEFB $04
-
-; Message at 9D4C
-t$9D4C DEFM "\"CYg"
-
-; Data block at 9D50
-b$9D50 DEFB $05
-
-; Message at 9D51
-t$9D51 DEFM "$IZj"
-
-; Data block at 9D55
-b$9D55 DEFB $06
-
-; Message at 9D56
-t$9D56 DEFM "&J[l"
-
-; Data block at 9D5A
-b$9D5A DEFB $07,$29,$4C,$5C,$71,$08
-
-; Message at 9D60
-t$9D60 DEFM "/N]yijklmijklmnopqrstuvwxyz"
-
-; Data block at 9D7B
-b$9D7B DEFB $7B,$7C,$7D,$7E,$7F,$0C,$31,$4F
- $9D83 DEFB $5E,$7D,$0D
-
-; Message at 9D86
-t$9D86 DEFM "2Qi"
-
-; Data block at 9D89
-b$9D89 DEFB $7C,$11
-
-; Message at 9D8B
-t$9D8B DEFM "3Raz"
-
-; Data block at 9D8F
-b$9D8F DEFB $01,$13
-
-; Message at 9D91
-t$9D91 DEFM "5Td"
-
-; Data block at 9D94
-b$9D94 DEFB $02
-
-; Message at 9D95
-t$9D95 DEFM " BUe"
-
-; Data block at 9D99
-b$9D99 DEFB $04
-
-; Message at 9D9A
-t$9D9A DEFM "\"CYg"
-
-; Data block at 9D9E
-b$9D9E DEFB $05
-
-; Message at 9D9F
-t$9D9F DEFM "$IZj"
-
-; Data block at 9DA3
-b$9DA3 DEFB $06
-
-; Message at 9DA4
-t$9DA4 DEFM "&J[l"
-
-; Data block at 9DA8
-b$9DA8 DEFB $07,$29,$4C,$5C,$71,$08
-
-; Message at 9DAE
-t$9DAE DEFM "/N]y"
-
-; Data block at 9DB2
-b$9DB2 DEFB $0C,$31,$4F,$5E,$7D,$0D
-
-; Message at 9DB8
-t$9DB8 DEFM "2Qi"
-
-; Data block at 9DBB
-b$9DBB DEFB $7C,$11
-
-; Message at 9DBD
-t$9DBD DEFM "3Raz"
-
-; Data block at 9DC1
-b$9DC1 DEFB $01,$13
-
-; Message at 9DC3
-t$9DC3 DEFM "5Td"
-
-; Data block at 9DC6
-b$9DC6 DEFB $02
-
-; Message at 9DC7
-t$9DC7 DEFM " BUe"
-
-; Data block at 9DCB
-b$9DCB DEFB $04
-
-; Message at 9DCC
-t$9DCC DEFM "\"CYg"
-
-; Data block at 9DD0
-b$9DD0 DEFB $05
-
-; Message at 9DD1
-t$9DD1 DEFM "$IZj"
-
-; Data block at 9DD5
-b$9DD5 DEFB $06
-
-; Message at 9DD6
-t$9DD6 DEFM "&J[l"
-
-; Data block at 9DDA
-b$9DDA DEFB $07,$29,$4C,$5C,$71,$08
-
-; Message at 9DE0
-t$9DE0 DEFM "/N]yijklmijklmnopqrstuvwxyz"
-
-; Data block at 9DFB
-b$9DFB DEFB $7B,$7C,$7D,$7E,$7F
+; Item-placement scratch table, rotated by $9498 each game start
+b$9D80 DEFB $0C,$31,$4F,$5E,$7D,$0D,$32,$51 ; {Master 45-byte collectible table
+ $9D88 DEFB $69,$7C,$11,$33,$52,$61,$7A,$01 ; (same layout as $9D00) repeated
+ $9D90 DEFB $13,$35,$54,$64,$02,$20,$42,$55 ; ~3x, plus filler tail
+ $9D98 DEFB $65,$04,$22,$43,$59,$67,$05,$24 ;
+ $9DA0 DEFB $49,$5A,$6A,$06,$26,$4A,$5B,$6C ;
+ $9DA8 DEFB $07,$29,$4C,$5C,$71,$08,$2F,$4E ;
+ $9DB0 DEFB $5D,$79,$0C,$31,$4F,$5E,$7D,$0D ;
+ $9DB8 DEFB $32,$51,$69,$7C,$11,$33,$52,$61 ;
+ $9DC0 DEFB $7A,$01,$13,$35,$54,$64,$02,$20 ;
+ $9DC8 DEFB $42,$55,$65,$04,$22,$43,$59,$67 ;
+ $9DD0 DEFB $05,$24,$49,$5A,$6A,$06,$26,$4A ;
+ $9DD8 DEFB $5B,$6C,$07,$29,$4C,$5C,$71,$08 ;
+ $9DE0 DEFB $2F,$4E,$5D,$79,$69,$6A,$6B,$6C ;
+ $9DE8 DEFB $6D,$69,$6A,$6B,$6C,$6D,$6E,$6F ;
+ $9DF0 DEFB $70,$71,$72,$73,$74,$75,$76,$77 ;
+ $9DF8 DEFB $78,$79,$7A,$7B,$7C,$7D,$7E,$7F ; }
 
 ; Text for running line of symbols
 b$9E00 DEFB $1F,$0C,$08,$12,$12,$08,$0E,$0D                     ; ' MISSION '
@@ -6354,7 +6260,7 @@ b$9F00 DEFB $8C,$12,$C8,$12,$A0,$12,$C8,$12
 ;
 ; .
 ;
-; 256x16px image (32 chars x 2 chars), drawn by #R$8B05 (DE=$A000, straight
+; 256x16px image (32 chars x 2 chars), drawn by #R$8B05 (DE=#R$A000, straight
 ; sequential copy). Stored in raster-scanline order - 32 bytes per scanline, 16
 ; scanlines - NOT the per-8x8-cell order the other sprite blocks use.
 ; Reconstructing one UDG cell needs 8 bytes at stride 32 (one byte per
@@ -6419,42 +6325,42 @@ b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; attribute/border strips, then draws the gauge via #R$FFB5. Used both at
 ; game-start init and by the food pickup (#R$9456).
 @label=EnergyFill
-c$A23C LD HL,$A228   ; {HL = $A228 (energy gauge); B = 18
- $A23F LD B,$12      ; }
-*$A241 LD (HL),$04   ;
+c$A23C LD HL,$A228   ; Energy gauge
+ $A23F LD B,$12      ; B = 18
+*$A241 LD (HL),$04   ; {Fill gauge segments to $04
  $A243 INC HL        ;
- $A244 DJNZ $A241    ;
+ $A244 DJNZ $A241    ; }
  $A246 LD HL,$5AA1   ; {Fill gauge attribute strip $5AA1
  $A249 LD B,$06      ; }
 *$A24B LD (HL),$42   ;
  $A24D INC HL        ;
  $A24E DJNZ $A24B    ;
- $A250 LD B,$06      ;
+ $A250 LD B,$06      ; {Fill attribute strip with $06
 *$A252 LD (HL),$06   ;
  $A254 INC HL        ;
- $A255 DJNZ $A252    ;
- $A257 LD B,$06      ;
+ $A255 DJNZ $A252    ; }
+ $A257 LD B,$06      ; {Fill attribute strip with $44
 *$A259 LD (HL),$44   ;
  $A25B INC HL        ;
- $A25C DJNZ $A259    ;
- $A25E LD HL,$5800   ;
+ $A25C DJNZ $A259    ; }
+ $A25E LD HL,$5800   ; {Fill 64 screen-attribute bytes at $5800 with $42
  $A261 LD B,$40      ;
 *$A263 LD (HL),$42   ;
  $A265 INC HL        ;
- $A266 DJNZ $A263    ;
- $A268 LD IX,$A228   ;
- $A26C LD HL,$50A1   ;
+ $A266 DJNZ $A263    ; }
+ $A268 LD IX,$A228   ; Energy gauge string address
+ $A26C LD HL,$50A1   ; HL = screen row 21 col 1
  $A26F CALL $FFB5    ; Draw a string of 8x8 glyphs
- $A272 LD HL,$5840   ;
+ $A272 LD HL,$5840   ; {Fill 64 bytes at $5840 with $46
  $A275 LD B,$40      ;
 *$A277 LD (HL),$46   ;
  $A279 INC HL        ;
- $A27A DJNZ $A277    ;
- $A27C LD A,$00      ;
+ $A27A DJNZ $A277    ; }
+ $A27C LD A,$00      ; {Clear 4 border/status flag bytes
  $A27E LD ($5840),A  ;
  $A281 LD ($5860),A  ;
  $A284 LD ($585F),A  ;
- $A287 LD ($587F),A  ;
+ $A287 LD ($587F),A  ; }
  $A28A RET           ;
 
 ; Unused
@@ -6567,31 +6473,32 @@ b$A2F1 DEFB $3C,$06,$0F,$C0,$C0
 ; .
 ;
 ; Same pattern as #R$912C but for two more collectibles: ammo (table $9D20,
-; sprite/mask $A500/$A580) and uniform (table $9D2B, sprite/mask $A400/$A480).
-; Pickup is handled separately by #R$A328 (ammo) and #R$7B1E (uniform).
+; sprite/mask $A500/$A580) and uniform (table $9D2B, sprite/mask
+; #R$A400/$A480). Pickup is handled separately by #R$A328 (ammo) and #R$7B1E
+; (uniform).
 @label=DetectAmmoUniform
-c$A2F6 LD HL,$9D20   ;
- $A2F9 LD DE,$A580   ;
- $A2FC LD B,$02      ;
+c$A2F6 LD HL,$9D20   ; Ammo table
+ $A2F9 LD DE,$A580   ; Mask
+ $A2FC LD B,$02      ; B = 2
 *$A2FE LD A,($8202)  ; get current room-tile index = room + 8*subtile
  $A301 CP (HL)       ;
  $A302 JR NZ,$A30A   ;
- $A304 LD B,D        ;
- $A305 LD C,$00      ;
+ $A304 LD B,D        ; {B = D (sprite/mask row), C = 0
+ $A305 LD C,$00      ; }
  $A307 JP $9118      ; => Draw a collectible-item sprite, left or right variant
-*$A30A INC HL        ;
- $A30B DJNZ $A2FE    ;
- $A30D LD HL,$9D2B   ;
- $A310 LD DE,$A480   ;
- $A313 LD B,$02      ;
+*$A30A INC HL        ; {No match: next entry
+ $A30B DJNZ $A2FE    ; }
+ $A30D LD HL,$9D2B   ; Uniform table
+ $A310 LD DE,$A480   ; Mask
+ $A313 LD B,$02      ; B = 2
 *$A315 LD A,($8202)  ; get current room-tile index = room + 8*subtile
  $A318 CP (HL)       ;
  $A319 JR NZ,$A321   ;
- $A31B LD B,D        ;
- $A31C LD C,$00      ;
+ $A31B LD B,D        ; {B = D (sprite/mask row), C = 0
+ $A31C LD C,$00      ; }
  $A31E JP $9118      ; => Draw a collectible-item sprite, left or right variant
-*$A321 INC HL        ;
- $A322 DJNZ $A315    ;
+*$A321 INC HL        ; {No match: next entry
+ $A322 DJNZ $A315    ; }
  $A324 RET           ;
  $A325 XOR D         ;
  $A326 AND E         ;
@@ -6608,8 +6515,8 @@ c$A2F6 LD HL,$9D20   ;
 ; (#R$A370, "SOME AMMUNITION") and a black-box popup, adds 10 to the ammo count
 ; $8225, then continues at #R$9296.
 @label=CheckAmmo
-c$A328 LD HL,$9D20   ; {HL = $9D20 (ammo tile table); B = 2
- $A32B LD B,$02      ; }
+c$A328 LD HL,$9D20   ; Ammo tile table
+ $A32B LD B,$02      ; B = 2
 *$A32D LD A,($8202)  ; {Compare current tile ($8202) against table entry
  $A330 CP (HL)       ;
  $A331 JR NZ,$A34C   ; }
@@ -6633,7 +6540,7 @@ c$A328 LD HL,$9D20   ; {HL = $9D20 (ammo tile table); B = 2
  $A352 CALL $8C00    ; Build room background into shadow buffer $B800
  $A355 CALL $923C    ; Draw black box on the screen
  $A358 LD IX,$A370   ;
- $A35C LD HL,$4868   ;
+ $A35C LD HL,$4868   ; HL = screen row 11 col 8
  $A35F CALL $9196    ; Draw string IX
  $A362 CALL $856E    ; Pickup/beep sound effect
  $A365 LD A,($8225)  ; {$8225 += 10 (ammo)
@@ -6654,6 +6561,7 @@ b$A370 DEFB $12,$0E,$0C,$04,$1F,$00,$0C,$0C ; {"SOME AMMUNITION" (ammo pickup
 ; Fill screen attributes with room attribute
 ;
 ; Used by the routine at #R$FDB0.
+@label=FillRoomAttr
 c$A3AA LD A,($7B0E)  ;
  $A3AD LD HL,$5880   ;
  $A3B0 LD (HL),A     ;
@@ -6665,6 +6573,7 @@ c$A3AA LD A,($7B0E)  ;
 ; Per-frame collectible items scan
 ;
 ; Used by the routine at #R$8F00.
+@label=ScanItems
 c$A3BA CALL $A328    ; Ammo pickup
  $A3BD CALL $9328    ; Food pickup
  $A3C0 CALL $9300    ; Bomb pickup
@@ -6678,6 +6587,7 @@ b$A3CA DEFB $C9
 ; Entry-point trampoline; real routine at $8FB4
 ;
 ; Used by the routine at #R$7D00.
+@label=jp_SetIntVector
 c$A3CB JP $8FB4      ; => Set interrupt-vector page register I=$8A
 
 ; Data block at A3CE
@@ -6784,8 +6694,8 @@ b$A600 DEFB $00,$00,$5C,$C6,$DE,$C6,$C6,$00 ; 'A' = $00
  $A648 DEFB $00,$00,$06,$06,$06,$66,$34,$00 ; 'J' = $09
  $A650 DEFB $00,$00,$C6,$CC,$D8,$CC,$C6,$00 ; 'K' = $0A
  $A658 DEFB $00,$00,$C0,$C0,$C0,$C0,$DE,$00 ; 'L' = $0B
- $A660 DEFB $00,$00,$86,$CE,$DE,$D6,$C6,$00
- $A668 DEFB $00,$00,$C6,$D6,$DE,$CE,$C6,$00
+ $A660 DEFB $00,$00,$86,$CE,$DE,$D6,$C6,$00 ; 'M' = $0C
+ $A668 DEFB $00,$00,$C6,$D6,$DE,$CE,$C6,$00 ; 'N' = $0D
  $A670 DEFB $00,$00,$5C,$C6,$C6,$C6,$5C,$00 ; 'O' = $0E
  $A678 DEFB $00,$00,$DC,$C6,$C6,$DC,$C0,$00 ; 'P' = $0F
 ; #HTML[#UDGARRAY16($A680-$A6FF-8)(font1.png)]
@@ -6807,15 +6717,15 @@ b$A600 DEFB $00,$00,$5C,$C6,$DE,$C6,$C6,$00 ; 'A' = $00
  $A6F8 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; space
 ; #HTML[#UDGARRAY10($A700-$A74F-8)(font2.png)]
  $A700 DEFB $00,$00,$5C,$C6,$C6,$C6,$5C,$00 ; '0' = $20
- $A708 DEFB $00,$00,$18,$38,$18,$18,$18,$00
- $A710 DEFB $00,$00,$5C,$06,$5C,$C0,$DE,$00
- $A718 DEFB $00,$00,$DC,$06,$1C,$06,$DC,$00
- $A720 DEFB $00,$00,$C6,$C6,$DE,$06,$06,$00
- $A728 DEFB $00,$00,$DE,$C0,$DC,$06,$DC,$00
- $A730 DEFB $00,$00,$5C,$C0,$DC,$C6,$5C,$00
- $A738 DEFB $00,$00,$DE,$06,$0C,$18,$18,$00
- $A740 DEFB $00,$00,$5C,$C6,$5C,$C6,$5C,$00
- $A748 DEFB $00,$00,$5C,$C6,$5E,$06,$5C,$00 ; '9'
+ $A708 DEFB $00,$00,$18,$38,$18,$18,$18,$00 ; '1' = $21
+ $A710 DEFB $00,$00,$5C,$06,$5C,$C0,$DE,$00 ; '2' = $22
+ $A718 DEFB $00,$00,$DC,$06,$1C,$06,$DC,$00 ; '3' = $23
+ $A720 DEFB $00,$00,$C6,$C6,$DE,$06,$06,$00 ; '4' = $24
+ $A728 DEFB $00,$00,$DE,$C0,$DC,$06,$DC,$00 ; '5' = $25
+ $A730 DEFB $00,$00,$5C,$C0,$DC,$C6,$5C,$00 ; '6' = $26
+ $A738 DEFB $00,$00,$DE,$06,$0C,$18,$18,$00 ; '7' = $27
+ $A740 DEFB $00,$00,$5C,$C6,$5C,$C6,$5C,$00 ; '8' = $28
+ $A748 DEFB $00,$00,$5C,$C6,$5E,$06,$5C,$00 ; '9' = $29
 
 ; Jump sound effect, gated on jump counter $820D
 ;
@@ -6826,18 +6736,18 @@ b$A600 DEFB $00,$00,$5C,$C6,$DE,$C6,$C6,$00 ; 'A' = $00
 ; While Joe is jumping ($820D <> 0), looks up a tone period from the table at
 ; $8000+ (indexed by $820D) and toggles the border 3 times at that pitch.
 @label=SFX_jump
-c$A750 LD A,($820D)  ; {Check jump counter $820D; return if not jumping
- $A753 OR A          ;
- $A754 RET Z         ; }
+c$A750 LD A,($820D)  ; {Check jump counter $820D
+ $A753 OR A          ; }
+ $A754 RET Z         ; Return if not jumping
  $A755 LD L,A        ; {Look up tone period from table at $8000
  $A756 LD H,$80      ;
  $A758 LD A,(HL)     ;
  $A759 AND $1C       ;
  $A75B RRCA          ;
  $A75C ADD A,$0A     ; }
- $A75E NOP           ;
- $A75F LD D,A        ;
- $A760 LD E,$03      ;
+ $A75E NOP           ; {D = tone period
+ $A75F LD D,A        ; }
+ $A760 LD E,$03      ; E = 3 (repeat count)
 *$A762 LD A,$10      ;
  $A764 OUT ($FE),A   ;
  $A766 LD B,$0E      ;
@@ -6863,6 +6773,7 @@ b$A775 DEFB $00,$00,$00,$00,$00,$7F,$FE
 ; in a tight loop, instead of once per frame - forces the counter to roll all
 ; the way up immediately. Called 40 times in a row by #R$FEB4's win screen,
 ; giving a rapid score-tally-up effect.
+@label=ScoreCountFast
 c$A77C LD A,$FA      ; {$820F = $FA (250 ticks)
  $A77E LD ($820F),A  ; }
 *$A781 PUSH AF       ;
@@ -6897,9 +6808,9 @@ s$A797 DEFS $01
 ; Checked from #R$8F5A (called from #R$8E64). If fire is pressed ($820A bit4)
 ; and $8225 (ammo count) is non-zero, consumes one round, calls #R$FFF0 and
 ; #R$7869 (soldier hit/reaction logic), then sets $8226 based on Joe's X
-; relative to a $9700-table entry for the current tile (bullet range/collision
-; against the current room?). Out of ammo -> #R$A7DC (draw an "out of ammo"
-; message, #R$A7EC).
+; relative to a #R$9700-table entry for the current tile (bullet
+; range/collision against the current room?). Out of ammo -> #R$A7DC (draw an
+; "out of ammo" message, #R$A7EC).
 @label=Shoot
 c$A798 LD A,($820A)  ; {Check fire button ($820A bit4)
  $A79B AND $10       ; }
@@ -6945,7 +6856,7 @@ s$A7DB DEFS $01
 @label=OutOfAmmo
 c$A7DC CALL $923C    ; Draw black box on the screen
  $A7DF LD IX,$A7EC   ; "YOUR GUN'S EMPTY"
- $A7E3 LD HL,$4868   ;
+ $A7E3 LD HL,$4868   ; HL = screen row 11 col 8
  $A7E6 CALL $9196    ; Draw string IX
  $A7E9 JP $A78A      ; => Delay
 
@@ -9679,7 +9590,7 @@ b$FD80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDA0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDA8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Fill status-bar attribute strip, then room attribute
+; Fill HUD attribute strip, then room attribute
 ;
 ; Used by the routine at #R$7AE5.
 ;
@@ -9687,6 +9598,7 @@ b$FD80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; Fills 30 bytes at $5861 with attribute $46, then falls into #R$A3AA to fill
 ; the rest with the current room's attribute.
+@label=FillHudAttr
 c$FDB0 LD HL,$5861   ;
  $FDB3 LD B,$1E      ;
 *$FDB5 LD (HL),$46   ;
@@ -9708,6 +9620,7 @@ b$FDBD DEFB $00,$00,$00,$20,$20,$20,$20,$20
 ; Rounds IX's low byte up to the next 16-byte row boundary (+2), then jumps
 ; into #R$8596 to draw that row's string and play the pickup beep. Called
 ; repeatedly by #R$8DB4/#R$8DBE to reveal the high-score table row by row.
+@label=HiScoreNextIX
 c$FDCE LD A,IXl      ;
  $FDD0 ADD A,$04     ;
  $FDD2 AND $F0       ;
@@ -9755,7 +9668,8 @@ b$FE00 DEFB $02,$0E,$0D,$06,$11,$00,$13,$14
 ;
 ; Triggered by #R$FF14 on game completion. Redraws the "JOE BLADE" sign and
 ; several congratulation strings, pauses (28 iterations of #R$A77C), then falls
-; into a HL-countdown delay before JP $8EB4 (back to the menu/hi-score flow).
+; into a HL-countdown delay before JP #R$8EB4 (back to the menu/hi-score flow).
+@label=WinScreen
 c$FEB4 CALL $83C0    ; Clear screen, border to black
  $FEB7 NOP           ;
  $FEB8 NOP           ;
@@ -9769,22 +9683,22 @@ c$FEB4 CALL $83C0    ; Clear screen, border to black
  $FEC0 NOP           ;
  $FEC1 CALL $8B02    ; Show "JOE BLADE" big sign on the screen
  $FEC4 LD IX,$FE00   ;
- $FEC8 LD HL,$4809   ;
+ $FEC8 LD HL,$4809   ; HL = screen row 8 col 9
  $FECB CALL $9196    ; Draw string IX
  $FECE LD HL,$5908   ;
  $FED1 LD B,$11      ;
 *$FED3 LD (HL),$57   ;
  $FED5 INC HL        ;
  $FED6 DJNZ $FED3    ;
- $FED8 LD HL,$4866   ;
+ $FED8 LD HL,$4866   ; HL = screen row 11 col 6
  $FEDB CALL $9196    ; Draw string IX
- $FEDE LD HL,$48A5   ;
+ $FEDE LD HL,$48A5   ; HL = screen row 13 col 5
  $FEE1 CALL $9196    ; Draw string IX
- $FEE4 LD HL,$48E4   ;
+ $FEE4 LD HL,$48E4   ; HL = screen row 15 col 4
  $FEE7 CALL $9196    ; Draw string IX
- $FEEA LD HL,$5042   ;
+ $FEEA LD HL,$5042   ; HL = screen row 18 col 2
  $FEED CALL $9196    ; Draw string IX
- $FEF0 LD HL,$5082   ;
+ $FEF0 LD HL,$5082   ; HL = screen row 20 col 2
  $FEF3 CALL $9196    ; Draw string IX
  $FEF6 LD A,$28      ;
 *$FEF8 PUSH AF       ;
@@ -9814,7 +9728,8 @@ s$FF0F DEFS $05
 ; is $7B (the same tile as Joe's starting room), the hostage counter $8214=6,
 ; and the bomb counter $8216=6 - i.e. rescue all hostages, defuse all bombs,
 ; and return to the start. On match, calls #R$FEB4 (win screen) and waits for
-; all keys to release before returning to the menu ($8EB4).
+; all keys to release before returning to the menu (#R$8EB4).
+@label=CheckWin
 c$FF14 LD A,($8202)  ; {Current tile = starting room ($7B)?
  $FF17 CP $7B        ;
  $FF19 RET NZ        ; }
@@ -9848,9 +9763,10 @@ c$FF14 LD A,($8202)  ; {Current tile = starting room ($7B)?
 ; when done). A second, independent sparkle-effect slot - resolves $8226's
 ; purpose (set by #R$A798/#R$7869 on a hit): it's the same kill-sparkle
 ; mechanism as $7B10, letting two kills animate at once.
-c$FF3E LD A,($8226)  ; {Check $8226; return if inactive
- $FF41 OR A          ;
- $FF42 RET Z         ; }
+@label=KillSparkle2
+c$FF3E LD A,($8226)  ; {Check $8226
+ $FF41 OR A          ; }
+ $FF42 RET Z         ; Return if inactive
  $FF43 NOP           ;
  $FF44 NOP           ;
  $FF45 NOP           ;
@@ -9887,10 +9803,10 @@ c$FF3E LD A,($8226)  ; {Check $8226; return if inactive
  $FF7D INC H         ;
  $FF7E INC H         ;
  $FF7F LD ($8F8D),HL ;
- $FF82 LD A,($8226)  ; {Advance $8226; done at $1E?
+ $FF82 LD A,($8226)  ; {Advance $8226
  $FF85 INC A         ;
- $FF86 LD ($8226),A  ;
- $FF89 CP $1E        ; }
+ $FF86 LD ($8226),A  ; }
+ $FF89 CP $1E        ; Done at $1E?
  $FF8B RET NZ        ;
  $FF8C DEC A         ;
  $FF8D LD ($8226),A  ; set kill-sparkle animation counter
@@ -9901,6 +9817,7 @@ c$FF3E LD A,($8226)  ; {Check $8226; return if inactive
 ; Per-frame soldier update (redirect)
 ;
 ; Used by the routine at #R$8F00.
+@label=jp_ProcessSoldier
 @label=jp_ProcessSoldier
 c$FF96 JP $8E64      ; => Per-frame soldier update
 
@@ -9918,6 +9835,7 @@ b$FF99 DEFB $CD,$98,$A7,$C3,$3E,$FF,$00
 ; and returns - a double-return that aborts the rest of #R$A798 too (skips
 ; setting $8226 and the facing-direction/range logic), preventing a new shot
 ; from stomping the still-active sparkle.
+@label=ShotGuard
 c$FFA0 LD A,($8209)  ; {Check $8209 (mid-jump)
  $FFA3 OR A          ;
  $FFA4 JR NZ,$FFAB   ; }
@@ -9941,15 +9859,15 @@ c$FFAD LD A,$00      ; {Clear $8226 flag
 ; .
 ;
 ; IX = byte string (each byte a glyph index, $FF-terminated), HL = destination.
-; Each glyph is an 8-byte (8x8 1bpp) block at $A200+index*8. Used by #R$93A0
+; Each glyph is an 8-byte (8x8 1bpp) block at #R$A200+index*8. Used by #R$93A0
 ; (energy loss) and #R$A23C (gauge fill) to draw the energy-gauge bar.
 @label=DrawStringGlyphs
-c$FFB5 LD C,(IX+$00) ; {C = glyph index; $FF terminates
+c$FFB5 LD C,(IX+$00) ; {C = glyph index
  $FFB8 LD A,C        ;
- $FFB9 INC IX        ;
- $FFBB CP $FF        ;
+ $FFB9 INC IX        ; }
+ $FFBB CP $FF        ; {$FF terminates
  $FFBD RET Z         ; }
- $FFBE LD E,C        ; {DE = $A200 + index*8 (glyph source)
+ $FFBE LD E,C        ; {DE = #R$A200 + index*8 (glyph source)
  $FFBF LD D,$00      ;
  $FFC1 EX DE,HL      ;
  $FFC2 ADD HL,HL     ;
@@ -9958,19 +9876,26 @@ c$FFB5 LD C,(IX+$00) ; {C = glyph index; $FF terminates
  $FFC5 EX DE,HL      ;
  $FFC6 LD D,$A2      ; }
  $FFC8 LD B,$08      ;
- $FFCA PUSH HL       ;
+ $FFCA PUSH HL       ; {Draw 8-byte glyph column
 *$FFCB LD A,(DE)     ;
  $FFCC LD (HL),A     ;
  $FFCD INC H         ;
  $FFCE INC DE        ;
- $FFCF DJNZ $FFCB    ;
+ $FFCF DJNZ $FFCB    ; }
  $FFD1 POP HL        ;
  $FFD2 INC HL        ;
  $FFD3 JR $FFB5      ;
 
-; Routine at FFD5
+; Menu-done delay, then wait for a key or timeout
 ;
 ; Used by the routine at #R$8A5E.
+;
+; .
+;
+; Reached from #R$8A5E once the menu is done (`JP NZ,$FFD5`) - not ROM code,
+; despite an earlier pass's uncertainty. Sets HL=BC=$0200 (512) and falls into
+; #R$8680 (WaitKeyTimeout).
+@label=MenuDoneWait
 c$FFD5 LD HL,$0200   ;
  $FFD8 LD BC,$0200   ;
  $FFDB JP $8680      ; => Wait for a key or timeout
@@ -9979,17 +9904,18 @@ c$FFD5 LD HL,$0200   ;
 b$FFDE DEFB $0F,$00,$14,$12,$04,$FF,$00,$00
  $FFE6 DEFB $00,$00
 
-; Key-gated staircase check, if not mid-jump
+; Key-gated door check, if not mid-jump
 ;
 ; Used by the routine at #R$9602.
 ;
 ; .
 ;
 ; Skips #R$9880 while $8209<>0 (Joe mid-jump/climb).
+@label=KeyDoorGateChk
 c$FFE8 LD A,($8209)  ;
  $FFEB OR A          ;
  $FFEC RET NZ        ;
- $FFED JP $9880      ; => Key-gated staircase
+ $FFED JP $9880      ; => Key-gated door
 
 ; Play gunshot sound effect (3x)
 ;

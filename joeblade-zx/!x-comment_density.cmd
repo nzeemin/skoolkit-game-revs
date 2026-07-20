@@ -1,1 +1,1 @@
-@py ..\comment_density.py --threshold=10 joeblade.ctl joeblade.skool
+@py ..\comment_density.py --threshold=6 joeblade.ctl joeblade.skool

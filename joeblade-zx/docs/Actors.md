@@ -63,6 +63,8 @@ Confirmed by decoding the screen's own text (see below) and live gameplay knowle
 
 **$85FA countdown confirmed tied to bomb tiles**: $85F9 is a gate byte - $9650 (the "20:00" tick routine) is a no-op while $85F9=$FF. $92DE (bomb-tile touch/pickup tally) takes it out of that disabled state on the first touch, matching live-player observation that the 20-minute countdown starts on first bomb contact.
 
+**Timeout confirmed: it's a death timer.** When the countdown reaches "00:00" (its first digit decodes to a space), $9650 draws a black box, the message **"OUT OF TIME"** ($96C0), plays 10 beeps, then falls straight into $935E ("YOU ARE DEAD") - same fate as the energy gauge emptying. Same overall shape as the bomb-minigame's 30-second timer (fail -> game over), just on a much longer 20-minute clock covering the whole level.
+
 ## Score (confirmed)
 
 Not a per-item point value - it's an emergent side effect of a shared digit-animation mechanism, confirmed live.
@@ -70,6 +72,18 @@ Not a per-item point value - it's an emergent side effect of a shared digit-anim
 $925C (DrawGlyph - called every time *any* HUD digit is redrawn, including on every pickup) always starts with $855B, which bumps a pending-tick budget $820F by $87 (135). Every frame, $850E (called from the main loop $8F00) spends down $820F one tick at a time; each tick increments and rolls the digit string of the high-score table row selected by $8210.
 
 $8210 defaults to $05 (from the $8228 init block) and stays 5 throughout normal play - row 5 is a permanently-reserved "current game" slot in the high-score table ($8900+). Since $8210<>0, $850E also re-sorts that row into the live leaderboard via $8982 on every tick: **the on-screen score is continuously bubble-sorted into its real ranked position as it climbs**, not just tallied once at game end.
+
+**High-score row layout (confirmed by decoding the shipped table).** `$8900 + $8210*16`, six 16-byte rows:
+
+```
+bytes 0-1   16-bit LE score value   - what $8982 compares when sorting, what $850E increments
+bytes 2-8   7 digit glyphs ($20-$29) - the displayed score
+byte  9     $1F                      - space separator
+bytes 10-14 5-character name
+byte  15    $FF                      - terminator
+```
+
+Shipped defaults: `15000 "COLIN"`, `15000 "KEVIN"` (digits read 100000), `8000 "CHRIS"`, `6256 "SIMON"`, `1 "JABBA"`, then the blank reserved row 5. The binary word and digit string are maintained in parallel and don't always agree in the presets - the digits are what's drawn, the word is what's ordered on. (An earlier pass of this disassembly started the data block at $8901, one byte late, which made the 16-byte stride look like it didn't divide evenly and left the layout recorded as "unconfirmed".)
 
 So: any pickup that triggers a digit redraw schedules ~135 frames of score-row auto-increment. There's no distinct point value per item type - score is effectively "how often you've triggered any HUD digit redraw." The end-of-game rolling animation ($A77C, called 40x by $FEB4's win screen) is just a cosmetic forced-fast version of this same mechanism (250 ticks/call), not a separate score computation.
 
@@ -90,7 +104,14 @@ Checked every frame from $8F5A (called from $8E64). Fire pressed + ammo ($8225) 
 1. Consume one round ($8225--).
 2. $FFF0 - plays the gunshot sound: two chained descending-pitch beeper (`OUT ($FE)`) sweeps, $A2BE then falling into $A28C, repeated 3x.
 3. $7869 - hit check: looks up the $7900 entry for the current tile and compares it against Joe's X, setting the flag $7B10 depending on which side of the threshold Joe is on (also gated by $8209/$820B - Joe's orientation/facing). Reads as "is a soldier (or the tile's shootable point) within range/on this side".
-4. $7B10 is picked up elsewhere by $789D (per-frame soldier update, called from $8E64), which drives the **kill-sparkle animation**: on the first tick it snapshots the soldier's screen/mask address as an anchor ($8FA4/$8FA7 -> $7B11/$7B12), then each frame picks a sparkle sprite frame from the $6400+ bank (see Sprite graphics banks below) based on that anchor and the $8206 counter, counting up to $1E (~30 frames) before freezing (never resets to 0 or clears anything). **The soldier is never actually removed from play** (player-confirmed: sparkles still deal contact damage) - $789D only overwrites the sprite/mask source addresses ($8FA4/$8FA1/$8FA7), it never touches $9700's pattern byte or $8F93 (screen position), so the soldier keeps standing at the same spot with its movement pattern still running underneath the sparkle graphic. Once frozen, $789D stops touching those addresses and the normal per-frame sprite-copy ($8E53, runs every frame regardless) resumes drawing the real soldier sprite. Since $93DC's contact-damage check is pure pixel-overlap against whatever's on screen, walking into the sparkle still registers as contact - "killing" a soldier is purely cosmetic.
+4. $7B10 is picked up elsewhere by $789D (per-frame soldier update, called from $8E64), which drives the **kill-sparkle animation**: on the first tick it snapshots the soldier's screen/mask address as an anchor ($8FA4/$8FA7 -> $7B11/$7B12), then each frame picks a sparkle sprite frame from the $6400+ bank (see Sprite graphics banks below) based on that anchor and the $8206 counter, counting up to $1E (~30 frames) before freezing (never resets to 0 or clears anything).
+
+**Why "killing" a soldier is purely cosmetic - the two draw triples.** $8F8C (DrawSoldier) draws the soldier *twice* per call, from two near-identical self-modifying operand triples:
+
+- **Triple A** - `$8F8C` (`LD DE,mask` operand at $8F8D, `LD BC,sprite` at $8F90, `LD HL,screen` at $8F93). This is the live one; the movement code ($9041/$904C) patches these three operands every frame.
+- **Triple B** - `$8FA0` (operands at $8FA1/$8FA4/$8FA7). $8E53 LDIRs 13 bytes from $8F8C to $8FA0 at the **start** of $8E64, i.e. *before* $96CC runs that frame's movement update - so triple B is always a one-frame-stale copy of triple A.
+
+The sparkle animators ($789D, and its independent second slot $FF3E) only ever patch **triple B's** operands. Triple A is never touched - it keeps being patched by the still-running movement pattern and keeps drawing the real soldier at its live position. So the sparkle is literally just an echo frame with different graphics swapped in; the soldier never leaves play, its $9700 pattern byte is never cleared, and since $93DC's contact-damage check is pure pixel-overlap against whatever is on screen, walking into it still costs energy (player-confirmed).
 5. Sets $8226 based on Joe's X relative to a $9700 entry for the current tile - same threshold-table pattern as $7869.
 
 **$8226 resolved**: $FF3E (called from $8E64, same as $789D) is byte-for-byte the same kill-sparkle animator as $789D/$7B10, just gated on $8226 with its own anchor ($8217/$8227 instead of $7B11/$7B12) and end-flag ($8F94 instead of $8FA8). A second, independent sparkle slot - lets two kills animate at once (e.g. two soldiers, or a soldier plus something else).
@@ -119,7 +140,7 @@ There's no vertical component or eased motion in this routine at all. Whatever v
 Identified from the generated HTML sprite gallery:
 
 - **$6400-$6BFF - sparkle (kill effect) sprites/masks**: 8 animation frames + 8 masks, plays when someone (soldier/inmate) is killed.
-- **$7000-$77FF - soldier sprites/masks**: 8 frames + 8 masks. Distinct from the $A800/$AA00 addresses the movement-pattern code ($900A/$8164/$9464) picks between for left/right facing - relationship between this bank and those two addresses not yet traced (animation sub-frames? a different soldier type?).
+- **$7000-$77FF - soldier sprites/masks, but unreferenced**: 8 frames + 8 masks in soldier format, yet **no code in the visible 64K ever loads an address in this range**. All soldier drawing uses $A800-$AFFF instead: $900A/$8164/$9464 select $A800 (facing left) or $AA00 (facing right), $9028 derives the sprite half/row from the soldier's X within that base, $9041 sets mask = sprite+$0400, and $8F8C's power-on defaults ($AB00/$AF00) are in the same bank. An external port effort reports visually identifying $7000/$7200 as *jump* frames (with $A800/$AA00 as the walk frames) from pre-rendered reference sprites - plausible as artwork, but unverifiable here since nothing reads the bytes. Treat as unused/leftover unless live tracing proves otherwise.
 - **$C800-$CFFF - inmate sprites/masks**: 8 sprite frames ($C800-$CBFF) + 8 masks ($CC00-$CFFF), 128 bytes each (32x32 1bpp). Distinct from the "hostage" collectible tiles ($9D24) - an inmate is presumably an actor Joe frees/interacts with, not the same as a hostage pickup icon.
 - **$D000-$DFFF - Joe sprites/masks**: 16 sprite frames ($D000-$D3FF, $D800-$DBFF) + 16 masks ($D400-$D7FF, $DC00-$DFFF) - twice the inmate count, consistent with Joe needing more animation states (walk L/R, climb/jump costume via the alt sprite bank $D0 selected by $8209 bits0/1/7, disguise costume via $7B1E, etc).
 

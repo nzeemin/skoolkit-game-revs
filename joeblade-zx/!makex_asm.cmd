@@ -1,0 +1,1 @@
+C:\bin\skoolkit-10.0\skool2asm.py -H -c -S 25088 -E 65535 joeblade.skool >joeblade.asm

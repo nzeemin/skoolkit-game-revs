@@ -517,13 +517,26 @@ b$6C00 DEFB $04,$2F,$2F,$2F,$2F,$2F,$2F,$2F
  $6FF0 DEFB $2F,$2F,$2F,$2F,$2F,$2F,$2F,$2F
  $6FF8 DEFB $2F,$2F,$2F,$2F,$2F,$2F,$2F,$1B
 
-; Soldier sprites and masks
+; Soldier sprites and masks - not referenced by any reachable code
 ;
 ; .
 ;
 ; .
 ;
-; Soldier sprite 1
+; 8 sprite frames + 8 masks in the same 32x32 format as the soldier sprites at
+; #R$A800, but **nothing in the visible 64K ever loads an address in this
+; range**. Every soldier-drawing path goes through #R$A800/$AA00: the movement
+; routines (#R$900A/#R$8164/#R$9464) pick $A800 (facing left) or $AA00 (facing
+; right), #R$9028 derives the sprite half/row from the soldier's X within that
+; base, and #R$9041 sets the mask to sprite+$0400 - so the range actually used
+; is $A800-$AFFF, never $7000-$77FF. #R$8F8C's power-on defaults ($AB00 sprite
+; / $AF00 mask) sit in that same $A800 bank.
+; .
+; An external port effort reports identifying these visually (against
+; pre-rendered reference sprites) as jump frames, with $A800/$AA00 being the
+; walk frames - plausible for the artwork, but unverifiable from this
+; disassembly since no code reads these bytes. Treat as unused/leftover data
+; unless live tracing shows otherwise.
 b$7000 DEFB $00,$00,$00,$00,$00,$FF,$80,$00 ; {#HTML[#UDGARRAY4,7,4,4,,($7000-$707F-1-32)(spr7000)]
  $7008 DEFB $01,$D5,$C0,$00,$03,$AA,$E0,$00 ;
  $7010 DEFB $03,$55,$60,$00,$00,$02,$A0,$00 ;
@@ -2270,12 +2283,12 @@ s$810D DEFS $07
 ; .
 ;
 ; Bridges #R$7D00 into the game loop: computes the current room-tile offset
-; from $8203/$8204, looks it up in the table at #R$8300, stores it as the
+; from $8203/$8204, looks it up in the table at $8300, stores it as the
 ; terrain-flags byte $820C (bit map documented at that variable), redraws the
 ; status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD,
 ; #R$7D96 into #R$8F00.
 @label=RoomFrame
-c$8114 LD A,($8204)  ; {Look up current room tile from table at #R$8300
+c$8114 LD A,($8204)  ; {Look up current room tile from table at $8300
  $8117 RLCA          ;
  $8118 RLCA          ;
  $8119 RLCA          ;
@@ -2575,6 +2588,7 @@ b$8280 DEFB $23,$10,$D5,$C9,$00,$00,$00,$00
 ; left/right) and draws a small door graphic (source $8380, via #R$8258) at
 ; $5004 (left) or $5018 (right) - screen row 16, right above the HUD - when the
 ; current tile has that door.
+@label=DrawBottomAndDoors
 c$828C CALL $8250    ; Fill bottom-screen fixed graphics from data at $82BE
  $828F LD A,($820C)  ; {$820C bit5 (down-door-left)?
  $8292 AND $20       ; }
@@ -2597,42 +2611,59 @@ c$828C CALL $8250    ; Fill bottom-screen fixed graphics from data at $82BE
  $82B6 RET           ;
 
 ; Data block at 82B7
-b$82B7 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
- $82BF DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $82C7 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $82CF DEFB $FF,$FF,$FF,$00,$00,$00,$00,$FF
- $82D7 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
- $82DF DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $82E7 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $82EF DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $82F7 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $82FF DEFB $00
+b$82B7 DEFB $00,$00,$00,$00,$00,$00,$00
 
-; Data block at 8300
-b$8300 DEFB $12,$11,$02,$10,$01,$02,$11,$53
- $8308 DEFB $A3,$62,$45,$66,$45,$07,$E2,$E5
- $8310 DEFB $86,$80,$89,$0B,$9B,$4A,$45,$9B
- $8318 DEFB $D8,$C0,$C4,$D0,$E0,$C0,$C8,$E0
- $8320 DEFB $A3,$92,$89,$67,$12,$04,$00,$11
- $8328 DEFB $05,$22,$00,$18,$25,$8A,$85,$22
- $8330 DEFB $C8,$C4,$C1,$63,$9B,$D2,$C8,$C0
- $8338 DEFB $D2,$C8,$C0,$C0,$E0,$E0,$C0,$C5
- $8340 DEFB $F2,$C0,$D0,$C0,$C0,$C4,$C5,$5B
- $8348 DEFB $27,$47,$A2,$91,$53,$5B,$4B,$23
- $8350 DEFB $0A,$09,$47,$62,$61,$66,$40,$45
- $8358 DEFB $40,$41,$4A,$44,$50,$49,$87,$4A
- $8360 DEFB $12,$00,$00,$09,$A2,$81,$1A,$05
- $8368 DEFB $66,$45,$02,$10,$00,$05,$A7,$1B
- $8370 DEFB $59,$8A,$91,$62,$51,$4A,$48,$64
- $8378 DEFB $A2,$81,$E2,$C1,$A3,$02,$00,$09
- $8380 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $8388 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- $8390 DEFB $FF,$FF,$FF,$FF,$7F,$FF,$FF,$FE
- $8398 DEFB $7F,$FF,$FF,$FE,$7F,$FF,$FF,$FE
- $83A0 DEFB $7F,$FF,$FF,$FE,$7F,$FF,$FF,$FE
- $83A8 DEFB $00,$00,$00,$00,$7F,$FF,$FF,$FE
- $83B0 DEFB $7F,$FF,$FF,$FE,$00,$00,$00,$00
- $83B8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+; Bottom-screen fixed graphic source (64 bytes), drawn by #R$8250
+;
+; .
+;
+; .
+;
+; 64 bytes = 2 rows x 8 pixel-rows x 4 bytes, the shape #R$8250's nested loops
+; consume before its outer loop reloads DE and repeats the same block at the
+; next column. Ends at $82FD; $82FE-$82FF are two zero padding bytes before the
+; terrain-flags table at #R$8300.
+b$82BE DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ $82CE DEFB $FF,$FF,$FF,$FF,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ $82DE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $82EE DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $82FE DEFB $00,$00
+
+; Per-tile terrain flags, indexed by $8202 (128 bytes)
+;
+; .
+;
+; .
+;
+; One byte per room-tile ($8202, 0-127), read every frame by #R$8114 into the
+; variable $820C - full bit map documented at $820C and in docs/Room-Format.md
+; (blocks left/right room-jump, the four up/down x left/right door transitions,
+; and a 2-bit room colour zone). Spans exactly $8300-$837F, immediately
+; followed by the down-door graphic at #R$8380 with no gap; an earlier pass had
+; this table, that graphic and #R$82BE all merged into one undifferentiated
+; data block.
+b$8300 DEFB $12,$11,$02,$10,$01,$02,$11,$53,$A3,$62,$45,$66,$45,$07,$E2,$E5
+ $8310 DEFB $86,$80,$89,$0B,$9B,$4A,$45,$9B,$D8,$C0,$C4,$D0,$E0,$C0,$C8,$E0
+ $8320 DEFB $A3,$92,$89,$67,$12,$04,$00,$11,$05,$22,$00,$18,$25,$8A,$85,$22
+ $8330 DEFB $C8,$C4,$C1,$63,$9B,$D2,$C8,$C0,$D2,$C8,$C0,$C0,$E0,$E0,$C0,$C5
+ $8340 DEFB $F2,$C0,$D0,$C0,$C0,$C4,$C5,$5B,$27,$47,$A2,$91,$53,$5B,$4B,$23
+ $8350 DEFB $0A,$09,$47,$62,$61,$66,$40,$45,$40,$41,$4A,$44,$50,$49,$87,$4A
+ $8360 DEFB $12,$00,$00,$09,$A2,$81,$1A,$05,$66,$45,$02,$10,$00,$05,$A7,$1B
+ $8370 DEFB $59,$8A,$91,$62,$51,$4A,$48,$64,$A2,$81,$E2,$C1,$A3,$02,$00,$09
+
+; Down-door graphic source (64 bytes), drawn by #R$828C via #R$8258
+;
+; .
+;
+; .
+;
+; Same 64-byte 2x8x4 shape as #R$82BE. #R$828C passes this as DE with B=1 to
+; #R$8258 (the shared entry inside #R$8250), drawing it once at $5004 (left
+; door) or $5018 (right door) depending on $820C bits 5/3.
+b$8380 DEFB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ $8390 DEFB $FF,$FF,$FF,$FF,$7F,$FF,$FF,$FE,$7F,$FF,$FF,$FE,$7F,$FF,$FF,$FE
+ $83A0 DEFB $7F,$FF,$FF,$FE,$7F,$FF,$FF,$FE,$00,$00,$00,$00,$7F,$FF,$FF,$FE
+ $83B0 DEFB $7F,$FF,$FF,$FE,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
 ; Clear screen, border to black
 ;
@@ -3011,10 +3042,9 @@ s$86B3 DEFS $0D
 ; .
 ;
 ; Called by the hostage/key/bomb/food pickup routines with C = pickup-type
-; index (0-3). Draws a black popup box, then two message strings looked up in a
-; per-type table at $9800 + C*32 (resolves that region's earlier "unidentified
-; trailing bytes" flag - it's 4 pickup messages, 32 bytes each), plays the
-; pickup beep, and delays.
+; index: 0=key (#R$92C8), 1=hostage (#R$86E4), 2=bomb (#R$92DE), 3=food
+; (#R$9350). Draws a black popup box, then two message strings looked up in a
+; per-type table at #R$9800 + C*32, plays the pickup beep, and delays.
 @label=ShowPickupMsg
 c$86C0 CALL $923C    ; Draw black box on the screen
  $86C3 LD A,C        ; {IX = $9800 + C*32 (message table)
@@ -3141,37 +3171,49 @@ b$8799 DEFB $CD,$AA,$88,$CD,$82,$9A,$C3,$D2
  $88E1 DEFB $18,$0E,$14,$11,$1F,$1F,$1F,$1F
  $88E9 DEFB $1F,$1F,$1F,$1F,$1F,$0C,$08,$12
  $88F1 DEFB $12,$08,$0E,$0D,$1F,$00,$0D,$03
- $88F9 DEFB $1F,$11,$04,$13,$14,$11,$0D,$98
+ $88F9 DEFB $1F,$11,$04,$13,$14,$11,$0D
 
-; High-score table (name + score rows), indexed by $8210
+; High-score table (6 x 16-byte rows), indexed by $8210
 ;
 ; .
 ;
 ; .
 ;
-; Read/written by #R$850E/#R$8982 as `$8900 + $8210*16` (16-byte rows). Each
-; visible row looks like: name text (same font encoding as the HUD strings,
-; terminated $FF) followed by a numeric score field. Row boundaries don't
-; cleanly divide the observed #R$8901-$8963 span into fixed 16-byte chunks
-; though (name lengths vary 7-8 chars) - the $8210*16 stride from the code
-; doesn't match what's visible here byte-for-byte, so exact row layout is
-; unconfirmed; needs live tracing (watch $8210 and this region during an actual
-; high-score entry). Was previously fragmented into ~13 spurious t/b blocks by
-; the same sna2skool text-detection heuristic fixed for #R$9D00/#R$6C00.
-b$8901 DEFB $3A,$20,$21,$25,$20,$20,$20,$20
- $8909 DEFB $1F,$02,$0E,$0B,$08,$0D,$FF,$98
- $8911 DEFB $3A,$20,$21,$20,$20,$20,$20,$20
- $8919 DEFB $1F,$0A,$04,$15,$08,$0D,$FF,$40
- $8921 DEFB $1F,$20,$20,$28,$20,$20,$20,$20
- $8929 DEFB $1F,$02,$07,$11,$08,$12,$FF,$70
- $8931 DEFB $18,$20,$20,$26,$20,$20,$20,$20
- $8939 DEFB $1F,$12,$08,$0C,$0E,$0D,$FF,$01
- $8941 DEFB $00,$20,$20,$20,$20,$20,$21,$20
- $8949 DEFB $1F,$09,$00,$01,$01,$00,$FF
-
-; Data block at 8950
-b$8950 DEFB $00,$00,$20,$20,$20,$20,$20,$20
- $8958 DEFB $20,$1F,$1F,$1F,$1F,$1F,$1F,$FF
+; Read/written by #R$850E/#R$8982 as `$8900 + $8210*16`. Row layout confirmed
+; by decoding the raw bytes (an earlier pass started this block at $8901, one
+; byte late, which is why the 16-byte stride appeared not to divide cleanly):
+; .
+; Each 16-byte row is: bytes 0-1 = 16-bit LE score value (what #R$8982 compares
+; when bubbling rows into order, and what #R$850E increments); bytes 2-8 = the
+; same score as 7 displayed digit glyphs ($20-$29); byte 9 = $1F space
+; separator; bytes 10-14 = 5-character name; byte 15 = $FF terminator. Rows 0-4
+; are the preset defaults shipped in the tape image; row 5 ($8950) is the
+; reserved "current game" slot that gameplay writes into (see the Score section
+; in docs/Actors.md). The binary word and the digit string are maintained in
+; parallel - the digits are what's drawn, the word is what's sorted on. In the
+; shipped defaults the two don't always agree exactly (row 1's word is $3A98
+; while its digits read 100000), so treat the digit string as authoritative for
+; display and the word as authoritative for ordering.
+b$8900 DEFB $98,$3A,$20,$21,$25,$20,$20,$20,$20,$1F,$02,$0E,$0B,$08,$0D,$FF ; 15000
+                                                                            ; "COLIN"
+ $8910 DEFB $98,$3A,$20,$21,$20,$20,$20,$20,$20,$1F,$0A,$04,$15,$08,$0D,$FF ; 15000
+                                                                            ; "KEVIN"
+                                                                            ; (word
+                                                                            ; disagrees
+                                                                            ; with
+                                                                            ; digits
+                                                                            ; "100000")
+ $8920 DEFB $40,$1F,$20,$20,$28,$20,$20,$20,$20,$1F,$02,$07,$11,$08,$12,$FF ; 8000
+                                                                            ; "CHRIS"
+ $8930 DEFB $70,$18,$20,$20,$26,$20,$20,$20,$20,$1F,$12,$08,$0C,$0E,$0D,$FF ; 6256
+                                                                            ; "SIMON"
+ $8940 DEFB $01,$00,$20,$20,$20,$20,$20,$21,$20,$1F,$09,$00,$01,$01,$00,$FF ; 1 "JABBA"
+ $8950 DEFB $00,$00,$20,$20,$20,$20,$20,$20,$20,$1F,$1F,$1F,$1F,$1F,$1F,$FF ; 0 (blank
+                                                                            ; name) -
+                                                                            ; reserved
+                                                                            ; "current
+                                                                            ; game" row,
+                                                                            ; $8210=5
  $8960 DEFB $36,$36,$23,$10
 
 ; High-score name entry: store selected character
@@ -4230,9 +4272,12 @@ c$8E16 LD IX,$84AC   ;
 ;
 ; .
 ;
-; Calls #R$96CE (checks the current tile's soldier movement pattern), then
-; copies 13 bytes from the soldier sprite template at #R$8F8C to the working
-; area $8FA0.
+; Calls #R$96CE (checks the current tile's soldier movement pattern via the
+; #R$7900 table - note H=$79, not $97), then LDIRs 13 bytes from #R$8F8C to
+; $8FA0 - snapshotting draw-triple A into triple B. Because #R$8E64 calls this
+; *before* #R$96CC updates the soldier's position, triple B ends up holding the
+; previous frame's mask/sprite/screen values; see #R$8F8C for why that matters
+; to the kill-sparkle effect.
 @label=CopySoldierData
 c$8E53 LD H,$79      ;
  $8E55 CALL $96CE    ;
@@ -4428,11 +4473,22 @@ b$8F82 DEFB $C9,$00,$00,$00,$00,$00,$00,$00
 ;
 ; .
 ;
-; Self-modifying: DE/BC/HL patched by the caller with the soldier's live
-; mask/sprite/screen addr (e.g. #R$9041/#R$904C/#R$FF56) before falling into
-; #R$81AA. Same pattern as #R$80A0 (draw Joe). Called once per frame from the
-; main loop ($8F41) and once from the post-bomb-minigame refresh ($7AEE) - only
-; one soldier per room, not two.
+; Self-modifying, and draws the soldier **twice** per call from two
+; near-identical operand triples - this is a one-frame echo, not two soldiers.
+; Triple A ($8F8C: DE=mask at $8F8D, BC=sprite at $8F90, HL=screen at $8F93) is
+; the live one: the movement code (#R$9041/#R$904C) patches those three
+; operands every frame. Triple B ($8FA0/$8FA1/$8FA4/$8FA7) is a copy of triple
+; A made by #R$8E53 at the *start* of #R$8E64, i.e. before that frame's
+; movement update - so triple B always redraws the soldier at its
+; previous-frame position while triple A draws the current one.
+; .
+; This split is what makes "killing" a soldier purely cosmetic: the
+; kill-sparkle animators (#R$789D and its second slot #R$FF3E) only ever patch
+; triple B's operands ($8FA1/$8FA4/$8FA7), swapping in sparkle frames. Triple A
+; is untouched, keeps being patched by the still-running movement pattern, and
+; keeps drawing the real soldier at its live position - which is why the "dead"
+; soldier still moves and still deals contact damage (see docs/Actors.md). Same
+; self-modifying shape as #R$80A0 (draw Joe), which has only one triple.
 @label=DrawSoldier
 c$8F8C LD DE,$AF00   ; !!MUT-ARG!! Soldier mask
  $8F8F LD BC,$AB00   ; !!MUT-ARG!! Soldier sprite
@@ -4693,15 +4749,9 @@ b$90E0 DEFB $19                                 ; 'Z'
                                                 ; collected
  $90FA DEFB $FF
  $90FB DEFB $12,$02,$0E,$11,$04                 ; 'SCORE'
- $9100 DEFB $FF
-
-; Message at 9101
-t$9101 DEFM "     "
-
-; Data block at 9106
-b$9106 DEFB $FF,$02,$0B,$0E,$02,$0A,$1F,$1F
- $910E DEFB $1F,$1F,$FF,$22,$20,$1D,$20,$20
- $9116 DEFB $FF,$FF
+ $9100 DEFB $FF,$20,$20,$20,$20,$20,$FF,$02
+ $9108 DEFB $0B,$0E,$02,$0A,$1F,$1F,$1F,$1F
+ $9110 DEFB $FF,$22,$20,$1D,$20,$20,$FF,$FF
 
 ; Draw a collectible-item sprite, left or right variant
 ;
@@ -5652,8 +5702,11 @@ s$964C DEFS $04
 ; #R$92DE, which releases it on first bomb contact). Otherwise decrements $85F9
 ; each frame, and once it wraps past 0 (every 25 frames), decrements the
 ; "MM:SS"-style digit string at $85FA-$85FE (seconds ones, seconds tens with a
-; 0-5 wrap, minutes with a 0-1 wrap), redrawing it via #R$9196 unless it's
-; already at "00:00".
+; 0-5 wrap, minutes with a 0-1 wrap). If the countdown has reached "00:00"
+; (first digit $85FA = space, $1F), draws a black box + "OUT OF TIME" (#R$96C0)
+; + 10 beeps, then falls into #R$935E ("YOU ARE DEAD") - the 20-minute
+; countdown is a death timer, same consequence as the bomb-minigame's 30s
+; timer. Otherwise just redraws the digit string via #R$9196.
 @label=CountdownTick
 c$9650 LD HL,$85F9   ;
  $9653 LD A,(HL)     ;
@@ -5685,9 +5738,9 @@ c$9650 LD HL,$85F9   ;
  $967A LD (HL),$29   ;
  $967C DEC HL        ;
  $967D DEC (HL)      ;
-*$967E LD A,($85FA)  ;
+*$967E LD A,($85FA)  ; {Countdown reached "00:00" (first digit = space)? branch
  $9681 CP $1F        ;
- $9683 JR Z,$968F    ;
+ $9683 JR Z,$968F    ; }
  $9685 LD IX,$85FA   ;
  $9689 LD HL,$50E8   ; HL = screen row 23 col 8
  $968C JP $9196      ; => Draw string IX
@@ -5708,9 +5761,9 @@ c$9650 LD HL,$85F9   ;
  $96BA CALL $856E    ; Pickup/beep sound effect
  $96BD JP $935E      ; => "YOU ARE DEAD" message and finalize the game
 
-; Data block at 96C0
-b$96C0 DEFB $0E,$14,$13,$1F,$0E,$05,$1F,$13
- $96C8 DEFB $08,$0C,$04,$FF
+; "OUT OF TIME" (20-minute countdown expiry message)
+b$96C0 DEFB $0E,$14,$13,$1F,$0E,$05,$1F,$13 ; {"OUT OF TIME"
+ $96C8 DEFB $08,$0C,$04,$FF                 ; }
 
 ; Soldier presence/movement-pattern dispatch for the current tile
 ;
@@ -5764,6 +5817,15 @@ b$96FE DEFB $00,$00
 ; #R$96CC and docs/Actors.md. Confirmed 4/4 against known room layout. Array
 ; proper is 128 words (256 bytes, index range 0-127); the trailing 128 bytes
 ; are unaccounted for.
+; .
+; **This is pure data - none of these words are code pointers**, even where a
+; disassembler renders one as a label. Tile 22's entry at $972C is the trap:
+; its bytes are $05,$93 (pattern 5, boundary 147 - both perfectly valid, and
+; 147 sits inside #R$7D96's $46-$A5 clamp range), but read as a little-endian
+; word that spells $9305, which happens to be a real mid-routine entry point
+; inside #R$9300. Any disassembler with symbol resolution will helpfully print
+; it as a reference to that label. It isn't one; treat every entry here as two
+; independent bytes.
 b$9700 DEFW $4600
  $9702 DEFW $0E02
  $9704 DEFW $BC02
@@ -5892,20 +5954,29 @@ b$9700 DEFW $4600
  $97FA DEFW $9D01
  $97FC DEFW $BA02
  $97FE DEFW $8401
- $9800 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {4 pickup messages, 32 bytes each
- $9808 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ; (indexed by pickup-type C in
- $9810 DEFB $1F,$1F,$00,$1F,$02,$04,$0B,$0B ; #R$86C0)
- $9818 DEFB $1F,$0A,$04,$18,$1D,$1F,$1F,$FF ;
- $9820 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ;
- $9828 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ;
+
+; Pickup messages
+;
+; .
+;
+; .
+;
+; 4 pickup messages, 32 bytes each (indexed by pickup-type C in #R$86C0), each
+; a pair of $FF-terminated 16-byte lines shown one above the other.
+b$9800 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {"YOU HAVE FOUND" / "A CELL KEY:"
+ $9808 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ; (key, C=0)
+ $9810 DEFB $1F,$1F,$00,$1F,$02,$04,$0B,$0B ;
+ $9818 DEFB $1F,$0A,$04,$18,$1D,$1F,$1F,$FF ; }
+ $9820 DEFB $18,$0E,$14,$1F,$07,$00,$15,$04 ; {"YOU HAVE FOUND" / "A HOSTAGE"
+ $9828 DEFB $1F,$05,$0E,$14,$0D,$03,$1F,$FF ; (hostage, C=1)
  $9830 DEFB $1F,$1F,$1F,$00,$1F,$07,$0E,$12 ;
- $9838 DEFB $13,$00,$06,$04,$1F,$FF,$1F,$FF ;
- $9840 DEFB $1F,$1F,$1F,$04,$17,$0F,$0B,$0E ;
- $9848 DEFB $12,$08,$15,$04,$1F,$1F,$1F,$FF ;
+ $9838 DEFB $13,$00,$06,$04,$1F,$FF,$1F,$FF ; }
+ $9840 DEFB $1F,$1F,$1F,$04,$17,$0F,$0B,$0E ; {"EXPLOSIVE" / "ACTIVATED:"
+ $9848 DEFB $12,$08,$15,$04,$1F,$1F,$1F,$FF ; (bomb, C=2)
  $9850 DEFB $1F,$1F,$1F,$00,$02,$13,$08,$15 ;
- $9858 DEFB $00,$13,$04,$03,$1D,$1F,$1F,$FF ;
- $9860 DEFB $1F,$18,$0E,$14,$1F,$07,$00,$15 ;
- $9868 DEFB $04,$1F,$05,$0E,$14,$0D,$03,$FF ;
+ $9858 DEFB $00,$13,$04,$03,$1D,$1F,$1F,$FF ; }
+ $9860 DEFB $1F,$18,$0E,$14,$1F,$07,$00,$15 ; {"YOU HAVE FOUND" / "SOME FOOD:"
+ $9868 DEFB $04,$1F,$05,$0E,$14,$0D,$03,$FF ; (food, C=3)
  $9870 DEFB $1F,$1F,$1F,$12,$0E,$0C,$04,$1F ;
  $9878 DEFB $05,$0E,$0E,$03,$1D,$1F,$1F,$FF ; }
 
@@ -6304,12 +6375,22 @@ b$A000 DEFB $00,$00,$1F,$E1,$FF,$FF,$FE,$1F,$FF,$FF,$F0,$00,$00,$00,$1F,$FF
  $A1E0 DEFB $7F,$FF,$FF,$E1,$FF,$FF,$FE,$1F,$FF,$FF,$F0,$00,$00,$00,$1F,$FF
  $A1F0 DEFB $FF,$F0,$FF,$FF,$FF,$8F,$E0,$01,$FC,$FF,$FF,$FE,$07,$FF,$FF,$FE
 
-; Data block at A200
-b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $A208 DEFB $00,$F0,$F0,$F0,$F0,$00,$F0,$00
- $A210 DEFB $00,$FF,$FF,$FF,$FF,$00,$FF,$00
- $A218 DEFB $0F,$EF,$EF,$EF,$EF,$0F,$E0,$0F
- $A220 DEFB $78,$7B,$7B,$7B,$7B,$78,$03,$78
+; Energy-gauge segment glyphs (5 fill levels)
+;
+; .
+;
+; .
+;
+; 5 8x8 glyphs (40 bytes, $A200-$A227), one per energy-gauge segment fill level
+; (0=empty..4=full) - read by #R$FFB5 as `$A200 + index*8`, where the index is
+; the segment's current value in the #R$A228 gauge array.
+; .
+; #HTML[#UDGARRAY5($A200-$A227-8)(energybar.png)]
+b$A200 DEFB $00,$00,$00,$00,$00,$00,$00,$00         ; Level 0 (empty)
+ $A208 DEFB $00,$F0,$F0,$F0,$F0,$00,$F0,$00         ; Level 1
+ $A210 DEFB $00,$FF,$FF,$FF,$FF,$00,$FF,$00         ; Level 2
+ $A218 DEFB $0F,$EF,$EF,$EF,$EF,$0F,$E0,$0F         ; Level 3
+ $A220 DEFB $78,$7B,$7B,$7B,$7B,$78,$03,$78         ; Level 4 (full)
 @label=EnergyGauge
  $A228 DEFB $04,$04,$04,$04,$04,$04,$04,$04,$04,$04 ; {Energy gauge
  $A232 DEFB $04,$04,$04,$04,$04,$04,$04,$04         ; }

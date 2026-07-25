@@ -114,11 +114,11 @@ Status: Work in progress (43K .ctl file).
 
 Original: for ZX Spectrum, 1987, Players.
 
-Volume: about 3200 code instructions.
+Volume: about 3300 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/joeblade-zx/joeblade/
 
-Status: just started (115K .ctl file).
+Status: Have pretty good progress (120K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)

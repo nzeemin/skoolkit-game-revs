@@ -50,8 +50,9 @@ B $6B80,128,8 #HTML[#UDGARRAY4,7,4,4,,($6B80-$6BFF-1-32)(msk6B80)]
 b $6C00 Per-tile top-row selector table (128 x 8 bytes), used by $8CF0
 N $6C00 One 8-byte row per tile ($8202, 0-127), spanning exactly #R$6C00-$6FFF (128*8=1024 bytes, ending precisely at #R$7000 where the sprite/mask data begins). Same selector-byte format as the paged-bank table at #R$C000 (#R$8C00): bit0=variant, bits1-5=tile index (0-31), source addr=$E0+((byte>>1)&$1F):(bit0?$80:0), tiles at #R$E000-$FFFF. Read by #R$8CF0 to draw one extra background row directly onto the live screen (bypassing the shadow buffer, unlike #R$8C00's rows). Decode spot-checked against tile $7B's row ($6FD8-$6FDF): bytes $21/$20/$16 all decode to plausible #R$E000-$FFFF addresses.
 B $6C00,1024,8
-b $7000 Soldier sprites and masks
-N $7000 Soldier sprite 1
+b $7000 Soldier sprites and masks - not referenced by any reachable code
+N $7000 8 sprite frames + 8 masks in the same 32x32 format as the soldier sprites at #R$A800, but **nothing in the visible 64K ever loads an address in this range**. Every soldier-drawing path goes through #R$A800/$AA00: the movement routines (#R$900A/#R$8164/#R$9464) pick $A800 (facing left) or $AA00 (facing right), #R$9028 derives the sprite half/row from the soldier's X within that base, and #R$9041 sets the mask to sprite+$0400 - so the range actually used is $A800-$AFFF, never $7000-$77FF. #R$8F8C's power-on defaults ($AB00 sprite / $AF00 mask) sit in that same $A800 bank.
+N $7000 An external port effort reports identifying these visually (against pre-rendered reference sprites) as jump frames, with $A800/$AA00 being the walk frames - plausible for the artwork, but unverifiable from this disassembly since no code reads these bytes. Treat as unused/leftover data unless live tracing shows otherwise.
 B $7000,128,8 #HTML[#UDGARRAY4,7,4,4,,($7000-$707F-1-32)(spr7000)]
 N $7080 Soldier sprite 2
 B $7080,128,8 #HTML[#UDGARRAY4,7,4,4,,($7080-$70FF-1-32)(spr7080)]
@@ -449,8 +450,8 @@ C $810A,3 => Draw Joe sprite 32x32 with mask
 s $810D
 c $8114 Per-frame room-tile lookup, then hand off to game loop
 @ $8114 label=RoomFrame
-N $8114 Bridges #R$7D00 into the game loop: computes the current room-tile offset from $8203/$8204, looks it up in the table at #R$8300, stores it as the terrain-flags byte $820C (bit map documented at that variable), redraws the status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD, #R$7D96 into #R$8F00.
-C $8114,14 Look up current room tile from table at #R$8300
+N $8114 Bridges #R$7D00 into the game loop: computes the current room-tile offset from $8203/$8204, looks it up in the table at $8300, stores it as the terrain-flags byte $820C (bit map documented at that variable), redraws the status bar from bits6-7 of it (LDIR to $5880), then falls through #R$FFAD, #R$7D96 into #R$8F00.
+C $8114,14 Look up current room tile from table at $8300
 C $8127,4 Store tile byte in $820C
 C $812B,3 Build room background into shadow buffer $B800
 C $812E,13 Attribute byte = (($820C>>6)&3) + $44: bright green/cyan/yellow/white ink on black, by room zone
@@ -527,6 +528,7 @@ C $8271,6 Advance column X by $20
 C $8277,2 Restore HL/BC
 C $8279,6 Advance source HL by 4
 b $8280
+@ $828C label=DrawBottomAndDoors
 c $828C Draw bottom-door graphics
 N $828C Called from #R$8114 after #R$8250. Checks $820C bits 5/3 (down-door left/right) and draws a small door graphic (source $8380, via #R$8258) at $5004 (left) or $5018 (right) - screen row 16, right above the HUD - when the current tile has that door.
 C $828C,3 Fill bottom-screen fixed graphics from data at $82BE
@@ -537,7 +539,15 @@ C $82A3,5 $820C bit3 (down-door-right)?
 C $82A9,10 Right door dest, screen row 16 col 24
 C $82B3,3 Draw right down-door graphic
 b $82B7
-b $8300
+b $82BE Bottom-screen fixed graphic source (64 bytes), drawn by #R$8250
+N $82BE 64 bytes = 2 rows x 8 pixel-rows x 4 bytes, the shape #R$8250's nested loops consume before its outer loop reloads DE and repeats the same block at the next column. Ends at $82FD; $82FE-$82FF are two zero padding bytes before the terrain-flags table at #R$8300.
+B $82BE,64,16
+b $8300 Per-tile terrain flags, indexed by $8202 (128 bytes)
+N $8300 One byte per room-tile ($8202, 0-127), read every frame by #R$8114 into the variable $820C - full bit map documented at $820C and in docs/Room-Format.md (blocks left/right room-jump, the four up/down x left/right door transitions, and a 2-bit room colour zone). Spans exactly $8300-$837F, immediately followed by the down-door graphic at #R$8380 with no gap; an earlier pass had this table, that graphic and #R$82BE all merged into one undifferentiated data block.
+B $8300,128,16
+b $8380 Down-door graphic source (64 bytes), drawn by #R$828C via #R$8258
+N $8380 Same 64-byte 2x8x4 shape as #R$82BE. #R$828C passes this as DE with B=1 to #R$8258 (the shared entry inside #R$8250), drawing it once at $5004 (left door) or $5018 (right door) depending on $820C bits 5/3.
+B $8380,64,16
 c $83C0 Clear screen, border to black
 @ $83C0 label=ClearScreen
 N $83C0 Clears the full bitmap ($4000-$57FF), fills attributes ($5800-$5AFF) with bright white-on-black, and sets the border black.
@@ -649,7 +659,7 @@ C $86AD,6 HL reached 0? loop or return (EI)
 s $86B3
 c $86C0 Show pickup message popup (type in C)
 @ $86C0 label=ShowPickupMsg
-N $86C0 Called by the hostage/key/bomb/food pickup routines with C = pickup-type index (0-3). Draws a black popup box, then two message strings looked up in a per-type table at $9800 + C*32 (resolves that region's earlier "unidentified trailing bytes" flag - it's 4 pickup messages, 32 bytes each), plays the pickup beep, and delays.
+N $86C0 Called by the hostage/key/bomb/food pickup routines with C = pickup-type index: 0=key (#R$92C8), 1=hostage (#R$86E4), 2=bomb (#R$92DE), 3=food (#R$9350). Draws a black popup box, then two message strings looked up in a per-type table at #R$9800 + C*32, plays the pickup beep, and delays.
 C $86C0,3 Draw black box on the screen
 C $86C3,7 IX = $9800 + C*32 (message table)
 C $86CF,3 HL = screen row 11 col 9
@@ -679,10 +689,15 @@ t $877F
 b $8783
 t $8796
 b $8799
-b $8901 High-score table (name + score rows), indexed by $8210
-N $8901 Read/written by #R$850E/#R$8982 as `$8900 + $8210*16` (16-byte rows). Each visible row looks like: name text (same font encoding as the HUD strings, terminated $FF) followed by a numeric score field. Row boundaries don't cleanly divide the observed #R$8901-$8963 span into fixed 16-byte chunks though (name lengths vary 7-8 chars) - the $8210*16 stride from the code doesn't match what's visible here byte-for-byte, so exact row layout is unconfirmed; needs live tracing (watch $8210 and this region during an actual high-score entry). Was previously fragmented into ~13 spurious t/b blocks by the same sna2skool text-detection heuristic fixed for #R$9D00/#R$6C00.
-B $8901,79,8
-b $8950
+b $8900 High-score table (6 x 16-byte rows), indexed by $8210
+N $8900 Read/written by #R$850E/#R$8982 as `$8900 + $8210*16`. Row layout confirmed by decoding the raw bytes (an earlier pass started this block at $8901, one byte late, which is why the 16-byte stride appeared not to divide cleanly):
+N $8900 Each 16-byte row is: bytes 0-1 = 16-bit LE score value (what #R$8982 compares when bubbling rows into order, and what #R$850E increments); bytes 2-8 = the same score as 7 displayed digit glyphs ($20-$29); byte 9 = $1F space separator; bytes 10-14 = 5-character name; byte 15 = $FF terminator. Rows 0-4 are the preset defaults shipped in the tape image; row 5 ($8950) is the reserved "current game" slot that gameplay writes into (see the Score section in docs/Actors.md). The binary word and the digit string are maintained in parallel - the digits are what's drawn, the word is what's sorted on. In the shipped defaults the two don't always agree exactly (row 1's word is $3A98 while its digits read 100000), so treat the digit string as authoritative for display and the word as authoritative for ordering.
+B $8900,16,16 15000 "COLIN"
+B $8910,16,16 15000 "KEVIN" (word disagrees with digits "100000")
+B $8920,16,16 8000 "CHRIS"
+B $8930,16,16 6256 "SIMON"
+B $8940,16,16 1 "JABBA"
+B $8950,16,16 0 (blank name) - reserved "current game" row, $8210=5
 c $8964 High-score name entry: store selected character
 @ $8964 label=HiScoreStoreChar
 N $8964 Called from #R$9580 (the name-entry cursor loop). During hi-score name entry, $8201/$8202 are repurposed as the cursor column and selected character. Writes the selected character ($8202) into the current table row at $8900 + $8210*16 + $0A + cursor column ($8201), then plays a beep (#R$856E). Part of the same cluster as #R$850E/#R$8982 (digit-roll + sort) - together they implement entering initials for a new high score.
@@ -1029,7 +1044,7 @@ C $8E4B,3 Wait until every key on the keyboard is released
 C $8E50,3 => Main menu loop
 c $8E53 Copy soldier sprite template to working area
 @ $8E53 label=CopySoldierData
-N $8E53 Calls #R$96CE (checks the current tile's soldier movement pattern), then copies 13 bytes from the soldier sprite template at #R$8F8C to the working area $8FA0.
+N $8E53 Calls #R$96CE (checks the current tile's soldier movement pattern via the #R$7900 table - note H=$79, not $97), then LDIRs 13 bytes from #R$8F8C to $8FA0 - snapshotting draw-triple A into triple B. Because #R$8E64 calls this *before* #R$96CC updates the soldier's position, triple B ends up holding the previous frame's mask/sprite/screen values; see #R$8F8C for why that matters to the kill-sparkle effect.
 c $8E64 Per-frame soldier update
 @ $8E64 label=ProcessSoldier
 N $8E64 Called from #R$FF96 (via #R$8F0C in the main loop). Refreshes the soldier's movement pattern (#R$8E53/#R$96CC), draws it (#R$8F5A/#R$FF3E), then reacts to a shot hit via #R$789D.
@@ -1105,7 +1120,8 @@ c $8F78 Pause
 b $8F82
 c $8F8C Draw soldier
 @ $8F8C label=DrawSoldier
-N $8F8C Self-modifying: DE/BC/HL patched by the caller with the soldier's live mask/sprite/screen addr (e.g. #R$9041/#R$904C/#R$FF56) before falling into #R$81AA. Same pattern as #R$80A0 (draw Joe). Called once per frame from the main loop ($8F41) and once from the post-bomb-minigame refresh ($7AEE) - only one soldier per room, not two.
+N $8F8C Self-modifying, and draws the soldier **twice** per call from two near-identical operand triples - this is a one-frame echo, not two soldiers. Triple A ($8F8C: DE=mask at $8F8D, BC=sprite at $8F90, HL=screen at $8F93) is the live one: the movement code (#R$9041/#R$904C) patches those three operands every frame. Triple B ($8FA0/$8FA1/$8FA4/$8FA7) is a copy of triple A made by #R$8E53 at the *start* of #R$8E64, i.e. before that frame's movement update - so triple B always redraws the soldier at its previous-frame position while triple A draws the current one.
+N $8F8C This split is what makes "killing" a soldier purely cosmetic: the kill-sparkle animators (#R$789D and its second slot #R$FF3E) only ever patch triple B's operands ($8FA1/$8FA4/$8FA7), swapping in sparkle frames. Triple A is untouched, keeps being patched by the still-running movement pattern, and keeps drawing the real soldier at its live position - which is why the "dead" soldier still moves and still deals contact damage (see docs/Actors.md). Same self-modifying shape as #R$80A0 (draw Joe), which has only one triple.
 C $8F8C,3 !!MUT-ARG!! Soldier mask
 C $8F8F,3 !!MUT-ARG!! Soldier sprite
 C $8F92,3 !!MUT-ARG!! screen address
@@ -1174,8 +1190,6 @@ B $90F1,1,1 '0' = number of keys collected
 B $90F3,6,6 'BOMBS '
 B $90F9,1,1 '0' = number of bombs collected
 B $90FB,5,5 'SCORE'
-t $9101
-b $9106
 c $9118 Draw a collectible-item sprite, left or right variant
 @ $9118 label=DrawItemSprite
 N $9118 Called by #R$912C once a collectible tile has been matched (DE/other regs already set up by the caller for #R$81AA). Picks between two destination columns in the shadow buffer ($B898 or $B884) based on $820C bits4-5, then draws via #R$81AA.
@@ -1429,7 +1443,8 @@ C $9643,5 Bit7: unused (NOPed out)
 s $964C
 c $9650 Countdown timer tick, MM:SS-style display at $85FA
 @ $9650 label=CountdownTick
-N $9650 Called every frame from #R$8F00. No-op while the gate byte $85F9 is $FF (see #R$92DE, which releases it on first bomb contact). Otherwise decrements $85F9 each frame, and once it wraps past 0 (every 25 frames), decrements the "MM:SS"-style digit string at $85FA-$85FE (seconds ones, seconds tens with a 0-5 wrap, minutes with a 0-1 wrap), redrawing it via #R$9196 unless it's already at "00:00".
+N $9650 Called every frame from #R$8F00. No-op while the gate byte $85F9 is $FF (see #R$92DE, which releases it on first bomb contact). Otherwise decrements $85F9 each frame, and once it wraps past 0 (every 25 frames), decrements the "MM:SS"-style digit string at $85FA-$85FE (seconds ones, seconds tens with a 0-5 wrap, minutes with a 0-1 wrap). If the countdown has reached "00:00" (first digit $85FA = space, $1F), draws a black box + "OUT OF TIME" (#R$96C0) + 10 beeps, then falls into #R$935E ("YOU ARE DEAD") - the 20-minute countdown is a death timer, same consequence as the bomb-minigame's 30s timer. Otherwise just redraws the digit string via #R$9196.
+C $967E,7 Countdown reached "00:00" (first digit = space)? branch
 C $9689,3 HL = screen row 23 col 8
 C $968C,3 => Draw string IX
 C $968F,3 Draw black box on the screen
@@ -1447,7 +1462,8 @@ C $96B4,3 Pickup/beep sound effect
 C $96B7,3 Pickup/beep sound effect
 C $96BA,3 Pickup/beep sound effect
 C $96BD,3 => "YOU ARE DEAD" message and finalize the game
-b $96C0
+b $96C0 "OUT OF TIME" (20-minute countdown expiry message)
+B $96C0,12 "OUT OF TIME"
 c $96CC Soldier presence/movement-pattern dispatch for the current tile
 @ $96CC label=SoldierDispatch
 N $96CC The even (low) byte of #R$9700's word pair for the current tile ($8202) is a soldier movement-pattern selector, not unused padding: 0 = no soldier (clears the soldier screen address $8F93 and returns), 1-6 select one of 6 movement routines (#R$900A/#R$9464/#R$8164/#R$7D64/#R$7D82/#R$7D8C). Confirmed 4/4 against known room layout: tiles $71/$7A (have a soldier) hold pattern 2/1; tiles $72/$7B (no soldier) hold pattern 0 - see docs/Actors.md.
@@ -1463,8 +1479,14 @@ C $96F7,6 No/unknown pattern: clear soldier screen address $8F93
 b $96FE
 b $9700 Per-tile soldier movement pattern (low byte) + boundary value (high byte)
 N $9700 Word pairs indexed by $8202 (low byte at #R$9700+2*idx, high byte at +2*idx+1 - the one #R$7D96 clamps into $46-$A5 each frame). The low byte is a soldier movement-pattern selector (0 = no soldier, 1-6 = a movement routine) - see #R$96CC and docs/Actors.md. Confirmed 4/4 against known room layout. Array proper is 128 words (256 bytes, index range 0-127); the trailing 128 bytes are unaccounted for.
+N $9700 **This is pure data - none of these words are code pointers**, even where a disassembler renders one as a label. Tile 22's entry at $972C is the trap: its bytes are $05,$93 (pattern 5, boundary 147 - both perfectly valid, and 147 sits inside #R$7D96's $46-$A5 clamp range), but read as a little-endian word that spells $9305, which happens to be a real mid-routine entry point inside #R$9300. Any disassembler with symbol resolution will helpfully print it as a reference to that label. It isn't one; treat every entry here as two independent bytes.
 W $9700,256,2
-B $9800,128,8 4 pickup messages, 32 bytes each (indexed by pickup-type C in #R$86C0)
+b $9800 Pickup messages
+N $9800 4 pickup messages, 32 bytes each (indexed by pickup-type C in #R$86C0), each a pair of $FF-terminated 16-byte lines shown one above the other.
+B $9800,32,8 "YOU HAVE FOUND" / "A CELL KEY:" (key, C=0)
+B $9820,32,8 "YOU HAVE FOUND" / "A HOSTAGE" (hostage, C=1)
+B $9840,32,8 "EXPLOSIVE" / "ACTIVATED:" (bomb, C=2)
+B $9860,32,8 "YOU HAVE FOUND" / "SOME FOOD:" (food, C=3)
 c $9880 Key-gated door: consume a key to open, or block the UP input
 @ $9880 label=KeyDoorGate
 N $9880 Called (via #R$FFE8) whenever Joe isn't mid-jump ($8209=0) and the current tile has an up-door flag set in $820C (bit4=left side, bit2=right side). If Joe is standing at that door's screen edge with UP pressed: with keys in stock ($8215), consumes one and redraws the key-count digit (#R$925C); with none, clears the UP bit in $820A before #R$7E32 processes it - blocking the level transition outright. Confirms $8215's "key" role extends beyond a simple pickup counter: keys are also the toll for certain doors. Left-edge and right-edge halves are otherwise identical.
@@ -1556,7 +1578,14 @@ b $A000 "JOE BLADE" sign
 N $A000 256x16px image (32 chars x 2 chars), drawn by #R$8B05 (DE=#R$A000, straight sequential copy). Stored in raster-scanline order - 32 bytes per scanline, 16 scanlines - NOT the per-8x8-cell order the other sprite blocks use. Reconstructing one UDG cell needs 8 bytes at stride 32 (one byte per scanline), not the usual stride 1. Confirmed correct by rendering the raw bytes directly with PIL first ("JOE BLADE" reads clean) before writing this macro; the UDGARRAY macro's grammar (width,attr,scale,step then an address-range in parens with horizontal/vertical step) was checked against docs/skool-macros.html.
 N $A000 #HTML[#UDGARRAY32,7,2,32($A000-$A11F-1-256)(signA000)]
 B $A000,512,16
-b $A200
+b $A200 Energy-gauge segment glyphs (5 fill levels)
+N $A200 5 8x8 glyphs (40 bytes, $A200-$A227), one per energy-gauge segment fill level (0=empty..4=full) - read by #R$FFB5 as `$A200 + index*8`, where the index is the segment's current value in the #R$A228 gauge array.
+N $A200 #HTML[#UDGARRAY5($A200-$A227-8)(energybar.png)]
+B $A200,8,8 Level 0 (empty)
+B $A208,8,8 Level 1
+B $A210,8,8 Level 2
+B $A218,8,8 Level 3
+B $A220,8,8 Level 4 (full)
 @ $A228 label=EnergyGauge
 B $A228,18,10 Energy gauge
 c $A23C Energy gauge initial fill

@@ -56,11 +56,11 @@ Status: Not finished, but have a good progress (62K .ctl file).
 
 Original: by Carter Follis Software Associates for ZX Spectrum, 1987.
 
-Volume: about 4500 code instructions.
+Volume: about 4600 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: Have some progress (112K .ctl file).
+Status: Have pretty good progress (198K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)

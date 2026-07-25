@@ -493,11 +493,11 @@ without the stats screen) is not yet confirmed.
   and `$40`.
 - What do the `$0A`-`$10` decor-cube values (§4b) actually look like on
   screen? Not yet catalogued individually.
-- What does `$9A60` do? The two roles previously attributed to it — writing
-  the handler address into slot `+3`/`+4`, and linking the object into the
-  active chain — both turned out to happen inside `$84AE` itself. Observed
-  effect: slot `+9` (triggering value) reads `$00` afterwards. Internals
-  not traced.
+- ~~What does `$9A60` do?~~ RESOLVED: it computes the object's bounding box
+  (`+0x10`..`+0x13`) from its position and a per-kind size template at
+  table `$750A` — the source of the fields every collision routine
+  (`$9BF0`/`$9B5A`/`$9ABC`) reads. Returns Carry if the box would extend
+  off-screen.
 - What do `$9602`'s and `$9684`'s unidentified sub-calls do (`$9B5D`, the
   player-position proximity checks)?
 - What is `$618C`'s early-exit path for, exactly?

@@ -130,7 +130,9 @@ screen tiles). Then:
   at `$7556`** (the same table `$8E6E` reads during creature setup) —
   meaning individual terrain codes (rocks, seaweed, etc.) may have
   different collision shapes rather than being uniformly solid or passable.
-  Not yet decoded.
+  `$7556` holds a pointer per code into a variable-length shape record,
+  walked by `$9AFD` as `(key,threshold)` pairs against the object's
+  in-cell position — see §6.
 
 ## 5. Walk animation (`$99A1`)
 
@@ -143,16 +145,65 @@ otherwise a sprite number) — this is how the player's walk cycle picks the
 correct sprite frames and fine position adjustments for whichever
 direction it's currently facing.
 
-## 6. Open questions
+## 7. Creature waypoint movement (`$925C`)
+
+A per-frame handler used by non-player dynamic objects to patrol between
+fixed points, distinct from the player's own input-driven movement (§2-3).
+
+1. Walks a linked list of waypoint records at `$8DEF` (each entry links via
+   its own `+8` offset) looking for the entry whose tag matches this
+   object's target-waypoint field (`+0x1A`). The match's position is copied
+   into scratch `$9246`.
+2. Picks a **4-byte movement-delta entry** from a table at `$924C`, indexed
+   by the object's current facing (`+0x0B`), into scratch `$9248`.
+3. A 3-iteration threshold scan compares the target position against the
+   object's own bounding-box edges (`+0x05`/`+0x06`) to decide whether the
+   object should approach the near or far side of the target cell, swapping
+   a byte of the scratch delta accordingly.
+4. Moves up to 4 steps, one per call, via `$8ABB`/`$9BF0` (the same
+   position-apply/collision-test pair the player uses — see §3-4). On
+   collision, the walk is abandoned for this call without finalizing
+   (jumps straight to `$99A1`, the walk-animation stepper).
+5. On reaching the target (target position matches a fixed marker at
+   `$8DB6`): calls a handler via `IY=$7CBC`+`$88DD`, plays sound effect
+   `$05`, then adds an adjustment (returned in `B`) to the rust/oil timer
+   `$6501` (see `Items-Combat-Format.md` §7 for that timer's other user).
+   Finalizes via `$9A60` before resuming.
+
+Bytes between the `CALL $8513` at `$930A` and `$931C` disassemble as
+implausible instructions (`LD D,D`, `DEC L`, and similar) — these are
+`$8513`'s own inline arguments, not real code: `$8513` prints a
+message-window string, a fixed prefix from `$65CF`, then reads one inline
+attribute/control byte (`$930D`, value `$14`), then prints the inline
+message text that follows (`"    OO-ER!   "`, terminated by `$5E`) and
+jumps back into real code right after the terminator (`$931C`, not `$9326`
+as originally estimated). Real code resumes there and runs through
+`$9326` unbroken.
+
+## 8. Open questions
 
 - The keyboard half-row → diagonal-group mapping (which of `$6182`-`$6184`/
   `$617D`-`$617F` corresponds to which documented key group) isn't
   decoded key-by-key.
-- The `$7556` per-terrain-code shape table (partial-block shapes for
-  non-wall, non-empty grid codes) is unread.
-- `$9BF0`'s leading `CALL $9A60` (same address as the dynamic-object
-  finalizer — see `Room-Format.md` §6.2) returning early on Carry: unclear
-  why a collision check calls the object finalizer, or whether this is a
-  second, coincidentally-identical entry point.
+- ~~The `$7556` per-terrain-code shape table~~ RESOLVED: it's a table of
+  pointers to variable-length shape records, walked by `$9AFD` as
+  `(key,threshold)` pairs (via the `$74CE`/`$750B` lookup) compared against
+  the object's in-cell position, deciding a partial block and setting bit
+  0/1 of `+0x0D` along the way. The exact game-meaning of those bits
+  (ledge? climbable edge?) is still open.
+- ~~`$9BF0`'s leading `CALL $9A60`~~ RESOLVED: `$9A60` is the bounding-box
+  finalizer (see `Room-Format.md` §6.2) — `$9BF0` calls it to recompute the
+  mover's own box from its current position before testing corners,
+  bailing out (Carry) if the move would push the box off-screen. Not a
+  coincidence, and not the object-spawn finalizer role it was once assumed
+  to have.
 - The exact meaning of bit 7 in `(IX+$0D)` used elsewhere isn't tied back
   to movement state yet.
+- `$925C`'s threshold-scan swap logic (§7 step 3) is decoded mechanically
+  but the game-meaning of "near vs far side of the target cell" isn't
+  confirmed against actual creature behaviour.
+- ~~The `$930A`-`$9326` byte range in `$925C`~~ RESOLVED: only `$930D`-`$931B`
+  is `$8513`'s inline print data (control byte + "OO-ER!" string); `$931C`
+  onward is genuine code, see §7.
+- What sets an object's target-waypoint tag (`+0x1A`), and where the
+  waypoint list at `$8DEF` itself is populated per room/level.

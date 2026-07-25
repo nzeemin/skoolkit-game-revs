@@ -21,7 +21,7 @@ end-game stats screen via `$854F`:
 Gated on bit 4 of the input mask (`$6186` — see `Movement-Format.md` §1).
 Branches on whether a weapon is currently held (`$619E`):
 
-- **Weapon held** → jumps to `$8D8D` (attack — not yet traced).
+- **Weapon held** → jumps to `$8D8D` (attack — see §7).
 - **Nothing held, and the held-item pointer `$6110` equals the fixed
   "empty hands" sentinel record at `$788A`** → **pick up**.
 - **Otherwise** (holding a regular item) → **drop**.
@@ -160,6 +160,17 @@ offset `+9`, so `$9401`'s reward lookup can identify which weapon scored
 the hit. On hitting plain terrain, it just stops. Either way it animates
 briefly then self-destructs.
 
+`$8C35` (reached from `$8D8D` on `$9923` reporting Carry, and from
+`$8AFB`/pickup code via `$8C15`) prints a fixed inline message via `$8513`
+and returns — no branching on the result: `$8C35` prints "BLOCKED",
+`$8C15` prints "FULL!" (inventory-full pickup rejection), and the
+still-unidentified caller at `$89F5` prints "OO-ER!" (also used verbatim
+by `$925C`'s waypoint-arrival handler, §7). `$8513`'s own return never
+falls through to the next instruction — it jumps past its inline
+attribute byte + message text + `$5E` terminator via a computed address,
+so bytes immediately following each `CALL $8513` are message data, not
+code.
+
 **Score** lives at `$611B`-`$611F` (5-digit BCD): `$8879` adds, `$8894`
 subtracts (resetting from a fixed `$5C92` block if the score can't cover
 the cost), `$888E` adds a bonus then redraws, and `$885A` redraws the
@@ -169,7 +180,25 @@ score HUD (last 4 digits, via `$8523`).
 Gnomes or weapons): resets the rust/oil timer `$6501` to 0, decrements the
 oil-can count `$6198`, plays sound `$09`. Matches the game's own
 instructions ("rusting commences on contact with water ... reversed by an
-intake of oil").
+intake of oil"). The remaining oil-can count is drawn on the HUD by `$663B`
+(icon plus BCD count via `$854F`).
+
+The rust/oil timer's own per-frame tick is `$6503` (called from the main
+loop, `$6B71`): does nothing in rooms 1/2 (ending/menu) or once the
+game-over flag `$617A` is set; while `$6199` (oil-used flag) is clear,
+decrements `$6501` and, each time it wraps, decrements a cycle counter at
+`$6500` (reloaded from `$64FF` when it hits zero) while incrementing the
+rust level at `$6502`. Once that rust level reaches `$52`, the player is
+killed (handler switched to `$8C48`, game-over flag set). The rust gauge
+itself is drawn by `$655E` (base icon plus repeated `$6543` segments,
+scaled by `$6502`) and ticked/redrawn each frame by `$6580`.
+
+The same timer `$6501` is also *incremented* elsewhere: `$925C`, a
+creature waypoint-patrol handler (see `Movement-Format.md` §7), adds an
+adjustment to it (sound effect `$05`, not `$09`) on reaching a waypoint —
+i.e. `$6501` isn't purely a player action outcome, some creature arrivals
+also nudge it. How that interacts with the player's own oil-can pickup
+isn't traced.
 
 ## 8. Open questions
 
@@ -178,10 +207,15 @@ intake of oil").
   detector's own sprite field (`+0x08` in `$9341`'s object) — the gap
   between "player is holding the right item" and "delivery detector
   notices."
-- Why `$9923` returning Carry sends `$8D8D` straight to `$8C35`
-  (hit-response text) before the asynchronous projectile (`$9963`) could
-  possibly have hit anything — meaning is unclear (spawn failure?).
-- The weapon lookup table at `$7C83`'s format.
+- Why `$9923` returning Carry sends `$8D8D` straight to `$8C35` (which just
+  prints "BLOCKED" and returns, see below) before the asynchronous
+  projectile (`$9963`) could possibly have hit anything — meaning is
+  unclear (spawn failure?).
+- ~~The weapon lookup table at `$7C83`'s format~~ PARTIALLY RESOLVED: `$88E3`
+  searches it as a flat list of sprite-number bytes via CPIR, length from
+  `$7C88`, returning Z on a match. Whether each matched slot carries any
+  further per-weapon data (ammo type, sound) beyond the sprite number isn't
+  confirmed.
 - The exact Y/X bit-packing used when dropping an item (§2.2).
 - Whether all 4 Plug Rooms need to be completed simultaneously/in-order,
   or independently — a live session found door access to a Plug Room

@@ -280,6 +280,7 @@ C $6646,3 Print an inline string embedded right after the caller's CALL instruct
 T $6649,4 cursor position only, no visible text
 C $6650,3 => Print BCD byte A as two digits, high digit blanked to a space if zero
 c $6653 Prepare room with color 0
+N $6653 Sets colour to 0 and jumps into #R$69AC to draw the room's background.
 C $6654,3 => Draw the room's background
 c $6657 Get room color from room description and store to 6175
 N $6657 Reads byte3 of the current room description ($6127+3), masks to the low nibble, colour, ignoring the size bits, and stores it to $6175.
@@ -468,16 +469,20 @@ C $6AE5,2 enable interrupts, return
 c $6AE7 ISR continuation setup: latch the resume address and clear the frame-ready flag
 N $6AE7 Pops the return address off the stack and stores it to the self-modified jump target at $6AF9, clears the frame-ready flag byte at $6AFB, then re-enables interrupts and returns.
 c $6AF1 Idle loop: enable interrupts, drive the sound-effect player each pass
+N $6AF1 Loops forever: enables interrupts, calls #R$8445 to step the currently-playing sound effect, then repeats.
 C $6AF1,1 Enable interrupts
 C $6AF2,3 Per-frame sound-effect player
 C $6AF5,3 => Idle loop
 C $6AF2,3 Per-frame sound-effect player
 c $6AF8 Jump to new-game initialization
+N $6AF8 Trampoline: jumps to #R$6B05 to start a new game.
 C $6AF8,3 => New-game initialization
 C $6AF8,3 => New-game initialization
 c $6AFB Self-modified per-frame hook, called by the ISR #R$6AAA (currently a RET stub, patched by #R$6AFC)
+N $6AFB Currently a bare RET, self-modified in by #R$6AFC; called every frame by the ISR #R$6AAA as the main per-frame game-logic hook.
 C $6AFB,1 Do nothing, until self-modified
 c $6AFC Patch #R$6AFB to RET (disabling the hook), then jump to new-game initialization
+N $6AFC Writes the RET opcode ($C9) into #R$6AFB, disabling it, then re-enables interrupts and jumps to #R$6AF8 to start a new game.
 C $6AFC,2 A = $C9, the RET opcode
 C $6AFE,3 Patch it into #R$6AFB, disabling further triggers
 C $6B01,1 Enable interrupts
@@ -494,14 +499,37 @@ C $6B6B,3 Per-frame main loop entry
 C $6B6E,3 System/interrupt setup before the main menu
 c $6B71 Main game loop
 N $6B71 Frame-rate pacing, per-frame updates (redraw flush, oil timer, screen flip), game-over restart check, and pause/menu key handling.
+C $6B71,6 Reset the frame counter $5C78 to 0
+C $6B77,6 Save a copy to $6179 as the pacing baseline
 C $6B7D,3 ISR continuation setup
+C $6B80,9 Compare the live frame counter against the saved baseline, test if at least 3 frames have passed
+C $6B89,2 If not yet, loop back and wait
+C $6B8B,4 Save the new frame count as the baseline for next time
 C $6B8F,3 Per-frame rust/oil tick
 C $6B92,3 End-of-frame screen flip
-C $6B95,3 get room number
+C $6B95,7 A = the room number, compare against room 2, the menu
+C $6B9C,6 Otherwise test flag $61A1, skip resetting $61A2 if set
+C $6BA2,3 Clear $61A2
 C $6BA5,3 Flush the queued redraw requests at $9D3C
 C $6BA8,3 Per-frame main loop entry
+C $6BAB,5 A = the game-over flag $617A, compare against $FF
 C $6BB0,3 => New-game initialization
+C $6BB3,9 Read the CAPS-SHIFT/Z/X/C/V row ($7FFE), loop back to the top if Z, pause, is pressed
+C $6BBC,7 Read the SPACE/SYM row ($F7FE), test bit 0, SPACE
 C $6BC3,3 => New-game initialization
+C $6BC6,8 Read another row ($EFFE), test bit 0 via RRCA; if pressed, BREAK, handle it below
+C $6BCE,1 Disable interrupts
+C $6BCF,5 Wait for the key to release
+C $6BD4,6 A = flag $61A0, skip forcing the border colour below if set
+C $6BDA,7 HL = $61A2, test its value, skip forcing white if nonzero
+C $6BE1,3 Force $61A3 = $7F, white border
+C $6BE4,7 Select AY register $11 via port $7FFD
+C $6BEB,3 Call a 128K sound ROM helper
+C $6BEE,7 Restore AY register select to $10 via port $7FFD
+C $6BF5,6 Read the row again, test bit 0
+C $6BFB,2 Loop while still pressed, debounce
+C $6BFD,5 Read once more, loop until released, second debounce
+C $6C02,1 Re-enable interrupts
 b $6C06 Sprite number -> mask sprite number table (indexed by sprite number, read by #R$8128)
 b $6CCF Room descriptions.
 N $6CCF The world is a 6x6x6 cube of room slots (6 levels, each a 6x6 grid), per an external game map. The highest room number in this table is $D7=215=6*6*6-1, and the table has 216 records total ($00-$D7) -- one per cube slot, including ~15 unused/vacant ones (no room actually there). Horizontal (same-level) neighbours connect via doors (#R$612B); vertical neighbours connect via whirlpools (down, #R$8A87) and bubbles (up, also #R$8A87).
@@ -935,10 +963,167 @@ B $75A6,3 Shape record for terrain code $11 (#R$7556)
 B $75A9,2 Shape record for terrain code $12 (#R$7556)
 B $75AB,3 Shape record for terrain code $13 (#R$7556)
 b $75AE
-b $75B5
+b $75B5 Decoration/creature spawner table (room-gated, see #R$8F82)
+N $75B5 The real table starts at $75B6 (byte $75B5 itself precedes it and its role is unclear); consumed by #R$8F82 (spawns pairs) and likely other unidentified routines. Each record: offset 0 = total record length (8 + room-list length, a value under 8 marks the end of the table); offset 1 = active flag, tested nonzero, overwritten with the current room number once spawned; offset 2/3 = a handler word for other consumer routines (#R$8F82 ignores it, always uses #R$9021); offset 4 = X, offset 5 = Y; offset 6 = kind (object +0x0A); offset 7 = waypoint tag (object +0x1A, see #R$925C); offset 8+ = the room-list, searched via CPIR against the current room.
+B $75B5,1 unknown, precedes the table
+B $75B6,8 header
+B $75BE,5 room-list
+B $75C3,8 header
+B $75CB,1 room-list
+B $75CC,8 header
+B $75D4,1 room-list
+B $75D5,8 header
+B $75DD,4 room-list
+B $75E1,8 header
+B $75E9,1 room-list
+B $75EA,8 header
+B $75F2,1 room-list
+B $75F3,8 header
+B $75FB,1 room-list
+B $75FC,8 header
+B $7604,1 room-list
+B $7605,8 header
+B $760D,1 room-list
+B $760E,8 header
+B $7616,4 room-list
+B $761A,8 header
+B $7622,1 room-list
+B $7623,8 header
+B $762B,2 room-list
+B $762D,8 header
+B $7635,3 room-list
+B $7638,8 header
+B $7640,4 room-list
+B $7644,8 header
+B $764C,1 room-list
+B $764D,8 header
+B $7655,1 room-list
+B $7656,8 header
+B $765E,1 room-list
+B $765F,8 header
+B $7667,3 room-list
+B $766A,8 header
+B $7672,1 room-list
+B $7673,8 header
+B $767B,1 room-list
+B $767C,8 header
+B $7684,1 room-list
+B $7685,8 header
+B $768D,1 room-list
+B $768E,8 header
+B $7696,2 room-list
+B $7698,8 header
+B $76A0,2 room-list
+B $76A2,8 header
+B $76AA,4 room-list
+B $76AE,8 header
+B $76B6,4 room-list
+B $76BA,8 header
+B $76C2,1 room-list
+B $76C3,8 header
+B $76CB,1 room-list
+B $76CC,8 header
+B $76D4,3 room-list
+B $76D7,8 header
+B $76DF,3 room-list
+B $76E2,8 header
+B $76EA,1 room-list
+B $76EB,8 header
+B $76F3,1 room-list
+B $76F4,8 header
+B $76FC,5 room-list
+B $7701,8 header
+B $7709,1 room-list
+B $770A,8 header
+B $7712,3 room-list
+B $7715,8 header
+B $771D,1 room-list
+B $771E,8 header
+B $7726,1 room-list
+B $7727,8 header
+B $772F,1 room-list
+B $7730,8 header
+B $7738,1 room-list
+B $7739,8 header
+B $7741,1 room-list
+B $7742,8 header
+B $774A,1 room-list
+B $774B,8 header
+B $7753,1 room-list
+B $7754,8 header
+B $775C,4 room-list
+B $7760,8 header
+B $7768,1 room-list
+B $7769,8 header
+B $7771,1 room-list
+B $7772,8 header
+B $777A,3 room-list
+B $777D,8 header
+B $7785,1 room-list
+B $7786,8 header
+B $778E,1 room-list
+B $778F,8 header
+B $7797,1 room-list
+B $7798,8 header
+B $77A0,1 room-list
+B $77A1,8 header
+B $77A9,3 room-list
+B $77AC,8 header
+B $77B4,1 room-list
+B $77B5,8 header
+B $77BD,1 room-list
+B $77BE,8 header
+B $77C6,3 room-list
+B $77C9,8 header
+B $77D1,2 room-list
+B $77D3,8 header
+B $77DB,1 room-list
+B $77DC,8 header
+B $77E4,1 room-list
+B $77E5,8 header
+B $77ED,1 room-list
+B $77EE,8 header
+B $77F6,2 room-list
+B $77F8,8 header
+B $7800,5 room-list
+B $7805,8 header
+B $780D,1 room-list
+B $780E,8 header
+B $7816,1 room-list
+B $7817,8 header
+B $781F,3 room-list
+B $7822,8 header
+B $782A,1 room-list
+B $782B,8 header
+B $7833,1 room-list
+B $7834,8 header
+B $783C,1 room-list
+B $783D,8 header
+B $7845,1 room-list
+B $7846,8 header
+B $784E,3 room-list
+B $7851,8 header
+B $7859,1 room-list
+B $785A,8 header
+B $7862,1 room-list
+B $7863,8 header
+B $786B,2 room-list
+B $786D,8 header
+B $7875,1 room-list
+B $7876,8 header
+B $787E,1 room-list
+B $787F,8 header
+B $7887,1 room-list
+B $7888,2 unused
+b $788A
 B $788A,4 "Empty hands" sentinel item record (room,Y,X,sprite) -- #R$6110 (currently-held item) points here when nothing is held; #R$8AFB compares against this fixed address to decide pick-up vs. drop
 W $7C81,2
 B $7C88,1
+b $7C89 Creature hit/defeat lookup table (see #R$9401)
+N $7C89 5 fixed (room,position,reward-sprite) triples, one per level. Position is $3C in every entry, the shared corner-cube grid cell; reward is $7A except level 3's $36.
+B $7C89,15,3
+B $7C98,1 entry count (B in LD BC,($7C97) at #R$940E; the paired low byte at $7C97 coincides with the table's last byte, unused)
+b $7C9A
 W $7C9A,4,4
 B $7C9E
 B $7CA0
@@ -993,10 +1178,25 @@ B $7D66,2
 c $7D68 Print string routine
 N $7D68 Prints the string at (HL) to the shadow screen until terminator $5E; handles control codes $16 (set row+col) and $2B (newline, +8 rows).
 R $7D68 HL string address (terminated by $5E)
+C $7D68,5 A = 1, set the "row advance" scratch $61A6
+C $7D6D,4 A = the next string byte, advance HL, test for control code $16
+C $7D71,3 Not $16: jump to the terminator/newline tests below
+C $7D74,7 $16: copy the next 2 bytes (row,col) into scratch $7D66, advancing HL
+C $7D7B,9 A = the row byte, C = it, isolate the low bit into $7D65, halve C
+C $7D84,7 A = the column byte + 1, B = it, the loop count
+C $7D8B,1 Save HL, the string pointer
 C $7D8C,3 Shadow screen address
-C $7D94
-C $7D9F
+C $7D8F,5 DE = $20, the screen row stride
+C $7D94,1 Add the stride, advancing to the next row
+C $7D95,2 Loop B times to reach the target row
+C $7D97,4 Add the column offset (C), save the resulting screen address to $7D63
+C $7D9B,4 Restore HL, the string pointer, loop back for the next character
+C $7D9F,2 Test for the string terminator $5E
+C $7DA1,1 Terminator: return
+C $7DA2,4 Test for the newline control code $2B
+C $7DA6,8 Newline: advance the row scratch $7D67 by 8, loop back to reposition
 C $7DB1,3 Print engine
+C $7DB4,3 Loop back for the next character
 b $7DB7
 B $7DBF
 c $7DC7 Print engine: plot one character glyph into the shadow-screen font buffer, then blit it
@@ -1352,6 +1552,7 @@ C $8544,1 A = the printable digit code
 C $8545,3 Print one digit
 C $8548,3 Advance HL, loop for the next byte pair
 c $854C Print one digit (JP target self-modified by #R$8523)
+N $854C Self-modified JP target: #R$8523 patches the operand here before calling, so this resolves to whichever routine (usually #R$7CEC, the print engine entry point) should print the current digit.
 C $854C,3 => Print engine entry point
 c $854F Print BCD byte A as two digits, high digit blanked to a space if zero
 N $854F Rotates A's high nibble down, prints it via #R$7CEC as a digit, or a space ($F0 sentinel) if it's zero, then prints the low nibble as a digit unconditionally.
@@ -1449,7 +1650,13 @@ N $8879 Saves the bonus value (HL) to scratch $8874, then adds it byte-by-byte, 
 C $8879,3 Save the bonus value to scratch $8874
 C $887C,8 HL = the bonus bytes, DE = the score's low byte, B = 5
 C $8885,8 Add corresponding bytes in BCD, carry propagates, loop
+C $8894,3 Save the subtrahend to scratch $8874
+C $8897,9 HL = the subtrahend bytes, DE = the score's low byte, B = 5
+C $88A0,8 Subtract corresponding bytes in BCD, borrow propagates, loop
+C $88AB,9 Score underflowed: HL = the fixed reset block $5C92, DE = the score $611B, BC = 5
+C $88B4,2 Copy the reset block over the score
 c $888E Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
+N $888E Calls #R$8879 to add the bonus (HL) to the score, then falls into #R$885A to redraw the score HUD.
 C $888E,3 Add a 5-digit BCD value at #R$8874 to the score
 C $8891,3 => Redraw the score display on HUD
 c $8894 Subtract a BCD value from the score
@@ -1467,11 +1674,13 @@ C $88CD,2 Retry the read from there
 C $88CF,6 Store the advanced HL back as the new head pointer (IY+0/1)
 C $88D5,2 DE = the value read, return
 c $88D7 Add a bonus to the score, value from a circular queue via #R$88B9
+N $88D7 Reads the next bonus value from the circular queue via #R$88B9, then adds it to the score via #R$888E.
 C $88D7,3 Read the next value from a small circular queue, head pointer at IY+0/1, wrap pointer at IY+2/3, advancing the head
 C $88DA,3 => Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
 C $88D7,3 Read the next value from a small circular queue, head pointer at IY+0/1, wrap pointer at IY+2/3, advancing the head
 C $88DA,3 => Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
 c $88DD Subtract a BCD value from the score, value from a circular queue via #R$88B9
+N $88DD Reads the next value from the circular queue via #R$88B9, then subtracts it from the score via #R$8894.
 C $88DD,3 Read the next value from a small circular queue, head pointer at IY+0/1, wrap pointer at IY+2/3, advancing the head
 C $88E0,3 => Subtract a BCD value from the score
 C $88DD,3 Read the next value from a small circular queue, head pointer at IY+0/1, wrap pointer at IY+2/3, advancing the head
@@ -1731,15 +1940,30 @@ C $8FB6,3 get room number
 C $9007,3 Dynamic object finalizer
 c $9021 Per-frame animation-table stepper
 N $9021 Searches the table pointed by (IX+$18/$19) for a matching entry ($619A), then applies position/facing changes over several frames via #R$923E continuations.
+C $9021,6 HL = the linked spawner-record pointer (+0x18/+0x19)
+C $9027,4 A = the record's kind byte minus 8, the waypoint-search length, C = it
+C $902B,6 B = 0, DE = 8, HL = the room-list start (record+8)
+C $9031,7 A = the target sprite $619A, search the room-list for it; not found, skip to the idle branch
+C $9038,7 Found: clear the search-target $619A, HL = the target position $619B
+C $903F,6 Store it as the object's position (+0x05/+0x06)
+C $9045,10 A = the target facing $619D, store it (+0x0B), set the move counter (+0x09=10)
 C $904F,3 Apply the object's facing direction to its position (IX+5/+6), returning the OLD position in BC
 C $9052,3 Dynamic object finalizer
 C $9055,3 Save continuation
+C $9058,4 Decrement the move counter, return unless it just reached 0
+C $905C,4 Reset the move counter to 10
 C $9060,3 Collision/overlap scan
+C $9063,1 Collision: abandon the animation without finalizing
+C $9064,4 Clear bit 7 of the flags byte (+0x0D)
+C $9068,8 HL = the record pointer again, advance past the header to the next-link field
+C $9070,4 Read the linked record's own pointer (E,D), swap into HL
+C $9074,3 Jump to the continuation there
 t $9077
 b $907B
 t $907C
 b $9080
 c $9085 Object type stub: dispatch into #R$90A8's creature AI setup
+N $9085 Sets A=$72 and HL to the object's animation-table pointer $9081, then jumps into #R$90A8's shared creature AI setup body, a per-kind trampoline supplying its own table/param constants.
 C $9085,2 A = $72, the initial width/param
 C $9087,3 HL = the object's animation-table pointer $9081
 C $908A,3 => Jump into #R$90A8's shared creature AI setup
@@ -1772,6 +1996,7 @@ C $91D3,3 Save continuation
 C $91D9,3 Sprite-animation stepper
 b $91E2
 c $9208 Object type stub: dispatch into #R$9232's shared setup
+N $9208 Sets A=$3E and HL to the object's animation-table pointer $9204, then jumps into #R$9232's shared setup body ($9237), a per-kind trampoline supplying its own table/param constants.
 C $9208,2 A = $3E, the initial width/param
 C $920A,3 HL = the object's animation-table pointer $9204
 C $920D,3 => Jump into #R$9232's shared setup
@@ -1950,6 +2175,31 @@ C $95B9,3 Dynamic object finalizer
 b $95C1
 B $95FB
 c $9602 Per-frame behaviour handler for the individual rising-bubble particle spawned by #R$957C
+N $9602 Plays sound $03, then runs the rise animation via #R$99D5 (table $95C1, returns NC if off-screen). Resets phase, tests the despawn flag (+0x0D bit 6), jumping to self-destruction if set. If this is the full-strength variant (facing $6A), sets +0x0D bit 4 and switches to the alternate rise table $95E2, then runs the (possibly swapped) table again. If the bubble's height hasn't yet reached its target (+0x0E), or +0x09 is $FF, skips straight to the pop sequence. Otherwise scans for a nearby object via #R$9B5D; if it's specifically the player ($8DB6), refills the player's height (+0x07) by 2, or 4 for the full-strength variant, sets a player flag (+0x0D bit 4), and returns without popping. If no player nearby, falls through to the pop sequence: sets its own handler to resume past the setup, resets phase, and runs the pop animation via #R$99D5 (table $95FB).
+C $9602,2 A = sound effect $03
+C $960A,3 HL = the rise animation table $95C1
+C $9610,1 Off-screen: return
+C $9611,4 Reset the animation phase counter (+0x0F)
+C $9618,7 HL = the second rise table $95C9, test the despawn flag (+0x0D bit 6)
+C $961F,3 If set, jump straight to self-destruct
+C $9622,7 A = facing, compare against $6A, the full-strength marker
+C $9629,7 Full-strength: set +0x0D bit 4, switch HL to the alternate table $95E2
+C $9633,6 A = the bubble's height (+0x07), compare against its target (+0x0E)
+C $9639,2 If not yet reached, skip straight to the pop sequence
+C $963B,5 A = $FF, compare against +0x09
+C $9640,3 If it matches, skip straight to the pop sequence
+C $9643,6 HL = the active-object list head $610E, scan for a nearby object
+C $9649,1 None found: return
+C $964A,6 Compare the found object's address against the player $8DB6
+C $9650,2 Not the player: skip straight to the pop sequence
+C $9652,2 B = 2, the default height refill
+C $9654,9 A = facing, compare against $6A; if matched, B = 4 instead
+C $965D,7 HL = the found object's height field (+7), add B to it
+C $9664,6 HL = the found object's flags field (+0x0D), set bit 4
+C $966B,13 Pop sequence: set the object's own handler to resume at $9678, reset the phase counter
+C $9678,3 HL = the pop animation table $95FB
+C $967E,1 Off-screen: return
+C $967F,4 Mark for self-destruction (+0x02=$FF)
 N $9602 At $9622-$962D, branches on the inherited trigger value at (IX+$0B) -- only if it's $6A does it SET bit 4 of (IX+$0D) and switch to movement table $95E2 (steps +0x07 by $04/frame) instead of the default #R$95C9 (steps by $02/frame): the $6A bubble rises at double the rate. That bit 4 flag is later tested at #R$97E6 (in the sprite-draw wrapper, right after #R$8128 draws it); only if set does it SET bit 6 of (IX+$0D). Back here at $961B, bit 6 being set causes immediate self-destruct ((IX+$02)=$FF). So only $6A-triggered bubbles can ever reach that clean completion state -- $66 bubbles never do: a full-strength bubble stream that completes its rise ($6A) vs. a weak one that never does ($66), matching gameplay where some bubble sources cannot lift the player all the way. Whether bit 6 specifically means "reached the surface" is unconfirmed.
 C $9604,3 Request sound effect A
 C $9607,3 Save continuation
@@ -2098,6 +2348,7 @@ C $99B4,3 set instruction
 C $99BD,1 "NOP" instruction code
 C $99BE,3 set instruction
 c $99D1 NEG / not NEG
+N $99D1 A 1-byte self-modified stub, patched by #R$99A1/#R$99D5 to either NEG ($44) or RET ($C9). #R$9A01/#R$9A15 CALL it to conditionally negate a signed delta before adding it to the object's position, letting the same animation-table byte-code represent movement in either direction depending on facing.
 c $99D5 Sprite-animation stepper: read next entry from a per-object sprite-number table, advancing a phase counter
 N $99D5 Called with HL = a small table of raw sprite numbers (see #R$9526/#R$9577/#R$94E9 for examples). Indexes the table by (IX+$0F) (a per-object phase counter), reads the byte there into A, then INCs (IX+$0F) for next time. $FF in the table means "wrap to start" (resets (IX+$0F) to 0 and re-reads from the table's first byte); $FD is a second special marker (purpose not yet traced past #R$9A01). Otherwise A is the next sprite number to display for this object -- this is how #R$957C/#R$952D/#R$94EE (and others) drive their objects' animation frames.
 C $99D5 "RET" instruction code
@@ -3050,6 +3301,7 @@ C $FBC4,3 DE = that value, widened
 C $FBC7,4 HL = the period table $FC64 plus the index
 C $FBCB,3 H = the looked-up period byte, L = $01 fixed, return
 c $FBCF Continuation of #R$FBB4
+N $FBCF Reloads the melody-index pointer from a fixed loop-restart address when #R$FBB4 hits the $40 end-of-tune marker, then resumes reading indices from there.
 c $FBD7 Play one note / check key selection
 N $FBD7 Calls #R$FBB4 twice (storing results at $FBA8/$FBA9), then #R$FBC1 twice to check them; if neither matches, falls into the tone-generator loop at $FC04, continuing through $FC15/$FC17/$FC25 into #R$FC34, which toggles the speaker/border via OUT ($FE),A (bit 4 = speaker) in a tight DJNZ-timed square-wave loop -- this is the music heard while the menu waits for input. If both checks match, jumps to the plain delay loop at #R$FC46 instead.
 C $FBDA,3 Melody-index table reader/advancer, used by #R$FBD7

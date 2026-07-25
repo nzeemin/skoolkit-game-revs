@@ -1106,6 +1106,10 @@ c$663B LD DE,$D408          ;
 ; Prepare room with color 0
 ;
 ; Used by the routine at #R$676D.
+;
+; .
+;
+; Sets colour to 0 and jumps into #R$69AC to draw the room's background.
 c$6653 XOR A         ;
  $6654 JP $69AC      ; => Draw the room's background
 
@@ -1789,6 +1793,13 @@ c$6AE7 POP HL        ;
  $6AF0 RET           ;
 
 ; Idle loop: enable interrupts, drive the sound-effect player each pass
+;
+; .
+;
+; .
+;
+; Loops forever: enables interrupts, calls #R$8445 to step the
+; currently-playing sound effect, then repeats.
 c$6AF1 EI            ; Enable interrupts
  $6AF2 CALL $8445    ; Per-frame sound-effect player
  $6AF5 JP $6AF1      ; => Idle loop
@@ -1796,16 +1807,32 @@ c$6AF1 EI            ; Enable interrupts
 ; Jump to new-game initialization
 ;
 ; Used by the routine at #R$6AFC.
+;
+; .
+;
+; Trampoline: jumps to #R$6B05 to start a new game.
 c$6AF8 JP $6B05      ; => New-game initialization
 
 ; Self-modified per-frame hook, called by the ISR #R$6AAA (currently a RET
 ; stub, patched by #R$6AFC)
 ;
 ; Used by the routine at #R$6AAA.
+;
+; .
+;
+; Currently a bare RET, self-modified in by #R$6AFC; called every frame by the
+; ISR #R$6AAA as the main per-frame game-logic hook.
 c$6AFB RET           ; Do nothing, until self-modified
 
 ; Patch #R$6AFB to RET (disabling the hook), then jump to new-game
 ; initialization
+;
+; .
+;
+; .
+;
+; Writes the RET opcode ($C9) into #R$6AFB, disabling it, then re-enables
+; interrupts and jumps to #R$6AF8 to start a new game.
 c$6AFC LD A,$C9      ; A = $C9, the RET opcode
  $6AFE LD ($6AFB),A  ; Patch it into #R$6AFB, disabling further triggers
  $6B01 EI            ; Enable interrupts
@@ -1870,72 +1897,72 @@ c$6B05 CALL $61E3      ; New-game initialization
 ;
 ; Frame-rate pacing, per-frame updates (redraw flush, oil timer, screen flip),
 ; game-over restart check, and pause/menu key handling.
-c$6B71 LD HL,$0000   ;
- $6B74 LD ($5C78),HL ;
- $6B77 LD A,($5C78)  ;
- $6B7A LD ($6179),A  ;
+c$6B71 LD HL,$0000   ; {Reset the frame counter $5C78 to 0
+ $6B74 LD ($5C78),HL ; }
+ $6B77 LD A,($5C78)  ; {Save a copy to $6179 as the pacing baseline
+ $6B7A LD ($6179),A  ; }
 *$6B7D CALL $6AE7    ; ISR continuation setup
- $6B80 LD A,($5C78)  ;
- $6B83 LD HL,$6179   ;
+ $6B80 LD A,($5C78)  ; {Compare the live frame counter against the saved
+ $6B83 LD HL,$6179   ; baseline, test if at least 3 frames have passed
  $6B86 SUB (HL)      ;
- $6B87 CP $03        ;
- $6B89 JR C,$6B7D    ;
- $6B8B LD A,($5C78)  ;
- $6B8E LD (HL),A     ;
+ $6B87 CP $03        ; }
+ $6B89 JR C,$6B7D    ; If not yet, loop back and wait
+ $6B8B LD A,($5C78)  ; {Save the new frame count as the baseline for next time
+ $6B8E LD (HL),A     ; }
  $6B8F CALL $6503    ; Per-frame rust/oil tick
  $6B92 CALL $9C35    ; End-of-frame screen flip
- $6B95 LD A,($6126)  ; get room number
+ $6B95 LD A,($6126)  ; {A = the room number, compare against room 2, the menu
  $6B98 CP $02        ;
- $6B9A JR Z,$6BA5    ;
- $6B9C LD A,($61A1)  ;
+ $6B9A JR Z,$6BA5    ; }
+ $6B9C LD A,($61A1)  ; {Otherwise test flag $61A1, skip resetting $61A2 if set
  $6B9F AND A         ;
- $6BA0 JR NZ,$6BA5   ;
- $6BA2 LD ($61A2),A  ;
+ $6BA0 JR NZ,$6BA5   ; }
+ $6BA2 LD ($61A2),A  ; Clear $61A2
 *$6BA5 CALL $835E    ; Flush the queued redraw requests at $9D3C
  $6BA8 CALL $9808    ; Per-frame main loop entry
- $6BAB LD A,($617A)  ;
- $6BAE CP $FF        ;
+ $6BAB LD A,($617A)  ; {A = the game-over flag $617A, compare against $FF
+ $6BAE CP $FF        ; }
  $6BB0 JP Z,$6B05    ; => New-game initialization
- $6BB3 LD BC,$7FFE   ;
- $6BB6 IN A,(C)      ;
+ $6BB3 LD BC,$7FFE   ; {Read the CAPS-SHIFT/Z/X/C/V row ($7FFE), loop back to
+ $6BB6 IN A,(C)      ; the top if Z, pause, is pressed
  $6BB8 BIT 1,A       ;
- $6BBA JR NZ,$6B7D   ;
- $6BBC LD BC,$F7FE   ;
+ $6BBA JR NZ,$6B7D   ; }
+ $6BBC LD BC,$F7FE   ; {Read the SPACE/SYM row ($F7FE), test bit 0, SPACE
  $6BBF IN A,(C)      ;
- $6BC1 BIT 0,A       ;
+ $6BC1 BIT 0,A       ; }
  $6BC3 JP Z,$6B05    ; => New-game initialization
- $6BC6 LD BC,$EFFE   ;
- $6BC9 IN A,(C)      ;
+ $6BC6 LD BC,$EFFE   ; {Read another row ($EFFE), test bit 0 via RRCA; if
+ $6BC9 IN A,(C)      ; pressed, BREAK, handle it below
  $6BCB RRCA          ;
- $6BCC JR C,$6C03    ;
- $6BCE DI            ;
-*$6BCF IN A,(C)      ;
+ $6BCC JR C,$6C03    ; }
+ $6BCE DI            ; Disable interrupts
+*$6BCF IN A,(C)      ; {Wait for the key to release
  $6BD1 RRCA          ;
- $6BD2 JR NC,$6BCF   ;
- $6BD4 LD A,($61A0)  ;
- $6BD7 AND A         ;
- $6BD8 JR NZ,$6BF5   ;
- $6BDA LD HL,$61A2   ;
- $6BDD LD A,(HL)     ;
+ $6BD2 JR NC,$6BCF   ; }
+ $6BD4 LD A,($61A0)  ; {A = flag $61A0, skip forcing the border colour below if
+ $6BD7 AND A         ; set
+ $6BD8 JR NZ,$6BF5   ; }
+ $6BDA LD HL,$61A2   ; {HL = $61A2, test its value, skip forcing white if
+ $6BDD LD A,(HL)     ; nonzero
  $6BDE AND A         ;
- $6BDF JR NZ,$6BE4   ;
- $6BE1 INC HL        ;
- $6BE2 LD (HL),$7F   ;
-*$6BE4 LD BC,$7FFD   ;
+ $6BDF JR NZ,$6BE4   ; }
+ $6BE1 INC HL        ; {Force $61A3 = $7F, white border
+ $6BE2 LD (HL),$7F   ; }
+*$6BE4 LD BC,$7FFD   ; {Select AY register $11 via port $7FFD
  $6BE7 LD A,$11      ;
- $6BE9 OUT (C),A     ;
- $6BEB CALL $F42A    ;
- $6BEE LD BC,$7FFD   ;
+ $6BE9 OUT (C),A     ; }
+ $6BEB CALL $F42A    ; Call a 128K sound ROM helper
+ $6BEE LD BC,$7FFD   ; {Restore AY register select to $10 via port $7FFD
  $6BF1 LD A,$10      ;
- $6BF3 OUT (C),A     ;
-*$6BF5 LD BC,$EFFE   ;
+ $6BF3 OUT (C),A     ; }
+*$6BF5 LD BC,$EFFE   ; {Read the row again, test bit 0
  $6BF8 IN A,(C)      ;
- $6BFA RRCA          ;
- $6BFB JR C,$6BF5    ;
-*$6BFD IN A,(C)      ;
+ $6BFA RRCA          ; }
+ $6BFB JR C,$6BF5    ; Loop while still pressed, debounce
+*$6BFD IN A,(C)      ; {Read once more, loop until released, second debounce
  $6BFF RRCA          ;
- $6C00 JR NC,$6BFD   ;
- $6C02 EI            ;
+ $6C00 JR NC,$6BFD   ; }
+ $6C02 EI            ; Re-enable interrupts
 *$6C03 JP $6B7D      ;
 
 ; Sprite number -> mask sprite number table (indexed by sprite number, read by
@@ -2625,99 +2652,174 @@ b$7556 DEFW $1A1A
 ; Data block at 75AE
 b$75AE DEFB $46,$4E,$50,$52,$54,$56,$6C
 
-; Data block at 75B5
-b$75B5 DEFB $07,$0D,$01,$32,$92,$34,$34,$07
- $75BD DEFB $00,$04,$05,$06,$0B,$0C,$09,$01
- $75C5 DEFB $1E,$92,$1C,$14,$07,$40,$08,$09
- $75CD DEFB $01,$1E,$92,$1C,$24,$07,$40,$08
- $75D5 DEFB $0C,$01,$85,$90,$34,$34,$07,$00
- $75DD DEFB $0D,$0E,$14,$1A,$09,$01,$08,$92
- $75E5 DEFB $14,$3C,$09,$00,$10,$09,$01,$08
- $75ED DEFB $92,$34,$0C,$09,$00,$10,$09,$01
- $75F5 DEFB $08,$92,$2C,$0C,$09,$00,$12,$09
- $75FD DEFB $01,$08,$92,$14,$3C,$09,$00,$19
- $7605 DEFB $09,$01,$08,$92,$34,$0C,$09,$00
- $760D DEFB $19,$0C,$01,$85,$90,$34,$34,$07
- $7615 DEFB $00,$1D,$1E,$23,$24,$09,$01,$A8
- $761D DEFB $90,$24,$3C,$07,$00,$22,$0A,$01
- $7625 DEFB $85,$90,$1C,$24,$07,$00,$2B,$2C
- $762D DEFB $0B,$01,$85,$90,$34,$34,$07,$00
- $7635 DEFB $2F,$30,$36,$0C,$01,$32,$92,$24
- $763D DEFB $1C,$07,$00,$34,$3A,$40,$46,$09
- $7645 DEFB $01,$32,$92,$34,$34,$07,$00,$38
- $764D DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40
- $7655 DEFB $3B,$09,$01,$1E,$92,$24,$1C,$07
- $765D DEFB $40,$3B,$0B,$01,$A8,$90,$24,$34
- $7665 DEFB $07,$00,$3E,$3F,$44,$09,$01,$08
- $766D DEFB $92,$14,$24,$09,$00,$48,$09,$01
- $7675 DEFB $08,$92,$2C,$1C,$09,$00,$48,$09
- $767D DEFB $01,$08,$92,$04,$3C,$09,$00,$4B
- $7685 DEFB $09,$01,$08,$92,$3C,$04,$09,$00
- $768D DEFB $4B,$0A,$01,$A8,$90,$1C,$24,$07
- $7695 DEFB $00,$4E,$54,$0A,$01,$A8,$90,$1C
- $769D DEFB $0C,$07,$00,$55,$5B,$0C,$01,$A8
- $76A5 DEFB $90,$34,$34,$07,$00,$5C,$5D,$5E
- $76AD DEFB $63,$0C,$01,$A8,$90,$34,$34,$07
- $76B5 DEFB $00,$67,$68,$69,$6A,$09,$01,$32
- $76BD DEFB $92,$34,$34,$07,$00,$6C,$09,$01
- $76C5 DEFB $85,$90,$1C,$1C,$07,$00,$6E,$0B
- $76CD DEFB $01,$08,$92,$0C,$24,$09,$00,$75
- $76D5 DEFB $76,$7B,$0B,$01,$08,$92,$2C,$0C
- $76DD DEFB $09,$00,$75,$76,$7B,$09,$01,$1E
- $76E5 DEFB $92,$2C,$0C,$07,$40,$78,$09,$01
- $76ED DEFB $1E,$92,$04,$2C,$07,$40,$78,$0D
- $76F5 DEFB $01,$85,$90,$24,$14,$07,$00,$82
- $76FD DEFB $87,$88,$8D,$8E,$09,$01,$32,$92
- $7705 DEFB $34,$34,$07,$00,$83,$0B,$01,$A8
- $770D DEFB $90,$24,$14,$07,$00,$85,$8B,$8C
- $7715 DEFB $09,$01,$1E,$92,$2C,$04,$07,$40
- $771D DEFB $86,$09,$01,$1E,$92,$0C,$34,$07
- $7725 DEFB $40,$86,$09,$01,$08,$92,$0C,$2C
- $772D DEFB $09,$00,$8F,$09,$01,$08,$92,$2C
- $7735 DEFB $0C,$09,$00,$8F,$09,$01,$32,$92
- $773D DEFB $24,$1C,$07,$00,$92,$09,$01,$1E
- $7745 DEFB $92,$1C,$2C,$07,$40,$93,$09,$01
- $774D DEFB $1E,$92,$2C,$1C,$07,$40,$93,$0C
- $7755 DEFB $01,$A8,$90,$1C,$24,$07,$00,$94
- $775D DEFB $95,$96,$9A,$09,$01,$1E,$92,$1C
- $7765 DEFB $2C,$07,$40,$9D,$09,$01,$1E,$92
- $776D DEFB $2C,$1C,$07,$40,$9D,$0B,$01,$85
- $7775 DEFB $90,$24,$14,$07,$00,$9F,$A5,$A0
- $777D DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40
- $7785 DEFB $A1,$09,$01,$1E,$92,$2C,$1C,$07
- $778D DEFB $40,$A1,$09,$01,$08,$92,$14,$2C
- $7795 DEFB $09,$00,$A7,$09,$01,$08,$92,$2C
- $779D DEFB $0C,$09,$00,$A7,$0B,$01,$85,$90
- $77A5 DEFB $0C,$34,$07,$00,$A8,$AE,$B4,$09
- $77AD DEFB $01,$08,$92,$14,$2C,$09,$00,$A9
- $77B5 DEFB $09,$01,$08,$92,$24,$24,$09,$00
- $77BD DEFB $A9,$0B,$01,$32,$92,$1C,$24,$07
- $77C5 DEFB $00,$AA,$AF,$B0,$0A,$01,$32,$92
- $77CD DEFB $1C,$24,$07,$00,$AB,$AC,$09,$01
- $77D5 DEFB $08,$92,$24,$24,$09,$00,$B1,$09
- $77DD DEFB $01,$08,$92,$24,$14,$09,$00,$B5
- $77E5 DEFB $09,$01,$08,$92,$2C,$34,$09,$00
- $77ED DEFB $B5,$0A,$01,$85,$90,$14,$34,$07
- $77F5 DEFB $00,$B6,$BC,$0D,$01,$32,$92,$34
- $77FD DEFB $34,$07,$00,$B7,$B8,$B9,$BE,$BF
- $7805 DEFB $09,$01,$08,$92,$24,$24,$09,$00
- $780D DEFB $BA,$09,$01,$32,$92,$24,$24,$07
- $7815 DEFB $00,$C1,$0B,$01,$A8,$90,$1C,$24
- $781D DEFB $07,$00,$C2,$C3,$C4,$09,$01,$1E
- $7825 DEFB $92,$1C,$2C,$07,$40,$C5,$09,$01
- $782D DEFB $1E,$92,$2C,$1C,$07,$40,$C5,$09
- $7835 DEFB $01,$1E,$92,$1C,$2C,$07,$40,$CC
- $783D DEFB $09,$01,$1E,$92,$1C,$14,$07,$40
- $7845 DEFB $CC,$0B,$01,$32,$92,$2C,$24,$07
- $784D DEFB $00,$C7,$CD,$CE,$09,$01,$08,$92
- $7855 DEFB $14,$24,$09,$00,$C9,$09,$01,$08
- $785D DEFB $92,$1C,$1C,$09,$00,$C9,$0A,$01
- $7865 DEFB $85,$90,$24,$14,$07,$00,$CA,$D0
- $786D DEFB $09,$01,$1E,$92,$1C,$24,$07,$40
- $7875 DEFB $D3,$09,$01,$1E,$92,$2C,$1C,$07
- $787D DEFB $40,$D3,$09,$01,$85,$90,$24,$14
- $7885 DEFB $07,$00,$1C,$01,$5A
- $788A DEFB $00,$01,$18,$6D                 ; "Empty hands" sentinel item
+; Decoration/creature spawner table (room-gated, see #R$8F82)
+;
+; .
+;
+; .
+;
+; The real table starts at $75B6 (byte $75B5 itself precedes it and its role is
+; unclear); consumed by #R$8F82 (spawns pairs) and likely other unidentified
+; routines. Each record: offset 0 = total record length (8 + room-list length,
+; a value under 8 marks the end of the table); offset 1 = active flag, tested
+; nonzero, overwritten with the current room number once spawned; offset 2/3 =
+; a handler word for other consumer routines (#R$8F82 ignores it, always uses
+; #R$9021); offset 4 = X, offset 5 = Y; offset 6 = kind (object +0x0A); offset
+; 7 = waypoint tag (object +0x1A, see #R$925C); offset 8+ = the room-list,
+; searched via CPIR against the current room.
+b$75B5 DEFB $07                             ; unknown, precedes the table
+ $75B6 DEFB $0D,$01,$32,$92,$34,$34,$07,$00 ; header
+ $75BE DEFB $04,$05,$06,$0B,$0C             ; room-list
+ $75C3 DEFB $09,$01,$1E,$92,$1C,$14,$07,$40 ; header
+ $75CB DEFB $08                             ; room-list
+ $75CC DEFB $09,$01,$1E,$92,$1C,$24,$07,$40 ; header
+ $75D4 DEFB $08                             ; room-list
+ $75D5 DEFB $0C,$01,$85,$90,$34,$34,$07,$00 ; header
+ $75DD DEFB $0D,$0E,$14,$1A                 ; room-list
+ $75E1 DEFB $09,$01,$08,$92,$14,$3C,$09,$00 ; header
+ $75E9 DEFB $10                             ; room-list
+ $75EA DEFB $09,$01,$08,$92,$34,$0C,$09,$00 ; header
+ $75F2 DEFB $10                             ; room-list
+ $75F3 DEFB $09,$01,$08,$92,$2C,$0C,$09,$00 ; header
+ $75FB DEFB $12                             ; room-list
+ $75FC DEFB $09,$01,$08,$92,$14,$3C,$09,$00 ; header
+ $7604 DEFB $19                             ; room-list
+ $7605 DEFB $09,$01,$08,$92,$34,$0C,$09,$00 ; header
+ $760D DEFB $19                             ; room-list
+ $760E DEFB $0C,$01,$85,$90,$34,$34,$07,$00 ; header
+ $7616 DEFB $1D,$1E,$23,$24                 ; room-list
+ $761A DEFB $09,$01,$A8,$90,$24,$3C,$07,$00 ; header
+ $7622 DEFB $22                             ; room-list
+ $7623 DEFB $0A,$01,$85,$90,$1C,$24,$07,$00 ; header
+ $762B DEFB $2B,$2C                         ; room-list
+ $762D DEFB $0B,$01,$85,$90,$34,$34,$07,$00 ; header
+ $7635 DEFB $2F,$30,$36                     ; room-list
+ $7638 DEFB $0C,$01,$32,$92,$24,$1C,$07,$00 ; header
+ $7640 DEFB $34,$3A,$40,$46                 ; room-list
+ $7644 DEFB $09,$01,$32,$92,$34,$34,$07,$00 ; header
+ $764C DEFB $38                             ; room-list
+ $764D DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $7655 DEFB $3B                             ; room-list
+ $7656 DEFB $09,$01,$1E,$92,$24,$1C,$07,$40 ; header
+ $765E DEFB $3B                             ; room-list
+ $765F DEFB $0B,$01,$A8,$90,$24,$34,$07,$00 ; header
+ $7667 DEFB $3E,$3F,$44                     ; room-list
+ $766A DEFB $09,$01,$08,$92,$14,$24,$09,$00 ; header
+ $7672 DEFB $48                             ; room-list
+ $7673 DEFB $09,$01,$08,$92,$2C,$1C,$09,$00 ; header
+ $767B DEFB $48                             ; room-list
+ $767C DEFB $09,$01,$08,$92,$04,$3C,$09,$00 ; header
+ $7684 DEFB $4B                             ; room-list
+ $7685 DEFB $09,$01,$08,$92,$3C,$04,$09,$00 ; header
+ $768D DEFB $4B                             ; room-list
+ $768E DEFB $0A,$01,$A8,$90,$1C,$24,$07,$00 ; header
+ $7696 DEFB $4E,$54                         ; room-list
+ $7698 DEFB $0A,$01,$A8,$90,$1C,$0C,$07,$00 ; header
+ $76A0 DEFB $55,$5B                         ; room-list
+ $76A2 DEFB $0C,$01,$A8,$90,$34,$34,$07,$00 ; header
+ $76AA DEFB $5C,$5D,$5E,$63                 ; room-list
+ $76AE DEFB $0C,$01,$A8,$90,$34,$34,$07,$00 ; header
+ $76B6 DEFB $67,$68,$69,$6A                 ; room-list
+ $76BA DEFB $09,$01,$32,$92,$34,$34,$07,$00 ; header
+ $76C2 DEFB $6C                             ; room-list
+ $76C3 DEFB $09,$01,$85,$90,$1C,$1C,$07,$00 ; header
+ $76CB DEFB $6E                             ; room-list
+ $76CC DEFB $0B,$01,$08,$92,$0C,$24,$09,$00 ; header
+ $76D4 DEFB $75,$76,$7B                     ; room-list
+ $76D7 DEFB $0B,$01,$08,$92,$2C,$0C,$09,$00 ; header
+ $76DF DEFB $75,$76,$7B                     ; room-list
+ $76E2 DEFB $09,$01,$1E,$92,$2C,$0C,$07,$40 ; header
+ $76EA DEFB $78                             ; room-list
+ $76EB DEFB $09,$01,$1E,$92,$04,$2C,$07,$40 ; header
+ $76F3 DEFB $78                             ; room-list
+ $76F4 DEFB $0D,$01,$85,$90,$24,$14,$07,$00 ; header
+ $76FC DEFB $82,$87,$88,$8D,$8E             ; room-list
+ $7701 DEFB $09,$01,$32,$92,$34,$34,$07,$00 ; header
+ $7709 DEFB $83                             ; room-list
+ $770A DEFB $0B,$01,$A8,$90,$24,$14,$07,$00 ; header
+ $7712 DEFB $85,$8B,$8C                     ; room-list
+ $7715 DEFB $09,$01,$1E,$92,$2C,$04,$07,$40 ; header
+ $771D DEFB $86                             ; room-list
+ $771E DEFB $09,$01,$1E,$92,$0C,$34,$07,$40 ; header
+ $7726 DEFB $86                             ; room-list
+ $7727 DEFB $09,$01,$08,$92,$0C,$2C,$09,$00 ; header
+ $772F DEFB $8F                             ; room-list
+ $7730 DEFB $09,$01,$08,$92,$2C,$0C,$09,$00 ; header
+ $7738 DEFB $8F                             ; room-list
+ $7739 DEFB $09,$01,$32,$92,$24,$1C,$07,$00 ; header
+ $7741 DEFB $92                             ; room-list
+ $7742 DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $774A DEFB $93                             ; room-list
+ $774B DEFB $09,$01,$1E,$92,$2C,$1C,$07,$40 ; header
+ $7753 DEFB $93                             ; room-list
+ $7754 DEFB $0C,$01,$A8,$90,$1C,$24,$07,$00 ; header
+ $775C DEFB $94,$95,$96,$9A                 ; room-list
+ $7760 DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $7768 DEFB $9D                             ; room-list
+ $7769 DEFB $09,$01,$1E,$92,$2C,$1C,$07,$40 ; header
+ $7771 DEFB $9D                             ; room-list
+ $7772 DEFB $0B,$01,$85,$90,$24,$14,$07,$00 ; header
+ $777A DEFB $9F,$A5,$A0                     ; room-list
+ $777D DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $7785 DEFB $A1                             ; room-list
+ $7786 DEFB $09,$01,$1E,$92,$2C,$1C,$07,$40 ; header
+ $778E DEFB $A1                             ; room-list
+ $778F DEFB $09,$01,$08,$92,$14,$2C,$09,$00 ; header
+ $7797 DEFB $A7                             ; room-list
+ $7798 DEFB $09,$01,$08,$92,$2C,$0C,$09,$00 ; header
+ $77A0 DEFB $A7                             ; room-list
+ $77A1 DEFB $0B,$01,$85,$90,$0C,$34,$07,$00 ; header
+ $77A9 DEFB $A8,$AE,$B4                     ; room-list
+ $77AC DEFB $09,$01,$08,$92,$14,$2C,$09,$00 ; header
+ $77B4 DEFB $A9                             ; room-list
+ $77B5 DEFB $09,$01,$08,$92,$24,$24,$09,$00 ; header
+ $77BD DEFB $A9                             ; room-list
+ $77BE DEFB $0B,$01,$32,$92,$1C,$24,$07,$00 ; header
+ $77C6 DEFB $AA,$AF,$B0                     ; room-list
+ $77C9 DEFB $0A,$01,$32,$92,$1C,$24,$07,$00 ; header
+ $77D1 DEFB $AB,$AC                         ; room-list
+ $77D3 DEFB $09,$01,$08,$92,$24,$24,$09,$00 ; header
+ $77DB DEFB $B1                             ; room-list
+ $77DC DEFB $09,$01,$08,$92,$24,$14,$09,$00 ; header
+ $77E4 DEFB $B5                             ; room-list
+ $77E5 DEFB $09,$01,$08,$92,$2C,$34,$09,$00 ; header
+ $77ED DEFB $B5                             ; room-list
+ $77EE DEFB $0A,$01,$85,$90,$14,$34,$07,$00 ; header
+ $77F6 DEFB $B6,$BC                         ; room-list
+ $77F8 DEFB $0D,$01,$32,$92,$34,$34,$07,$00 ; header
+ $7800 DEFB $B7,$B8,$B9,$BE,$BF             ; room-list
+ $7805 DEFB $09,$01,$08,$92,$24,$24,$09,$00 ; header
+ $780D DEFB $BA                             ; room-list
+ $780E DEFB $09,$01,$32,$92,$24,$24,$07,$00 ; header
+ $7816 DEFB $C1                             ; room-list
+ $7817 DEFB $0B,$01,$A8,$90,$1C,$24,$07,$00 ; header
+ $781F DEFB $C2,$C3,$C4                     ; room-list
+ $7822 DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $782A DEFB $C5                             ; room-list
+ $782B DEFB $09,$01,$1E,$92,$2C,$1C,$07,$40 ; header
+ $7833 DEFB $C5                             ; room-list
+ $7834 DEFB $09,$01,$1E,$92,$1C,$2C,$07,$40 ; header
+ $783C DEFB $CC                             ; room-list
+ $783D DEFB $09,$01,$1E,$92,$1C,$14,$07,$40 ; header
+ $7845 DEFB $CC                             ; room-list
+ $7846 DEFB $0B,$01,$32,$92,$2C,$24,$07,$00 ; header
+ $784E DEFB $C7,$CD,$CE                     ; room-list
+ $7851 DEFB $09,$01,$08,$92,$14,$24,$09,$00 ; header
+ $7859 DEFB $C9                             ; room-list
+ $785A DEFB $09,$01,$08,$92,$1C,$1C,$09,$00 ; header
+ $7862 DEFB $C9                             ; room-list
+ $7863 DEFB $0A,$01,$85,$90,$24,$14,$07,$00 ; header
+ $786B DEFB $CA,$D0                         ; room-list
+ $786D DEFB $09,$01,$1E,$92,$1C,$24,$07,$40 ; header
+ $7875 DEFB $D3                             ; room-list
+ $7876 DEFB $09,$01,$1E,$92,$2C,$1C,$07,$40 ; header
+ $787E DEFB $D3                             ; room-list
+ $787F DEFB $09,$01,$85,$90,$24,$14,$07,$00 ; header
+ $7887 DEFB $1C                             ; room-list
+ $7888 DEFB $01,$5A                         ; unused
+
+; Data block at 788A
+b$788A DEFB $00,$01,$18,$6D                 ; "Empty hands" sentinel item
                                             ; record (room,Y,X,sprite) --
                                             ; #R$6110 (currently-held item)
                                             ; points here when nothing is held;
@@ -2854,10 +2956,28 @@ b$75B5 DEFB $07,$0D,$01,$32,$92,$34,$34,$07
  $7C81 DEFW $7F6E
  $7C83 DEFB $3E,$78,$72,$74,$3C
  $7C88 DEFB $05
- $7C89 DEFB $07,$3C,$7A,$22,$3C,$7A,$82,$3C
- $7C91 DEFB $36,$A1,$3C,$7A,$D3,$3C,$7A,$05
+
+; Creature hit/defeat lookup table (see #R$9401)
+;
+; .
+;
+; .
+;
+; 5 fixed (room,position,reward-sprite) triples, one per level. Position is $3C
+; in every entry, the shared corner-cube grid cell; reward is $7A except level
+; 3's $36.
+b$7C89 DEFB $07,$3C,$7A
+ $7C8C DEFB $22,$3C,$7A
+ $7C8F DEFB $82,$3C,$36
+ $7C92 DEFB $A1,$3C,$7A
+ $7C95 DEFB $D3,$3C,$7A
+ $7C98 DEFB $05         ; entry count (B in LD BC,($7C97) at #R$940E; the
+                        ; paired low byte at $7C97 coincides with the table's
+                        ; last byte, unused)
  $7C99 DEFB $00
- $7C9A DEFW $7C9E,$7CA0
+
+; Data block at 7C9A
+b$7C9A DEFW $7C9E,$7CA0
  $7C9E DEFB $53,$01
  $7CA0 DEFB $39,$00,$35,$02,$00,$01,$07,$01
  $7CA8 DEFB $52,$00,$00,$00
@@ -3017,43 +3137,43 @@ b$7D63 DEFW $0000    ; Print string cursor: current shadow screen address for
 ;
 ; Prints the string at (HL) to the shadow screen until terminator $5E; handles
 ; control codes $16 (set row+col) and $2B (newline, +8 rows).
-c$7D68 LD A,$01      ;
- $7D6A LD ($61A6),A  ;
-*$7D6D LD A,(HL)     ;
- $7D6E INC HL        ;
- $7D6F CP $16        ;
- $7D71 JP NZ,$7D9F   ;
- $7D74 LD DE,$7D66   ;
- $7D77 LDI           ;
- $7D79 LDI           ;
-*$7D7B LD A,($7D66)  ;
- $7D7E LD C,A        ;
+c$7D68 LD A,$01      ; {A = 1, set the "row advance" scratch $61A6
+ $7D6A LD ($61A6),A  ; }
+*$7D6D LD A,(HL)     ; {A = the next string byte, advance HL, test for control
+ $7D6E INC HL        ; code $16
+ $7D6F CP $16        ; }
+ $7D71 JP NZ,$7D9F   ; Not $16: jump to the terminator/newline tests below
+ $7D74 LD DE,$7D66   ; {$16: copy the next 2 bytes (row,col) into scratch
+ $7D77 LDI           ; $7D66, advancing HL
+ $7D79 LDI           ; }
+*$7D7B LD A,($7D66)  ; {A = the row byte, C = it, isolate the low bit into
+ $7D7E LD C,A        ; $7D65, halve C
  $7D7F AND $01       ;
- $7D81 LD ($7D65),A  ;
- $7D84 SRL C         ;
+ $7D81 LD ($7D65),A  ; }
+ $7D84 SRL C         ; {A = the column byte + 1, B = it, the loop count
  $7D86 LD A,($7D67)  ;
  $7D89 INC A         ;
- $7D8A LD B,A        ;
- $7D8B PUSH HL       ;
+ $7D8A LD B,A        ; }
+ $7D8B PUSH HL       ; Save HL, the string pointer
  $7D8C LD HL,$E390   ; Shadow screen address
- $7D8F LD DE,$0020   ;
- $7D92 JR $7D95      ;
-*$7D94 ADD HL,DE     ;
-*$7D95 DJNZ $7D94    ;
- $7D97 ADD HL,BC     ;
- $7D98 LD ($7D63),HL ;
- $7D9B POP HL        ;
- $7D9C JP $7D6D      ;
-*$7D9F CP $5E        ;
- $7DA1 RET Z         ;
- $7DA2 CP $2B        ;
- $7DA4 JR NZ,$7DB1   ;
- $7DA6 LD A,($7D67)  ;
- $7DA9 ADD A,$08     ;
- $7DAB LD ($7D67),A  ;
+ $7D8F LD DE,$0020   ; {DE = $20, the screen row stride
+ $7D92 JR $7D95      ; }
+*$7D94 ADD HL,DE     ; Add the stride, advancing to the next row
+*$7D95 DJNZ $7D94    ; Loop B times to reach the target row
+ $7D97 ADD HL,BC     ; {Add the column offset (C), save the resulting screen
+ $7D98 LD ($7D63),HL ; address to $7D63}
+ $7D9B POP HL        ; {Restore HL, the string pointer, loop back for the next
+ $7D9C JP $7D6D      ; character}
+*$7D9F CP $5E        ; Test for the string terminator $5E
+ $7DA1 RET Z         ; Terminator: return
+ $7DA2 CP $2B        ; {Test for the newline control code $2B
+ $7DA4 JR NZ,$7DB1   ; }
+ $7DA6 LD A,($7D67)  ; {Newline: advance the row scratch $7D67 by 8, loop back
+ $7DA9 ADD A,$08     ; to reposition
+ $7DAB LD ($7D67),A  ; }
  $7DAE JP $7D7B      ;
 *$7DB1 CALL $7DC7    ; Print engine
- $7DB4 JP $7D6D      ;
+ $7DB4 JP $7D6D      ; Loop back for the next character
 
 ; Data block at 7DB7
 b$7DB7 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -4459,6 +4579,12 @@ c$8523 LD ($854D),DE ; Set the per-digit print routine, self-modify #R$854C's
 ; Print one digit (JP target self-modified by #R$8523)
 ;
 ; Used by the routine at #R$8523.
+;
+; .
+;
+; Self-modified JP target: #R$8523 patches the operand here before calling, so
+; this resolves to whichever routine (usually #R$7CEC, the print engine entry
+; point) should print the current digit.
 c$854C JP $7CEC      ; => Print engine entry point
 
 ; Print BCD byte A as two digits, high digit blanked to a space if zero
@@ -4825,6 +4951,11 @@ c$8879 LD ($8874),HL ; Save the bonus value to scratch $8874
 ; Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
 ;
 ; Used by the routines at #R$88D7 and #R$8AFB.
+;
+; .
+;
+; Calls #R$8879 to add the bonus (HL) to the score, then falls into #R$885A to
+; redraw the score HUD.
 c$888E CALL $8879    ; Add a 5-digit BCD value at #R$8874 to the score
  $8891 JP $885A      ; => Redraw the score display on HUD
 
@@ -4841,23 +4972,23 @@ c$888E CALL $8879    ; Add a 5-digit BCD value at #R$8874 to the score
 ; Whether the $5C92 fallback is a genuine "reset score" or coincidentally
 ; reuses the same default-state bytes seen elsewhere (see #R$A900) is
 ; unconfirmed.
-c$8894 LD ($8874),HL ;
- $8897 LD HL,$8874   ;
- $889A LD DE,$611F   ;
+c$8894 LD ($8874),HL ; Save the subtrahend to scratch $8874
+ $8897 LD HL,$8874   ; {HL = the subtrahend bytes, DE = the score's low byte, B
+ $889A LD DE,$611F   ; = 5
  $889D LD B,$05      ;
- $889F XOR A         ;
-*$88A0 LD A,(DE)     ;
- $88A1 SBC A,(HL)    ;
+ $889F XOR A         ; }
+*$88A0 LD A,(DE)     ; {Subtract corresponding bytes in BCD, borrow propagates,
+ $88A1 SBC A,(HL)    ; loop
  $88A2 DAA           ;
  $88A3 LD (DE),A     ;
  $88A4 INC HL        ;
  $88A5 DEC DE        ;
- $88A6 DJNZ $88A0    ;
+ $88A6 DJNZ $88A0    ; }
  $88A8 JP NC,$885A   ; => Redraw the score display on HUD
- $88AB LD HL,$5C92   ;
- $88AE LD DE,$611B   ;
- $88B1 LD BC,$0005   ;
- $88B4 LDIR          ;
+ $88AB LD HL,$5C92   ; {Score underflowed: HL = the fixed reset block $5C92, DE
+ $88AE LD DE,$611B   ; = the score $611B, BC = 5
+ $88B1 LD BC,$0005   ; }
+ $88B4 LDIR          ; Copy the reset block over the score
  $88B6 JP $885A      ; => Redraw the score display on HUD
 
 ; Read the next value from a small circular queue, head pointer at IY+0/1, wrap
@@ -4890,6 +5021,11 @@ c$88B9 LD L,(IY+$00) ; {HL = the head pointer (IY+0/1)
 ; Add a bonus to the score, value from a circular queue via #R$88B9
 ;
 ; Used by the routines at #R$6743, #R$8AFB and #R$91A6.
+;
+; .
+;
+; Reads the next bonus value from the circular queue via #R$88B9, then adds it
+; to the score via #R$888E.
 c$88D7 CALL $88B9    ; Read the next value from a small circular queue, head
                      ; pointer at IY+0/1, wrap pointer at IY+2/3, advancing the
                      ; head
@@ -4899,6 +5035,11 @@ c$88D7 CALL $88B9    ; Read the next value from a small circular queue, head
 ; Subtract a BCD value from the score, value from a circular queue via #R$88B9
 ;
 ; Used by the routines at #R$6743, #R$8968 and #R$925C.
+;
+; .
+;
+; Reads the next value from the circular queue via #R$88B9, then subtracts it
+; from the score via #R$8894.
 c$88DD CALL $88B9    ; Read the next value from a small circular queue, head
                      ; pointer at IY+0/1, wrap pointer at IY+2/3, advancing the
                      ; head
@@ -5932,44 +6073,44 @@ c$8F82 LD HL,$5C92     ; {copy the 19-byte default state block into $8DD1
 ; Searches the table pointed by (IX+$18/$19) for a matching entry ($619A), then
 ; applies position/facing changes over several frames via #R$923E
 ; continuations.
-c$9021 LD L,(IX+$18)   ;
- $9024 LD H,(IX+$19)   ;
- $9027 LD A,(HL)       ;
- $9028 SUB $08         ;
- $902A LD C,A          ;
- $902B LD B,$00        ;
+c$9021 LD L,(IX+$18)   ; {HL = the linked spawner-record pointer (+0x18/+0x19)
+ $9024 LD H,(IX+$19)   ; }
+ $9027 LD A,(HL)       ; {A = the record's kind byte minus 8, the
+ $9028 SUB $08         ; waypoint-search length, C = it
+ $902A LD C,A          ; }
+ $902B LD B,$00        ; {B = 0, DE = 8, HL = the room-list start (record+8)
  $902D LD DE,$0008     ;
- $9030 ADD HL,DE       ;
- $9031 LD A,($619A)    ;
- $9034 CPIR            ;
- $9036 JR NZ,$9064     ;
- $9038 XOR A           ;
- $9039 LD ($619A),A    ;
- $903C LD HL,($619B)   ;
- $903F LD (IX+$05),L   ;
- $9042 LD (IX+$06),H   ;
- $9045 LD A,($619D)    ;
- $9048 LD (IX+$0B),A   ;
- $904B LD (IX+$09),$0A ;
+ $9030 ADD HL,DE       ; }
+ $9031 LD A,($619A)    ; {A = the target sprite $619A, search the room-list for
+ $9034 CPIR            ; it; not found, skip to the idle branch
+ $9036 JR NZ,$9064     ; }
+ $9038 XOR A           ; {Found: clear the search-target $619A, HL = the target
+ $9039 LD ($619A),A    ; position $619B
+ $903C LD HL,($619B)   ; }
+ $903F LD (IX+$05),L   ; {Store it as the object's position (+0x05/+0x06)
+ $9042 LD (IX+$06),H   ; }
+ $9045 LD A,($619D)    ; {A = the target facing $619D, store it (+0x0B), set
+ $9048 LD (IX+$0B),A   ; the move counter (+0x09=10)
+ $904B LD (IX+$09),$0A ; }
  $904F CALL $8ABB      ; Apply the object's facing direction to its position
                        ; (IX+5/+6), returning the OLD position in BC
  $9052 CALL $9A60      ; Dynamic object finalizer
  $9055 CALL $923E      ; Save continuation
- $9058 DEC (IX+$09)    ;
- $905B RET NZ          ;
- $905C LD (IX+$09),$0A ;
+ $9058 DEC (IX+$09)    ; {Decrement the move counter, return unless it just
+ $905B RET NZ          ; reached 0}
+ $905C LD (IX+$09),$0A ; Reset the move counter to 10
  $9060 CALL $9B5A      ; Collision/overlap scan
- $9063 RET C           ;
-*$9064 RES 7,(IX+$0D)  ;
- $9068 LD L,(IX+$18)   ;
- $906B LD H,(IX+$19)   ;
+ $9063 RET C           ; Collision: abandon the animation without finalizing
+*$9064 RES 7,(IX+$0D)  ; Clear bit 7 of the flags byte (+0x0D)
+ $9068 LD L,(IX+$18)   ; {HL = the record pointer again, advance past the
+ $906B LD H,(IX+$19)   ; header to the next-link field
  $906E INC HL          ;
- $906F INC HL          ;
- $9070 LD E,(HL)       ;
- $9071 INC HL          ;
+ $906F INC HL          ; }
+ $9070 LD E,(HL)       ; {Read the linked record's own pointer (E,D), swap into
+ $9071 INC HL          ; HL
  $9072 LD D,(HL)       ;
- $9073 EX DE,HL        ;
- $9074 JP $923F        ;
+ $9073 EX DE,HL        ; }
+ $9074 JP $923F        ; Jump to the continuation there
 
 ; Message at 9077
 t$9077 DEFM "++,,"
@@ -5984,6 +6125,14 @@ t$907C DEFM "))**"
 b$9080 DEFB $FF,$77,$90,$7C,$90
 
 ; Object type stub: dispatch into #R$90A8's creature AI setup
+;
+; .
+;
+; .
+;
+; Sets A=$72 and HL to the object's animation-table pointer $9081, then jumps
+; into #R$90A8's shared creature AI setup body, a per-kind trampoline supplying
+; its own table/param constants.
 c$9085 LD A,$72      ; A = $72, the initial width/param
  $9087 LD HL,$9081   ; HL = the object's animation-table pointer $9081
  $908A JP $90AD      ; => Jump into #R$90A8's shared creature AI setup
@@ -6147,6 +6296,14 @@ b$91E2 DEFB $28,$28,$FE,$FE,$28,$28,$FE,$FE
  $9202 DEFB $02,$FF,$E2,$91,$F3,$91
 
 ; Object type stub: dispatch into #R$9232's shared setup
+;
+; .
+;
+; .
+;
+; Sets A=$3E and HL to the object's animation-table pointer $9204, then jumps
+; into #R$9232's shared setup body ($9237), a per-kind trampoline supplying its
+; own table/param constants.
 c$9208 LD A,$3E      ; A = $3E, the initial width/param
  $920A LD HL,$9204   ; HL = the object's animation-table pointer $9204
  $920D JP $9237      ; => Jump into #R$9232's shared setup
@@ -6792,6 +6949,19 @@ b$95C1 DEFB $62,$62,$63,$63,$64,$64,$5E,$FF
 ;
 ; .
 ;
+; Plays sound $03, then runs the rise animation via #R$99D5 (table $95C1,
+; returns NC if off-screen). Resets phase, tests the despawn flag (+0x0D bit
+; 6), jumping to self-destruction if set. If this is the full-strength variant
+; (facing $6A), sets +0x0D bit 4 and switches to the alternate rise table
+; $95E2, then runs the (possibly swapped) table again. If the bubble's height
+; hasn't yet reached its target (+0x0E), or +0x09 is $FF, skips straight to the
+; pop sequence. Otherwise scans for a nearby object via #R$9B5D; if it's
+; specifically the player ($8DB6), refills the player's height (+0x07) by 2, or
+; 4 for the full-strength variant, sets a player flag (+0x0D bit 4), and
+; returns without popping. If no player nearby, falls through to the pop
+; sequence: sets its own handler to resume past the setup, resets phase, and
+; runs the pop animation via #R$99D5 (table $95FB).
+; .
 ; At $9622-$962D, branches on the inherited trigger value at (IX+$0B) -- only
 ; if it's $6A does it SET bit 4 of (IX+$0D) and switch to movement table $95E2
 ; (steps +0x07 by $04/frame) instead of the default #R$95C9 (steps by
@@ -6804,58 +6974,58 @@ b$95C1 DEFB $62,$62,$63,$63,$64,$64,$5E,$FF
 ; never does ($66), matching gameplay where some bubble sources cannot lift the
 ; player all the way. Whether bit 6 specifically means "reached the surface" is
 ; unconfirmed.
-c$9602 LD A,$03        ;
+c$9602 LD A,$03        ; A = sound effect $03
  $9604 CALL $848E      ; Request sound effect A
  $9607 CALL $923E      ; Save continuation
- $960A LD HL,$95C1     ;
+ $960A LD HL,$95C1     ; HL = the rise animation table $95C1
  $960D CALL $99D5      ; Sprite-animation stepper
- $9610 RET NC          ;
- $9611 LD (IX+$0F),$00 ;
+ $9610 RET NC          ; Off-screen: return
+ $9611 LD (IX+$0F),$00 ; Reset the animation phase counter (+0x0F)
  $9615 CALL $923E      ; Save continuation
- $9618 LD HL,$95C9     ;
- $961B BIT 6,(IX+$0D)  ;
- $961F JP NZ,$967F     ;
- $9622 LD A,(IX+$0B)   ;
- $9625 CP $6A          ;
- $9627 JR NZ,$9630     ;
- $9629 SET 4,(IX+$0D)  ;
- $962D LD HL,$95E2     ;
+ $9618 LD HL,$95C9     ; {HL = the second rise table $95C9, test the despawn
+ $961B BIT 6,(IX+$0D)  ; flag (+0x0D bit 6)}
+ $961F JP NZ,$967F     ; If set, jump straight to self-destruct
+ $9622 LD A,(IX+$0B)   ; {A = facing, compare against $6A, the full-strength
+ $9625 CP $6A          ; marker
+ $9627 JR NZ,$9630     ; }
+ $9629 SET 4,(IX+$0D)  ; {Full-strength: set +0x0D bit 4, switch HL to the
+ $962D LD HL,$95E2     ; alternate table $95E2}
 *$9630 CALL $99D5      ; Sprite-animation stepper
- $9633 LD A,(IX+$07)   ;
- $9636 CP (IX+$0E)     ;
- $9639 JR NC,$966B     ;
- $963B LD A,$FF        ;
- $963D CP (IX+$09)     ;
- $9640 JP Z,$966B      ;
- $9643 LD HL,$610E     ;
- $9646 CALL $9B5D      ;
- $9649 RET NC          ;
- $964A LD HL,$8DB6     ;
- $964D AND A           ;
- $964E SBC HL,DE       ;
- $9650 JR NZ,$966B     ;
- $9652 LD B,$02        ;
- $9654 LD A,(IX+$0B)   ;
- $9657 CP $6A          ;
+ $9633 LD A,(IX+$07)   ; {A = the bubble's height (+0x07), compare against its
+ $9636 CP (IX+$0E)     ; target (+0x0E)}
+ $9639 JR NC,$966B     ; If not yet reached, skip straight to the pop sequence
+ $963B LD A,$FF        ; {A = $FF, compare against +0x09
+ $963D CP (IX+$09)     ; }
+ $9640 JP Z,$966B      ; If it matches, skip straight to the pop sequence
+ $9643 LD HL,$610E     ; {HL = the active-object list head $610E, scan for a
+ $9646 CALL $9B5D      ; nearby object}
+ $9649 RET NC          ; None found: return
+ $964A LD HL,$8DB6     ; {Compare the found object's address against the player
+ $964D AND A           ; $8DB6
+ $964E SBC HL,DE       ; }
+ $9650 JR NZ,$966B     ; Not the player: skip straight to the pop sequence
+ $9652 LD B,$02        ; B = 2, the default height refill
+ $9654 LD A,(IX+$0B)   ; {A = facing, compare against $6A; if matched, B = 4
+ $9657 CP $6A          ; instead
  $9659 JR NZ,$965D     ;
- $965B LD B,$04        ;
-*$965D LD HL,$0007     ;
- $9660 ADD HL,DE       ;
+ $965B LD B,$04        ; }
+*$965D LD HL,$0007     ; {HL = the found object's height field (+7), add B to
+ $9660 ADD HL,DE       ; it
  $9661 LD A,B          ;
  $9662 ADD A,(HL)      ;
- $9663 LD (HL),A       ;
- $9664 LD HL,$000D     ;
- $9667 ADD HL,DE       ;
- $9668 SET 4,(HL)      ;
+ $9663 LD (HL),A       ; }
+ $9664 LD HL,$000D     ; {HL = the found object's flags field (+0x0D), set bit
+ $9667 ADD HL,DE       ; 4
+ $9668 SET 4,(HL)      ; }
  $966A RET             ;
-*$966B LD HL,$9678     ;
- $966E LD (IX+$03),L   ;
+*$966B LD HL,$9678     ; {Pop sequence: set the object's own handler to resume
+ $966E LD (IX+$03),L   ; at $9678, reset the phase counter
  $9671 LD (IX+$04),H   ;
- $9674 LD (IX+$0F),$00 ;
- $9678 LD HL,$95FB     ;
+ $9674 LD (IX+$0F),$00 ; }
+ $9678 LD HL,$95FB     ; HL = the pop animation table $95FB
  $967B CALL $99D5      ; Sprite-animation stepper
- $967E RET NC          ;
-*$967F LD (IX+$02),$FF ;
+ $967E RET NC          ; Off-screen: return
+*$967F LD (IX+$02),$FF ; Mark for self-destruction (+0x02=$FF)
  $9683 RET             ;
 
 ; Per-frame behaviour handler for value-$68 objects -- rearing snake
@@ -7405,6 +7575,13 @@ c$99A1 LD L,(IX+$1D) ;
 ; NEG / not NEG
 ;
 ; Used by the routine at #R$99D5.
+;
+; .
+;
+; A 1-byte self-modified stub, patched by #R$99A1/#R$99D5 to either NEG ($44)
+; or RET ($C9). #R$9A01/#R$9A15 CALL it to conditionally negate a signed delta
+; before adding it to the object's position, letting the same animation-table
+; byte-code represent movement in either direction depending on facing.
 c$99D1 RET           ;
  $99D2 NEG           ;
  $99D4 RET           ;
@@ -11276,6 +11453,12 @@ c$FBC1 LD A,(HL)     ; {A = the melody index at (HL), add $0C
 ; Continuation of #R$FBB4
 ;
 ; Used by the routine at #R$FBB4.
+;
+; .
+;
+; Reloads the melody-index pointer from a fixed loop-restart address when
+; #R$FBB4 hits the $40 end-of-tune marker, then resumes reading indices from
+; there.
 c$FBCF INC HL        ;
  $FBD0 LD E,(HL)     ;
  $FBD1 INC HL        ;

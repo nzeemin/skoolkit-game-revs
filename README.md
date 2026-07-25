@@ -60,7 +60,7 @@ Volume: about 4600 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: Have pretty good progress (198K .ctl file).
+Status: Have pretty good progress (210K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)

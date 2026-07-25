@@ -61,13 +61,30 @@ combined Y/X byte isn't fully resolved.
 Confirmed by live memory diffing (picking up a horseshoe): each item lives
 in a 4-byte table record `(room, Y, X, sprite)`. Picking it up zeroes its
 room byte (the mechanism `$8AFB` reverses on drop, §2.2); `$6110` then
-points at that record as "currently held." A parallel table
-(`$75B5`-`$792E`-ish region) holds variable-length spawner records
-`(len, marker, handler_word, Y, X, type, flags, room-list...)` whose
-handler words (`$9232`, `$921E`, `$9208`, `$9085`, `$90A8`) are per-type
-behaviour handlers — likely how decorations/items actually get placed and
-drawn per room, separate from the item-persistence table itself. Not
-fully connected to §2's pickup code yet.
+points at that record as "currently held." A parallel table at `$75B6`
+(`$75B5`-`$792E`-ish region) holds variable-length spawner records, format
+confirmed via `$8F82`'s consumer code:
+
+| Offset | Field |
+|---|---|
+| 0 | Total record length (`8 + room-list length`); a value `< 8` marks the end of the table |
+| 1 | Active flag, tested nonzero; overwritten with the current room number once spawned (bookkeeping) |
+| 2-3 | A handler word for other consumer routines — `$8F82` ignores it, always spawning `$9021` |
+| 4 | X |
+| 5 | Y |
+| 6 | Kind (copied to the object's `+0x0A`) |
+| 7 | Waypoint tag (copied to `+0x1A`, see `Movement-Format.md` §7) |
+| 8+ | Room-list, searched via `CPIR` against the current room |
+
+`$8F82` walks this table once at room-build time, re-initializing two fixed
+object records and spawning a decoration/creature **pair** (both objects
+linked via `+0x18`/`+0x19`) for every record whose room-list contains the
+current room. The handler words seen in other records (`$9232`, `$921E`,
+`$9208`, `$9085`, `$90A8`) are per-type behaviour handlers consumed by
+routines other than `$8F82` — likely how single (non-paired)
+decorations/items get placed and drawn per room, separate from the
+item-persistence table itself. Not fully connected to §2's pickup code
+yet.
 
 ## 4. The room creature and the Plug Room delivery mechanic (`$9341`)
 
@@ -202,7 +219,11 @@ isn't traced.
 
 ## 8. Open questions
 
-- The `$7C89` room/position/reward-sprite hit table's exact byte layout.
+- ~~The `$7C89` room/position/reward-sprite hit table's exact byte layout~~
+  RESOLVED: 5 fixed 3-byte entries, `(room, position, reward-sprite)`, count
+  in the high byte of the word at `$7C97`. Every entry's position byte is
+  `$3C`, the shared corner-cube grid cell reused across all 5 levels; the
+  reward sprite is `$7A` in 4 of the 5 entries and `$36` in the level-3 one.
 - How a carried item's sprite gets linked to the Plug Room delivery
   detector's own sprite field (`+0x08` in `$9341`'s object) — the gap
   between "player is holding the right item" and "delivery detector

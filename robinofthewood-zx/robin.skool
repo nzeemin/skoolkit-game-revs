@@ -24,6 +24,21 @@ w$5B00 DEFW $5BA8,$5C39,$5C82,$5CA4
  $5BA0 DEFW $78F9,$7942,$798B,$79B0
 
 ; Block $00
+;
+; .
+;
+; .
+;
+; Block header byte, decoded by #R$C0D1: bit 7 = natural-mirror flag (XORed
+; with the placing token's own mirror bit and the room's world-map bit 7 to
+; decide whether to mirror at draw time); bit 6 = flat-attribute flag (1 = a
+; single attribute byte fills the whole block instead of one row); bits 0-4 =
+; pixel row count / 8 (i.e. pixel rows = (header AND $1F) x 8, each row 4
+; bytes/32 pixels wide); bits 0-2 (reused) = attribute row count (0-7, each row
+; 4 bytes wide, appended immediately after the pixel data - or a single byte if
+; the flat-attribute flag is set). Bit 5 is unused. Verified against block $00
+; ($04: 32 pixel rows = 128 bytes, 4 attribute rows = 16 bytes, matching the
+; gap before block $01 exactly) and blocks $01/$02/$0A.
 b$5BA8 DEFB $04
  $5BA9 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {#HTML[<img
  $5BB1 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; src="images/blocks/block00.png"
@@ -1681,35 +1696,9 @@ b$7B39 DEFB $18
  $8426 DEFB $85,$46,$84,$46,$83,$C7,$7F,$02 ;
  $842E DEFB $7D,$02,$7E,$02                 ; }
 
-; Data block at 8432
-b$8432 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $843A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8442 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $844A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8452 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $845A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8462 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $846A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8472 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $847A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8482 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $848A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8492 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $849A DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84A2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84AA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84B2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84BA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84C2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84CA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84D2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84DA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84E2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84EA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84F2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $84FA DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8502 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $850A DEFB $00,$00,$00,$00,$00,$00,$00
+; Unused padding (223 zero bytes) between the room-type and additional-element
+; tables
+s$8432 DEFS $DF
 
 ; Additional room elements, by room number
 ;
@@ -2660,19 +2649,19 @@ b$8A37 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $8A6F DEFB $FF,$00,$00,$79,$8A,$79,$8A,$8C
  $8A77 DEFB $8C,$03
 
-; Menu select: main menu items ($8B82), called from #R$CD6C
+; Play the main menu melody ($8B82), called from #R$CD6C
 ;
 ; Used by the routine at #R$CD6C.
 c$8A79 LD HL,$8B82   ;
  $8A7C JR $8A86      ;
 
-; Menu select: victory-screen items ($8C3E), called from #R$C055
+; Play the victory-screen melody ($8C3E), called from #R$C055
 ;
 ; Used by the routine at #R$C055.
 c$8A7E LD HL,$8C3E   ;
  $8A81 JR $8A86      ;
 
-; Menu select: death/edge-of-map items ($8C74), called from #R$BF80
+; Play the death/edge-of-map melody ($8C74), called from #R$BF80
 ;
 ; Used by the routine at #R$BF80.
 c$8A83 LD HL,$8C74   ;
@@ -2725,11 +2714,20 @@ c$8A86 DI            ; {Disable interrupts; B = this entry's header byte, or 0
 ;
 ; .
 ;
-; (HL) on entry points at a length-prefixed list of jump targets; HL is
-; advanced past it. Loops B times (from #R$8B4F/#R$8AB7): reads keyboard port
-; $00FE, flashes the border while idle (#R$8AD6), then decodes the raw port
-; value through the table at #R$8B57 twice to get a row/column pair. The exact
-; mapping to a specific menu action is not confirmed.
+; (HL) on entry points at a length-prefixed playlist (see #R$8B82); HL is
+; advanced past it. Loops B times (repeat count from the entry's header, from
+; #R$8B4F/#R$8AB7): reads keyboard port $00FE to check for a keypress between
+; phrases (#R$8AD6, no visible border flash despite the port-$FE writes), then
+; decodes two phrase bytes through the pitch table at #R$8B57/#R$8B60. Each
+; phrase byte's bits 0-4 select a note (0-31, #R$8B60); bits 6-7 of the second
+; byte in the pair (extracted at #R$8B17 via RLCA/RLCA/AND $03) select a
+; duration class (1-4) that sets the note's playback countdown length
+; (#R$8B1E). Bit 5 is not used anywhere in this decode. Confirmed live: this
+; whole routine (and its #R$8B27-#R$8B48 tail) is what's re-invoked
+; continuously while the menu idles, and its tail sets bit 4 of port $FE (the
+; real beeper/EAR output, #R$8B27) on one specific countdown condition - this
+; is the actual playback of the phrase data, the source of the continuous "menu
+; music".
 c$8AAF PUSH HL       ; {DE = jump target address read from the list at (HL)
  $8AB0 LD A,(HL)     ;
  $8AB1 LD E,A        ;
@@ -2761,35 +2759,35 @@ c$8AAF PUSH HL       ; {DE = jump target address read from the list at (HL)
  $8AD8 AND $18       ;
  $8ADA OUT ($FE),A   ;
  $8ADC DJNZ $8AD6    ; }
- $8ADE PUSH DE       ; {A = the first raw port value, masked to 5 bits
- $8ADF PUSH HL       ;
+ $8ADE PUSH DE       ; {A = the first phrase byte, masked to a note index (bits
+ $8ADF PUSH HL       ; 0-4, 0-31)
  $8AE0 LD A,(DE)     ;
  $8AE1 LD B,A        ;
  $8AE2 AND $1F       ;
  $8AE4 PUSH HL       ; }
- $8AE5 CALL $8B57    ; Look up A in the byte table at #R$8B60
- $8AE8 POP HL        ; {C = decoded first value; A = a second raw port value
- $8AE9 LD ($8B2D),A  ;
+ $8AE5 CALL $8B57    ; Look up the note's pitch/period in #R$8B60
+ $8AE8 POP HL        ; {C = first note's pitch period; A = the second (raw)
+ $8AE9 LD ($8B2D),A  ; phrase byte
  $8AEC LD C,A        ;
  $8AED LD A,(HL)     ;
  $8AEE PUSH AF       ;
  $8AEF AND $1F       ; }
- $8AF1 CALL $8B57    ; Look up A in the byte table at #R$8B60
- $8AF4 LD E,C        ; {Compare decoded C against a rotated copy of itself;
- $8AF5 RLC E         ; adjust A
+ $8AF1 CALL $8B57    ; Look up the second note's pitch/period in #R$8B60
+ $8AF4 LD E,C        ; {Compare the two decoded pitch periods; adjust A
+ $8AF5 RLC E         ;
  $8AF7 CP C          ;
  $8AF8 JR NZ,$8AFD   ;
  $8AFA CP E          ;
  $8AFB JR NZ,$8AFE   ; }
-*$8AFD INC A         ; {Save the two decoded values; test each against $1F
-*$8AFE LD D,A        ; (border cases)
+*$8AFD INC A         ; {Save the two decoded pitch periods; flag if either note
+*$8AFE LD D,A        ; index was 0 (rest)
  $8AFF LD ($8B34),A  ;
  $8B02 POP AF        ;
  $8B03 PUSH AF       ;
  $8B04 AND $1F       ;
  $8B06 JR Z,$8B0A    ;
  $8B08 LD A,$02      ; }
-*$8B0A LD ($8B32),A  ; {Save more comparison flags for the values just decoded
+*$8B0A LD ($8B32),A  ; {Save more rest-flags for the notes just decoded
  $8B0D LD A,B        ;
  $8B0E AND $1F       ;
  $8B10 JR Z,$8B14    ;
@@ -2807,13 +2805,13 @@ c$8AAF PUSH HL       ; {DE = jump target address read from the list at (HL)
  $8B23 LD H,A        ;
  $8B24 LD L,$FF      ;
  $8B26 XOR A         ; }
-*$8B27 DEC C         ; {Decrement C then D toward 0, wrapping via a
- $8B28 JR NZ,$8B2E   ; self-modified operand
- $8B2A XOR $00       ;
- $8B2C LD C,$00      ;
-*$8B2E DEC D         ;
- $8B2F JR NZ,$8B35   ;
- $8B31 XOR $00       ;
+*$8B27 DEC C         ; {Decrement C then D toward 0, each wrapping via its own
+ $8B28 JR NZ,$8B2E   ; self-modified reload operand and toggling a bit of A on
+ $8B2A XOR $00       ; underflow (C -> bit 0, D -> bit 1). Only bit 1 (D's
+ $8B2C LD C,$00      ; toggle) is ever tested (AND $02) to decide the OUT value
+*$8B2E DEC D         ; below; C's toggle (bit 0) is computed but never read -
+ $8B2F JR NZ,$8B35   ; so only the second decoded note (D's period, see
+ $8B31 XOR $00       ; #R$8AF1) actually drives the audible tone, not the first
  $8B33 LD D,$00      ;
 *$8B35 AND $03       ;
  $8B37 JR Z,$8B41    ;
@@ -2821,9 +2819,9 @@ c$8AAF PUSH HL       ; {DE = jump target address read from the list at (HL)
  $8B3B LD A,$10      ;
  $8B3D JR NZ,$8B41   ;
  $8B3F LD A,$18      ; }
-*$8B41 OUT ($FE),A   ; {Output the resulting value to the border; E = its value
- $8B43 LD E,A        ;
- $8B44 DEC HL        ;
+*$8B41 OUT ($FE),A   ; {Output the resulting value ($10 = tone on, from D's
+ $8B43 LD E,A        ; underflow toggle, or $00 = silent) to port $FE; E = its
+ $8B44 DEC HL        ; value
  $8B45 LD A,H        ;
  $8B46 OR L          ;
  $8B47 LD A,E        ; }
@@ -2850,119 +2848,135 @@ c$8B57 LD E,A        ;
  $8B5E LD A,(HL)     ;
  $8B5F RET           ;
 
-; Data block at 8B60
+; 32-note chromatic pitch/period table for the beeper music engine
+;
+; .
+;
+; .
+;
+; 32 bytes, indexed 0-31 by #R$8B57. Consecutive values' ratios all cluster
+; tightly around 1.059 = 2^(1/12), the equal-temperament semitone ratio,
+; confirming this is a period table for a 1-bit tone generator spanning roughly
+; 2.5 octaves (higher index = shorter period = higher pitch). Entry 0 ($00)
+; fits the same geometric progression only when read as $100 (256), not literal
+; zero - i.e. the lowest note's period wraps through a byte-sized counter.
+; .
+; Absolute frequencies computed by simulating the exact fixed T-state cost of
+; #R$8B27's loop body (both branch paths) at 3.5MHz, since only entry
+; 31's/entry 0's role as D's reload value (see #R$8B27) actually gates the
+; tone. Entry 0 ($100) = ~71Hz (near C#2/D2); entry 31 ($2D) = ~401Hz (near G4)
+; - a ~2.5-octave chromatic run from the low D-ish range up to G4.
 b$8B60 DEFB $00,$FD,$EF,$E1,$D5,$C9,$BE,$B3
  $8B68 DEFB $A9,$9F,$96,$8E,$86,$7F,$77,$71
  $8B70 DEFB $6A,$64,$5F,$59,$54,$50,$4B,$47
  $8B78 DEFB $43,$3F,$3C,$38,$35,$32,$2F,$2D
  $8B80 DEFB $2A,$28
 
-; Data block at 8B82
-b$8B82 DEFB $81,$B3,$8B,$C1,$B3,$8B,$E2,$B3
- $8B8A DEFB $8B,$E1,$C4,$8B,$E1,$B3,$8B,$A1
- $8B92 DEFB $1C,$8C,$E1,$1C,$8C,$E1,$D9,$8B
- $8B9A DEFB $E1,$A7,$8B,$E2,$B3,$8B,$E1,$C4
- $8BA2 DEFB $8B,$81,$B3,$8B,$00,$0B,$C0,$40
- $8BAA DEFB $C0,$40,$C0,$40,$40,$40,$40,$FF
- $8BB2 DEFB $00,$0C
+; Main menu melody (see #R$8A86)
+;
+; .
+;
+; .
+;
+; Each entry is 3 bytes: a header byte followed by a 2-byte address, ending
+; with a $00 header. This is a music playlist, not a key list: by ear, the
+; header's low nibble is a repeat count and the high nibble ($80/$A0/$C0/$E0)
+; selects an effect (plain/echo/drums/...) applied to the phrase at the given
+; address; several entries reuse the same phrase address with a different
+; effect/repeat. #R$8A86 still treats the header generically (as a wait-count
+; and two bits fed to $8AD9/$8B36) since the effect selection itself hasn't
+; been isolated in the code yet.
+b$8B82 DEFB $81
+ $8B83 DEFW $8BB3
+ $8B85 DEFB $C1
+ $8B86 DEFW $8BB3
+ $8B88 DEFB $E2
+ $8B89 DEFW $8BB3
+ $8B8B DEFB $E1
+ $8B8C DEFW $8BC4
+ $8B8E DEFB $E1
+ $8B8F DEFW $8BB3
+ $8B91 DEFB $A1
+ $8B92 DEFW $8C1C
+ $8B94 DEFB $E1
+ $8B95 DEFW $8C1C
+ $8B97 DEFB $E1
+ $8B98 DEFW $8BD9
+ $8B9A DEFB $E1
+ $8B9B DEFW $8BA7
+ $8B9D DEFB $E2
+ $8B9E DEFW $8BB3
+ $8BA0 DEFB $E1
+ $8BA1 DEFW $8BC4
+ $8BA3 DEFB $81
+ $8BA4 DEFW $8BB3
+ $8BA6 DEFB $00
 
-; Message at 8BB4
-t$8BB4 DEFM "MQTRQm"
+; Data block at 8BA7
+b$8BA7 DEFB $0B,$C0,$40,$C0,$40,$C0,$40,$40
+ $8BAF DEFB $40,$40,$FF,$00
+ $8BB3 DEFB $0C,$4D,$51,$54,$52,$51,$6D,$EB
+ $8BBB DEFB $6D,$CD,$45,$FF,$01,$05,$08,$05
+ $8BC3 DEFB $01
+ $8BC4 DEFB $0E,$99,$17,$56,$77,$56,$54,$B6
+ $8BCC DEFB $14,$72,$74,$72,$71,$FF,$01,$03
+ $8BD4 DEFB $05,$01,$06,$01,$06
+ $8BD9 DEFB $32,$85,$08,$6D,$65,$48,$4D,$A6
+ $8BE1 DEFB $14,$4F,$46,$68,$6F,$AA,$0D,$51
+ $8BE9 DEFB $4A,$4D,$51,$B2,$0F,$46,$4B,$4F
+ $8BF1 DEFB $52,$AA,$11,$4D,$4A,$4D,$51,$B2
+ $8BF9 DEFB $0A,$4F,$46,$4F,$4A,$AB,$0F,$66
+ $8C01 DEFB $4F,$6B,$66,$B1,$0D,$48,$45,$6D
+ $8C09 DEFB $68,$FF,$01,$08,$01,$08,$01,$08
+ $8C11 DEFB $0A,$0B,$05,$03,$06,$0B,$06,$03
+ $8C19 DEFB $01,$05,$01
+ $8C1C DEFB $19,$D4,$11,$0D,$6B,$4D,$51,$74
+ $8C24 DEFB $51,$4D,$6B,$48,$4B,$F4,$11,$0D
+ $8C2C DEFB $6B,$4D,$45,$66,$65,$43,$E1,$41
+ $8C34 DEFB $FF,$01,$08,$01,$08,$01,$08,$01
+ $8C3C DEFB $08,$0D
 
-; Data block at 8BBA
-b$8BBA DEFB $EB,$6D,$CD,$45,$FF,$01,$05,$08
- $8BC2 DEFB $05,$01,$0E,$99,$17
+; Victory-screen melody (see #R$8A86)
+;
+; .
+;
+; .
+;
+; Same 3-byte playlist format as #R$8B82. All three entries here point at the
+; same phrase, just with different effect/repeat headers.
+b$8C3E DEFB $81
+ $8C3F DEFW $8C48
+ $8C41 DEFB $C1
+ $8C42 DEFW $8C48
+ $8C44 DEFB $E1
+ $8C45 DEFW $8C48
+ $8C47 DEFB $00
 
-; Message at 8BC7
-t$8BC7 DEFM "VwVT"
+; Data block at 8C48
+b$8C48 DEFB $21,$48,$69,$6B,$6E,$69,$55,$50
+ $8C50 DEFB $4D,$68,$54,$50,$4D,$66,$55,$52
+ $8C58 DEFB $4D,$66,$4E,$55,$52,$64,$54,$50
+ $8C60 DEFB $4B,$68,$4B,$50,$54,$69,$D0,$50
+ $8C68 DEFB $FF,$04,$06,$08,$0B,$09,$08,$06
+ $8C70 DEFB $02,$04,$08,$04
 
-; Data block at 8BCB
-b$8BCB DEFB $B6,$14
+; Death/edge-of-map melody (see #R$8A86)
+;
+; .
+;
+; .
+;
+; Same 3-byte playlist format as #R$8B82, but only a single entry - this screen
+; has just one music phrase. Its address ($8C78) is the first byte right after
+; the list's own terminator; the 21 bytes from there to #R$8C8D are presumably
+; the phrase data itself (not further list entries).
+b$8C74 DEFB $C1
+ $8C75 DEFW $8C78
+ $8C77 DEFB $00
 
-; Message at 8BCD
-t$8BCD DEFM "rtrq"
-
-; Data block at 8BD1
-b$8BD1 DEFB $FF,$01,$03,$05,$01,$06,$01,$06
- $8BD9 DEFB $32,$85,$08
-
-; Message at 8BDC
-t$8BDC DEFM "meHM"
-
-; Data block at 8BE0
-b$8BE0 DEFB $A6,$14
-
-; Message at 8BE2
-t$8BE2 DEFM "OFho"
-
-; Data block at 8BE6
-b$8BE6 DEFB $AA,$0D
-
-; Message at 8BE8
-t$8BE8 DEFM "QJMQ"
-
-; Data block at 8BEC
-b$8BEC DEFB $B2,$0F
-
-; Message at 8BEE
-t$8BEE DEFM "FKOR"
-
-; Data block at 8BF2
-b$8BF2 DEFB $AA,$11
-
-; Message at 8BF4
-t$8BF4 DEFM "MJMQ"
-
-; Data block at 8BF8
-b$8BF8 DEFB $B2,$0A
-
-; Message at 8BFA
-t$8BFA DEFM "OFOJ"
-
-; Data block at 8BFE
-b$8BFE DEFB $AB,$0F
-
-; Message at 8C00
-t$8C00 DEFM "fOkf"
-
-; Data block at 8C04
-b$8C04 DEFB $B1,$0D
-
-; Message at 8C06
-t$8C06 DEFM "HEmh"
-
-; Data block at 8C0A
-b$8C0A DEFB $FF,$01,$08,$01,$08,$01,$08,$0A
- $8C12 DEFB $0B,$05,$03,$06,$0B,$06,$03,$01
- $8C1A DEFB $05,$01,$19,$D4,$11,$0D
-
-; Message at 8C20
-t$8C20 DEFM "kMQtQMkHK"
-
-; Data block at 8C29
-b$8C29 DEFB $F4,$11,$0D
-
-; Message at 8C2C
-t$8C2C DEFM "kMEfeC"
-
-; Data block at 8C32
-b$8C32 DEFB $E1,$41,$FF,$01,$08,$01,$08,$01
- $8C3A DEFB $08,$01,$08,$0D,$81,$48,$8C,$C1
- $8C42 DEFB $48,$8C,$E1,$48,$8C,$00
-
-; Message at 8C48
-t$8C48 DEFM "!HikniUPMhTPMfURMfNURdTPKhKPTi"
-
-; Data block at 8C66
-b$8C66 DEFB $D0,$50,$FF,$04,$06,$08,$0B,$09
- $8C6E DEFB $08,$06,$02,$04,$08,$04,$C1,$78
- $8C76 DEFB $8C,$00,$0E,$4D,$F2
-
-; Message at 8C7B
-t$8C7B DEFM "TvTRy"
-
-; Data block at 8C80
-b$8C80 DEFB $40,$39,$00,$F9,$59,$FF,$00,$01
+; Data block at 8C78
+b$8C78 DEFB $0E,$4D,$F2,$54,$76,$54,$52,$79
+ $8C80 DEFB $40,$39,$00,$F9,$59,$FF,$00,$01
  $8C88 DEFB $06,$01,$05,$06,$00
 
 ; Sound of evil laughter
@@ -3024,21 +3038,32 @@ c$8CAA LD E,(HL)     ; {DE = total bit count, from the 2 bytes at (HL)
  $8CD3 RET           ;
 
 ; Data for Sound of evil laughter
-b$8CD4 DEFB $AC,$00,$0F,$C0,$E1,$F0,$1F,$C0,$FC,$07,$C0,$1C
- $8CE0 DEFB $0E,$01,$F0,$3F,$E0,$03,$C0,$7F,$01,$F8,$1F,$81
- $8CEC DEFB $F8,$20,$F8,$1F,$E0,$7E,$03,$F0,$00,$7C,$03,$FC
- $8CF8 DEFB $1F,$80,$3F,$C0,$03,$E0,$1F,$E0,$FC,$03,$F0,$00
- $8D04 DEFB $1E,$01,$F8,$0F,$C0,$7E,$0E,$01,$F0,$1F,$C0,$FC
- $8D10 DEFB $1F,$07,$C0,$7E,$07,$F8,$1F,$81,$F0,$7C,$07,$E0
- $8D1C DEFB $3F,$C0,$F8,$1F,$07,$E6,$3F,$01,$FC,$1F,$81,$F0
- $8D28 DEFB $7C,$43,$E0,$3F,$81,$F0,$3E,$1F,$C0,$7E,$03,$FC
- $8D34 DEFB $1F,$81,$F0,$7E,$01,$F8,$0F,$E0,$7C,$07,$C3,$F0
- $8D40 DEFB $0F,$C0,$7F,$03,$E0,$7C,$1F,$00,$7E,$03,$F8,$3F
- $8D4C DEFB $03,$E0,$F0,$01,$F0,$1F,$C0,$FF,$07,$81,$E0,$00
- $8D58 DEFB $F8,$0F,$E0,$1F,$83,$C0,$F0,$10,$7E,$07,$F0,$1F
- $8D64 DEFB $83,$81,$F8,$18,$3F,$03,$F8,$1F,$83,$81,$38,$06
- $8D70 DEFB $07,$F0,$1F,$83,$F0,$00,$01,$C0,$30,$1E,$1F,$E0
- $8D7C DEFB $1F,$80,$E0,$01
+;
+; .
+;
+; .
+;
+; The "ha-ha-ha-ha" bitstream played by #R$8CAA (heard on the intro and on the
+; #R$B867 capture/ambush - confirmed by ear, not on ordinary combat). 172 bytes
+; total ($8CD4-$8D7F): a 2-byte bit-count ($00AC = 172 bits) followed by 170
+; bytes of bitstream.
+b$8CD4 DEFB $AC,$00                                         ; Bit count ($00AC
+                                                            ; = 172 bits)
+ $8CD6 DEFB $0F,$C0,$E1,$F0,$1F,$C0,$FC,$07,$C0,$1C,$0E,$01
+ $8CE2 DEFB $F0,$3F,$E0,$03,$C0,$7F,$01,$F8,$1F,$81,$F8,$20
+ $8CEE DEFB $F8,$1F,$E0,$7E,$03,$F0,$00,$7C,$03,$FC,$1F,$80
+ $8CFA DEFB $3F,$C0,$03,$E0,$1F,$E0,$FC,$03,$F0,$00,$1E,$01
+ $8D06 DEFB $F8,$0F,$C0,$7E,$0E,$01,$F0,$1F,$C0,$FC,$1F,$07
+ $8D12 DEFB $C0,$7E,$07,$F8,$1F,$81,$F0,$7C,$07,$E0,$3F,$C0
+ $8D1E DEFB $F8,$1F,$07,$E6,$3F,$01,$FC,$1F,$81,$F0,$7C,$43
+ $8D2A DEFB $E0,$3F,$81,$F0,$3E,$1F,$C0,$7E,$03,$FC,$1F,$81
+ $8D36 DEFB $F0,$7E,$01,$F8,$0F,$E0,$7C,$07,$C3,$F0,$0F,$C0
+ $8D42 DEFB $7F,$03,$E0,$7C,$1F,$00,$7E,$03,$F8,$3F,$03,$E0
+ $8D4E DEFB $F0,$01,$F0,$1F,$C0,$FF,$07,$81,$E0,$00,$F8,$0F
+ $8D5A DEFB $E0,$1F,$83,$C0,$F0,$10,$7E,$07,$F0,$1F,$83,$81
+ $8D66 DEFB $F8,$18,$3F,$03,$F8,$1F,$83,$81,$38,$06,$07,$F0
+ $8D72 DEFB $1F,$83,$F0,$00,$01,$C0,$30,$1E,$1F,$E0,$1F,$80
+ $8D7E DEFB $E0,$01
 
 ; Data block at 8D80
 w$8D80 DEFW $8E24,$8E87,$8EEA,$8F4D
@@ -4488,65 +4513,71 @@ b$AD31 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $AE2B DEFB $7C,$86,$C2,$46,$0C,$18,$00,$18
 ; #HTML[#UDGARRAY16($AE33-$AEB2-8)(font2.png)]
  $AE33 DEFB $7F,$41,$22,$22,$14,$14,$08,$08 ; $40
- $AE3B DEFB $18,$34,$66,$64,$6E,$42,$26,$E7
- $AE43 DEFB $F8,$54,$46,$6C,$46,$42,$4C,$F8
- $AE4B DEFB $3C,$62,$C6,$80,$C0,$C2,$46,$3C
- $AE53 DEFB $F8,$46,$63,$62,$43,$63,$66,$F8
- $AE5B DEFB $BC,$66,$42,$78,$44,$41,$63,$EF
- $AE63 DEFB $BC,$46,$42,$70,$48,$40,$60,$30
- $AE6B DEFB $3C,$66,$C2,$80,$8A,$C6,$6A,$3C
- $AE73 DEFB $C0,$9C,$EE,$C6,$84,$88,$0C,$06
- $AE7B DEFB $70,$28,$10,$08,$18,$18,$14,$3C
- $AE83 DEFB $05,$03,$03,$03,$03,$81,$46,$3C
- $AE8B DEFB $80,$C7,$4C,$D8,$F4,$AE,$C5,$E3
- $AE93 DEFB $C0,$60,$60,$60,$60,$61,$53,$7F
- $AE9B DEFB $83,$46,$6C,$51,$49,$43,$42,$A3
- $AEA3 DEFB $EE,$5B,$61,$41,$43,$66,$A6,$03
- $AEAB DEFB $3C,$46,$83,$83,$83,$83,$46,$3C
+ $AE3B DEFB $18,$34,$66,$64,$6E,$42,$26,$E7 ; $41 'A'
+ $AE43 DEFB $F8,$54,$46,$6C,$46,$42,$4C,$F8 ; $42 'B'
+ $AE4B DEFB $3C,$62,$C6,$80,$C0,$C2,$46,$3C ; $43 'C'
+ $AE53 DEFB $F8,$46,$63,$62,$43,$63,$66,$F8 ; $44 'D'
+ $AE5B DEFB $BC,$66,$42,$78,$44,$41,$63,$EF ; $45 'E'
+ $AE63 DEFB $BC,$46,$42,$70,$48,$40,$60,$30 ; $46 'F'
+ $AE6B DEFB $3C,$66,$C2,$80,$8A,$C6,$6A,$3C ; $47 'G'
+ $AE73 DEFB $C0,$9C,$EE,$C6,$84,$88,$0C,$06 ; $48 'H'
+ $AE7B DEFB $70,$28,$10,$08,$18,$18,$14,$3C ; $49 'I'
+ $AE83 DEFB $05,$03,$03,$03,$03,$81,$46,$3C ; $4A 'J'
+ $AE8B DEFB $80,$C7,$4C,$D8,$F4,$AE,$C5,$E3 ; $4B 'K'
+ $AE93 DEFB $C0,$60,$60,$60,$60,$61,$53,$7F ; $4C 'L'
+ $AE9B DEFB $83,$46,$6C,$51,$49,$43,$42,$A3 ; $4D 'M'
+ $AEA3 DEFB $EE,$5B,$61,$41,$43,$66,$A6,$03 ; $4E 'N'
+ $AEAB DEFB $3C,$46,$83,$83,$83,$83,$46,$3C ; $4F 'O'
 ; #HTML[#UDGARRAY11($AEB3-$AF0A-8)(font3.png)]
- $AEB3 DEFB $78,$CC,$82,$C4,$78,$C0,$C0,$80 ; $50
- $AEBB DEFB $3C,$42,$83,$83,$92,$9B,$C4,$7B
- $AEC3 DEFB $BC,$46,$63,$63,$46,$3C,$66,$F3
- $AECB DEFB $3C,$7A,$40,$36,$03,$C3,$6E,$3C
- $AED3 DEFB $FF,$C2,$99,$10,$18,$18,$28,$70
- $AEDB DEFB $20,$41,$83,$83,$C1,$A7,$6D,$39
- $AEE3 DEFB $81,$81,$C3,$C2,$A7,$62,$3C,$18
- $AEEB DEFB $81,$C3,$D3,$D1,$DB,$CB,$F7,$62
- $AEF3 DEFB $C3,$E3,$50,$28,$1C,$6E,$E7,$C2
- $AEFB DEFB $00,$81,$C3,$C6,$7D,$01,$62,$3C
- $AF03 DEFB $7D,$F6,$84,$08,$10,$21,$5D,$FF
+ $AEB3 DEFB $78,$CC,$82,$C4,$78,$C0,$C0,$80 ; $50 'P'
+ $AEBB DEFB $3C,$42,$83,$83,$92,$9B,$C4,$7B ; $51 'Q'
+ $AEC3 DEFB $BC,$46,$63,$63,$46,$3C,$66,$F3 ; $52 'R'
+ $AECB DEFB $3C,$7A,$40,$36,$03,$C3,$6E,$3C ; $53 'S'
+ $AED3 DEFB $FF,$C2,$99,$10,$18,$18,$28,$70 ; $54 'T'
+ $AEDB DEFB $20,$41,$83,$83,$C1,$A7,$6D,$39 ; $55 'U'
+ $AEE3 DEFB $81,$81,$C3,$C2,$A7,$62,$3C,$18 ; $56 'V'
+ $AEEB DEFB $81,$C3,$D3,$D1,$DB,$CB,$F7,$62 ; $57 'W'
+ $AEF3 DEFB $C3,$E3,$50,$28,$1C,$6E,$E7,$C2 ; $58 'X'
+ $AEFB DEFB $00,$81,$C3,$C6,$7D,$01,$62,$3C ; $59 'Y'
+ $AF03 DEFB $7D,$F6,$84,$08,$10,$21,$5D,$FF ; $5A 'Z'
 ; #HTML[#UDGARRAY15($AF0B-$AF82-8)(font4.png)]
- $AF0B DEFB $00,$07,$0C,$18,$10,$18,$18,$0E ; $5B
- $AF13 DEFB $00,$80,$03,$07,$0E,$0E,$0E,$07
- $AF1B DEFB $00,$00,$C1,$63,$07,$06,$06,$17
- $AF23 DEFB $00,$60,$F0,$80,$01,$03,$03,$03
- $AF2B DEFB $00,$00,$30,$E8,$C0,$C0,$80,$80
- $AF33 DEFB $00,$02,$04,$0C,$0C,$0C,$0E,$07
- $AF3B DEFB $00,$00,$00,$00,$01,$01,$01,$05
- $AF43 DEFB $00,$00,$00,$F8,$FC,$CC,$D8,$C0
- $AF4B DEFB $00,$00,$00,$00,$00,$07,$0F,$1F
- $AF53 DEFB $00,$00,$00,$00,$00,$00,$C0,$80
- $AF5B DEFB $00,$00,$00,$00,$0E,$1C,$30,$50
- $AF63 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $AF6B DEFB $00,$00,$00,$1C,$30,$60,$60,$61
- $AF73 DEFB $00,$00,$00,$00,$3E,$41,$BE,$7F
- $AF7B DEFB $00,$00,$00,$00,$00,$80,$60,$90
+; .
+; Energy-bar antlers, upper half (15 glyphs, see #R$BF37 - a fixed shape
+; recoloured to show the energy level, not a growth sequence)
+ $AF0B DEFB $00,$07,$0C,$18,$10,$18,$18,$0E ; $5B upper antler 0
+ $AF13 DEFB $00,$80,$03,$07,$0E,$0E,$0E,$07 ; $5C upper antler 1
+ $AF1B DEFB $00,$00,$C1,$63,$07,$06,$06,$17 ; $5D upper antler 2
+ $AF23 DEFB $00,$60,$F0,$80,$01,$03,$03,$03 ; $5E upper antler 3
+ $AF2B DEFB $00,$00,$30,$E8,$C0,$C0,$80,$80 ; $5F upper antler 4
+ $AF33 DEFB $00,$02,$04,$0C,$0C,$0C,$0E,$07 ; $60 upper antler 5
+ $AF3B DEFB $00,$00,$00,$00,$01,$01,$01,$05 ; $61 upper antler 6
+ $AF43 DEFB $00,$00,$00,$F8,$FC,$CC,$D8,$C0 ; $62 upper antler 7
+ $AF4B DEFB $00,$00,$00,$00,$00,$07,$0F,$1F ; $63 upper antler 8
+ $AF53 DEFB $00,$00,$00,$00,$00,$00,$C0,$80 ; $64 upper antler 9
+ $AF5B DEFB $00,$00,$00,$00,$0E,$1C,$30,$50 ; $65 upper antler 10
+ $AF63 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; $66 upper antler 11
+ $AF6B DEFB $00,$00,$00,$1C,$30,$60,$60,$61 ; $67 upper antler 12
+ $AF73 DEFB $00,$00,$00,$00,$3E,$41,$BE,$7F ; $68 upper antler 13
+ $AF7B DEFB $00,$00,$00,$00,$00,$80,$60,$90 ; $69 upper antler 14
 ; #HTML[#UDGARRAY15($AF83-$AFFA-8)(font5.png)]
- $AF83 DEFB $07,$03,$00,$00,$00,$00,$00,$00 ; $6A
- $AF8B DEFB $83,$F0,$FF,$0F,$00,$00,$00,$00
- $AF93 DEFB $83,$E1,$5E,$FF,$00,$00,$00,$00
- $AF9B DEFB $C3,$F3,$79,$1C,$00,$00,$00,$00
- $AFA3 DEFB $80,$C0,$E0,$F8,$7E,$1F,$00,$00
- $AFAB DEFB $03,$01,$00,$01,$03,$FF,$FC,$00
- $AFB3 DEFB $8C,$E6,$F0,$7F,$9F,$00,$00,$00
- $AFBB DEFB $E0,$70,$3F,$DF,$E0,$00,$00,$00
- $AFC3 DEFB $78,$AF,$E1,$81,$01,$01,$00,$00
- $AFCB DEFB $B8,$FE,$CF,$97,$99,$D8,$F8,$70
- $AFD3 DEFB $70,$70,$98,$E0,$FC,$7F,$0F,$01
- $AFDB DEFB $00,$00,$00,$00,$03,$CF,$FF,$FC
- $AFE3 DEFB $62,$53,$2F,$1F,$C0,$F0,$C0,$00
- $AFEB DEFB $E3,$C0,$80,$00,$00,$00,$00,$00
- $AFF3 DEFB $E8,$F4,$3A,$3A,$3C,$18,$00,$00
+; .
+; Energy-bar antlers, lower half (15 glyphs, see #R$BF37 - a fixed shape
+; recoloured to show the energy level, not a growth sequence)
+ $AF83 DEFB $07,$03,$00,$00,$00,$00,$00,$00 ; $6A lower antler 0
+ $AF8B DEFB $83,$F0,$FF,$0F,$00,$00,$00,$00 ; $6B lower antler 1
+ $AF93 DEFB $83,$E1,$5E,$FF,$00,$00,$00,$00 ; $6C lower antler 2
+ $AF9B DEFB $C3,$F3,$79,$1C,$00,$00,$00,$00 ; $6D lower antler 3
+ $AFA3 DEFB $80,$C0,$E0,$F8,$7E,$1F,$00,$00 ; $6E lower antler 4
+ $AFAB DEFB $03,$01,$00,$01,$03,$FF,$FC,$00 ; $6F lower antler 5
+ $AFB3 DEFB $8C,$E6,$F0,$7F,$9F,$00,$00,$00 ; $70 lower antler 6
+ $AFBB DEFB $E0,$70,$3F,$DF,$E0,$00,$00,$00 ; $71 lower antler 7
+ $AFC3 DEFB $78,$AF,$E1,$81,$01,$01,$00,$00 ; $72 lower antler 8
+ $AFCB DEFB $B8,$FE,$CF,$97,$99,$D8,$F8,$70 ; $73 lower antler 9
+ $AFD3 DEFB $70,$70,$98,$E0,$FC,$7F,$0F,$01 ; $74 lower antler 10
+ $AFDB DEFB $00,$00,$00,$00,$03,$CF,$FF,$FC ; $75 lower antler 11
+ $AFE3 DEFB $62,$53,$2F,$1F,$C0,$F0,$C0,$00 ; $76 lower antler 12
+ $AFEB DEFB $E3,$C0,$80,$00,$00,$00,$00,$00 ; $77 lower antler 13
+ $AFF3 DEFB $E8,$F4,$3A,$3A,$3C,$18,$00,$00 ; $78 lower antler 14
  $AFFB DEFB $00,$00,$00,$00,$00,$00,$08,$0A
  $B003 DEFB $00,$00,$00,$00,$00,$00,$3A,$C5
  $B00B DEFB $00,$00,$0C,$14,$28,$28,$51,$53
@@ -4584,13 +4615,17 @@ b$AD31 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $B10B DEFB $00,$00,$00,$FE,$00,$00,$00,$00
  $B113 DEFB $00,$00,$40,$E0,$40,$00,$00,$00
 ; #HTML[#UDGARRAY3($B11B-$B132-8)(font9D.png)]
- $B11B DEFB $00,$08,$1C,$0D,$02,$25,$32,$34 ; $9D
- $B123 DEFB $00,$00,$81,$00,$00,$00,$00,$00
- $B12B DEFB $00,$10,$38,$B0,$40,$A4,$4C,$2C
+; .
+; "+1 life" wreath symbol, upper half (3 glyphs)
+ $B11B DEFB $00,$08,$1C,$0D,$02,$25,$32,$34 ; $9D wreath upper 0
+ $B123 DEFB $00,$00,$81,$00,$00,$00,$00,$00 ; $9E wreath upper 1
+ $B12B DEFB $00,$10,$38,$B0,$40,$A4,$4C,$2C ; $9F wreath upper 2
 ; #HTML[#UDGARRAY3($B133-$B14A-8)(fontA0.png)]
- $B133 DEFB $0D,$02,$09,$1F,$0C,$00,$00,$00 ; $A0
- $B13B DEFB $00,$00,$81,$42,$18,$2A,$63,$41
- $B143 DEFB $B0,$40,$90,$F8,$30,$00,$00,$00
+; .
+; "+1 life" wreath symbol, lower half (3 glyphs)
+ $B133 DEFB $0D,$02,$09,$1F,$0C,$00,$00,$00 ; $A0 wreath lower 0
+ $B13B DEFB $00,$00,$81,$42,$18,$2A,$63,$41 ; $A1 wreath lower 1
+ $B143 DEFB $B0,$40,$90,$F8,$30,$00,$00,$00 ; $A2 wreath lower 2
  $B14B DEFB $00,$00,$00,$00,$04,$0E,$0A,$04 ; $A3
  $B153 DEFB $00,$00,$00,$00,$40,$A0,$E0,$40
  $B15B DEFB $00,$00,$02,$02,$14,$3C,$4B,$00
@@ -4613,9 +4648,11 @@ b$AD31 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $B1E3 DEFB $04,$64,$B0,$58,$2C,$96,$0A,$16
  $B1EB DEFB $B5,$58,$66,$18,$46,$B1,$A0,$70
 ; #HTML[#UDGARRAY3($B1F3-$B20A-8)(fontB8.png)]
- $B1F3 DEFB $02,$02,$6A,$D6,$6A,$02,$02,$00 ; $B8
- $B1FB DEFB $00,$00,$FF,$5F,$FF,$00,$00,$00
- $B203 DEFB $00,$00,$F8,$FC,$F8,$00,$00,$00
+; .
+; Sword symbol used as the main-menu selection pointer (3 glyphs)
+ $B1F3 DEFB $02,$02,$6A,$D6,$6A,$02,$02,$00 ; $B8 sword 0
+ $B1FB DEFB $00,$00,$FF,$5F,$FF,$00,$00,$00 ; $B9 sword 1
+ $B203 DEFB $00,$00,$F8,$FC,$F8,$00,$00,$00 ; $BA sword 2
  $B20B DEFB $00,$00,$00,$00,$00,$03,$0C,$00
  $B213 DEFB $00,$00,$03,$0E,$70,$80,$26,$00
  $B21B DEFB $00,$7F,$D5,$7F,$00,$00,$12,$00
@@ -5826,9 +5863,15 @@ c$BDE0 LD A,($C549)   ; {Only run for multi-column rooms, while idle, ~1 call
 ;
 ; Called from #R$BDA3/#R$BDE0 on a hazard/door-guard hit. Only acts while idle
 ; ($CC7B=0). If the energy byte at $BF6F is already $02 (critical), instead
-; sets Robin's animation to the death frame ($6E) and clears a flag at $BC67;
-; otherwise just decrements the energy byte. Either way redraws the energy bar
-; via #R$BF37.
+; sets Robin's animation to code $6E and clears a flag at $BC67; otherwise just
+; decrements the energy byte. Either way redraws the energy bar via #R$BF37.
+; Despite the name this isn't necessarily permanent death: #R$C9E7 dispatches
+; code $6E to #R$CB9D, which plays a short border-flash (not the "evil
+; laughter" heard on capture/game-over), penalises the kill counter, and lets
+; Robin recover after a timer - a "critical hit/stagger" reaction, not a
+; game-over. The actual death/game-over sequence has not been located; it may
+; simply be the scripted ambush/capture at #R$B867 (the only other place "evil
+; laughter" plays).
 c$BE25 LD A,($CC7B)  ; {Only act while Robin is idle ($CC7B = 0)
  $BE28 OR A          ;
  $BE29 RET NZ        ; }
@@ -6040,6 +6083,15 @@ c$BF1A CP $01         ; {A = 1 (special case): skip the guard-table update
 ; Draw the energy bar
 ;
 ; Used by the routines at #R$BE25, #R$BEB1, #R$CBE3 and #R$DB18.
+;
+; .
+;
+; The energy display itself is a fixed pair of branching antlers drawn from the
+; font glyphs at #R$AF0B/#R$AF83 (15 static glyphs each, forming the
+; upper/lower halves); this routine doesn't draw them, it recolours a 63-byte
+; attribute row at $5A40 from the energy value at $BF6F ($00-$0F, split into an
+; ink/paper-ish bit pattern), so the antler artwork itself never changes shape
+; - only its colour reflects the current energy level.
 c$BF37 LD A,($BF6F)  ; get Energy level
  $BF3A RRA           ;
  $BF3B AND $07       ;
@@ -6318,10 +6370,12 @@ c$C0AF CALL $C1C1    ; Skip forward to the ($C547)-th descriptor in the table
 ; .
 ;
 ; A = block number (bit 7 = horizontal-mirror flag), C = packed screen
-; coordinate byte (see #R$79F9 token format). Looks up the block's pixel data
-; address in the table at #R$5B00, draws its 4-byte-wide rows into the pixel
-; area at #R$EB00, and its attribute rows into the shadow attribute area at
-; $E800, adjusting X for mirrored blocks along the way.
+; coordinate byte (see #R$79F9 token format). Looks up the block's data address
+; (see #R$5BA8 for its header-byte format) in the table at #R$5B00, draws
+; (header AND $1F) x 8 pixel rows (4 bytes/row) into #R$EB00, then (header AND
+; $7) attribute rows (4 bytes/row, or a single byte reused if the header's
+; flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along
+; the way.
 c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
  $C0D2 PUSH BC       ; flag via XOR
  $C0D3 LD L,A        ;
@@ -6348,10 +6402,10 @@ c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
                      ; table at $FD00
  $C0F1 POP DE        ; Restore DE after the mirror call
 *$C0F2 POP BC        ;
- $C0F3 LD A,(DE)     ;
- $C0F4 AND $07       ;
+ $C0F3 LD A,(DE)     ; {Header byte AND $07 = attribute row count, patched into
+ $C0F4 AND $07       ; #R$C14D's operand
  $C0F6 LD ($C14C),A  ;
- $C0F9 PUSH DE       ;
+ $C0F9 PUSH DE       ; }
  $C0FA LD HL,$EB00   ; {HL = pixel address in #R$EB00 from the coordinate byte
  $C0FD LD A,C        ; in C
  $C0FE SLA A         ;
@@ -6360,18 +6414,18 @@ c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
  $C104 LD C,A        ;
  $C105 ADD HL,BC     ;
  $C106 PUSH HL       ; }
- $C107 LD DE,$0020   ; {Copy the block's pixel rows into the shadow screen, 4
- $C10A EXX           ; bytes at a time
+ $C107 LD DE,$0020   ; {DE = row stride ($0020); HL/DE = pixel dest/source (via
+ $C10A EXX           ; EXX+stack)
  $C10B POP HL        ;
- $C10C POP DE        ;
- $C10D LD A,(DE)     ;
- $C10E INC DE        ;
+ $C10C POP DE        ; }
+ $C10D LD A,(DE)     ; {Header AND $1F, x8 (via RLCA x3/AND $F8) = pixel row
+ $C10E INC DE        ; count in C
  $C10F RLCA          ;
  $C110 RLCA          ;
  $C111 RLCA          ;
  $C112 AND $F8       ;
- $C114 LD C,A        ;
-*$C115 LD B,$04      ;
+ $C114 LD C,A        ; }
+*$C115 LD B,$04      ; {Copy 4 bytes per pixel row, C rows total
 *$C117 LD A,(DE)     ;
  $C118 INC DE        ;
  $C119 LD (HL),A     ;
@@ -6383,16 +6437,17 @@ c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
  $C120 EXX           ;
  $C121 POP HL        ;
  $C122 DEC C         ;
- $C123 JR NZ,$C115   ;
- $C125 EX AF,AF'     ;
- $C126 LD B,A        ;
+ $C123 JR NZ,$C115   ; }
+ $C125 EX AF,AF'     ; {Header bit 6 set -> flat-attribute flag (A=$00), else
+ $C126 LD B,A        ; A=$13
  $C127 XOR A         ;
  $C128 BIT 6,B       ;
  $C12A JR NZ,$C12E   ;
- $C12C LD A,$13      ;
-*$C12E LD ($C151),A  ;
- $C131 POP HL        ;
- $C132 SLA L         ;
+ $C12C LD A,$13      ; }
+*$C12E LD ($C151),A  ; Patch the attribute loop's INC DE with A
+                     ; (enables/disables advance)
+ $C131 POP HL        ; {Compute the shadow attribute address from the pixel
+ $C132 SLA L         ; address
  $C134 SLA L         ;
  $C136 XOR A         ;
  $C137 RR H          ;
@@ -8013,7 +8068,7 @@ c$C9E7 LD BC,$CBF7   ; BC = default return address (pushed for the handler to
  $C9EE OR A          ;
  $C9EF JR Z,$C9F9    ;
  $C9F1 CP $6E        ;
- $C9F3 CALL Z,$CB9D  ; Finish a sword kill
+ $C9F3 CALL Z,$CB9D  ; Robin's critical-hit stagger
  $C9F6 JP $CA30      ;
 *$C9F9 LD A,($CC7A)  ; Skip action selection unless idle ($CC7A = 0)
  $C9FC OR A          ;
@@ -8292,17 +8347,21 @@ c$CB6B AND $0F       ;
  $CB99 LD HL,$CD2D   ;
  $CB9C RET           ;
 
-; Finish a sword kill: adjust the counter, cost energy, pick a frame
+; Robin's critical-hit stagger: penalise the counter, recover after a timer
 ;
 ; Used by the routine at #R$C9E7.
 ;
 ; .
 ;
-; Called from #R$C9E7's action code $6E. Clears the animation timer and cancels
-; the border-flash sound, adjusts the kill counter at $D5A4 (2 decrements,
-; offsetting #R$D91A's own increment to a net -1), arms a $001E timer, and
-; picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or
-; $CD3B/$0E) before falling into #R$CBF7 to store it.
+; Called from #R$C9E7's action code $6E - set by #R$BE25 when a hazard/guard
+; hits Robin while his energy is already critical. Clears the animation timer
+; and plays a short border-flash (not "evil laughter" - confirmed live/by ear
+; that the laugh is reserved for the capture/ambush sequence at #R$B867, not
+; this), penalises the kill counter at $D5A4 (2 decrements, offsetting
+; #R$D91A's own increment to a net -1), arms a $001E recovery timer, and picks
+; a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or
+; $CD3B/$0E) before falling into #R$CBF7 to store it. Robin keeps playing
+; afterwards - this is a stagger/penalty, not a game-over.
 c$CB9D XOR A         ;
  $CB9E LD ($CC7A),A  ;
  $CBA1 DEC A         ;
@@ -8516,6 +8575,16 @@ b$CC7A DEFB $00,$00,$00,$01,$0D,$CD,$00,$00
 ; Menu procedure, return on game start
 ;
 ; Used by the routine at #R$BF70.
+;
+; .
+;
+; First plays the digitized "Will you help Robin..." speech via #R$8CAA,
+; reading a bitstream at $E500 (confirmed live: genuine non-zero data during
+; playback, 2-byte bit-count $1644 = 5700 bits followed by ~712 bytes of
+; bitstream, $E500-$E7CE) - before the screen is cleared and the title/menu is
+; drawn. The looping click heard continuously while the menu waits for a key is
+; not a separate tune; it comes from #R$8AAF's key-decode loop, re-invoked
+; every pass of the idle wait.
 c$CD6C LD A,$0B      ; Delay for sound procedure
  $CD6E LD ($8CB1),A  ;
  $CD71 LD HL,$1644   ;

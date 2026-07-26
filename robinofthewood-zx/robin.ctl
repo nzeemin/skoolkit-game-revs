@@ -3,6 +3,7 @@
 w $5B00 Table for block addresses
 W $5B00,,8
 b $5BA8 Block $00
+N $5BA8 Block header byte, decoded by #R$C0D1: bit 7 = natural-mirror flag (XORed with the placing token's own mirror bit and the room's world-map bit 7 to decide whether to mirror at draw time); bit 6 = flat-attribute flag (1 = a single attribute byte fills the whole block instead of one row); bits 0-4 = pixel row count / 8 (i.e. pixel rows = (header AND $1F) x 8, each row 4 bytes/32 pixels wide); bits 0-2 (reused) = attribute row count (0-7, each row 4 bytes wide, appended immediately after the pixel data - or a single byte if the flat-attribute flag is set). Bit 5 is unused. Verified against block $00 ($04: 32 pixel rows = 128 bytes, 4 attribute rows = 16 bytes, matching the gap before block $01 exactly) and blocks $01/$02/$0A.
 B $5BA8,1,1
 B $5BA9,128,8 #HTML[<img src="images/blocks/block00.png" />]
 b $5C39 Block $01
@@ -374,7 +375,7 @@ B $83BD,56,8 #HTML[<img src="images/roomtypes/roomt25.png" />]
 N $83F5 Room type $26
 B $83F5,1,1
 B $83F6,60,8 #HTML[<img src="images/roomtypes/roomt26.png" />]
-b $8432
+s $8432 Unused padding (223 zero bytes) between the room-type and additional-element tables
 b $8511 Additional room elements, by room number
 N $8511 Indexed by room number, not by room type: one entry per room $00..$FF, in order. Entry format matches the room type descriptors at #R$7B39 - a token count byte, followed by that many 2-byte tokens (coordinate byte + block number). A count of $00 means the room has no additional elements.
 N $8511 Only rooms $0000..$00FF have entries here. #R$C072 loads the room number and returns early when its high byte is non-zero, so rooms $0100..$013D (256..317) get room type graphics only.
@@ -1025,9 +1026,9 @@ B $8A30,6,6 #HTML[<img src="images/roomadds/roomaddFE.png" />]
 N $8A36 Room $FF
 B $8A36,1,1 Nothing
 b $8A37
-c $8A79 Menu select: main menu items ($8B82), called from #R$CD6C
-c $8A7E Menu select: victory-screen items ($8C3E), called from #R$C055
-c $8A83 Menu select: death/edge-of-map items ($8C74), called from #R$BF80
+c $8A79 Play the main menu melody ($8B82), called from #R$CD6C
+c $8A7E Play the victory-screen melody ($8C3E), called from #R$C055
+c $8A83 Play the death/edge-of-map melody ($8C74), called from #R$BF80
 c $8A86 Wait for the player to select a menu item from the list at (HL)
 N $8A86 Each list entry is a header byte B (bit 5 = flash the border-colour attribute at $8AD9; bits 6-7 = a colour index saved to $8B36; bits 0-3 = a key-wait count) followed by a 2-byte jump-list pointer, consumed by #R$8AAF. A $00 header byte ends the list. Loops to the next entry until #R$8AAF reports a match (Z flag).
 C $8A86,2 Disable interrupts; B = this entry's header byte, or 0 = end of list
@@ -1036,58 +1037,77 @@ C $8A95,8 Bits 6-7 of the header -> colour index, saved to $8B36
 C $8A9D,5 Bits 0-3 of the header -> B (key-wait count for #R$8AAF)
 C $8AA7,3 Wait for a keyboard row read, decode it via the table at #R$8B57
 c $8AAF Wait for a keyboard row read, decode it via the table at #R$8B57
-N $8AAF (HL) on entry points at a length-prefixed list of jump targets; HL is advanced past it. Loops B times (from #R$8B4F/#R$8AB7): reads keyboard port $00FE, flashes the border while idle (#R$8AD6), then decodes the raw port value through the table at #R$8B57 twice to get a row/column pair. The exact mapping to a specific menu action is not confirmed.
+N $8AAF (HL) on entry points at a length-prefixed playlist (see #R$8B82); HL is advanced past it. Loops B times (repeat count from the entry's header, from #R$8B4F/#R$8AB7): reads keyboard port $00FE to check for a keypress between phrases (#R$8AD6, no visible border flash despite the port-$FE writes), then decodes two phrase bytes through the pitch table at #R$8B57/#R$8B60. Each phrase byte's bits 0-4 select a note (0-31, #R$8B60); bits 6-7 of the second byte in the pair (extracted at #R$8B17 via RLCA/RLCA/AND $03) select a duration class (1-4) that sets the note's playback countdown length (#R$8B1E). Bit 5 is not used anywhere in this decode. Confirmed live: this whole routine (and its #R$8B27-#R$8B48 tail) is what's re-invoked continuously while the menu idles, and its tail sets bit 4 of port $FE (the real beeper/EAR output, #R$8B27) on one specific countdown condition - this is the actual playback of the phrase data, the source of the continuous "menu music".
 C $8AAF,8 DE = jump target address read from the list at (HL)
 C $8ABA,10 Read keyboard port $00FE; low 5 bits (inverted) = pressed keys
 C $8AD6,8 Flash border while waiting for a key
-C $8ADE,7 A = the first raw port value, masked to 5 bits
-C $8AE5,3 Look up A in the byte table at #R$8B60
-C $8AE8,9 C = decoded first value; A = a second raw port value
-C $8AF1,3 Look up A in the byte table at #R$8B60
-C $8AF4,9 Compare decoded C against a rotated copy of itself; adjust A
-C $8AFD,13 Save the two decoded values; test each against $1F (border cases)
-C $8B0A,13 Save more comparison flags for the values just decoded
+C $8ADE,7 A = the first phrase byte, masked to a note index (bits 0-4, 0-31)
+C $8AE5,3 Look up the note's pitch/period in #R$8B60
+C $8AE8,9 C = first note's pitch period; A = the second (raw) phrase byte
+C $8AF1,3 Look up the second note's pitch/period in #R$8B60
+C $8AF4,9 Compare the two decoded pitch periods; adjust A
+C $8AFD,13 Save the two decoded pitch periods; flag if either note index was 0 (rest)
+C $8B0A,13 Save more rest-flags for the notes just decoded
 C $8B17,7 A -> B = 1-4, from bits 6-7 of the saved flag byte
 C $8B1E,9 Compute H = a table row base from B (0x0E per step)
-C $8B27,26 Decrement C then D toward 0, wrapping via a self-modified operand
-C $8B41,7 Output the resulting value to the border; E = its value
+C $8B27,26 Decrement C then D toward 0, each wrapping via its own self-modified reload operand and toggling a bit of A on underflow (C -> bit 0, D -> bit 1). Only bit 1 (D's toggle) is ever tested (AND $02) to decide the OUT value below; C's toggle (bit 0) is computed but never read - so only the second decoded note (D's period, see #R$8AF1) actually drives the audible tone, not the first
+C $8B41,7 Output the resulting value ($10 = tone on, from D's underflow toggle, or $00 = silent) to port $FE; E = its value
 C $8B48,7 Loop while HL is non-zero (a distance-proportional delay)
 C $8B4F,8 Loop back for the next list entry (B times)
 c $8B57 Look up A in the byte table at #R$8B60
 R $8B57 A $00.$1F
-b $8B60
+b $8B60 32-note chromatic pitch/period table for the beeper music engine
+N $8B60 32 bytes, indexed 0-31 by #R$8B57. Consecutive values' ratios all cluster tightly around 1.059 = 2^(1/12), the equal-temperament semitone ratio, confirming this is a period table for a 1-bit tone generator spanning roughly 2.5 octaves (higher index = shorter period = higher pitch). Entry 0 ($00) fits the same geometric progression only when read as $100 (256), not literal zero - i.e. the lowest note's period wraps through a byte-sized counter.
+N $8B60 Absolute frequencies computed by simulating the exact fixed T-state cost of #R$8B27's loop body (both branch paths) at 3.5MHz, since only entry 31's/entry 0's role as D's reload value (see #R$8B27) actually gates the tone. Entry 0 ($100) = ~71Hz (near C#2/D2); entry 31 ($2D) = ~401Hz (near G4) - a ~2.5-octave chromatic run from the low D-ish range up to G4.
 B $8B60,32,8
-b $8B82
-t $8BB4
-b $8BBA
-t $8BC7
-b $8BCB
-t $8BCD
-b $8BD1
-t $8BDC
-b $8BE0
-t $8BE2
-b $8BE6
-t $8BE8
-b $8BEC
-t $8BEE
-b $8BF2
-t $8BF4
-b $8BF8
-t $8BFA
-b $8BFE
-t $8C00
-b $8C04
-t $8C06
-b $8C0A
-t $8C20
-b $8C29
-t $8C2C
-b $8C32
-t $8C48
-b $8C66
-t $8C7B
-b $8C80
+b $8B82 Main menu melody (see #R$8A86)
+N $8B82 Each entry is 3 bytes: a header byte followed by a 2-byte address, ending with a $00 header. This is a music playlist, not a key list: by ear, the header's low nibble is a repeat count and the high nibble ($80/$A0/$C0/$E0) selects an effect (plain/echo/drums/...) applied to the phrase at the given address; several entries reuse the same phrase address with a different effect/repeat. #R$8A86 still treats the header generically (as a wait-count and two bits fed to $8AD9/$8B36) since the effect selection itself hasn't been isolated in the code yet.
+B $8B82,1
+W $8B83,2
+B $8B85,1
+W $8B86,2
+B $8B88,1
+W $8B89,2
+B $8B8B,1
+W $8B8C,2
+B $8B8E,1
+W $8B8F,2
+B $8B91,1
+W $8B92,2
+B $8B94,1
+W $8B95,2
+B $8B97,1
+W $8B98,2
+B $8B9A,1
+W $8B9B,2
+B $8B9D,1
+W $8B9E,2
+B $8BA0,1
+W $8BA1,2
+B $8BA3,1
+W $8BA4,2
+B $8BA6,1
+b $8BA7
+B $8BB3
+B $8BC4
+B $8BD9
+B $8C1C
+b $8C3E Victory-screen melody (see #R$8A86)
+N $8C3E Same 3-byte playlist format as #R$8B82. All three entries here point at the same phrase, just with different effect/repeat headers.
+B $8C3E,1
+W $8C3F,2
+B $8C41,1
+W $8C42,2
+B $8C44,1
+W $8C45,2
+B $8C47,1
+b $8C48
+b $8C74 Death/edge-of-map melody (see #R$8A86)
+N $8C74 Same 3-byte playlist format as #R$8B82, but only a single entry - this screen has just one music phrase. Its address ($8C78) is the first byte right after the list's own terminator; the 21 bytes from there to #R$8C8D are presumably the phrase data itself (not further list entries).
+B $8C74,1
+W $8C75,2
+B $8C77,1
+b $8C78
 c $8C8D Sound of evil laughter
 C $8C96,3 Play a sound effect encoded as a bit-per-border-flip stream
 c $8CAA Play a sound effect encoded as a bit-per-border-flip stream
@@ -1096,7 +1116,9 @@ C $8CAA,4 DE = total bit count, from the 2 bytes at (HL)
 C $8CAE,7 B = 8 bits per data byte; C = a short per-bit delay
 C $8CB5,4 A = $18 (border white); RLC (HL) shifts out the next bit
 b $8CD4 Data for Sound of evil laughter
-B $8CD4,,12
+N $8CD4 The "ha-ha-ha-ha" bitstream played by #R$8CAA (heard on the intro and on the #R$B867 capture/ambush - confirmed by ear, not on ordinary combat). 172 bytes total ($8CD4-$8D7F): a 2-byte bit-count ($00AC = 172 bits) followed by 170 bytes of bitstream.
+B $8CD4,2 Bit count ($00AC = 172 bits)
+B $8CD6,,12
 w $8D80
 W $8D80,,8
 w $8E12
@@ -1319,24 +1341,83 @@ B $ADF3,8 $38 '8'
 B $ADFB,8 $39 '9'
 N $AE33 #HTML[#UDGARRAY16($AE33-$AEB2-8)(font2.png)]
 B $AE33,8,8 $40
-B $AE3B,120,8
+B $AE3B,8,8 $41 'A'
+B $AE43,8,8 $42 'B'
+B $AE4B,8,8 $43 'C'
+B $AE53,8,8 $44 'D'
+B $AE5B,8,8 $45 'E'
+B $AE63,8,8 $46 'F'
+B $AE6B,8,8 $47 'G'
+B $AE73,8,8 $48 'H'
+B $AE7B,8,8 $49 'I'
+B $AE83,8,8 $4A 'J'
+B $AE8B,8,8 $4B 'K'
+B $AE93,8,8 $4C 'L'
+B $AE9B,8,8 $4D 'M'
+B $AEA3,8,8 $4E 'N'
+B $AEAB,8,8 $4F 'O'
 N $AEB3 #HTML[#UDGARRAY11($AEB3-$AF0A-8)(font3.png)]
-B $AEB3,8,8 $50
-B $AEBB,80,8
+B $AEB3,8,8 $50 'P'
+B $AEBB,8,8 $51 'Q'
+B $AEC3,8,8 $52 'R'
+B $AECB,8,8 $53 'S'
+B $AED3,8,8 $54 'T'
+B $AEDB,8,8 $55 'U'
+B $AEE3,8,8 $56 'V'
+B $AEEB,8,8 $57 'W'
+B $AEF3,8,8 $58 'X'
+B $AEFB,8,8 $59 'Y'
+B $AF03,8,8 $5A 'Z'
 N $AF0B #HTML[#UDGARRAY15($AF0B-$AF82-8)(font4.png)]
-B $AF0B $5B
-B $AF13,112,8
+N $AF0B Energy-bar antlers, upper half (15 glyphs, see #R$BF37 - a fixed shape recoloured to show the energy level, not a growth sequence)
+B $AF0B,8,8 $5B upper antler 0
+B $AF13,8,8 $5C upper antler 1
+B $AF1B,8,8 $5D upper antler 2
+B $AF23,8,8 $5E upper antler 3
+B $AF2B,8,8 $5F upper antler 4
+B $AF33,8,8 $60 upper antler 5
+B $AF3B,8,8 $61 upper antler 6
+B $AF43,8,8 $62 upper antler 7
+B $AF4B,8,8 $63 upper antler 8
+B $AF53,8,8 $64 upper antler 9
+B $AF5B,8,8 $65 upper antler 10
+B $AF63,8,8 $66 upper antler 11
+B $AF6B,8,8 $67 upper antler 12
+B $AF73,8,8 $68 upper antler 13
+B $AF7B,8,8 $69 upper antler 14
 N $AF83 #HTML[#UDGARRAY15($AF83-$AFFA-8)(font5.png)]
-B $AF83,8,8 $6A
-B $AF8B
-B $AFFB
+N $AF83 Energy-bar antlers, lower half (15 glyphs, see #R$BF37 - a fixed shape recoloured to show the energy level, not a growth sequence)
+B $AF83,8,8 $6A lower antler 0
+B $AF8B,8,8 $6B lower antler 1
+B $AF93,8,8 $6C lower antler 2
+B $AF9B,8,8 $6D lower antler 3
+B $AFA3,8,8 $6E lower antler 4
+B $AFAB,8,8 $6F lower antler 5
+B $AFB3,8,8 $70 lower antler 6
+B $AFBB,8,8 $71 lower antler 7
+B $AFC3,8,8 $72 lower antler 8
+B $AFCB,8,8 $73 lower antler 9
+B $AFD3,8,8 $74 lower antler 10
+B $AFDB,8,8 $75 lower antler 11
+B $AFE3,8,8 $76 lower antler 12
+B $AFEB,8,8 $77 lower antler 13
+B $AFF3,8,8 $78 lower antler 14
 N $B11B #HTML[#UDGARRAY3($B11B-$B132-8)(font9D.png)]
-B $B11B,8,8 $9D
+N $B11B "+1 life" wreath symbol, upper half (3 glyphs)
+B $B11B,8,8 $9D wreath upper 0
+B $B123,8,8 $9E wreath upper 1
+B $B12B,8,8 $9F wreath upper 2
 N $B133 #HTML[#UDGARRAY3($B133-$B14A-8)(fontA0.png)]
-B $B133,8,8 $A0
+N $B133 "+1 life" wreath symbol, lower half (3 glyphs)
+B $B133,8,8 $A0 wreath lower 0
+B $B13B,8,8 $A1 wreath lower 1
+B $B143,8,8 $A2 wreath lower 2
 B $B14B,8,8 $A3
 N $B1F3 #HTML[#UDGARRAY3($B1F3-$B20A-8)(fontB8.png)]
-B $B1F3,8,8 $B8
+N $B1F3 Sword symbol used as the main-menu selection pointer (3 glyphs)
+B $B1F3,8,8 $B8 sword 0
+B $B1FB,8,8 $B9 sword 1
+B $B203,8,8 $BA sword 2
 s $B26A
 t $B26B
 b $B273
@@ -1542,7 +1623,7 @@ C $BE0D,3 Bounding-box overlap test
 C $BE12,3 Damage Robin
 C $BE17,3 Border-flash sound with rising pitch
 c $BE25 Damage Robin: decrement energy, or trigger death if critical
-N $BE25 Called from #R$BDA3/#R$BDE0 on a hazard/door-guard hit. Only acts while idle ($CC7B=0). If the energy byte at $BF6F is already $02 (critical), instead sets Robin's animation to the death frame ($6E) and clears a flag at $BC67; otherwise just decrements the energy byte. Either way redraws the energy bar via #R$BF37.
+N $BE25 Called from #R$BDA3/#R$BDE0 on a hazard/door-guard hit. Only acts while idle ($CC7B=0). If the energy byte at $BF6F is already $02 (critical), instead sets Robin's animation to code $6E and clears a flag at $BC67; otherwise just decrements the energy byte. Either way redraws the energy bar via #R$BF37. Despite the name this isn't necessarily permanent death: #R$C9E7 dispatches code $6E to #R$CB9D, which plays a short border-flash (not the "evil laughter" heard on capture/game-over), penalises the kill counter, and lets Robin recover after a timer - a "critical hit/stagger" reaction, not a game-over. The actual death/game-over sequence has not been located; it may simply be the scripted ambush/capture at #R$B867 (the only other place "evil laughter" plays).
 C $BE25,5 Only act while Robin is idle ($CC7B = 0)
 C $BE35,10 Critical: switch to the death animation, clear a flag at $BC67
 C $BE2A,3 Energy level address
@@ -1585,6 +1666,8 @@ N $BF1A Called from #R$BD49/#R$BE43 with A = the hit guard's slot number (1-5, f
 C $BF1A,4 A = 1 (special case): skip the guard-table update below
 C $BF1E,17 Compute an index into the guard table at ($C54C) from A
 c $BF37 Draw the energy bar
+N $BF37 The energy display itself is a fixed pair of branching antlers drawn from the font glyphs at #R$AF0B/#R$AF83 (15 static glyphs each, forming the upper/lower halves); this routine doesn't draw them, it recolours a 63-byte attribute row at $5A40 from the energy value at $BF6F ($00-$0F, split into an ink/paper-ish bit pattern), so the antler artwork itself never changes shape - only its colour reflects the current energy level.
+C $BF37,16 A = a colour byte packed from the energy value's low 3 bits and bit 3
 C $BF37,3 Energy value -> bar length (bits 0-2) and low/high half flag (bit 6)
 C $BF47,9 Fill $3F bytes of bar attributes at $5A40
 C $BF37,3 get Energy level
@@ -1658,13 +1741,19 @@ C $C0B2,1 get length
 C $C0B4,2 zero => end, return
 C $C0C8,3 Draw one block token onto the shadow screen, with mirroring
 c $C0D1 Draw one block token onto the shadow screen, with mirroring
-N $C0D1 A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see #R$79F9 token format). Looks up the block's pixel data address in the table at #R$5B00, draws its 4-byte-wide rows into the pixel area at #R$EB00, and its attribute rows into the shadow attribute area at $E800, adjusting X for mirrored blocks along the way.
+N $C0D1 A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see #R$79F9 token format). Looks up the block's data address (see #R$5BA8 for its header-byte format) in the table at #R$5B00, draws (header AND $1F) x 8 pixel rows (4 bytes/row) into #R$EB00, then (header AND $7) attribute rows (4 bytes/row, or a single byte reused if the header's flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along the way.
 C $C0D1,22 DE = block data address from #R$5B00; detect the mirror flag via XOR
 C $C0EE,3 Horizontally mirror a block's rows using the bit-reverse table at $FD00
 C $C0E9,5 Mirror flag set: call #R$C1D6 to flip the block's pixel/attribute data
 C $C0F1,1 Restore DE after the mirror call
+C $C0F3,7 Header byte AND $07 = attribute row count, patched into #R$C14D's operand
 C $C0FA,13 HL = pixel address in #R$EB00 from the coordinate byte in C
-C $C107,64 Copy the block's pixel rows into the shadow screen, 4 bytes at a time
+C $C107,6 DE = row stride ($0020); HL/DE = pixel dest/source (via EXX+stack)
+C $C10D,8 Header AND $1F, x8 (via RLCA x3/AND $F8) = pixel row count in C
+C $C115,16 Copy 4 bytes per pixel row, C rows total
+C $C125,9 Header bit 6 set -> flat-attribute flag (A=$00), else A=$13
+C $C12E,3 Patch the attribute loop's INC DE with A (enables/disables advance)
+C $C131,22 Compute the shadow attribute address from the pixel address
 C $C147,3 BC = shadow attribute area base ($E800)
 C $C14A,20 Copy the block's attribute rows into the shadow attribute area
 C $C0E7,2 !!MUT-ARG!! current room byte
@@ -1874,7 +1963,7 @@ C $C9DC,3 Collision check
 c $C9E7 Robin's action dispatcher: pick sword/arrow frames, then jump by facing
 N $C9E7 If Robin's animation code ($CC7B) is non-zero, waits for it to finish (or, for code $6E, calls #R$CB9D). Otherwise, if idle ($CC7A=0) and standing still and centred in a cell, picks between a sword attack (#R$CA44) or an arrow shot (#R$CA4C) based on the movement bits at $CC8B. Finally looks up a per-facing handler in the table at $CD42 (indexed by $CC87) and jumps to it with E = the movement bitmask ($CC8B).
 C $C9E7,3 BC = default return address (pushed for the handler to RET to)
-C $C9F3,3 Finish a sword kill
+C $C9F3,3 Robin's critical-hit stagger
 C $C9F9,3 Skip action selection unless idle ($CC7A = 0)
 C $CA28,3 Sword-attack entry into #R$CA4C's frame-table picker
 C $CA2D,3 Pick Robin's sprite frame table for his current action and facing
@@ -1906,8 +1995,8 @@ C $CB68,3 Timer still running: discard the caller's return address, return
 C $CB41,3 Pick Robin's sprite frame table for his current action and facing
 c $CB6B Pick a walking-frame table by movement bit (low nibble of A)
 N $CB6B Part of the facing-direction dispatch chain from #R$C9E7/#R$CB21. Tests bits 0-3 of A (right/left/down/up) in turn and returns A = a small type code (2-5) with HL -> the matching frame table ($CCFC/$CD11/$CD26/$CD2D); returns with the stack popped and no result if no bit is set.
-c $CB9D Finish a sword kill: adjust the counter, cost energy, pick a frame
-N $CB9D Called from #R$C9E7's action code $6E. Clears the animation timer and cancels the border-flash sound, adjusts the kill counter at $D5A4 (2 decrements, offsetting #R$D91A's own increment to a net -1), arms a $001E timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into #R$CBF7 to store it.
+c $CB9D Robin's critical-hit stagger: penalise the counter, recover after a timer
+N $CB9D Called from #R$C9E7's action code $6E - set by #R$BE25 when a hazard/guard hits Robin while his energy is already critical. Clears the animation timer and plays a short border-flash (not "evil laughter" - confirmed live/by ear that the laugh is reserved for the capture/ambush sequence at #R$B867, not this), penalises the kill counter at $D5A4 (2 decrements, offsetting #R$D91A's own increment to a net -1), arms a $001E recovery timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into #R$CBF7 to store it. Robin keeps playing afterwards - this is a stagger/penalty, not a game-over.
 C $CBA2,3 Set the border-flash colour/count operands without flashing
 C $CBAA,3 Print a kill-count message, increment the counter and its displayed digit
 C $CBC4,3 => Store Robin's facing (A) and frame-table pointer
@@ -1942,6 +2031,7 @@ C $CC6D,5 Type 3, frame table $CD13
 C $CC73,6 Return the cached frame from $CC88/$CC89
 b $CC7A
 c $CD6C Menu procedure, return on game start
+N $CD6C First plays the digitized "Will you help Robin..." speech via #R$8CAA, reading a bitstream at $E500 (confirmed live: genuine non-zero data during playback, 2-byte bit-count $1644 = 5700 bits followed by ~712 bytes of bitstream, $E500-$E7CE) - before the screen is cleared and the title/menu is drawn. The looping click heard continuously while the menu waits for a key is not a separate tune; it comes from #R$8AAF's key-decode loop, re-invoked every pass of the idle wait.
 C $CD6C,2 Delay for sound procedure
 C $CD7A,3 Play a sound effect encoded as a bit-per-border-flip stream
 C $CD7D,3 Clear screen pixels

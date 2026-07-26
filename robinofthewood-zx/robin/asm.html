@@ -136,6 +136,16 @@
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="23464"></span>
+<div class="comments">
+<div class="paragraph">
+Block header byte, decoded by <a href="asm.html#49361">C0D1</a>: bit 7 = natural-mirror flag (XORed with the placing token's own mirror bit and the room's world-map bit 7 to decide whether to mirror at draw time); bit 6 = flat-attribute flag (1 = a single attribute byte fills the whole block instead of one row); bits 0-4 = pixel row count / 8 (i.e. pixel rows = (header AND $1F) x 8, each row 4 bytes/32 pixels wide); bits 0-2 (reused) = attribute row count (0-7, each row 4 bytes wide, appended immediately after the pixel data - or a single byte if the flat-attribute flag is set). Bit 5 is unused. Verified against block $00 ($04: 32 pixel rows = 128 bytes, 4 attribute rows = 16 bytes, matching the gap before block $01 exactly) and blocks $01/$02/$0A.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-1"><span id="23464"></span>5BA8</td>
 <td class="instruction">DEFB $04</td>
 <td class="comment-1" rowspan="1"></td>
@@ -7434,7 +7444,7 @@ Room type $26
 <td class="instruction">DEFB $7D,$02,$7E,$02</td>
 </tr>
 </table>
-<div id="33842" class="description">8432: Data block at 8432</div>
+<div id="33842" class="description">8432: Unused padding (223 zero bytes) between the room-type and additional-element tables</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -7444,142 +7454,7 @@ Room type $26
 </tr>
 <tr>
 <td class="address-1"><span id="33842"></span>8432</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33850"></span>843A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33858"></span>8442</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33866"></span>844A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33874"></span>8452</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33882"></span>845A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33890"></span>8462</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33898"></span>846A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33906"></span>8472</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33914"></span>847A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33922"></span>8482</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33930"></span>848A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33938"></span>8492</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33946"></span>849A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33954"></span>84A2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33962"></span>84AA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33970"></span>84B2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33978"></span>84BA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33986"></span>84C2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="33994"></span>84CA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34002"></span>84D2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34010"></span>84DA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34018"></span>84E2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34026"></span>84EA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34034"></span>84F2</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34042"></span>84FA</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34050"></span>8502</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-<tr>
-<td class="address-1"><span id="34058"></span>850A</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00</td>
+<td class="instruction">DEFS $DF</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
@@ -12386,7 +12261,7 @@ Room $FF
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35449" class="description">8A79: Menu select: main menu items ($8B82), called from <a href="asm.html#52588">CD6C</a></div>
+<div id="35449" class="description">8A79: Play the main menu melody ($8B82), called from <a href="asm.html#52588">CD6C</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -12408,7 +12283,7 @@ Used by the routine at <a href="asm.html#52588">CD6C</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35454" class="description">8A7E: Menu select: victory-screen items ($8C3E), called from <a href="asm.html#49237">C055</a></div>
+<div id="35454" class="description">8A7E: Play the victory-screen melody ($8C3E), called from <a href="asm.html#49237">C055</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -12430,7 +12305,7 @@ Used by the routine at <a href="asm.html#49237">C055</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35459" class="description">8A83: Menu select: death/edge-of-map items ($8C74), called from <a href="asm.html#49024">BF80</a></div>
+<div id="35459" class="description">8A83: Play the death/edge-of-map melody ($8C74), called from <a href="asm.html#49024">BF80</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -12619,7 +12494,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <span id="35503"></span>
 <div class="comments">
 <div class="paragraph">
-(HL) on entry points at a length-prefixed list of jump targets; HL is advanced past it. Loops B times (from <a href="asm.html#35663">8B4F</a>/<a href="asm.html#35511">8AB7</a>): reads keyboard port $00FE, flashes the border while idle (<a href="asm.html#35542">8AD6</a>), then decodes the raw port value through the table at <a href="asm.html#35671">8B57</a> twice to get a row/column pair. The exact mapping to a specific menu action is not confirmed.
+(HL) on entry points at a length-prefixed playlist (see <a href="asm.html#35714">8B82</a>); HL is advanced past it. Loops B times (repeat count from the entry's header, from <a href="asm.html#35663">8B4F</a>/<a href="asm.html#35511">8AB7</a>): reads keyboard port $00FE to check for a keypress between phrases (<a href="asm.html#35542">8AD6</a>, no visible border flash despite the port-$FE writes), then decodes two phrase bytes through the pitch table at <a href="asm.html#35671">8B57</a>/<a href="asm.html#35680">8B60</a>. Each phrase byte's bits 0-4 select a note (0-31, <a href="asm.html#35680">8B60</a>); bits 6-7 of the second byte in the pair (extracted at <a href="asm.html#35607">8B17</a> via RLCA/RLCA/AND $03) select a duration class (1-4) that sets the note's playback countdown length (<a href="asm.html#35614">8B1E</a>). Bit 5 is not used anywhere in this decode. Confirmed live: this whole routine (and its <a href="asm.html#35623">8B27</a>-<a href="asm.html#35656">8B48</a> tail) is what's re-invoked continuously while the menu idles, and its tail sets bit 4 of port $FE (the real beeper/EAR output, <a href="asm.html#35623">8B27</a>) on one specific countdown condition - this is the actual playback of the phrase data, the source of the continuous "menu music".
 </div>
 </div>
 </td>
@@ -12769,7 +12644,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-1"><span id="35550"></span>8ADE</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="6">A = the first raw port value, masked to 5 bits</td>
+<td class="comment-1" rowspan="6">A = the first phrase byte, masked to a note index (bits 0-4, 0-31)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35551"></span>8ADF</td>
@@ -12794,12 +12669,12 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-1"><span id="35557"></span>8AE5</td>
 <td class="instruction">CALL <a href="#35671">$8B57</a></td>
-<td class="comment-1" rowspan="1">Look up A in the byte table at <a href="asm.html#35680">8B60</a></td>
+<td class="comment-1" rowspan="1">Look up the note's pitch/period in <a href="asm.html#35680">8B60</a></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35560"></span>8AE8</td>
 <td class="instruction">POP HL</td>
-<td class="comment-1" rowspan="6">C = decoded first value; A = a second raw port value</td>
+<td class="comment-1" rowspan="6">C = first note's pitch period; A = the second (raw) phrase byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35561"></span>8AE9</td>
@@ -12824,12 +12699,12 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-1"><span id="35569"></span>8AF1</td>
 <td class="instruction">CALL <a href="#35671">$8B57</a></td>
-<td class="comment-1" rowspan="1">Look up A in the byte table at <a href="asm.html#35680">8B60</a></td>
+<td class="comment-1" rowspan="1">Look up the second note's pitch/period in <a href="asm.html#35680">8B60</a></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35572"></span>8AF4</td>
 <td class="instruction">LD E,C</td>
-<td class="comment-1" rowspan="6">Compare decoded C against a rotated copy of itself; adjust A</td>
+<td class="comment-1" rowspan="6">Compare the two decoded pitch periods; adjust A</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35573"></span>8AF5</td>
@@ -12854,7 +12729,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-2"><span id="35581"></span>8AFD</td>
 <td class="instruction">INC A</td>
-<td class="comment-1" rowspan="8">Save the two decoded values; test each against $1F (border cases)</td>
+<td class="comment-1" rowspan="8">Save the two decoded pitch periods; flag if either note index was 0 (rest)</td>
 </tr>
 <tr>
 <td class="address-2"><span id="35582"></span>8AFE</td>
@@ -12887,7 +12762,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-2"><span id="35594"></span>8B0A</td>
 <td class="instruction">LD ($8B32),A</td>
-<td class="comment-1" rowspan="6">Save more comparison flags for the values just decoded</td>
+<td class="comment-1" rowspan="6">Save more rest-flags for the notes just decoded</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35597"></span>8B0D</td>
@@ -12962,7 +12837,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-2"><span id="35623"></span>8B27</td>
 <td class="instruction">DEC C</td>
-<td class="comment-1" rowspan="14">Decrement C then D toward 0, wrapping via a self-modified operand</td>
+<td class="comment-1" rowspan="14">Decrement C then D toward 0, each wrapping via its own self-modified reload operand and toggling a bit of A on underflow (C -&gt; bit 0, D -&gt; bit 1). Only bit 1 (D's toggle) is ever tested (AND $02) to decide the OUT value below; C's toggle (bit 0) is computed but never read - so only the second decoded note (D's period, see <a href="asm.html#35569">8AF1</a>) actually drives the audible tone, not the first</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35624"></span>8B28</td>
@@ -13019,7 +12894,7 @@ Used by the routine at <a href="asm.html#35462">8A86</a>.
 <tr>
 <td class="address-2"><span id="35649"></span>8B41</td>
 <td class="instruction">OUT ($FE),A</td>
-<td class="comment-1" rowspan="6">Output the resulting value to the border; E = its value</td>
+<td class="comment-1" rowspan="6">Output the resulting value ($10 = tone on, from D's underflow toggle, or $00 = silent) to port $FE; E = its value</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35651"></span>8B43</td>
@@ -13135,11 +13010,24 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35680" class="description">8B60: Data block at 8B60</div>
+<div id="35680" class="description">8B60: 32-note chromatic pitch/period table for the beeper music engine</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="35680"></span>
+<div class="comments">
+<div class="paragraph">
+32 bytes, indexed 0-31 by <a href="asm.html#35671">8B57</a>. Consecutive values' ratios all cluster tightly around 1.059 = 2^(1/12), the equal-temperament semitone ratio, confirming this is a period table for a 1-bit tone generator spanning roughly 2.5 octaves (higher index = shorter period = higher pitch). Entry 0 ($00) fits the same geometric progression only when read as $100 (256), not literal zero - i.e. the lowest note's period wraps through a byte-sized counter.
+</div>
+<div class="paragraph">
+Absolute frequencies computed by simulating the exact fixed T-state cost of <a href="asm.html#35623">8B27</a>'s loop body (both branch paths) at 3.5MHz, since only entry 31's/entry 0's role as D's reload value (see <a href="asm.html#35623">8B27</a>) actually gates the tone. Entry 0 ($100) = ~71Hz (near C#2/D2); entry 31 ($2D) = ~401Hz (near G4) - a ~2.5-octave chromatic run from the low D-ish range up to G4.
+</div>
 </div>
 </td>
 </tr>
@@ -13169,51 +13057,151 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35714" class="description">8B82: Data block at 8B82</div>
+<div id="35714" class="description">8B82: Main menu melody (see <a href="asm.html#35462">8A86</a>)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="35714"></span>
+<div class="comments">
+<div class="paragraph">
+Each entry is 3 bytes: a header byte followed by a 2-byte address, ending with a $00 header. This is a music playlist, not a key list: by ear, the header's low nibble is a repeat count and the high nibble ($80/$A0/$C0/$E0) selects an effect (plain/echo/drums/...) applied to the phrase at the given address; several entries reuse the same phrase address with a different effect/repeat. <a href="asm.html#35462">8A86</a> still treats the header generically (as a wait-count and two bits fed to $8AD9/$8B36) since the effect selection itself hasn't been isolated in the code yet.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="35714"></span>8B82</td>
-<td class="instruction">DEFB $81,$B3,$8B,$C1,$B3,$8B,$E2,$B3</td>
+<td class="instruction">DEFB $81</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35722"></span>8B8A</td>
-<td class="instruction">DEFB $8B,$E1,$C4,$8B,$E1,$B3,$8B,$A1</td>
+<td class="address-1"><span id="35715"></span>8B83</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35717"></span>8B85</td>
+<td class="instruction">DEFB $C1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35718"></span>8B86</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35720"></span>8B88</td>
+<td class="instruction">DEFB $E2</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35721"></span>8B89</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35723"></span>8B8B</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35724"></span>8B8C</td>
+<td class="instruction">DEFW <a href="#35780">$8BC4</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35726"></span>8B8E</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35727"></span>8B8F</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35729"></span>8B91</td>
+<td class="instruction">DEFB $A1</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35730"></span>8B92</td>
-<td class="instruction">DEFB $1C,$8C,$E1,$1C,$8C,$E1,$D9,$8B</td>
+<td class="instruction">DEFW <a href="#35868">$8C1C</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35732"></span>8B94</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35733"></span>8B95</td>
+<td class="instruction">DEFW <a href="#35868">$8C1C</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35735"></span>8B97</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35736"></span>8B98</td>
+<td class="instruction">DEFW <a href="#35801">$8BD9</a></td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35738"></span>8B9A</td>
-<td class="instruction">DEFB $E1,$A7,$8B,$E2,$B3,$8B,$E1,$C4</td>
+<td class="instruction">DEFB $E1</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35746"></span>8BA2</td>
-<td class="instruction">DEFB $8B,$81,$B3,$8B,$00,$0B,$C0,$40</td>
+<td class="address-1"><span id="35739"></span>8B9B</td>
+<td class="instruction">DEFW <a href="#35751">$8BA7</a></td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35754"></span>8BAA</td>
-<td class="instruction">DEFB $C0,$40,$C0,$40,$40,$40,$40,$FF</td>
+<td class="address-1"><span id="35741"></span>8B9D</td>
+<td class="instruction">DEFB $E2</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35762"></span>8BB2</td>
-<td class="instruction">DEFB $00,$0C</td>
+<td class="address-1"><span id="35742"></span>8B9E</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35744"></span>8BA0</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35745"></span>8BA1</td>
+<td class="instruction">DEFW <a href="#35780">$8BC4</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35747"></span>8BA3</td>
+<td class="instruction">DEFB $81</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35748"></span>8BA4</td>
+<td class="instruction">DEFW <a href="#35763">$8BB3</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35750"></span>8BA6</td>
+<td class="instruction">DEFB $00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35764" class="description">8BB4: Message at 8BB4</div>
+<div id="35751" class="description">8BA7: Data block at 8BA7</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13222,368 +13210,117 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="35764"></span>8BB4</td>
-<td class="instruction">DEFM "MQTRQm"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35770" class="description">8BBA: Data block at 8BBA</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35770"></span>8BBA</td>
-<td class="instruction">DEFB $EB,$6D,$CD,$45,$FF,$01,$05,$08</td>
+<td class="address-1"><span id="35751"></span>8BA7</td>
+<td class="instruction">DEFB $0B,$C0,$40,$C0,$40,$C0,$40,$40</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35778"></span>8BC2</td>
-<td class="instruction">DEFB $05,$01,$0E,$99,$17</td>
+<td class="address-1"><span id="35759"></span>8BAF</td>
+<td class="instruction">DEFB $40,$40,$FF,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35783" class="description">8BC7: Message at 8BC7</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35783"></span>8BC7</td>
-<td class="instruction">DEFM "VwVT"</td>
+<td class="address-1"><span id="35763"></span>8BB3</td>
+<td class="instruction">DEFB $0C,$4D,$51,$54,$52,$51,$6D,$EB</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35787" class="description">8BCB: Data block at 8BCB</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35787"></span>8BCB</td>
-<td class="instruction">DEFB $B6,$14</td>
+<td class="address-1"><span id="35771"></span>8BBB</td>
+<td class="instruction">DEFB $6D,$CD,$45,$FF,$01,$05,$08,$05</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35789" class="description">8BCD: Message at 8BCD</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35789"></span>8BCD</td>
-<td class="instruction">DEFM "rtrq"</td>
+<td class="address-1"><span id="35779"></span>8BC3</td>
+<td class="instruction">DEFB $01</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35793" class="description">8BD1: Data block at 8BD1</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
+<td class="address-1"><span id="35780"></span>8BC4</td>
+<td class="instruction">DEFB $0E,$99,$17,$56,$77,$56,$54,$B6</td>
+<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35793"></span>8BD1</td>
-<td class="instruction">DEFB $FF,$01,$03,$05,$01,$06,$01,$06</td>
+<td class="address-1"><span id="35788"></span>8BCC</td>
+<td class="instruction">DEFB $14,$72,$74,$72,$71,$FF,$01,$03</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35796"></span>8BD4</td>
+<td class="instruction">DEFB $05,$01,$06,$01,$06</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35801"></span>8BD9</td>
-<td class="instruction">DEFB $32,$85,$08</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35804" class="description">8BDC: Message at 8BDC</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35804"></span>8BDC</td>
-<td class="instruction">DEFM "meHM"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35808" class="description">8BE0: Data block at 8BE0</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35808"></span>8BE0</td>
-<td class="instruction">DEFB $A6,$14</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35810" class="description">8BE2: Message at 8BE2</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35810"></span>8BE2</td>
-<td class="instruction">DEFM "OFho"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35814" class="description">8BE6: Data block at 8BE6</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35814"></span>8BE6</td>
-<td class="instruction">DEFB $AA,$0D</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35816" class="description">8BE8: Message at 8BE8</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35816"></span>8BE8</td>
-<td class="instruction">DEFM "QJMQ"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35820" class="description">8BEC: Data block at 8BEC</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35820"></span>8BEC</td>
-<td class="instruction">DEFB $B2,$0F</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35822" class="description">8BEE: Message at 8BEE</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35822"></span>8BEE</td>
-<td class="instruction">DEFM "FKOR"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35826" class="description">8BF2: Data block at 8BF2</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35826"></span>8BF2</td>
-<td class="instruction">DEFB $AA,$11</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35828" class="description">8BF4: Message at 8BF4</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35828"></span>8BF4</td>
-<td class="instruction">DEFM "MJMQ"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35832" class="description">8BF8: Data block at 8BF8</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35832"></span>8BF8</td>
-<td class="instruction">DEFB $B2,$0A</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35834" class="description">8BFA: Message at 8BFA</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35834"></span>8BFA</td>
-<td class="instruction">DEFM "OFOJ"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35838" class="description">8BFE: Data block at 8BFE</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35838"></span>8BFE</td>
-<td class="instruction">DEFB $AB,$0F</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35840" class="description">8C00: Message at 8C00</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35840"></span>8C00</td>
-<td class="instruction">DEFM "fOkf"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35844" class="description">8C04: Data block at 8C04</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35844"></span>8C04</td>
-<td class="instruction">DEFB $B1,$0D</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35846" class="description">8C06: Message at 8C06</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35846"></span>8C06</td>
-<td class="instruction">DEFM "HEmh"</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35850" class="description">8C0A: Data block at 8C0A</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35850"></span>8C0A</td>
-<td class="instruction">DEFB $FF,$01,$08,$01,$08,$01,$08,$0A</td>
+<td class="instruction">DEFB $32,$85,$08,$6D,$65,$48,$4D,$A6</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35858"></span>8C12</td>
-<td class="instruction">DEFB $0B,$05,$03,$06,$0B,$06,$03,$01</td>
+<td class="address-1"><span id="35809"></span>8BE1</td>
+<td class="instruction">DEFB $14,$4F,$46,$68,$6F,$AA,$0D,$51</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35866"></span>8C1A</td>
-<td class="instruction">DEFB $05,$01,$19,$D4,$11,$0D</td>
+<td class="address-1"><span id="35817"></span>8BE9</td>
+<td class="instruction">DEFB $4A,$4D,$51,$B2,$0F,$46,$4B,$4F</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35872" class="description">8C20: Message at 8C20</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35872"></span>8C20</td>
-<td class="instruction">DEFM "kMQtQMkHK"</td>
+<td class="address-1"><span id="35825"></span>8BF1</td>
+<td class="instruction">DEFB $52,$AA,$11,$4D,$4A,$4D,$51,$B2</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35881" class="description">8C29: Data block at 8C29</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="35881"></span>8C29</td>
-<td class="instruction">DEFB $F4,$11,$0D</td>
+<td class="address-1"><span id="35833"></span>8BF9</td>
+<td class="instruction">DEFB $0A,$4F,$46,$4F,$4A,$AB,$0F,$66</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="35884" class="description">8C2C: Message at 8C2C</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
+<td class="address-1"><span id="35841"></span>8C01</td>
+<td class="instruction">DEFB $4F,$6B,$66,$B1,$0D,$48,$45,$6D</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35849"></span>8C09</td>
+<td class="instruction">DEFB $68,$FF,$01,$08,$01,$08,$01,$08</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35857"></span>8C11</td>
+<td class="instruction">DEFB $0A,$0B,$05,$03,$06,$0B,$06,$03</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35865"></span>8C19</td>
+<td class="instruction">DEFB $01,$05,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35868"></span>8C1C</td>
+<td class="instruction">DEFB $19,$D4,$11,$0D,$6B,$4D,$51,$74</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35876"></span>8C24</td>
+<td class="instruction">DEFB $51,$4D,$6B,$48,$4B,$F4,$11,$0D</td>
+<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35884"></span>8C2C</td>
-<td class="instruction">DEFM "kMEfeC"</td>
+<td class="instruction">DEFB $6B,$4D,$45,$66,$65,$43,$E1,$41</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35892"></span>8C34</td>
+<td class="instruction">DEFB $FF,$01,$08,$01,$08,$01,$08,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35900"></span>8C3C</td>
+<td class="instruction">DEFB $08,$0D</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35890" class="description">8C32: Data block at 8C32</div>
+<div id="35902" class="description">8C3E: Victory-screen melody (see <a href="asm.html#35462">8A86</a>)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13592,22 +13329,52 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="35890"></span>8C32</td>
-<td class="instruction">DEFB $E1,$41,$FF,$01,$08,$01,$08,$01</td>
+<td class="routine-comment" colspan="5">
+<span id="35902"></span>
+<div class="comments">
+<div class="paragraph">
+Same 3-byte playlist format as <a href="asm.html#35714">8B82</a>. All three entries here point at the same phrase, just with different effect/repeat headers.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="35902"></span>8C3E</td>
+<td class="instruction">DEFB $81</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35898"></span>8C3A</td>
-<td class="instruction">DEFB $08,$01,$08,$0D,$81,$48,$8C,$C1</td>
+<td class="address-1"><span id="35903"></span>8C3F</td>
+<td class="instruction">DEFW <a href="#35912">$8C48</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35905"></span>8C41</td>
+<td class="instruction">DEFB $C1</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35906"></span>8C42</td>
-<td class="instruction">DEFB $48,$8C,$E1,$48,$8C,$00</td>
+<td class="instruction">DEFW <a href="#35912">$8C48</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35908"></span>8C44</td>
+<td class="instruction">DEFB $E1</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35909"></span>8C45</td>
+<td class="instruction">DEFW <a href="#35912">$8C48</a></td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35911"></span>8C47</td>
+<td class="instruction">DEFB $00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35912" class="description">8C48: Message at 8C48</div>
+<div id="35912" class="description">8C48: Data block at 8C48</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13617,11 +13384,36 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 </tr>
 <tr>
 <td class="address-1"><span id="35912"></span>8C48</td>
-<td class="instruction">DEFM "!HikniUPMhTPMfURMfNURdTPKhKPTi"</td>
+<td class="instruction">DEFB $21,$48,$69,$6B,$6E,$69,$55,$50</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35920"></span>8C50</td>
+<td class="instruction">DEFB $4D,$68,$54,$50,$4D,$66,$55,$52</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35928"></span>8C58</td>
+<td class="instruction">DEFB $4D,$66,$4E,$55,$52,$64,$54,$50</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35936"></span>8C60</td>
+<td class="instruction">DEFB $4B,$68,$4B,$50,$54,$69,$D0,$50</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35944"></span>8C68</td>
+<td class="instruction">DEFB $FF,$04,$06,$08,$0B,$09,$08,$06</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="35952"></span>8C70</td>
+<td class="instruction">DEFB $02,$04,$08,$04</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35942" class="description">8C66: Data block at 8C66</div>
+<div id="35956" class="description">8C74: Death/edge-of-map melody (see <a href="asm.html#35462">8A86</a>)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13630,22 +13422,32 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="35942"></span>8C66</td>
-<td class="instruction">DEFB $D0,$50,$FF,$04,$06,$08,$0B,$09</td>
+<td class="routine-comment" colspan="5">
+<span id="35956"></span>
+<div class="comments">
+<div class="paragraph">
+Same 3-byte playlist format as <a href="asm.html#35714">8B82</a>, but only a single entry - this screen has just one music phrase. Its address ($8C78) is the first byte right after the list's own terminator; the 21 bytes from there to <a href="asm.html#35981">8C8D</a> are presumably the phrase data itself (not further list entries).
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="35956"></span>8C74</td>
+<td class="instruction">DEFB $C1</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35950"></span>8C6E</td>
-<td class="instruction">DEFB $08,$06,$02,$04,$08,$04,$C1,$78</td>
+<td class="address-1"><span id="35957"></span>8C75</td>
+<td class="instruction">DEFW <a href="#35960">$8C78</a></td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="35958"></span>8C76</td>
-<td class="instruction">DEFB $8C,$00,$0E,$4D,$F2</td>
+<td class="address-1"><span id="35959"></span>8C77</td>
+<td class="instruction">DEFB $00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="35963" class="description">8C7B: Message at 8C7B</div>
+<div id="35960" class="description">8C78: Data block at 8C78</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -13654,18 +13456,9 @@ Used by the routine at <a href="asm.html#35503">8AAF</a>.
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="35963"></span>8C7B</td>
-<td class="instruction">DEFM "TvTRy"</td>
+<td class="address-1"><span id="35960"></span>8C78</td>
+<td class="instruction">DEFB $0E,$4D,$F2,$54,$76,$54,$52,$79</td>
 <td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="35968" class="description">8C80: Data block at 8C80</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35968"></span>8C80</td>
@@ -13919,79 +13712,94 @@ Called from <a href="asm.html#52588">CD6C</a> ("Sound of evil laughter" is one s
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="36052"></span>
+<div class="comments">
+<div class="paragraph">
+The "ha-ha-ha-ha" bitstream played by <a href="asm.html#36010">8CAA</a> (heard on the intro and on the <a href="asm.html#47207">B867</a> capture/ambush - confirmed by ear, not on ordinary combat). 172 bytes total ($8CD4-$8D7F): a 2-byte bit-count ($00AC = 172 bits) followed by 170 bytes of bitstream.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-1"><span id="36052"></span>8CD4</td>
-<td class="instruction">DEFB $AC,$00,$0F,$C0,$E1,$F0,$1F,$C0,$FC,$07,$C0,$1C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $AC,$00</td>
+<td class="comment-1" rowspan="1">Bit count ($00AC = 172 bits)</td>
 </tr>
 <tr>
-<td class="address-1"><span id="36064"></span>8CE0</td>
-<td class="instruction">DEFB $0E,$01,$F0,$3F,$E0,$03,$C0,$7F,$01,$F8,$1F,$81</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36054"></span>8CD6</td>
+<td class="instruction">DEFB $0F,$C0,$E1,$F0,$1F,$C0,$FC,$07,$C0,$1C,$0E,$01</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36076"></span>8CEC</td>
-<td class="instruction">DEFB $F8,$20,$F8,$1F,$E0,$7E,$03,$F0,$00,$7C,$03,$FC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36066"></span>8CE2</td>
+<td class="instruction">DEFB $F0,$3F,$E0,$03,$C0,$7F,$01,$F8,$1F,$81,$F8,$20</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36088"></span>8CF8</td>
-<td class="instruction">DEFB $1F,$80,$3F,$C0,$03,$E0,$1F,$E0,$FC,$03,$F0,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36078"></span>8CEE</td>
+<td class="instruction">DEFB $F8,$1F,$E0,$7E,$03,$F0,$00,$7C,$03,$FC,$1F,$80</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36100"></span>8D04</td>
-<td class="instruction">DEFB $1E,$01,$F8,$0F,$C0,$7E,$0E,$01,$F0,$1F,$C0,$FC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36090"></span>8CFA</td>
+<td class="instruction">DEFB $3F,$C0,$03,$E0,$1F,$E0,$FC,$03,$F0,$00,$1E,$01</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36112"></span>8D10</td>
-<td class="instruction">DEFB $1F,$07,$C0,$7E,$07,$F8,$1F,$81,$F0,$7C,$07,$E0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36102"></span>8D06</td>
+<td class="instruction">DEFB $F8,$0F,$C0,$7E,$0E,$01,$F0,$1F,$C0,$FC,$1F,$07</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36124"></span>8D1C</td>
-<td class="instruction">DEFB $3F,$C0,$F8,$1F,$07,$E6,$3F,$01,$FC,$1F,$81,$F0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36114"></span>8D12</td>
+<td class="instruction">DEFB $C0,$7E,$07,$F8,$1F,$81,$F0,$7C,$07,$E0,$3F,$C0</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36136"></span>8D28</td>
-<td class="instruction">DEFB $7C,$43,$E0,$3F,$81,$F0,$3E,$1F,$C0,$7E,$03,$FC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36126"></span>8D1E</td>
+<td class="instruction">DEFB $F8,$1F,$07,$E6,$3F,$01,$FC,$1F,$81,$F0,$7C,$43</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36148"></span>8D34</td>
-<td class="instruction">DEFB $1F,$81,$F0,$7E,$01,$F8,$0F,$E0,$7C,$07,$C3,$F0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36138"></span>8D2A</td>
+<td class="instruction">DEFB $E0,$3F,$81,$F0,$3E,$1F,$C0,$7E,$03,$FC,$1F,$81</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36160"></span>8D40</td>
-<td class="instruction">DEFB $0F,$C0,$7F,$03,$E0,$7C,$1F,$00,$7E,$03,$F8,$3F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36150"></span>8D36</td>
+<td class="instruction">DEFB $F0,$7E,$01,$F8,$0F,$E0,$7C,$07,$C3,$F0,$0F,$C0</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36172"></span>8D4C</td>
-<td class="instruction">DEFB $03,$E0,$F0,$01,$F0,$1F,$C0,$FF,$07,$81,$E0,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36162"></span>8D42</td>
+<td class="instruction">DEFB $7F,$03,$E0,$7C,$1F,$00,$7E,$03,$F8,$3F,$03,$E0</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36184"></span>8D58</td>
-<td class="instruction">DEFB $F8,$0F,$E0,$1F,$83,$C0,$F0,$10,$7E,$07,$F0,$1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36174"></span>8D4E</td>
+<td class="instruction">DEFB $F0,$01,$F0,$1F,$C0,$FF,$07,$81,$E0,$00,$F8,$0F</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36196"></span>8D64</td>
-<td class="instruction">DEFB $83,$81,$F8,$18,$3F,$03,$F8,$1F,$83,$81,$38,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36186"></span>8D5A</td>
+<td class="instruction">DEFB $E0,$1F,$83,$C0,$F0,$10,$7E,$07,$F0,$1F,$83,$81</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36208"></span>8D70</td>
-<td class="instruction">DEFB $07,$F0,$1F,$83,$F0,$00,$01,$C0,$30,$1E,$1F,$E0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36198"></span>8D66</td>
+<td class="instruction">DEFB $F8,$18,$3F,$03,$F8,$1F,$83,$81,$38,$06,$07,$F0</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="36220"></span>8D7C</td>
-<td class="instruction">DEFB $1F,$80,$E0,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="address-1"><span id="36210"></span>8D72</td>
+<td class="instruction">DEFB $1F,$83,$F0,$00,$01,$C0,$30,$1E,$1F,$E0,$1F,$80</td>
+<td class="comment-1" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="36222"></span>8D7E</td>
+<td class="instruction">DEFB $E0,$01</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="36224" class="description">8D80: Data block at 8D80</div>
@@ -20367,77 +20175,77 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <tr>
 <td class="address-1"><span id="44603"></span>AE3B</td>
 <td class="instruction">DEFB $18,$34,$66,$64,$6E,$42,$26,$E7</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$41 'A'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44611"></span>AE43</td>
 <td class="instruction">DEFB $F8,$54,$46,$6C,$46,$42,$4C,$F8</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$42 'B'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44619"></span>AE4B</td>
 <td class="instruction">DEFB $3C,$62,$C6,$80,$C0,$C2,$46,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$43 'C'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44627"></span>AE53</td>
 <td class="instruction">DEFB $F8,$46,$63,$62,$43,$63,$66,$F8</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$44 'D'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44635"></span>AE5B</td>
 <td class="instruction">DEFB $BC,$66,$42,$78,$44,$41,$63,$EF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$45 'E'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44643"></span>AE63</td>
 <td class="instruction">DEFB $BC,$46,$42,$70,$48,$40,$60,$30</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$46 'F'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44651"></span>AE6B</td>
 <td class="instruction">DEFB $3C,$66,$C2,$80,$8A,$C6,$6A,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$47 'G'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44659"></span>AE73</td>
 <td class="instruction">DEFB $C0,$9C,$EE,$C6,$84,$88,$0C,$06</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$48 'H'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44667"></span>AE7B</td>
 <td class="instruction">DEFB $70,$28,$10,$08,$18,$18,$14,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$49 'I'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44675"></span>AE83</td>
 <td class="instruction">DEFB $05,$03,$03,$03,$03,$81,$46,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4A 'J'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44683"></span>AE8B</td>
 <td class="instruction">DEFB $80,$C7,$4C,$D8,$F4,$AE,$C5,$E3</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4B 'K'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44691"></span>AE93</td>
 <td class="instruction">DEFB $C0,$60,$60,$60,$60,$61,$53,$7F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4C 'L'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44699"></span>AE9B</td>
 <td class="instruction">DEFB $83,$46,$6C,$51,$49,$43,$42,$A3</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4D 'M'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44707"></span>AEA3</td>
 <td class="instruction">DEFB $EE,$5B,$61,$41,$43,$66,$A6,$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4E 'N'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44715"></span>AEAB</td>
 <td class="instruction">DEFB $3C,$46,$83,$83,$83,$83,$46,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$4F 'O'</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20452,57 +20260,57 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <tr>
 <td class="address-1"><span id="44723"></span>AEB3</td>
 <td class="instruction">DEFB $78,$CC,$82,$C4,$78,$C0,$C0,$80</td>
-<td class="comment-1" rowspan="1">$50</td>
+<td class="comment-1" rowspan="1">$50 'P'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44731"></span>AEBB</td>
 <td class="instruction">DEFB $3C,$42,$83,$83,$92,$9B,$C4,$7B</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$51 'Q'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44739"></span>AEC3</td>
 <td class="instruction">DEFB $BC,$46,$63,$63,$46,$3C,$66,$F3</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$52 'R'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44747"></span>AECB</td>
 <td class="instruction">DEFB $3C,$7A,$40,$36,$03,$C3,$6E,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$53 'S'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44755"></span>AED3</td>
 <td class="instruction">DEFB $FF,$C2,$99,$10,$18,$18,$28,$70</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$54 'T'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44763"></span>AEDB</td>
 <td class="instruction">DEFB $20,$41,$83,$83,$C1,$A7,$6D,$39</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$55 'U'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44771"></span>AEE3</td>
 <td class="instruction">DEFB $81,$81,$C3,$C2,$A7,$62,$3C,$18</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$56 'V'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44779"></span>AEEB</td>
 <td class="instruction">DEFB $81,$C3,$D3,$D1,$DB,$CB,$F7,$62</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$57 'W'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44787"></span>AEF3</td>
 <td class="instruction">DEFB $C3,$E3,$50,$28,$1C,$6E,$E7,$C2</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$58 'X'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44795"></span>AEFB</td>
 <td class="instruction">DEFB $00,$81,$C3,$C6,$7D,$01,$62,$3C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$59 'Y'</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44803"></span>AF03</td>
 <td class="instruction">DEFB $7D,$F6,$84,$08,$10,$21,$5D,$FF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$5A 'Z'</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20511,83 +20319,86 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <div class="paragraph">
 <img alt="font4" src="images/udgs/font4.png" />
 </div>
+<div class="paragraph">
+Energy-bar antlers, upper half (15 glyphs, see <a href="asm.html#48951">BF37</a> - a fixed shape recoloured to show the energy level, not a growth sequence)
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="44811"></span>AF0B</td>
 <td class="instruction">DEFB $00,$07,$0C,$18,$10,$18,$18,$0E</td>
-<td class="comment-1" rowspan="1">$5B</td>
+<td class="comment-1" rowspan="1">$5B upper antler 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44819"></span>AF13</td>
 <td class="instruction">DEFB $00,$80,$03,$07,$0E,$0E,$0E,$07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$5C upper antler 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44827"></span>AF1B</td>
 <td class="instruction">DEFB $00,$00,$C1,$63,$07,$06,$06,$17</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$5D upper antler 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44835"></span>AF23</td>
 <td class="instruction">DEFB $00,$60,$F0,$80,$01,$03,$03,$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$5E upper antler 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44843"></span>AF2B</td>
 <td class="instruction">DEFB $00,$00,$30,$E8,$C0,$C0,$80,$80</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$5F upper antler 4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44851"></span>AF33</td>
 <td class="instruction">DEFB $00,$02,$04,$0C,$0C,$0C,$0E,$07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$60 upper antler 5</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44859"></span>AF3B</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$01,$01,$01,$05</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$61 upper antler 6</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44867"></span>AF43</td>
 <td class="instruction">DEFB $00,$00,$00,$F8,$FC,$CC,$D8,$C0</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$62 upper antler 7</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44875"></span>AF4B</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$00,$07,$0F,$1F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$63 upper antler 8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44883"></span>AF53</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$C0,$80</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$64 upper antler 9</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44891"></span>AF5B</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$0E,$1C,$30,$50</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$65 upper antler 10</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44899"></span>AF63</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$66 upper antler 11</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44907"></span>AF6B</td>
 <td class="instruction">DEFB $00,$00,$00,$1C,$30,$60,$60,$61</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$67 upper antler 12</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44915"></span>AF73</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$3E,$41,$BE,$7F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$68 upper antler 13</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44923"></span>AF7B</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$00,$80,$60,$90</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$69 upper antler 14</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20596,83 +20407,86 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <div class="paragraph">
 <img alt="font5" src="images/udgs/font5.png" />
 </div>
+<div class="paragraph">
+Energy-bar antlers, lower half (15 glyphs, see <a href="asm.html#48951">BF37</a> - a fixed shape recoloured to show the energy level, not a growth sequence)
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="44931"></span>AF83</td>
 <td class="instruction">DEFB $07,$03,$00,$00,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1">$6A</td>
+<td class="comment-1" rowspan="1">$6A lower antler 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44939"></span>AF8B</td>
 <td class="instruction">DEFB $83,$F0,$FF,$0F,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$6B lower antler 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44947"></span>AF93</td>
 <td class="instruction">DEFB $83,$E1,$5E,$FF,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$6C lower antler 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44955"></span>AF9B</td>
 <td class="instruction">DEFB $C3,$F3,$79,$1C,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$6D lower antler 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44963"></span>AFA3</td>
 <td class="instruction">DEFB $80,$C0,$E0,$F8,$7E,$1F,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$6E lower antler 4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44971"></span>AFAB</td>
 <td class="instruction">DEFB $03,$01,$00,$01,$03,$FF,$FC,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$6F lower antler 5</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44979"></span>AFB3</td>
 <td class="instruction">DEFB $8C,$E6,$F0,$7F,$9F,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$70 lower antler 6</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44987"></span>AFBB</td>
 <td class="instruction">DEFB $E0,$70,$3F,$DF,$E0,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$71 lower antler 7</td>
 </tr>
 <tr>
 <td class="address-1"><span id="44995"></span>AFC3</td>
 <td class="instruction">DEFB $78,$AF,$E1,$81,$01,$01,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$72 lower antler 8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45003"></span>AFCB</td>
 <td class="instruction">DEFB $B8,$FE,$CF,$97,$99,$D8,$F8,$70</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$73 lower antler 9</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45011"></span>AFD3</td>
 <td class="instruction">DEFB $70,$70,$98,$E0,$FC,$7F,$0F,$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$74 lower antler 10</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45019"></span>AFDB</td>
 <td class="instruction">DEFB $00,$00,$00,$00,$03,$CF,$FF,$FC</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$75 lower antler 11</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45027"></span>AFE3</td>
 <td class="instruction">DEFB $62,$53,$2F,$1F,$C0,$F0,$C0,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$76 lower antler 12</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45035"></span>AFEB</td>
 <td class="instruction">DEFB $E3,$C0,$80,$00,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$77 lower antler 13</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45043"></span>AFF3</td>
 <td class="instruction">DEFB $E8,$F4,$3A,$3A,$3C,$18,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$78 lower antler 14</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45051"></span>AFFB</td>
@@ -20861,23 +20675,26 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <div class="paragraph">
 <img alt="font9D" src="images/udgs/font9D.png" />
 </div>
+<div class="paragraph">
+"+1 life" wreath symbol, upper half (3 glyphs)
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="45339"></span>B11B</td>
 <td class="instruction">DEFB $00,$08,$1C,$0D,$02,$25,$32,$34</td>
-<td class="comment-1" rowspan="1">$9D</td>
+<td class="comment-1" rowspan="1">$9D wreath upper 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45347"></span>B123</td>
 <td class="instruction">DEFB $00,$00,$81,$00,$00,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$9E wreath upper 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45355"></span>B12B</td>
 <td class="instruction">DEFB $00,$10,$38,$B0,$40,$A4,$4C,$2C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$9F wreath upper 2</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20886,23 +20703,26 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <div class="paragraph">
 <img alt="fontA0" src="images/udgs/fontA0.png" />
 </div>
+<div class="paragraph">
+"+1 life" wreath symbol, lower half (3 glyphs)
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="45363"></span>B133</td>
 <td class="instruction">DEFB $0D,$02,$09,$1F,$0C,$00,$00,$00</td>
-<td class="comment-1" rowspan="1">$A0</td>
+<td class="comment-1" rowspan="1">$A0 wreath lower 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45371"></span>B13B</td>
 <td class="instruction">DEFB $00,$00,$81,$42,$18,$2A,$63,$41</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$A1 wreath lower 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45379"></span>B143</td>
 <td class="instruction">DEFB $B0,$40,$90,$F8,$30,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$A2 wreath lower 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45387"></span>B14B</td>
@@ -21016,23 +20836,26 @@ Called from <a href="asm.html#52588">CD6C</a>. Clears the screen, computes a hig
 <div class="paragraph">
 <img alt="fontB8" src="images/udgs/fontB8.png" />
 </div>
+<div class="paragraph">
+Sword symbol used as the main-menu selection pointer (3 glyphs)
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="45555"></span>B1F3</td>
 <td class="instruction">DEFB $02,$02,$6A,$D6,$6A,$02,$02,$00</td>
-<td class="comment-1" rowspan="1">$B8</td>
+<td class="comment-1" rowspan="1">$B8 sword 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45563"></span>B1FB</td>
 <td class="instruction">DEFB $00,$00,$FF,$5F,$FF,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$B9 sword 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45571"></span>B203</td>
 <td class="instruction">DEFB $00,$00,$F8,$FC,$F8,$00,$00,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">$BA sword 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="45579"></span>B20B</td>
@@ -26221,7 +26044,7 @@ Used by the routines at <a href="asm.html#48547">BDA3</a> and <a href="asm.html#
 <span id="48677"></span>
 <div class="comments">
 <div class="paragraph">
-Called from <a href="asm.html#48547">BDA3</a>/<a href="asm.html#48608">BDE0</a> on a hazard/door-guard hit. Only acts while idle ($CC7B=0). If the energy byte at $BF6F is already $02 (critical), instead sets Robin's animation to the death frame ($6E) and clears a flag at $BC67; otherwise just decrements the energy byte. Either way redraws the energy bar via <a href="asm.html#48951">BF37</a>.
+Called from <a href="asm.html#48547">BDA3</a>/<a href="asm.html#48608">BDE0</a> on a hazard/door-guard hit. Only acts while idle ($CC7B=0). If the energy byte at $BF6F is already $02 (critical), instead sets Robin's animation to code $6E and clears a flag at $BC67; otherwise just decrements the energy byte. Either way redraws the energy bar via <a href="asm.html#48951">BF37</a>. Despite the name this isn't necessarily permanent death: <a href="asm.html#51687">C9E7</a> dispatches code $6E to <a href="asm.html#52125">CB9D</a>, which plays a short border-flash (not the "evil laughter" heard on capture/game-over), penalises the kill counter, and lets Robin recover after a timer - a "critical hit/stagger" reaction, not a game-over. The actual death/game-over sequence has not been located; it may simply be the scripted ambush/capture at <a href="asm.html#47207">B867</a> (the only other place "evil laughter" plays).
 </div>
 </div>
 </td>
@@ -27010,6 +26833,16 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#48677">BE25</a>, <a href="asm.html#48817">BEB1</a>, <a href="asm.html#52195">CBE3</a> and <a href="asm.html#56088">DB18</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="48951"></span>
+<div class="comments">
+<div class="paragraph">
+The energy display itself is a fixed pair of branching antlers drawn from the font glyphs at <a href="asm.html#44811">AF0B</a>/<a href="asm.html#44931">AF83</a> (15 static glyphs each, forming the upper/lower halves); this routine doesn't draw them, it recolours a 63-byte attribute row at $5A40 from the energy value at $BF6F ($00-$0F, split into an ink/paper-ish bit pattern), so the antler artwork itself never changes shape - only its colour reflects the current energy level.
 </div>
 </div>
 </td>
@@ -28146,7 +27979,7 @@ Used by the routine at <a href="asm.html#49327">C0AF</a>.
 <span id="49361"></span>
 <div class="comments">
 <div class="paragraph">
-A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see <a href="asm.html#31225">79F9</a> token format). Looks up the block's pixel data address in the table at <a href="asm.html#23296">5B00</a>, draws its 4-byte-wide rows into the pixel area at <a href="asm.html#60160">EB00</a>, and its attribute rows into the shadow attribute area at $E800, adjusting X for mirrored blocks along the way.
+A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see <a href="asm.html#31225">79F9</a> token format). Looks up the block's data address (see <a href="asm.html#23464">5BA8</a> for its header-byte format) in the table at <a href="asm.html#23296">5B00</a>, draws (header AND $1F) x 8 pixel rows (4 bytes/row) into <a href="asm.html#60160">EB00</a>, then (header AND $7) attribute rows (4 bytes/row, or a single byte reused if the header's flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along the way.
 </div>
 </div>
 </td>
@@ -28260,22 +28093,19 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49395"></span>C0F3</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Header byte AND $07 = attribute row count, patched into <a href="asm.html#49485">C14D</a>'s operand</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49396"></span>C0F4</td>
 <td class="instruction">AND $07</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49398"></span>C0F6</td>
 <td class="instruction">LD ($C14C),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49401"></span>C0F9</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49402"></span>C0FA</td>
@@ -28313,7 +28143,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49415"></span>C107</td>
 <td class="instruction">LD DE,$0020</td>
-<td class="comment-1" rowspan="44">Copy the block's pixel rows into the shadow screen, 4 bytes at a time</td>
+<td class="comment-1" rowspan="4">DE = row stride ($0020); HL/DE = pixel dest/source (via EXX+stack)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49418"></span>C10A</td>
@@ -28330,6 +28160,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49421"></span>C10D</td>
 <td class="instruction">LD A,(DE)</td>
+<td class="comment-1" rowspan="7">Header AND $1F, x8 (via RLCA x3/AND $F8) = pixel row count in C</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49422"></span>C10E</td>
@@ -28358,6 +28189,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49429"></span>C115</td>
 <td class="instruction">LD B,$04</td>
+<td class="comment-1" rowspan="13">Copy 4 bytes per pixel row, C rows total</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49431"></span>C117</td>
@@ -28410,6 +28242,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49445"></span>C125</td>
 <td class="instruction">EX AF,AF'</td>
+<td class="comment-1" rowspan="6">Header bit 6 set -&gt; flat-attribute flag (A=$00), else A=$13</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49446"></span>C126</td>
@@ -28434,10 +28267,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49454"></span>C12E</td>
 <td class="instruction">LD ($C151),A</td>
+<td class="comment-1" rowspan="1">Patch the attribute loop's INC DE with A (enables/disables advance)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49457"></span>C131</td>
 <td class="instruction">POP HL</td>
+<td class="comment-1" rowspan="13">Compute the shadow attribute address from the pixel address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49458"></span>C132</td>
@@ -34857,7 +34692,7 @@ If Robin's animation code ($CC7B) is non-zero, waits for it to finish (or, for c
 <tr>
 <td class="address-1"><span id="51699"></span>C9F3</td>
 <td class="instruction">CALL Z,<a href="#52125">$CB9D</a></td>
-<td class="comment-1" rowspan="1">Finish a sword kill</td>
+<td class="comment-1" rowspan="1">Robin's critical-hit stagger</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51702"></span>C9F6</td>
@@ -36010,7 +35845,7 @@ This entry point is used by the routines at <a href="asm.html#52255">CC1F</a> an
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="52125" class="description">CB9D: Finish a sword kill: adjust the counter, cost energy, pick a frame</div>
+<div id="52125" class="description">CB9D: Robin's critical-hit stagger: penalise the counter, recover after a timer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36026,7 +35861,7 @@ Used by the routine at <a href="asm.html#51687">C9E7</a>.
 <span id="52125"></span>
 <div class="comments">
 <div class="paragraph">
-Called from <a href="asm.html#51687">C9E7</a>'s action code $6E. Clears the animation timer and cancels the border-flash sound, adjusts the kill counter at $D5A4 (2 decrements, offsetting <a href="asm.html#55578">D91A</a>'s own increment to a net -1), arms a $001E timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into <a href="asm.html#52215">CBF7</a> to store it.
+Called from <a href="asm.html#51687">C9E7</a>'s action code $6E - set by <a href="asm.html#48677">BE25</a> when a hazard/guard hits Robin while his energy is already critical. Clears the animation timer and plays a short border-flash (not "evil laughter" - confirmed live/by ear that the laugh is reserved for the capture/ambush sequence at <a href="asm.html#47207">B867</a>, not this), penalises the kill counter at $D5A4 (2 decrements, offsetting <a href="asm.html#55578">D91A</a>'s own increment to a net -1), arms a $001E recovery timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into <a href="asm.html#52215">CBF7</a> to store it. Robin keeps playing afterwards - this is a stagger/penalty, not a game-over.
 </div>
 </div>
 </td>
@@ -36893,6 +36728,16 @@ This entry point is used by the routine at <a href="asm.html#52295">CC47</a>.
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#49008">BF70</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="52588"></span>
+<div class="comments">
+<div class="paragraph">
+First plays the digitized "Will you help Robin..." speech via <a href="asm.html#36010">8CAA</a>, reading a bitstream at $E500 (confirmed live: genuine non-zero data during playback, 2-byte bit-count $1644 = 5700 bits followed by ~712 bytes of bitstream, $E500-$E7CE) - before the screen is cleared and the title/menu is drawn. The looping click heard continuously while the menu waits for a key is not a separate tune; it comes from <a href="asm.html#35503">8AAF</a>'s key-decode loop, re-invoked every pass of the idle wait.
 </div>
 </div>
 </td>

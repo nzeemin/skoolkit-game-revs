@@ -102,11 +102,11 @@ Follow-up projects:
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
-Volume: about 4900 code instructions.
+Volume: about 5000 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Work in progress (43K .ctl file).
+Status: Work in progress (123K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)

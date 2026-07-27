@@ -3,7 +3,7 @@ Reverse engineering games using [SkoolKit](https://github.com/skoolkid/skoolkit)
 
 
 ## Highway Encounter (ZX Spectrum)
-<img src="highwayencounter-zx\highwayencounter\images\scr\loading.png" align="right" style="padding:8">
+<img src="highwayencounter-zx\highwayencounter\images\scr\loading.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1985.
 
@@ -41,6 +41,7 @@ Follow-up projects:
 
 
 ## Commando (ZX Spectrum)
+<img src="commando-zx/commando/images/scr/loading.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1985, Elite Systems Ltd.
 
@@ -48,11 +49,11 @@ Volume: about 8300 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
-Status: Not finished, but have a good progress (62K .ctl file).
+Status: Not finished, but have a good progress (94K .ctl file).
 
 
 ## Hydrofool (ZX Spectrum)
-<img src="hydrofool-zx\hydrofool\images\scr\menu.png" align="right" style="padding:8">
+<img src="hydrofool-zx\hydrofool\images\scr\menu.png" align="right" style="border:6px solid black">
 
 Original: by Carter Follis Software Associates for ZX Spectrum, 1987.
 
@@ -64,7 +65,7 @@ Status: Have pretty good progress (210K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)
-<img src="scubadive-zx\scuba\images\scr\loading.png" align="right" style="padding:8">
+<img src="scubadive-zx\scuba\images\scr\loading.png" align="right" style="border:6px solid black">
 
 Original: by Mike Richardson for ZX Spectrum, 1983, Durell Software.
 
@@ -79,7 +80,7 @@ Follow-up projects:
 
 
 ## Saboteur (ZX Spectrum)
-<img src="saboteur1-zx\saboteur\images\rooms\791E.png" align="right" width="256" style="padding:8">
+<img src="saboteur1-zx\saboteur\images\rooms\791E.png" align="right" width="256" style="border:6px solid black">
 
 Original: by Clive Townsend for ZX Spectrum, 1985, Durell Software.
 
@@ -98,7 +99,7 @@ Follow-up projects:
 
 
 ## Robin of the Wood (ZX Spectrum)
-<img src="robinofthewood-zx/robin/images/scr/loading.png" align="right" style="padding:8">
+<img src="robinofthewood-zx/robin/images/scr/loading.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1985, Odin Computer Graphics.
 
@@ -110,7 +111,7 @@ Status: Have pretty good progress (131K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)
-<img src="joeblade-zx/joeblade/images/scr/gameplay.png" align="right" style="padding:8">
+<img src="joeblade-zx/joeblade/images/scr/gameplay.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1987, Players.
 
@@ -122,7 +123,7 @@ Status: Have pretty good progress (120K .ctl file).
 
 
 ## Bruce Lee (ZX Spectrum)
-<img src="brucelee-zx\brucelee\images\rooms\room00.png" align="right" style="padding:8">
+<img src="brucelee-zx\brucelee\images\rooms\room00.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1984, US Gold.
 
@@ -135,7 +136,7 @@ Based on great work done by Anatoly Vdovichev.
 
 
 ## Nebulus (ZX Spectrum)
-<img src="nebulus-zx/nebulus/images/scr/loading.png" align="right" style="padding:8">
+<img src="nebulus-zx/nebulus/images/scr/loading.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum, 1987, Hewson Consultants.
 
@@ -148,7 +149,7 @@ Based on work done by Anatoly Vdovichev.
 
 
 ## Elite 128K (ZX Spectrum)
-<img src="elite128-zx/elite/images/scr/loading.png" align="right" style="padding:8">
+<img src="elite128-zx/elite/images/scr/loading.png" align="right" style="border:6px solid black">
 
 Original: for ZX Spectrum 128K, 1985, Firebird, by Torus.
 

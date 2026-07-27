@@ -29,43 +29,57 @@ b $6196
 b $61F8
 b $6308
 b $6318
-c $6400 -> $7A10
-C $6403,3 Delay by BC
-c $6415 -> $6825 - Update Score
+c $6400 Abort: restore stack and interrupts, return to frame loop (redirect)
+C $6400,3 => Abort
+C $6403,3 => Delay by BC HALTs
+C $6412,3 => Fill screen rectangle with byte
+c $6415 Update Score (redirect)
+C $6415,3 => Update Score
 b $6418
-c $6424 -> $7511 - XOR AF and AF' with every byte in $F900-F9FF
-c $6427 -> $6593
-c $642A -> $6600
-c $642D -> $6456
-c $6430 -> $6C7A - We've got A more grenades
+c $6424 XOR AF and AF' with every byte in $F900-F9FF (redirect)
+C $6424,3 => XOR AF and AF' with every byte in $F900-F9FF
+c $6427 Scan $6648 table, call $65A5 for active entries (redirect)
+C $6427,3 => Scan $6648 table, call $65A5 for active entries
+c $642A Find free slot in $6648 table (redirect)
+C $642A,3 => Find free slot in $6648 table
+c $642D Trigger sound effect A into free slot at $6433 (redirect)
+C $642D,3 => Trigger sound effect A into free slot at $6433
+c $6430 We've got A more grenades (redirect)
+C $6430,3 => We've got A more grenades
 b $6433
 B $6433,7
 W $6448,14
-c $6456
+c $6456 Trigger sound effect A into free slot at $6433 (unconfirmed)
 C $6458,2 Clear 7 bytes at $6433
 c $6469 Clear 7 bytes at $6433
-c $6474
-c $6495
+c $6474 Sound-effect dispatcher, 7 channels (unconfirmed)
+c $6495 Decay sound-effect counters at $6433 (unconfirmed)
 t $64AB
 b $64B0
 t $64BF
 b $64C2
 t $64C3
 b $64C6
-c $64C7
-c $64E9
-c $64F9
-c $6505
+c $64C7 Play beep tone (pitch $6437, duration loop) (unconfirmed)
+C $64DA,3 get Border color
+C $64DE,2 Set border color, toggle speaker bit
+c $64E9 Sound param calc -> $6575 (uses $6438) (unconfirmed)
+c $64F9 Sound param calc -> $6575 (uses $6439) (unconfirmed)
+c $6505 Sound param calc -> $6575 (uses $6436) (unconfirmed)
 t $650F
 b $6513
 c $6533
 b $6550
 c $6575
-c $6593
+C $6576,7 Toggle speaker bit (tone half-cycle)
+C $6581,9 Toggle speaker bit, set border color
+c $6593 Scan $6648 table, call $65A5 for active entries
 c $65A5
-C $65EF,3 -> $806B
-c $65F6
-c $6600
+C $65D1,3 Menu key check, set carry/B=$12
+C $65DE,3 Menu key check, set carry/B=$12
+C $65EF,3 Mark map cells for object IX, direction-aware
+c $65F6 Menu key check, set carry/B=$12 (unconfirmed)
+c $6600 Find free slot in $6648 table
 c $6626 Prepare records and variables at $6648
 C $663A,13 Prepare records at $6648
 b $6648
@@ -91,40 +105,66 @@ R $6825 I:BC ??
 C $6825,3 Get Score 2nd char
 C $6854,2 Font 2nd char address, lo byte
 C $6857,2 Font address, hi byte
+C $6874,3 Trigger sound effect A into free slot at $6433
 C $6877,3 Address of variable - Lives player have
 C $687A,1 plus one live
 C $687B,1 Get Lives player have
 C $6880,3 Print immediate string
-B $6883,12
+B $6883,3 char $16: set position (col=$00, row=$15)
+B $6886,2 char $19: set flag bit 0 ($FDAF) = $00
+B $6888,2 char $18: set width counter ($FDB0) = $00
+B $688A,2 char $10: set $FDA0 bits 0-2 = $07
+B $688C,2 char $11: set $FDA0 bits 3-5 = $02
+B $688E,1 char $1F: end of string
 C $6890,2 number 0..9 -> char '0'..'9'
-C $6892,3 Print char
-c $6896
-C $689E,3 -> $98F5
-c $68A6
-R $68A6 I:HL ??
+C $6892,3 Print Char
+c $6896 Convert (H,L) screen coords to attribute address
+C $689E,3 Convert row number to screen line address
+c $68A6 Zero screen rows using SP as pointer (B rows)
+R $68A6 I:HL Start screen address
 c $68CA
 C $68DB,3 Address on the screen
-C $68F2,3 -> $9904 - DOWN HL
-c $6950
+C $68E4,3 Zero screen rows using SP as pointer
+C $68F2,3 DOWN HL
+C $6902,3 Zero screen rows using SP as pointer
+C $6928,3 Compute row attribute address, call $69B4
+C $6948,3 Compute row attribute address, call $69B4
+c $6950 Compute row attribute address, call $69B4 (unconfirmed)
+C $696D,3 Compute attribute address for tile
 c $6975
 c $699A
-c $69B4
-C $69C6,3 -> $8E92
+C $69AC,3 Compute attribute address for tile
+c $69B4 Compute attribute address for tile (D,E)
+C $69BD,3 Convert (H,L) screen coords to attribute address
+C $69C6,3 Multiply HL by 10, add DE
 b $69D2
 c $69F3 Top Score and Main Menu??
 C $69F3,3 Print Score Table
+C $69F6,3 Prepare status bar screen
 C $69F9,3 Clear 7 bytes at $6433
+C $69FC,3 Clear playfield and status screen/attribute areas
 C $69FF,3 Set up scrolling string
 C $6A05,3 Check menu keys
 C $6A0A,3 Check menu keys
+C $6A10,3 Clear playfield and status screen/attribute areas
 C $6A14,2 'S' - Start game
+C $6A16,3 => Start Game
 C $6A19,2 'J' - Joystick
 C $6A1B,3 => Select joystick type
 c $6A1E Redefine Keys
 C $6A1E,3 Print immediate string
-B $6A21,13
+B $6A21,2 char $15: set/clear flag bit 1 ($FDAF) = $00
+B $6A23,2 char $11: set $FDA0 bits 3-5 = $02
+B $6A25,2 char $10: set $FDA0 bits 0-2 = $07
+B $6A27,2 char $18: set width counter ($FDB0) = $02
+B $6A29,3 char $16: set position (col=$0C, row=$00)
+B $6A2C,2 char $19: set flag bit 0 ($FDAF) = $01
 T $6A2E,13
-B $6A3B,10
+B $6A3B,3 char $16: set position (col=$16, row=$00)
+B $6A3E,2 char $19: set flag bit 0 ($FDAF) = $00
+B $6A40,2 char $18: set width counter ($FDB0) = $00
+B $6A42,2 char $11: set $FDA0 bits 3-5 = $00
+B $6A44,1 char $1F: end of string
 C $6A45,3 Where to store redefined keys
 C $6A4F,2 6 keys to redefine
 C $6A51,3 Start address for messages to use in Redefine Keys
@@ -133,7 +173,8 @@ C $6A59,3 (HL) -> HL
 C $6A5D,3 Wait key unpress, wait key press
 C $6A72,3 Print key entered on Redefine Keys
 C $6A75,3 Print immediate string
-B $6A78,4
+B $6A78,3 char $03: repeat character $04, $0D times
+B $6A7B,1 char $1F: end of string
 C $6A82,4 Set joystick type ($FD84) = Keyboard
 C $6A86,3 Set up scrolling string
 c $6A8C
@@ -154,27 +195,35 @@ B $6ACE,4
 B $6AD2,2
 T $6AD4,7
 B $6ADB,4
-c $6AE1
-C $6B0D,3 -> $9904 - DOWN HL
+c $6AE1 Prepare status bar screen: fill, set scroll handler
+C $6AEA,3 Fill screen rectangle with byte
+C $6B0D,3 DOWN HL
 c $6B14 Wait key unpress, wait key press
 C $6B14,3 Get last key read from keyboard
 C $6B1A,3 Get last key read from keyboard
-c $6B21
-c $6B4C
-C $6B54,3 -> $98F5
-C $6B60,3 -> $9904 - DOWN HL
+c $6B21 Clear playfield and status screen/attribute areas
+C $6B2C,3 Fill screen rectangle with byte
+C $6B35,3 Zero rectangle at HL
+C $6B3F,3 Fill screen rectangle with byte
+C $6B48,3 Zero rectangle at HL
+c $6B4C Zero rectangle at HL (C rows x B bytes)
+C $6B54,3 Convert row number to screen line address
+C $6B60,3 DOWN HL
 t $6B67 Letters to select from entering Top Score
 T $6B67,,8
-c $6B87
+c $6B87 Draw menu box border/frame (unconfirmed)
 R $6B87 I:A ??
+C $6B95,3 Fill screen rectangle with byte
+C $6B9E,3 Zero rectangle at HL
+C $6BA8,3 Fill screen rectangle with byte
 c $6BAC
-C $6BAF,3 -> $9193
+C $6BAF,3 Advance level scroll
 c $6BBB Start Game
-C $6BBB,3 Prepare new game
+C $6BBB,3 Prepare New Game
 C $6BBE,3 Prepare at new Area
-C $6BC7,3 -> $91AA
+C $6BC7,3 Reset R register (random seed), inside $9193
 C $6BCB,3 Clear 7 bytes at $6433
-C $6BCE,3 -> $DCDF - Initialization and go to game main loop
+C $6BCE,3 Initialization and go to game main loop
 C $6BD1,3 Clear 7 bytes at $6433
 C $6BDA,3 Get last joystick/keyboard bits
 C $6BE0,4 Is Player alive??
@@ -184,36 +233,48 @@ C $6BE9,1 Get player's grenades number
 C $6BEE,2 Set player's grenades number to max allowed
 C $6BF0,3 Update grenades number on the screen
 C $6BF3,3 Print immediate string
-B $6BF6,4
+B $6BF6,3 char $16: set position (col=$00, row=$15)
+B $6BF9,1 char $1F: end of string
 C $6BFA,3 Get lives player have
 C $6C04,3 Minus one live
-C $6C01,3 => Print Char
+C $6C01,3 Print Char
 C $6C07,3 => Game Over
 N $6C1D Black screen at the end of an Area
+C $6C1F,3 Draw menu box border/frame
 C $6C22,3 Print immediate string
-B $6C25,7
-T $6C2C,13
-B $6C38,1
+B $6C25,2 char $15: set/clear flag bit 1 ($FDAF) = $01
+B $6C27,2 char $19: set flag bit 0 ($FDAF) = $01
+B $6C29,3 char $16: set position (col=$14, row=$09)
+T $6C2C,12
+B $6C38,1 char $1F: end of string
 C $6C39,3 Print Area number
 C $6C3C,3 increase Area number
 C $6C3F,3 Print immediate string
-B $6C42,3
-T $6C45,19
-B $6C57,1
+B $6C42,3 char $16: set position (col=$19, row=$06)
+T $6C45,18
+B $6C57,1 char $1F: end of string
 C $6C58,3 Print Area number
 C $6C5B,3 +2000
 C $6C5E,3 Update Score
-C $6C64,3 Delay by BC
+C $6C64,3 Delay by BC HALTs
 C $6C67,3 Print immediate string
-B $6C6A,4
+B $6C6A,3 char $16: set position (col=$00, row=$0D)
+B $6C6D,1 char $1F: end of string
 C $6C6E,3 Print Area number
 C $6C71,3 Print immediate string
-B $6C74,3
+B $6C74,2 char $19: set flag bit 0 ($FDAF) = $00
+B $6C76,1 char $1F: end of string
 c $6C7A We've got A more grenades
 C $6C7D,3 Update player's grenades number
 c $6C80 Update grenades number on the screen
 C $6C80,3 Print immediate string
-B $6C83,14
+B $6C83,2 char $10: set $FDA0 bits 0-2 = $07
+B $6C85,2 char $11: set $FDA0 bits 3-5 = $02
+B $6C87,2 char $19: set flag bit 0 ($FDAF) = $00
+B $6C89,2 char $18: set width counter ($FDB0) = $00
+B $6C8B,3 char $16: set position (col=$00, row=$1E)
+B $6C8E,2 char $15: set/clear flag bit 1 ($FDAF) = $00
+B $6C90,1 char $1F: end of string
 C $6C91,3 Get player's grenades number
 C $6C94,2 Print 2-digit number
 c $6C96 Print Area number
@@ -221,63 +282,90 @@ C $6C96,3 Get Area number
 c $6C99 Print 2-digit number A
 C $6C9D,2 minus 10
 N $6CB5 Enter name for the new Top Score record
-C $6CA3,3 Print char
-C $6CA9,3 Print char
+C $6CA3,3 Print Char
+C $6CA9,3 Print Char
 c $6CAE Game Over
 C $6CAE,3 Find a place in Top Score table
-C $6CB2,3 => Top Score and Main Menu
+C $6CB2,3 => Top Score and Main Menu??
 C $6CC0,3 Print Score Table
+C $6CC3,3 Prepare status bar screen
 C $6CC6,3 Print immediate string
-B $6CC9,6
+B $6CC9,3 char $16: set position (col=$0C, row=$01)
+B $6CCC,2 char $13: set fill char ($FD9F) = $01
+B $6CCE,1 char $1F: end of string
 C $6CCF,3 Letters to select from entering Top Score
 C $6CD2,2 4 rows
 C $6CD4,2 8 columns
-C $6CD8,3 Print char
-C $6CDD,3 Print char
+C $6CD8,3 Print Char
+C $6CDD,3 Print Char
 C $6CE2,3 Print immediate string
-B $6CE5,4
+B $6CE5,3 char $03: repeat character $04, $0D times
+B $6CE8,1 char $1F: end of string
 C $6CEC,3 Print immediate string
-B $6CEF,9
+B $6CEF,3 char $16: set position (col=$20, row=$01)
+B $6CF2,2 char $18: set width counter ($FDB0) = $02
+B $6CF4,2 char $19: set flag bit 0 ($FDAF) = $01
+B $6CF6,2 char $11: set $FDA0 bits 3-5 = $01
 T $6CF8,15
-B $6D07,7
-C $6D30,3 -> $9922
-C $6D3B,3 -> $9922
+B $6D07,2 char $19: set flag bit 0 ($FDAF) = $00
+B $6D09,2 char $11: set $FDA0 bits 3-5 = $00
+B $6D0B,2 char $13: set fill char ($FD9F) = $00
+B $6D0D,1 char $1F: end of string
+C $6D30,3 Update object IX position, clip to screen, dispatch sprite draw
+C $6D3B,3 Update object IX position, clip to screen, dispatch sprite draw
 C $6D3E,3 Copy 64 bytes $66D1 to $6711
+C $6D4A,3 XOR attribute pattern onto screen, explosion effect
 C $6D4D,3 Get last key read from keyboard
 C $6D53,3 Get last joystick/keyboard bits
 C $6D5A,3 Print immediate string
-B $6D5D,9
+B $6D5D,3 char $16: set position (col=$20, row=$01)
+B $6D60,3 char $03: repeat character $20, $0F times
+B $6D63,2 char $18: set width counter ($FDB0) = $03
+B $6D65,1 char $1F: end of string
 C $6D66,3 Prepare records at $6FD9
 C $6D69,3 Prepare records at $6FE5
 C $6D71,4 Check bit 4 (Fire) of Last joystick/keyboard bits ($FD85)
-C $6D98,3 -> $9922
+C $6D81,3 Find free record in table at $6FD9
+C $6D90,3 Print table row using $6E34
+C $6D98,3 Update object IX position, clip to screen, dispatch sprite draw
+C $6D9B,3 XOR attribute pattern onto screen, explosion effect
 C $6D9E,3 Get last joystick/keyboard bits
 C $6DCC,3 Get last joystick/keyboard bits
+C $6E02,3 XOR attribute pattern onto screen, explosion effect
 b $6E08
-c $6E11
-c $6E34
-C $6E38,3 Print char
-C $6E48,3 Print char
-C $6E55,3 Print char
-C $6E6E,3 Print char
-C $6E72,3 Print char
-C $6E76,3 Print char
+c $6E11 Print table row using $6E34 (unconfirmed)
+C $6E1E,3 Print char with derived attribute
+C $6E23,3 Print char with derived attribute
+c $6E34 Print char with derived attribute (unconfirmed)
+C $6E38,3 Print Char
+C $6E48,3 Print Char
+C $6E55,3 Print Char
+C $6E6E,3 Print Char
+C $6E72,3 Print Char
+C $6E76,3 Print Char
 c $6E7B
 C $6EB4,3 Letters to select from entering Top Score
 C $6EB7,3 HL = HL + A
 c $6ECD
 C $6ECE,3 Print immediate string
-B $6ED1,4
-C $6EDD,3 Print char
-C $6EE6,3 Print char
+B $6ED1,2 char $18: set width counter ($FDB0) = $00
+B $6ED3,1 char $16: opens (2 args) but string ends here -- dangling, never dispatched
+B $6ED4,1 char $1F: end of string
+C $6EDD,3 Print Char
+C $6EE6,3 Print Char
 C $6F07,3 Score table address
 C $6F0E,3 HL = HL + A
 C $6F1A,3 => Print Char
 c $6F1D
+C $6F39,3 Print table row using $6E34
+C $6F40,3 Clear playfield and status screen/attribute areas
 c $6F46 Prepare records at $6FE5
 c $6F52
-c $6F79
-C $6FBA,3 -> $98F5
+c $6F79 Find free record in table at $6FD9
+C $6F87,3 Check record slot free (byte = $FF)
+C $6F92,3 Mark record active, set flag byte
+C $6FA0,7 Compute animation frame index into (IX+$02)
+C $6FBA,3 Convert row number to screen line address
 c $6FC7 Prepare records at $6FD9
 b $6FD9
 B $6FD9,12,3
@@ -287,9 +375,9 @@ C $701A,3 HL = HL + A
 C $7032,3 => Copy 64 bytes $66D1 to $6711
 c $706E
 b $709A
-c $70BD
-C $70C9,3 -> $98F5
-C $70E6,3 -> $9904 - DOWN HL
+c $70BD XOR attribute pattern onto screen, explosion effect (unconfirmed)
+C $70C9,3 Convert row number to screen line address
+C $70E6,3 DOWN HL
 c $70EC Copy 64 bytes $66D1 to $6711
 c $70F8 Find a place in Top Score table
 C $70F8,3 Score address
@@ -298,24 +386,31 @@ C $7126,3 Top score #11 last char address
 C $7129,3 Top score line width = 15
 c $7143 Select joystick type
 C $7143,3 Print immediate string
-B $7146,13
+B $7146,2 char $11: set $FDA0 bits 3-5 = $02
+B $7148,2 char $10: set $FDA0 bits 0-2 = $07
+B $714A,2 char $18: set width counter ($FDB0) = $02
+B $714C,3 char $16: set position (col=$0C, row=$00)
+B $714F,2 char $15: set/clear flag bit 1 ($FDAF) = $00
+B $7151,2 char $19: set flag bit 0 ($FDAF) = $01
 T $7153,6
-B $7159,7
+B $7159,3 char $16: set position (col=$13, row=$00)
+B $715C,2 char $19: set flag bit 0 ($FDAF) = $00
+B $715E,2 char $11: set $FDA0 bits 3-5 = $00
 T $7160,10
-B $716A,3
+B $716A,3 char $03: repeat character $07, $0D times
 T $716D,14
-B $717B,3
+B $717B,3 char $03: repeat character $07, $0D times
 T $717E,8
-B $7186,3
+B $7186,3 char $03: repeat character $07, $0D times
 T $7189,8
-B $7191,1
+B $7191,1 char $1F: end of string
 C $7192,3 Wait key unpress, wait key press
 C $7195,2 < '1' ?
 C $7199,2 >= '5' ?
 C $719D,2 char '1'..'4' -> number 1..4
 C $71A2,3 Set up scrolling string
 c $71A8 Print string HL
-C $71AD,3 Print char
+C $71AD,3 Print Char
 b $71B2 Screen attributes, 4 bytes
 c $71B6
 C $71B6,3 Print immediate string checking menu keys
@@ -336,31 +431,50 @@ C $7257,2 'J' - Joystick
 C $725A,2 'K' - Redefine keys
 c $725D Print immediate string checking menu keys
 C $725E,3 Check menu keys
-C $726A,3 Print char
+C $726A,3 Print Char
 c $7274 Print Score Table
+C $7275,2 Set border black
 C $7277,3 Print immediate string
-B $727A,6
+B $727A,1 char $01: reset print format state
+B $727B,2 char $00: clear screen, attribute = $07
+B $727D,2 char $15: set/clear flag bit 1 ($FDAF) = $01
+B $727F,1 char $1F: end of string
+C $728A,3 Fill screen rectangle with byte
 C $728D,3 Print immediate string
-B $7290,8
+B $7290,2 char $13: set fill char ($FD9F) = $11
+B $7292,3 char $16: set position (col=$0C, row=$11)
+B $7295,2 char $19: set flag bit 0 ($FDAF) = $00
+B $7297,1 char $1F: end of string
 C $7298,3 Score table address
 C $729B,2 11 = score table lines count
-C $72A0,3 Print char
-C $72A8,3 Print char
-C $72AB,3 Print char
+C $72A0,3 Print Char
+C $72A8,3 Print Char
+C $72AB,3 Print Char
 t $72B2 Score table
 T $72B2,,15
-c $7357
-C $7374,3 Read input: joystick or keyboard
+c $7357 Game main loop / frame handler
+C $7371,3 Compute code checksum
+C $7374,3 Read input
 C $7377,3 Save the input
+C $738A,3 Sound-effect dispatcher, 7 channels
 C $7391,3 !!! Modifying argument: $6975 / $68CA
-C $73A1,3 -> $7A5D - Delay by BC-1 HALTs
+C $73A1,3 => Delay by BC-1 HALTs
 C $73A4,3 Read Keyboard
 C $73A7,3 Save last key read from keyboard
 c $73B7 Read Keyboard
+C $73C0,9 Scan half-row, invert bits, loop to next row if no key down
+C $73D1,4 Key found: set carry marker, clear column counter
+C $73D5,6 Rotate to find pressed column, advance HL to its map entry
+C $73DB,1 Look up char for (row,column) from keyboard map
 N $73DD Keyboard map
 T $73DD,40,5
-c $7405
+c $7405 Compute code checksum
+C $7405,17 Skip check if pointer below $8000 or at/above $F000
+C $7416,114 XOR one byte from each $80xx-$C0xx page into checksum
+C $7488,114 ...continues through $C2xx-$F8xx
 C $74FA,2 see $FA00
+C $74FF,7 Fold in checksum from $7511, store to ($FD8D)
+C $7509,8 Store both checksum halves to ($FD8D) and ($FD8E)
 C $7506,3 XOR AF and AF' with every byte in $F900-F9FF
 c $7511 XOR AF and AF' with every byte in $F900-F9FF
 C $7514,1 #0
@@ -381,9 +495,9 @@ C $753E,1 #14
 C $7541,1 #15
 c $7547 Read input: joystick or keyboard
 C $7549,3 Get joystick type 0..4
-C $754D,3 => Read keysboard
-C $7554,3 -> $98EA - HL = HL + A
-C $7557,3 -> $98F0 - (HL) -> HL
+C $754D,3 => Read keyboard in game mode
+C $7554,3 HL = HL + A
+C $7557,3 (HL) -> HL
 C $755A,1 Go to joystick read procedure
 W $755B,8,8 Joystick read procedure addresses
 N $7563 Read Kempston
@@ -394,33 +508,36 @@ N $7587 Read Cursor
 B $758E,10 Keyboard ports + bit masks for cursor keys
 b $7598 Keyboard ports and bit masks - keys to read in game mode
 c $75A8 Read keyboard in game mode
-c $75BE
-R $75BE I:HL ??
-R $75BE I:BC ??
+c $75BE Fill screen rectangle with byte
+R $75BE I:HL Start screen address
+R $75BE I:B Row count per column
+R $75BE I:C Column count
+R $75BE I:A Fill byte
 c $75D2 Print key entered on Redefine Keys
 R $75D2 I:A Key entered - character or special code
 C $75DE,3 => Print Char
 C $75E1,3 Print immediate string
-B $75E4,3
+B $75E4,3 char $03: repeat character $08, 5 times (erase old label)
 T $75E7,6
-B $75ED,1
+B $75ED,1 char $1F: end of string
 C $75EF,3 Print immediate string
-B $75F2,3
+B $75F2,3 char $03: repeat character $08, 3 times (erase old label)
 T $75F5,4
-B $75F9,1
+B $75F9,1 char $1F: end of string
 C $75FB,3 Print immediate string
-B $75FE,3
+B $75FE,3 char $03: repeat character $08, 4 times (erase old label)
 T $7601,5
-B $7606,1
+B $7606,1 char $1F: end of string
 C $7608,3 Print immediate string
-B $760B,3
+B $760B,3 char $03: repeat character $08, 4 times (erase old label)
 T $760E,5
-B $7613,1
+B $7613,1 char $1F: end of string
 c $7615 Print immediate string
-C $761C,3 Print char
+C $761C,3 Print Char
 c $7621
 c $7637 Print Char
 R $7637 I:A Character to print
+N $7637 Chars $20 and up print directly. Chars $00-$1F are special-char opcodes: the opcode is looked up in the $78CC arg-count table (0, 1 or 2 extra bytes) and stored to ($FDA8); ($FDA7) is set to that count and acts as a state counter for the following calls to this routine. While ($FDA7) > 0, each call stores the char as an argument byte at ($FDA9) instead of printing it, advances ($FDA9), and decrements ($FDA7). Once the argument count reaches zero (with 0 args, immediately; otherwise after the last argument byte), execution jumps to $7675, which looks up ($FDA8) in the $78EC word table (32 handler addresses, one per opcode $00-$1F) and calls the matching handler with HL pointing at the collected argument bytes ($FDAB onward).
 C $7657,2 $00..$1F ?
 C $7659,3 no => jump
 N $765C Process a special char $00..$1F
@@ -428,70 +545,128 @@ C $7662,3 HL = HL + A
 C $7665,1 A = $00..$02
 C $767C,3 HL = HL + A
 C $767F,3 (HL) -> HL
-C $76B2,3 Delay by BC
+C $76AC,3 Trigger sound effect A into free slot at $6433
+C $76B2,3 Delay by BC HALTs
 N $7687 Print usual char >= $20
 C $76BC,4 Get Font address
-C $76C8,3 -> $98F5
-C $76DF,3 -> $9904 - DOWN HL
-C $7703,3 -> $9904 - DOWN HL
-C $770F,3 -> $9904 - DOWN HL
-C $7719,3 -> $9904 - DOWN HL
+C $76C8,3 Convert row number to screen line address
+C $76DF,3 DOWN HL
+C $7703,3 DOWN HL
+C $770F,3 DOWN HL
+C $7719,3 DOWN HL
 C $7754,3 HL = HL + A
 C $7757,3 (HL) -> HL
 b $775F
 W $775F,8
-c $7767
-c $777A
+c $7767 Char $02: set spacing/mode ($FDB1) from arg, range 0-3
+C $776C,3 => -> $7A10
+C $7771,3 => -> $7A10
+c $777A Char $00: clear screen (attributes + bitmap)
 C $777C,3 Get attribute byte
 C $7782,3 Fill all screen attributes with D
 C $76BB,1 HL = HL * 8
 C $778B,3 Clear all the screen bits
 C $778F,3 Fill all screen attributes with D
 c $7795 Fill all screen attributes with D
-c $77A4
-c $77AC
-c $77B8
-c $77C2
-c $77CB
-c $77D5
-c $77EB
-c $77FD
-c $7811
-c $7828
-c $783E
-C $7842,3 Print char
-c $784A
-c $7852
-c $7866
-c $786E
+c $77A4 Char $04: advance format counter by 2, store fill char (unconfirmed)
+c $77AC Char $0A: increment format counter, abort if it reaches $31
+C $77B2,3 => -> $7A10
+c $77B8 Char $0B: decrement format counter, abort on underflow
+C $77BC,3 => -> $7A10
+c $77C2 Char $08: decrement format counter, abort if negative
+C $77C5,3 => -> $7A10
+c $77CB Char $09: increment format counter, store fill char once $20 reached
+c $77D5 Char $12: set/clear bit 6 of $FDA0 from arg (0/1)
+C $77E1,3 => -> $7A10
+c $77EB Char $19: set/clear flag bit 0 ($FDAF) from arg
+C $77F3,3 => -> $7A10
+c $77FD Char $10: set field bits 0-2 of $FDA0 from arg
+C $7809,3 => -> $7A10
+c $7811 Char $11: set field bits 3-5 of $FDA0 from arg
+C $781D,3 => -> $7A10
+c $7828 Char $16: set print position, 2 bounds-checked args
+C $782D,3 => -> $7A10
+C $7837,3 => -> $7A10
+c $783E Char $03: repeat character H, L times
+C $7842,3 Print Char
+c $784A Char $13: set fill char ($FD9F) from arg
+c $7852 Char $14: set tab stop, advance format counter
+C $7857,3 => -> $7A10
+c $7866 Char $1A: set Font address ($FDA3) from arg word
+c $786E Char $0C: print padded field using $FDB0 width
 C $7875,3 Print immediate string
-B $7878,4
-c $787F
-c $7887
-c $7896
+B $7878,1 char $08: decrement format counter, abort if negative
+B $7879,1 literal space char
+B $787A,1 char $08: decrement format counter, abort if negative
+B $787B,1 char $1F: end of string
+c $787F Char $18: set width/column counter ($FDB0) from arg
+c $7887 Char $15: set/clear flag bit 1 ($FDAF) from arg
+c $7896 Char $01: reset print format state
 C $78B0,3 Font address
 C $78B3,3 Set Font address
 c $78BF -> $7A10
+C $78BF,3 => Abort
 b $78C2
 c $78C4
 c $78C7
 b $78CC Table to map special char $00..$1F to types $00..$02
 w $78EC Address map to print chars $00..$1F - 32 addresses
+W $78EC,2 char $00, 1 arg: clear screen (attributes + bitmap)
+W $78EE,2 char $01, 0 args: reset print format state
+W $78F0,2 char $02, 1 arg: set spacing/mode ($FDB1), range 0-3
+W $78F2,2 char $03, 2 args: repeat character H, L times
+W $78F4,2 char $04, 0 args: advance format counter by 2, store fill char (unconfirmed)
+W $78F6,2 char $05, unused (no-op)
+W $78F8,2 char $06, unused (no-op)
+W $78FA,2 char $07, unused (no-op)
+W $78FC,2 char $08, 0 args: decrement format counter, abort if negative
+W $78FE,2 char $09, 0 args: increment format counter, store fill char once $20 reached
+W $7900,2 char $0A, 0 args: increment format counter, abort if it reaches $31
+W $7902,2 char $0B, 0 args: decrement format counter, abort on underflow
+W $7904,2 char $0C, 0 args: print padded field using $FDB0 width
+W $7906,2 char $0D, 0 args: store fill char at HL
+W $7908,2 char $0E, unused (no-op)
+W $790A,2 char $0F, unused (no-op)
+W $790C,2 char $10, 1 arg: set field bits 0-2 of $FDA0
+W $790E,2 char $11, 1 arg: set field bits 3-5 of $FDA0
+W $7910,2 char $12, 1 arg: set/clear bit 6 of $FDA0
+W $7912,2 char $13, 1 arg: set fill char ($FD9F)
+W $7914,2 char $14, 1 arg: set tab stop, advance format counter
+W $7916,2 char $15, 1 arg: set/clear flag bit 1 ($FDAF)
+W $7918,2 char $16, 2 args: set print position, bounds-checked
+W $791A,2 char $17, unused (no-op)
+W $791C,2 char $18, 1 arg: set width/column counter ($FDB0)
+W $791E,2 char $19, 1 arg: set/clear flag bit 0 ($FDAF)
+W $7920,2 char $1A, 2 args: set Font address ($FDA3)
+W $7922,2 char $1B, unused (no-op)
+W $7924,2 char $1C, unused (no-op)
+W $7926,2 char $1D, unused (no-op)
+W $7928,2 char $1E, unused (no-op)
+W $792A,2 char $1F, unused (no-op)
 c $792C Prepare at new Area
 C $7953,4 Clear Player's dead flag
 C $792D,3 Clear last joystick/keyboard bits
 C $7930,3 Clear Land space size
 C $7933,3 Clear Offset in $FF00 buffer
 C $795E,3 Prepare records and variables at $6648
+C $7963,3 Draw menu box border/frame
 c $796A Prepare New Game
 C $7978,10 Score = "000000"
 C $7975,3 Area number = $01
+C $798B,4 Set border black
 C $7982,5 Player's lives = $05
 C $7988,3 Set grenades number = $06
 C $798F,3 Print immediate string
-B $7992,16
+B $7992,1 char $01: reset print format state
+B $7993,2 char $00: clear screen, attribute = $30
+B $7995,2 char $15: set/clear flag bit 1 ($FDAF) = $00
+B $7997,3 char $16: set position (col=$00, row=$00)
+B $799A,2 char $18: set width counter ($FDB0) = $00
+B $799C,2 char $19: set flag bit 0 ($FDAF) = $00
+B $799E,2 char $11: set $FDA0 bits 3-5 = $02
+B $79A0,2 char $10: set $FDA0 bits 0-2 = $07
 T $79A2,32
-B $79C2,1
+B $79C2,1 char $1F: end of string
 c $79CA
 C $79D2,3 Prepare $FE00 table - addresses for every even screen line
 C $79D5,3 Calculate checksums??
@@ -499,12 +674,13 @@ C $79D8,4 Clear byte ($FD87)
 C $79DC,4 Set byte ($FDC2) = $02
 c $79E1
 c $79FB Calculate checksums??
-c $7A10
+c $7A10 Abort: restore stack and interrupts, return to frame loop
 c $7A1E
-c $7A42 -> $7357
+c $7A42 Game main loop / frame handler (redirect)
+C $7A42,3 => Game main loop / frame handler
 c $7A45 Prepare $FE00 table - addresses for every even screen line
-C $7A52,3 -> $9904 - DOWN HL
-C $7A55,3 -> $9904 - DOWN HL
+C $7A52,3 DOWN HL
+C $7A55,3 DOWN HL
 c $7A5C Delay by BC HALTs
 b $7A63
 t $7A6A
@@ -521,18 +697,48 @@ b $7EA0 Font
 D $7EA0 #HTML[#UDGARRAY16($7EA0-$7F1F-8)(font0.png)]
 . #HTML[#UDGARRAY28($7F20-$7FFF-8)(font1.png)]
 b $8000
-c $8003 -> $9193
-c $8006 -> $91AA
+c $8003 Advance level scroll: walk $FF00 buffer, process sequence record (redirect)
+C $8003,3 => Advance level scroll
+c $8006 Reset R register (random seed), inside $9193 (redirect)
 b $8009
-c $800C -> $8E92
-c $800F -> $806B
+c $800C Multiply HL by 10, add DE (redirect)
+C $800C,3 => Multiply HL by 10, add DE
+c $800F Mark map cells for object IX, direction-aware (redirect)
+C $800F,3 => Mark map cells for object IX, direction-aware
 b $8012
-c $806B
-c $80E4
-c $80EA
-c $80FB
-c $8101
-c $8122
+c $806B Mark map cells for object IX, direction-aware
+C $8086,3 Mark cells in $1600 map, B=1
+C $808D,3 Mark cells in $1600 map, B=1
+C $8092,3 Mark cells in $1600 map, B=C
+C $8096,3 Mark cells in $1600 map, B=C
+C $809A,3 Mark cells in $1600 map, B=C
+C $80AC,3 Mark 3 cells in $1600 map, B=1
+C $80B1,3 Mark 3 cells in $1600 map, B=C
+C $80C7,3 Mark 3 cells in $1600 map, B=C
+C $80D0,3 Mark 3 cells in $1600 map, B=1
+C $80D3,3 => Update object IX position, clip to screen, dispatch sprite draw
+C $80D6,3 Mark cells in $1600 map, B=1
+C $80DA,3 Mark cells in $1600 map, B=1
+C $80DE,3 Mark cells in $1600 map, B=1
+C $80E1,3 => Update object IX position, clip to screen, dispatch sprite draw
+c $80E4 Mark 3 cells in $1600 map, B=1 (entry to $80ED)
+c $80EA Mark 3 cells in $1600 map, B=C (entry to $80ED)
+C $80EE,3 Set/test flag in $1600 map at tile
+C $80F2,3 Set/test flag in $1600 map at tile
+C $80F6,3 Set/test flag in $1600 map at tile
+c $80FB Mark cells in $1600 map, B=1 (entry to $8104)
+c $8101 Mark cells in $1600 map, B=C (entry to $8104)
+C $8105,3 Set/test flag in $1600 map at tile
+C $810C,3 Set/test flag in $1600 map at tile
+C $8113,3 Set/test flag in $1600 map at tile
+C $811D,3 Set/test flag in $1600 map at tile
+c $8122 Set/test flag in $1600 map at tile (D,E)
+C $8123,3 Reject if column (E) out of range
+C $8126,4 Reject if row (D) out of range
+C $812F,2 Column * 4 into A
+C $8131,7 Compute $1600 map row base into H
+C $813C,3 B=1: test flag only
+C $8147,4 Merge flag bits, write back
 b $8158
 t $8160
 b $8163
@@ -543,31 +749,57 @@ b $81EA
 t $820A
 b $820D
 c $822B
+C $8275,3 Advance/rotate object buffer pointer
+C $827E,3 Advance/rotate object buffer pointer
+C $8287,3 Set object state flags, call $806B
 b $82B4 Data 13 bytes to copy at $FDCF
-c $82C1
-c $82E1
+c $82C1 Set object state flags, call $806B (unconfirmed)
+C $82D1,3 Mark map cells for object IX, direction-aware
+c $82E1 Advance/rotate object buffer pointer (unconfirmed)
+C $82E9,3 Set object state flags, call $806B
 b $8301
 c $834B Draw sprite HL
 R $834B I:A
 R $834B I:B Sprite height??
 R $834B I:HL Sprite address
+C $8352,3 Clip sprite rectangle against screen edge
+C $8363,3 Compute screen draw address for sprite, save state to buffer
 b $83A4
 c $83B8 ?? Smth about Jeep
+C $83E4,3 Sprite draw dispatch
+C $83EE,3 => Find free slot in $6648 table
+C $83F9,3 Clip sprite rectangle against screen edge
+C $8401,3 Compute screen draw address for sprite, save state to buffer
+C $8422,3 Compute screen draw address for sprite, save state to buffer
 C $842B,3 Get sprite addr Jeep; width 4
 c $8458
 c $8471 ?? Smth about Motorbike
 C $847D,3 ?? Smth with Motorbike sprite
-c $8497
+C $8484,3 Get pseudo-random value / update counter at (HL)
+C $848F,3 Get pseudo-random value / update counter at (HL)
+c $8497 Get pseudo-random value / update counter at (HL) (unconfirmed)
+C $84C1,3 => Sprite draw dispatch
+C $84C6,3 Clip sprite rectangle against screen edge
 c $8500 ?? Smth with Motorbike sprite
+C $8511,12 Copy full Motorbike sprite from ($C02E) to $FC06
+C $851D,42 Shift Motorbike sprite bitmap right one pixel (sub-pixel scroll)
 C $8511,3 Get sprite addr Motorbike
-c $854A
+c $854A Sprite draw dispatch: clip and compute screen address
+C $8553,3 Clip sprite rectangle against screen edge
+C $855B,3 Compute screen draw address for sprite, save state to buffer
 b $8594
 c $85AB ?? Smth about Truck
 C $85C4,3 Get Truck sprite to $6300 buffer and shift it if needed
-C $85F9,3 -> $6600
-C $8601,3 -> $6600
+C $85F9,3 Find free slot in $6648 table
+C $8601,3 Find free slot in $6648 table
+C $8615,3 => Sprite draw dispatch
 c $8618
-c $867C
+C $8625,3 Clip sprite rectangle against screen edge
+C $862E,3 Compute screen draw address for sprite, save state to buffer
+C $8639,3 Compute screen draw address for sprite, save state to buffer
+c $867C Clip sprite rectangle against screen edge (vertical)
+C $8693,3 Multiply HL by 10, add DE
+C $869B,9 Off bottom edge: clip height, bail if fully off-screen
 C $86B0,2 $FE00 - table of even screen lines addresses
 c $86B8 Get Truck sprite to $6300 buffer and shift it if needed
 C $86BC,3 Get sprite addr Truck; width 8
@@ -575,25 +807,28 @@ N $86C7 Shift 8*32 bytes at $6300 one bit left
 C $86CB,3 Buffer address
 C $86D1,2 Loop counter = 32
 c $86F5
-C $8721,3 -> $6600
-C $872A,3 -> $6600
-c $872F
-C $8743,3 Get attributes address for screen line D
+C $8716,3 Sprite draw dispatch
+C $8721,3 Find free slot in $6648 table
+C $872A,3 Find free slot in $6648 table
+c $872F Fill attribute cells below sprite via SP push (unconfirmed)
+C $874D,18 PUSH DE 16 times to fill attribute row via SP
+C $875F,7 Advance to row above, loop B rows
+C $8743,3 Get attributes address for the screen line
 c $876E Draw walls??
 C $8797,4 Get Sprite addr Wall; width 4
 C $87A2,2 $FE00 - table of even screen lines addresses
 C $87A9,2 Height = 25
 C $87AB,3 Get Sprite addr Wall; width 4
 c $87F1
-C $8805,3 Get attributes address for screen line D
+C $8805,3 Get attributes address for the screen line
 C $8808,2 Attribute byte
 C $8811,16 Fill attribute line
-C $8823,3 Get attributes address for screen line D
+C $8823,3 Get attributes address for the screen line
 C $8826,2 Attribute byte
 C $882F,16 Fill attribute line
 C $8844,2 Attribute byte
 C $8847,16 Fill attribute line
-C $8881,3 HL = HL + A; now HL = address in table $88E5
+C $8881,3 HL = HL + A
 C $888B,2 $FE00 - table of even screen lines addresses
 C $888D,4 Get screen line address from table $FE00
 C $8895,1 Now SP = address on the screen
@@ -604,7 +839,10 @@ C $88B1 Get 2nd word from table $88E5
 C $88B5,16 Fill screen line with DE
 b $88E5
 B $88E5,,4
-c $8914
+c $8914 Draw sprite at ($C006), then fill $1600 map tiles it covers
+C $8921,3 Clip sprite, then AND/OR-mask blit rows via SP into screen
+C $8929,16 Compute $1600 map address from row/column
+C $8941,27 PUSH DE 15 or 30 times to mark map row via SP
 c $896D Get attributes address for the screen line
 R $896D I:D Screen line number, divided by 2
 R $896D O:HL Address in the screen attribute area for the given line
@@ -613,12 +851,26 @@ C $8973,5 Get screen line address to HL
 C $8978,3 Rotate H right on 3 bits
 C $897D,1 Now HL = address in the screen attribute area for the given line
 b $897F
-c $899E
-c $89F3
+c $899E Compute screen draw address for sprite, save state to buffer
+C $89A2,37 Split coords into screen third + row/column offset
+C $89C7,3 Set attribute color for B cells at HL
+C $89CC,29 Random-pick screen-third wrap direction, advance HL per row
+C $89E9,3 Set attribute color for B cells at HL
+c $89F3 Set attribute color for B cells at HL
 c $8A03
-c $8A14
+c $8A14 Sprite draw dispatch variant, C=4 (unconfirmed)
+C $8A1E,4 Off-screen: return with carry set
+C $8A28,2 On-screen: set draw flag
+C $8A33,5 Random-pick blit entry point
+C $8A19,3 Clip sprite rectangle against screen edge
+C $8A2A,3 Compute screen draw address for sprite, save state to buffer
 c $8A7B
-c $8AC3
+C $8A80,3 Clip sprite rectangle against screen edge
+C $8A8B,3 Compute screen draw address for sprite, save state to buffer
+c $8AC3 Sprite draw dispatch: clip and compute screen address, C=$0C
+C $8AE0,29 One masked byte per row: AND mask then OR sprite data
+C $8AC8,3 Clip sprite rectangle against screen edge
+C $8AD2,3 Compute screen draw address for sprite, save state to buffer
 b $8B4B
 t $8B9F
 b $8BA2
@@ -628,7 +880,11 @@ t $8C42
 b $8C45
 t $8CB9
 b $8CBC
-c $8CC9
+c $8CC9 Clip sprite, then AND/OR-mask blit rows via SP into screen
+C $8CE1,29 One masked byte per row: AND mask then OR sprite data
+C $8D16,66 Unrolled: same AND/OR blit repeated per screen row
+C $8CCE,3 Clip sprite rectangle against screen edge
+C $8CD8,3 Compute screen draw address for sprite, save state to buffer
 b $8D58
 t $8D6D
 b $8D71
@@ -649,18 +905,21 @@ b $8E48
 t $8E5E
 b $8E6D
 c $8E83
-c $8E92
+c $8E92 Multiply HL by 10, add DE (unconfirmed)
 R $8E92 I:H ??
 R $8E92 I:E ??
 c $8EB5
 b $8ECC
 c $8EE3
-C $8EFC,3 -> $6C7A - We've got A more grenades
+C $8EF7,3 => Sprite draw dispatch
+C $8EFC,3 We've got A more grenades
+C $8F07,3 Sprite draw dispatch
 C $8F0A,3 +1000
-C $8F0D,3 -> $6825 - Update Score
-C $8F12,3 -> $6456
+C $8F0D,3 Update Score
+C $8F12,3 Trigger sound effect A into free slot at $6433
 c $8F17
 c $8F26
+C $8F32,3 => Sprite draw dispatch
 c $8F35
 b $8F42
 b $8F60
@@ -675,16 +934,22 @@ b $8FB7
 b $8FC6
 b $8FCF
 c $9014
+C $9021,3 Sprite draw dispatch variant, C=4
+C $903B,3 => Sprite draw dispatch
 c $903E
+C $904A,3 => Sprite draw dispatch
 c $904D
 C $9054,3 Get sprite addr Cliff edge left
 C $9058,3 Get sprite addr ???
 C $9070,3 Get sprite addr Cliff edge right
-c $90A1
+C $9091,3 Adjust and clip sprite draw, calls $8A14
+C $909C,3 Adjust and clip sprite draw, calls $8A14
+c $90A1 Adjust and clip sprite draw, calls $8A14 (unconfirmed)
 R $90A1 I:B ??
 R $90A1 I:C ??
 R $90A1 I:A ??
 R $90A1 I:DE ??
+C $90A7,3 Sprite draw dispatch variant, C=4
 c $90AC
 C $90B8,3 Get sprite addr Cliff top right; width 6
 C $90BC,3 Get sprite addr Cliff bottom right; width 6
@@ -694,6 +959,7 @@ C $90C8,2 Sprite height = 20
 C $90CD,3 Draw sprite HL
 C $90D2,2 Sprite height = 12
 C $90DD,3 Draw sprite HL
+C $90E8,3 Clip sprite rectangle against screen edge
 C $90F7,3 HL = HL + A
 b $9124
 c $9132 Decrement Land space or process next record in the sequence
@@ -711,24 +977,25 @@ C $9150,3 Save current level sequence address
 C $9153,1 $00 - Land space?
 C $9154,2 no => jump
 C $9157,3 Save Land space size
-C $9162,3 -> $7A10
+C $9162,3 => Abort
 C $9165,2 Spawn Point/Level End ?
 C $9167,2 no => jump
 C $9169,1 Level End ?
 C $916A,2 no => jump
-C $9171,3 Process codes $01-28, not $22
+C $9171,3 Process record codes $01-28, not $22
 C $9174,2 => process next record in the sequence
 b $9176
-c $917C
+c $917C Walk $FF00 buffer chain (offset $FD88), increment field at +4
 C $917C,3 Get Offset in $FF00 buffer
 C $918C,3 Get Offset in $FF00 buffer
-c $9193
+c $9193 Advance level scroll: walk $FF00 buffer, process sequence record
+C $9199,3 Walk $FF00 buffer chain (offset $FD88), increment field at +4
 C $91AD,3 ?? Smth about Truck
 C $91B0,3 ?? Smth about Motorbike
 C $91B3,3 ?? Smth about Jeep
 C $91B6,3 Get Offset in $FF00 buffer
 C $919C,3 Decrement Land space or process next record in the sequence
-C $91E0,3 -> $7A10
+C $91E0,3 => Abort
 c $91E3
 C $91E6,3 Get Offset in $FF00 buffer
 C $91F8,3 Update Offset in $FF00 buffer
@@ -1591,48 +1858,110 @@ B $98C8,2 Fortress gates
 B $98CA,2 Land Space
 B $98CC,2 Spawn Point
 B $98CE,1 End of levels marker
-c $98D0 -> $9922
-c $98D3 -> $98EA - HL = HL + A
-c $98D6 -> $98F0 - (HL) -> HL
-c $98D9 -> $98F5
-c $98DC -> $9904 - DOWN HL
+c $98D0 Update object IX position, clip to screen, dispatch sprite draw (redirect)
+C $98D0,3 => Update object IX position, clip to screen, dispatch sprite draw
+c $98D3 HL = HL + A (redirect)
+C $98D3,3 => HL = HL + A
+c $98D6 (HL) -> HL (redirect)
+C $98D6,3 => (HL) -> HL
+c $98D9 Convert row number to screen line address (redirect)
+C $98D9,3 => Convert row number to screen line address
+c $98DC DOWN HL (redirect)
+C $98DC,3 => DOWN HL - move HL to the next screen line
 c $98DF
 b $98E2 Offsets in $A000 sprites block, lo byte
 c $98EA HL = HL + A
 c $98F0 (HL) -> HL
-c $98F5
+c $98F5 Convert row number to screen line address (via $FE00 table)
 C $98FD,2 $FE00 - table of even screen lines addresses
 c $9904 DOWN HL - move HL to the next screen line
 b $9913
-c $9922
+c $9922 Update object IX position, clip to screen, dispatch sprite draw
+C $993E,20 Check object bounds against clip window (IX+8/9 vs B/C)
 C $9962,2 lo byte of $98E2
 C $99C0,2 $FE00 - table of even screen lines addresses
+C $99CF,10 Compute screen draw address, dispatch to blit routine
+C $99DC,3 => Clip sprite edge, dispatch to masked blit
+C $99E9,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $99F0,3 => Masked-OR blit variant, draws sprite row across screen thirds
 c $9A46
-c $9A6E
+C $9A5A,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $9A60,3 => Masked-OR blit variant, draws sprite row across screen thirds
+c $9A6E Clip sprite edge, dispatch to masked blit
+C $9A78,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $9A87,3 => Masked-OR blit variant, draws sprite row across screen thirds
+C $9A95,42 Masked-OR blit: draw sprite row across screen thirds
 c $9AE6
-c $9B05
+C $9AF3,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $9B02,3 => Masked-OR blit variant, draws sprite row across screen thirds
+c $9B05 Masked-OR blit variant, draws sprite row across screen thirds
+C $9B10,4 AND-mask then OR sprite byte, first third
+C $9B17,5 AND-mask then OR sprite byte, second third
+C $9B27,4 AND-mask then OR sprite byte, third third
+C $9B49,4 Advance column, check wrap point
+C $9B4F,7 Wrap to next screen third if needed
 c $9B61
+C $9B7F,3 Compute screen address for sprite row via IX object
+C $9B88,3 => Erase sprite
+C $9B8D,3 => Erase sprite variant
+C $9B94,3 => Erase sprite
 c $9B97
+C $9BB2,3 Compute screen address for sprite row via IX object
+C $9BBC,3 => Unmasked-OR blit variant
+C $9BC8,3 => Unmasked-OR blit variant, draws opaque sprite row across screen thirds
 c $9BCB
+C $9BE2,3 Compute screen address for sprite row via IX object
+C $9BEB,3 => Erase sprite variant
+C $9BEF,3 => Erase sprite
+C $9BF2,3 => Erase sprite
 c $9BF5
-c $9C23
+C $9C10,3 Compute screen address for sprite row via IX object
+C $9C1D,3 => Unmasked-OR blit variant
+C $9C20,3 => Unmasked-OR blit variant, draws opaque sprite row across screen thirds
+c $9C23 Compute screen address for sprite row via IX object (unconfirmed)
 C $9C2D,2 $FE00 - table of even screen lines addresses
 C $9C5F,2 $FE00 - table of even screen lines addresses
-c $9C6B
-c $9CB1
-c $9CED
-c $9D1F
-c $9D5B
-c $9D8D
-c $9DCC
+c $9C6B Erase sprite: AND-mask bytes off screen, SP walks data as pointer
+C $9C72,16 One erased byte per third: AND clear mask into screen
+C $9C93,15 Advance to next screen column, wrap to next third, loop columns
+c $9CB1 Erase sprite: AND-mask bytes off screen, SP walks data as pointer
+C $9CB8,16 One erased byte per third: AND clear mask into screen
+C $9CCF,15 Advance to next screen column, wrap to next third, loop
+c $9CED Erase sprite variant: AND-mask 2 bytes per column via SP
+C $9CF6,4 Clear one column byte
+C $9CFB,3 Clear the paired byte
+C $9D01,3 Check screen third boundary
+c $9D1F Erase sprite: AND-mask bytes off screen, SP walks data as pointer
+C $9D26,16 One erased byte per third: AND clear mask into screen
+C $9D3D,15 Advance to next screen column, wrap to next third, loop
+c $9D5B Erase sprite variant: AND-mask row bytes via SP
+C $9D63,4 Clear one screen byte
+C $9D6A,4 Clear the paired byte
+C $9D6F,3 Check screen third boundary
+c $9D8D Unmasked-OR blit variant, draws opaque sprite row across screen thirds
+C $9D93,17 One blitted byte per third: OR sprite data into screen
+C $9DAE,15 Advance to next screen column, wrap to next third, loop
+c $9DCC Unmasked-OR blit variant: 2 bytes per column via SP
+C $9DD2,4 OR sprite byte into one column byte
+C $9DD8,3 OR sprite byte into paired byte
+C $9DE5,3 Check screen third boundary
 c $9E03
-c $9E32
+c $9E32 Unmasked-OR blit variant: 2 bytes per column via SP
+C $9E38,4 OR sprite byte into one column byte
+C $9E43,3 OR sprite byte into paired byte
+C $9E4B,3 Check screen third boundary
 c $9E69
-c $9E98
-c $9EDF
+c $9E98 Masked-OR blit variant, draws sprite row across screen thirds
+C $9E99,30 One blitted byte per third: AND mask then OR sprite data
+C $9EC0,17 Advance to next screen row, wrap to next third, loop rows
+c $9EDF Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $9EDF,20 One blitted byte per third: OR sprite data into screen
+C $9EFE,17 Advance to next screen row, wrap to next third, loop rows
 c $9F1D
 C $9F40,2 $FE00 - table of even screen lines addresses
+C $9F71,3 => Masked-OR blit variant, draws sprite row across screen thirds
 C $9FA3,2 $FE00 - table of even screen lines addresses
+C $9FD5,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
 c $9FDE
 c $9FF5
 b $A000 Sprites of Player and troopers; width 3 height 21
@@ -1876,18 +2205,23 @@ t $D74E
 b $D751
 t $D75F
 b $D762
-c $DC83 -> $DF16 - Get random byte??
-c $DC86 -> $DF37
-c $DC89 -> $DCDF - Initialization and go to game main loop
-c $DC8C -> $E01B
-c $DC8F -> $DDBE
-c $DC92 -> $DF33
+c $DC83 Get random byte?? (redirect)
+C $DC83,3 => Get random byte??
+c $DC86 Entry E=0, dispatch bullet/collision handler via $DF39 (redirect)
+C $DC86,3 => Entry E=0, dispatch bullet/collision handler via $DF39
+c $DC89 Initialization and go to game main loop (redirect)
+C $DC89,3 => Initialization and go to game main loop
+c $DC8C Check IX flag and column bound, dispatch (redirect)
+C $DC8C,3 => Check IX flag and column bound, dispatch
+c $DC8F Check screen brightness threshold, inside $DD8D (redirect)
+c $DC92 Entry E=2, dispatch bullet/collision handler via $DF39 (redirect)
+C $DC92,3 => Entry E=2, dispatch bullet/collision handler via $DF39
 c $DC95
-C $DC95,3 -> $9193
+C $DC95,3 Advance level scroll
 c $DCAF
 C $DCBB,3 Get random byte??
-C $DCCF,3 -> $E1AC
-C $DCD6,3 -> $E44D
+C $DCCF,3 Common enemy-object init helper
+C $DCD6,3 Find free enemy slot in $5B11 table, inside $E01B
 c $DCDF Initialization and go to game main loop
 C $DCF3,3 Player's object record address
 C $DCF6,2 ($5BDA) = $10 - Initial starting column
@@ -1901,84 +2235,110 @@ C $DD0E,1 HL = $5BE5
 C $DD11,1 HL = $5BE6
 C $DD15,16 Initialize values for random byte calculation
 C $DD38,4 $01 - Enemy delay (Time until first enemy appears)
+C $DD3C,3 => Game's main loop, Part 1
 b $DD3F
 c $DD71 Process object records at $5B11
-C $DD79,3 => Process object record IX
+C $DD79,3 Process object IX??
 C $DD7F,2 Next record
 C $DD84,2 End marker?
 c $DD89 Process Player's object record
 C $DD89,4 Player's object record address
 c $DD8D Process object IX??
+C $DD90,4 Check wall-solid flag, adjust bit 0
+C $DDA2,2 Frame index * 2 into E
+C $DDA4,8 Add direction offset, index frame table $DD3F
+C $DDB6,5 Skip further checks if state (IX+$12) = $09
 R $DD8D I:IX Address of the 20-byte object record
-C $DDF5,3 -> $98F5
-C $DE8E,3 -> $806B
+C $DDF5,3 Convert row number to screen line address
+C $DE77,3 => Update object IX position, clip to screen, dispatch sprite draw
+C $DE8E,3 => Mark map cells for object IX, direction-aware
 c $DE91 Game's main loop, Part 1
 C $DE91,4 Is Player alive??
-C $DEA9,3 -> $6456
-C $DECB,3 -> $91AA
+C $DEA9,3 Trigger sound effect A into free slot at $6433
+C $DECB,3 Reset R register (random seed), inside $9193
 C $DECE,3 Process object records at $5B11
 C $DED5,4 Check bit 6 (??) of Last joystick/keyboard bits ($FD85)
 b $DEDD
 c $DEEF Game's main loop, Part 2
-C $DEEF,3 -> $ED52
-C $DEF2,3 -> $E4FC
-C $DEF5,3 -> $ECC1
-C $DEF8,3 -> $E6FE
-C $DEFB,3 -> $F26E
-C $DEFE,3 -> $F36D
-C $DF01,3 -> $F381
+C $DEEF,3 Rebuild active-object list at $F900 from $FF00 buffer
+C $DEF2,3 Set up player object pointers (IX=$5BDA)
+C $DEF5,3 Check fire button and joystick input
+C $DEF8,3 Update boss/enemy state via IX=$5B11
+C $DEFB,3 Scan object table at $F82D, init $F8ED marker
+C $DEFE,3 Set up object table $F81E, dispatch
+C $DF01,3 Scan object table (IX,$0E stride), process motion
 C $DF04,3 Process Player's object record
-C $DF07,3 -> $F707
-C $DF0A,3 -> $E2EA
-C $DF0D,3 -> $6593
+C $DF07,3 Scan object table $F856, entry stride $14
+C $DF0A,3 Decrement Enemy delay ($FDDD), spawn enemy by Area ($FDE5) when due
+C $DF0D,3 Scan $6648 table, call $65A5 for active entries
+C $DF13,3 => Game's main loop, Part 1
 c $DF16 Get random byte??
-c $DF33
-c $DF37
+c $DF33 Entry E=2, dispatch bullet/collision handler via $DF39
+c $DF37 Entry E=0, dispatch bullet/collision handler via $DF39
 c $DF67
 c $DF6D
 c $DF71
 C $DF71 Player is dead??
-c $DF7B
-c $E01B
-C $E061,3 -> $E1AC
-C $E075,3 -> $E1AC
+c $DF7B Bullet collision check, carry set on hit
+C $DF96,8 Check wall-solid bit (IX+$0B), mark tile hit if breakable
+C $DFBE,10 Compare bullet position against 4 edges of wall tile
+C $E014,7 No overlap on any edge: miss, return to $DF40
+c $E01B Check IX flag and column bound, dispatch (unconfirmed)
+C $E033,3 Entry E=2, dispatch bullet/collision handler via $DF39
+C $E061,3 Common enemy-object init helper
+C $E075,3 Common enemy-object init helper
 C $E0A2,4 Check bit 3 (Up) of Last joystick/keyboard bits ($FD85)
 b $E0BF
-c $E100 -> $E4FC
-c $E103 -> $ECC1
-c $E106 -> $E6FE
-c $E109 -> $ED52
-c $E10C -> $E2EA
-c $E10F -> $E44D
-c $E112 -> $E1AC
+c $E100 Set up player object pointers (IX=$5BDA) (redirect)
+C $E100,3 => Set up player object pointers
+c $E103 Check fire button and joystick input (redirect)
+C $E103,3 => Check fire button and joystick input
+c $E106 Update boss/enemy state via IX=$5B11 (redirect)
+C $E106,3 => Update boss/enemy state via IX=$5B11
+c $E109 Rebuild active-object list at $F900 from $FF00 buffer (redirect)
+C $E109,3 => Rebuild active-object list at $F900 from $FF00 buffer
+c $E10C Decrement Enemy delay ($FDDD), spawn enemy by Area ($FDE5) when due (redirect)
+C $E10C,3 => Decrement Enemy delay ($FDDD), spawn enemy by Area ($FDE5) when due
+c $E10F Find free enemy slot in $5B11 table, inside $E01B (redirect)
+c $E112 Common enemy-object init helper (redirect)
+C $E112,3 => Common enemy-object init helper
 b $E115
-c $E1AC
-C $E1AC,3 -> $DF16
+c $E1AC Common enemy-object init helper (unconfirmed)
+C $E1AC,3 Get random byte??
 c $E1B5
-c $E1D1
+C $E1BF,3 Check pickup/collision near object, award score
+C $E1CC,3 Check pickup/collision near object, award score
+c $E1D1 Check pickup/collision near object, award score
 C $E1EA,3 +750??
-C $E1ED,3 -> $6825 - Update Score
+C $E1ED,3 => Update Score
 c $E224
 C $E24A,3 Get Area number
-C $E268,3 -> $F4F6
+C $E268,3 Scan object table (IX,$0E stride), compute and store motion vector
 C $E28A,3 +1500?? for destroying a Jeep??
-C $E28D,3 -> $6825 - Update Score
+C $E28D,3 Update Score
 C $E2AE,4 Player is dead??
 C $E2D8,4 Player is dead??
-c $E2DD
-c $E2EA
+c $E2DD Init enemy object (BC=$0806, type $07) (unconfirmed)
+c $E2EA Decrement Enemy delay ($FDDD), spawn enemy by Area ($FDE5) when due
 C $E2FF,3 Get Area number
 C $E323,3 Get Area number
 C $E326,2 $03 - Fortress byte
-C $E360,3 -> $DF16 - Get random byte??
-C $E39B,3 -> $DF16 - Get random byte??
-C $E3A4,3 -> $DF16 - Get random byte??
-C $E425,3 -> $DF16 - Get random byte??
-C $E42C,3 -> $DF16 - Get random byte??
-C $E438,3 -> $DF16 - Get random byte??
-C $E48D,3 -> $DF33
+C $E32D,3 Init enemy object (BC=$0806, type $07)
+C $E332,3 Init enemy object (BC=$0806, type $07)
+C $E337,3 Init enemy object (BC=$0806, type $07)
+C $E340,3 Init enemy object (BC=$0806, type $07)
+C $E360,3 Get random byte??
+C $E36D,3 Common enemy-object init helper
+C $E39B,3 Get random byte??
+C $E3A0,3 => Check enemy position on-screen, trigger action
+C $E3A4,3 Get random byte??
+C $E425,3 Get random byte??
+C $E42C,3 Get random byte??
+C $E438,3 Get random byte??
+C $E440,3 Common enemy-object init helper
+C $E48D,3 Entry E=2, dispatch bullet/collision handler via $DF39
 b $E4F2
-c $E4FC
+c $E4FC Set up player object pointers (IX=$5BDA)
 C $E4FC,4 Player's object record address
 C $E546,3 Get last joystick/keyboard bits
 C $E54C,3 Update last joystick/keyboard bits
@@ -1986,7 +2346,7 @@ C $E57C,4 Player is dead??
 C $E586,3 Get last joystick/keyboard bits
 c $E5B8
 c $E5DB
-C $E607,3 -> $F34F
+C $E607,3 Clamp/check coordinate H
 c $E628
 c $E648
 C $E65B,4 Check bit 0 (Right) of Last joystick/keyboard bits ($FD85)
@@ -1994,68 +2354,96 @@ c $E679
 C $E68C,4 Check bit 1 (Left) of Last joystick/keyboard bits ($FD85)
 c $E6A8
 C $E6BC,4 Check bit 3 (Up) of Last joystick/keyboard bits ($FD85)
+C $E6D8,3 => Check IX flag and column bound, dispatch
 c $E6DB
-c $E6FE
+c $E6FE Update boss/enemy state via IX=$5B11 (unconfirmed)
 N $E753 Killed the object
 C $E75B,3 +200 for the kill
 C $E765,1 change to +2000
-C $E766,3 -> $6825 - Update Score
-C $E76B,3 -> $6456
-c $E77C
+C $E766,3 Update Score
+C $E76B,3 Trigger sound effect A into free slot at $6433
+c $E77C Scan object table for entry near position (unconfirmed)
 R $E77C I:HL ??
 R $E77C I:D ??
 R $E77C I:B ??
 C $E77F,2 Inactive record marker??
 c $E794
 C $E7B9,4 Player is dead??
+C $E7C3,3 => Dispatch enemy AI by state
+C $E7CA,3 => Dispatch enemy AI by state
+C $E7EE,3 Compute direction bits toward player position
+C $E83B,3 Check position bounds, set flags
+C $E859,3 Compute direction bits toward player position
 c $E86B
 c $E881
-C $E887,3 -> $DF16 - Get random byte??
+C $E881,3 Compute direction bits toward player position
+C $E887,3 Get random byte??
+C $E896,3 Check enemy position on-screen, trigger action
 c $E8A0
-C $E8C4,3 -> $DF16 - Get random byte??
-C $E8E0,3 -> $DF16 - Get random byte??
+C $E8B4,3 Compute direction bits toward player position
+C $E8BE,3 Compute direction bits toward player position
+C $E8C4,3 Get random byte??
+C $E8CB,3 Check enemy position on-screen, trigger action
+C $E8E0,3 Get random byte??
 c $E90A
-C $E960,3 -> $DF16 - Get random byte??
-c $E972
+C $E91D,3 Common enemy-object init helper
+C $E960,3 Get random byte??
+C $E96C,3 Check enemy position on-screen, trigger action
+c $E972 Dispatch enemy AI by state (IX+$12)
+C $E972,7 Special-case states $06 and $0A
+C $E984,9 Look up state handler, jump to it
+C $E992,8 Check for a small set of special states
+C $E9AE,3 Use alternate delay field (IX+$13)
 b $E9C7
 t $E9E1
 b $E9E4
 t $EAC4
 b $EAC7
-c $EB13
+c $EB13 Set enemy AI delay/direction by Area number ($FDE5)
 C $EB15,3 Get Area number
-C $EB21,3 -> $DF16 - Get random byte??
+C $EB21,3 Get random byte??
+C $EB28,3 Compute direction bits toward player position
 C $EB44,3 Get Area number
-C $EB55,3 -> $DF16 - Get random byte??
+C $EB55,3 Get random byte??
+C $EB59,3 Check enemy position on-screen, trigger action
 c $EB68
 c $EB7B
 c $EB96
-C $EB9C,3 -> $DF16 - Get random byte??
-C $EBC0,3 -> $DF16 - Get random byte??
-c $EBE1
-c $EC1B
+C $EB9C,3 Get random byte??
+C $EBB4,3 Compute direction bits toward player position
+C $EBC0,3 Get random byte??
+C $EBDB,3 Check enemy position on-screen, trigger action
+c $EBE1 Compute direction bits toward player position (unconfirmed)
+c $EC1B Check enemy position on-screen, trigger action (unconfirmed)
+C $EC20,3 Look up entry in table at $EC81
 C $EC3F,3 Get Area number
-C $EC52,3 -> $F4F6
+C $EC52,3 Scan object table (IX,$0E stride), compute and store motion vector
 c $EC58
 b $EC81
-c $ECC1
+c $ECC1 Check fire button and joystick input
 C $ECC7,4 Check bit 4 (Fire) of Last joystick/keyboard bits ($FD85)
 C $ECCF,2 Fire => jump
 N $ECE3 Fire button pressed
 C $ECFA,3 Get grenades number
 C $ECFF,3 Get player's column
-C $ED11,3 -> $F4E3
+C $ED11,3 Select object table $F81E
 C $ED15,2 -1 more grenades
-C $ED17,3 -> $6C7A - We've got A more grenades
+C $ED17,3 => We've got A more grenades
 C $ED1F,3 Player's object record address
-C $ED29,3 -> $F24A
-C $ED2E,3 -> $6456
-c $ED31
-c $ED52
-C $EDAE,3 -> $7511 - XOR AF and AF' with every byte in $F900-F9FF
+C $ED26,3 Look up entry in table at $EC81
+C $ED29,3 Scan object table at $F82D, entry stride 5
+C $ED2E,3 => Trigger sound effect A into free slot at $6433
+c $ED31 Look up entry in table at $EC81 (unconfirmed)
+c $ED52 Rebuild active-object list at $F900 from $FF00 buffer
+C $ED5C,7 Align to page, compare against limit (IY+$08)
+C $ED65,6 Follow buffer link, read record type byte
+C $ED6F,6 Convert type to index into $E116 table
+C $ED75,6 Read Y coordinate, scale into $F900 entry
+C $ED7C,3 Check high bit (visible flag) of table byte
+C $EDAE,3 XOR AF and AF' with every byte in $F900-F9FF
 c $EDC8
 c $EDD6
-C $EDEE,3 -> $DF16 - Get random byte??
+C $EDEE,3 Get random byte??
 c $EE11
 c $EE15
 b $EE24
@@ -2067,7 +2455,9 @@ t $EEBF
 b $EEC3
 t $EF05
 b $EF08
-c $EF37
+c $EF37 Init object record via $EDC8, entry size $0E
+C $EF44,7 Check remaining slot count, reset when exhausted
+C $EF4E,12 Mark next slot used, bump ($FDE1) counter
 c $EF7C
 b $EFA3
 t $EFBB
@@ -2077,9 +2467,9 @@ b $EFC5
 t $EFD2
 b $EFD7
 c $EFDD
-C $EFF5,3 -> $DF16 - Get random byte??
+C $EFF5,3 Get random byte??
 C $F003,3 Get Area number
-C $F045,3 -> $DF16 - Get random byte??
+C $F045,3 Get random byte??
 b $F052
 t $F05D
 b $F060
@@ -2089,7 +2479,7 @@ t $F072
 b $F075
 c $F076
 C $F093,3 +3000
-C $F096,3 -> $6825 - Update Score
+C $F096,3 Update Score
 b $F09E
 t $F0ED
 b $F0F0
@@ -2101,56 +2491,88 @@ c $F114
 c $F126
 c $F14C
 c $F180
-c $F1BB
+C $F1B3,3 Check position bounds, set flags
+c $F1BB Check position bounds, set flags (unconfirmed)
+C $F1D8,3 => Select object table $F7C9
 b $F1DD
 t $F1DE
 b $F1E1
-c $F200 -> $F4F6
-c $F203 -> $F381
-c $F206 -> $F707
-c $F209 -> $F26E
-c $F20C -> $F24A
-c $F20F -> $F4E9
-c $F212 -> $F36D
+c $F200 Scan object table (IX,$0E stride), compute and store motion vector (redirect)
+C $F200,3 => Scan object table (IX,$0E stride), compute and store motion vector
+c $F203 Scan object table (IX,$0E stride), process motion (redirect)
+C $F203,3 => Scan object table (IX,$0E stride), process motion
+c $F206 Scan object table $F856, entry stride $14 (redirect)
+C $F206,3 => Scan object table $F856, entry stride $14
+c $F209 Scan object table at $F82D, init $F8ED marker (redirect)
+C $F209,3 => Scan object table at $F82D, init $F8ED marker
+c $F20C Scan object table at $F82D, entry stride 5 (redirect)
+C $F20C,3 => Scan object table at $F82D, entry stride 5
+c $F20F Select object table $F7C9 (redirect)
+C $F20F,3 => Select object table $F7C9
+c $F212 Set up object table $F81E, dispatch (redirect)
+C $F212,3 => Set up object table $F81E, dispatch
 b $F215
-c $F21B -> $F4E3
-c $F21E -> $F34F
+c $F21B Select object table $F81E (redirect)
+C $F21B,3 => Select object table $F81E
+c $F21E Clamp/check coordinate H (redirect)
+C $F21E,3 => Clamp/check coordinate H
 c $F221
-c $F237
+C $F227,3 Clear/init table records
+C $F22A,3 Clear/init table records
+C $F22D,3 Clear/init table records
+c $F237 Clear/init table records (entry size $0E)
 c $F23B
-c $F24A
-c $F26E
-C $F314,3 -> $E44D
-C $F323,3 -> $6456
+c $F24A Scan object table at $F82D, entry stride 5
+c $F26E Scan object table at $F82D, init $F8ED marker
+C $F314,3 Find free enemy slot in $5B11 table, inside $E01B
+C $F323,3 Trigger sound effect A into free slot at $6433
 C $F326,3 +1000
-C $F329,3 -> $6825 - Update Score
-C $F331,3 -> $DF37
-c $F34F
-c $F36D
+C $F329,3 Update Score
+C $F331,3 Entry E=0, dispatch bullet/collision handler via $DF39
+C $F349,3 Scan $F856 table (stride $11), find/init matching entry
+c $F34F Clamp/check coordinate H (unconfirmed)
+c $F36D Set up object table $F81E, dispatch
 c $F37B
-c $F381
+c $F381 Scan object table (IX,$0E stride), process motion
+C $F3A4,3 Generate rotated bit-mask pattern A, variant
+C $F3BB,3 Clamp/check coordinate H
+C $F446,3 Set explosion/effect buffer values from object IX
+C $F453,3 Generate rotated bit-mask pattern A
 C $F46C,4 Player is dead??
-C $F4CA,3 -> $6600
-C $F4CF,3 -> $6456
-c $F4E3
-c $F4E9
-c $F4F6
-c $F582
-C $F589,3 -> $98F5
-c $F5A0
-C $F5A7,3 -> $98F5
+C $F4BC,3 Set explosion/effect buffer values from object IX
+C $F4CA,3 Find free slot in $6648 table
+C $F4CF,3 Trigger sound effect A into free slot at $6433
+C $F4D4,3 Scan $F856 table (stride $11), find/init matching entry
+c $F4E3 Select object table $F81E
+c $F4E9 Select object table $F7C9
+c $F4F6 Scan object table (IX,$0E stride), compute and store motion vector
+C $F502,4 Check slot empty (byte = $FF)
+C $F507,5 Advance to next slot, retry
+C $F536,3 Store direction flags to (IX+$00)
+C $F539,6 Store speed to (IX+$01)
+C $F53F,9 Store target coordinates (IX+$02..$05)
+c $F582 Generate rotated bit-mask pattern A (unconfirmed)
+C $F582,3 Check row/column bounds
+C $F589,3 Convert row number to screen line address
+c $F5A0 Generate rotated bit-mask pattern A, variant (unconfirmed)
+C $F5A0,3 Check row/column bounds
+C $F5A7,3 Convert row number to screen line address
 c $F5BF
+C $F5C1,3 Generate rotated bit-mask pattern A, variant
 c $F5C6
-c $F5CD
-c $F5DD
-C $F64D,3 -> $9922
-C $F66E,3 -> $9922
-C $F684,3 -> $9922
+C $F5C8,3 Generate rotated bit-mask pattern A
+c $F5CD Check row/column bounds (used by $F582/$F5A0)
+c $F5DD Set explosion/effect buffer values from object IX (unconfirmed)
+C $F64D,3 Update object IX position, clip to screen, dispatch sprite draw
+C $F66E,3 Update object IX position, clip to screen, dispatch sprite draw
+C $F684,3 Update object IX position, clip to screen, dispatch sprite draw
 c $F68A
-c $F6C2
-c $F707
+c $F6C2 Scan $F856 table (stride $11), find/init matching entry
+C $F6D7,10 Match found: mark entry, rewind to its start
+C $F704,3 => Generate rotated bit-mask pattern A, variant
+c $F707 Scan object table $F856, entry stride $14
 C $F716,3 Record width = 20
-C $F737,3 -> $DDBE
+C $F737,3 Check screen brightness threshold, inside $DD8D
 b $F73C
 B $F73C,,14 Record width 14
 B $F7C8,1 End marker
@@ -2173,7 +2595,8 @@ b $F900 Buffer
 b $FA00 Checksums??
 b $FB00
 b $FC06 Buffer for at least 144 bytes
-c $FCFC -> $7357
+c $FCFC Game main loop / frame handler (redirect)
+C $FCFC,3 => Game main loop / frame handler
 b $FCFF Stack, grows to lower addresses from $FD80
 W $FD00,,8
 b $FD80 (IY+xx) variables; IY=$FD80
@@ -2188,7 +2611,7 @@ B $FD88,1 (IY+$08) -  Offset in $FF00 buffer = $00
 W $FD8A,2 Current address in level sequence, starts from $9236
 W $FD8D,2 Saved SP
 W $FD8F,2
-c $FD91 -> $7A5D - Delay by BC-1 HALTs
+c $FD91 Delay by BC-1 HALTs (redirect)
 b $FD94 (IY+xx) variables continued
 B $FD95,1 (IY+$15) - ??
 B $FD96,1 (IY+$16) - ?? = $88,$AA
@@ -2247,6 +2670,7 @@ B $FDE9,1 (IY+$69) - Score, 2nd char = '0'
 B $FDEE,1 (IY+$6E) - ??
 B $FDF0,1 (IY+$70) - ?? = $88
 B $FDF1,1 (IY+$71) - ??
+B $FDF7,1 Border color
 B $FDFA,1 (IY+$7A) - ?? = $00,$04
 B $FDFB,1 ?? = $00
 B $FDFC,1 (IY+$7C) - ?? = $00

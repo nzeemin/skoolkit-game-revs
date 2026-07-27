@@ -9552,7 +9552,7 @@ Room 13 data
 <td class="instruction">DEFB $00</td>
 </tr>
 </table>
-<div id="37632" class="description">9300: Routine at 9300</div>
+<div id="37632" class="description">9300: Play win/level-complete jingle</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -10082,7 +10082,7 @@ Used by the routine at <a href="asm.html#54133">D375</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="38370" class="description">95E2: Routine at 95E2</div>
+<div id="38370" class="description">95E2: Play music/sound-effect sequence (list of tone groups)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18466,7 +18466,7 @@ Used by the routine at <a href="asm.html#38370">95E2</a>.
 <td class="comment-1" rowspan="1">=&gt; Start point</td>
 </tr>
 </table>
-<div id="49155" class="description">C003: Routine at C003</div>
+<div id="49155" class="description">C003: Interrupt handler: decode input, tick frame counters</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18477,22 +18477,20 @@ Used by the routine at <a href="asm.html#38370">95E2</a>.
 <tr>
 <td class="address-2"><span id="49155"></span>C003</td>
 <td class="instruction">PUSH AF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Save registers</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49156"></span>C004</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49157"></span>C005</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Save registers</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49158"></span>C006</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49159"></span>C007</td>
@@ -18502,102 +18500,91 @@ Used by the routine at <a href="asm.html#38370">95E2</a>.
 <tr>
 <td class="address-1"><span id="49162"></span>C00A</td>
 <td class="instruction">LD HL,$FE02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Set frame-ready flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49165"></span>C00D</td>
 <td class="instruction">SCF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49166"></span>C00E</td>
 <td class="instruction">RL (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49168"></span>C010</td>
 <td class="instruction">LD HL,($FE05)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Advance frame counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49171"></span>C013</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49172"></span>C014</td>
 <td class="instruction">LD ($FE05),HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49175"></span>C017</td>
 <td class="instruction">LD HL,$FE99</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance water-color counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49178"></span>C01A</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49179"></span>C01B</td>
 <td class="instruction">LD HL,$FE73</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance object-1 counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49182"></span>C01E</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49183"></span>C01F</td>
 <td class="instruction">LD HL,$FE78</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance object-2 counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49186"></span>C022</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49187"></span>C023</td>
 <td class="instruction">LD HL,$FE7D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance object-3 counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49190"></span>C026</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49191"></span>C027</td>
 <td class="instruction">POP HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore registers</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49192"></span>C028</td>
 <td class="instruction">POP DE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49193"></span>C029</td>
 <td class="instruction">POP BC</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore registers</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49194"></span>C02A</td>
 <td class="instruction">POP AF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49195"></span>C02B</td>
 <td class="instruction">EI</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49196"></span>C02C</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="49197" class="description">C02D: Decode and store player input direction</div>
@@ -18797,7 +18784,7 @@ Used by the routine at <a href="asm.html#49155">C003</a>.
 <td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
-<div id="49285" class="description">C085: Routine at C085</div>
+<div id="49285" class="description">C085: Decode raw key/joystick input to direction code</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18811,177 +18798,162 @@ Used by the routine at <a href="asm.html#49197">C02D</a>.
 <tr>
 <td class="address-2"><span id="49285"></span>C085</td>
 <td class="instruction">CP $01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Dispatch by input source code (0/1/2)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49287"></span>C087</td>
 <td class="instruction">JR C,$C0C6</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49289"></span>C089</td>
 <td class="instruction">JR Z,$C0B5</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49291"></span>C08B</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check for third source</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49293"></span>C08D</td>
 <td class="instruction">JR Z,$C0B1</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49295"></span>C08F</td>
 <td class="instruction">LD BC,$EFFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">BC=keyboard port, HL=key table</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49298"></span>C092</td>
 <td class="instruction">LD HL,$C10D</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49301"></span>C095</td>
 <td class="instruction">LD A,($FE15)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check direction-changed flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49304"></span>C098</td>
 <td class="instruction">CP $01</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49306"></span>C09A</td>
 <td class="instruction">LD A,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A=0 (no key), skip if flag set</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49308"></span>C09C</td>
 <td class="instruction">JR C,$C0AC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49310"></span>C09E</td>
 <td class="instruction">JR NZ,$C0A7</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Use alt key table if needed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49312"></span>C0A0</td>
 <td class="instruction">LD HL,$C112</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49315"></span>C0A3</td>
 <td class="instruction">RRC B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance to next key row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49317"></span>C0A5</td>
 <td class="instruction">JR $C0AC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip alt read</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49319"></span>C0A7</td>
 <td class="instruction">CALL <a href="#49367">$C0D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read key row, advance</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49322"></span>C0AA</td>
 <td class="instruction">RRC B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49324"></span>C0AC</td>
 <td class="instruction">CALL <a href="#49367">$C0D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read key row, store result</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49327"></span>C0AF</td>
 <td class="instruction">JR $C0D3</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49329"></span>C0B1</td>
 <td class="instruction">IN A,($1F)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read joystick port</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49331"></span>C0B3</td>
 <td class="instruction">JR $C0D3</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49333"></span>C0B5</td>
 <td class="instruction">XOR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A=0, HL=alt key table</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49334"></span>C0B6</td>
 <td class="instruction">LD HL,$C117</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49337"></span>C0B9</td>
 <td class="instruction">LD BC,$EFFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">BC=keyboard port</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49340"></span>C0BC</td>
 <td class="instruction">CALL <a href="#49367">$C0D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read key row, advance</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49343"></span>C0BF</td>
 <td class="instruction">RRC B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49345"></span>C0C1</td>
 <td class="instruction">CALL <a href="#49367">$C0D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read key row, store</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49348"></span>C0C4</td>
 <td class="instruction">JR $C0D3</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49350"></span>C0C6</td>
 <td class="instruction">LD HL,$C0E5</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL=numeric key table</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49353"></span>C0C9</td>
 <td class="instruction">LD BC,$7FFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">BC=keyboard port</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49356"></span>C0CC</td>
 <td class="instruction">CALL <a href="#49367">$C0D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read key row, advance</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49359"></span>C0CF</td>
 <td class="instruction">RRC B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49361"></span>C0D1</td>
 <td class="instruction">JR C,$C0CC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop while no key found</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49363"></span>C0D3</td>
 <td class="instruction">LD ($FE10),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store decoded key, return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49366"></span>C0D6</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="49367" class="description">C0D7: Routine at C0D7</div>
@@ -19090,7 +19062,7 @@ Used by the routine at <a href="asm.html#49285">C085</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="49441" class="description">C121: Routine at C121</div>
+<div id="49441" class="description">C121: Check pause/reset keys, handle pause screen</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -19104,122 +19076,112 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 <tr>
 <td class="address-2"><span id="49441"></span>C121</td>
 <td class="instruction">LD A,$7F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read keyboard row (SPACE)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49443"></span>C123</td>
 <td class="instruction">IN A,($FE)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49445"></span>C125</td>
 <td class="instruction">RRA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check SPACE pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49446"></span>C126</td>
 <td class="instruction">JR C,$C135</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49448"></span>C128</td>
 <td class="instruction">LD A,$FE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read keyboard row (Q)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49450"></span>C12A</td>
 <td class="instruction">IN A,($FE)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49452"></span>C12C</td>
 <td class="instruction">RRA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check Q pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49453"></span>C12D</td>
 <td class="instruction">JR C,$C135</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49455"></span>C12F</td>
 <td class="instruction">CALL <a href="#50916">$C6E4</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Play click, restart game</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49458"></span>C132</td>
 <td class="instruction">JP <a href="#50365">start_0</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49461"></span>C135</td>
 <td class="instruction">LD BC,$BFFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read keyboard row (CAPS SHIFT)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49464"></span>C138</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49466"></span>C13A</td>
 <td class="instruction">BIT 0,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check CAPS SHIFT pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49468"></span>C13C</td>
 <td class="instruction">JR NZ,$C158</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49470"></span>C13E</td>
 <td class="instruction">LD HL,$92C0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">PAUSE message text + row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49473"></span>C141</td>
 <td class="instruction">LD C,$46</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49475"></span>C143</td>
 <td class="instruction">CALL <a href="#51918">$CACE</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw message and fill screen background color</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49478"></span>C146</td>
 <td class="instruction">CALL <a href="#50883">$C6C3</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Wait for key, check ENTER</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49481"></span>C149</td>
 <td class="instruction">CP $21</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49483"></span>C14B</td>
 <td class="instruction">JR NZ,$C146</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop until pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49485"></span>C14D</td>
 <td class="instruction">LD HL,$FED2</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Resume message text + row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49488"></span>C150</td>
 <td class="instruction">LD C,$38</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49490"></span>C152</td>
 <td class="instruction">CALL <a href="#51918">$CACE</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw message and fill screen background color</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49493"></span>C155</td>
 <td class="instruction">JP <a href="#50916">$C6E4</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Play click, return</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -19234,47 +19196,43 @@ This entry point is used by the routine at <a href="asm.html#50480">C530</a>.
 <tr>
 <td class="address-2"><span id="49496"></span>C158</td>
 <td class="instruction">LD BC,$7FFE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Read keyboard row (SYM SHIFT/M)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49499"></span>C15B</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49501"></span>C15D</td>
 <td class="instruction">BIT 1,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check key pressed, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49503"></span>C15F</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49504"></span>C160</td>
 <td class="instruction">LD A,($FE9A)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Toggle difficulty flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49507"></span>C163</td>
 <td class="instruction">XOR $01</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49509"></span>C165</td>
 <td class="instruction">AND $01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask and store</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49511"></span>C167</td>
 <td class="instruction">LD ($FE9A),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49514"></span>C16A</td>
 <td class="instruction">JP <a href="#50916">$C6E4</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Play click, return</td>
 </tr>
 </table>
 <div id="49517" class="description">C16D: Data block at C16D</div>
@@ -20426,187 +20384,171 @@ Used by the routines at <a href="asm.html#49518">prepare_level</a> and <a href="
 <td class="asm-label">draw_scene_element</td>
 <td class="address-2"><span id="49856"></span>C2C0</td>
 <td class="instruction">LD E,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">DE = element index into scene data table</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49857"></span>C2C1</td>
 <td class="instruction">LD A,($6003)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49860"></span>C2C4</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49861"></span>C2C5</td>
 <td class="instruction">LD HL,($FEA8)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = destination tile address</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49864"></span>C2C8</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49865"></span>C2C9</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store element index to tile map</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49866"></span>C2CA</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49867"></span>C2CB</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance and save tile pointer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49868"></span>C2CC</td>
 <td class="instruction">LD ($FEA8),HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49871"></span>C2CF</td>
 <td class="instruction">LD D,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = personage image data pointer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49873"></span>C2D1</td>
 <td class="instruction">LD HL,($6000)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49876"></span>C2D4</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Multiply index by 8</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49877"></span>C2D5</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49878"></span>C2D6</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49879"></span>C2D7</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49880"></span>C2D8</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Add offset, restore tile coord</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49881"></span>C2D9</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49882"></span>C2DA</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask row bits</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49883"></span>C2DB</td>
 <td class="instruction">AND $03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49885"></span>C2DD</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Shift row into high bits</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49886"></span>C2DE</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49887"></span>C2DF</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49888"></span>C2E0</td>
 <td class="instruction">ADD A,$E0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">D = screen attribute high byte</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49890"></span>C2E2</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49891"></span>C2E3</td>
 <td class="instruction">LD B,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Row counter = 8</td>
 </tr>
 <tr>
 <td class="asm-label">draw_scene_element_0</td>
 <td class="address-2"><span id="49893"></span>C2E5</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Copy pixel byte to screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49894"></span>C2E6</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49895"></span>C2E7</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance source, next screen row</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49896"></span>C2E8</td>
 <td class="instruction">INC D</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49897"></span>C2E9</td>
 <td class="instruction">DJNZ <a href="#49893">draw_scene_element_0</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop 8 rows</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="49899"></span>C2EB</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="49900" class="description">C2EC: Updates area of personage from offscreen to screen</div>
@@ -22754,7 +22696,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <td class="asm-label">start_2</td>
 <td class="address-2"><span id="50477"></span>C52D</td>
 <td class="instruction">CALL <a href="#37632">$9300</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Play win/level-complete jingle</td>
 </tr>
 </table>
 <div id="50480" class="description">C530: Draws title screen and handles menu selection</div>
@@ -24435,7 +24377,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="asm-label">play_loop</td>
 <td class="address-2"><span id="51108"></span>C7A4</td>
 <td class="instruction">CALL <a href="#49441">$C121</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check pause/reset keys, handle pause screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -24675,7 +24617,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="51223"></span>C817</td>
 <td class="instruction">CALL <a href="#51959">$CAF7</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Kill personage that fell off bottom of screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -24693,7 +24635,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="51233"></span>C821</td>
 <td class="instruction">CALL <a href="#51959">$CAF7</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Kill personage that fell off bottom of screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -25344,7 +25286,7 @@ Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html
 <td class="comment-1" rowspan="1">=&gt; Draw message</td>
 </tr>
 </table>
-<div id="51464" class="description">C908: Routine at C908</div>
+<div id="51464" class="description">C908: Draw single character to screen (8x8 font)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -25358,107 +25300,97 @@ Used by the routine at <a href="asm.html#51492">draw_message</a>.
 <tr>
 <td class="address-2"><span id="51464"></span>C908</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = char index</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51465"></span>C909</td>
 <td class="instruction">LD H,$00</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51467"></span>C90B</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Multiply by 8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51468"></span>C90C</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51469"></span>C90D</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51470"></span>C90E</td>
 <td class="instruction">LD BC,$3C00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Add font data base</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51473"></span>C911</td>
 <td class="instruction">ADD HL,BC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51474"></span>C912</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask row bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51475"></span>C913</td>
 <td class="instruction">AND $03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51477"></span>C915</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Shift row into high bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51478"></span>C916</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51479"></span>C917</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51480"></span>C918</td>
 <td class="instruction">ADD A,$E0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">D = screen high byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51482"></span>C91A</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51483"></span>C91B</td>
 <td class="instruction">LD B,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Row counter=8</td>
 </tr>
 <tr>
 <td class="address-2"><span id="51485"></span>C91D</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Copy char row to screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51486"></span>C91E</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51487"></span>C91F</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance source, next screen row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51488"></span>C920</td>
 <td class="instruction">INC D</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="51489"></span>C921</td>
 <td class="instruction">DJNZ $C91D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop 8 rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51491"></span>C923</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="51492" class="description">C924: Draw message</div>
@@ -25493,73 +25425,73 @@ Used by the routines at <a href="asm.html#50360">start</a>, <a href="asm.html#50
 <td class="asm-label">draw_message</td>
 <td class="address-2"><span id="51492"></span>C924</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51493"></span>C925</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51494"></span>C926</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51495"></span>C927</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51496"></span>C928</td>
 <td class="instruction">CALL <a href="#51464">$C908</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw single character to screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51499"></span>C92B</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51500"></span>C92C</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51501"></span>C92D</td>
 <td class="instruction">POP BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51502"></span>C92E</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51503"></span>C92F</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51504"></span>C930</td>
 <td class="instruction">DJNZ <a href="#51492">draw_message</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51506"></span>C932</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="51507" class="description">C933: Draws a message and set screen dirty flag</div>
@@ -25613,91 +25545,86 @@ Used by the routines at <a href="asm.html#50964">start_game</a> and <a href="asm
 <td class="asm-label">fill_offscreen_header_color</td>
 <td class="address-2"><span id="51516"></span>C93C</td>
 <td class="instruction">LD HL,$F800</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = header attr address, BC = fill color/count</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51519"></span>C93F</td>
 <td class="instruction">LD BC,$4038</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label">fill_offscreen_header_color_0</td>
 <td class="address-2"><span id="51522"></span>C942</td>
 <td class="instruction">LD (HL),C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Fill header attribute row</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51523"></span>C943</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51524"></span>C944</td>
 <td class="instruction">DJNZ <a href="#51522">fill_offscreen_header_color_0</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51526"></span>C946</td>
 <td class="instruction">LD HL,$FEF2</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = player-1 score digits</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51529"></span>C949</td>
 <td class="instruction">LD A,($FE04)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = player number as ASCII digit</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51532"></span>C94C</td>
 <td class="instruction">ADD A,$30</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51534"></span>C94E</td>
 <td class="instruction">LD ($FEB2),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store player digit into message</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51537"></span>C951</td>
 <td class="instruction">CP $31</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check if player 1</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51539"></span>C953</td>
 <td class="instruction">JR Z,<a href="#51544">fill_offscreen_header_color_1</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51541"></span>C955</td>
 <td class="instruction">LD HL,$FEF8</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else use player-2 score digits</td>
 </tr>
 <tr>
 <td class="asm-label">fill_offscreen_header_color_1</td>
 <td class="address-2"><span id="51544"></span>C958</td>
 <td class="instruction">LD DE,$FEB6</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">DE = message buffer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51547"></span>C95B</td>
 <td class="instruction">LD BC,$0006</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">6 bytes</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51550"></span>C95E</td>
 <td class="instruction">LDIR</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Copy score digits into message</td>
 </tr>
 </table>
 <div id="51552" class="description">C960: Draws message at header of game screen</div>
@@ -26746,7 +26673,7 @@ Used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="51904" class="description">CAC0: Routine at CAC0</div>
+<div id="51904" class="description">CAC0: Game over: show time-up message, restart</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -26770,7 +26697,7 @@ Used by the routine at <a href="asm.html#51782">CA46</a>.
 <tr>
 <td class="address-1"><span id="51909"></span>CAC5</td>
 <td class="instruction">CALL <a href="#51918">$CACE</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw message and fill screen background color</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51912"></span>CAC8</td>
@@ -26783,7 +26710,7 @@ Used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="comment-1" rowspan="1">=&gt; Start point</td>
 </tr>
 </table>
-<div id="51918" class="description">CACE: Routine at CACE</div>
+<div id="51918" class="description">CACE: Draw message and fill screen background color</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -26887,7 +26814,7 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="51959" class="description">CAF7: Routine at CAF7</div>
+<div id="51959" class="description">CAF7: Kill personage that fell off bottom of screen</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -28094,7 +28021,7 @@ Used for Bruce/Yamo state 15.
 <tr>
 <td class="address-2"><span id="52680"></span>CDC8</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52683"></span>CDCB</td>
@@ -28114,7 +28041,7 @@ This entry point is used by the routine at <a href="asm.html#52808">CE48</a>.
 <tr>
 <td class="address-2"><span id="52685"></span>CDCD</td>
 <td class="instruction">CALL <a href="#54277">$D405</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for rope/ladder under personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52688"></span>CDD0</td>
@@ -28393,7 +28320,7 @@ This entry point is used by the routine at <a href="asm.html#52808">CE48</a>.
 <tr>
 <td class="address-1"><span id="52812"></span>CE4C</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52815"></span>CE4F</td>
@@ -28528,7 +28455,7 @@ This entry point is used by the routine at <a href="asm.html#52808">CE48</a>.
 <tr>
 <td class="address-1"><span id="52877"></span>CE8D</td>
 <td class="instruction">CALL <a href="#54099">$D353</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for ceiling/obstacle above personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52880"></span>CE90</td>
@@ -28688,7 +28615,7 @@ This entry point is used by the routine at <a href="asm.html#52808">CE48</a>.
 <tr>
 <td class="address-1"><span id="52951"></span>CED7</td>
 <td class="instruction">CALL <a href="#54099">$D353</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for ceiling/obstacle above personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52954"></span>CEDA</td>
@@ -28807,52 +28734,52 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="52996"></span>CF04</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="52999"></span>CF07</td>
 <td class="instruction">JR Z,$CF12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53001"></span>CF09</td>
 <td class="instruction">CALL <a href="#54277">$D405</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for rope/ladder under personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53004"></span>CF0C</td>
 <td class="instruction">LD A,$0E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53006"></span>CF0E</td>
 <td class="instruction">RET Z</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53007"></span>CF0F</td>
 <td class="instruction">LD A,$11</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53009"></span>CF11</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53010"></span>CF12</td>
 <td class="instruction">INC (IX+$0D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53013"></span>CF15</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53015"></span>CF17</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53016" class="description">CF18: Personage action handler 3: jump, obstacle collision check for all personages</div>
@@ -28915,92 +28842,84 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="53037"></span>CF2D</td>
 <td class="instruction">INC (IX+$0C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance walk-cycle counter, reload</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53040"></span>CF30</td>
 <td class="instruction">LD A,(IX+$0C)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53043"></span>CF33</td>
 <td class="instruction">CP $04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check cycle &lt; 4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53045"></span>CF35</td>
 <td class="instruction">JR NC,$CF52</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53047"></span>CF37</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check facing direction</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53051"></span>CF3B</td>
 <td class="instruction">JR NZ,$CF47</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53053"></span>CF3D</td>
 <td class="instruction">CALL <a href="#54415">$D48F</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle right, stop if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53056"></span>CF40</td>
 <td class="instruction">JR Z,$CF52</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53058"></span>CF42</td>
 <td class="instruction">INC (IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Step right one column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53061"></span>CF45</td>
 <td class="instruction">JR $CF4F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53063"></span>CF47</td>
 <td class="instruction">CALL <a href="#54364">$D45C</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle left, stop if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53066"></span>CF4A</td>
 <td class="instruction">JR Z,$CF52</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53068"></span>CF4C</td>
 <td class="instruction">DEC (IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Step left one column</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53071"></span>CF4F</td>
 <td class="instruction">LD A,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return state 4 (continue walking)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53073"></span>CF51</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53074"></span>CF52</td>
 <td class="instruction">LD (IX+$0D),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Clear counter, return state 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53078"></span>CF56</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53080"></span>CF58</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53081" class="description">CF59: Personage action handler 5: kick/attack, execute swing, resolve hit</div>
@@ -29019,7 +28938,7 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-1"><span id="53085"></span>CF5D</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53088"></span>CF60</td>
@@ -29276,87 +29195,80 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="53198"></span>CFCE</td>
 <td class="instruction">CALL <a href="#53255">$D007</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Look up frame offset, test zero</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53201"></span>CFD1</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53202"></span>CFD2</td>
 <td class="instruction">JR Z,$CFEC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Cycle done: land</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53204"></span>CFD4</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check facing direction</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53208"></span>CFD8</td>
 <td class="instruction">JR NZ,$CFE1</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53210"></span>CFDA</td>
 <td class="instruction">CALL <a href="#54415">$D48F</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle right, land if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53213"></span>CFDD</td>
 <td class="instruction">JR Z,$CFEC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53215"></span>CFDF</td>
 <td class="instruction">JR $CFE9</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip left-obstacle check</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53217"></span>CFE1</td>
 <td class="instruction">CALL <a href="#54364">$D45C</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle left, land if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53220"></span>CFE4</td>
 <td class="instruction">JR Z,$CFEC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53222"></span>CFE6</td>
 <td class="instruction">DEC (IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Step left one column</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53225"></span>CFE9</td>
 <td class="instruction">LD A,$0A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return state 10 (continue jump)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53227"></span>CFEB</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53228"></span>CFEC</td>
 <td class="instruction">INC (IX+$07)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Land: step down one row, clear frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53231"></span>CFEF</td>
 <td class="instruction">LD (IX+$04),$00</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53235"></span>CFF3</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return state 2 (walking), dispatch</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53237"></span>CFF5</td>
 <td class="instruction">JP <a href="#52969">$CEE9</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="53240" class="description">CFF8: Personage action handler 9: jump, diagonal motion, advance column</div>
@@ -29519,32 +29431,32 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <tr>
 <td class="address-2"><span id="53298"></span>D032</td>
 <td class="instruction">LD (IX+$00),$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53302"></span>D036</td>
 <td class="instruction">CALL <a href="#54099">$D353</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for ceiling/obstacle above personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53305"></span>D039</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53307"></span>D03B</td>
 <td class="instruction">RET Z</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53308"></span>D03C</td>
 <td class="instruction">LD A,$12</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53310"></span>D03E</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53311" class="description">D03F: Personage action handler 12: falling, descend via frame table, check rope catch</div>
@@ -29558,82 +29470,82 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <tr>
 <td class="address-2"><span id="53311"></span>D03F</td>
 <td class="instruction">CALL <a href="#53255">$D007</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53314"></span>D042</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53315"></span>D043</td>
 <td class="instruction">JR Z,$D052</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53317"></span>D045</td>
 <td class="instruction">LD A,(IX+$0C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53320"></span>D048</td>
 <td class="instruction">CP $03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53322"></span>D04A</td>
 <td class="instruction">CALL Z,<a href="#54277">$D405</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for rope/ladder under personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53325"></span>D04D</td>
 <td class="instruction">JR Z,$D05C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53327"></span>D04F</td>
 <td class="instruction">LD A,$0D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53329"></span>D051</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53330"></span>D052</td>
 <td class="instruction">INC (IX+$07)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53333"></span>D055</td>
 <td class="instruction">LD (IX+$00),$07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53337"></span>D059</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53339"></span>D05B</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53340"></span>D05C</td>
 <td class="instruction">LD (IX+$04),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53344"></span>D060</td>
 <td class="instruction">LD A,$0E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53346"></span>D062</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53347" class="description">D063: Personage action handler 13: climbing, handle up/down/left/right input on rope/ladder</div>
@@ -30088,7 +30000,7 @@ This entry point is used by the routine at <a href="asm.html#53517">D10D</a>.
 <tr>
 <td class="address-2"><span id="53547"></span>D12B</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53550"></span>D12E</td>
@@ -30236,12 +30148,11 @@ This entry point is used by the routine at <a href="asm.html#53517">D10D</a>.
 <tr>
 <td class="address-2"><span id="53615"></span>D16F</td>
 <td class="instruction">LD A,(IX+$0E)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check hit counter &gt;= 10</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53618"></span>D172</td>
 <td class="instruction">CP $0A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53620"></span>D174</td>
@@ -30251,72 +30162,67 @@ This entry point is used by the routine at <a href="asm.html#53517">D10D</a>.
 <tr>
 <td class="address-1"><span id="53623"></span>D177</td>
 <td class="instruction">LD (IX+$00),$0A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Switch to handler 10 (hurt state)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53627"></span>D17B</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check facing direction</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53631"></span>D17F</td>
 <td class="instruction">JR NZ,$D18C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53633"></span>D181</td>
 <td class="instruction">CALL <a href="#54331">$D43B</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle right</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53636"></span>D184</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53638"></span>D186</td>
 <td class="instruction">RET Z</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53639"></span>D187</td>
 <td class="instruction">DEC (IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Step left, continue</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53642"></span>D18A</td>
 <td class="instruction">JR $D195</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53644"></span>D18C</td>
 <td class="instruction">CALL <a href="#54343">$D447</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle left</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53647"></span>D18F</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53649"></span>D191</td>
 <td class="instruction">RET Z</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53650"></span>D192</td>
 <td class="instruction">INC (IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Step right</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53653"></span>D195</td>
 <td class="instruction">LD A,$14</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return state 20</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53655"></span>D197</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53656" class="description">D198: Personage action handler 19: hit reaction, apply damage and knockback flag</div>
@@ -30365,87 +30271,83 @@ Used by the routine at <a href="asm.html#53615">D16F</a>.
 <tr>
 <td class="address-2"><span id="53666"></span>D1A2</td>
 <td class="instruction">LD (IX+$0C),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Clear jump counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53670"></span>D1A6</td>
 <td class="instruction">LD (IX+$00),$03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Switch to handler 3 (walking)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53674"></span>D1AA</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check facing direction</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53678"></span>D1AE</td>
 <td class="instruction">JR NZ,$D1CB</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53680"></span>D1B0</td>
 <td class="instruction">CALL <a href="#54331">$D43B</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle right, hit-react if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53683"></span>D1B3</td>
 <td class="instruction">JR Z,<a href="#53656">$D198</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53685"></span>D1B5</td>
 <td class="instruction">DEC (IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Step left one column</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53688"></span>D1B8</td>
 <td class="instruction">LD (IX+$02),$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">IX+02=6 (recoil frame)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53692"></span>D1BC</td>
 <td class="instruction">CALL <a href="#54066">$D332</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for floor tile beneath personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53695"></span>D1BF</td>
 <td class="instruction">JR Z,$D1C4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip fall if floor present</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53697"></span>D1C1</td>
 <td class="instruction">INC (IX+$07)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Step down one row</td>
 </tr>
 <tr>
 <td class="address-2"><span id="53700"></span>D1C4</td>
 <td class="instruction">LD (IX+$04),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Clear animation frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53704"></span>D1C8</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return state 6 (walking)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53706"></span>D1CA</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53707"></span>D1CB</td>
 <td class="instruction">CALL <a href="#54343">$D447</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check obstacle left, hit-react if blocked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53710"></span>D1CE</td>
 <td class="instruction">JR Z,<a href="#53656">$D198</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53712"></span>D1D0</td>
 <td class="instruction">JR $D1B8</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue</td>
 </tr>
 </table>
 <div id="53714" class="description">D1D2: Personage action handler 21: attack, detect melee hit on all personages, trigger hurt state</div>
@@ -31441,7 +31343,7 @@ Used by the routine at <a href="asm.html#53838">personage_play_step</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54066" class="description">D332: Routine at D332</div>
+<div id="54066" class="description">D332: Check for floor tile beneath personage</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31548,7 +31450,7 @@ Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#528
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54099" class="description">D353: Routine at D353</div>
+<div id="54099" class="description">D353: Check for ceiling/obstacle above personage</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31681,7 +31583,7 @@ Used by the routine at <a href="asm.html#53714">D1D2</a>.
 <tr>
 <td class="address-2"><span id="54133"></span>D375</td>
 <td class="instruction">LD D,$09</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">D = damage amount</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31701,192 +31603,179 @@ This entry point is used by the routine at <a href="asm.html#54129">D371</a>.
 <tr>
 <td class="address-1"><span id="54138"></span>D37A</td>
 <td class="instruction">RET Z</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if same personage</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54139"></span>D37B</td>
 <td class="instruction">PUSH IY</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">IY = target personage struct</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54141"></span>D37D</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54142"></span>D37E</td>
 <td class="instruction">POP IY</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54144"></span>D380</td>
 <td class="instruction">LD A,(IY+$0A)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check target not dying</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54147"></span>D383</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54148"></span>D384</td>
 <td class="instruction">JP NZ,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if already dying</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54151"></span>D387</td>
 <td class="instruction">LD A,(IY+$02)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check target alive</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54154"></span>D38A</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54155"></span>D38B</td>
 <td class="instruction">JP Z,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if dead</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54158"></span>D38E</td>
 <td class="instruction">LD A,(IX+$07)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare attacker row to target row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54161"></span>D391</td>
 <td class="instruction">CP (IY+$07)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54164"></span>D394</td>
 <td class="instruction">JR Z,$D39C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Same row: check facing</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54166"></span>D396</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check row below</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54167"></span>D397</td>
 <td class="instruction">CP (IY+$07)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54170"></span>D39A</td>
 <td class="instruction">JR NZ,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Not adjacent row: no hit</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54172"></span>D39C</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check attacker facing</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54176"></span>D3A0</td>
 <td class="instruction">JR NZ,$D3B7</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54178"></span>D3A2</td>
 <td class="instruction">LD A,(IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Attacker column+1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54181"></span>D3A5</td>
 <td class="instruction">INC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54182"></span>D3A6</td>
 <td class="instruction">CP (IY+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare to target column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54185"></span>D3A9</td>
 <td class="instruction">JR Z,$D3B1</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54187"></span>D3AB</td>
 <td class="instruction">INC A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check column+2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54188"></span>D3AC</td>
 <td class="instruction">CP (IY+$06)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54191"></span>D3AF</td>
 <td class="instruction">JR NZ,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Not adjacent: no hit</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54193"></span>D3B1</td>
 <td class="instruction">LD (IY+$03),$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Face target left</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54197"></span>D3B5</td>
 <td class="instruction">JR $D3C9</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Apply damage</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54199"></span>D3B7</td>
 <td class="instruction">LD A,(IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare attacker column to target</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54202"></span>D3BA</td>
 <td class="instruction">CP (IY+$06)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54205"></span>D3BD</td>
 <td class="instruction">JR Z,$D3C5</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Same column: apply</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54207"></span>D3BF</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check column-1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54208"></span>D3C0</td>
 <td class="instruction">CP (IY+$06)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54211"></span>D3C3</td>
 <td class="instruction">JR NZ,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Not adjacent: no hit</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54213"></span>D3C5</td>
 <td class="instruction">LD (IY+$03),$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Face target right</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54217"></span>D3C9</td>
 <td class="instruction">LD A,(IY+$0E)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Add damage to hit counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54220"></span>D3CC</td>
 <td class="instruction">ADD A,D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54221"></span>D3CD</td>
 <td class="instruction">LD (IY+$0E),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store hit counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54224"></span>D3D0</td>
 <td class="instruction">LD HL,$CB1C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check if target is Bruce</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54227"></span>D3D3</td>
@@ -31896,52 +31785,48 @@ This entry point is used by the routine at <a href="asm.html#54129">D371</a>.
 <tr>
 <td class="address-1"><span id="54230"></span>D3D6</td>
 <td class="instruction">JR Z,$D3DF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip extra damage if Bruce</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54232"></span>D3D8</td>
 <td class="instruction">LD A,(IY+$0E)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Double damage for non-Bruce target</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54235"></span>D3DB</td>
 <td class="instruction">ADD A,D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54236"></span>D3DC</td>
 <td class="instruction">LD (IY+$0E),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="54239"></span>D3DF</td>
 <td class="instruction">LD (IY+$02),$13</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Set target to hurt state</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54243"></span>D3E3</td>
 <td class="instruction">LD (IY+$00),$01</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54247"></span>D3E7</td>
 <td class="instruction">LD A,($FE9A)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check sound-enabled flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54250"></span>D3EA</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54251"></span>D3EB</td>
 <td class="instruction">CALL NZ,$9312</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Play hit sound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54254"></span>D3EE</td>
 <td class="instruction">LD HL,$CCA5</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check if target is weapon/object</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54257"></span>D3F1</td>
@@ -31951,45 +31836,43 @@ This entry point is used by the routine at <a href="asm.html#54129">D371</a>.
 <tr>
 <td class="address-1"><span id="54260"></span>D3F4</td>
 <td class="instruction">JR NZ,$D3F9</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if not weapon</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54262"></span>D3F6</td>
 <td class="instruction">LD (IY+$11),D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store damage on weapon</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54265"></span>D3F9</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check for kick damage amount</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54266"></span>D3FA</td>
 <td class="instruction">CP $08</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54268"></span>D3FC</td>
 <td class="instruction">JR NZ,$D402</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if not kick</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54270"></span>D3FE</td>
 <td class="instruction">LD (IX+$0C),$03</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set attacker's kick-hit counter</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54274"></span>D402</td>
 <td class="instruction">POP IY</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore, return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54276"></span>D404</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54277" class="description">D405: Routine at D405</div>
+<div id="54277" class="description">D405: Check for rope/ladder under personage</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32013,167 +31896,154 @@ Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#529
 <tr>
 <td class="address-1"><span id="54283"></span>D40B</td>
 <td class="instruction">LD D,C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">D = row count - 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54284"></span>D40C</td>
 <td class="instruction">DEC D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54285"></span>D40D</td>
 <td class="instruction">LD A,(IX+$04)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check animation frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54288"></span>D410</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54289"></span>D411</td>
 <td class="instruction">JR Z,$D414</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Extend scan if mid-frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54291"></span>D413</td>
 <td class="instruction">INC B</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="54292"></span>D414</td>
 <td class="instruction">LD E,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">E = rope-tile counter</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54294"></span>D416</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Load tile, check upper bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54295"></span>D417</td>
 <td class="instruction">CP $20</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54297"></span>D419</td>
 <td class="instruction">JR NC,$D424</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if not rope range</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54299"></span>D41B</td>
 <td class="instruction">CP $18</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check lower bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54301"></span>D41D</td>
 <td class="instruction">JR C,$D424</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54303"></span>D41F</td>
 <td class="instruction">INC E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Count rope tiles, check 2 found</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54304"></span>D420</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54305"></span>D421</td>
 <td class="instruction">CP $02</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54307"></span>D423</td>
 <td class="instruction">RET Z</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if enough rope</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54308"></span>D424</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance to next column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54309"></span>D425</td>
 <td class="instruction">DEC C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54310"></span>D426</td>
 <td class="instruction">JR NZ,$D416</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54312"></span>D428</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare rope count to threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54313"></span>D429</td>
 <td class="instruction">CP D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54314"></span>D42A</td>
 <td class="instruction">RET Z</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if matched</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54315"></span>D42B</td>
 <td class="instruction">LD A,($FEA4)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">C = row width</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54318"></span>D42E</td>
 <td class="instruction">LD C,A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54319"></span>D42F</td>
 <td class="instruction">LD A,$20</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compute row step</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54321"></span>D431</td>
 <td class="instruction">SUB C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54322"></span>D432</td>
 <td class="instruction">ADD A,L</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance to next row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54323"></span>D433</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54324"></span>D434</td>
 <td class="instruction">JR NC,$D437</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip carry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54326"></span>D436</td>
 <td class="instruction">INC H</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Carry into row</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54327"></span>D437</td>
 <td class="instruction">DJNZ $D414</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop remaining rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54329"></span>D439</td>
 <td class="instruction">INC B</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore counter, return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54330"></span>D43A</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="54331" class="description">D43B: Routine at D43B</div>
@@ -32546,97 +32416,88 @@ Address is Y * 20h + X + current_room_playing_data
 <td class="asm-label">get_personage_room_addr</td>
 <td class="address-2"><span id="54435"></span>D4A3</td>
 <td class="instruction">LD L,(IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = personage tile coords</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54438"></span>D4A6</td>
 <td class="instruction">LD H,(IX+$07)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54441"></span>D4A9</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Rotate row bits into low nibble</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54443"></span>D4AB</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54445"></span>D4AD</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54447"></span>D4AF</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Fold coord bits into column</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54448"></span>D4B0</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54449"></span>D4B1</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54451"></span>D4B3</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Combine and store column</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54452"></span>D4B4</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54453"></span>D4B5</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Mask row, store</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54454"></span>D4B6</td>
 <td class="instruction">AND $03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54456"></span>D4B8</td>
 <td class="instruction">LD H,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54457"></span>D4B9</td>
 <td class="instruction">LD DE,$6000</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Add room data base address</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54460"></span>D4BC</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="54461"></span>D4BD</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
 <div id="54462" class="description">D4BE: Store size of personage image to image_size variable</div>
@@ -33931,7 +33792,7 @@ Used by the routines at <a href="asm.html#54508">review_personage_location</a>, 
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54798" class="description">D60E: Routine at D60E</div>
+<div id="54798" class="description">D60E: Draw personage tile to screen and offscreen buffer (variant of D626)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -33945,82 +33806,73 @@ Used by the routines at <a href="asm.html#55783">D9E7</a>, <a href="asm.html#558
 <tr>
 <td class="address-2"><span id="54798"></span>D60E</td>
 <td class="instruction">PUSH AF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Save tile index, rotate row bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54799"></span>D60F</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54801"></span>D611</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Rotate row bits into low nibble</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54803"></span>D613</td>
 <td class="instruction">RRC H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54805"></span>D615</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Fold coord bits into scene column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54806"></span>D616</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54807"></span>D617</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54809"></span>D619</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Combine and store column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54810"></span>D61A</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54811"></span>D61B</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Mask row, store</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54812"></span>D61C</td>
 <td class="instruction">AND $03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54814"></span>D61E</td>
 <td class="instruction">LD H,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54815"></span>D61F</td>
 <td class="instruction">POP AF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore tile index, save coord</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54816"></span>D620</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54817"></span>D621</td>
 <td class="instruction">LD DE,$6000</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">DE = personage image data pointer, join draw</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54820"></span>D624</td>
 <td class="instruction">JR <a href="#54847">$D63F</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="54822" class="description">D626: Draw single scene tile to screen and offscreen buffer</div>
@@ -34503,7 +34355,7 @@ Used by the routine at <a href="asm.html#53838">personage_play_step</a>.
 <td class="asm-label">get_personage_action_will_3</td>
 <td class="address-2"><span id="54962"></span>D6B2</td>
 <td class="instruction">CALL <a href="#54099">$D353</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for ceiling/obstacle above personage</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -34929,7 +34781,7 @@ Used by the routine at <a href="asm.html#53838">personage_play_step</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="55126"></span>D756</td>
 <td class="instruction">CALL <a href="#54277">$D405</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check for rope/ladder under personage</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -35302,148 +35154,137 @@ Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html
 <td class="asm-label">draw</td>
 <td class="address-2"><span id="55333"></span>D825</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Save block counter, row counter=8</td>
 </tr>
 <tr>
 <td class="asm-label">draw_0</td>
 <td class="address-2"><span id="55334"></span>D826</td>
 <td class="instruction">LD B,$08</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label">draw_1</td>
 <td class="address-2"><span id="55336"></span>D828</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Copy tile byte, advance source</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55337"></span>D829</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55338"></span>D82A</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55339"></span>D82B</td>
 <td class="instruction">INC D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance dest row, loop 8</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55340"></span>D82C</td>
 <td class="instruction">DJNZ <a href="#55336">draw_1</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55342"></span>D82E</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Wrap dest row back</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55343"></span>D82F</td>
 <td class="instruction">SUB $08</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55345"></span>D831</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55346"></span>D832</td>
 <td class="instruction">INC E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance dest column, decrement block count</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55347"></span>D833</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55348"></span>D834</td>
 <td class="instruction">JR NZ,<a href="#55334">draw_0</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop remaining blocks</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55350"></span>D836</td>
 <td class="instruction">POP BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restore block counter</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55351"></span>D837</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compute column wrap</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55352"></span>D838</td>
 <td class="instruction">SUB C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55353"></span>D839</td>
 <td class="instruction">ADD A,$20</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance to next screen third</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55355"></span>D83B</td>
 <td class="instruction">LD E,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55356"></span>D83C</td>
 <td class="instruction">JR NC,<a href="#55362">draw_2</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip wrap if no carry</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55358"></span>D83E</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Wrap to next screen row</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55359"></span>D83F</td>
 <td class="instruction">ADD A,$08</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55361"></span>D841</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label">draw_2</td>
 <td class="address-2"><span id="55362"></span>D842</td>
 <td class="instruction">DJNZ <a href="#55333">draw</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop remaining columns</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55364"></span>D844</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
-<div id="55365" class="description">D845: Routine at D845</div>
+<div id="55365" class="description">D845: Object handler: timed trigger of will-target 1</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35507,7 +35348,7 @@ This entry point is used by the routines at <a href="asm.html#55382">D856</a> an
 <td class="comment-1" rowspan="1">=&gt; Draw personage's action-target tiles from will table</td>
 </tr>
 </table>
-<div id="55382" class="description">D856: Routine at D856</div>
+<div id="55382" class="description">D856: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35518,137 +35359,125 @@ This entry point is used by the routines at <a href="asm.html#55382">D856</a> an
 <tr>
 <td class="address-2"><span id="55382"></span>D856</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check Y coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55383"></span>D857</td>
 <td class="instruction">CP $10</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55385"></span>D859</td>
 <td class="instruction">JR NC,$D86C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else use alt path</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55387"></span>D85B</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check X coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55388"></span>D85C</td>
 <td class="instruction">CP $1B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55390"></span>D85E</td>
 <td class="instruction">RET C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if too early</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55391"></span>D85F</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Set water-color mode 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55393"></span>D861</td>
 <td class="instruction">LD ($FE38),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55396"></span>D864</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55398"></span>D866</td>
 <td class="instruction">LD L,$1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55400"></span>D868</td>
 <td class="instruction">LD H,$11</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55402"></span>D86A</td>
 <td class="instruction">JR <a href="#55379">$D853</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55404"></span>D86C</td>
 <td class="instruction">LD HL,$FE22</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55407"></span>D86F</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55408"></span>D870</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55409"></span>D871</td>
 <td class="instruction">CP $04</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55411"></span>D873</td>
 <td class="instruction">JR NZ,$D87D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue if not</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55413"></span>D875</td>
 <td class="instruction">LD A,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55415"></span>D877</td>
 <td class="instruction">LD L,$00</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55417"></span>D879</td>
 <td class="instruction">LD H,$12</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55419"></span>D87B</td>
 <td class="instruction">JR <a href="#55379">$D853</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55421"></span>D87D</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 2, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55423"></span>D87F</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55424"></span>D880</td>
 <td class="instruction">LD A,$04</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55426"></span>D882</td>
 <td class="instruction">LD L,$12</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55428"></span>D884</td>
 <td class="instruction">LD H,$11</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55430"></span>D886</td>
 <td class="instruction">JR <a href="#55379">$D853</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
 <div id="55432" class="description">D888: Routine at D888</div>
@@ -35715,7 +35544,7 @@ This entry point is used by the routines at <a href="asm.html#55448">D898</a> an
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55448" class="description">D898: Routine at D898</div>
+<div id="55448" class="description">D898: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35726,170 +35555,156 @@ This entry point is used by the routines at <a href="asm.html#55448">D898</a> an
 <tr>
 <td class="address-2"><span id="55448"></span>D898</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check Y coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55449"></span>D899</td>
 <td class="instruction">CP $0F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55451"></span>D89B</td>
 <td class="instruction">JR NC,$D8B9</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else use alt path</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55453"></span>D89D</td>
 <td class="instruction">LD HL,$FE24</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55456"></span>D8A0</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55457"></span>D8A1</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 5</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55458"></span>D8A2</td>
 <td class="instruction">CP $05</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55460"></span>D8A4</td>
 <td class="instruction">JR NZ,$D8AE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue if not</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55462"></span>D8A6</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 1 (will target coord)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55464"></span>D8A8</td>
 <td class="instruction">LD L,$1B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55466"></span>D8AA</td>
 <td class="instruction">LD H,$03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55468"></span>D8AC</td>
 <td class="instruction">JR <a href="#55446">$D896</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55470"></span>D8AE</td>
 <td class="instruction">CP $0A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 10, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55472"></span>D8B0</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55473"></span>D8B1</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55475"></span>D8B3</td>
 <td class="instruction">LD L,$1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55477"></span>D8B5</td>
 <td class="instruction">LD H,$09</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55479"></span>D8B7</td>
 <td class="instruction">JR <a href="#55446">$D896</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55481"></span>D8B9</td>
 <td class="instruction">LD HL,$FE26</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance alt room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55484"></span>D8BC</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55485"></span>D8BD</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter &lt; 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55486"></span>D8BE</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55488"></span>D8C0</td>
 <td class="instruction">RET C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if too early</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55489"></span>D8C1</td>
 <td class="instruction">LD HL,$DAFB</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = data table entry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55492"></span>D8C4</td>
 <td class="instruction">LD (HL),$1C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store first byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55494"></span>D8C6</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55495"></span>D8C7</td>
 <td class="instruction">LD (HL),$05</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store second byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55497"></span>D8C9</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55498"></span>D8CA</td>
 <td class="instruction">LD (HL),$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store third byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55500"></span>D8CC</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55502"></span>D8CE</td>
 <td class="instruction">LD L,$0B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55504"></span>D8D0</td>
 <td class="instruction">LD H,$0B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55506"></span>D8D2</td>
 <td class="instruction">JR <a href="#55446">$D896</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
-<div id="55508" class="description">D8D4: Routine at D8D4</div>
+<div id="55508" class="description">D8D4: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35900,130 +35715,120 @@ This entry point is used by the routines at <a href="asm.html#55448">D898</a> an
 <tr>
 <td class="address-2"><span id="55508"></span>D8D4</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check X coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55509"></span>D8D5</td>
 <td class="instruction">CP $06</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55511"></span>D8D7</td>
 <td class="instruction">JR NC,$D8EC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else use alt path</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55513"></span>D8D9</td>
 <td class="instruction">LD HL,$DAFB</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = data table entry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55516"></span>D8DC</td>
 <td class="instruction">LD (HL),$05</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store first byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55518"></span>D8DE</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55519"></span>D8DF</td>
 <td class="instruction">LD (HL),$1C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store second byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55521"></span>D8E1</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55522"></span>D8E2</td>
 <td class="instruction">LD (HL),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store third byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55524"></span>D8E4</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55526"></span>D8E6</td>
 <td class="instruction">LD L,$00</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55528"></span>D8E8</td>
 <td class="instruction">LD H,$11</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55530"></span>D8EA</td>
 <td class="instruction">JR <a href="#55446">$D896</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55532"></span>D8EC</td>
 <td class="instruction">CP $15</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check X threshold, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55534"></span>D8EE</td>
 <td class="instruction">RET NC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55535"></span>D8EF</td>
 <td class="instruction">LD HL,$FE28</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55538"></span>D8F2</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55539"></span>D8F3</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter &lt; 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55540"></span>D8F4</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55542"></span>D8F6</td>
 <td class="instruction">RET C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if too early</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55543"></span>D8F7</td>
 <td class="instruction">CALL <a href="#56888">$DE38</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set water color mode</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55546"></span>D8FA</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55548"></span>D8FC</td>
 <td class="instruction">LD L,$14</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55550"></span>D8FE</td>
 <td class="instruction">LD H,$0B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55552"></span>D900</td>
 <td class="instruction">JR <a href="#55446">$D896</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
-<div id="55554" class="description">D902: Routine at D902</div>
+<div id="55554" class="description">D902: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36034,92 +35839,84 @@ This entry point is used by the routines at <a href="asm.html#55448">D898</a> an
 <tr>
 <td class="address-2"><span id="55554"></span>D902</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check Y coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55555"></span>D903</td>
 <td class="instruction">CP $06</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55557"></span>D905</td>
 <td class="instruction">JP C,<a href="#56888">$DE38</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Below: set water color mode 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55560"></span>D908</td>
 <td class="instruction">CP $11</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check upper bound, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55562"></span>D90A</td>
 <td class="instruction">RET C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55563"></span>D90B</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check X coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55564"></span>D90C</td>
 <td class="instruction">CP $19</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55566"></span>D90E</td>
 <td class="instruction">JP NC,<a href="#56897">$DE41</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Beyond: set water color mode 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55569"></span>D911</td>
 <td class="instruction">LD HL,$FE3A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55572"></span>D914</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55573"></span>D915</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55574"></span>D916</td>
 <td class="instruction">CP $02</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55576"></span>D918</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return unless matched</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55577"></span>D919</td>
 <td class="instruction">LD A,($DBA5)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Copy pattern byte to target slot</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55580"></span>D91C</td>
 <td class="instruction">LD ($DBAB),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55583"></span>D91F</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55585"></span>D921</td>
 <td class="instruction">LD L,$1F</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55587"></span>D923</td>
 <td class="instruction">LD H,$03</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36299,7 +36096,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55640" class="description">D958: Routine at D958</div>
+<div id="55640" class="description">D958: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36310,107 +36107,98 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <tr>
 <td class="address-2"><span id="55640"></span>D958</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check Y coord threshold</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55641"></span>D959</td>
 <td class="instruction">CP $10</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55643"></span>D95B</td>
 <td class="instruction">JR NC,$D96D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else use alt path</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55645"></span>D95D</td>
 <td class="instruction">LD HL,$FE30</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55648"></span>D960</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55649"></span>D961</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55650"></span>D962</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55652"></span>D964</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return unless matched</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55653"></span>D965</td>
 <td class="instruction">LD A,$0D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55655"></span>D967</td>
 <td class="instruction">LD L,$1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55657"></span>D969</td>
 <td class="instruction">LD H,$04</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55659"></span>D96B</td>
 <td class="instruction">JR <a href="#55589">$D925</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55661"></span>D96D</td>
 <td class="instruction">LD HL,$FE32</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance alt room counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55664"></span>D970</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55665"></span>D971</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check counter == 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55666"></span>D972</td>
 <td class="instruction">CP $02</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55668"></span>D974</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return unless matched</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55669"></span>D975</td>
 <td class="instruction">LD A,$0D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Select target 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55671"></span>D977</td>
 <td class="instruction">LD L,$1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55673"></span>D979</td>
 <td class="instruction">LD H,$12</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55675"></span>D97B</td>
 <td class="instruction">JR <a href="#55589">$D925</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
 <div id="55677" class="description">D97D: Routine at D97D</div>
@@ -36663,7 +36451,7 @@ Used by the routine at <a href="asm.html#55693">D98D</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55767" class="description">D9D7: Routine at D9D7</div>
+<div id="55767" class="description">D9D7: Update all wall-crack counters and spread cracks</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36971,7 +36759,7 @@ Used by the routine at <a href="asm.html#55767">D9D7</a>.
 <td class="comment-1" rowspan="1">Return via shared exit</td>
 </tr>
 </table>
-<div id="55878" class="description">DA46: Routine at DA46</div>
+<div id="55878" class="description">DA46: Draw one crack-spread tile, advance list and coord pointers</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36985,47 +36773,47 @@ Used by the routine at <a href="asm.html#55783">D9E7</a>.
 <tr>
 <td class="address-2"><span id="55878"></span>DA46</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55879"></span>DA47</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55880"></span>DA48</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55881"></span>DA49</td>
 <td class="instruction">CALL <a href="#54798">$D60E</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw personage tile to screen and offscreen buffer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55884"></span>DA4C</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55885"></span>DA4D</td>
 <td class="instruction">INC L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55886"></span>DA4E</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55887"></span>DA4F</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55888"></span>DA50</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="55889" class="description">DA51: Data block at DA51</div>
@@ -37087,214 +36875,195 @@ Used by the routine at <a href="asm.html#55783">D9E7</a>.
 <td class="asm-label">handler_of_17_object</td>
 <td class="address-2"><span id="55907"></span>DA63</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">HL = coord, DE = base address</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55908"></span>DA64</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55909"></span>DA65</td>
 <td class="instruction">LD DE,$6000</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55912"></span>DA68</td>
 <td class="instruction">SBC HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = offset from base</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55914"></span>DA6A</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Fold coord bits into tile row</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55915"></span>DA6B</td>
 <td class="instruction">XOR L</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55916"></span>DA6C</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55918"></span>DA6E</td>
 <td class="instruction">XOR L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Combine and rotate to scene column</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55919"></span>DA6F</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55920"></span>DA70</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55921"></span>DA71</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55922"></span>DA72</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask row, store</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55924"></span>DA74</td>
 <td class="instruction">LD H,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55925"></span>DA75</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Mask column</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55926"></span>DA76</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55928"></span>DA78</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55929"></span>DA79</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">DE = tile coord, HL = crack-slot table</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55930"></span>DA7A</td>
 <td class="instruction">LD HL,$FE60</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55933"></span>DA7D</td>
 <td class="instruction">LD B,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">6 slots</td>
 </tr>
 <tr>
 <td class="asm-label">handler_of_17_object_0</td>
 <td class="address-2"><span id="55935"></span>DA7F</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check if slot free</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55936"></span>DA80</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55937"></span>DA81</td>
 <td class="instruction">JR Z,<a href="#55945">handler_of_17_object_1</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Use free slot</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55939"></span>DA83</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Advance to next slot</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55940"></span>DA84</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55941"></span>DA85</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55942"></span>DA86</td>
 <td class="instruction">DJNZ <a href="#55935">handler_of_17_object_0</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop 6 slots</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55944"></span>DA88</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">No free slot: return</td>
 </tr>
 <tr>
 <td class="asm-label">handler_of_17_object_1</td>
 <td class="address-2"><span id="55945"></span>DA89</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="5">Mark slot used, store coord</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55946"></span>DA8A</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55947"></span>DA8B</td>
 <td class="instruction">LD (HL),E</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55948"></span>DA8C</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55949"></span>DA8D</td>
 <td class="instruction">LD (HL),D</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55950"></span>DA8E</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = crack tile index</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55951"></span>DA8F</td>
 <td class="instruction">LD A,$20</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="55953"></span>DA91</td>
 <td class="instruction">JP <a href="#54798">$D60E</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw crack tile</td>
 </tr>
 </table>
-<div id="55956" class="description">DA94: Routine at DA94</div>
+<div id="55956" class="description">DA94: Animate flickering tile (room-specific)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37305,7 +37074,7 @@ Used by the routine at <a href="asm.html#55783">D9E7</a>.
 <tr>
 <td class="address-2"><span id="55956"></span>DA94</td>
 <td class="instruction">LD DE,$0F05</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">DE = tile coord for animated object 1</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37320,67 +37089,61 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="55959"></span>DA97</td>
 <td class="instruction">LD HL,$FE38</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = counter, A = counter value</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55962"></span>DA9A</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55963"></span>DA9B</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return if counter zero</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55964"></span>DA9C</td>
 <td class="instruction">RET Z</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55965"></span>DA9D</td>
 <td class="instruction">INC A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance, force odd</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55966"></span>DA9E</td>
 <td class="instruction">OR $01</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55968"></span>DAA0</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store, test bounce bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55969"></span>DAA1</td>
 <td class="instruction">BIT 6,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55971"></span>DAA3</td>
 <td class="instruction">LD A,$53</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = tile 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55973"></span>DAA5</td>
 <td class="instruction">JR Z,$DAA9</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55975"></span>DAA7</td>
 <td class="instruction">LD A,$79</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Else tile 2</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55977"></span>DAA9</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Draw animated tile</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55978"></span>DAAA</td>
 <td class="instruction">JP <a href="#54798">$D60E</a></td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="55981" class="description">DAAD: Routine at DAAD</div>
@@ -37402,7 +37165,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55986" class="description">DAB2: Routine at DAB2</div>
+<div id="55986" class="description">DAB2: Redraw wall-crack tile (room-specific), then animate water</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37413,12 +37176,12 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="55986"></span>DAB2</td>
 <td class="instruction">CALL <a href="#56831">$DDFF</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance water/crack animation phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55989"></span>DAB5</td>
 <td class="instruction">JP NZ,<a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55992"></span>DAB8</td>
@@ -37438,7 +37201,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-1"><span id="56001"></span>DAC1</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
 <div id="56004" class="description">DAC4: Routine at DAC4</div>
@@ -37475,7 +37238,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="56012" class="description">DACC: Routine at DACC</div>
+<div id="56012" class="description">DACC: Redraw wall-crack tile (room-specific), then animate water</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37486,12 +37249,12 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56012"></span>DACC</td>
 <td class="instruction">CALL <a href="#56831">$DDFF</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance water/crack animation phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56015"></span>DACF</td>
 <td class="instruction">JP NZ,<a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56018"></span>DAD2</td>
@@ -37511,10 +37274,10 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-1"><span id="56027"></span>DADB</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
-<div id="56030" class="description">DADE: Routine at DADE</div>
+<div id="56030" class="description">DADE: Redraw moving object (room-specific), update cracks, animate water</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37525,57 +37288,57 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56030"></span>DADE</td>
 <td class="instruction">LD HL,$FE99</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56033"></span>DAE1</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56034"></span>DAE2</td>
 <td class="instruction">CP $03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56036"></span>DAE4</td>
 <td class="instruction">JR C,$DAF3</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56038"></span>DAE6</td>
 <td class="instruction">LD (HL),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56040"></span>DAE8</td>
 <td class="instruction">PUSH IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56042"></span>DAEA</td>
 <td class="instruction">LD IX,$DAF9</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56046"></span>DAEE</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56049"></span>DAF1</td>
 <td class="instruction">POP IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56051"></span>DAF3</td>
 <td class="instruction">CALL <a href="#55767">$D9D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Update all wall-crack counters and spread cracks</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56054"></span>DAF6</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
 <div id="56057" class="description">DAF9: Data block at DAF9</div>
@@ -37592,7 +37355,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="56063" class="description">DAFF: Routine at DAFF</div>
+<div id="56063" class="description">DAFF: Redraw 3 wall-crack tiles (room-specific), then animate water</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37603,12 +37366,12 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56063"></span>DAFF</td>
 <td class="instruction">CALL <a href="#56831">$DDFF</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance water/crack animation phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56066"></span>DB02</td>
 <td class="instruction">JP NZ,<a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56069"></span>DB05</td>
@@ -37658,7 +37421,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-1"><span id="56096"></span>DB20</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
 <div id="56099" class="description">DB23: Redraw cracked-wall tiles after level reset</div>
@@ -37909,7 +37672,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="56240" class="description">DBB0: Routine at DBB0</div>
+<div id="56240" class="description">DBB0: Animate water color cycle (bubbling effect)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37920,165 +37683,154 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56240"></span>DBB0</td>
 <td class="instruction">LD HL,$FE38</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance water color-cycle counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56243"></span>DBB3</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56244"></span>DBB4</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = counter, DE = color pair 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56245"></span>DBB5</td>
 <td class="instruction">LD DE,$206C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56248"></span>DBB8</td>
 <td class="instruction">CP $40</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check for first phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56250"></span>DBBA</td>
 <td class="instruction">JR Z,$DBC2</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56252"></span>DBBC</td>
 <td class="instruction">LD DE,$6C20</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">DE = color pair 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56255"></span>DBBF</td>
 <td class="instruction">CP $C0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check for second phase, else return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56257"></span>DBC1</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56258"></span>DBC2</td>
 <td class="instruction">LD HL,$F928</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = screen attribute address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56261"></span>DBC5</td>
 <td class="instruction">LD ($FEA8),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Save target address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56264"></span>DBC8</td>
 <td class="instruction">LD B,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">6 blocks</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56266"></span>DBCA</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">A = color byte 1, save regs</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56267"></span>DBCB</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56268"></span>DBCC</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56269"></span>DBCD</td>
 <td class="instruction">CALL <a href="#49848">$C2B8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill color block</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56272"></span>DBD0</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore regs</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56273"></span>DBD1</td>
 <td class="instruction">POP BC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56274"></span>DBD2</td>
 <td class="instruction">DJNZ $DBCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop 6 blocks</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56276"></span>DBD4</td>
 <td class="instruction">LD HL,$F930</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = second screen row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56279"></span>DBD7</td>
 <td class="instruction">LD ($FEA8),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Save target address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56282"></span>DBDA</td>
 <td class="instruction">LD B,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">6 blocks</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56284"></span>DBDC</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">A = color byte 2, save regs</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56285"></span>DBDD</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56286"></span>DBDE</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56287"></span>DBDF</td>
 <td class="instruction">CALL <a href="#49848">$C2B8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill color block</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56290"></span>DBE2</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Restore regs</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56291"></span>DBE3</td>
 <td class="instruction">POP BC</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56292"></span>DBE4</td>
 <td class="instruction">DJNZ $DBDC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop 6 blocks</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56294"></span>DBE6</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Flag redraw needed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56296"></span>DBE8</td>
 <td class="instruction">LD ($FE0B),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56299"></span>DBEB</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
-<div id="56300" class="description">DBEC: Routine at DBEC</div>
+<div id="56300" class="description">DBEC: Update wall cracks and animate water</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38089,15 +37841,15 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56300"></span>DBEC</td>
 <td class="instruction">CALL <a href="#55767">$D9D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Update all wall-crack counters and spread cracks</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56303"></span>DBEF</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
-<div id="56306" class="description">DBF2: Routine at DBF2</div>
+<div id="56306" class="description">DBF2: Redraw wall-crack tile, update crack counters, check bonus condition</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38108,7 +37860,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56306"></span>DBF2</td>
 <td class="instruction">CALL <a href="#56831">$DDFF</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance water/crack animation phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56309"></span>DBF5</td>
@@ -38133,7 +37885,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56320"></span>DC00</td>
 <td class="instruction">CALL <a href="#55767">$D9D7</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Update all wall-crack counters and spread cracks</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56323"></span>DC03</td>
@@ -38206,7 +37958,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="56349" class="description">DC1D: Routine at DC1D</div>
+<div id="56349" class="description">DC1D: Force wall collapse and update cracks</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38217,22 +37969,22 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56349"></span>DC1D</td>
 <td class="instruction">LD HL,$FE95</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56352"></span>DC20</td>
 <td class="instruction">SET 6,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56354"></span>DC22</td>
 <td class="instruction">SET 7,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56356"></span>DC24</td>
 <td class="instruction">JP <a href="#55767">$D9D7</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Update all wall-crack counters and spread cracks</td>
 </tr>
 </table>
 <div id="56359" class="description">DC27: Handle wall collapse and bonus-life award</div>
@@ -38413,7 +38165,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-1" rowspan="1">Loop: reset walls again</td>
 </tr>
 </table>
-<div id="56440" class="description">DC78: Routine at DC78</div>
+<div id="56440" class="description">DC78: Animate 8 moving objects (bubbles), gate by counter</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38424,122 +38176,122 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56440"></span>DC78</td>
 <td class="instruction">LD HL,$FE99</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56443"></span>DC7B</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56444"></span>DC7C</td>
 <td class="instruction">CP $03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56446"></span>DC7E</td>
 <td class="instruction">RET C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56447"></span>DC7F</td>
 <td class="instruction">LD (HL),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56449"></span>DC81</td>
 <td class="instruction">PUSH IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56451"></span>DC83</td>
 <td class="instruction">LD IX,$DCBE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56455"></span>DC87</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56458"></span>DC8A</td>
 <td class="instruction">LD IX,$DCC4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56462"></span>DC8E</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56465"></span>DC91</td>
 <td class="instruction">LD IX,$DCCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56469"></span>DC95</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56472"></span>DC98</td>
 <td class="instruction">LD IX,$DCD0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56476"></span>DC9C</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56479"></span>DC9F</td>
 <td class="instruction">LD IX,$DCD6</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56483"></span>DCA3</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56486"></span>DCA6</td>
 <td class="instruction">LD IX,$DCDC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56490"></span>DCAA</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56493"></span>DCAD</td>
 <td class="instruction">LD IX,$DCE2</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56497"></span>DCB1</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56500"></span>DCB4</td>
 <td class="instruction">LD IX,$DCE8</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56504"></span>DCB8</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56507"></span>DCBB</td>
 <td class="instruction">POP IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56509"></span>DCBD</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="56510" class="description">DCBE: Data block at DCBE</div>
@@ -38581,7 +38333,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="56558" class="description">DCEE: Routine at DCEE</div>
+<div id="56558" class="description">DCEE: Animate moving object, else animate water ripples</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38592,52 +38344,52 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56558"></span>DCEE</td>
 <td class="instruction">LD HL,$FE99</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56561"></span>DCF1</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56562"></span>DCF2</td>
 <td class="instruction">CP $03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56564"></span>DCF4</td>
 <td class="instruction">JP C,<a href="#57210">$DF7A</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56567"></span>DCF7</td>
 <td class="instruction">LD (HL),$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56569"></span>DCF9</td>
 <td class="instruction">PUSH IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56571"></span>DCFB</td>
 <td class="instruction">LD IX,$DD07</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56575"></span>DCFF</td>
 <td class="instruction">CALL <a href="#56744">$DDA8</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Animate moving object between two columns</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56578"></span>DD02</td>
 <td class="instruction">POP IX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56580"></span>DD04</td>
 <td class="instruction">JP <a href="#57210">$DF7A</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
 <div id="56583" class="description">DD07: Data block at DD07</div>
@@ -38863,7 +38615,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
-<div id="56679" class="description">DD67: Routine at DD67</div>
+<div id="56679" class="description">DD67: Level-complete sequence: show win message, play sound, restart level</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38874,150 +38626,140 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="address-2"><span id="56679"></span>DD67</td>
 <td class="instruction">LD HL,$FE3E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = win-sequence timer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56682"></span>DD6A</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56683"></span>DD6B</td>
 <td class="instruction">INC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Advance timer, branch if not first tick</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56684"></span>DD6C</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56685"></span>DD6D</td>
 <td class="instruction">JR NZ,$DD8B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56687"></span>DD6F</td>
 <td class="instruction">LD HL,$92E0</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Message text + row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56690"></span>DD72</td>
 <td class="instruction">LD C,$B2</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56692"></span>DD74</td>
 <td class="instruction">CALL <a href="#51918">$CACE</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw message and fill screen background color</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56695"></span>DD77</td>
 <td class="instruction">XOR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">A=0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56696"></span>DD78</td>
 <td class="instruction">LD ($FE11),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Clear direction flags</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56699"></span>DD7B</td>
 <td class="instruction">LD ($FE12),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56702"></span>DD7E</td>
 <td class="instruction">LD ($CCA8),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Clear flash flag, A=1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56705"></span>DD81</td>
 <td class="instruction">INC A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56706"></span>DD82</td>
 <td class="instruction">LD ($CCA5),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set player-1 active</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56709"></span>DD85</td>
 <td class="instruction">LD A,$10</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Set bright attribute</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56711"></span>DD87</td>
 <td class="instruction">LD ($CCA7),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56714"></span>DD8A</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56715"></span>DD8B</td>
 <td class="instruction">CP $03</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check timer == 3, else redraw message</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56717"></span>DD8D</td>
 <td class="instruction">JR NZ,$DD77</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56719"></span>DD8F</td>
 <td class="instruction">LD BC,$00D3</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">BC = tone params</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56722"></span>DD92</td>
 <td class="instruction">LD A,($FE9A)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check difficulty flag</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56725"></span>DD95</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56726"></span>DD96</td>
 <td class="instruction">JR NZ,$DD9A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Skip if set</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56728"></span>DD98</td>
 <td class="instruction">LD C,$3E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Alt tone param</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56730"></span>DD9A</td>
 <td class="instruction">CALL <a href="#37632">$9300</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Play win jingle</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56733"></span>DD9D</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Flag level restart</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56735"></span>DD9F</td>
 <td class="instruction">LD ($FE0D),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56738"></span>DDA2</td>
 <td class="instruction">LD SP,$FFFF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Reset stack</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56741"></span>DDA5</td>
 <td class="instruction">JP <a href="#51004">start_game_1</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restart level</td>
 </tr>
 </table>
-<div id="56744" class="description">DDA8: Routine at DDA8</div>
+<div id="56744" class="description">DDA8: Animate moving object between two columns (bounce pattern)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39031,42 +38773,38 @@ Used by the routines at <a href="asm.html#56030">DADE</a>, <a href="asm.html#560
 <tr>
 <td class="address-2"><span id="56744"></span>DDA8</td>
 <td class="instruction">BIT 0,(IX+$04)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check direction bit, A = current column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56748"></span>DDAC</td>
 <td class="instruction">LD A,(IX+$05)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56751"></span>DDAF</td>
 <td class="instruction">JR NZ,$DDE1</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Branch by direction, check right bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56753"></span>DDB1</td>
 <td class="instruction">CP $06</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56755"></span>DDB3</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Bounce at right edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56757"></span>DDB5</td>
 <td class="instruction">JR Z,$DDCD</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56759"></span>DDB7</td>
 <td class="instruction">LD H,(IX+$00)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = tile coord</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56762"></span>DDBA</td>
 <td class="instruction">LD L,(IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56765"></span>DDBD</td>
@@ -39076,87 +38814,81 @@ Used by the routines at <a href="asm.html#56030">DADE</a>, <a href="asm.html#560
 <tr>
 <td class="address-1"><span id="56768"></span>DDC0</td>
 <td class="instruction">LD A,(IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare column to left bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56771"></span>DDC3</td>
 <td class="instruction">CP (IX+$03)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56774"></span>DDC6</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Continue right, else wrap</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56776"></span>DDC8</td>
 <td class="instruction">JR NC,$DDD9</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56778"></span>DDCA</td>
 <td class="instruction">INC (IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance column right</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56781"></span>DDCD</td>
 <td class="instruction">LD (IX+$05),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store new direction</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56784"></span>DDD0</td>
 <td class="instruction">LD H,(IX+$00)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = new tile coord</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56787"></span>DDD3</td>
 <td class="instruction">LD L,(IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56790"></span>DDD6</td>
 <td class="instruction">JP <a href="#54798">$D60E</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw tile</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56793"></span>DDD9</td>
 <td class="instruction">LD H,(IX+$02)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Reset column to right bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56796"></span>DDDC</td>
 <td class="instruction">LD (IX+$01),H</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56799"></span>DDDF</td>
 <td class="instruction">JR $DDCD</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store direction, draw</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56801"></span>DDE1</td>
 <td class="instruction">CP $07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check for right-direction, A = left dir</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56803"></span>DDE3</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56805"></span>DDE5</td>
 <td class="instruction">JR Z,$DDCD</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Bounce at left edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56807"></span>DDE7</td>
 <td class="instruction">LD H,(IX+$00)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL = tile coord</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56810"></span>DDEA</td>
 <td class="instruction">LD L,(IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56813"></span>DDED</td>
@@ -39166,35 +38898,32 @@ Used by the routines at <a href="asm.html#56030">DADE</a>, <a href="asm.html#560
 <tr>
 <td class="address-1"><span id="56816"></span>DDF0</td>
 <td class="instruction">LD A,(IX+$03)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compare column to right bound</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56819"></span>DDF3</td>
 <td class="instruction">CP (IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56822"></span>DDF6</td>
 <td class="instruction">LD A,$07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Continue left, else wrap</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56824"></span>DDF8</td>
 <td class="instruction">JR NC,$DDD9</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56826"></span>DDFA</td>
 <td class="instruction">DEC (IX+$01)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance column left, store</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56829"></span>DDFD</td>
 <td class="instruction">JR $DDCD</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="56831" class="description">DDFF: Routine at DDFF</div>
+<div id="56831" class="description">DDFF: Advance water/crack animation phase (bounce counter)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39208,172 +38937,157 @@ Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#560
 <tr>
 <td class="address-2"><span id="56831"></span>DDFF</td>
 <td class="instruction">LD A,($CCAF)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = difficulty/animation speed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56834"></span>DE02</td>
 <td class="instruction">AND A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56835"></span>DE03</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return if not slowest speed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56836"></span>DE04</td>
 <td class="instruction">LD HL,$FE9B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = animation tick counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56839"></span>DE07</td>
 <td class="instruction">DEC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Tick counter, return unless expired</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56840"></span>DE08</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56841"></span>DE09</td>
 <td class="instruction">LD A,($FE9C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A/B = animation phase byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56844"></span>DE0C</td>
 <td class="instruction">LD B,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56845"></span>DE0D</td>
 <td class="instruction">AND $3F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">C = phase counter (masked)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56847"></span>DE0F</td>
 <td class="instruction">LD C,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56848"></span>DE10</td>
 <td class="instruction">SRL A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = phase/4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56850"></span>DE12</td>
 <td class="instruction">SRL A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56852"></span>DE14</td>
 <td class="instruction">ADD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Compute next tick delay, store</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56854"></span>DE16</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56855"></span>DE17</td>
 <td class="instruction">BIT 6,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Check direction bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56857"></span>DE19</td>
 <td class="instruction">JR Z,$DE22</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56859"></span>DE1B</td>
 <td class="instruction">DEC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Decrement phase, continue unless zero</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56860"></span>DE1C</td>
 <td class="instruction">JR NZ,$DE2E</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56862"></span>DE1E</td>
 <td class="instruction">RES 6,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Flip direction bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56864"></span>DE20</td>
 <td class="instruction">JR $DE2E</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56866"></span>DE22</td>
 <td class="instruction">INC C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Increment phase, test overflow bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56867"></span>DE23</td>
 <td class="instruction">BIT 6,C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56869"></span>DE25</td>
 <td class="instruction">JR Z,$DE2E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Continue if not overflowed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56871"></span>DE27</td>
 <td class="instruction">LD A,B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Flip direction bit, keep phase</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56872"></span>DE28</td>
 <td class="instruction">OR $7F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56874"></span>DE2A</td>
 <td class="instruction">XOR $80</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56876"></span>DE2C</td>
 <td class="instruction">JR $DE33</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store and return</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56878"></span>DE2E</td>
 <td class="instruction">LD A,C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Combine phase and direction bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56879"></span>DE2F</td>
 <td class="instruction">XOR B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56880"></span>DE30</td>
 <td class="instruction">AND $3F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask and restore direction bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56882"></span>DE32</td>
 <td class="instruction">XOR B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56883"></span>DE33</td>
 <td class="instruction">LD ($FE9C),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store updated phase byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56886"></span>DE36</td>
 <td class="instruction">CP A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Return (Z set = OK to animate)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56887"></span>DE37</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="56888" class="description">DE38: Routine at DE38</div>
@@ -39813,7 +39527,7 @@ Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#560
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="57037" class="description">DECD: Routine at DECD</div>
+<div id="57037" class="description">DECD: Fold coords into scene-map attribute address</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39827,70 +39541,64 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="57037"></span>DECD</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = column, rotate</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57038"></span>DECE</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57039"></span>DECF</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Continue rotate (x3 total)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57040"></span>DED0</td>
 <td class="instruction">RLCA</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57041"></span>DED1</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Fold into attribute row bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57042"></span>DED2</td>
 <td class="instruction">AND $E7</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57044"></span>DED4</td>
 <td class="instruction">XOR H</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Combine and mask</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57045"></span>DED5</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57047"></span>DED7</td>
 <td class="instruction">LD H,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57048"></span>DED8</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Mask column bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57049"></span>DED9</td>
 <td class="instruction">AND $1F</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57051"></span>DEDB</td>
 <td class="instruction">LD L,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Store column, return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57052"></span>DEDC</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="57053" class="description">DEDD: Routine at DEDD</div>
+<div id="57053" class="description">DEDD: Check if personage/object overlaps given screen area</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39904,32 +39612,28 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="57053"></span>DEDD</td>
 <td class="instruction">LD A,(IX+$0A)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Return early if object not active</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57056"></span>DEE0</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57057"></span>DEE1</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57058"></span>DEE2</td>
 <td class="instruction">LD A,(IX+$02)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Skip if object not alive</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57061"></span>DEE5</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57062"></span>DEE6</td>
 <td class="instruction">JR Z,$DF0D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57064"></span>DEE8</td>
@@ -39939,127 +39643,113 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="57067"></span>DEEB</td>
 <td class="instruction">LD A,(IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Compute object right edge (X+width-1)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57070"></span>DEEE</td>
 <td class="instruction">ADD A,C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57071"></span>DEEF</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57072"></span>DEF0</td>
 <td class="instruction">CP L</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">No overlap if left of area</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57073"></span>DEF1</td>
 <td class="instruction">JR C,$DF0D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57075"></span>DEF3</td>
 <td class="instruction">LD A,L</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Compute area right edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57076"></span>DEF4</td>
 <td class="instruction">ADD A,D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57077"></span>DEF5</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57078"></span>DEF6</td>
 <td class="instruction">CP (IX+$06)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">No overlap if right of object</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57081"></span>DEF9</td>
 <td class="instruction">JR C,$DF0D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57083"></span>DEFB</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Compute area bottom edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57084"></span>DEFC</td>
 <td class="instruction">ADD A,E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57085"></span>DEFD</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57086"></span>DEFE</td>
 <td class="instruction">CP (IX+$07)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">No overlap if below object</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57089"></span>DF01</td>
 <td class="instruction">JR C,$DF0D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57091"></span>DF03</td>
 <td class="instruction">LD A,(IX+$07)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Compute object bottom edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57094"></span>DF06</td>
 <td class="instruction">ADD A,B</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57095"></span>DF07</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57096"></span>DF08</td>
 <td class="instruction">CP H</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">No overlap if above area</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57097"></span>DF09</td>
 <td class="instruction">JR C,$DF0D</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57099"></span>DF0B</td>
 <td class="instruction">CP A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Overlap found: return Z</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57100"></span>DF0C</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="57101"></span>DF0D</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">No overlap: clear Z</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57103"></span>DF0F</td>
 <td class="instruction">AND A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57104"></span>DF10</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Return</td>
 </tr>
 </table>
 <div id="57105" class="description">DF11: Mirror pixel area to screen and check personage/object bounds</div>
@@ -40381,7 +40071,7 @@ Used by the routine at <a href="asm.html#56903">DE47</a>.
 <td class="instruction">RET</td>
 </tr>
 </table>
-<div id="57210" class="description">DF7A: Routine at DF7A</div>
+<div id="57210" class="description">DF7A: Animate water ripple tiles (3 frames)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">

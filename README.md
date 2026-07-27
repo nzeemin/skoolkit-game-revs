@@ -127,11 +127,11 @@ Status: Have pretty good progress (120K .ctl file).
 
 Original: for ZX Spectrum, 1984, US Gold.
 
-Volume: about 3500 code instructions.
+Volume: about 3700 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
-Status: just started (54K .ctl file).
+Status: Work in progress (72K .ctl file).
 Based on great work done by Anatoly Vdovichev.
 
 

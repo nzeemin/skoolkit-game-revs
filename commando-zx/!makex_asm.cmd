@@ -1,1 +1,1 @@
-C:\bin\skoolkit-10.0\skool2asm.py -H -c commando.skool >commando.asm
+C:\bin\skoolkit-10.0\skool2asm.py -H -c -S 19200 -E 65535 commando.skool >commando.asm

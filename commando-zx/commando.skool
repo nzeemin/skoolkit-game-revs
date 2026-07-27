@@ -5,6 +5,16 @@ b$5B00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $5B10 DEFB $00
 
 ; Object records, 20 bytes wide
+;
+; .
+;
+; .
+;
+; Enemy/object slots. +$00/$01 X/Y (current), +$02/$03 sprite frame/page
+; (current), +$04/$05 X/Y (target), +$06/$07 sprite frame/page (next),
+; +$08/$09/$0A clip bounds, +$0B flags (bit 2 flip, bit 4 wall-solid, bit 5
+; draw-active), +$11 AI delay timer, +$12 AI state. See #R$5BDA for the
+; player's own instance and docs/Object-Record.md for the full field writeup.
 b$5B11 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $5B1B DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $5B25 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -32,16 +42,21 @@ b$5BD9 DEFB $00                             ; ?? = $90
  $5BDA DEFB $00                             ; Starting column = $10
  $5BDB DEFB $00                             ; Pixels down screen start point =
                                             ; $40
- $5BDC DEFB $00                             ; ?? = $02
+ $5BDC DEFB $00                             ; Sprite frame index (+$02) = $02
  $5BDD DEFB $00
- $5BDE DEFB $00                             ; ??
- $5BDF DEFB $00                             ; ??
+ $5BDE DEFB $00                             ; Target/new column (+$04)
+ $5BDF DEFB $00                             ; Target/new row (+$05)
  $5BE0 DEFB $00,$00,$00,$00
- $5BE4 DEFB $00                             ; ?? = $0A
- $5BE5 DEFB $00                             ; ?? = $30
- $5BE6 DEFB $00                             ; ??
+ $5BE4 DEFB $00                             ; Y-axis clip bound (+$0A) = $0A
+ $5BE5 DEFB $00                             ; Flags (+$0B): bit 2 sprite flip,
+                                            ; bit 5 draw-active, see #R$9922 =
+                                            ; $30
+ $5BE6 DEFB $00                             ; Sub-state/type byte (+$0C),
+                                            ; context-dependent, see #R$806B
+                                            ; and #R$82C1
  $5BE7 DEFB $00,$00,$00,$00
- $5BEB DEFB $00                             ; ??
+ $5BEB DEFB $00                             ; Action delay timer (+$11), see
+                                            ; #R$EB13
  $5BEC DEFB $00,$00
  $5BEE DEFB $00                             ; ?? = $90
  $5BEF DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -336,52 +351,35 @@ b$6318 DEFB $D6,$8B,$0B,$FC,$43,$7B,$E1,$C9
  $63F0 DEFB $E1,$E1,$E1,$E1,$E1,$E1,$E1,$E1
  $63F8 DEFB $E1,$E1,$E1,$E1,$E1,$E1,$E1,$E1
 
-; Abort: restore stack and interrupts, return to frame loop (redirect)
+; Block of redirects
 ;
 ; Used by the routines at #R$9132 and #R$9193.
 c$6400 JP $7A10      ; => Abort
  $6403 JP $7A5C      ; => Delay by BC HALTs
  $6406 JP $79CA      ;
  $6409 JP $0000      ;
- $640C JP $7621      ;
+ $640C JP $7621      ; => Print HL as 4-digit hex/BCD
  $640F JP $7626      ;
  $6412 JP $75BE      ; => Fill screen rectangle with byte
-
-; Update Score (redirect)
-;
-; Used by the routines at #R$8EE3, #R$E1D1, #R$E224, #R$E6FE, #R$F076 and
-; #R$F26E.
-c$6415 JP $6825      ; => Update Score
-
-; Data block at 6418
-b$6418 DEFB $C3,$6A,$79,$C3,$2C,$79,$C3,$D2
- $6420 DEFB $69,$C3,$57,$73
-
-; XOR AF and AF' with every byte in $F900-F9FF (redirect)
-;
-; Used by the routine at #R$ED52.
-c$6424 JP $7511      ; => XOR AF and AF' with every byte in $F900-F9FF
-
-; Scan $6648 table, call $65A5 for active entries (redirect)
-;
-; Used by the routine at #R$DEEF.
-c$6427 JP $6593      ; => Scan $6648 table, call $65A5 for active entries
-
-; Find free slot in $6648 table (redirect)
-;
-; Used by the routines at #R$83B8, #R$85AB, #R$86F5 and #R$F381.
-c$642A JP $6600      ; => Find free slot in $6648 table
-
-; Trigger sound effect A into free slot at $6433 (redirect)
-;
-; Used by the routines at #R$8EE3, #R$DE91, #R$E6FE, #R$ECC1, #R$F26E and
+; This entry point is used by the routines at #R$8EE3, #R$E1D1, #R$E224,
+; #R$E6FE, #R$F076 and #R$F26E.
+*$6415 JP $6825      ; => Update Score
+ $6418 JP $796A      ; => Prepare New Game
+ $641B JP $792C      ; => Prepare at new Area
+ $641E JP $69D2      ;
+ $6421 JP $7357      ; => Game main loop / frame handler
+; This entry point is used by the routine at #R$ED52.
+*$6424 JP $7511      ; => XOR AF and AF' with every byte in $F900-F9FF
+; This entry point is used by the routine at #R$DEEF.
+*$6427 JP $6593      ; => Scan $6648 table, call $65A5 for active entries
+; This entry point is used by the routines at #R$83B8, #R$85AB, #R$86F5 and
 ; #R$F381.
-c$642D JP $6456      ; => Trigger sound effect A into free slot at $6433
-
-; We've got A more grenades (redirect)
-;
-; Used by the routines at #R$8EE3 and #R$ECC1.
-c$6430 JP $6C7A      ; => We've got A more grenades
+*$642A JP $6600      ; => Find free slot in $6648 table
+; This entry point is used by the routines at #R$8EE3, #R$DE91, #R$E6FE,
+; #R$ECC1, #R$F26E and #R$F381.
+*$642D JP $6456      ; => Trigger sound effect A into free slot at $6433
+; This entry point is used by the routines at #R$8EE3 and #R$ECC1.
+*$6430 JP $6C7A      ; => We've got A more grenades
 
 ; Data block at 6433
 b$6433 DEFB $00,$00,$00,$00,$00,$00,$01
@@ -397,7 +395,7 @@ b$6433 DEFB $00,$00,$00,$00,$00,$00,$01
 
 ; Trigger sound effect A into free slot at $6433 (unconfirmed)
 ;
-; Used by the routines at #R$642D, #R$6825 and #R$7637.
+; Used by the routines at #R$6400, #R$6825 and #R$7637.
 c$6456 CP $07        ;
  $6458 JR Z,$6469    ; Clear 7 bytes at $6433
  $645A LD E,A        ;
@@ -425,18 +423,18 @@ c$6469 LD B,$07      ;
 ; Sound-effect dispatcher, 7 channels (unconfirmed)
 ;
 ; Used by the routine at #R$7357.
-c$6474 LD HL,$6433   ;
- $6477 LD B,$07      ;
+c$6474 LD HL,$6433   ; {Scan $6433 slots for active sound
+ $6477 LD B,$07      ; }
 *$6479 LD A,(HL)     ;
  $647A AND A         ;
  $647B JP NZ,$6482   ;
  $647E INC HL        ;
  $647F DJNZ $6479    ;
  $6481 RET           ;
-*$6482 LD HL,$6446   ;
+*$6482 LD HL,$6446   ; {Compute jump table entry, dispatch
  $6485 LD A,B        ;
  $6486 ADD A,A       ;
- $6487 ADD A,L       ;
+ $6487 ADD A,L       ; }
  $6488 LD L,A        ;
  $6489 JR NC,$648C   ;
  $648B INC H         ;
@@ -582,7 +580,7 @@ c$6575 LD E,A        ;
 
 ; Scan $6648 table, call $65A5 for active entries
 ;
-; Used by the routine at #R$6427.
+; Used by the routine at #R$6400.
 c$6593 LD HL,$6648   ;
  $6596 LD DE,$0005   ;
  $6599 LD B,$05      ;
@@ -658,10 +656,10 @@ c$65F6 OR A          ;
 
 ; Find free slot in $6648 table
 ;
-; Used by the routine at #R$642A.
-c$6600 EX AF,AF'     ;
+; Used by the routine at #R$6400.
+c$6600 EX AF,AF'     ; {Scan for slot marked $80 (free)
  $6601 PUSH HL       ;
- $6602 LD HL,$6648   ;
+ $6602 LD HL,$6648   ; }
  $6605 LD DE,$0005   ;
  $6608 LD B,$05      ;
  $660A LD A,$80      ;
@@ -671,16 +669,16 @@ c$6600 EX AF,AF'     ;
  $6610 DJNZ $660C    ;
  $6612 POP HL        ;
  $6613 RET           ;
-*$6614 POP DE        ;
+*$6614 POP DE        ; {Fill slot: address, active flag
  $6615 LD (HL),E     ;
  $6616 INC HL        ;
  $6617 LD (HL),D     ;
  $6618 INC HL        ;
- $6619 LD (HL),$00   ;
+ $6619 LD (HL),$00   ; }
  $661B INC HL        ;
- $661C EX AF,AF'     ;
+ $661C EX AF,AF'     ; {Store derived attribute value
  $661D SRL A         ;
- $661F ADD A,$13     ;
+ $661F ADD A,$13     ; }
  $6621 LD (HL),A     ;
  $6622 INC HL        ;
  $6623 LD (HL),$01   ;
@@ -766,17 +764,18 @@ c$6751 LD HL,$67CE    ;
  $6766 SET 3,(IY+$07) ; Set bit 3 of byte ($FD87)
  $676A RET            ;
 
-; Routine at 676B
+; Shift scroll pattern into left border column (unconfirmed)
 ;
 ; Used by the routine at #R$7357.
-c$676B LD A,($681D)  ;
- $676E DEC A         ;
+c$676B LD A,($681D)  ; {Decrement counter, trigger $679D at zero
+ $676E DEC A         ; }
  $676F LD ($681D),A  ;
- $6772 CALL Z,$679D  ;
+ $6772 CALL Z,$679D  ; Advance scroll-message pointer, copy next char's font
+                     ; row to $681E
  $6775 LD E,$02      ;
-*$6777 LD BC,$2007   ;
+*$6777 LD BC,$2007   ; {Compute row byte address, rotate bit into column
  $677A LD HL,$56FF   ;
-*$677D PUSH DE       ;
+*$677D PUSH DE       ; }
  $677E LD DE,$681E   ;
  $6781 DEC E         ;
  $6782 LD A,E        ;
@@ -786,8 +785,8 @@ c$676B LD A,($681D)  ;
  $6786 RL (HL)       ;
  $6788 EX DE,HL      ;
  $6789 POP DE        ;
-*$678A RL (HL)       ;
- $678C DEC L         ;
+*$678A RL (HL)       ; {Rotate remaining bits down column, loop rows
+ $678C DEC L         ; }
  $678D DJNZ $678A    ;
  $678F LD A,$20      ;
  $6791 ADD A,L       ;
@@ -800,25 +799,25 @@ c$676B LD A,($681D)  ;
  $679A JR NZ,$6777   ;
  $679C RET           ;
 
-; Routine at 679D
+; Advance scroll-message pointer, copy next char's font row to $681E
 ;
 ; Used by the routine at #R$676B.
-c$679D LD A,$04      ;
- $679F LD ($681D),A  ;
+c$679D LD A,$04      ; {Reset scroll counter, load message pointer
+ $679F LD ($681D),A  ; }
  $67A2 LD HL,($681B) ;
- $67A5 LD A,(HL)     ;
+ $67A5 LD A,(HL)     ; {Read char, check for end-of-message marker
  $67A6 CP $1F        ;
- $67A8 JR Z,$67C7    ;
+ $67A8 JR Z,$67C7    ; }
  $67AA INC HL        ;
  $67AB LD ($681B),HL ;
  $67AE CP $20        ;
  $67B0 JR NZ,$67B4   ;
  $67B2 LD A,$2F      ;
-*$67B4 LD L,A        ;
+*$67B4 LD L,A        ; {Look up font row for char, offset $7D28
  $67B5 LD H,$00      ;
  $67B7 ADD HL,HL     ;
  $67B8 ADD HL,HL     ;
- $67B9 ADD HL,HL     ;
+ $67B9 ADD HL,HL     ; }
  $67BA LD DE,$7D28   ;
  $67BD ADD HL,DE     ;
  $67BE LD DE,$681E   ;
@@ -841,7 +840,7 @@ b$681B DEFW $67D4                           ; Address of current char in
 
 ; Update Score
 ;
-; Used by the routines at #R$6415 and #R$6BBB.
+; Used by the routines at #R$6400 and #R$6BBB.
 ;
 ; I:BC ??
 c$6825 LD A,($FDE9)     ; Get Score 2nd char
@@ -938,7 +937,7 @@ c$6896 LD A,H        ;
 ; Used by the routine at #R$68CA.
 ;
 ; I:HL Start screen address
-c$68A6 LD ($FD82),SP ;
+c$68A6 LD ($FD82),SP ; Switch SP to HL, clear DE=0
  $68AA LD DE,$0000   ;
 *$68AD LD SP,HL      ;
  $68AE PUSH DE       ;
@@ -946,9 +945,9 @@ c$68A6 LD ($FD82),SP ;
  $68B0 PUSH DE       ;
  $68B1 PUSH DE       ;
  $68B2 PUSH DE       ;
- $68B3 INC H         ;
+ $68B3 INC H         ; {Check third boundary, wrap if needed
  $68B4 LD A,H        ;
- $68B5 AND $07       ;
+ $68B5 AND $07       ; }
  $68B7 JR NZ,$68C3   ;
  $68B9 LD A,L        ;
  $68BA ADD A,$20     ;
@@ -1040,12 +1039,12 @@ c$68CA LD A,($FDBC)   ;
 ; Compute row attribute address, call $69B4 (unconfirmed)
 ;
 ; Used by the routine at #R$68CA.
-c$6950 PUSH AF       ;
+c$6950 PUSH AF       ; {Save regs, check joystick type bit 5
  $6951 PUSH DE       ;
  $6952 PUSH HL       ;
  $6953 PUSH BC       ;
  $6954 EXX           ;
- $6955 LD DE,$7AA0   ;
+ $6955 LD DE,$7AA0   ; }
  $6958 EXX           ;
  $6959 LD L,$03      ;
  $695B LD A,($FDBC)  ;
@@ -1064,24 +1063,24 @@ c$6950 PUSH AF       ;
  $6973 POP AF        ;
  $6974 RET           ;
 
-; Routine at 6975
+; Fill status-bar columns down, calling $699A per column (unconfirmed)
 ;
 ; Used by the routine at #R$7357.
-c$6975 LD A,($FDBB)   ;
+c$6975 LD A,($FDBB)   ; {Check idle flag ($FDBB), clear on match
  $6978 LD H,A         ;
- $6979 CP $20         ;
+ $6979 CP $20         ; }
  $697B JR NZ,$6982    ;
  $697D RES 2,(IY+$07) ;
  $6981 RET            ;
-*$6982 INC A          ;
+*$6982 INC A          ; {Set up fill byte/column loop
  $6983 LD ($FDBB),A   ;
  $6986 LD A,$1F       ;
- $6988 LD B,$20       ;
+ $6988 LD B,$20       ; }
  $698A LD DE,$0000    ;
-*$698D SUB H          ;
+*$698D SUB H          ; {Subtract row height, call $699A per column
  $698E JR NC,$6996    ;
  $6990 ADD A,$20      ;
- $6992 CALL $699A     ;
+ $6992 CALL $699A     ; }
  $6995 INC D          ;
 *$6996 INC E          ;
  $6997 DJNZ $698D     ;
@@ -1133,12 +1132,23 @@ c$69B4 LD A,$1F      ;
  $69CF LDIR          ;
  $69D1 RET           ;
 
-; Data block at 69D2
-b$69D2 DEFB $D9,$E5,$FD,$E5,$D9,$ED,$73,$80
- $69DA DEFB $FD,$CD,$CA,$79,$FD,$CB,$07,$CE
- $69E2 DEFB $21,$AB,$FD,$22,$A9,$FD,$AF,$32
- $69EA DEFB $A7,$FD,$32,$98,$FD,$32,$84,$FD
- $69F2 DEFB $FB
+; Routine at 69D2
+;
+; Used by the routine at #R$6400.
+c$69D2 EXX            ;
+ $69D3 PUSH HL        ;
+ $69D4 PUSH IY        ;
+ $69D6 EXX            ;
+ $69D7 LD ($FD80),SP  ;
+ $69DB CALL $79CA     ;
+ $69DE SET 1,(IY+$07) ;
+ $69E2 LD HL,$FDAB    ;
+ $69E5 LD ($FDA9),HL  ;
+ $69E8 XOR A          ;
+ $69E9 LD ($FDA7),A   ;
+ $69EC LD ($FD98),A   ;
+ $69EF LD ($FD84),A   ;
+ $69F2 EI             ;
 
 ; Top Score and Main Menu??
 ;
@@ -1457,7 +1467,7 @@ c$6BBB CALL $796A                ; Prepare New Game
 
 ; We've got A more grenades
 ;
-; Used by the routine at #R$6430.
+; Used by the routine at #R$6400.
 c$6C7A ADD A,(IY+$67) ;
  $6C7D LD ($FDE7),A   ; Update player's grenades number
 
@@ -1631,7 +1641,7 @@ c$6CAE CALL $70F8             ; Find a place in Top Score table
  $6DD8 LD A,$FF               ;
 *$6DDA LD ($70BB),A           ;
 *$6DDD LD C,(IX+$0C)          ;
- $6DE0 CALL $6FF5             ;
+ $6DE0 CALL $6FF5             ; Look up record entry for door/scroll trigger
  $6DE3 LD A,($70B5)           ;
  $6DE6 OR A                   ;
  $6DE7 JR NZ,$6E02            ;
@@ -1761,7 +1771,7 @@ c$6E7B LD IX,$6FD9     ;
  $6EC1 CALL $6ECD      ;
  $6EC4 POP AF          ;
  $6EC5 CP $3E          ;
- $6EC7 CALL NZ,$6F52   ;
+ $6EC7 CALL NZ,$6F52   ; Look up record in $6FE5 table, mask low bits
  $6ECA POP BC          ;
  $6ECB JR $6E9A        ;
 
@@ -1855,11 +1865,11 @@ c$6F46 LD HL,$6FE5   ;
  $6F4F DJNZ $6F4B    ;
  $6F51 RET           ;
 
-; Routine at 6F52
+; Look up record in $6FE5 table, mask low bits (unconfirmed)
 ;
 ; Used by the routine at #R$6E7B.
-c$6F52 LD C,A        ;
- $6F53 LD HL,$6FE5   ;
+c$6F52 LD C,A        ; {Scan table for matching value C
+ $6F53 LD HL,$6FE5   ; }
  $6F56 LD B,$08      ;
 *$6F58 LD A,(HL)     ;
  $6F59 CP C          ;
@@ -1867,8 +1877,8 @@ c$6F52 LD C,A        ;
  $6F5C INC HL        ;
  $6F5D INC HL        ;
  $6F5E DJNZ $6F58    ;
- $6F60 LD HL,$6FE5   ;
- $6F63 LD B,$08      ;
+ $6F60 LD HL,$6FE5   ; {Scan table for first free ($FF) slot
+ $6F63 LD B,$08      ; }
 *$6F65 LD A,(HL)     ;
  $6F66 INC A         ;
  $6F67 JR Z,$6F74    ;
@@ -1876,9 +1886,9 @@ c$6F52 LD C,A        ;
  $6F6A INC HL        ;
  $6F6B DJNZ $6F65    ;
  $6F6D RET           ;
-*$6F6E INC HL        ;
+*$6F6E INC HL        ; {Mask found entry to 2 bits
  $6F6F LD A,(HL)     ;
- $6F70 AND $03       ;
+ $6F70 AND $03       ; }
  $6F72 LD (HL),A     ;
  $6F73 RET           ;
 *$6F74 LD (HL),C     ;
@@ -1949,10 +1959,10 @@ b$6FD9 DEFB $00,$00,$00
 b$6FE5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $6FED DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at 6FF5
+; Look up record entry for door/scroll trigger (unconfirmed)
 ;
 ; Used by the routine at #R$6CAE.
-c$6FF5 LD A,($70B3)   ;
+c$6FF5 LD A,($70B3)   ; Row index * 4 into A
  $6FF8 ADD A,A        ;
  $6FF9 ADD A,A        ;
  $6FFA ADD A,(IX+$06) ;
@@ -1964,14 +1974,14 @@ c$6FF5 LD A,($70B3)   ;
  $7004 RET Z          ;
  $7005 AND $03        ;
  $7007 LD ($70B5),A   ;
- $700A LD A,B         ;
- $700B SRL A          ;
+ $700A LD A,B         ; {Extract high bits of B into new row
+ $700B SRL A          ; }
  $700D SRL A          ;
  $700F LD ($70B3),A   ;
  $7012 LD A,($70BC)   ;
  $7015 ADD A,C        ;
  $7016 LD B,A         ;
- $7017 LD HL,$709A    ;
+ $7017 LD HL,$709A    ; Look up entry offset in $709A table
  $701A CALL $98D3     ; HL = HL + A
  $701D LD A,(HL)      ;
  $701E CP $FF         ;
@@ -2020,24 +2030,24 @@ c$6FF5 LD A,($70B3)   ;
  $706B JR NZ,$7057    ;
  $706D RET            ;
 
-; Routine at 706E
+; Unpack $66D1 record, scale coordinate x4 (unconfirmed)
 ;
 ; Used by the routine at #R$6FF5.
-c$706E LD HL,$66D1   ;
- $7071 LD DE,$6711   ;
+c$706E LD HL,$66D1   ; {Load source/dest pointers, B=16 records
+ $7071 LD DE,$6711   ; }
  $7074 EXX           ;
  $7075 LD B,$10      ;
 *$7077 EXX           ;
- $7078 LD C,(HL)     ;
+ $7078 LD C,(HL)     ; {Read 3-byte packed record
  $7079 INC HL        ;
  $707A LD B,(HL)     ;
  $707B INC HL        ;
  $707C LD A,(HL)     ;
- $707D INC HL        ;
+ $707D INC HL        ; }
  $707E INC HL        ;
- $707F SLA A         ;
+ $707F SLA A         ; {Scale value left by 2 bits (x4)
  $7081 RL B          ;
- $7083 RL C          ;
+ $7083 RL C          ; }
  $7085 SLA A         ;
  $7087 RL B          ;
  $7089 RL C          ;
@@ -2323,7 +2333,7 @@ t$72B2 DEFM "KEITH... 060000"
 
 ; Game main loop / frame handler
 ;
-; Used by the routines at #R$7A42 and #R$FCFC.
+; Used by the routines at #R$6400, #R$7A42 and #R$FCFC.
 c$7357 LD ($FD8F),HL  ;
  $735A LD HL,$0000    ;
  $735D EX (SP),HL     ;
@@ -2361,7 +2371,7 @@ c$7357 LD ($FD8F),HL  ;
  $73A7 LD ($FD98),A   ; Save last key read from keyboard
  $73AA LD ($FD99),BC  ;
  $73AE BIT 3,(IY+$07) ;
- $73B2 CALL NZ,$676B  ;
+ $73B2 CALL NZ,$676B  ; Shift scroll pattern into left border column
  $73B5 JR $7374       ;
 
 ; Read Keyboard
@@ -2409,13 +2419,13 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $740A CP $80        ;
  $740C RET C         ;
  $740D CP $F0        ;
- $740F JP NC,$74FF   ;
- $7412 CALL $7416    ;
+ $740F JP NC,$74FF   ; }
+ $7412 CALL $7416    ; {Recurse for adjacent byte, advance pointer
  $7415 INC DE        ; }
-*$7416 LD L,E        ; {XOR one byte from each $80xx-$C0xx page into checksum
+*$7416 LD L,E        ;
  $7417 LD H,$80      ;
  $7419 XOR A         ;
- $741A XOR (HL)      ;
+ $741A XOR (HL)      ; XOR byte from $8000 page into checksum
  $741B INC H         ;
  $741C XOR (HL)      ;
  $741D INC H         ;
@@ -2469,7 +2479,7 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $744D INC H         ;
  $744E XOR (HL)      ;
  $744F INC H         ;
- $7450 XOR (HL)      ;
+ $7450 XOR (HL)      ; ...halfway through the page run
  $7451 INC H         ;
  $7452 XOR (HL)      ;
  $7453 INC H         ;
@@ -2524,9 +2534,9 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $7484 XOR (HL)      ;
  $7485 INC H         ;
  $7486 XOR (HL)      ;
- $7487 INC H         ; }
- $7488 XOR (HL)      ; {...continues through $C2xx-$F8xx
- $7489 INC H         ;
+ $7487 INC H         ;
+ $7488 XOR (HL)      ; {...continues, one page per pair of instructions
+ $7489 INC H         ; }
  $748A XOR (HL)      ;
  $748B INC H         ;
  $748C XOR (HL)      ;
@@ -2589,7 +2599,7 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $74C5 INC H         ;
  $74C6 XOR (HL)      ;
  $74C7 INC H         ;
- $74C8 XOR (HL)      ;
+ $74C8 XOR (HL)      ; ...more of the same, third quarter
  $74C9 INC H         ;
  $74CA XOR (HL)      ;
  $74CB INC H         ;
@@ -2613,7 +2623,7 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $74DD INC H         ;
  $74DE XOR (HL)      ;
  $74DF INC H         ;
- $74E0 XOR (HL)      ;
+ $74E0 XOR (HL)      ; ...still in the run, near the end
  $74E1 INC H         ;
  $74E2 XOR (HL)      ;
  $74E3 INC H         ;
@@ -2629,8 +2639,8 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $74ED INC H         ;
  $74EE XOR (HL)      ;
  $74EF INC H         ;
- $74F0 XOR (HL)      ;
- $74F1 INC H         ;
+ $74F0 XOR (HL)      ; {XOR byte from $F8xx page, last of the run
+ $74F1 INC H         ; }
  $74F2 XOR (HL)      ;
  $74F3 INC H         ;
  $74F4 XOR (HL)      ;
@@ -2638,7 +2648,7 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $74F6 XOR (HL)      ;
  $74F7 INC H         ;
  $74F8 XOR (HL)      ;
- $74F9 INC H         ; }
+ $74F9 INC H         ;
  $74FA LD H,$FA      ; see $FA00
  $74FC XOR (HL)      ;
  $74FD LD (DE),A     ;
@@ -2656,8 +2666,8 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
 
 ; XOR AF and AF' with every byte in $F900-F9FF
 ;
-; Used by the routines at #R$6424 and #R$7405.
-c$7511 LD HL,$F900   ;
+; Used by the routines at #R$6400 and #R$7405.
+c$7511 LD HL,$F900   ; Set up loop pointer to $F900
 *$7514 XOR (HL)      ; #0
  $7515 EX AF,AF'     ;
  $7516 INC L         ;
@@ -2757,13 +2767,13 @@ b$7598 DEFB $FE,$01,$7F,$01,$7F,$04,$FE,$02
 ; Read keyboard in game mode
 ;
 ; Used by the routine at #R$7547.
-c$75A8 LD B,$01      ;
- $75AA LD HL,$7598   ;
+c$75A8 LD B,$01      ; {Set up bit mask, port table pointer
+ $75AA LD HL,$7598   ; }
 ; This entry point is used by the routine at #R$7547.
-*$75AD LD A,(HL)     ;
+*$75AD LD A,(HL)     ; {Read port, test key bit
  $75AE INC HL        ;
  $75AF IN A,($FE)    ;
- $75B1 AND (HL)      ;
+ $75B1 AND (HL)      ; }
  $75B2 INC HL        ;
  $75B3 JR NZ,$75B6   ;
  $75B5 SCF           ;
@@ -2782,15 +2792,15 @@ c$75A8 LD B,$01      ;
 ; I:B Row count per column
 ; I:C Column count
 ; I:A Fill byte
-c$75BE LD D,B        ;
+c$75BE LD D,B        ; {Fill row bytes, count in B
 *$75BF LD E,L        ;
 *$75C0 LD (HL),A     ;
- $75C1 INC L         ;
+ $75C1 INC L         ; }
  $75C2 DJNZ $75C0    ;
  $75C4 LD B,D        ;
- $75C5 EX AF,AF'     ;
+ $75C5 EX AF,AF'     ; {Advance column, wrap to next third
  $75C6 LD A,E        ;
- $75C7 ADD A,$20     ;
+ $75C7 ADD A,$20     ; }
  $75C9 LD L,A        ;
  $75CA JR NC,$75CD   ;
  $75CC INC H         ;
@@ -2849,18 +2859,18 @@ c$7615 EX (SP),HL    ;
  $761C CALL $7637    ; Print Char
  $761F JR $7615      ;
 
-; Routine at 7621
+; Print HL as 4-digit hex/BCD (unconfirmed)
 ;
 ; Used by the routine at #R$6400.
-c$7621 LD A,H        ;
- $7622 CALL $7626    ;
+c$7621 LD A,H        ; {Print high byte via $7626
+ $7622 CALL $7626    ; }
  $7625 LD A,L        ;
 ; This entry point is used by the routine at #R$6400.
-*$7626 PUSH AF       ;
+*$7626 PUSH AF       ; {Save value, shift high nibble
  $7627 RRCA          ;
  $7628 RRCA          ;
  $7629 RRCA          ;
- $762A RRCA          ;
+ $762A RRCA          ; }
  $762B CALL $762F    ;
  $762E POP AF        ;
 *$762F AND $0F       ;
@@ -2888,18 +2898,18 @@ c$7621 LD A,H        ;
 ; pointing at the collected argument bytes ($FDAB onward).
 c$7637 PUSH HL        ;
  $7638 PUSH AF        ;
- $7639 LD A,($FDA7)   ;
+ $7639 LD A,($FDA7)   ; get Special-char argument counter
  $763C AND A          ;
  $763D JR Z,$7655     ;
  $763F POP AF         ;
  $7640 PUSH AF        ;
- $7641 LD HL,($FDA9)  ;
+ $7641 LD HL,($FDA9)  ; get Special-char argument write pointer
  $7644 LD (HL),A      ;
  $7645 INC HL         ;
- $7646 LD ($FDA9),HL  ;
- $7649 LD A,($FDA7)   ;
+ $7646 LD ($FDA9),HL  ; set Special-char argument write pointer
+ $7649 LD A,($FDA7)   ; get Special-char argument counter
  $764C DEC A          ;
- $764D LD ($FDA7),A   ;
+ $764D LD ($FDA7),A   ; set Special-char argument counter
  $7650 JR Z,$7675     ;
  $7652 POP AF         ;
  $7653 POP HL         ;
@@ -2913,11 +2923,11 @@ c$7637 PUSH HL        ;
  $765F LD HL,$78CC    ;
  $7662 CALL $98D3     ; HL = HL + A
  $7665 LD A,(HL)      ; A = $00..$02
- $7666 LD ($FDA7),A   ;
+ $7666 LD ($FDA7),A   ; set Special-char argument counter
  $7669 AND A          ;
  $766A JR Z,$7675     ;
  $766C LD HL,$FDAB    ;
- $766F LD ($FDA9),HL  ;
+ $766F LD ($FDA9),HL  ; set Special-char argument write pointer
  $7672 POP AF         ;
  $7673 POP HL         ;
  $7674 RET            ;
@@ -3032,7 +3042,7 @@ c$7637 PUSH HL        ;
  $772E AND $03        ;
  $7730 ADD A,(IY+$22) ;
  $7733 LD H,A         ;
- $7734 LD A,($FDA0)   ;
+ $7734 LD A,($FDA0)   ; get Print attribute
  $7737 LD (HL),A      ;
  $7738 LD DE,$0020    ;
  $773B LD B,A         ;
@@ -3106,7 +3116,8 @@ c$77A4 INC HL        ;
  $77A6 INC (HL)      ;
  $77A7 DEC HL        ;
 ; This entry point is used by the routine at #R$77CB.
-*$77A8 LD A,($FD9F)  ;
+*$77A8 LD A,($FD9F)  ; get Fill char for special-char codes $0C/$13/$0D/$09 =
+                     ; $00
  $77AB LD (HL),A     ;
 
 ; Char $0A: increment format counter, abort if it reaches $31
@@ -3214,7 +3225,8 @@ c$783E LD HL,($FDAB) ;
 
 ; Char $13: set fill char ($FD9F) from arg
 c$784A LD A,($FDAB)  ;
- $784D LD ($FD9F),A  ;
+ $784D LD ($FD9F),A  ; set Fill char for special-char codes $0C/$13/$0D/$09 =
+                     ; $00
  $7850 JR $78C4      ;
 
 ; Char $14: set tab stop, advance format counter
@@ -3232,7 +3244,7 @@ c$7852 LD A,($FDAB)  ;
 
 ; Char $1A: set Font address ($FDA3) from arg word
 c$7866 LD HL,($FDAB) ;
- $7869 LD ($FDA3),HL ;
+ $7869 LD ($FDA3),HL ; set Font address = $7EA0
  $786C JR $78C4      ;
 
 ; Char $0C: print padded field using $FDB0 width
@@ -3264,11 +3276,12 @@ c$7887 LD HL,$FDAF   ;
 
 ; Char $01: reset print format state
 c$7896 LD A,$07      ;
- $7898 LD ($FDA0),A  ;
+ $7898 LD ($FDA0),A  ; set Print attribute
  $789B LD A,$01      ;
  $789D LD ($FDB1),A  ;
  $78A0 XOR A         ;
- $78A1 LD ($FD9F),A  ;
+ $78A1 LD ($FD9F),A  ; set Fill char for special-char codes $0C/$13/$0D/$09 =
+                     ; $00
  $78A4 LD ($FDAF),A  ;
  $78A7 LD ($FDB0),A  ;
  $78AA LD HL,$0000   ;
@@ -3354,7 +3367,7 @@ w$78EC DEFW $777A    ; char $00, 1 arg: clear screen (attributes + bitmap)
 
 ; Prepare at new Area
 ;
-; Used by the routine at #R$6BBB.
+; Used by the routines at #R$6400 and #R$6BBB.
 c$792C XOR A          ;
  $792D LD ($FD85),A   ; Clear last joystick/keyboard bits
  $7930 LD ($FD86),A   ; Clear Land space size
@@ -3371,7 +3384,7 @@ c$792C XOR A          ;
  $7950 LD ($FDCB),A   ;
  $7953 RES 0,(IY+$62) ; Clear Player's dead flag
  $7957 RES 4,(IY+$15) ;
- $795B CALL $79E1     ;
+ $795B CALL $79E1     ; Init $FF00 buffer entries
  $795E CALL $6626     ; Prepare records and variables at $6648
  $7961 LD A,$31       ;
  $7963 CALL $6B87     ; Draw menu box border/frame
@@ -3380,11 +3393,12 @@ c$792C XOR A          ;
 
 ; Prepare New Game
 ;
-; Used by the routine at #R$6BBB.
+; Used by the routines at #R$6400 and #R$6BBB.
 c$796A LD HL,($800A)                           ;
  $796D LD ($FD8A),HL                           ;
  $7970 XOR A                                   ;
- $7971 LD ($FDA7),A                            ;
+ $7971 LD ($FDA7),A                            ; set Special-char argument
+                                               ; counter
  $7974 INC A                                   ;
  $7975 LD ($FDE5),A                            ; Area number = $01
  $7978 LD HL,$FDE8                             ; {Score = "000000"
@@ -3424,10 +3438,10 @@ c$796A LD HL,($800A)                           ;
 
 ; Routine at 79CA
 ;
-; Used by the routine at #R$6400.
+; Used by the routines at #R$6400 and #R$69D2.
 c$79CA DI              ;
  $79CB LD IY,$FD80     ;
- $79CF CALL $7A1E      ;
+ $79CF CALL $7A1E      ; Set up interrupt vector table at $FB00
  $79D2 CALL $7A45      ; Prepare $FE00 table - addresses for every even screen
                        ; line
  $79D5 CALL $79FB      ; Calculate checksums??
@@ -3435,15 +3449,15 @@ c$79CA DI              ;
  $79DC LD (IY+$42),$02 ; Set byte ($FDC2) = $02
  $79E0 RET             ;
 
-; Routine at 79E1
+; Init $FF00 buffer entries (32 slots, unconfirmed)
 ;
 ; Used by the routine at #R$792C.
-c$79E1 LD HL,$FF00   ;
- $79E4 LD C,$20      ;
+c$79E1 LD HL,$FF00   ; {Set up pointer, count C=$20
+ $79E4 LD C,$20      ; }
  $79E6 LD A,$08      ;
-*$79E8 LD (HL),A     ;
+*$79E8 LD (HL),A     ; {Fill first two bytes of entry
  $79E9 INC L         ;
- $79EA SUB $10       ;
+ $79EA SUB $10       ; }
  $79EC LD (HL),A     ;
  $79ED INC L         ;
  $79EE ADD A,$18     ;
@@ -3485,18 +3499,18 @@ c$7A10 DI            ;
  $7A1C EI            ;
  $7A1D RET           ;
 
-; Routine at 7A1E
+; Set up interrupt vector table at $FB00 (unconfirmed)
 ;
 ; Used by the routine at #R$79CA.
-c$7A1E LD A,($7A42)  ;
- $7A21 LD ($FD91),A  ;
+c$7A1E LD A,($7A42)  ; {Copy IM2 vector byte, fill $FB00 table
+ $7A21 LD ($FD91),A  ; }
  $7A24 LD HL,$FB00   ;
  $7A27 LD B,$00      ;
 *$7A29 LD (HL),$FC   ;
  $7A2B INC HL        ;
  $7A2C DJNZ $7A29    ;
- $7A2E LD (HL),$FC   ;
- $7A30 LD DE,$FCFC   ;
+ $7A2E LD (HL),$FC   ; {Terminate table, copy 3 more bytes
+ $7A30 LD DE,$FCFC   ; }
  $7A33 LD HL,$7A42   ;
  $7A36 LD BC,$0003   ;
  $7A39 LDIR          ;
@@ -4007,9 +4021,9 @@ b$820D DEFB $04,$7C,$D6,$08,$67,$10,$DF,$ED
  $821D DEFB $C8,$21,$E0,$FD,$34,$7E,$FE,$20
  $8225 DEFB $3F,$D0,$36,$00,$37,$C9
 
-; Routine at 822B
-c$822B LD IX,$FDCF     ;
- $822F BIT 7,(IX+$0B)  ;
+; Update vehicle position/state, drift toward player (unconfirmed)
+c$822B LD IX,$FDCF     ; {Load object at $FDCF, check flag bit 7
+ $822F BIT 7,(IX+$0B)  ; }
  $8233 JR Z,$82A7      ;
  $8235 LD A,D          ;
  $8236 CP $28          ;
@@ -4018,14 +4032,14 @@ c$822B LD IX,$FDCF     ;
  $823C JP P,$826F      ;
  $823F INC (IX+$05)    ;
  $8242 JR $826F        ;
-*$8244 LD A,(IX+$0B)   ;
+*$8244 LD A,(IX+$0B)   ; {Check flags, clear ($FDDB) if all clear
  $8247 OR $ED          ;
- $8249 INC A           ;
+ $8249 INC A           ; }
  $824A JR NZ,$824F     ;
  $824C LD ($FDDB),A    ;
-*$824F BIT 0,(IY+$5B)  ;
+*$824F BIT 0,(IY+$5B)  ; {Decrement scroll counters, adjust position
  $8253 JR NZ,$8262     ;
- $8255 DEC (IX+$06)    ;
+ $8255 DEC (IX+$06)    ; }
  $8258 JP P,$8262      ;
  $825B LD (IX+$06),$03 ;
  $825F DEC (IX+$04)    ;
@@ -4094,8 +4108,8 @@ c$82C1 LD (IX+$03),E   ;
 ; Advance/rotate object buffer pointer (unconfirmed)
 ;
 ; Used by the routine at #R$822B.
-c$82E1 LD HL,($FDCF) ;
- $82E4 LD B,(IX+$02) ;
+c$82E1 LD HL,($FDCF) ; {Save/restore pointer around $82C1 call
+ $82E4 LD B,(IX+$02) ; }
  $82E7 PUSH HL       ;
  $82E8 PUSH BC       ;
  $82E9 CALL $82C1    ; Set object state flags, call $806B
@@ -4103,9 +4117,9 @@ c$82E1 LD HL,($FDCF) ;
  $82ED POP HL        ;
  $82EE LD ($FDCF),HL ;
  $82F1 LD (IX+$02),B ;
- $82F4 LD HL,$FDD3   ;
+ $82F4 LD HL,$FDD3   ; {Bump ($FDD3) and ($FDCF) counters by 3
  $82F7 INC (HL)      ;
- $82F8 INC (HL)      ;
+ $82F8 INC (HL)      ; }
  $82F9 INC (HL)      ;
  $82FA LD HL,$FDCF   ;
  $82FD INC (HL)      ;
@@ -4132,25 +4146,25 @@ b$8301 DEFB $CB,$7B,$CB,$BB,$28,$1F,$1D,$2A
 ; I:A
 ; I:B Sprite height??
 ; I:HL Sprite address
-c$834B EX AF,AF'     ;
+c$834B EX AF,AF'     ; {Save/restore alt HL across bank switch
  $834C PUSH HL       ;
  $834D EXX           ;
  $834E POP HL        ;
- $834F EXX           ;
+ $834F EXX           ; }
  $8350 LD C,$0C      ;
  $8352 CALL $867C    ; Clip sprite rectangle against screen edge
  $8355 RET C         ;
- $8356 PUSH HL       ;
+ $8356 PUSH HL       ; {Save alt HL for later position calc
  $8357 EXX           ;
  $8358 PUSH HL       ;
- $8359 EXX           ;
+ $8359 EXX           ; }
  $835A POP HL        ;
  $835B ADD HL,DE     ;
  $835C POP DE        ;
  $835D EX AF,AF'     ;
  $835E LD C,A        ;
  $835F LD A,$06      ;
- $8361 BIT 6,C       ;
+ $8361 BIT 6,C       ; Check attribute bit 6, choose draw variant
  $8363 CALL Z,$899E  ; Compute screen draw address for sprite, save state to
                      ; buffer
  $8366 LD ($FD82),SP ;
@@ -4212,22 +4226,22 @@ b$83A4 DEFB $21,$CB,$FD,$36,$0A,$23,$36,$6A
 ; ?? Smth about Jeep
 ;
 ; Used by the routine at #R$9193.
-c$83B8 LD HL,$FDCB   ;
+c$83B8 LD HL,$FDCB   ; {Read Jeep flag ($FDCB), check active
  $83BB LD E,(HL)     ;
- $83BC INC E         ;
+ $83BC INC E         ; }
  $83BD RET Z         ;
  $83BE DEC E         ;
- $83BF INC HL        ;
+ $83BF INC HL        ; {Decrement position, get absolute value
  $83C0 INC HL        ;
  $83C1 DEC (HL)      ;
  $83C2 LD A,(HL)     ;
- $83C3 DEC HL        ;
+ $83C3 DEC HL        ; }
  $83C4 JP P,$83C9    ;
  $83C7 NEG           ;
-*$83C9 CP $32        ;
+*$83C9 CP $32        ; {Clamp to bound $32, then $1E
  $83CB JR C,$83CE    ;
  $83CD DEC (HL)      ;
-*$83CE CP $1E        ;
+*$83CE CP $1E        ; }
  $83D0 JR C,$83D3    ;
  $83D2 DEC (HL)      ;
 *$83D3 LD A,(HL)     ;
@@ -4318,15 +4332,15 @@ c$83B8 LD HL,$FDCB   ;
  $8453 LD SP,($FD82) ;
  $8457 RET           ;
 
-; Routine at 8458
-c$8458 LD A,E        ;
+; Update Motorbike/Jeep type state (unconfirmed)
+c$8458 LD A,E        ; {Save state ($FDCE), read Motorbike flag ($FDC7)
  $8459 LD ($FDCE),A  ;
- $845C LD HL,$FDC7   ;
+ $845C LD HL,$FDC7   ; }
  $845F LD E,(HL)     ;
- $8460 LD A,$03      ;
+ $8460 LD A,$03      ; {Check flag: -1 sentinel or mask to 2 bits
  $8462 INC E         ;
  $8463 JR Z,$846B    ;
- $8465 DEC E         ;
+ $8465 DEC E         ; }
  $8466 LD A,E        ;
  $8467 AND $03       ;
  $8469 INC HL        ;
@@ -4368,13 +4382,13 @@ c$8471 LD HL,$FDC7   ;
 ; Get pseudo-random value / update counter at (HL) (unconfirmed)
 ;
 ; Used by the routine at #R$8471.
-c$8497 LD E,(HL)     ;
+c$8497 LD E,(HL)     ; {Check byte at HL, bump E if non-negative
  $8498 OR A          ;
  $8499 INC E         ;
- $849A RET Z         ;
+ $849A RET Z         ; }
  $849B DEC E         ;
- $849C LD A,($FDCE)  ;
- $849F DEC A         ;
+ $849C LD A,($FDCE)  ; {Decrement counter ($FDCE), reset if bottomed out
+ $849F DEC A         ; }
  $84A0 JR Z,$84AF    ;
  $84A2 LD ($FDCE),A  ;
  $84A5 INC E         ;
@@ -4385,7 +4399,7 @@ c$8497 LD E,(HL)     ;
  $84AD DEC E         ;
 *$84AE LD (HL),E     ;
 *$84AF INC HL        ;
- $84B0 LD A,R        ;
+ $84B0 LD A,R        ; Random-bump (HL) using R register
  $84B2 JP P,$84B6    ;
  $84B5 INC (HL)      ;
 *$84B6 LD D,(HL)     ;
@@ -4441,9 +4455,9 @@ c$8497 LD E,(HL)     ;
 ; ?? Smth with Motorbike sprite
 ;
 ; Used by the routine at #R$8471.
-c$8500 LD A,($FDCE)  ;
+c$8500 LD A,($FDCE)  ; {Check Motorbike state counter ($FDCE)
  $8503 DEC A         ;
- $8504 RET Z         ;
+ $8504 RET Z         ; }
  $8505 CP $14        ;
  $8507 JR NC,$850B   ;
  $8509 RRCA          ;
@@ -4500,9 +4514,9 @@ c$854A LD A,C        ;
  $8552 PUSH HL       ;
  $8553 CALL $867C    ; Clip sprite rectangle against screen edge
  $8556 EX AF,AF'     ;
- $8557 ADD A,A       ;
+ $8557 ADD A,A       ; {Set width C=$01 for draw address calc
  $8558 LD C,$01      ;
- $855A EX DE,HL      ;
+ $855A EX DE,HL      ; }
  $855B CALL $899E    ; Compute screen draw address for sprite, save state to
                      ; buffer
  $855E SRL A         ;
@@ -4581,7 +4595,7 @@ c$85AB LD HL,$FDC3   ;
  $85DA ADD A,A       ;
  $85DB JR C,$85E6    ;
  $85DD PUSH HL       ;
- $85DE CALL $8618    ;
+ $85DE CALL $8618    ; Draw two-part sprite from record at HL
  $85E1 POP HL        ;
  $85E2 RET NC        ;
  $85E3 LD (HL),$FF   ;
@@ -4621,24 +4635,24 @@ c$85AB LD HL,$FDC3   ;
  $8612 LD BC,$1004   ;
  $8615 JP $854A      ; => Sprite draw dispatch
 
-; Routine at 8618
+; Draw two-part sprite from record at HL (unconfirmed)
 ;
 ; Used by the routine at #R$85AB.
-c$8618 LD A,(HL)     ;
+c$8618 LD A,(HL)     ; {Read frame byte, extract type into E
  $8619 INC A         ;
  $861A INC HL        ;
  $861B RRCA          ;
  $861C RRCA          ;
  $861D RRCA          ;
- $861E AND $1F       ;
+ $861E AND $1F       ; }
  $8620 LD E,A        ;
- $8621 LD D,(HL)     ;
- $8622 LD BC,$1010   ;
+ $8621 LD D,(HL)     ; {Read attribute (D), set size $1010
+ $8622 LD BC,$1010   ; }
  $8625 CALL $867C    ; Clip sprite rectangle against screen edge
  $8628 RET C         ;
  $8629 EX DE,HL      ;
- $862A LD A,$08      ;
- $862C LD C,$04      ;
+ $862A LD A,$08      ; {Draw first part, C=$04
+ $862C LD C,$04      ; }
  $862E CALL $899E    ; Compute screen draw address for sprite, save state to
                      ; buffer
  $8631 LD A,E        ;
@@ -4868,16 +4882,16 @@ c$872F LD A,D        ;
  $876D RET           ;
 
 ; Draw walls??
-c$876E LD A,D        ;
+c$876E LD A,D        ; {Check row on-screen, reject if not
  $876F CP $78        ;
  $8771 CCF           ;
  $8772 RET C         ;
- $8773 LD B,$19      ;
- $8775 LD A,D        ;
+ $8773 LD B,$19      ; }
+ $8775 LD A,D        ; {Compute row within wall band, check limit
  $8776 INC A         ;
  $8777 SUB B         ;
  $8778 LD D,A        ;
- $8779 CP $04        ;
+ $8779 CP $04        ; }
  $877B JP P,$879E    ;
  $877E LD A,D        ;
  $877F ADD A,B       ;
@@ -5183,24 +5197,24 @@ c$8914 LD A,D        ;
  $8925 LD A,D        ;
  $8926 CP $60        ;
  $8928 RET NC        ;
- $8929 LD E,$1F      ; {Compute $1600 map address from row/column
- $892B LD H,$16      ;
+ $8929 LD E,$1F      ; {Compute $1600 map row base
+ $892B LD H,$16      ; }
  $892D LD A,D        ;
  $892E ADD A,A       ;
  $892F ADD A,A       ;
  $8930 RL H          ;
  $8932 ADD A,A       ;
  $8933 RL H          ;
- $8935 AND $E0       ;
+ $8935 AND $E0       ; {Combine row/column into map address
  $8937 OR E          ;
  $8938 LD L,A        ; }
  $8939 LD D,$30      ;
  $893B LD E,D        ;
  $893C LD ($FD82),SP ;
  $8940 LD SP,HL      ;
- $8941 INC SP        ; {PUSH DE 15 or 30 times to mark map row via SP
+ $8941 INC SP        ; {Switch SP to HL for map fill
  $8942 PUSH DE       ;
- $8943 PUSH DE       ;
+ $8943 PUSH DE       ; }
  $8944 PUSH DE       ;
  $8945 PUSH DE       ;
  $8946 PUSH DE       ;
@@ -5215,14 +5229,14 @@ c$8914 LD A,D        ;
  $894F PUSH DE       ;
  $8950 PUSH DE       ;
  $8951 PUSH DE       ;
- $8952 LD A,H        ;
+ $8952 LD A,H        ; {Check width: 15 or 30 columns
  $8953 CP $5A        ;
- $8955 JR C,$8967    ;
+ $8955 JR C,$8967    ; }
  $8957 PUSH DE       ;
  $8958 PUSH DE       ;
  $8959 PUSH DE       ;
  $895A PUSH DE       ;
- $895B PUSH DE       ; }
+ $895B PUSH DE       ;
  $895C PUSH DE       ;
  $895D PUSH DE       ;
  $895E PUSH DE       ;
@@ -5443,20 +5457,20 @@ c$8A14 LD A,C        ;
  $8A76 LD SP,($FD82) ;
  $8A7A RET           ;
 
-; Routine at 8A7B
+; Sprite draw dispatch: clip and compute screen address, C=$08
 ;
 ; Used by the routines at #R$8E83, #R$8EB5, #R$8F17 and #R$8F35.
-c$8A7B LD A,C        ;
+c$8A7B LD A,C        ; {Save color, set width C=$08
  $8A7C EX AF,AF'     ;
- $8A7D LD C,$08      ;
+ $8A7D LD C,$08      ; }
  $8A7F PUSH HL       ;
  $8A80 CALL $867C    ; Clip sprite rectangle against screen edge
  $8A83 EX (SP),HL    ;
  $8A84 ADD HL,DE     ;
  $8A85 POP DE        ;
- $8A86 EX AF,AF'     ;
+ $8A86 EX AF,AF'     ; {Restore color, double for table index
  $8A87 LD C,A        ;
- $8A88 ADD A,A       ;
+ $8A88 ADD A,A       ; }
  $8A89 LD A,$02      ;
  $8A8B CALL NC,$899E ; Compute screen draw address for sprite, save state to
                      ; buffer
@@ -5505,34 +5519,34 @@ c$8A7B LD A,C        ;
 ; Sprite draw dispatch: clip and compute screen address, C=$0C
 ;
 ; Used by the routines at #R$8EE3, #R$8F26, #R$9014 and #R$903E.
-c$8AC3 LD A,C        ;
+c$8AC3 LD A,C        ; {Save color, prepare clip call
  $8AC4 EX AF,AF'     ;
  $8AC5 LD C,$0C      ;
- $8AC7 PUSH HL       ;
+ $8AC7 PUSH HL       ; }
  $8AC8 CALL $867C    ; Clip sprite rectangle against screen edge
  $8ACB EX (SP),HL    ;
  $8ACC ADD HL,DE     ;
  $8ACD POP DE        ;
  $8ACE EX AF,AF'     ;
  $8ACF LD C,A        ;
- $8AD0 LD A,$03      ;
+ $8AD0 LD A,$03      ; Set drop type A=3 for draw address calc
  $8AD2 CALL $899E    ; Compute screen draw address for sprite, save state to
                      ; buffer
  $8AD5 LD ($FD82),SP ;
  $8AD9 LD SP,HL      ;
  $8ADA EX DE,HL      ;
- $8ADB LD A,R        ;
- $8ADD JP P,$8B1B    ;
-*$8AE0 POP DE        ; {One masked byte per row: AND mask then OR sprite data
+ $8ADB LD A,R        ; {Random-pick blit entry point
+ $8ADD JP P,$8B1B    ; }
+*$8AE0 POP DE        ; {AND mask then OR sprite byte, row 1
  $8AE1 LD A,(HL)     ;
  $8AE2 AND D         ;
- $8AE3 OR E          ;
+ $8AE3 OR E          ; }
  $8AE4 LD (HL),A     ;
  $8AE5 INC L         ;
- $8AE6 POP DE        ;
+ $8AE6 POP DE        ; {AND mask then OR sprite byte, row 2
  $8AE7 LD A,(HL)     ;
  $8AE8 AND D         ;
- $8AE9 OR E          ;
+ $8AE9 OR E          ; }
  $8AEA LD (HL),A     ;
  $8AEB INC L         ;
  $8AEC POP DE        ;
@@ -5551,7 +5565,7 @@ c$8AC3 LD A,C        ;
  $8AF9 LD A,(HL)     ;
  $8AFA AND D         ;
  $8AFB OR E          ;
- $8AFC LD (HL),A     ; }
+ $8AFC LD (HL),A     ;
  $8AFD DEC L         ;
  $8AFE POP DE        ;
  $8AFF LD A,(HL)     ;
@@ -5686,9 +5700,9 @@ b$8CBC DEFB $04,$7C,$D6,$08,$67,$10,$A7,$B7
 ; Clip sprite, then AND/OR-mask blit rows via SP into screen
 ;
 ; Used by the routine at #R$8914.
-c$8CC9 LD A,C        ;
+c$8CC9 LD A,C        ; {Save color, set width C=$20
  $8CCA EX AF,AF'     ;
- $8CCB LD C,$20      ;
+ $8CCB LD C,$20      ; }
  $8CCD PUSH HL       ;
  $8CCE CALL $867C    ; Clip sprite rectangle against screen edge
  $8CD1 EX (SP),HL    ;
@@ -5696,22 +5710,22 @@ c$8CC9 LD A,C        ;
  $8CD3 POP DE        ;
  $8CD4 EX AF,AF'     ;
  $8CD5 LD C,A        ;
- $8CD6 LD A,$08      ;
+ $8CD6 LD A,$08      ; Set drop type A=8 for draw address calc
  $8CD8 CALL $899E    ; Compute screen draw address for sprite, save state to
                      ; buffer
  $8CDB LD ($FD82),SP ;
  $8CDF LD SP,HL      ;
  $8CE0 EX DE,HL      ;
-*$8CE1 POP DE        ; {One masked byte per row: AND mask then OR sprite data
+*$8CE1 POP DE        ; {AND mask then OR sprite byte, row 1
  $8CE2 LD A,(HL)     ;
  $8CE3 AND D         ;
- $8CE4 OR E          ;
+ $8CE4 OR E          ; }
  $8CE5 LD (HL),A     ;
  $8CE6 INC L         ;
- $8CE7 POP DE        ;
+ $8CE7 POP DE        ; {AND mask then OR sprite byte, row 2
  $8CE8 LD A,(HL)     ;
  $8CE9 AND D         ;
- $8CEA OR E          ;
+ $8CEA OR E          ; }
  $8CEB LD (HL),A     ;
  $8CEC INC L         ;
  $8CED POP DE        ;
@@ -5730,7 +5744,7 @@ c$8CC9 LD A,C        ;
  $8CFA LD A,(HL)     ;
  $8CFB AND D         ;
  $8CFC OR E          ;
- $8CFD LD (HL),A     ; }
+ $8CFD LD (HL),A     ;
  $8CFE INC L         ;
  $8CFF POP DE        ;
  $8D00 LD A,(HL)     ;
@@ -5755,10 +5769,10 @@ c$8CC9 LD A,C        ;
  $8D13 AND D         ;
  $8D14 OR E          ;
  $8D15 LD (HL),A     ;
- $8D16 DEC L         ; {Unrolled: same AND/OR blit repeated per screen row
+ $8D16 DEC L         ; {Unrolled: same AND/OR blit, next row
  $8D17 POP DE        ;
  $8D18 LD A,(HL)     ;
- $8D19 AND D         ;
+ $8D19 AND D         ; }
  $8D1A OR E          ;
  $8D1B LD (HL),A     ;
  $8D1C DEC L         ;
@@ -5811,7 +5825,7 @@ c$8CC9 LD A,C        ;
 *$8D50 DJNZ $8CE1    ;
  $8D52 OR A          ;
  $8D53 LD SP,($FD82) ;
- $8D57 RET           ; }
+ $8D57 RET           ;
 
 ; Data block at 8D58
 b$8D58 DEFB $3E,$0D,$08,$18,$03,$3E,$31,$08
@@ -5904,7 +5918,7 @@ c$8E83 LD A,D        ;
  $8E88 LD B,$08      ;
  $8E8A LD C,$30      ;
  $8E8C LD HL,($C010) ;
- $8E8F JP $8A7B      ;
+ $8E8F JP $8A7B      ; => Sprite draw dispatch
 
 ; Multiply HL by 10, add DE (unconfirmed)
 ;
@@ -5912,12 +5926,12 @@ c$8E83 LD A,D        ;
 ;
 ; I:H ??
 ; I:E ??
-c$8E92 LD L,$00      ;
- $8E94 LD D,L        ;
- $8E95 ADD HL,HL     ;
+c$8E92 LD L,$00      ; {Init: L=0, D=L (clear high accumulator)
+ $8E94 LD D,L        ; }
+ $8E95 ADD HL,HL     ; {Double HL, add DE if carry (first BCD digit)
  $8E96 JR NC,$8E99   ;
  $8E98 ADD HL,DE     ;
-*$8E99 ADD HL,HL     ;
+*$8E99 ADD HL,HL     ; }
  $8E9A JR NC,$8E9D   ;
  $8E9C ADD HL,DE     ;
 *$8E9D ADD HL,HL     ;
@@ -5952,28 +5966,28 @@ c$8EB5 LD A,D        ;
  $8EC2 JR NZ,$8EFA   ;
  $8EC4 LD C,$32      ;
  $8EC6 LD HL,($C008) ;
- $8EC9 JP $8A7B      ;
+ $8EC9 JP $8A7B      ; => Sprite draw dispatch
 
 ; Data block at 8ECC
 b$8ECC DEFB $7A,$FE,$6A,$3F,$D8,$3E,$03,$06
  $8ED4 DEFB $0B,$0E,$02,$CB,$7B,$20,$1F,$0E
  $8EDC DEFB $32,$2A,$0A,$C0,$C3,$C3,$8A
 
-; Routine at 8EE3
-c$8EE3 LD A,D        ;
+; Grenade-crate pickup: draw, on collect award grenades/score/sound
+c$8EE3 LD A,D        ; {Reject if row (D) off bottom edge
  $8EE4 CP $6A        ;
  $8EE6 CCF           ;
- $8EE7 RET C         ;
- $8EE8 LD A,$05      ;
+ $8EE7 RET C         ; }
+ $8EE8 LD A,$05      ; {Unclaimed variant: wider box, draw sprite ($C00C)
  $8EEA LD B,$0B      ;
  $8EEC LD C,$02      ;
  $8EEE BIT 7,E       ;
- $8EF0 JR NZ,$8EFA   ;
+ $8EF0 JR NZ,$8EFA   ; }
  $8EF2 LD C,$32      ;
  $8EF4 LD HL,($C00C) ;
  $8EF7 JP $8AC3      ; => Sprite draw dispatch
 ; This entry point is used by the routine at #R$8EB5.
-*$8EFA RES 7,E       ;
+*$8EFA RES 7,E       ; Claimed: clear flag bit
  $8EFC CALL $6430    ; We've got A more grenades
  $8EFF LD A,C        ;
  $8F00 ADD A,A       ;
@@ -5989,7 +6003,7 @@ c$8EE3 LD A,D        ;
  $8F15 SCF           ;
  $8F16 RET           ;
 
-; Routine at 8F17
+; Draw scenery sprite ($C016) if row on-screen (unconfirmed)
 c$8F17 LD A,D        ;
  $8F18 CP $68        ;
  $8F1A CCF           ;
@@ -5997,9 +6011,9 @@ c$8F17 LD A,D        ;
  $8F1C LD B,$09      ;
  $8F1E LD C,$31      ;
  $8F20 LD HL,($C016) ;
- $8F23 JP $8A7B      ;
+ $8F23 JP $8A7B      ; => Sprite draw dispatch
 
-; Routine at 8F26
+; Draw scenery sprite ($C018) if row on-screen (unconfirmed)
 c$8F26 LD A,D        ;
  $8F27 CP $68        ;
  $8F29 CCF           ;
@@ -6009,14 +6023,14 @@ c$8F26 LD A,D        ;
  $8F2F LD HL,($C018) ;
  $8F32 JP $8AC3      ; => Sprite draw dispatch
 
-; Routine at 8F35
+; Draw scenery sprite ($C01A) if row on-screen (unconfirmed)
 c$8F35 LD A,D        ;
  $8F36 CP $68        ;
  $8F38 CCF           ;
  $8F39 RET C         ;
  $8F3A LD B,$09      ;
  $8F3C LD HL,($C01A) ;
- $8F3F JP $8A7B      ;
+ $8F3F JP $8A7B      ; => Sprite draw dispatch
 
 ; Data block at 8F42
 b$8F42 DEFB $D9,$0E,$07,$3E,$30,$18,$05,$D9
@@ -6376,7 +6390,7 @@ c$91E3 JR NC,$91FC   ;
  $91ED LD L,(HL)     ;
  $91EE PUSH HL       ;
  $91EF LD L,A        ;
- $91F0 CALL $921F    ;
+ $91F0 CALL $921F    ; Insert entry into $FF00 buffer chain
  $91F3 POP HL        ;
  $91F4 JR $91BF      ;
 *$91F6 INC L         ;
@@ -6412,17 +6426,17 @@ c$9204 LD B,A        ;
  $921C LD (HL),$00   ;
  $921E RET           ;
 
-; Routine at 921F
+; Insert entry into $FF00 buffer chain (unconfirmed)
 ;
 ; Used by the routine at #R$91E3.
-c$921F LD D,L        ;
+c$921F LD D,L        ; {Swap chain link with new entry
  $9220 LD A,(HL)     ;
  $9221 INC L         ;
  $9222 LD L,(HL)     ;
  $9223 LD E,L        ;
  $9224 LD (HL),A     ;
  $9225 LD L,A        ;
- $9226 INC L         ;
+ $9226 INC L         ; }
  $9227 LD (HL),E     ;
  $9228 LD A,($FD88)  ; Get Offset in $FF00 buffer
  $922B LD L,A        ;
@@ -7334,11 +7348,25 @@ c$98D9 JP $98F5      ; => Convert row number to screen line address
 ; #R$7A45.
 c$98DC JP $9904      ; => DOWN HL - move HL to the next screen line
 
-; Routine at 98DF
-c$98DF JP $9913      ;
+; UP HL (redirect)
+c$98DF JP $9913      ; => UP HL
 
 ; Offsets in $A000 sprites block, lo byte
-b$98E2 DEFB $00,$1E,$40,$5E,$80,$9E,$C0,$DE
+;
+; .
+;
+; .
+;
+; Indexed as frame*2 (+1 if the flip bit, IX+$0B bit 2, is set) -- 8 entries
+; cover 4 animation frames, each with a normal and flipped variant.
+b$98E2 DEFB $00      ; frame 0, normal
+ $98E3 DEFB $1E      ; 1
+ $98E4 DEFB $40      ; 2
+ $98E5 DEFB $5E      ; frame 1, flipped
+ $98E6 DEFB $80      ; frame 2, normal
+ $98E7 DEFB $9E      ; frame 2, flipped
+ $98E8 DEFB $C0      ; frame 3, normal
+ $98E9 DEFB $DE      ; frame 3, flipped
 
 ; HL = HL + A
 ;
@@ -7390,11 +7418,21 @@ c$9904 INC H         ;
  $9911 LD H,A        ;
  $9912 RET           ;
 
-; Data block at 9913
+; UP HL
 ;
 ; Used by the routine at #R$98DF.
-b$9913 DEFB $7C,$25,$E6,$07,$C0,$7D,$D6,$20
- $991B DEFB $6F,$D8,$7C,$C6,$08,$67,$C9
+c$9913 LD A,H        ;
+ $9914 DEC H         ;
+ $9915 AND $07       ;
+ $9917 RET NZ        ;
+ $9918 LD A,L        ;
+ $9919 SUB $20       ;
+ $991B LD L,A        ;
+ $991C RET C         ;
+ $991D LD A,H        ;
+ $991E ADD A,$08     ;
+ $9920 LD H,A        ;
+ $9921 RET           ;
 
 ; Update object IX position, clip to screen, dispatch sprite draw
 ;
@@ -7424,32 +7462,32 @@ c$9922 SET 5,(IX+$0B) ;
  $9956 JP P,$995D     ;
  $9959 CP C           ;
  $995A JP M,$9FDE     ;
-*$995D EXX            ;
+*$995D EXX            ; {Frame index (IX+$02) * 2 into A
  $995E LD A,(IX+$02)  ;
- $9961 ADD A,A        ;
+ $9961 ADD A,A        ; }
  $9962 ADD A,$E2      ; lo byte of $98E2
- $9964 BIT 2,(IX+$0B) ;
+ $9964 BIT 2,(IX+$0B) ; {Add 1 if flipped, look up sprite lo byte ($98E2)
  $9968 JR Z,$996B     ;
  $996A INC A          ;
 *$996B LD L,A         ;
  $996C LD H,$98       ;
- $996E LD L,(HL)      ;
- $996F LD A,(IX+$03)  ;
+ $996E LD L,(HL)      ; }
+ $996F LD A,(IX+$03)  ; {Sprite page = (IX+$03) + $A0
  $9972 ADD A,$A0      ;
- $9974 LD H,A         ;
+ $9974 LD H,A         ; }
  $9975 EXX            ;
- $9976 LD A,(IX+$06)  ;
- $9979 LD (IX+$02),A  ;
- $997C ADD A,A        ;
- $997D ADD A,$E2      ;
- $997F BIT 2,(IX+$0B) ;
+ $9976 LD A,(IX+$06)  ; {Copy new frame (IX+$06) into (IX+$02) for next draw
+ $9979 LD (IX+$02),A  ; }
+ $997C ADD A,A        ; {New frame index * 2 into A
+ $997D ADD A,$E2      ; }
+ $997F BIT 2,(IX+$0B) ; {Add 1 if flipped, look up sprite lo byte ($98E2)
  $9983 JR Z,$9986     ;
  $9985 INC A          ;
 *$9986 LD L,A         ;
  $9987 LD H,$98       ;
- $9989 LD L,(HL)      ;
- $998A LD A,(IX+$07)  ;
- $998D LD (IX+$03),A  ;
+ $9989 LD L,(HL)      ; }
+ $998A LD A,(IX+$07)  ; {Store new sub-frame, sprite page = (IX+$07) + $A0
+ $998D LD (IX+$03),A  ; }
  $9990 ADD A,$A0      ;
  $9992 LD H,A         ;
  $9993 LD A,D         ;
@@ -7461,9 +7499,9 @@ c$9922 SET 5,(IX+$0B) ;
  $999F LD A,(IX+$08)  ;
  $99A2 DEC A          ;
  $99A3 CP B           ;
- $99A4 JP P,$9F1D     ;
+ $99A4 JP P,$9F1D     ; => Off-screen sprite draw
  $99A7 CP C           ;
- $99A8 JP P,$9F1D     ;
+ $99A8 JP P,$9F1D     ; => Off-screen sprite draw
  $99AB PUSH HL        ;
  $99AC LD H,(IX+$01)  ;
  $99AF LD A,(IX+$05)  ;
@@ -7609,20 +7647,20 @@ c$9A46 EXX           ;
 ; Clip sprite edge, dispatch to masked blit
 ;
 ; Used by the routine at #R$9922.
-c$9A6E SUB (IX+$05)  ;
- $9A71 JR Z,$9A8A    ;
- $9A73 LD HL,$9A8A   ;
+c$9A6E SUB (IX+$05)  ; {Compare sprite width to clip limit
+ $9A71 JR Z,$9A8A    ; }
+ $9A73 LD HL,$9A8A   ; {On-screen: save entry point, split width
  $9A76 LD B,A        ;
- $9A77 LD C,A        ;
+ $9A77 LD C,A        ; }
  $9A78 JP NC,$9EDF   ; => Unmasked-OR blit, draws opaque sprite row across
                      ; screen thirds
  $9A7B EXX           ;
  $9A7C DEC E         ;
  $9A7D EXX           ;
- $9A7E LD HL,$9A8D   ;
+ $9A7E LD HL,$9A8D   ; {Off-left case: negate width, mark carry
  $9A81 NEG           ;
  $9A83 LD B,A        ;
- $9A84 LD C,A        ;
+ $9A84 LD C,A        ; }
  $9A85 SCF           ;
  $9A86 EX AF,AF'     ;
  $9A87 JP $9E98      ; => Masked-OR blit variant, draws sprite row across
@@ -7877,7 +7915,7 @@ c$9B97 EXX            ;
  $9BBC JP Z,$9DCC     ; => Unmasked-OR blit variant
  $9BBF INC A          ;
  $9BC0 RET NZ         ;
- $9BC1 JP $9E03       ;
+ $9BC1 JP $9E03       ; => Unmasked-OR blit variant
 *$9BC4 EXX            ;
  $9BC5 ADD A,E        ;
  $9BC6 LD E,A         ;
@@ -7934,7 +7972,7 @@ c$9BF5 EXX            ;
  $9C14 CP $20         ;
  $9C16 RET NC         ;
  $9C17 SUB $1F        ;
- $9C19 JP Z,$9E69     ;
+ $9C19 JP Z,$9E69     ; => Unmasked-OR blit variant
  $9C1C INC A          ;
  $9C1D JP Z,$9E32     ; => Unmasked-OR blit variant
  $9C20 JP $9D8D       ; => Unmasked-OR blit variant, draws opaque sprite row
@@ -7943,8 +7981,8 @@ c$9BF5 EXX            ;
 ; Compute screen address for sprite row via IX object (unconfirmed)
 ;
 ; Used by the routines at #R$9B61, #R$9B97, #R$9BCB and #R$9BF5.
-c$9C23 CP (IX+$08)    ;
- $9C26 JP M,$9C47     ;
+c$9C23 CP (IX+$08)    ; {Check row against clip bound (IX+$08)
+ $9C26 JP M,$9C47     ; }
  $9C29 LD L,A         ;
  $9C2A EX AF,AF'      ;
  $9C2B SLA L          ;
@@ -8001,27 +8039,27 @@ c$9C6B LD ($FD82),SP ;
  $9C6F EXX           ;
  $9C70 LD SP,HL      ;
  $9C71 EX DE,HL      ;
-*$9C72 POP DE        ; {One erased byte per third: AND clear mask into screen
+*$9C72 POP DE        ; {Clear one column byte
  $9C73 LD A,E        ;
  $9C74 CPL           ;
- $9C75 AND (HL)      ;
+ $9C75 AND (HL)      ; }
  $9C76 LD (HL),A     ;
  $9C77 INC L         ;
  $9C78 LD A,D        ;
- $9C79 CPL           ;
+ $9C79 CPL           ; {Clear the paired byte
  $9C7A AND (HL)      ;
  $9C7B LD (HL),A     ;
- $9C7C INC L         ;
+ $9C7C INC L         ; }
  $9C7D POP DE        ;
  $9C7E LD A,E        ;
  $9C7F CPL           ;
  $9C80 AND (HL)      ;
- $9C81 LD (HL),A     ; }
+ $9C81 LD (HL),A     ;
  $9C82 INC H         ;
- $9C83 LD A,D        ;
+ $9C83 LD A,D        ; {Clear a third byte
  $9C84 CPL           ;
  $9C85 AND (HL)      ;
- $9C86 LD (HL),A     ;
+ $9C86 LD (HL),A     ; }
  $9C87 DEC L         ;
  $9C88 POP DE        ;
  $9C89 LD A,E        ;
@@ -8034,16 +8072,16 @@ c$9C6B LD ($FD82),SP ;
  $9C90 AND (HL)      ;
  $9C91 LD (HL),A     ;
  $9C92 INC H         ;
- $9C93 LD A,H        ; {Advance to next screen column, wrap to next third, loop
- $9C94 AND $07       ; columns
+ $9C93 LD A,H        ; {Check screen third boundary
+ $9C94 AND $07       ; }
  $9C96 JR NZ,$9CA2   ;
  $9C98 LD A,L        ;
  $9C99 ADD A,$20     ;
  $9C9B LD L,A        ;
- $9C9C LD A,H        ;
- $9C9D JR C,$9CAA    ;
+ $9C9C LD A,H        ; {Wrap to next screen third if needed
+ $9C9D JR C,$9CAA    ; }
  $9C9F SUB $08       ;
- $9CA1 LD H,A        ; }
+ $9CA1 LD H,A        ;
 *$9CA2 DJNZ $9C72    ;
 *$9CA4 EXX           ;
  $9CA5 LD SP,($FD82) ;
@@ -8059,39 +8097,39 @@ c$9CB1 LD ($FD82),SP ;
  $9CB5 EXX           ;
  $9CB6 LD SP,HL      ;
  $9CB7 EX DE,HL      ;
-*$9CB8 POP DE        ; {One erased byte per third: AND clear mask into screen
+*$9CB8 POP DE        ; {Clear one column byte
  $9CB9 LD A,D        ;
  $9CBA CPL           ;
- $9CBB AND (HL)      ;
+ $9CBB AND (HL)      ; }
  $9CBC LD (HL),A     ;
  $9CBD INC L         ;
  $9CBE POP DE        ;
- $9CBF LD A,E        ;
+ $9CBF LD A,E        ; {Clear the paired byte
  $9CC0 CPL           ;
  $9CC1 AND (HL)      ;
- $9CC2 LD (HL),A     ;
+ $9CC2 LD (HL),A     ; }
  $9CC3 INC H         ;
  $9CC4 LD A,D        ;
  $9CC5 CPL           ;
  $9CC6 AND (HL)      ;
- $9CC7 LD (HL),A     ; }
+ $9CC7 LD (HL),A     ;
  $9CC8 DEC L         ;
- $9CC9 POP DE        ;
+ $9CC9 POP DE        ; {Clear a third byte
  $9CCA LD A,E        ;
  $9CCB CPL           ;
- $9CCC AND (HL)      ;
+ $9CCC AND (HL)      ; }
  $9CCD LD (HL),A     ;
  $9CCE INC H         ;
- $9CCF LD A,H        ; {Advance to next screen column, wrap to next third, loop
- $9CD0 AND $07       ;
+ $9CCF LD A,H        ; {Check screen third boundary
+ $9CD0 AND $07       ; }
  $9CD2 JR NZ,$9CDE   ;
  $9CD4 LD A,L        ;
  $9CD5 ADD A,$20     ;
  $9CD7 LD L,A        ;
- $9CD8 LD A,H        ;
- $9CD9 JR C,$9CE6    ;
+ $9CD8 LD A,H        ; {Wrap to next screen third if needed
+ $9CD9 JR C,$9CE6    ; }
  $9CDB SUB $08       ;
- $9CDD LD H,A        ; }
+ $9CDD LD H,A        ;
 *$9CDE DJNZ $9CB8    ;
 *$9CE0 EXX           ;
  $9CE1 LD SP,($FD82) ;
@@ -8145,39 +8183,39 @@ c$9D1F LD ($FD82),SP ;
  $9D23 EXX           ;
  $9D24 LD SP,HL      ;
  $9D25 EX DE,HL      ;
-*$9D26 POP DE        ; {One erased byte per third: AND clear mask into screen
+*$9D26 POP DE        ; {Clear one column byte
  $9D27 LD A,E        ;
  $9D28 CPL           ;
- $9D29 AND (HL)      ;
+ $9D29 AND (HL)      ; }
  $9D2A LD (HL),A     ;
  $9D2B INC L         ;
  $9D2C LD A,D        ;
- $9D2D CPL           ;
+ $9D2D CPL           ; {Clear the paired byte
  $9D2E AND (HL)      ;
  $9D2F LD (HL),A     ;
- $9D30 POP DE        ;
+ $9D30 POP DE        ; }
  $9D31 INC H         ;
  $9D32 POP DE        ;
  $9D33 LD A,E        ;
  $9D34 CPL           ;
- $9D35 AND (HL)      ; }
+ $9D35 AND (HL)      ;
  $9D36 LD (HL),A     ;
- $9D37 DEC L         ;
+ $9D37 DEC L         ; {Clear a third byte
  $9D38 LD A,D        ;
  $9D39 CPL           ;
- $9D3A AND (HL)      ;
+ $9D3A AND (HL)      ; }
  $9D3B LD (HL),A     ;
  $9D3C INC H         ;
- $9D3D LD A,H        ; {Advance to next screen column, wrap to next third, loop
- $9D3E AND $07       ;
+ $9D3D LD A,H        ; {Check screen third boundary
+ $9D3E AND $07       ; }
  $9D40 JR NZ,$9D4C   ;
  $9D42 LD A,L        ;
  $9D43 ADD A,$20     ;
  $9D45 LD L,A        ;
- $9D46 LD A,H        ;
- $9D47 JR C,$9D54    ;
+ $9D46 LD A,H        ; {Wrap to next screen third if needed
+ $9D47 JR C,$9D54    ; }
  $9D49 SUB $08       ;
- $9D4B LD H,A        ; }
+ $9D4B LD H,A        ;
 *$9D4C DJNZ $9D26    ;
 *$9D4E EXX           ;
  $9D4F LD SP,($FD82) ;
@@ -8230,43 +8268,43 @@ c$9D5B LD ($FD82),SP ;
 c$9D8D LD ($FD82),SP ;
  $9D91 EXX           ;
  $9D92 LD SP,HL      ;
-*$9D93 POP HL        ; {One blitted byte per third: OR sprite data into screen
+*$9D93 POP HL        ; {OR sprite byte, first third
  $9D94 LD A,(DE)     ;
  $9D95 OR L          ;
- $9D96 LD (DE),A     ;
+ $9D96 LD (DE),A     ; }
  $9D97 INC E         ;
  $9D98 LD A,(DE)     ;
  $9D99 OR H          ;
  $9D9A LD (DE),A     ;
  $9D9B INC E         ;
- $9D9C POP HL        ;
+ $9D9C POP HL        ; {OR sprite byte, second third
  $9D9D LD A,(DE)     ;
  $9D9E OR L          ;
- $9D9F LD (DE),A     ;
+ $9D9F LD (DE),A     ; }
  $9DA0 INC D         ;
  $9DA1 LD A,(DE)     ;
  $9DA2 OR H          ;
- $9DA3 LD (DE),A     ; }
+ $9DA3 LD (DE),A     ;
  $9DA4 DEC E         ;
  $9DA5 POP HL        ;
- $9DA6 LD A,(DE)     ;
+ $9DA6 LD A,(DE)     ; {OR sprite byte, third third
  $9DA7 OR L          ;
  $9DA8 LD (DE),A     ;
- $9DA9 DEC E         ;
+ $9DA9 DEC E         ; }
  $9DAA LD A,(DE)     ;
  $9DAB OR H          ;
  $9DAC LD (DE),A     ;
  $9DAD INC D         ;
- $9DAE LD A,D        ; {Advance to next screen column, wrap to next third, loop
- $9DAF AND $07       ;
+ $9DAE LD A,D        ; {Check screen third boundary
+ $9DAF AND $07       ; }
  $9DB1 JR NZ,$9DBD   ;
  $9DB3 LD A,E        ;
  $9DB4 ADD A,$20     ;
  $9DB6 LD E,A        ;
- $9DB7 LD A,D        ;
- $9DB8 JR C,$9DC5    ;
+ $9DB7 LD A,D        ; {Wrap to next screen third if needed
+ $9DB8 JR C,$9DC5    ; }
  $9DBA SUB $08       ;
- $9DBC LD D,A        ; }
+ $9DBC LD D,A        ;
 *$9DBD DJNZ $9D93    ;
 *$9DBF EXX           ;
  $9DC0 LD SP,($FD82) ;
@@ -8318,7 +8356,7 @@ c$9DCC LD ($FD82),SP ;
  $9DFE JP PO,$9DF4   ;
  $9E01 JR $9DF6      ;
 
-; Routine at 9E03
+; Unmasked-OR blit variant: 2 bytes per column via SP
 ;
 ; Used by the routine at #R$9B97.
 c$9E03 LD ($FD82),SP ;
@@ -8326,17 +8364,17 @@ c$9E03 LD ($FD82),SP ;
  $9E08 LD SP,HL      ;
 *$9E09 POP HL        ;
  $9E0A POP HL        ;
- $9E0B LD A,(DE)     ;
+ $9E0B LD A,(DE)     ; {OR sprite byte into one column byte
  $9E0C OR L          ;
  $9E0D LD (DE),A     ;
- $9E0E INC D         ;
- $9E0F LD A,(DE)     ;
+ $9E0E INC D         ; }
+ $9E0F LD A,(DE)     ; {OR sprite byte into paired byte
  $9E10 OR H          ;
- $9E11 LD (DE),A     ;
+ $9E11 LD (DE),A     ; }
  $9E12 POP HL        ;
  $9E13 INC D         ;
- $9E14 LD A,D        ;
- $9E15 AND $07       ;
+ $9E14 LD A,D        ; {Check screen third boundary
+ $9E15 AND $07       ; }
  $9E17 JR NZ,$9E23   ;
  $9E19 LD A,E        ;
  $9E1A ADD A,$20     ;
@@ -8396,25 +8434,25 @@ c$9E32 LD ($FD82),SP ;
  $9E64 JP PO,$9E5A   ;
  $9E67 JR $9E5C      ;
 
-; Routine at 9E69
+; Unmasked-OR blit variant: alternating columns via SP
 ;
 ; Used by the routine at #R$9BF5.
 c$9E69 LD ($FD82),SP ;
  $9E6D EXX           ;
  $9E6E LD SP,HL      ;
 *$9E6F POP HL        ;
- $9E70 LD A,(DE)     ;
+ $9E70 LD A,(DE)     ; {OR sprite byte into first column
  $9E71 OR L          ;
- $9E72 LD (DE),A     ;
+ $9E72 LD (DE),A     ; }
  $9E73 POP HL        ;
  $9E74 INC D         ;
  $9E75 POP HL        ;
- $9E76 LD A,(DE)     ;
+ $9E76 LD A,(DE)     ; {OR sprite byte into second column
  $9E77 OR H          ;
- $9E78 LD (DE),A     ;
+ $9E78 LD (DE),A     ; }
  $9E79 INC D         ;
- $9E7A LD A,D        ;
- $9E7B AND $07       ;
+ $9E7A LD A,D        ; {Check screen third boundary
+ $9E7B AND $07       ; }
  $9E7D JR NZ,$9E89   ;
  $9E7F LD A,E        ;
  $9E80 ADD A,$20     ;
@@ -8435,10 +8473,10 @@ c$9E69 LD ($FD82),SP ;
 ;
 ; Used by the routines at #R$9922, #R$9A46, #R$9A6E, #R$9AE6 and #R$9F1D.
 c$9E98 EXX           ;
- $9E99 POP BC        ; {One blitted byte per third: AND mask then OR sprite
- $9E9A LD A,(DE)     ; data
+ $9E99 POP BC        ; {AND-mask then OR sprite byte, first third
+ $9E9A LD A,(DE)     ;
  $9E9B CPL           ;
- $9E9C OR C          ;
+ $9E9C OR C          ; }
  $9E9D CPL           ;
  $9E9E LD (DE),A     ;
  $9E9F INC E         ;
@@ -8447,11 +8485,11 @@ c$9E98 EXX           ;
  $9EA2 OR B          ;
  $9EA3 CPL           ;
  $9EA4 LD (DE),A     ;
- $9EA5 INC E         ;
+ $9EA5 INC E         ; {AND-mask then OR sprite byte, second third
  $9EA6 POP BC        ;
  $9EA7 LD A,(DE)     ;
  $9EA8 CPL           ;
- $9EA9 OR C          ;
+ $9EA9 OR C          ; }
  $9EAA CPL           ;
  $9EAB LD (DE),A     ;
  $9EAC INC D         ;
@@ -8462,10 +8500,10 @@ c$9E98 EXX           ;
  $9EB1 LD (DE),A     ;
  $9EB2 DEC E         ;
  $9EB3 POP BC        ;
- $9EB4 LD A,(DE)     ;
+ $9EB4 LD A,(DE)     ; {AND-mask then OR sprite byte, third third
  $9EB5 CPL           ;
- $9EB6 OR C          ; }
- $9EB7 CPL           ;
+ $9EB6 OR C          ;
+ $9EB7 CPL           ; }
  $9EB8 LD (DE),A     ;
  $9EB9 DEC E         ;
  $9EBA LD A,(DE)     ;
@@ -8474,18 +8512,18 @@ c$9E98 EXX           ;
  $9EBD CPL           ;
  $9EBE LD (DE),A     ;
  $9EBF INC D         ;
- $9EC0 LD A,D        ; {Advance to next screen row, wrap to next third, loop
- $9EC1 AND $07       ; rows
+ $9EC0 LD A,D        ; {Advance column, check wrap point
+ $9EC1 AND $07       ; }
  $9EC3 JR NZ,$9ECF   ;
- $9EC5 LD A,E        ;
+ $9EC5 LD A,E        ; {Wrap to next screen third if needed
  $9EC6 ADD A,$20     ;
  $9EC8 LD E,A        ;
  $9EC9 LD A,D        ;
- $9ECA JR C,$9ED7    ;
+ $9ECA JR C,$9ED7    ; }
  $9ECC SUB $08       ;
  $9ECE LD D,A        ;
 *$9ECF EXX           ;
- $9ED0 DEC E         ; }
+ $9ED0 DEC E         ;
  $9ED1 JP Z,$9FF5    ;
  $9ED4 DJNZ $9E98    ;
  $9ED6 JP (HL)       ;
@@ -8496,23 +8534,23 @@ c$9E98 EXX           ;
 ; Unmasked-OR blit, draws opaque sprite row across screen thirds
 ;
 ; Used by the routines at #R$9922, #R$9A46, #R$9A6E, #R$9AE6 and #R$9F1D.
-c$9EDF EXX           ; {One blitted byte per third: OR sprite data into screen
+c$9EDF EXX           ; {OR sprite byte, first third
  $9EE0 LD A,(DE)     ;
  $9EE1 OR (HL)       ;
- $9EE2 LD (DE),A     ;
+ $9EE2 LD (DE),A     ; }
  $9EE3 INC L         ;
  $9EE4 INC E         ;
- $9EE5 LD A,(DE)     ;
+ $9EE5 LD A,(DE)     ; {OR sprite byte, second third
  $9EE6 OR (HL)       ;
  $9EE7 LD (DE),A     ;
- $9EE8 INC L         ;
+ $9EE8 INC L         ; }
  $9EE9 INC E         ;
  $9EEA LD A,(DE)     ;
  $9EEB OR (HL)       ;
  $9EEC LD (DE),A     ;
  $9EED INC L         ;
  $9EEE INC D         ;
- $9EEF LD A,(DE)     ;
+ $9EEF LD A,(DE)     ; {OR sprite byte, third third
  $9EF0 OR (HL)       ;
  $9EF1 LD (DE),A     ;
  $9EF2 INC L         ; }
@@ -8527,18 +8565,18 @@ c$9EDF EXX           ; {One blitted byte per third: OR sprite data into screen
  $9EFB LD (DE),A     ;
  $9EFC INC L         ;
  $9EFD INC D         ;
- $9EFE LD A,D        ; {Advance to next screen row, wrap to next third, loop
- $9EFF AND $07       ; rows
+ $9EFE LD A,D        ; {Advance row, check wrap point
+ $9EFF AND $07       ; }
  $9F01 JR NZ,$9F0D   ;
- $9F03 LD A,E        ;
+ $9F03 LD A,E        ; {Wrap to next screen third if needed
  $9F04 ADD A,$20     ;
  $9F06 LD E,A        ;
  $9F07 LD A,D        ;
- $9F08 JR C,$9F15    ;
+ $9F08 JR C,$9F15    ; }
  $9F0A SUB $08       ;
  $9F0C LD D,A        ;
 *$9F0D EXX           ;
- $9F0E DEC E         ; }
+ $9F0E DEC E         ;
  $9F0F JP Z,$9FF5    ;
  $9F12 DJNZ $9EDF    ;
  $9F14 JP (HL)       ;
@@ -8546,21 +8584,21 @@ c$9EDF EXX           ; {One blitted byte per third: OR sprite data into screen
  $9F17 JP PO,$9F0D   ;
  $9F1A JP $9A63      ;
 
-; Routine at 9F1D
+; Off-screen sprite draw: clip, compute address, dispatch blit
 ;
 ; Used by the routine at #R$9922.
-c$9F1D PUSH HL        ;
+c$9F1D PUSH HL        ; {Check width against clip limit
  $9F1E LD ($FD82),SP  ;
  $9F22 SUB C          ;
- $9F23 EXX            ;
- $9F24 INC A          ;
- $9F25 JP M,$9F2E     ;
- $9F28 LD C,A         ;
+ $9F23 EXX            ; }
+ $9F24 INC A          ; {Sign check: fully off left/right edge
+ $9F25 JP M,$9F2E     ; }
+ $9F28 LD C,A         ; {Scale offset index into sprite data
  $9F29 ADD A,A        ;
  $9F2A ADD A,C        ;
  $9F2B ADD A,A        ;
  $9F2C ADD A,L        ;
- $9F2D LD L,A         ;
+ $9F2D LD L,A         ; }
 *$9F2E LD SP,HL       ;
  $9F2F EXX            ;
  $9F30 LD A,E         ;
@@ -10393,8 +10431,8 @@ c$DD8D LD A,(IX+$0C)   ;
  $DDBB JP Z,$DE65      ;
 ; This entry point is used by the routine at #R$DC8F.
 *$DDBE LD A,($FD97)    ;
- $DDC1 CP $88          ;
- $DDC3 JP NC,$DE65     ;
+ $DDC1 CP $88          ; {Check screen brightness upper bound
+ $DDC3 JP NC,$DE65     ; }
  $DDC6 SUB $0D         ;
  $DDC8 JP C,$DE65      ;
  $DDCB CP $04          ;
@@ -10534,11 +10572,12 @@ c$DEEF CALL $E109    ; Rebuild active-object list at $F900 from $FF00 buffer
  $DEF2 CALL $E100    ; Set up player object pointers (IX=$5BDA)
  $DEF5 CALL $E103    ; Check fire button and joystick input
  $DEF8 CALL $E106    ; Update boss/enemy state via IX=$5B11
- $DEFB CALL $F209    ; Scan object table at $F82D, init $F8ED marker
- $DEFE CALL $F212    ; Set up object table $F81E, dispatch
- $DF01 CALL $F203    ; Scan object table (IX,$0E stride), process motion
+ $DEFB CALL $F209    ; Scan player-bullet table at $F82D, init $F8ED marker
+ $DEFE CALL $F212    ; Set up grenade table $F81E, dispatch
+ $DF01 CALL $F203    ; Set up primary projectile/vehicle table $F73C, process
+                     ; motion
  $DF04 CALL $DD89    ; Process Player's object record
- $DF07 CALL $F206    ; Scan object table $F856, entry stride $14
+ $DF07 CALL $F206    ; Scan explosion-effect table $F856, entry stride $14
  $DF0A CALL $E10C    ; Decrement Enemy delay ($FDDD), spawn enemy by Area
                      ; ($FDE5) when due
  $DF0D CALL $6427    ; Scan $6648 table, call $65A5 for active entries
@@ -10571,28 +10610,28 @@ c$DF33 LD E,$02      ;
 ; Used by the routine at #R$DC86.
 c$DF37 LD E,$00      ;
 ; This entry point is used by the routine at #R$DF33.
-*$DF39 LD ($FD82),SP ;
- $DF3D LD SP,$F900   ;
+*$DF39 LD ($FD82),SP ; {Switch to $F900 stack for object scan
+ $DF3D LD SP,$F900   ; }
 ; This entry point is used by the routines at #R$DF6D and #R$DF7B.
-*$DF40 XOR A         ;
+*$DF40 XOR A         ; {Pop bullet type, check high bit
  $DF41 EX AF,AF'     ;
  $DF42 POP BC        ;
  $DF43 LD A,C        ;
- $DF44 BIT 7,A       ;
+ $DF44 BIT 7,A       ; }
  $DF46 JR NZ,$DF7B   ;
 ; This entry point is used by the routine at #R$DF7B.
-*$DF48 SUB L         ;
+*$DF48 SUB L         ; {Compare bullet Y against object bounds
  $DF49 JR C,$DF4E    ;
  $DF4B SUB E         ;
  $DF4C JR NC,$DF6D   ;
-*$DF4E ADD A,B       ;
+*$DF4E ADD A,B       ; }
  $DF4F JR C,$DF54    ;
  $DF51 SUB E         ;
  $DF52 JR NC,$DF6D   ;
-*$DF54 POP BC        ;
+*$DF54 POP BC        ; {Compare bullet X against object bounds
  $DF55 LD A,C        ;
  $DF56 SUB H         ;
- $DF57 JP M,$DF40    ;
+ $DF57 JP M,$DF40    ; }
  $DF5A SUB B         ;
  $DF5B JP P,$DF40    ;
 ; This entry point is used by the routine at #R$DF7B.
@@ -10626,8 +10665,8 @@ c$DF71 SET 0,(IY+$62) ; {Player is dead??
 ; Bullet collision check, carry set on hit
 ;
 ; Used by the routine at #R$DF37.
-c$DF7B CP $80         ;
- $DF7D JR Z,$DF67     ;
+c$DF7B CP $80         ; {Check high bit of type byte, pick branch
+ $DF7D JR Z,$DF67     ; }
  $DF7F AND $7F        ;
  $DF81 BIT 1,A        ;
  $DF83 JR Z,$DF96     ;
@@ -10648,9 +10687,9 @@ c$DF7B CP $80         ;
  $DF9C JR Z,$DF6D     ; }
  $DF9E BIT 4,(IX+$0B) ;
  $DFA2 JR Z,$DF6D     ;
- $DFA4 LD A,B         ;
+ $DFA4 LD A,B         ; {Compare row against wall bound
  $DFA5 SUB L          ;
- $DFA6 JR NC,$DF6D    ;
+ $DFA6 JR NC,$DF6D    ; }
  $DFA8 ADD A,$08      ;
  $DFAA JR NC,$DF6D    ;
  $DFAC POP BC         ;
@@ -10672,8 +10711,8 @@ c$DF7B CP $80         ;
  $DFC5 JR NC,$E014    ;
  $DFC7 ADD A,B        ; }
  $DFC8 JR NC,$E014    ;
- $DFCA SUB D          ;
- $DFCB JR NC,$DFF3    ;
+ $DFCA SUB D          ; {Check second edge crossing
+ $DFCB JR NC,$DFF3    ; }
  $DFCD LD A,E         ;
  $DFCE SUB H          ;
  $DFCF JR C,$E014     ;
@@ -10733,17 +10772,17 @@ c$DF7B CP $80         ;
 ; Check IX flag and column bound, dispatch (unconfirmed)
 ;
 ; Used by the routine at #R$DC8C.
-c$E01B BIT 1,(IX+$0B)  ;
- $E01F JR NZ,$E084     ;
+c$E01B BIT 1,(IX+$0B)  ; {Check flag bit 1 and column limit
+ $E01F JR NZ,$E084     ; }
  $E021 LD A,L          ;
  $E022 CP $20          ;
  $E024 JR NC,$E084     ;
- $E026 PUSH HL         ;
+ $E026 PUSH HL         ; {Compute map address from row/column offset
  $E027 PUSH DE         ;
  $E028 LD A,L          ;
  $E029 ADD A,A         ;
  $E02A ADD A,A         ;
- $E02B ADD A,$04       ;
+ $E02B ADD A,$04       ; }
  $E02D ADD A,E         ;
  $E02E LD L,A          ;
  $E02F LD A,H          ;
@@ -10753,7 +10792,7 @@ c$E01B BIT 1,(IX+$0B)  ;
  $E036 POP DE          ;
  $E037 POP HL          ;
  $E038 JR NC,$E084     ;
- $E03A BIT 4,(IX+$0B)  ;
+ $E03A BIT 4,(IX+$0B)  ; Check wall-solid flag (IX+$0B)
  $E03E JR NZ,$E083     ;
  $E040 LD A,H          ;
  $E041 CP $60          ;
@@ -10914,14 +10953,14 @@ c$E1B5 LD HL,$FDF2   ;
 ; Check pickup/collision near object, award score
 ;
 ; Used by the routine at #R$E1B5.
-c$E1D1 PUSH DE       ;
+c$E1D1 PUSH DE       ; {Compute scan address, scan $F8EA table via $E77D
  $E1D2 PUSH HL       ;
  $E1D3 EX DE,HL      ;
  $E1D4 ADD A,$08     ;
  $E1D6 LD E,A        ;
  $E1D7 INC L         ;
  $E1D8 LD D,(HL)     ;
- $E1D9 SRL E         ;
+ $E1D9 SRL E         ; }
  $E1DB LD HL,$F8EA   ;
  $E1DE LD B,$1D      ;
  $E1E0 CALL $E77D    ;
@@ -10929,7 +10968,7 @@ c$E1D1 PUSH DE       ;
  $E1E4 POP HL        ;
  $E1E5 JR Z,$E1F0    ;
  $E1E7 INC L         ;
- $E1E8 SET 7,(HL)    ;
+ $E1E8 SET 7,(HL)    ; Mark hit
  $E1EA LD BC,$4B02   ; +750??
  $E1ED JP $6415      ; => Update Score
 *$E1F0 EX DE,HL      ;
@@ -11452,24 +11491,24 @@ c$E4FC LD IX,$5BDA     ; Player's object record address
  $E5A5 JR Z,$E5DB      ;
  $E5A7 BIT 4,E         ;
  $E5A9 JR NZ,$E5DB     ;
- $E5AB CALL $E5B8      ;
+ $E5AB CALL $E5B8      ; Convert direction code (masked 0-15) to E delta
  $E5AE LD A,E          ;
  $E5AF AND $0F         ;
  $E5B1 LD (IX+$0C),A   ;
  $E5B4 LD D,A          ;
- $E5B5 JP $E5DB        ;
+ $E5B5 JP $E5DB        ; => Move enemy toward target, clamp to bounds
 
-; Routine at E5B8
+; Convert direction code (masked 0-15) to E delta (unconfirmed)
 ;
 ; Used by the routine at #R$E4FC.
-c$E5B8 LD B,A        ;
+c$E5B8 LD B,A        ; {Mask direction to 0-15, check low range
  $E5B9 AND $0F       ;
- $E5BB CP $05        ;
+ $E5BB CP $05        ; }
  $E5BD JR C,$E5D3    ;
  $E5BF CP $08        ;
  $E5C1 JR Z,$E5D5    ;
- $E5C3 JR C,$E5D0    ;
- $E5C5 CP $0C        ;
+ $E5C3 JR C,$E5D0    ; {Check mid range, branch
+ $E5C5 CP $0C        ; }
  $E5C7 JR C,$E5CB    ;
  $E5C9 DEC E         ;
  $E5CA RET           ;
@@ -11487,24 +11526,24 @@ c$E5B8 LD B,A        ;
  $E5D7 JR NZ,$E5D0   ;
  $E5D9 JR $E5CB      ;
 
-; Routine at E5DB
+; Move enemy toward target, clamp to bounds (unconfirmed)
 ;
 ; Used by the routines at #R$E4FC and #R$E972.
-c$E5DB INC (IX+$10)  ;
+c$E5DB INC (IX+$10)  ; Load object position/velocity into HL/E
  $E5DE LD H,(IX+$05) ;
  $E5E1 LD L,(IX+$04) ;
  $E5E4 LD E,(IX+$06) ;
- $E5E7 LD A,D        ;
- $E5E8 CP $10        ;
+ $E5E7 LD A,D        ; {Pick $E679 or $E648 handler by direction (D)
+ $E5E8 CP $10        ; }
  $E5EA JR Z,$E5F5    ;
  $E5EC CP $17        ;
  $E5EE JR NZ,$E61B   ;
- $E5F0 CALL $E679    ;
+ $E5F0 CALL $E679    ; Move left
  $E5F3 JR $E5F8      ;
-*$E5F5 CALL $E648    ;
+*$E5F5 CALL $E648    ; Move right
 *$E5F8 LD (IX+$06),E ;
  $E5FB LD (IX+$04),L ;
- $E5FE LD D,(IX+$0F) ;
+ $E5FE LD D,(IX+$0F) ; Load target coordinates for bound check
  $E601 LD E,(IX+$0E) ;
  $E604 LD H,(IX+$13) ;
  $E607 CALL $F21E    ; Clamp/check coordinate H
@@ -11538,15 +11577,15 @@ c$E628 LD A,L         ;
  $E63C JR C,$E6A8     ;
  $E63E CP $0C         ;
  $E640 JP Z,$E6C3     ;
- $E643 JP C,$E6DB     ;
+ $E643 JP C,$E6DB     ; => Move up/down
  $E646 JR $E6A8       ;
 
-; Routine at E648
+; Move right: check keys/state, advance E and wrap
 ;
 ; Used by the routine at #R$E5DB.
-c$E648 CP $01         ;
+c$E648 CP $01         ; {Check special states $01/$07, test heading bit
  $E64A JR Z,$E650     ;
- $E64C CP $07         ;
+ $E64C CP $07         ; }
  $E64E JR NZ,$E655    ;
 *$E650 BIT 0,(IX+$10) ;
  $E654 RET Z          ;
@@ -11555,10 +11594,10 @@ c$E648 CP $01         ;
  $E65B BIT 0,(IY+$05) ; Check bit 0 (Right) of Last joystick/keyboard bits
                       ; ($FD85)
  $E65F RET Z          ;
-*$E660 LD A,E         ;
+*$E660 LD A,E         ; {Advance direction counter E, wrap mod 4
  $E661 INC A          ;
  $E662 AND $03        ;
- $E664 LD E,A         ;
+ $E664 LD E,A         ; }
  $E665 JR Z,$E668     ;
  $E667 RET            ;
 *$E668 LD A,L         ;
@@ -11572,12 +11611,12 @@ c$E648 CP $01         ;
  $E676 LD E,$03       ;
  $E678 RET            ;
 
-; Routine at E679
+; Move left: check keys/state, advance E and wrap
 ;
 ; Used by the routine at #R$E5DB.
-c$E679 CP $09         ;
+c$E679 CP $09         ; {Check special states $09/$0F, test heading bit
  $E67B JR Z,$E681     ;
- $E67D CP $0F         ;
+ $E67D CP $0F         ; }
  $E67F JR NZ,$E686    ;
 *$E681 BIT 0,(IX+$10) ;
  $E685 RET Z          ;
@@ -11587,10 +11626,10 @@ c$E679 CP $09         ;
                       ; ($FD85)
  $E690 JR NZ,$E693    ;
  $E692 RET            ;
-*$E693 LD A,E         ;
+*$E693 LD A,E         ; {Advance direction counter E, wrap mod 4
  $E694 DEC A          ;
  $E695 AND $03        ;
- $E697 LD E,A         ;
+ $E697 LD E,A         ; }
  $E698 CP $03         ;
  $E69A RET NZ         ;
  $E69B DEC L          ;
@@ -11630,18 +11669,18 @@ c$E6A8 CP $03         ;
  $E6D7 RET            ;
 *$E6D8 JP $DC8C       ; => Check IX flag and column bound, dispatch
 
-; Routine at E6DB
+; Move up/down: check states, adjust row (unconfirmed)
 ;
 ; Used by the routine at #R$E628.
-c$E6DB CP $05         ;
- $E6DD JR Z,$E6E3     ;
+c$E6DB CP $05         ; {Check special states $05/$0B, test heading bit
+ $E6DD JR Z,$E6E3     ; }
  $E6DF CP $0B         ;
  $E6E1 JR NZ,$E6E9    ;
 *$E6E3 BIT 0,(IX+$10) ;
  $E6E7 JR Z,$E6C3     ;
-*$E6E9 LD A,H         ;
+*$E6E9 LD A,H         ; {Advance row, check limit $55
  $E6EA INC A          ;
- $E6EB CP $55         ;
+ $E6EB CP $55         ; }
  $E6ED JR C,$E6FB     ;
  $E6EF BIT 4,(IX+$0B) ;
  $E6F3 JR Z,$E6FB     ;
@@ -11721,12 +11760,12 @@ c$E6FE LD A,($FDFC)    ;
 c$E77C INC L         ;
 ; This entry point is used by the routines at #R$E1D1, #R$E224, #R$E6FE and
 ; #R$F076.
-*$E77D LD A,(HL)     ;
- $E77E INC L         ;
+*$E77D LD A,(HL)     ; {Read record
+ $E77E INC L         ; }
  $E77F CP $90        ; Inactive record marker??
  $E781 RET Z         ;
- $E782 SUB D         ;
- $E783 JR C,$E77C    ;
+ $E782 SUB D         ; {Check row within range B
+ $E783 JR C,$E77C    ; }
  $E785 CP B          ;
  $E786 JR NC,$E77C   ;
  $E788 LD A,E        ;
@@ -12002,7 +12041,7 @@ c$E972 LD A,(IX+$12) ; {Special-case states $06 and $0A
 *$E9B3 LD D,(IX+$0C) ;
 ; This entry point is used by the routines at #R$E794, #R$EB68, #R$EB7B and
 ; #R$EB96.
-*$E9B6 CALL $E5DB    ;
+*$E9B6 CALL $E5DB    ; Move enemy toward target, clamp to bounds
 ; This entry point is used by the routines at #R$E6FE, #R$E794, #R$E86B,
 ; #R$E8A0, #R$E90A, #R$EC58 and #R$F180.
 *$E9B9 LD DE,$0014   ;
@@ -12161,8 +12200,8 @@ c$EB96 BIT 7,(IX+$0B)  ;
 ; Compute direction bits toward player position (unconfirmed)
 ;
 ; Used by the routines at #R$E794, #R$E881, #R$E8A0, #R$EB13 and #R$EB96.
-c$EBE1 LD A,($5BDF)  ;
- $EBE4 LD BC,$0000   ;
+c$EBE1 LD A,($5BDF)  ; {Y distance to object, set right/left bound flags
+ $EBE4 LD BC,$0000   ; }
  $EBE7 SUB (IX+$05)  ;
  $EBEA JR C,$EBF4    ;
  $EBEC SUB $10       ;
@@ -12172,8 +12211,8 @@ c$EBE1 LD A,($5BDF)  ;
 *$EBF4 ADD A,$10     ;
  $EBF6 JR C,$EBFA    ;
  $EBF8 SET 3,C       ;
-*$EBFA LD A,($5BDE)  ;
- $EBFD CP (IX+$04)   ;
+*$EBFA LD A,($5BDE)  ; {Compare X coordinate to object (IX+$04)
+ $EBFD CP (IX+$04)   ; }
  $EC00 JR Z,$EC12    ;
  $EC02 JR NC,$EC0C   ;
  $EC04 ADD A,$01     ;
@@ -12183,9 +12222,9 @@ c$EBE1 LD A,($5BDF)  ;
 *$EC0C SUB $01       ;
  $EC0E JR C,$EC12    ;
  $EC10 SET 0,C       ;
-*$EC12 LD HL,$E4F1   ;
+*$EC12 LD HL,$E4F1   ; {Look up direction code in $E4F1 table
  $EC15 ADD HL,BC     ;
- $EC16 LD A,(HL)     ;
+ $EC16 LD A,(HL)     ; }
  $EC17 AND $0F       ;
  $EC19 LD B,A        ;
  $EC1A RET           ;
@@ -12229,16 +12268,16 @@ c$EC1B PUSH IX       ;
 *$EC55 POP IX        ;
  $EC57 RET           ;
 
-; Routine at EC58
-c$EC58 LD A,(IX+$0C)   ;
- $EC5B CP $08          ;
+; Set enemy sub-state (IX+$0C) by threshold, reset delay/target
+c$EC58 LD A,(IX+$0C)   ; {Compare (IX+$0C) against $08, pick $17/$10
+ $EC5B CP $08          ; }
  $EC5D JR C,$EC63      ;
  $EC5F LD A,$17        ;
  $EC61 JR $EC65        ;
 *$EC63 LD A,$10        ;
-*$EC65 LD (IX+$0C),A   ;
+*$EC65 LD (IX+$0C),A   ; {Store new sub-state, reset timers to defaults
  $EC68 LD (IX+$13),$F6 ;
- $EC6C LD (IX+$11),$10 ;
+ $EC6C LD (IX+$11),$10 ; }
  $EC70 LD (IX+$0F),$00 ;
  $EC74 LD (IX+$0E),$00 ;
  $EC78 LD A,(IX+$05)   ;
@@ -12300,7 +12339,7 @@ c$ECC1 LD A,($5BE6)   ;
  $ED0D LD A,$04       ;
 *$ED0F LD B,A         ;
  $ED10 LD C,L         ;
- $ED11 CALL $F21B     ; Select object table $F81E
+ $ED11 CALL $F21B     ; Select grenade table $F81E
  $ED14 RET Z          ;
  $ED15 LD A,$FF       ; -1 more grenades
  $ED17 JP $6430       ; => We've got A more grenades
@@ -12310,17 +12349,17 @@ c$ECC1 LD A,($5BE6)   ;
  $ED22 LD A,($5BE6)   ;
  $ED25 LD B,A         ;
  $ED26 CALL $ED31     ; Look up entry in table at $EC81
- $ED29 CALL $F20C     ; Scan object table at $F82D, entry stride 5
+ $ED29 CALL $F20C     ; Scan player-bullet table at $F82D, entry stride 5
  $ED2C LD A,$06       ;
  $ED2E JP $642D       ; => Trigger sound effect A into free slot at $6433
 
 ; Look up entry in table at $EC81 (unconfirmed)
 ;
 ; Used by the routines at #R$EC1B and #R$ECC1.
-c$ED31 LD A,(HL)     ;
+c$ED31 LD A,(HL)     ; {Row index * 4 into E
  $ED32 ADD A,A       ;
  $ED33 ADD A,A       ;
- $ED34 LD E,A        ;
+ $ED34 LD E,A        ; }
  $ED35 INC HL        ;
  $ED36 LD D,(HL)     ;
  $ED37 INC HL        ;
@@ -12328,14 +12367,14 @@ c$ED31 LD A,(HL)     ;
  $ED39 ADD A,E       ;
  $ED3A LD E,A        ;
  $ED3B LD HL,$EC81   ;
- $ED3E LD A,B        ;
+ $ED3E LD A,B        ; {Column index * 4 into C
  $ED3F ADD A,A       ;
  $ED40 ADD A,A       ;
- $ED41 LD C,A        ;
+ $ED41 LD C,A        ; }
  $ED42 LD B,$00      ;
- $ED44 ADD HL,BC     ;
+ $ED44 ADD HL,BC     ; {Add row+column to get table entry offset
  $ED45 LD A,(HL)     ;
- $ED46 ADD A,E       ;
+ $ED46 ADD A,E       ; }
  $ED47 LD E,A        ;
  $ED48 INC HL        ;
  $ED49 LD A,(HL)     ;
@@ -12451,15 +12490,15 @@ c$EDC8 EX DE,HL      ;
  $EDD4 EX DE,HL      ;
  $EDD5 RET           ;
 
-; Routine at EDD6
-c$EDD6 LD C,(HL)       ;
+; Init object timer field via $EDC8 (unconfirmed)
+c$EDD6 LD C,(HL)       ; {Read record, set up type $1C, count $2D
  $EDD7 LD A,$1C        ;
- $EDD9 LD B,$2D        ;
+ $EDD9 LD B,$2D        ; }
  $EDDB CALL $EDC8      ;
  $EDDE INC L           ;
- $EDDF CP $20          ;
+ $EDDF CP $20          ; {Check range, branch by type value
  $EDE1 JR NC,$EE0E     ;
- $EDE3 CP $06          ;
+ $EDE3 CP $06          ; }
  $EDE5 JR NC,$EDEB     ;
  $EDE7 LD (HL),$08     ;
  $EDE9 JR $EE0E        ;
@@ -12559,12 +12598,12 @@ b$EF08 DEFB $02,$2C,$EB,$D6,$02,$30,$06,$2C
  $EF30 DEFB $6F,$36,$05,$D1,$E1,$18,$DB
 
 ; Init object record via $EDC8, entry size $0E
-c$EF37 INC BC         ;
+c$EF37 INC BC         ; {Read next byte, set up B/C for $EDC8
  $EF38 LD A,(BC)      ;
  $EF39 EXX            ;
  $EF3A LD B,A         ;
  $EF3B EXX            ;
- $EF3C LD C,(HL)      ;
+ $EF3C LD C,(HL)      ; }
  $EF3D LD A,$0C       ;
  $EF3F LD B,$09       ;
  $EF41 CALL $EDC8     ;
@@ -12604,19 +12643,19 @@ c$EF37 INC BC         ;
  $EF79 POP HL         ;
  $EF7A JR $EF4B       ;
 
-; Routine at EF7C
-c$EF7C LD A,(HL)      ;
- $EF7D CP $0B         ;
+; Init two-part record via $EDC8, check record type (unconfirmed)
+c$EF7C LD A,(HL)      ; {Check record type against $0B
+ $EF7D CP $0B         ; }
  $EF7F JR NZ,$EF4B    ;
- $EF81 LD B,$24       ;
+ $EF81 LD B,$24       ; {Init first part via $EDC8 ($38, byte $00)
  $EF83 XOR A          ;
  $EF84 LD (DE),A      ;
- $EF85 LD A,$38       ;
+ $EF85 LD A,$38       ; }
  $EF87 CALL $EDC8     ;
  $EF8A DEC L          ;
- $EF8B LD A,$4A       ;
+ $EF8B LD A,$4A       ; {Init second part via $EDC8 ($38, byte $4A)
  $EF8D LD (DE),A      ;
- $EF8E LD A,$38       ;
+ $EF8E LD A,$38       ; }
  $EF90 CALL $EDC8     ;
  $EF93 BIT 4,(IY+$15) ;
  $EF97 JP NZ,$ED5C    ;
@@ -12650,14 +12689,14 @@ t$EFD2 DEFM "w,p,6"
 ; Data block at EFD7
 b$EFD7 DEFB $1D,$2C,$36,$80,$EB,$78
 
-; Routine at EFDD
+; Check active count vs limit, reset counter/state (unconfirmed)
 ;
 ; Used by the routine at #R$EF7C.
-c$EFDD INC L         ;
+c$EFDD INC L         ; {Bump, compare against $4B limit
  $EFDE CP $4B        ;
- $EFE0 JP NC,$ED5C   ;
- $EFE3 CP $15        ;
- $EFE5 JR NC,$EFEF   ;
+ $EFE0 JP NC,$ED5C   ; }
+ $EFE3 CP $15        ; {Compare against $15, branch
+ $EFE5 JR NC,$EFEF   ; }
  $EFE7 LD (HL),$01   ;
  $EFE9 INC L         ;
  $EFEA LD (HL),$00   ;
@@ -12803,16 +12842,16 @@ t$F100 DEFM "w,6 ,"
 b$F105 DEFB $EB,$2C,$0E,$81,$D6,$16,$DA,$4C
  $F10D DEFB $EE,$C3,$51,$EE,$C3,$76,$F0
 
-; Routine at F114
-c$F114 EX DE,HL      ;
+; Shift object table entry, mark boundary $81 (unconfirmed)
+c$F114 EX DE,HL      ; {Save old value, mark slot boundary $81
  $F115 LD A,(HL)     ;
- $F116 LD (HL),$81   ;
+ $F116 LD (HL),$81   ; }
  $F118 INC L         ;
  $F119 LD (HL),A     ;
- $F11A INC E         ;
+ $F11A INC E         ; {Copy entry byte across
  $F11B INC L         ;
  $F11C LD A,(DE)     ;
- $F11D LD (HL),A     ;
+ $F11D LD (HL),A     ; }
  $F11E INC L         ;
  $F11F DEC E         ;
  $F120 LD (HL),E     ;
@@ -12820,26 +12859,26 @@ c$F114 EX DE,HL      ;
  $F122 EX DE,HL      ;
  $F123 JP $ED5C      ;
 
-; Routine at F126
-c$F126 EX DE,HL      ;
+; Shift object table entry, mark boundary bytes $81 (unconfirmed)
+c$F126 EX DE,HL      ; {Save old value, mark slot boundary $81
  $F127 LD B,(HL)     ;
- $F128 LD (HL),$81   ;
+ $F128 LD (HL),$81   ; }
  $F12A INC L         ;
  $F12B LD (HL),B     ;
  $F12C INC E         ;
  $F12D INC L         ;
- $F12E LD A,(DE)     ;
+ $F12E LD A,(DE)     ; {Copy entry byte across
  $F12F LD C,A        ;
  $F130 LD (HL),A     ;
  $F131 INC L         ;
- $F132 DEC E         ;
+ $F132 DEC E         ; }
  $F133 LD (HL),E     ;
  $F134 INC L         ;
- $F135 LD (HL),$81   ;
+ $F135 LD (HL),$81   ; {Write second boundary marker, adjust value
  $F137 INC L         ;
  $F138 LD A,B        ;
  $F139 ADD A,$08     ;
- $F13B LD (HL),A     ;
+ $F13B LD (HL),A     ; }
  $F13C INC L         ;
  $F13D LD A,C        ;
  $F13E SUB $08       ;
@@ -12853,25 +12892,25 @@ c$F126 EX DE,HL      ;
 ; This entry point is used by the routine at #R$F14C.
 *$F149 JP $ED5C      ;
 
-; Routine at F14C
-c$F14C LD C,(HL)       ;
+; Spawn enemy from record, check readiness timer (unconfirmed)
+c$F14C LD C,(HL)       ; {Read record byte, compare against $06
  $F14D INC L           ;
  $F14E LD A,(HL)       ;
- $F14F INC L           ;
+ $F14F INC L           ; }
  $F150 CP $06          ;
  $F152 JR Z,$F15A      ;
  $F154 JR NC,$F149     ;
  $F156 LD (HL),$00     ;
  $F158 JR $F149        ;
-*$F15A LD A,(HL)       ;
+*$F15A LD A,(HL)       ; {Check slot free, mark used ($FF)
  $F15B INC A           ;
- $F15C JR Z,$F149      ;
+ $F15C JR Z,$F149      ; }
  $F15E LD (HL),$FF     ;
- $F160 PUSH DE         ;
+ $F160 PUSH DE         ; {Load slot address, set spawn marker $80
  $F161 PUSH HL         ;
  $F162 LD H,$FD        ;
  $F164 LD L,C          ;
- $F165 LD BC,$080D     ;
+ $F165 LD BC,$080D     ; }
  $F168 LD A,$80        ;
  $F16A LD (DE),A       ;
  $F16B CALL $E44D      ;
@@ -12883,16 +12922,16 @@ c$F14C LD C,(HL)       ;
  $F17D POP DE          ;
  $F17E JR $F149        ;
 
-; Routine at F180
-c$F180 LD (IX+$11),$01 ;
- $F184 LD A,(IX+$04)   ;
+; Update enemy state timer, check row threshold (unconfirmed)
+c$F180 LD (IX+$11),$01 ; {Set delay timer, load column *4 into E
+ $F184 LD A,(IX+$04)   ; }
  $F187 ADD A,A         ;
  $F188 ADD A,A         ;
  $F189 LD E,A          ;
- $F18A LD A,(IX+$05)   ;
+ $F18A LD A,(IX+$05)   ; {Compare row to $34, set state flag $12 if past
  $F18D LD D,A          ;
  $F18E CP $34          ;
- $F190 JR C,$F199      ;
+ $F190 JR C,$F199      ; }
  $F192 RLA             ;
  $F193 JR C,$F199      ;
  $F195 LD (IX+$12),$01 ;
@@ -12916,24 +12955,24 @@ c$F180 LD (IX+$11),$01 ;
 ; Check position bounds, set flags (unconfirmed)
 ;
 ; Used by the routines at #R$E794 and #R$F180.
-c$F1BB LD A,E        ;
- $F1BC CP $78        ;
+c$F1BB LD A,E        ; {Reject if E out of range
+ $F1BC CP $78        ; }
  $F1BE JR NC,$F1DB   ;
  $F1C0 LD A,D        ;
  $F1C1 CP $60        ;
  $F1C3 JR NC,$F1DB   ;
  $F1C5 CP $04        ;
  $F1C7 JR C,$F1DB    ;
- $F1C9 LD A,($5BDF)  ;
+ $F1C9 LD A,($5BDF)  ; {Compute spawn params from player position ($5BDF/$FDE3)
  $F1CC ADD A,$05     ;
- $F1CE LD B,A        ;
+ $F1CE LD B,A        ; }
  $F1CF LD A,($FDE3)  ;
  $F1D2 ADD A,$03     ;
  $F1D4 OR C          ;
  $F1D5 LD C,A        ;
  $F1D6 EX DE,HL      ;
  $F1D7 XOR A         ;
- $F1D8 JP $F20F      ; => Select object table $F7C9
+ $F1D8 JP $F20F      ; => Select secondary projectile/vehicle table $F7C9
 *$F1DB XOR A         ;
  $F1DC RET           ;
 
@@ -12955,43 +12994,44 @@ b$F1E1 DEFB $D3,$FD,$4F,$87,$87,$FD,$86,$55
 c$F200 JP $F4F6      ; => Scan object table (IX,$0E stride), compute and store
                      ; motion vector
 
-; Scan object table (IX,$0E stride), process motion (redirect)
+; Set up primary projectile/vehicle table $F73C, process motion (redirect)
 ;
 ; Used by the routine at #R$DEEF.
-c$F203 JP $F381      ; => Scan object table (IX,$0E stride), process motion
+c$F203 JP $F381      ; => Set up primary projectile/vehicle table $F73C,
+                     ; process motion
 
-; Scan object table $F856, entry stride $14 (redirect)
+; Scan explosion-effect table $F856, entry stride $14 (redirect)
 ;
 ; Used by the routine at #R$DEEF.
-c$F206 JP $F707      ; => Scan object table $F856, entry stride $14
+c$F206 JP $F707      ; => Scan explosion-effect table $F856, entry stride $14
 
-; Scan object table at $F82D, init $F8ED marker (redirect)
+; Scan player-bullet table at $F82D, init $F8ED marker (redirect)
 ;
 ; Used by the routine at #R$DEEF.
-c$F209 JP $F26E      ; => Scan object table at $F82D, init $F8ED marker
+c$F209 JP $F26E      ; => Scan player-bullet table at $F82D, init $F8ED marker
 
-; Scan object table at $F82D, entry stride 5 (redirect)
+; Scan player-bullet table at $F82D, entry stride 5 (redirect)
 ;
 ; Used by the routine at #R$ECC1.
-c$F20C JP $F24A      ; => Scan object table at $F82D, entry stride 5
+c$F20C JP $F24A      ; => Scan player-bullet table at $F82D, entry stride 5
 
-; Select object table $F7C9 (redirect)
+; Select secondary projectile/vehicle table $F7C9 (spawn entry, redirect)
 ;
 ; Used by the routine at #R$F1BB.
-c$F20F JP $F4E9      ; => Select object table $F7C9
+c$F20F JP $F4E9      ; => Select secondary projectile/vehicle table $F7C9
 
-; Set up object table $F81E, dispatch (redirect)
+; Set up grenade table $F81E, dispatch (redirect)
 ;
 ; Used by the routine at #R$DEEF.
-c$F212 JP $F36D      ; => Set up object table $F81E, dispatch
+c$F212 JP $F36D      ; => Set up grenade table $F81E, dispatch
 
 ; Data block at F215
 b$F215 DEFB $C3,$82,$F5,$C3,$A0,$F5
 
-; Select object table $F81E (redirect)
+; Select grenade table $F81E (spawn entry, redirect)
 ;
 ; Used by the routine at #R$ECC1.
-c$F21B JP $F4E3      ; => Select object table $F81E
+c$F21B JP $F4E3      ; => Select grenade table $F81E
 
 ; Clamp/check coordinate H (redirect)
 ;
@@ -13032,43 +13072,43 @@ c$F23B LD B,$05      ;
  $F248 INC HL        ;
  $F249 RET           ;
 
-; Scan object table at $F82D, entry stride 5
+; Scan player-bullet table at $F82D, entry stride 5
 ;
 ; Used by the routine at #R$F20C.
-c$F24A LD IX,$F82D     ;
- $F24E LD DE,$0005     ;
-*$F251 LD A,(IX+$00)   ;
+c$F24A LD IX,$F82D     ; {Set up table pointer, stride 5
+ $F24E LD DE,$0005     ; }
+*$F251 LD A,(IX+$00)   ; {Check slot empty ($FF)/active ($00)
  $F254 INC A           ;
- $F255 RET Z           ;
+ $F255 RET Z           ; }
  $F256 DEC A           ;
  $F257 JR Z,$F25D      ;
  $F259 ADD IX,DE       ;
  $F25B JR $F251        ;
-*$F25D LD (IX+$01),L   ;
+*$F25D LD (IX+$01),L   ; {Store position (L,H), size (C,B), mark active
  $F260 LD (IX+$02),H   ;
- $F263 LD (IX+$03),C   ;
+ $F263 LD (IX+$03),C   ; }
  $F266 LD (IX+$04),B   ;
  $F269 LD (IX+$00),$0E ;
  $F26D RET             ;
 
-; Scan object table at $F82D, init $F8ED marker
+; Scan player-bullet table at $F82D, init $F8ED marker
 ;
 ; Used by the routine at #R$F209.
-c$F26E LD IX,$F82D     ;
- $F272 LD HL,$F8ED     ;
+c$F26E LD IX,$F82D     ; {Set up marker at $F8ED, load first entry
+ $F272 LD HL,$F8ED     ; }
  $F275 LD (HL),$90     ;
  $F277 LD ($FDBD),HL   ;
-*$F27A LD A,(IX+$00)   ;
+*$F27A LD A,(IX+$00)   ; {Check slot empty ($FF)/active ($00)
  $F27D INC A           ;
- $F27E RET Z           ;
+ $F27E RET Z           ; }
  $F27F DEC A           ;
  $F280 JR NZ,$F289     ;
 *$F282 LD DE,$0005     ;
  $F285 ADD IX,DE       ;
  $F287 JR $F27A        ;
-*$F289 LD L,(IX+$01)   ;
+*$F289 LD L,(IX+$01)   ; {Load position, advance by speed (IX+$03)
  $F28C LD H,(IX+$02)   ;
- $F28F CALL $F5BF      ;
+ $F28F CALL $F5BF      ; }
  $F292 LD A,(IX+$03)   ;
  $F295 ADD A,L         ;
  $F296 LD (IX+$01),A   ;
@@ -13154,16 +13194,16 @@ c$F26E LD IX,$F82D     ;
  $F341 JP $F282        ;
 *$F344 LD (IX+$00),$00 ;
 *$F348 EX DE,HL        ;
- $F349 CALL $F6C2      ; Scan $F856 table (stride $11), find/init matching
+ $F349 CALL $F6C2      ; Scan explosion-effect table $F856, find/init free
                        ; entry
  $F34C JP $F282        ;
 
 ; Clamp/check coordinate H (unconfirmed)
 ;
 ; Used by the routines at #R$F21E and #R$F381.
-c$F34F LD A,H        ;
+c$F34F LD A,H        ; {Add $02, check sign, set carry if negative
  $F350 LD L,$00      ;
- $F352 ADD A,$02     ;
+ $F352 ADD A,$02     ; }
  $F354 LD C,A        ;
  $F355 LD H,A        ;
  $F356 JP P,$F35D    ;
@@ -13171,32 +13211,33 @@ c$F34F LD A,H        ;
  $F35A SCF           ;
  $F35B JR $F35E      ;
 *$F35D XOR A         ;
-*$F35E RR H          ;
+*$F35E RR H          ; {Rotate H:L right 3 bits, add DE
  $F360 RR L          ;
  $F362 RR H          ;
- $F364 RR L          ;
+ $F364 RR L          ; }
  $F366 RR H          ;
  $F368 RR L          ;
  $F36A ADD HL,DE     ;
  $F36B LD A,H        ;
  $F36C RET           ;
 
-; Set up object table $F81E, dispatch
+; Set up grenade table $F81E, dispatch
 ;
 ; Used by the routine at #R$F212.
-c$F36D CALL $F37B    ;
+c$F36D CALL $F37B    ; Set up secondary projectile/vehicle table $F7C9,
+                     ; dispatch
  $F370 LD IX,$F81E   ;
  $F374 LD A,$90      ;
  $F376 LD ($F8EA),A  ;
  $F379 JR $F385      ;
 
-; Routine at F37B
+; Set up secondary projectile/vehicle table $F7C9, dispatch (unconfirmed)
 ;
 ; Used by the routine at #R$F36D.
 c$F37B LD IX,$F7C9   ;
  $F37F JR $F385      ;
 
-; Scan object table (IX,$0E stride), process motion
+; Set up primary projectile/vehicle table $F73C, process motion (unconfirmed)
 ;
 ; Used by the routine at #R$F203.
 c$F381 LD IX,$F73C    ;
@@ -13213,7 +13254,7 @@ c$F381 LD IX,$F73C    ;
  $F397 SRL E          ;
  $F399 BIT 3,(IX+$00) ;
  $F39D JR Z,$F3A4     ;
- $F39F CALL $F68A     ;
+ $F39F CALL $F68A     ; Decompose position into sub-pixel fields ($F8CF-$F8D1)
  $F3A2 JR $F3A7       ;
 *$F3A4 CALL $F5A0     ; Generate rotated bit-mask pattern A, variant
 *$F3A7 LD A,(IX+$00)  ;
@@ -13356,20 +13397,20 @@ c$F381 LD IX,$F73C    ;
  $F4CD LD A,$04       ;
  $F4CF CALL $642D     ; Trigger sound effect A into free slot at $6433
  $F4D2 JR $F4D7       ;
-*$F4D4 CALL $F6C2     ; Scan $F856 table (stride $11), find/init matching entry
+*$F4D4 CALL $F6C2     ; Scan explosion-effect table $F856, find/init free entry
 *$F4D7 XOR A          ;
  $F4D8 LD (IX+$00),A  ;
 *$F4DB LD DE,$000E    ;
  $F4DE ADD IX,DE      ;
  $F4E0 JP $F385       ;
 
-; Select object table $F81E
+; Select grenade table $F81E (spawn entry)
 ;
 ; Used by the routine at #R$F21B.
 c$F4E3 LD IX,$F81E   ;
  $F4E7 JR $F4ED      ;
 
-; Select object table $F7C9
+; Select secondary projectile/vehicle table $F7C9 (spawn entry)
 ;
 ; Used by the routine at #R$F20F.
 c$F4E9 LD IX,$F7C9   ;
@@ -13548,20 +13589,20 @@ c$F5CD LD A,($FD97)  ;
 ; Set explosion/effect buffer values from object IX (unconfirmed)
 ;
 ; Used by the routine at #R$F381.
-c$F5DD EX DE,HL        ;
+c$F5DD EX DE,HL        ; {Compute row+offset, save IX
  $F5DE LD A,(IX+$0A)   ;
  $F5E1 LD B,A          ;
  $F5E2 ADD A,H         ;
  $F5E3 LD C,A          ;
- $F5E4 PUSH IX         ;
- $F5E6 LD A,$20        ;
+ $F5E4 PUSH IX         ; }
+ $F5E6 LD A,$20        ; {Check bit 2 flag, set ($F8DA) type byte
  $F5E8 BIT 2,(IX+$00)  ;
- $F5EC JR Z,$F5F0      ;
+ $F5EC JR Z,$F5F0      ; }
  $F5EE SET 2,A         ;
 *$F5F0 LD ($F8DA),A    ;
- $F5F3 LD A,L          ;
+ $F5F3 LD A,L          ; {Compute sub-column bits ($F8D5)
  $F5F4 AND $03         ;
- $F5F6 LD ($F8D5),A    ;
+ $F5F6 LD ($F8D5),A    ; }
  $F5F9 LD A,L          ;
  $F5FA AND $FC         ;
  $F5FC RRA             ;
@@ -13638,22 +13679,22 @@ c$F5DD EX DE,HL        ;
  $F687 POP IX          ;
  $F689 RET             ;
 
-; Routine at F68A
+; Decompose position into sub-pixel fields ($F8CF-$F8D1) (unconfirmed)
 ;
 ; Used by the routine at #R$F381.
-c$F68A EX DE,HL       ;
+c$F68A EX DE,HL       ; {Compute column byte ($F8D0)
  $F68B LD A,(IX+$0A)  ;
  $F68E LD C,A         ;
- $F68F ADD A,H        ;
+ $F68F ADD A,H        ; }
  $F690 LD ($F8D0),A   ;
- $F693 LD A,L         ;
+ $F693 LD A,L         ; {Compute sub-column bits ($F8D1)
  $F694 AND $03        ;
- $F696 LD ($F8D1),A   ;
- $F699 LD A,L         ;
+ $F696 LD ($F8D1),A   ; }
+ $F699 LD A,L         ; {Compute row/8 index ($F8CF)
  $F69A AND $FC        ;
  $F69C RRA            ;
  $F69D RRA            ;
- $F69E LD ($F8CF),A   ;
+ $F69E LD ($F8CF),A   ; }
  $F6A1 BIT 0,(IX+$00) ;
  $F6A5 JR Z,$F6AE     ;
  $F6A7 LD A,(IX+$0C)  ;
@@ -13672,22 +13713,22 @@ c$F68A EX DE,HL       ;
 *$F6BE LD ($F8D2),A   ;
  $F6C1 RET            ;
 
-; Scan $F856 table (stride $11), find/init matching entry
+; Scan explosion-effect table $F856, find/init free entry (unconfirmed)
 ;
 ; Used by the routines at #R$F26E and #R$F381.
 c$F6C2 LD HL,$F856   ;
 *$F6C5 LD A,(HL)     ;
  $F6C6 INC A         ;
  $F6C7 JR Z,$F704    ;
- $F6C9 LD BC,$0011   ;
+ $F6C9 LD BC,$0011   ; {Check delay field (+$11) for a free (zero) slot
  $F6CC ADD HL,BC     ;
  $F6CD LD A,(HL)     ;
  $F6CE OR A          ;
- $F6CF JR Z,$F6D7    ;
+ $F6CF JR Z,$F6D7    ; }
  $F6D1 LD BC,$0003   ;
  $F6D4 ADD HL,BC     ;
  $F6D5 JR $F6C5      ;
-*$F6D7 PUSH DE       ; {Match found: mark entry, rewind to its start
+*$F6D7 PUSH DE       ; {Free slot found: rewind to record start
  $F6D8 LD (HL),$07   ;
  $F6DA XOR A         ;
  $F6DB SBC HL,BC     ;
@@ -13725,7 +13766,7 @@ c$F6C2 LD HL,$F856   ;
  $F703 POP DE        ;
 *$F704 JP $F5A0      ; => Generate rotated bit-mask pattern A, variant
 
-; Scan object table $F856, entry stride $14
+; Scan explosion-effect table $F856, entry stride $14 (unconfirmed)
 ;
 ; Used by the routine at #R$F206.
 c$F707 LD IX,$F856   ;
@@ -13754,7 +13795,7 @@ c$F707 LD IX,$F856   ;
  $F737 CALL $DC8F    ; Check screen brightness threshold, inside $DD8D
  $F73A JR $F716      ;
 
-; Data block at F73C
+; Primary projectile/vehicle table (unconfirmed)
 b$F73C DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; {Record
  $F74A DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; width 14
  $F758 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ;
@@ -13767,7 +13808,7 @@ b$F73C DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; {Record
  $F7BA DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
  $F7C8 DEFB $FF                                                     ; End marker
 
-; Data block at F7C9
+; Secondary projectile/vehicle table (unconfirmed)
 b$F7C9 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; {Record
  $F7D7 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; width 14
  $F7E5 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ;
@@ -13776,12 +13817,12 @@ b$F7C9 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; {Record
  $F80F DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
  $F81D DEFB $FF                                                     ; End marker
 
-; Data block at F81E
+; Grenade table
 b$F81E DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; Record
                                                                     ; width 14
  $F82C DEFB $FF                                                     ; End marker
 
-; Data block at F82D
+; Player-bullet table
 b$F82D DEFB $00,$00,$00,$00,$00 ; {Record width 5
  $F832 DEFB $00,$00,$00,$00,$00 ;
  $F837 DEFB $00,$00,$00,$00,$00 ;
@@ -13792,7 +13833,7 @@ b$F82D DEFB $00,$00,$00,$00,$00 ; {Record width 5
  $F850 DEFB $00,$00,$00,$00,$00 ; }
  $F855 DEFB $FF                 ; End marker
 
-; Data block at F856
+; Explosion-effect table (unconfirmed)
 b$F856 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; {Record width 20
  $F860 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ;
  $F86A DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ;
@@ -14005,20 +14046,28 @@ b$FD94 DEFB $00
  $FD99 DEFW $0000               ; ??
  $FD9B DEFB $00,$00,$00,$00     ; (IY+$1B),(IY+$1C),(IY+$1D),(IY+$1E) - Stored
                                 ; values for random byte calculation
- $FD9F DEFB $00                 ; ?? = $00
- $FDA0 DEFB $07                 ; ?? = $07
+ $FD9F DEFB $00                 ; Fill char for special-char codes
+                                ; $0C/$13/$0D/$09
+ $FDA0 DEFB $07                 ; Print attribute: bits 0-2 INK (set by char
+                                ; $10), bits 3-5 PAPER (char $11), bit 6 (char
+                                ; $12) = $07
  $FDA1 DEFW $5800               ; ?? = $5800; hi byte accessed as (IY+$22)
  $FDA3 DEFW $7EA0               ; Font address = $7EA0
  $FDA5 DEFW $0C04               ; ??? = $0000
- $FDA7 DEFB $00                 ; ?? = $00; inc/dec (smth on char printing)
+ $FDA7 DEFB $00                 ; Special-char argument counter (0 = idle, N =
+                                ; N arg bytes still expected), see #R$7637 =
+                                ; $00
  $FDA8 DEFB $15                 ; Saved special char in $7637
- $FDA9 DEFW $FDAC               ; ?? = $FDAB
+ $FDA9 DEFW $FDAC               ; Special-char argument write pointer, see
+                                ; #R$7637 = $FDAB
  $FDAB DEFB $00                 ; Screen attribute??
  $FDAC DEFB $02                 ; ??
  $FDAD DEFB $00,$00
- $FDAF DEFB $01                 ; ?? = $00
- $FDB0 DEFB $02                 ; ?? = $00
- $FDB1 DEFB $01                 ; ?? = $01
+ $FDAF DEFB $01                 ; Print flag byte: bit 0 (char $19), bit 1
+                                ; (char $15) = $00
+ $FDB0 DEFB $02                 ; Width/column counter, set by char $18 = $00
+ $FDB1 DEFB $01                 ; Print spacing/mode, set by char $02, range
+                                ; 0-3 = $01
  $FDB2 DEFB $00                 ; (IY+$32) - ??
  $FDB3 DEFW $0000               ; ??
  $FDB5 DEFB $00

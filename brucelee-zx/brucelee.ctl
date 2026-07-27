@@ -1,6 +1,5 @@
-b $4000 Screen
-B $4000,6144,32
-B $5800,768,32
+@ $5B00 org
+b $5B00
 B $5B00,1280,8
 b $6000
 @ $6000 label=current_room_playing_data
@@ -325,7 +324,33 @@ N $930C Play sound after taking a key by Bruce
 @ $930C label=play_key_collecting
 b $9312
 c $95e2
-c $960A
+C $95FF,3 Play tone sequence via speaker
+c $960A Play tone sequence via speaker (used for sound effects)
+C $960A,2 E = table low byte, advance
+C $960C,2 D = table high byte, advance
+C $960E,2 C = repeat count low, advance
+C $9610,2 B = repeat count high, advance
+C $9612,2 Save caller HL, HL = table pointer
+C $9614,4 Loop while repeats remain
+C $9618,2 Decrement count, save table pointer
+C $961A,2 E = duration low
+C $961C,2 D = duration high
+C $961E,4 Skip toggle if duration zero
+C $9622,3 A = speaker state
+C $9625,5 Toggle and store speaker state
+C $962A,2 Output to speaker port
+C $962C,3 Delay loop: decrement duration
+C $962F,2 Loop until duration elapsed
+C $9631,2 Next half-cycle
+C $9633,3 Restore table pointer, loop repeats
+C $9636,1 Restore caller HL
+C $9637,5 Read keyboard port FE
+C $963C,3 Mask key bits
+C $963F,1 Return if any key pressed
+C $9640,2 E = wait duration low
+C $9642,2 D = wait duration high
+C $9644,4 Check duration, loop delay
+C $9648,1 Return
 b $9649
 b $9800 Background tiles 8*8, tile attributes at #R$6300
 @ $9800 label=bktiles
@@ -336,8 +361,31 @@ b $A000
 @ $B000 label=right_direction_masks
 @ $B800 label=left_direction_masks
 @ $C000 label=begin
+C $C000,3 => Start point
 c $C003
-c $C02D
+C $C007,3 Decode and store player input direction
+c $C02D Decode and store player input direction
+C $C02D,5 Clear direction-changed flag
+C $C032,6 A = raw joystick/key input, decode direction
+C $C038,4 Compare decoded input to previous
+C $C03C,3 Store input, skip if changed
+C $C03F,3 Store as pending direction
+C $C042,6 Skip player-2 handling if absent
+C $C048,5 Set direction-changed flag
+C $C04D,7 Skip if player 2 uses same input mode
+C $C054,6 Decode player-2 input
+C $C05A,2 Compare to previous player-2 input
+C $C05C,5 Store as pending direction if changed
+C $C061,5 Check two-player mode
+C $C066,2 Skip if single-player
+C $C068,6 Skip if player 2 not active
+C $C06E,6 Skip if not player 2's turn
+C $C074,3 HL = pending direction
+C $C077,3 Swap byte order
+C $C07A,3 Store as final direction result
+C $C07D,1 Return
+C $C07E,6 Use pending direction unchanged
+C $C084,1 Return
 c $C085
 c $C0D7
 b $C0E5
@@ -374,6 +422,10 @@ C $C1D2,1 Check for end of keys list
 N $C1F8 Now draw scene to offline screen
 @ $C1F8 label=end_of_keys
 @ $C204 label=draw_room_scene_loop
+C $C20C,3 Draws an 8*8 pixels element of scene
+C $C24D,3 Fill BC bytes at HL address by zeros
+C $C255,3 Fill BC bytes at HL address by zeros
+C $C274,3 Add points to current player score
 c $C29C Updates Video-RAM from offline drawing buffer
 @ $C29C label=update_screen
 c $C2B2 Fill BC bytes at HL address by zeros
@@ -383,8 +435,63 @@ c $C2C0 Draws an 8*8 pixels element of scene
 @ $C2C0 label=draw_scene_element
 c $C2EC Updates area of personage from offscreen to screen
 @ $C2EC label=show_personage_area
+C $C2EC,6 Skip ahead if area already shown (IX+0A)
+C $C2F2,5 Return if personage isn't alive (IX+2)
+C $C2F7,7 Load offscreen source coords (IX+8/9) into HL
+C $C2FE,3 Rotate row byte to get bitmap-third index
+C $C301,7 Fold coord bits into screen column (standard ZX address fold)
+C $C308,1 Save folded screen column
+C $C309,5 Build screen high byte (bits 5-3 of row) in D
+C $C30E,4 Set up wraparound screen row byte in H
+C $C312,4 Row-block counter C=5, inner counter B=4
+C $C316,4 Copy pixel byte HL(offscreen)->DE(screen), advance column
+C $C31A,4 Copy pixel byte, advance column
+C $C31E,4 Copy pixel byte, advance to next third
+C $C322,4 Copy pixel byte, advance to next third
+C $C326,4 Copy pixel byte, then step back a row
+C $C32A,4 Copy pixel byte, step back a row
+C $C32E,4 Copy pixel byte, step back a row
+C $C332,4 Copy pixel byte, advance to next pixel line
+C $C336,2 Loop for 4 pixel rows (DJNZ)
+C $C338,6 Advance HL to next screen third, handle wrap
+C $C33E,4 Conditional wrap subtract
+C $C342,4 Mask to valid screen range, rebuild D
+C $C346,3 Loop for 5 thirds (row blocks)
+C $C349,3 Restore saved screen column into HL/A
+C $C34C,5 Build attribute-area high byte in D
+C $C351,3 Build attribute-area address in H
+C $C354,2 Attribute row counter A=5
+C $C356,3 Load 4-byte attribute row length
+C $C359,2 Copy attribute row HL(offscreen)->DE(screen)
+C $C35B,7 Advance HL and DE to next attribute row
+C $C362,3 Loop for 5 attribute rows
 c $C366 Redraw background of personage area to offscreen
 @ $C366 label=update_personage_background
+C $C366,5 Return if personage isn't alive (IX+2)
+C $C36B,5 Compute image-slot offset from personage index
+C $C370,3 DE = offset into scene-elements table
+C $C373,3 HL = IX (personage struct base)
+C $C376,5 Load scene-elements list pointer via offset
+C $C37B,3 B = element count, C = row counter 5
+C $C37E,7 A = 24 - (IX+7) row, clamp to max 5 rows
+C $C385,3 Use clamped row count if fewer than 5 remain
+C $C388,4 Save row/element counters
+C $C38C,6 HL = personage tile coords (IX+6/7)
+C $C392,6 Rotate row bits into low nibble of H
+C $C398,5 Fold coord bits into tile column (standard ZX fold)
+C $C39D,4 Combine into scene tile row/col in H
+C $C3A1,3 Mask to valid scene-map range
+C $C3A4,3 Save scene-map tile address
+C $C3A7,1 Save row/element counters
+C $C3A8,6 HL = scene-map tile address, add scene data base
+C $C3AE,2 A = tile element index
+C $C3B0,3 Draws an 8*8 pixels element of scene
+C $C3B3,3 Restore counters, loop for each element in row (DJNZ)
+C $C3B6,4 HL = saved element counter, A = row width
+C $C3BA,5 Compute step to next scene-map row
+C $C3BF,1 DE = step to next row
+C $C3C0,7 Advance saved tile address by row step
+C $C3C7,3 Loop for remaining rows (5 max)
 c $C3CB Draws personage to offscreen
 @ $C3CB label=draw_personage
 C $C3D0,1 (IX+2) Personage image index and "alive status"
@@ -430,7 +537,25 @@ C $C48C,1 Image is not aligned, need to continue drawing in second 8*8 block
 @ $C499 label=second_block_loop
 c $C4B8 Start point
 @ $C4B8 label=start
-c $C530
+C $C4CF,3 Draw message
+C $C4DA,3 Draw message
+C $C4E5,3 Draw message
+C $C4F0,3 Draw message
+C $C4FB,3 Draw message
+C $C506,3 Draw message
+C $C51C,3 Draw
+C $C51F,3 Updates Video-RAM from offline drawing buffer
+c $C530 Draws title screen and handles menu selection
+C $C53B,3 Draw message
+C $C546,3 Draw message
+C $C551,3 Draw message
+C $C55C,3 Draw message
+C $C567,3 Draw message
+C $C572,3 Draw message
+C $C57D,3 Draw message
+C $C5A7,3 Updates Video-RAM from offline drawing buffer
+C $C5C1,3 Fill BC bytes at HL address by zeros
+C $C6C0,3 => looks like new game after pressing ENTER in main game menu
 c $C6C3
 c $C6D2
 c $C6E4
@@ -442,14 +567,36 @@ c $C714 looks like new game after pressing ENTER in main game menu
 @ $C714 label=start_game
 N $C71F Reset score of both players
 @ $C71F label=reset_score
+C $C752,3 Fill BC bytes at HL address by zeros
 @ $C790 label=next_player
+C $C790,3 Fills offline color attributes of playscreen header
+C $C7A1,3 Prepare level and draw it to playscreen
 @ $C7A4 label=play_loop
+C $C7B8,3 Updates Video-RAM from offline drawing buffer
 @ $C7BD label=screen_updated
+C $C7C1,3 Updates area of personage from offscreen to screen
+C $C7C8,3 Updates area of personage from offscreen to screen
+C $C7CF,3 Updates area of personage from offscreen to screen
 @ $C7D2 label=no_personages_update
+C $C7D6,3 Redraw background of personage area to offscreen
+C $C7DD,3 Redraw background of personage area to offscreen
+C $C7E4,3 Redraw background of personage area to offscreen
+C $C7EA,3 Handle object impact
+C $C7FA,3 Single gameplay step of personage
+C $C801,3 Single gameplay step of personage
+C $C808,3 Single gameplay step of personage
+C $C810,3 => Countdown timer tick, handle time-out and player switch
+C $C831,3 Store size of personage image to image_size variable
+C $C861,3 Draws personage to offscreen
+C $C868,3 Draws personage to offscreen
+C $C86F,3 Draws personage to offscreen
+C $C8B5,3 => Countdown timer tick, handle time-out and player switch
 c $C8C6
 @ $C8C6 label=clear_offline_screen
 c $C8E1
 @ $C8E1 label=init_1
+C $C8ED,3 Draw
+C $C905,3 => Draw message
 c $C908
 c $C924 Draw message
 @ $C924 label=draw_message
@@ -458,10 +605,12 @@ R $C924 HL message address
 R $C924 B message length
 c $C933 Draws a message and set screen dirty flag
 @ $C933 label=draw_message_and_invalidate
+C $C933,3 Draw message
 c $C93C Fills offline color attributes of playscreen header
 @ $C93C label=fill_offscreen_header_color
 c $C960 Draws message at header of game screen
 @ $C960 label=draw_playscreen_header_message
+C $C968,3 => Draws a message and set screen dirty flag
 t $C96B Score constants as text
 @ $C96B label=score_50
 T $C96B,6,6 Value of 50
@@ -481,6 +630,47 @@ T $C98F,6,6 Value of 2000 to add to player's score if a new room is visited
 T $C995,6,6 Value of 3000
 c $C99B Add points to current player score
 @ $C99B label=increase_score
+C $C99B,2 Save registers
+C $C99D,3 DE = player-1 score address
+C $C9A0,7 Check active player, else use player 2
+C $C9A7,3 DE = player-2 score address
+C $C9AA,5 Save score low byte for hiscore compare
+C $C9AF,5 Save score high byte
+C $C9B4,3 Advance DE past unused digits
+C $C9B7,4 HL = points value, aligned
+C $C9BB,3 B=6 digits, C=carry=0
+C $C9BE,2 Add points digit to score digit
+C $C9C0,3 Remove ASCII bias, add carry
+C $C9C3,2 Clear carry
+C $C9C5,4 Check digit overflow (BCD)
+C $C9C9,4 Adjust digit, set carry
+C $C9CD,3 Store digit, step to next
+C $C9D0,2 Loop for 6 digits
+C $C9D2,3 B=6, DE=score start
+C $C9D5,3 HL=hiscore digits
+C $C9D8,2 Compare score digit to hiscore digit
+C $C9DA,4 Stop if score is lower or higher
+C $C9DE,2 Advance both pointers
+C $C9E0,2 Loop while digits equal
+C $C9E2,2 Equal: no new hiscore
+C $C9E4,3 Copy score digit into hiscore
+C $C9E7,3 Loop for remaining digits
+C $C9EA,3 Redraw score header
+C $C9ED,4 DE = life-bonus threshold
+C $C9F1,3 HL = new score value
+C $C9F4,3 Compare score to threshold
+C $C9F7,2 Skip bonus if equal
+C $C9F9,3 Check high digit
+C $C9FC,2 Skip if threshold crossed exactly
+C $C9FE,2 Combine digits
+C $CA00,2 Mask to digit
+C $CA02,4 Check digit range
+C $CA06,2 Adjust digit
+C $CA08,4 Bonus at digit 3
+C $CA0C,4 Bonus at digit 6
+C $CA10,4 Bonus at digit 9, else skip
+C $CA14,3 Award bonus life
+C $CA17,2 Restore registers
 R $C99B HL address of value to add to score
 N $C99B Also, updates hiscore, if current score is greater.
 @ $C9AA label=add_score_for_first_player
@@ -490,21 +680,50 @@ N $C99B Also, updates hiscore, if current score is greater.
 N $C9E4 Copy current score value to the high score
 @ $C9E4 label=new_hiscore
 @ $C9EA label=not_hiscore
+C $C9EA,3 Fills offline color attributes of playscreen header
 N $CA14 Score value is good enough to increase lifes number
 @ $CA14 label=great_score
+C $CA14,3 Increase player lifes
 @ $CA17 label=no_lifes_increase
 c $CA1A Increase player lifes
 @ $CA1A label=increase_player_lifes
+C $CA34,3 => Draws message at header of game screen
 c $CA37 Handle object impact
 R $CA37 DE Object address in playroom
 R $CA37 HL object handlers table
 @ $CA37 label=handle_object_impact
-c $CA46
+c $CA46 Countdown timer tick, handle time-out and player switch
+C $CA46,7 DE = countdown timer, compare to 00:00
+C $CA4D,6 Time's up: go to game-over
+C $CA53,9 Decrement timer digit, borrow across BCD digits
+C $CA5C,4 Store decremented timer
+C $CA60,3 Draws message at header of game screen
+C $CA63,5 Short delay (50 frames)
+C $CA68,6 Pick color table by remaining time
+C $CA6E,4 Use alt table below threshold
+C $CA72,3 Alt color table
+C $CA75,10 Load border/paper color bytes
+C $CA7F,6 Load flash bit
+C $CA85,4 Clear bright flag
+C $CA89,7 Skip player-switch if single-player
+C $CA90,8 Compute next player number (wrap 1<->2)
+C $CA98,2 Wrap to player 1
+C $CA9A,3 Store active player
+C $CA9D,8 Swap personage 1/2 structs
+C $CAA5,3 Swap personage bytes
+C $CAA8,8 Swap remaining player-1/2 state block
+C $CAB0,3 Swap bytes
+C $CAB3,3 Continue to next turn
 c $CAB6
 c $CAC0
+C $CACB,3 => Start point
 c $CACE
+C $CAD3,3 Draw message
+C $CADF,3 => Updates Video-RAM from offline drawing buffer
 c $CAE2
 c $CAF7
+C $CAF7,3 Return in HL address of personage's cell in playroom
+C $CAFA,3 Store size of personage image to image_size variable
 b $CB1C Data on Ninja personage
 @ $CB1C label=ninja_description
 B $CB1C,2,2
@@ -536,28 +755,28 @@ B $CB2D,1,1
 W $CB2E,4,4
 @ $CB32 label=ninja_images_refs
 w $CB32 Ninja state descriptions
-W $CB32,4,4 0
-W $CB36,4,4 1
-W $CB3A,4,4 2
-W $CB3E,4,4 3
-W $CB42,4,4 4
-W $CB46,4,4 5
-W $CB4A,4,4 6
-W $CB4E,4,4 7
-W $CB52,4,4 8
-W $CB56,4,4 9
-W $CB5A,4,4 10
-W $CB5E,4,4 11
-W $CB62,4,4 12
-W $CB66,4,4 13
-W $CB6A,4,4 14
-W $CB6E,4,4 15
-W $CB72,4,4 16
-W $CB76,4,4 17
-W $CB7A,4,4 18
-W $CB7E,4,4 19
-W $CB82,4,4 20
-W $CB86,4,4 21
+W $CB32,4,4 0 idle
+W $CB36,4,4 1 walking
+W $CB3A,4,4 2 jump rising
+W $CB3E,4,4 3 jump obstacle check
+W $CB42,4,4 4 walking bump
+W $CB46,4,4 5 kick/attack
+W $CB4A,4,4 6 jump apex
+W $CB4E,4,4 7 jump rising (fast)
+W $CB52,4,4 8 jump diagonal
+W $CB56,4,4 9 jump diagonal (advance)
+W $CB5A,4,4 10 jump landing
+W $CB5E,4,4 11 jump landing check
+W $CB62,4,4 12 falling
+W $CB66,4,4 13 climbing
+W $CB6A,4,4 14 climbing dismount
+W $CB6E,4,4 15 Empty action
+W $CB72,4,4 16 kick/attack recovery
+W $CB76,4,4 17 enter climbing
+W $CB7A,4,4 18 being hit, recoil
+W $CB7E,4,4 19 hit reaction
+W $CB82,4,4 20 recoil
+W $CB86,4,4 21 attack, melee hit
 c $CB8A Empty action handler
 N $CB8A Used for Bruce/Yamo state 15.
 b $CB8B Ninja sprite descriptions
@@ -596,28 +815,28 @@ B $CBCF,1,1
 W $CBD0,4,4
 w $CBD4 Green Yamo state descriptions
 @ $CBD4 label=sumoist_images_refs
-W $CBD4,4,4 0
-W $CBD8,4,4 1
-W $CBDC,4,4 2
-W $CBE0,4,4 3
-W $CBE4,4,4 4
-W $CBE8,4,4 5
-W $CBEC,4,4 6
-W $CBF0,4,4 7
-W $CBF4,4,4 8
-W $CBF8,4,4 9
-W $CBFC,4,4 10
-W $CC00,4,4 11
-W $CC04,4,4 12
-W $CC08,4,4 13
-W $CC0C,4,4 14
+W $CBD4,4,4 0 idle
+W $CBD8,4,4 1 walking
+W $CBDC,4,4 2 jump rising
+W $CBE0,4,4 3 jump obstacle check
+W $CBE4,4,4 4 walking bump
+W $CBE8,4,4 5 kick/attack
+W $CBEC,4,4 6 jump apex
+W $CBF0,4,4 7 jump rising (fast)
+W $CBF4,4,4 8 jump diagonal
+W $CBF8,4,4 9 jump diagonal (advance)
+W $CBFC,4,4 10 jump landing
+W $CC00,4,4 11 jump landing check
+W $CC04,4,4 12 falling
+W $CC08,4,4 13 climbing
+W $CC0C,4,4 14 climbing dismount
 W $CC10,4,4 15 Empty action
-W $CC14,4,4 16
-W $CC18,4,4 17
-W $CC1C,4,4 18
-W $CC20,4,4 19
-W $CC24,4,4 20
-W $CC28,4,4 21
+W $CC14,4,4 16 kick/attack recovery
+W $CC18,4,4 17 enter climbing
+W $CC1C,4,4 18 being hit, recoil
+W $CC20,4,4 19 hit reaction
+W $CC24,4,4 20 recoil
+W $CC28,4,4 21 attack, melee hit
 b $CC2C Green Yamo sprite descriptions
 B $CC2C
 B $CC34
@@ -660,28 +879,28 @@ B $CCB6,1,1
 W $CCB7,4,4
 w $CCBB Bruce Lee state descriptions
 @ $CCBB label=bruce_image_refs
-W $CCBB,4,4 0
-W $CCBF,4,4 1
-W $CCC3,4,4 2
-W $CCC7,4,4 3
-W $CCCB,4,4 4
-W $CCCF,4,4 5
-W $CCD3,4,4 6
-W $CCD7,4,4 7
-W $CCDB,4,4 8
-W $CCDF,4,4 9
-W $CCE3,4,4 10
-W $CCE7,4,4 11
-W $CCEB,4,4 12
-W $CCEF,4,4 13
-W $CCF3,4,4 14
+W $CCBB,4,4 0 idle
+W $CCBF,4,4 1 walking
+W $CCC3,4,4 2 jump rising
+W $CCC7,4,4 3 jump obstacle check
+W $CCCB,4,4 4 walking bump
+W $CCCF,4,4 5 kick/attack
+W $CCD3,4,4 6 jump apex
+W $CCD7,4,4 7 jump rising (fast)
+W $CCDB,4,4 8 jump diagonal
+W $CCDF,4,4 9 jump diagonal (advance)
+W $CCE3,4,4 10 jump landing
+W $CCE7,4,4 11 jump landing check
+W $CCEB,4,4 12 falling
+W $CCEF,4,4 13 climbing
+W $CCF3,4,4 14 climbing dismount
 W $CCF7,4,4 15 Empty action
-W $CCFB,4,4 16
-W $CCFF,4,4 17
-W $CD03,4,4 18
-W $CD07,4,4 19
-W $CD0B,4,4 20
-W $CD0F,4,4 21
+W $CCFB,4,4 16 kick/attack recovery
+W $CCFF,4,4 17 enter climbing
+W $CD03,4,4 18 being hit, recoil
+W $CD07,4,4 19 hit reaction
+W $CD0B,4,4 20 recoil
+W $CD0F,4,4 21 attack, melee hit
 b $CD13 Bruce Lee sprite descriptions
 @ $CD13 label=bruce_image_descriptions
 B $CD13,8,8 2x3 + 6 bytes
@@ -695,32 +914,102 @@ B $CD63
 B $CD6E
 B $CD76
 B $CD91
-c $CD9B Personage action handler 0
-c $CE48 Personage action handler 1
-c $CF04 Personage action handler 2
-c $CF18 Personage action handler 3
-c $CF2D Personage action handler 4
-c $CF59 Personage action handler 5
-c $CFB3 Personage action handler 6
-c $CFBD Personage action handler 7
-c $CFCE Personage action handler 8
-c $CFF8 Personage action handler 9
+c $CD9B Personage action handler 0: idle, decode input and dispatch new state
+C $CDA6,3 Compares IX and HL for equality
+C $CDD6,3 Compares IX and HL for equality
+C $CDE9,3 Check for obstacle ahead of personage
+C $CE2D,3 Compares IX and HL for equality
+c $CE48 Personage action handler 1: walking, continue movement and re-decode input
+C $CE6E,3 Compares IX and HL for equality
+C $CEB5,3 Compares IX and HL for equality
+C $CEED,3 Compares IX and HL for equality
+c $CF04 Personage action handler 2: jump, rising, check for floor landing
+c $CF18 Personage action handler 3: jump, obstacle collision check for all personages
+c $CF2D Personage action handler 4: walking, advance one column, bump off obstacle
+c $CF59 Personage action handler 5: kick/attack, execute swing, resolve hit
+C $CF70,3 Check hit threshold, kill personage and award points
+C $CF7B,3 Compares IX and HL for equality
+c $CFB3 Personage action handler 6: jump, apex reached, prepare landing
+c $CFBD Personage action handler 7: jump, rising motion (2 rows per tick)
+c $CFCE Personage action handler 8: jump, diagonal motion via frame table, bump off obstacle
+c $CFF8 Personage action handler 9: jump, diagonal motion, advance column
 c $D007
 b $D018
-c $D023 Personage action handler 10
-c $D032 Personage action handler 11
-c $D03F Personage action handler 12
-c $D063 Personage action handler 13
-c $D10D Personage action handler 14
-c $D112 Personage action handler 16
-c $D15D Personage action handler 17
-c $D16F Personage action handler 18
-c $D198 Personage action handler 19
-c $D1A2 Personage action handler 20
-c $D1D2 Personage action handler 21
-c $D1EB
+c $D023 Personage action handler 10: jump, landing, step forward one column
+c $D032 Personage action handler 11: jump, landing, check floor and resume walking
+c $D03F Personage action handler 12: falling, descend via frame table, check rope catch
+c $D063 Personage action handler 13: climbing, handle up/down/left/right input on rope/ladder
+C $D063,4 Save input/state byte (IX+2)
+C $D067,5 Branch if not on rope/ladder (D405 check)
+C $D06C,5 Check input code == 8 (down)
+C $D071,2 Else go handle other input
+C $D073,5 Check animation frame >= 4
+C $D078,2 Skip climb-step call if so
+C $D07A,5 Check climb blocked, clear A
+C $D07F,2 Skip frame reload if blocked
+C $D081,3 Reload animation frame
+C $D084,4 Wrap frame past 4
+C $D088,3 Step up one row
+C $D08B,2 Mask frame to climb-cycle range
+C $D08D,3 Store new animation frame
+C $D090,7 Toggle facing/parity bit
+C $D097,3 Store toggled parity
+C $D09A,4 Switch to action handler 8
+C $D09E,4 Restore state, dispatch next handler
+C $D0A2,4 Check input code == 4 (up)
+C $D0A6,3 Store size of personage image to image_size variable
+C $D0A9,4 Row + image size sum
+C $D0AD,4 Stop climbing at top row
+C $D0B1,5 Advance climb frame
+C $D0B6,5 Mask and store frame
+C $D0BB,2 Continue if mid-cycle
+C $D0BD,3 Step up one row
+C $D0C0,2 Continue dispatch
+C $D0C2,4 Restore state, load frame
+C $D0C6,4 Clear animation frame
+C $D0CA,3 Skip row step if frame was zero
+C $D0CD,3 Step up one row
+C $D0D0,3 Return with handler-11 result
+C $D0D3,5 Check input code == 1 (left)
+C $D0D8,2 Else check other input
+C $D0DA,3 Restore state, compare to 0Fh
+C $D0DD,2 Skip obstacle check if already 0Fh
+C $D0DF,5 Check obstacle to left
+C $D0E4,4 Blocked: set state 0Fh
+C $D0E8,3 Step left one column
+C $D0EB,3 Set state 0Eh, save
+C $D0EE,3 Continue dispatch
+C $D0F1,5 Check input code == 2 (right)
+C $D0F6,3 Restore state, compare to 0Fh
+C $D0F9,2 Skip obstacle check if already 0Fh
+C $D0FB,5 Check obstacle to right
+C $D100,5 Blocked: set state 0Fh, step right
+C $D105,2 Continue
+C $D107,6 No input: switch to handler 8, return
+c $D10D Personage action handler 14: climbing, dismount entry (falls into handler 13)
+c $D112 Personage action handler 16: kick/attack, recovery animation, award points on hit
+C $D135,3 Compares IX and HL for equality
+C $D151,3 Add points to current player score
+c $D15D Personage action handler 17: enter climbing, snap to ladder tile
+c $D16F Personage action handler 18: being hit, recoil away, escalate to knockback at high hit count
+C $D174,3 => Personage action handler 20
+c $D198 Personage action handler 19: hit reaction, apply damage and knockback flag
+C $D198,3 Check hit threshold, kill personage and award points
+c $D1A2 Personage action handler 20: recoil, step back after being blocked, resume walking
+c $D1D2 Personage action handler 21: attack, detect melee hit on all personages, trigger hurt state
+C $D1D5,3 Detect melee hit on adjacent personage and apply damage
+C $D1DB,3 Detect melee hit on adjacent personage and apply damage
+C $D1E1,3 Detect melee hit on adjacent personage and apply damage
+c $D1EB Check hit threshold, kill personage and award points
+C $D1F5,3 Compares IX and HL for equality
+C $D20C,3 Compares IX and HL for equality
+C $D219,3 Compares IX and HL for equality
+C $D224,3 Add points to current player score
+C $D230,3 Compares IX and HL for equality
+C $D245,3 Add points to current player score
 c $D24E Single gameplay step of personage
 @ $D24E label=personage_play_step
+N $D24E Called once per frame for each of the 3 personage structs ($CB1C, $CBBE, $CCA5 - Bruce and two enemies), same as the Atari port's shared UpdateState looping actors 0-2. (IX+0) holds the current action-handler number (1 of 22, see #R$CD9B), dispatched via the table at #R$CCBB - same role as ActState. (IX+4) is the per-state animation/delay counter (ActStateTime), (IX+3) is the facing bit (ActFace), (IX+0B) is the decoded input direction (Joystick1,X).
 C $D254,1 Personage defeated and dying
 C $D25C,1 Personage started to dying
 N $D264 Personage already dying for a while
@@ -729,12 +1018,16 @@ N $D26A When personage defeated he is flashing for a while
 @ $D26A label=visible_flash_stage
 @ $D26D label=invisible_flash_stage
 @ $D271 label=defeate_sound_not_muted
+C $D274,3 Compares IX and HL for equality
 C $D279,4 When sound is not muted, flash only from 4bh to 64h steps (shorter flashing interval).
 N $D285 Step for healthy and alive personage
 @ $D285 label=normal_play_step
 C $D288,1 Personage is delayed and does nothing
 C $D289,3 Reload delay cycle for personage next step
+C $D293,3 => Return personage from the dead
+C $D296,3 Returns desired action for given personage
 C $D299,3 Store personage action to personage description
+C $D29C,3 Look up objects at personage location
 C $D29F,3 Get personage image index
 C $D2A2,1 Exclude "not alive" zero value
 C $D2A4,1 4 bytes per image reference
@@ -758,15 +1051,30 @@ C $D2CE,2 Return personage back to bottom of the screen
 c $D2EA
 c $D2EB Return personage from the dead
 @ $D2EB label=revive_personage
+C $D2EE,3 Compares IX and HL for equality
 @ $D306 label=do_revive
+C $D329,3 Compares IX and HL for equality
 c $D332
+C $D332,3 Return in HL address of personage's cell in playroom
+C $D335,3 Store size of personage image to image_size variable
 c $D353
+C $D35A,3 Return in HL address of personage's cell in playroom
+C $D35D,3 Store size of personage image to image_size variable
 c $D371
-c $D375
+c $D375 Detect melee hit on adjacent personage and apply damage
+C $D377,3 Compares IX and HL for equality
+C $D3D3,3 Compares IX and HL for equality
+C $D3F1,3 Compares IX and HL for equality
 c $D405
+C $D405,3 Return in HL address of personage's cell in playroom
+C $D408,3 Store size of personage image to image_size variable
 c $D43B
 c $D447
-c $D456
+c $D456 Check for obstacle ahead of personage (facing-direction aware)
+C $D472,3 Return in HL address of personage's cell in playroom
+C $D475,3 Store size of personage image to image_size variable
+C $D48F,3 Return in HL address of personage's cell in playroom
+C $D492,3 Store size of personage image to image_size variable
 c $D4A3 Return in HL address of personage's cell in playroom
 @ $D4A3 label=get_personage_room_addr
 R $D4A3 IX address of personage description
@@ -785,6 +1093,8 @@ c $D4E0 Compares IX and HL for equality
 @ $D4E0 label=compare_IX_HL
 c $D4EC Look up objects at personage location
 @ $D4EC label=review_personage_location
+C $D4EC,3 Return in HL address of personage's cell in playroom
+C $D4EF,3 Store size of personage image to image_size variable
 C $D4F6,1 Walk over width and height of the image
 N $D4F8 Review personage location in playroom
 N $D4F8 for various objects presence
@@ -796,9 +1106,15 @@ C $D515,1 HL contains address of next row of room data behind personage
 @ $D51A label=personage_on_17_object
 N $D524 Dangerous object detected at personage location
 @ $D524 label=danger_object
+C $D528,3 check collision between personage and an playroom object
 N $D539 Key, lamp, etc.
 N $D539 This object should be taken by Bruce
 @ $D539 label=collectable_object
+C $D540,3 Compares IX and HL for equality
+C $D547,3 check collision between personage and an playroom object
+C $D54F,3 Add points to current player score
+C $D575,3 Draw personage's action-target tiles from will table
+C $D57C,3 Handle object impact
 @ $D57F label=skip_object
 b $D586
 B $D586,1,1
@@ -807,12 +1123,65 @@ c $D587 check collision between personage and an playroom object
 C $D588,1 Get playroom object code
 C $D58C,1 Multiply it on 8
 C $D594,3 Get personage Y offset
-c $D5BB
+c $D5BB Draw personage's action-target tiles from will table
+C $D5BB,6 Save personage index and coords
+C $D5C1,4 L = index*2, H = table page
+C $D5C5,3 DE = will-table entry pointer
+C $D5C8,4 HL = pointer + 6 (action-list offset)
+C $D5CC,4 DE = action-list address
+C $D5D0,4 DE = saved coords, HL = action-list pointer
+C $D5D4,3 A = list terminator/entry byte
+C $D5D7,1 Return if end of list
+C $D5D8,4 Check if entry is default (no coord match)
+C $D5DC,5 Save default entry, load match X
+C $D5E1,4 Compare entry X to target
+C $D5E5,2 Compare entry Y to target
+C $D5E7,4 Advance to next list entry, loop
+C $D5EB,3 HL = matched (or default) entry
+C $D5EE,5 Mask entry's action-mask bits
+C $D5F3,1 Store masked action mask
+C $D5F4,4 B = current game state/level
+C $D5F8,4 Compare saved personage index to state
+C $D5FC,1 Return if mismatch
+C $D5FD,4 DE = target coord pointer
+C $D601,3 Save list pointer, HL = target coord
+C $D604,4 Draw target tile, restore list pointer
+C $D608,5 Advance, loop while more targets
 c $D60E
-c $D626
+c $D626 Draw single scene tile to screen and offscreen buffer
+C $D626,6 Rotate row bits into low nibble of H
+C $D62C,5 Fold coord bits into scene column
+C $D631,4 Combine row/col, mask row
+C $D635,2 Save scene tile coord
+C $D637,4 HL = scene-map tile address
+C $D63B,1 A = tile element index
+C $D63C,4 HL = scene overlay-map tile address
+C $D640,2 Store tile index to overlay map
+C $D642,5 Look up drawn-element index
+C $D647,5 HL = screen attribute address
+C $D64C,1 Store element index
+C $D64D,4 Shift to shadow/buffer attribute area
+C $D651,3 Store to shadow attribute area
+C $D654,4 HL = personage image data pointer
+C $D658,3 Multiply pointer by 8
+C $D65B,2 Add offset, A = row
+C $D65D,3 Rotate row into high bits
+C $D660,3 B = screen third selector
+C $D663,3 D = screen high byte
+C $D666,3 E = screen low byte, row counter A=8
+C $D669,4 Copy pixel byte to screen + shadow
+C $D66D,3 Advance to next screen third row
+C $D670,2 Restore row counter
+C $D672,2 Loop for 8 pixel rows
 c $D675 Returns desired action for given personage
 R $D675 IX address of personage description
 @ $D675 label=get_personage_action_will
+C $D678,3 Compares IX and HL for equality
+C $D688,3 Compares IX and HL for equality
+C $D726,3 Check for obstacle ahead of personage
+C $D74E,3 Compares IX and HL for equality
+C $D771,3 Compares IX and HL for equality
+C $D79D,3 Check for obstacle ahead of personage
 b $D7AC
 N $D7FC Table of handlers of object with 17h
 N $D7FC code for each room number
@@ -822,20 +1191,53 @@ c $D824
 c $D825 Draw
 @ $D825 label=draw
 c $D845
+C $D853,3 => Draw personage's action-target tiles from will table
 c $D856
 c $D888
 c $D898
 c $D8D4
 c $D902
+C $D925,3 => Draw personage's action-target tiles from will table
 c $D928
 c $D938
 c $D948
 c $D958
 c $D97D
-c $D98D
+c $D98D Award points for picking up weapon, then flash animation
+C $D990,3 Add points to current player score
+C $D993,3 Updates area of personage from offscreen to screen
+C $D9A0,3 Draws personage to offscreen
+C $D9A5,3 Updates Video-RAM from offline drawing buffer
 c $D9CD
 c $D9D7
-c $D9E7
+C $D9DE,3 Handle wall-crack hit counter and spread cracks
+c $D9E7 Handle wall-crack hit counter and spread cracks
+C $D9E7,4 Increment hit counter, compare to threshold 20
+C $D9EB,1 Return if below threshold
+C $D9EC,2 Save counter pointer and coords
+C $D9EE,5 DE = coords, HL = target list pointer
+C $D9F3,4 Check counter == 20
+C $D9F7,2 A = tile index for stage 1 crack
+C $D9F9,3 Draw crack tile
+C $D9FC,3 Restore and return
+C $D9FF,4 Check counter == 50
+C $DA03,4 A = tile index for stage 2 crack, draw
+C $DA07,4 Check counter == 55
+C $DA0B,3 Draw final collapse tile
+C $DA0E,3 Clear target cell
+C $DA11,2 Restore and return
+C $DA13,3 DE = spread pattern A
+C $DA16,4 Check counter == 25
+C $DA1A,4 Check counter == 40
+C $DA1E,3 DE = spread pattern B
+C $DA21,4 Check counter == 30
+C $DA25,3 DE = spread pattern C
+C $DA28,4 Check counter == 45, else return
+C $DA2C,3 Save coords, move to top-left neighbour
+C $DA2F,9 Spread crack to top row (3 cells)
+C $DA38,2 Restore coords, move to left neighbour
+C $DA3A,9 Spread crack to middle/bottom row (3 cells)
+C $DA43,3 Return via shared exit
 c $DA46
 b $DA51
 t $DA5D
@@ -845,34 +1247,202 @@ c $DA63 Tricky handler of object with 17h code for some rooms
 c $DA94
 c $DAAD
 c $DAB2
+C $DABE,3 Mirror attribute area to screen and check personage/object bounds
 c $DAC4
 c $DACC
+C $DAD8,3 Mirror attribute area to screen and check personage/object bounds
 c $DADE
 b $DAF9
 c $DAFF
-c $DB23
+C $DB0B,3 Mirror attribute area to screen and check personage/object bounds
+C $DB14,3 Mirror attribute area to screen and check personage/object bounds
+C $DB1D,3 Mirror attribute area to screen and check personage/object bounds
+c $DB23 Redraw cracked-wall tiles after level reset
+C $DB23,5 Skip crack redraw if already flagged
+C $DB28,9 Redraw crack tile (repeated below for other tiles)
+C $DB37,3 Mirror attribute area to screen and check personage/object bounds
+C $DB40,3 Mirror attribute area to screen and check personage/object bounds
+C $DB49,3 Mirror attribute area to screen and check personage/object bounds
+C $DB52,3 Mirror attribute area to screen and check personage/object bounds
+C $DB5B,3 Mirror attribute area to screen and check personage/object bounds
+C $DB64,3 Mirror attribute area to screen and check personage/object bounds
+C $DB6D,3 Mirror attribute area to screen and check personage/object bounds
+C $DB76,3 Mirror attribute area to screen and check personage/object bounds
+C $DB7F,3 Mirror attribute area to screen and check personage/object bounds
+C $DB82,3 HL = redraw-counter flag
+C $DB85,6 Skip further redraw below threshold
+C $DB8B,2 Clear redraw counter
+C $DB8D,6 IX = default pattern table
+C $DB93,7 Check level, else use default pattern
+C $DB9A,4 IX = alt pattern table
+C $DB9E,6 Draw pattern, restore, return
 b $DBA4
 c $DBB0
 c $DBEC
 c $DBF2
+C $DBFD,3 Mirror attribute area to screen and check personage/object bounds
 c $DC1D
-c $DC27
+c $DC27 Handle wall collapse and bonus-life award
+C $DC27,4 HL = wall-hit counter
+C $DC2B,3 Skip if not hit yet
+C $DC2E,4 Check for max-hit marker
+C $DC32,2 Clear counter
+C $DC34,3 HL = 0 (reset value)
+C $DC37,3 Clear wall-crack table (repeated below for other walls)
+C $DC46,5 Flag redraw needed
+C $DC4B,3 Continue
+C $DC4E,4 Clear busy flag, test top bit
+C $DC52,2 Return if clear
+C $DC54,5 Test collapse bit, HL = collapse image
+C $DC59,2 Reset walls if collapsing
+C $DC5B,5 Check score digit against threshold
+C $DC60,2 Skip if below
+C $DC62,5 Check other score digit
+C $DC67,2 Skip if mismatch
+C $DC69,4 HL = wall-hit counter
+C $DC6D,4 Skip if counter exhausted
+C $DC71,2 Decrement counter
+C $DC73,3 Increase player lifes
+C $DC76,2 Loop: reset walls again
 c $DC78
 b $DCBE
 c $DCEE
 b $DD07
-c $DD0D
+c $DD0D Animate wall-crumble tile
+C $DD0D,6 Skip if no active crumble timer
+C $DD13,4 Advance timer
+C $DD17,3 Return before timer expires
+C $DD1A,4 HL = crumble tile coord
+C $DD1E,4 Draw current crumble frame
+C $DD22,3 Check row against limit
+C $DD25,4 Stop animating past limit
+C $DD29,4 Advance row, load column step
+C $DD2D,2 Advance column by step
+C $DD2F,3 Store new crumble coord
+C $DD32,5 Save current image pointer
+C $DD37,3 DE = crumble frame image data
+C $DD3A,5 Point to crumble frame, A=tile 0
+C $DD3F,4 Draw crumble tile, restore pointer
+C $DD43,4 Restore image pointer
+C $DD47,1 Return
+C $DD48,6 Reset crumble coord to start
+C $DD4E,5 A = time value, B = -1
+C $DD53,4 Check first threshold
+C $DD57,3 Advance step, check second threshold
+C $DD5A,3 Advance step if past threshold
+C $DD5D,4 Store column step
+C $DD61,5 Restart crumble timer
+C $DD66,1 Return
 c $DD67
 c $DDA8
+C $DDBD,3 Draw single scene tile to screen and offscreen buffer
+C $DDED,3 Draw single scene tile to screen and offscreen buffer
 c $DDFF
 c $DE38
 c $DE41
-c $DE47
+c $DE47 Mirror attribute area to screen and check personage/object bounds
+C $DE47,2 A=1 (draw-mode flag)
+C $DE49,4 Clear bright/flash bits of H
+C $DE4D,3 Store draw-mode flag
+C $DE50,3 Load saved attribute state
+C $DE53,2 Test top bit
+C $DE55,3 Skip alt path if clear
+C $DE58,3 Else use mirrored routine
+C $DE5B,2 Save row/element counters
+C $DE5D,2 Save inner counters (loop entry)
+C $DE5F,3 Load bytes D,E from two rows
+C $DE62,3 H = attribute row low bound
+C $DE65,3 Load byte A, store E
+C $DE68,6 Rotate bytes down two rows
+C $DE6E,6 Rotate bytes down two more rows
+C $DE74,6 Rotate bytes down two more rows
+C $DE7A,4 Store last byte, advance column, loop 8 columns
+C $DE7E,3 Restore counters, decrement row-block count
+C $DE81,2 Done after 5 blocks
+C $DE83,4 Advance to next attribute third
+C $DE87,2 Continue if no wrap
+C $DE89,4 Wrap to next attribute row
+C $DE8D,2 Continue
+C $DE8F,2 Restore saved coords
+C $DE91,3 Fold coords into scene-map tile address
+C $DE94,4 IX = personage 1 struct
+C $DE98,3 Check/push personage 1 out of area
+C $DE9B,4 IX = personage 2 struct
+C $DE9F,3 Check/push personage 2 out of area
+C $DEA2,4 IX = weapon/object struct, fall into check below
+C $DEA6,4 Skip if object not in area
+C $DEAA,4 Skip if fall blocked
+C $DEAE,7 Advance object's fall frame
+C $DEB5,3 Store new fall frame
+C $DEB8,3 Return if mid fall-cycle
+C $DEBB,3 Step object down one row
+C $DEBE,5 Check row against floor line
+C $DEC3,1 Return if not yet at floor
+C $DEC4,8 Clamp row to floor, clear fall frame
 c $DECD
 c $DEDD
-c $DF11
+C $DEE8,3 Store size of personage image to image_size variable
+c $DF11 Mirror pixel area to screen and check personage/object bounds
+C $DF11,2 Save row/element counters
+C $DF13,2 Save inner counters (loop entry)
+C $DF15,3 H = attribute row low bound
+C $DF18,3 Load bottom byte E
+C $DF1B,4 Load byte D, mask to top row
+C $DF1F,2 Load top byte A
+C $DF21,6 Rotate bytes down two rows
+C $DF27,6 Rotate bytes down two more rows
+C $DF2D,6 Rotate bytes down two more rows
+C $DF33,3 Store last byte, advance column
+C $DF36,2 Loop for 8 attribute columns
+C $DF38,3 Restore counters, decrement row-block count
+C $DF3B,2 Done after 5 blocks
+C $DF3D,4 Advance to next attribute third
+C $DF41,2 Continue if no wrap
+C $DF43,4 Wrap to next attribute row
+C $DF47,2 Continue
+C $DF49,2 Restore saved coords
+C $DF4B,3 Fold coords into scene-map tile address
+C $DF4E,4 IX = personage 1 struct
+C $DF52,3 Check/push personage 1 out of area
+C $DF55,4 IX = personage 2 struct
+C $DF59,3 Check/push personage 2 out of area
+C $DF5C,4 IX = weapon/object struct, fall into check below
+C $DF60,4 Skip if object not in area
+C $DF64,6 Check row + height against floor
+C $DF6A,1 Return if below floor line
+C $DF6B,7 Advance object's fall frame
+C $DF72,3 Store new fall frame
+C $DF75,1 Return if mid fall-cycle
+C $DF76,4 Step object down one row
 c $DF7A
-c $DF9D
+C $DF83,3 Handle single obstacle/collision step for personage or object
+C $DF8D,3 Handle single obstacle/collision step for personage or object
+C $DF97,3 Handle single obstacle/collision step for personage or object
+c $DF9D Handle single obstacle/collision step for personage or object
+C $DF9D,3 Return if no obstacle byte
+C $DFA0,6 Skip if state busy
+C $DFA6,4 Countdown state timer, return
+C $DFAA,5 Check sub-state < 4
+C $DFAF,1 Return if not yet
+C $DFB0,4 Clear sub-state
+C $DFB4,6 Check direction flag
+C $DFBA,5 Load next map byte into (IX+3)
+C $DFBF,5 A = state 4, continue
+C $DFC4,6 Compare, else A = state 5
+C $DFCA,2 Save coord, D = map byte
+C $DFCC,4 E = stored byte, swap to HL
+C $DFD0,3 Draw tile
+C $DFD3,4 Restore coord, advance stored index
+C $DFD7,3 HL = length byte
+C $DFDA,5 Compare to stored index
+C $DFDF,2 Load next state byte
+C $DFE1,3 Store new state
+C $DFE4,4 Clear direction flag
+C $DFE8,1 Return
+C $DFE9,4 Rewind, A = state 4
+C $DFED,3 Store state
+C $DFF0,4 DE = map/stored bytes
+C $DFF4,4 Draw tile, return
 b $DFF8
 b $E000 Buffer for offline drawing
 N $E000 The offline screen buffer mirrors the ZX Spectrum video memory layout starting at $E000 (pixels $E000-F7FF, attributes $F800-FAFF).

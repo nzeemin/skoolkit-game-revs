@@ -131,7 +131,7 @@ Volume: about 3500 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
-Status: just started (28K .ctl file).
+Status: just started (54K .ctl file).
 Based on great work done by Anatoly Vdovichev.
 
 

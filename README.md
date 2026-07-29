@@ -159,3 +159,15 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/elite128-zx/elite/
 
 Status: Have pretty good progress (278K .ctl file).
 Based on colossal work done by LW.
+
+
+## Terramex (ZX Spectrum)
+<img src="terramex-zx/terramex/images/scr/Menu.png" align="right" style="padding:8">
+
+Original: for ZX Spectrum, 1985, Bug-Byte Premiere / Teque Software Development.
+
+Volume: about 4800 code instructions.
+
+Browse: https://nzeemin.github.io/skoolkit-game-revs/terramex-zx/terramex/
+
+Status: Work in progress (109K .ctl file).

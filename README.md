@@ -49,7 +49,7 @@ Volume: about 8300 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
-Status: Not finished, but have a good progress (108K .ctl file).
+Status: Not finished, but have a good progress (111K .ctl file).
 
 
 ## Hydrofool (ZX Spectrum)
@@ -131,7 +131,7 @@ Volume: about 3700 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
-Status: Work in progress (72K .ctl file).
+Status: Work in progress (74K .ctl file).
 Based on great work done by Anatoly Vdovichev.
 
 
@@ -171,3 +171,14 @@ Volume: about 4800 code instructions.
 Browse: https://nzeemin.github.io/skoolkit-game-revs/terramex-zx/terramex/
 
 Status: Work in progress (109K .ctl file).
+
+
+## Flying Shark (ZX Spectrum)
+
+Original: for ZX Spectrum, 1987, Firebird / Graftgold.
+
+Volume: about 6900 code instructions.
+
+Browse: https://nzeemin.github.io/skoolkit-game-revs/flyingshark-zx/flyingshark/
+
+Status: Work in progress (103K .ctl file).

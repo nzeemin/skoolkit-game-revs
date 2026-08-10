@@ -37,6 +37,16 @@ def main():
             titles[a] = m.group(2)
     c_starts.sort()
 
+    data_starts = []
+    data_titles = {}
+    for l in ctl_lines:
+        m = re.match(r'^([bgistuw]) \$([0-9A-Fa-f]{4}) ?(.*)', l)
+        if m:
+            a = int(m.group(2), 16)
+            data_starts.append(a)
+            data_titles[a] = m.group(3)
+    data_starts.sort()
+
     block_type_counts = {}
     for l in ctl_lines:
         m = re.match(r'^([bcgistuw]) \$[0-9A-Fa-f]{4}', l)
@@ -62,6 +72,14 @@ def main():
         if m:
             c_line_addrs.add(int(m.group(1), 16))
 
+    r_line_addrs = set()
+    r_line_count = 0
+    for l in ctl_lines:
+        m = re.match(r'^R \$([0-9A-Fa-f]{4})', l)
+        if m:
+            r_line_addrs.add(int(m.group(1), 16))
+            r_line_count += 1
+
     all_starts = []
     for l in ctl_lines:
         m = re.match(r'^[bcgistuw] \$([0-9A-Fa-f]{4})', l)
@@ -83,6 +101,7 @@ def main():
         return sum(1 for a in instr_addrs if lo <= a < hi)
 
     titled = sum(1 for a in c_starts if titles.get(a, '').strip())
+    data_titled = sum(1 for a in data_starts if data_titles.get(a, '').strip())
     labeled = sum(1 for a in c_starts if a in label_addrs)
     nlined = sum(1 for a in c_starts if a in n_addrs)
 
@@ -106,6 +125,9 @@ def main():
     print(f"  labeled (@label=):     {labeled} ({len(c_starts)-labeled} unlabeled)")
     print(f"  with N-line:           {nlined} ({len(c_starts)-nlined} without)")
     print(f"Addrs with C-line:       {len(c_line_addrs)}")
+    print(f"R-lines (input regs):    {r_line_count} across {len(r_line_addrs)} routines")
+    print(f"Data blocks:             {len(data_starts)}")
+    print(f"  titled:                {data_titled} ({len(data_starts)-data_titled} without a title)")
     print(f"Total instructions:      {total_instr}")
     print(f"Avg instructions/routine:{total_instr/len(c_starts):.1f}")
 

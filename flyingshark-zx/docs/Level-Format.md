@@ -151,6 +151,78 @@ Each entry `[trigger, D, cmd]`:
 confirming this is the enemy-scheduling routine. `$9BA4` (the level index /
 progress) is advanced here and also set by `$A4E7`.
 
+### Formation-tag spawning — `$BA5F`
+
+The `other` timeline command (a formation tag, held in `C`) resolves through
+three lookup tables before an object is actually spawned:
+
+1. `C` is masked to `C & $3F` and indexed into **`$5B29`** (44 populated
+   entries, strictly ascending `$00-$FB`) — a formation-tag → group-index
+   table.
+2. That group index selects a 2-byte entry in **`$5CF4`** — the per-group spawn
+   budget: byte 0 is the max object count to spawn this call, clamped against
+   the remaining wave counter `$9D18`; byte 1's role is not yet confirmed.
+3. `$BA5F` pops that many objects off the free-object list (`$9D1C`) via an
+   SP-trick, and initializes each from a spawn-template table at **`$5B55`**
+   (`index*9 + $5B55`, 9 bytes/entry).
+
+**Spawn-template fields** (confirmed by matching each self-modified write
+target to its instruction operand in `$BB62`'s init block):
+
+| Byte | Destination | Notes |
+|------|-------------|-------|
+| 0 | `IX+$05` | |
+| 1 | `IX+$12` | |
+| 2 | `IX+$1A` | |
+| 3 | `IX+$1B` | + difficulty offset (`$9C41`), clamped to `$FF` |
+| 4 | `IX+$11` | |
+| 5,6 | `IX+$02/$03` | little-endian, **not a code pointer** — see below |
+| 7,8 | — | little-endian — a **fixed-slot address**: `$9D1E`, `$9D24`, or `$9D2A` (3 of `$B730`'s 4 persistent object slots; `$9D30` never observed here) |
+
+**`IX+$02/$03` is a record pointer, not executable code.** It looks
+address-shaped (`$6Bxx` range) and was initially assumed to be a "per-frame
+handler", but the raw bytes at those addresses don't decode as coherent Z80
+(random `CP`/`XOR`/`RET PO`/`LD (BC),A` with no control flow). Checking the
+values against `$6B42`'s 17-byte descriptor-record table (used by `$7D98`'s
+title-screen decoder, record `n` at `$6B42 + 17*n`) resolves it: 6 of the 10
+spawn templates' values land **exactly** on that grid — `$6BCA`=record 8,
+`$6BDB`=record 9, `$6B64`=record 2, `$6B86`=record 4, `$6BA8`=record 6,
+`$6B75`=record 3 — and `$C559`'s object-init default is `$6B42` itself
+(record 0). `$6B42`'s own record field at offset `$02/$03` is documented as
+something `$7DC9` *writes* at runtime (a decoded graphics sub-pointer), not
+fixed code, which fits: `IX+$02/$03` is most likely an index/pointer into a
+shared state-descriptor record format, read as data by an as-yet-unlocated
+per-object routine — not called as a handler. The remaining ~4 values (and
+`$C5D2`'s `$6BF3`, which does *not* land on the grid) are unconfirmed.
+
+The fixed-slot address (bytes 7/8) is used twice:
+- `$BB62` reads **one byte** from it to index the movement-script offset table
+  `$5B00` (see below) — so the spawned object's script is chosen by a *live*
+  value at the slot, not a template constant.
+- After all objects for this call are spawned, a **word** at that address is
+  read, swapped via `EX (SP),HL`, and written back — apparently linking the
+  slot to the newly-spawned object(s); the exact mechanism isn't fully traced.
+
+(Template byte 1 happens to land on `$5B56`, the same literal address written
+directly as a "screen/timing poke" by `$A612`'s config word `$0A` and timeline
+command `$FB` — unrelated dual use of that address, not a field alias.)
+
+### Movement-script bytecode pool — `$5B00` / `$5BAF`
+
+`$5BAF` is one continuous stream of movement-script bytecode in
+`$B8F9`/`$B920`'s format (bit 7 set = wait byte; else bits 0-2 select one of 8
+opcodes via `$A076`/`$A082`, bits 3-6 are the parameter) — **not** an array of
+fixed-size records. `$5B00` (41 ascending entries, `$00-$89`) gives each
+script's entry point as a half-byte-offset into the pool (doubled at runtime,
+`$5BAF + 2*value`), so a single table byte can address the whole ~325-byte
+pool and several spawns can share one script by indexing the same `$5B00`
+entry. Scripts are variable-length — they simply run until their own content
+ends — which is why consecutive `$5B00` offsets aren't evenly spaced.
+
+`$BA5F` also handles `$C981`'s column-embedded spawn markers (`$05`/`$55`, see
+§2) through the same allocation path. Returns carry set on success; a failed
+spawn (pool full) leaves the trigger in place to retry.
+
 ## 5. Colour scheme (`$A4E7` / `$A54D`)
 
 `$A4E7` selects the active palette when a level starts: it searches the config
@@ -172,6 +244,12 @@ header row).
 | Background tile block 2x2 table | `$7900-$7CFF` | 4 parallel 256-byte tables = 2×2 char block per cell (TL/TR/BL/BR) |
 | Scenery script (default) | `$6D71` | seeded per level from config word `$04` |
 | Scenery offset-chain table | `$6E06` | scene-event dispatch |
+| Formation-tag → group-index table | `$5B29` | 44 entries, ascending, indexed by tag `& $3F` |
+| Per-group spawn budget table | `$5CF4` | 2 bytes/entry, indexed via `$5B29` |
+| Spawn-template table | `$5B55` | 9 bytes/entry, indexed as `index*9 + $5B55` |
+| Movement-script entry-point table | `$5B00` | 41 entries, ascending, half-byte-offset into `$5BAF` |
+| Movement-script bytecode pool | `$5BAF` | shared, variable-length scripts (`$B8F9`/`$B920` format) |
+| Fixed persistent object slots | `$9D1E` / `$9D24` / `$9D2A` | set up by `$B730`; referenced by spawn-template bytes 7/8 |
 
 ## Open questions
 
@@ -182,9 +260,17 @@ header row).
   hand-off point that makes it walk the relief cell stream is not yet traced).
 - Full decode of a colour-scheme table entry (3-byte stride assumed from
   `$A4E7`, individual byte meanings not confirmed).
-- Formation-tag → actual enemy-formation-script mapping (the `other` timeline
-  command path into `$BA5F`/formation selection) is only partly traced.
+- Formation-tag → group-index → spawn-budget → spawn-template chain
+  (`$5B29`/`$5CF4`/`$5B55`) and the full 9-byte template field layout are now
+  confirmed (see §4). Still open: `$5CF4` byte 1's role; template bytes 0-4's
+  individual meaning beyond their destination fields; the exact purpose of the
+  fixed-slot read/`EX (SP),HL`/write sequence after the spawn loop (looks like
+  a linked-list link-in, not confirmed); and why template byte 1 coincidentally
+  lands on the unrelated `$5B56` screen/timing-poke address.
 - Whether the scenery-script event table `$6E06` entries are per-level or global.
 - What the 2×2-block character codes (`$7900-$7CFF`) resolve to as pixel
   graphics — the `$C8B8` pass scales each code (×8) into screen writes, but the
-  actual character-graphics source they point at is not yet traced.
+  actual character-graphics source they point at is not yet traced. (Note:
+  the *sprite* format for objects — player/enemy planes, tanks, boats — is a
+  separate, fully-decoded system; see the masked-sprite data at `$CA09`+ and
+  the `draw_sprite_*` routines, not covered by this document.)

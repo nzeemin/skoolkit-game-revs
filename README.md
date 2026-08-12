@@ -181,4 +181,4 @@ Volume: about 6900 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/flyingshark-zx/flyingshark/
 
-Status: Work in progress (103K .ctl file).
+Status: Have a good progress (140K .ctl file).

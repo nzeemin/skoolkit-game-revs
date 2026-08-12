@@ -73,7 +73,7 @@ Volume: about 4500 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 
-Status: Work in progress (66K .ctl file).
+Status: Work in progress (98K .ctl file).
 
 Follow-up projects:
 [vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive)

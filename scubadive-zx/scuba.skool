@@ -222,25 +222,37 @@ b$4000 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,
 
 @org
 ; Variables
-b$5B00 DEFB $00                     ; ???
- $5B01 DEFW $0000                   ; ???
+b$5B00 DEFB $00                     ; Shell/object progress counter: level-gen
+                                    ; counts placed objects (stops at 100);
+                                    ; play decrements on shell pickup;
+                                    ; clear-check vs $08
+ $5B01 DEFW $0000                   ; Saved tunnel start position (scratch in
+                                    ; cave carvers #R$9F81/#R$A03B)
  $5B03 DEFW $0000                   ; Screen position on mini-map (H = row, L =
                                     ; column)
 @label=RANDOM
  $5B05 DEFW $0167                   ; Current number in pseudo-random sequence,
                                     ; see routine #R$9D84
- $5B07 DEFW $0000                   ; ???
- $5B09 DEFB $00                     ; ???
- $5B0A DEFB $00                     ; ???
- $5B0B DEFW $0000                   ; ???
+ $5B07 DEFW $0000                   ; Working pointer during mini-map
+                                    ; generation (#R$9DAA)
+ $5B09 DEFB $00                     ; Working counter during mini-map
+                                    ; generation (#R$9DAA)
+ $5B0A DEFB $00                     ; Working counter during mini-map
+                                    ; generation (#R$9DAA)
+ $5B0B DEFW $0000                   ; Screen scroll / viewport position on the
+                                    ; 256x256 map, in pixels
  $5B0D DEFB $08                     ; Delay value: 7 / 5 / 3 / 1, depending on
                                     ; #R$5B10
  $5B0E DEFB $08                     ; Delay value for Octopus: 10 / 8 / 6 / 4,
                                     ; depending on #R$5B10
- $5B0F DEFB $00                     ; ???
+ $5B0F DEFB $00                     ; Chest counter: level-gen counts chests
+                                    ; still to place (from 3); play increments
+                                    ; on chest pickup; clear-check vs 3 (all
+                                    ; collected)
 @label=LEVEL
  $5B10 DEFB $04                     ; Game level selected: 1..4
- $5B11 DEFW $0000                   ; ???
+ $5B11 DEFW $0000                   ; Saved object-list end pointer (scratch in
+                                    ; #R$B3A0)
  $5B13 DEFB $19                     ; Number of Meduza objects: 13 / 17 / 21 /
                                     ; 25, depending on #R$5B10
  $5B14 DEFB $1E                     ; Number of Round fishes: 13 / 17 / 21 /
@@ -260,11 +272,16 @@ b$5B00 DEFB $00                     ; ???
 @label=NumRecsV
  $5B19 DEFB $46                     ; Number of 28-byte records (12 / 27 / 42 /
                                     ; 57), group V
- $5B1A DEFB $02                     ; ???
- $5B1B DEFB $02                     ; ???
- $5B1C DEFB $02                     ; ???
- $5B1D DEFB $02                     ; ???
- $5B1E DEFB $05                     ; ???
+ $5B1A DEFB $02                     ; Delay value for depth row-band 0 (read by
+                                    ; #R$BDEA, passed to #R$C4D5)
+ $5B1B DEFB $02                     ; Delay value for depth row-band 1 (read by
+                                    ; #R$BDEA)
+ $5B1C DEFB $02                     ; Delay value for depth row-band 2 (read by
+                                    ; #R$BDEA)
+ $5B1D DEFB $02                     ; Delay value for depth row-band 3 (read by
+                                    ; #R$BDEA)
+ $5B1E DEFB $05                     ; Delay value for depth row-band 4 (read by
+                                    ; #R$BDEA)
 @label=RecsAddrII
  $5B1F DEFW $0000                   ; Address of 26-byte records in block
                                     ; #R$C4F0; NumRecsII is number of records
@@ -279,7 +296,8 @@ b$5B00 DEFB $00                     ; ???
                                     ; on #R$5B10, see #R$C4D5
  $5B27 DEFW $0000,$0000,$0000,$0000 ; {14 bytes copied from #R$DDF0 + ([Game
  $5B2F DEFW $0000,$0000,$0000       ; level] - 1) * 16}
- $5B35 DEFW $DF45                   ; ???
+ $5B35 DEFW $DF45                   ; Alternate draw-buffer address, swapped
+                                    ; with #R$B7B9 each frame
 @label=LIVES
  $5B37 DEFB $03                     ; Number of lives
  $5B38 DEFW $FEFE                   ; Port for Clockwise key
@@ -292,8 +310,12 @@ b$5B00 DEFB $00                     ; ???
  $5B43 DEFB $02                     ; Bit mask for Decelerate key
 @label=SCORE
  $5B44 DEFW $03E8                   ; Score value
- $5B46 DEFW $0000                   ; ??? $0000 at game start
- $5B48 DEFW $0000                   ; ??? $0000 at game start
+ $5B46 DEFW $0000                   ; Pearls collected this game (incremented
+                                    ; on shell pickup; stored to hi-score
+                                    ; PEARLS column)
+ $5B48 DEFW $0000                   ; Chests collected this game (incremented
+                                    ; on chest pickup; stored to hi-score
+                                    ; CHESTS column)
  $5B4A DEFB $00                     ; Screen attribute, see routine #R$DA39
 @label=HISCORE
  $5B4B DEFW $0000                   ; High score value
@@ -1530,14 +1552,19 @@ b$9C50 DEFB $00      ; $00 = no Octopus, $01 = we have Octopus on the game
 ; Used by the routines at #R$D990, #R$DFD5 and #R$EEAD.
 ;
 ; HL Screen position on mini-map
+;
+; Renders the 24x24-tile game viewport: for each screen cell, looks up the
+; relief block/tile from the mini-map, copies its 8x8 pixel data to the screen,
+; and sets the attribute (colour) based on depth/relief. Also detects the
+; Octopus spawn tile and remembers its position for later drawing.
 @label=DrawGameScr
 c$9C56 DI             ;
  $9C57 LD DE,$4000    ;
- $9C5A XOR A          ;
- $9C5B LD ($9C50),A   ;
+ $9C5A XOR A          ; {reset "has Octopus" flag
+ $9C5B LD ($9C50),A   ; }
  $9C5E PUSH IX        ;
  $9C60 PUSH IY        ;
- $9C62 LD IX,$5800    ;
+ $9C62 LD IX,$5800    ; attribute output pointer
  $9C66 LD B,$03       ; Game screen 3 blocks high = 24 tiles
  $9C68 EX DE,HL       ;
 *$9C69 PUSH BC        ;
@@ -1552,25 +1579,25 @@ c$9C56 DI             ;
  $9C77 JR NZ,$9C89    ;
  $9C79 LD ($9C51),HL  ; save the Octopus row/column
  $9C7C PUSH HL        ;
- $9C7D LD HL,$A41B    ;
+ $9C7D LD HL,$A41B    ; {mark Octopus tile found, use empty sprite placeholder
  $9C80 LD ($9C53),HL  ;
  $9C83 POP HL         ;
  $9C84 LD A,$01       ;
- $9C86 LD ($9C50),A   ;
-*$9C89 INC E          ;
+ $9C86 LD ($9C50),A   ; }
+*$9C89 INC E          ; {wrap map column 0..31
  $9C8A LD A,E         ;
  $9C8B AND $1F        ;
- $9C8D LD E,A         ;
+ $9C8D LD E,A         ; }
  $9C8E POP AF         ;
  $9C8F PUSH DE        ;
  $9C90 PUSH HL        ;
  $9C91 PUSH HL        ;
- $9C92 LD H,A         ;
+ $9C92 LD H,A         ; {block index = tile/8
  $9C93 LD L,$00       ;
  $9C95 SRL H          ;
  $9C97 RR L           ;
  $9C99 SRL H          ;
- $9C9B RR L           ;
+ $9C9B RR L           ; }
  $9C9D LD DE,$A4DD    ; base address for relief blocks, 8x8 tiles each block
  $9CA0 ADD HL,DE      ;
  $9CA1 PUSH HL        ;
@@ -1599,9 +1626,9 @@ c$9C56 DI             ;
  $9CC2 INC D          ;
  $9CC3 DJNZ $9CBF     ;
  $9CC5 POP HL         ;
- $9CC6 LD A,($5B04)   ;
+ $9CC6 LD A,($5B04)   ; {check depth zone for water color
  $9CC9 OR A           ;
- $9CCA JR NZ,$9CD5    ;
+ $9CCA JR NZ,$9CD5    ; }
  $9CCC LD A,H         ;
  $9CCD AND $18        ;
  $9CCF JR NZ,$9CD5    ;
@@ -1623,12 +1650,12 @@ c$9C56 DI             ;
  $9CF2 INC L          ;
  $9CF3 POP BC         ;
  $9CF4 DJNZ $9CAA     ;
- $9CF6 LD BC,$0018    ;
+ $9CF6 LD BC,$0018    ; {advance attribute pointer to next block
  $9CF9 ADD IX,BC      ;
  $9CFB DEC L          ;
  $9CFC LD A,L         ;
  $9CFD AND $F8        ;
- $9CFF ADD A,$20      ;
+ $9CFF ADD A,$20      ; }
  $9D01 LD L,A         ;
  $9D02 POP BC         ;
  $9D03 DJNZ $9CA7     ;
@@ -1641,11 +1668,11 @@ c$9C56 DI             ;
  $9D0F POP BC         ;
  $9D10 DEC B          ;
  $9D11 JP NZ,$9C6C    ;
- $9D14 LD L,$00       ;
+ $9D14 LD L,$00       ; {advance to next block row
  $9D16 LD A,H         ;
  $9D17 ADD A,$08      ;
  $9D19 LD H,A         ;
- $9D1A LD BC,$00E8    ;
+ $9D1A LD BC,$00E8    ; }
  $9D1D ADD IX,BC      ;
  $9D1F INC D          ;
  $9D20 DEC E          ;
@@ -1664,7 +1691,7 @@ c$9C56 DI             ;
  $9D35 CALL $B346     ; Draw Octopus
 *$9D38 POP IY         ;
  $9D3A POP IX         ;
- $9D3C CALL $B0A9     ;
+ $9D3C CALL $B0A9     ; Draw static objects on the screen
  $9D3F RET            ;
 
 ; Calculate address in the mini-map (#R$AC5D table)
@@ -1803,6 +1830,12 @@ c$9DA5 LD (HL),A     ;
 ; Prepare the mini-map (#R$AC5D table)
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
+;
+; .
+;
+; Builds the 32x32 world map: fills border walls and open water, carves the
+; Octopus starting room, then runs the random-walk tunnel carvers (#R$9F81,
+; #R$A03B) and finally scatters static objects across the result (#R$A193).
 @label=PrepareMiniMap
 c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
  $9DAD LD B,$1C      ;
@@ -1929,8 +1962,9 @@ c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
  $9E8C INC A         ;
 *$9E8D CALL $9D79    ; Calc address in #R$AC5D and Set
  $9E90 DJNZ $9E7D    ;
- $9E92 CALL $A193    ;
- $9E95 CALL $B1D4    ;
+ $9E92 CALL $A193    ; Generate static object placements (chests,
+                     ; pearls/shells) across the map
+ $9E95 CALL $B1D4    ; Select 8 random objects from the object pool
  $9E98 RET           ;
 *$9E99 PUSH HL       ;
  $9E9A PUSH BC       ;
@@ -1992,7 +2026,7 @@ c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
  $9F04 LD A,$0B      ;
  $9F06 CALL $9D79    ; Calc address in #R$AC5D and Set
  $9F09 PUSH BC       ;
- $9F0A CALL $9F81    ;
+ $9F0A CALL $9F81    ; Carve tunnel in world map
  $9F0D POP BC        ;
 *$9F0E LD A,($5B09)  ;
  $9F11 LD B,A        ;
@@ -2049,23 +2083,24 @@ c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
  $9F6E JR NZ,$9F39   ;
  $9F70 LD A,$0A      ;
  $9F72 CALL $9D79    ; Calc address in #R$AC5D and Set
- $9F75 CALL $A03B    ;
+ $9F75 CALL $A03B    ; Carve tunnel in world map
 *$9F78 LD A,($5B0A)  ;
  $9F7B LD ($5B09),A  ;
  $9F7E JP $9E5F      ;
 
-; Routine at 9F81
+; Carve tunnel in world map: random-walk cave generator
 ;
 ; Used by the routine at #R$9DAA.
-c$9F81 LD ($5B01),HL ;
+@label=CarveTunnelLeft
+c$9F81 LD ($5B01),HL ; save tunnel start position
 *$9F84 DEC L         ;
  $9F85 PUSH HL       ;
  $9F86 CALL $9D84    ; Random
  $9F89 POP DE        ;
  $9F8A EX DE,HL      ;
- $9F8B LD A,D        ;
+ $9F8B LD A,D        ; {pick digging direction from random bits
  $9F8C AND $02       ;
- $9F8E JR NZ,$9FEB   ;
+ $9F8E JR NZ,$9FEB   ; }
 *$9F90 DEC L         ;
  $9F91 CALL $9D5F    ; Check value in #R$AC5D table
  $9F94 JR Z,$9FC0    ;
@@ -2090,8 +2125,8 @@ c$9F81 LD ($5B01),HL ;
  $9FBC LD HL,($5B01) ;
  $9FBF RET           ;
 *$9FC0 INC L         ;
- $9FC1 BIT 7,E       ;
- $9FC3 JR Z,$9FE0    ;
+ $9FC1 BIT 7,E       ; {branch by random sub-direction
+ $9FC3 JR Z,$9FE0    ; }
  $9FC5 DEC H         ;
  $9FC6 CALL $9D56    ; Calc address in #R$AC5D and Get
  $9FC9 INC H         ;
@@ -2111,8 +2146,8 @@ c$9F81 LD ($5B01),HL ;
  $9FE3 ADD A,$10     ;
  $9FE5 CALL $9D79    ; Calc address in #R$AC5D and Get
  $9FE8 JP $9F84      ;
-*$9FEB BIT 6,E       ;
- $9FED JR NZ,$A011   ;
+*$9FEB BIT 6,E       ; {branch by random sub-direction
+ $9FED JR NZ,$A011   ; }
  $9FEF INC H         ;
  $9FF0 CALL $9D5F    ; Check value in #R$AC5D table
  $9FF3 JR Z,$9FF8    ;
@@ -2132,8 +2167,8 @@ c$9F81 LD ($5B01),HL ;
  $A00A CALL $9D79    ; Calc address in #R$AC5D and Get
  $A00D INC H         ;
  $A00E JP $9F84      ;
-*$A011 LD A,$09      ;
- $A013 CP H          ;
+*$A011 LD A,$09      ; {stop if reached map edge
+ $A013 CP H          ; }
  $A014 JP Z,$9F90    ;
  $A017 DEC H         ;
  $A018 CALL $9D5F    ; Check value in #R$AC5D table
@@ -2155,18 +2190,19 @@ c$9F81 LD ($5B01),HL ;
  $A037 DEC H         ;
  $A038 JP $9F84      ;
 
-; Routine at A03B
+; Carve tunnel in world map: random-walk cave generator (rightward)
 ;
 ; Used by the routine at #R$9DAA.
-c$A03B LD ($5B01),HL ;
+@label=CarveTunnelRight
+c$A03B LD ($5B01),HL ; save tunnel start position
 *$A03E INC L         ;
  $A03F PUSH HL       ;
  $A040 CALL $9D84    ; Random
  $A043 POP DE        ;
  $A044 EX DE,HL      ;
- $A045 LD A,D        ;
+ $A045 LD A,D        ; {pick digging direction from random bits
  $A046 AND $04       ;
- $A048 JR NZ,$A0A5   ;
+ $A048 JR NZ,$A0A5   ; }
 *$A04A INC L         ;
  $A04B CALL $9D5F    ; Check value in #R$AC5D table
  $A04E JR Z,$A079    ;
@@ -2191,8 +2227,8 @@ c$A03B LD ($5B01),HL ;
  $A075 LD HL,($5B01) ;
  $A078 RET           ;
 *$A079 DEC L         ;
- $A07A BIT 7,E       ;
- $A07C JR Z,$A09A    ;
+ $A07A BIT 7,E       ; {branch by random sub-direction
+ $A07C JR Z,$A09A    ; }
  $A07E DEC H         ;
  $A07F CALL $9D56    ; Calc address in #R$AC5D and Get
  $A082 INC H         ;
@@ -2212,8 +2248,8 @@ c$A03B LD ($5B01),HL ;
  $A09D ADD A,$10     ;
  $A09F CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0A2 JP $A03E      ;
-*$A0A5 BIT 6,E       ;
- $A0A7 JR NZ,$A0CB   ;
+*$A0A5 BIT 6,E       ; {branch by random sub-direction
+ $A0A7 JR NZ,$A0CB   ; }
  $A0A9 INC H         ;
  $A0AA CALL $9D5F    ; Check value in #R$AC5D table
  $A0AD JR Z,$A0B2    ;
@@ -2233,8 +2269,8 @@ c$A03B LD ($5B01),HL ;
  $A0C4 CALL $9D79    ; Calc address in #R$AC5D and Get
  $A0C7 INC H         ;
  $A0C8 JP $A03E      ;
-*$A0CB LD A,$09      ;
- $A0CD CP H          ;
+*$A0CB LD A,$09      ; {stop if reached map edge
+ $A0CD CP H          ; }
  $A0CE JP Z,$A04A    ;
  $A0D1 DEC H         ;
  $A0D2 CALL $9D5F    ; Check value in #R$AC5D table
@@ -2271,28 +2307,28 @@ c$A0F5 PUSH HL       ; {HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
  $A102 RR L          ;
  $A104 SRL H         ;
  $A106 RR L          ; }
- $A108 LD DE,$AC5D   ;
- $A10B ADD HL,DE     ;
- $A10C LD H,(HL)     ;
- $A10D POP DE        ;
+ $A108 LD DE,$AC5D   ; {index into mini-map row table
+ $A10B ADD HL,DE     ; }
+ $A10C LD H,(HL)     ; get relief block number for this row
+ $A10D POP DE        ; {column bits 0..2 (within-tile column)
  $A10E LD A,E        ;
  $A10F AND $07       ;
- $A111 LD E,A        ;
- $A112 LD A,D        ;
+ $A111 LD E,A        ; }
+ $A112 LD A,D        ; {extract row bits 0..2 shifted to top
  $A113 RRCA          ;
  $A114 RRCA          ;
  $A115 RRCA          ;
- $A116 AND $E0       ;
- $A118 LD L,A        ;
- $A119 SRL H         ;
+ $A116 AND $E0       ; }
+ $A118 LD L,A        ; combine into L
+ $A119 SRL H         ; {shift block number into position
  $A11B RR L          ;
  $A11D SRL H         ;
- $A11F RR L          ;
- $A121 LD A,L        ;
+ $A11F RR L          ; }
+ $A121 LD A,L        ; {combine block offset with column bits
  $A122 OR E          ;
- $A123 LD L,A        ;
- $A124 LD DE,$A4DD   ;
- $A127 ADD HL,DE     ;
+ $A123 LD L,A        ; }
+ $A124 LD DE,$A4DD   ; {add relief data base address
+ $A127 ADD HL,DE     ; }
  $A128 RET           ;
 
 ; Calculate address in relief block and Get tile nummber
@@ -2304,7 +2340,7 @@ c$A0F5 PUSH HL       ; {HL[15:11] -> HL[9:5]; HL[7:3] -> HL[4:0];
 @label=GetTileInBlock
 c$A129 PUSH HL       ;
  $A12A PUSH DE       ;
- $A12B CALL $A0F5    ;
+ $A12B CALL $A0F5    ; Calculate address in relief block
  $A12E LD A,(HL)     ;
  $A12F POP DE        ;
  $A130 POP HL        ;
@@ -2324,18 +2360,18 @@ b$A132 DEFB $E5,$D5,$F5,$CD,$F5,$A0,$F1,$5F
 ; I:HL Char coords H = row, L = column 0..31
 @label=GetScrAttrAddr
 c$A14C PUSH DE       ;
- $A14D LD A,L        ;
- $A14E LD L,$00      ;
- $A150 SRL H         ;
+ $A14D LD A,L        ; {save column, clear L for shift
+ $A14E LD L,$00      ; }
+ $A150 SRL H         ; {shift row into place
  $A152 RR L          ;
  $A154 SRL H         ;
  $A156 RR L          ;
  $A158 SRL H         ;
- $A15A RR L          ;
- $A15C OR L          ;
- $A15D LD L,A        ;
- $A15E LD DE,$5800   ;
- $A161 ADD HL,DE     ;
+ $A15A RR L          ; }
+ $A15C OR L          ; {combine row offset with column
+ $A15D LD L,A        ; }
+ $A15E LD DE,$5800   ; {add attributes base address
+ $A161 ADD HL,DE     ; }
  $A162 POP DE        ;
  $A163 RET           ;
 
@@ -2350,16 +2386,16 @@ c$A14C PUSH DE       ;
 c$A164 PUSH DE       ;
  $A165 LD A,H        ;
  $A166 LD D,A        ;
- $A167 AND $18       ;
+ $A167 AND $18       ; {build screen high byte
  $A169 SET 6,A       ;
- $A16B LD H,A        ;
+ $A16B LD H,A        ; }
  $A16C LD A,D        ;
- $A16D RRCA          ;
+ $A16D RRCA          ; {extract pixel-row bits
  $A16E RRCA          ;
  $A16F RRCA          ;
- $A170 AND $E0       ;
- $A172 OR L          ;
- $A173 LD L,A        ;
+ $A170 AND $E0       ; }
+ $A172 OR L          ; {combine with column
+ $A173 LD L,A        ; }
  $A174 POP DE        ;
  $A175 RET           ;
 
@@ -2371,16 +2407,16 @@ c$A164 PUSH DE       ;
 ; I:DE Tile address; 16 bytes
 @label=DrawTile16x8
 c$A176 CALL $A164    ; Convert char coords HL to ZX screen address
- $A179 LD B,$08      ;
-*$A17B LD A,(DE)     ;
+ $A179 LD B,$08      ; 8 pixel lines
+*$A17B LD A,(DE)     ; {write left column byte
  $A17C LD (HL),A     ;
  $A17D INC DE        ;
- $A17E INC L         ;
- $A17F LD A,(DE)     ;
+ $A17E INC L         ; }
+ $A17F LD A,(DE)     ; {write right column byte, next line
  $A180 LD (HL),A     ;
  $A181 DEC L         ;
  $A182 INC H         ;
- $A183 INC DE        ;
+ $A183 INC DE        ; }
  $A184 DJNZ $A17B    ;
  $A186 RET           ;
 
@@ -2392,65 +2428,73 @@ c$A176 CALL $A164    ; Convert char coords HL to ZX screen address
 ; I:DE Tile address; 8 bytes
 @label=DrawTile8x8
 c$A187 CALL $A164    ; Convert char coords HL to ZX screen address
- $A18A LD B,$08      ;
-*$A18C LD A,(DE)     ;
+ $A18A LD B,$08      ; 8 pixel lines
+*$A18C LD A,(DE)     ; {write byte, next line
  $A18D LD (HL),A     ;
  $A18E INC DE        ;
- $A18F INC H         ;
+ $A18F INC H         ; }
  $A190 DJNZ $A18C    ;
  $A192 RET           ;
 
-; Routine at A193
+; Generate static object placements (chests, pearls/shells) across the map
 ;
 ; Used by the routine at #R$9DAA.
-c$A193 LD HL,$20FF   ;
+;
+; .
+;
+; Scans every mini-map cell, placing two chests at fixed map edges, then walks
+; each cell's 16-tile relief block looking for pairs of open-water tiles,
+; randomly skipping most candidates, and writes a record (position + random
+; attribute) for each accepted spot, up to 100 objects.
+@label=PlaceStaticObjects
+c$A193 LD HL,$20FF   ; start scan at bottom-right map cell
  $A196 LD DE,$A27E   ; Table of static objects on the map
- $A199 XOR A         ;
+ $A199 XOR A         ; {reset placed-object count; init chest counter
  $A19A LD ($5B00),A  ;
  $A19D LD A,$03      ;
- $A19F LD ($5B0F),A  ;
-*$A1A2 INC L         ;
- $A1A3 LD A,L        ;
+ $A19F LD ($5B0F),A  ; }
+*$A1A2 INC L         ; {advance to next map column
+ $A1A3 LD A,L        ; }
  $A1A4 AND $1F       ; 0..31
- $A1A6 JR NZ,$A1B0   ;
- $A1A8 LD L,A        ;
+ $A1A6 JR NZ,$A1B0   ; check column wrapped
+ $A1A8 LD L,A        ; {wrap column, advance row
  $A1A9 DEC H         ;
- $A1AA JR NZ,$A1B0   ;
+ $A1AA JR NZ,$A1B0   ; }
  $A1AC LD A,$80      ; end of list marker
  $A1AE LD (DE),A     ;
  $A1AF RET           ;
 *$A1B0 CALL $9D56    ; Calc address in #R$AC5D and Get
  $A1B3 LD C,A        ;
  $A1B4 PUSH HL       ;
- $A1B5 CP $14        ;
+ $A1B5 CP $14        ; {check for special tile types
  $A1B7 JR Z,$A1CC    ;
  $A1B9 CP $15        ;
- $A1BB JR NZ,$A1F6   ;
- $A1BD LD A,L        ;
+ $A1BB JR NZ,$A1F6   ; }
+ $A1BD LD A,L        ; {only at map column 0
  $A1BE OR A          ;
- $A1BF JR NZ,$A1F6   ;
- $A1C1 LD L,$04      ;
+ $A1BF JR NZ,$A1F6   ; }
+ $A1C1 LD L,$04      ; {compute chest spawn coords (left side)
  $A1C3 LD A,H        ;
  $A1C4 ADD A,A       ;
  $A1C5 ADD A,A       ;
  $A1C6 ADD A,A       ;
  $A1C7 ADD A,$04     ;
- $A1C9 LD H,A        ;
+ $A1C9 LD H,A        ; }
  $A1CA JR $A1DA      ;
-*$A1CC LD A,L        ;
+*$A1CC LD A,L        ; {only at map column 31
  $A1CD CP $1F        ;
- $A1CF JR NZ,$A1F6   ;
- $A1D1 LD L,$FB      ;
+ $A1CF JR NZ,$A1F6   ; }
+ $A1D1 LD L,$FB      ; {compute chest spawn coords (right side)
  $A1D3 LD A,H        ;
  $A1D4 ADD A,A       ;
  $A1D5 ADD A,A       ;
  $A1D6 ADD A,A       ;
  $A1D7 ADD A,$06     ;
- $A1D9 LD H,A        ;
-*$A1DA LD A,($5B0F)  ;
- $A1DD OR A          ;
+ $A1D9 LD H,A        ; }
+*$A1DA LD A,($5B0F)  ; {skip if no chests left
+ $A1DD OR A          ; }
  $A1DE JR Z,$A1F6    ;
- $A1E0 LD A,$40      ;
+ $A1E0 LD A,$40      ; {write chest record (flags/col/row)
  $A1E2 LD (DE),A     ;
  $A1E3 INC DE        ;
  $A1E4 LD A,L        ;
@@ -2458,32 +2502,32 @@ c$A193 LD HL,$20FF   ;
  $A1E6 INC DE        ;
  $A1E7 LD A,H        ;
  $A1E8 LD (DE),A     ;
- $A1E9 INC DE        ;
- $A1EA LD A,($5B0F)  ;
+ $A1E9 INC DE        ; }
+ $A1EA LD A,($5B0F)  ; {store index, decrement chests-left
  $A1ED LD (DE),A     ;
  $A1EE INC DE        ;
  $A1EF DEC A         ;
- $A1F0 LD ($5B0F),A  ;
+ $A1F0 LD ($5B0F),A  ; }
  $A1F3 POP HL        ;
  $A1F4 JR $A1A2      ;
-*$A1F6 LD H,C        ;
+*$A1F6 LD H,C        ; {compute relief-block scan address
  $A1F7 LD L,$C0      ;
  $A1F9 SRL H         ;
  $A1FB RR L          ;
  $A1FD SRL H         ;
- $A1FF RR L          ;
- $A201 LD BC,$A4DD   ;
+ $A1FF RR L          ; }
+ $A201 LD BC,$A4DD   ; {add relief data base
  $A204 PUSH HL       ;
  $A205 ADD HL,BC     ;
- $A206 POP BC        ;
+ $A206 POP BC        ; }
  $A207 LD B,$10      ;
-*$A209 LD A,(HL)     ;
+*$A209 LD A,(HL)     ; {check tile is open-water type
  $A20A INC HL        ;
  $A20B INC C         ;
  $A20C SUB $1C       ;
  $A20E JR C,$A278    ;
  $A210 CP $04        ;
- $A212 JR NC,$A278   ;
+ $A212 JR NC,$A278   ; }
  $A214 LD A,(HL)     ;
  $A215 INC HL        ;
  $A216 INC C         ;
@@ -2491,39 +2535,39 @@ c$A193 LD HL,$20FF   ;
  $A219 JR C,$A278    ;
  $A21B CP $04        ;
  $A21D JR NC,$A278   ;
- $A21F LD A,C        ;
+ $A21F LD A,C        ; {skip 7 of 8 candidate tiles (spacing)
  $A220 AND $07       ;
- $A222 JR Z,$A278    ;
+ $A222 JR Z,$A278    ; }
  $A224 PUSH HL       ;
  $A225 PUSH DE       ;
  $A226 PUSH BC       ;
  $A227 CALL $9D84    ; Random
- $A22A POP BC        ;
+ $A22A POP BC        ; {random 50% skip
  $A22B POP DE        ;
  $A22C LD A,H        ;
  $A22D POP HL        ;
  $A22E AND $02       ;
- $A230 JR NZ,$A278   ;
- $A232 LD A,($5B00)  ;
+ $A230 JR NZ,$A278   ; }
+ $A232 LD A,($5B00)  ; {stop once 100 objects placed
  $A235 INC A         ;
  $A236 CP $64        ;
- $A238 JR Z,$A278    ;
- $A23A LD ($5B00),A  ;
+ $A238 JR Z,$A278    ; }
+ $A23A LD ($5B00),A  ; {store count; write object type flag
  $A23D LD A,$0A      ;
- $A23F LD (DE),A     ;
+ $A23F LD (DE),A     ; }
  $A240 EX (SP),HL    ;
  $A241 LD A,H        ;
  $A242 CP $04        ;
  $A244 JR C,$A249    ;
  $A246 LD A,$00      ;
  $A248 LD (DE),A     ;
-*$A249 INC DE        ;
+*$A249 INC DE        ; {compute column bits
  $A24A LD A,C        ;
  $A24B DEC A         ;
  $A24C DEC A         ;
  $A24D AND $07       ;
  $A24F PUSH DE       ;
- $A250 LD D,A        ;
+ $A250 LD D,A        ; }
  $A251 LD A,L        ;
  $A252 ADD A,A       ;
  $A253 ADD A,A       ;
@@ -2551,7 +2595,7 @@ c$A193 LD HL,$20FF   ;
  $A26C LD (DE),A     ;
  $A26D INC DE        ;
  $A26E LD A,($5B05)  ; get current Random
- $A271 AND $7F       ;
+ $A271 AND $7F       ; random 0..127 for extra field
  $A273 LD (DE),A     ;
  $A274 INC DE        ;
  $A275 INC HL        ;
@@ -2925,7 +2969,7 @@ b$B07D DEFB $01,$01,$01,$01
 ; Used by the routine at #R$9C56.
 @label=DrawStatics
 c$B0A9 LD DE,($5B03)   ; get Screen position on mini-map
- $B0AD LD A,D          ;
+ $B0AD LD A,D          ; {multiply scroll position by 8
  $B0AE RLCA            ;
  $B0AF RLCA            ;
  $B0B0 RLCA            ;
@@ -2934,44 +2978,44 @@ c$B0A9 LD DE,($5B03)   ; get Screen position on mini-map
  $B0B3 RLCA            ;
  $B0B4 RLCA            ;
  $B0B5 RLCA            ;
- $B0B6 LD E,A          ;
- $B0B7 LD ($5B0B),DE   ;
- $B0BB LD HL,$A27E     ;
- $B0BE DI              ;
+ $B0B6 LD E,A          ; }
+ $B0B7 LD ($5B0B),DE   ; store screen scroll (pixels)
+ $B0BB LD HL,$A27E     ; static-object table pointer
+ $B0BE DI              ; {output slot table pointer
  $B0BF PUSH IY         ;
- $B0C1 LD IY,$B07D     ;
-*$B0C5 BIT 7,(HL)      ;
- $B0C7 JR Z,$B0D0      ;
- $B0C9 LD (IY+$01),$FF ;
+ $B0C1 LD IY,$B07D     ; }
+*$B0C5 BIT 7,(HL)      ; {check end-of-list marker
+ $B0C7 JR Z,$B0D0      ; }
+ $B0C9 LD (IY+$01),$FF ; {mark output list end, done
  $B0CD POP IY          ;
- $B0CF RET             ;
-*$B0D0 PUSH HL         ;
+ $B0CF RET             ; }
+*$B0D0 PUSH HL         ; {save state; clear on-screen flag
  $B0D1 PUSH DE         ;
- $B0D2 RES 0,(HL)      ;
- $B0D4 INC HL          ;
+ $B0D2 RES 0,(HL)      ; }
+ $B0D4 INC HL          ; {check column within 24-tile viewport
  $B0D5 LD A,(HL)       ;
  $B0D6 SUB E           ;
  $B0D7 CP $18          ;
- $B0D9 JR NC,$B148     ;
- $B0DB LD E,A          ;
+ $B0D9 JR NC,$B148     ; }
+ $B0DB LD E,A          ; {check row within 24-tile viewport
  $B0DC INC HL          ;
  $B0DD LD A,(HL)       ;
  $B0DE SUB D           ;
  $B0DF CP $18          ;
- $B0E1 JR NC,$B148     ;
- $B0E3 LD D,A          ;
+ $B0E1 JR NC,$B148     ; }
+ $B0E3 LD D,A          ; {save relative row/col; rewind to record start
  $B0E4 PUSH DE         ;
  $B0E5 DEC HL          ;
- $B0E6 DEC HL          ;
- $B0E7 LD (IY+$00),L   ;
+ $B0E6 DEC HL          ; }
+ $B0E7 LD (IY+$00),L   ; {write output slot: address+relative coords
  $B0EA LD (IY+$01),H   ;
  $B0ED LD (IY+$02),E   ;
- $B0F0 LD (IY+$03),D   ;
- $B0F3 INC IY          ;
+ $B0F0 LD (IY+$03),D   ; }
+ $B0F3 INC IY          ; {advance output slot pointer
  $B0F5 INC IY          ;
  $B0F7 INC IY          ;
- $B0F9 INC IY          ;
- $B0FB SET 0,(HL)      ;
+ $B0F9 INC IY          ; }
+ $B0FB SET 0,(HL)      ; mark object as on-screen
  $B0FD LD C,$46        ; screen attribute for chest
  $B0FF LD DE,$B1B4     ; Sprite 16x8 Chest
  $B102 BIT 6,(HL)      ; check "chest" bit
@@ -3061,37 +3105,38 @@ b$B16C DEFB $60,$1C,$60,$0E,$2C,$1E,$36,$1C ; {#HTML[#UDGARRAY2,,,2,,($B16C-$B17
 ; Sprite 8x8 Small shell opened
  $B1CC DEFB $02,$03,$03,$03,$03,$03,$FE,$7C ; #HTML[#UDGARRAY1,,,1,,($B1CC-$B1D3-1-8)(sprB1CC)]
 
-; Routine at B1D4
+; Select 8 random objects from the object pool
 ;
 ; Used by the routine at #R$9DAA.
-c$B1D4 PUSH IY         ;
+@label=SelectRandomObjects
+c$B1D4 PUSH IY         ; {reset selected-count
  $B1D6 NOP             ;
  $B1D7 NOP             ;
  $B1D8 NOP             ;
  $B1D9 NOP             ;
  $B1DA XOR A           ;
- $B1DB LD ($B210),A    ;
-*$B1DE LD IY,$A27E     ;
+ $B1DB LD ($B210),A    ; }
+*$B1DE LD IY,$A27E     ; object pool base address
 *$B1E2 CALL $9D84      ; Random
- $B1E5 LD A,H          ;
+ $B1E5 LD A,H          ; {random step 3..6 entries
  $B1E6 AND $03         ;
- $B1E8 ADD A,$03       ;
+ $B1E8 ADD A,$03       ; }
  $B1EA LD B,A          ;
- $B1EB LD DE,$0004     ;
-*$B1EE ADD IY,DE       ;
+ $B1EB LD DE,$0004     ; {advance IY by random step
+*$B1EE ADD IY,DE       ; }
  $B1F0 DJNZ $B1EE      ;
- $B1F2 LD A,(IY+$02)   ;
- $B1F5 CP $48          ;
- $B1F7 JR C,$B1DE      ;
- $B1F9 LD A,(IY+$00)   ;
- $B1FC AND $60         ;
- $B1FE JR NZ,$B1E2     ;
- $B200 LD (IY+$00),$20 ;
- $B204 LD HL,$B210     ;
- $B207 INC (HL)        ;
- $B208 LD A,(HL)       ;
- $B209 CP $08          ;
- $B20B JR NZ,$B1E2     ;
+ $B1F2 LD A,(IY+$02)   ; {check object type/threshold
+ $B1F5 CP $48          ; }
+ $B1F7 JR C,$B1DE      ; reject, pick new random pool start
+ $B1F9 LD A,(IY+$00)   ; {check already-selected flag
+ $B1FC AND $60         ; }
+ $B1FE JR NZ,$B1E2     ; already used, retry
+ $B200 LD (IY+$00),$20 ; mark object selected
+ $B204 LD HL,$B210     ; {increment selected-count
+ $B207 INC (HL)        ; }
+ $B208 LD A,(HL)       ; {check 8 selected
+ $B209 CP $08          ; }
+ $B20B JR NZ,$B1E2     ; not done, pick another
  $B20D POP IY          ;
  $B20F RET             ;
 
@@ -3100,76 +3145,76 @@ b$B210 DEFB $00      ; ???
  $B211 DEFB $08      ; ???
  $B212 DEFB $05      ; ???
 
-; Routine at B213
+; Animate and draw rising air bubbles, plus Octopus
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
 c$B213 CALL $B2C0    ; Octopus delay and process
- $B216 LD HL,$B211   ;
+ $B216 LD HL,$B211   ; {spawn timer countdown
  $B219 DEC (HL)      ;
- $B21A RET NZ        ;
+ $B21A RET NZ        ; }
  $B21B DI            ;
  $B21C LD A,($5B0D)  ; get value 7 / 5 / 3 / 1, depending on Game level 1..4
- $B21F LD (HL),A     ;
- $B220 LD A,($B212)  ;
+ $B21F LD (HL),A     ; reset spawn timer
+ $B220 LD A,($B212)  ; {get/branch on bubble-position direction
  $B223 BIT 7,A       ;
- $B225 JR NZ,$B230   ;
- $B227 INC A         ;
+ $B225 JR NZ,$B230   ; }
+ $B227 INC A         ; {advance position, wrap and flip direction
  $B228 CP $07        ;
  $B22A JR NZ,$B237   ;
- $B22C SET 7,A       ;
+ $B22C SET 7,A       ; }
  $B22E JR $B237      ;
-*$B230 DEC A         ;
+*$B230 DEC A         ; {advance position (reverse), wrap and flip direction
  $B231 CP $83        ;
  $B233 JR NZ,$B237   ;
- $B235 RES 7,A       ;
-*$B237 LD ($B212),A  ;
+ $B235 RES 7,A       ; }
+*$B237 LD ($B212),A  ; {store position; bubble-slot table base
  $B23A PUSH IY       ;
- $B23C LD IY,$B079   ;
-*$B240 LD DE,$0004   ;
- $B243 LD BC,($5B0B) ;
-*$B247 ADD IY,DE     ;
+ $B23C LD IY,$B079   ; }
+*$B240 LD DE,$0004   ; {record size; screen scroll position
+ $B243 LD BC,($5B0B) ; }
+*$B247 ADD IY,DE     ; {next slot; get slot's screen address
  $B249 LD L,(IY+$00) ;
- $B24C LD H,(IY+$01) ;
- $B24F LD A,$FF      ;
+ $B24C LD H,(IY+$01) ; }
+ $B24F LD A,$FF      ; {check end-of-table marker
  $B251 CP H          ;
- $B252 JR NZ,$B257   ;
+ $B252 JR NZ,$B257   ; }
  $B254 POP IY        ;
  $B256 RET           ;
-*$B257 BIT 5,(HL)    ;
- $B259 JR NZ,$B247   ;
- $B25B BIT 6,(HL)    ;
- $B25D JR Z,$B276    ;
- $B25F BIT 3,(HL)    ;
- $B261 JR NZ,$B247   ;
- $B263 LD L,(IY+$02) ;
- $B266 LD H,(IY+$03) ;
+*$B257 BIT 5,(HL)    ; {skip if slot already active
+ $B259 JR NZ,$B247   ; }
+ $B25B BIT 6,(HL)    ; {branch by bubble state
+ $B25D JR Z,$B276    ; }
+ $B25F BIT 3,(HL)    ; {skip if slot unavailable
+ $B261 JR NZ,$B247   ; }
+ $B263 LD L,(IY+$02) ; {get slot's attribute-source address
+ $B266 LD H,(IY+$03) ; }
  $B269 CALL $A14C    ; Get screen attribute address
- $B26C LD A,($B212)  ;
- $B26F AND $07       ;
+ $B26C LD A,($B212)  ; {attribute value from position
+ $B26F AND $07       ; }
  $B271 LD (HL),A     ;
  $B272 INC HL        ;
  $B273 LD (HL),A     ;
  $B274 JR $B240      ;
-*$B276 BIT 3,(HL)    ;
- $B278 JR Z,$B27E    ;
- $B27A BIT 4,(HL)    ;
- $B27C JR NZ,$B247   ;
-*$B27E ADD HL,DE     ;
+*$B276 BIT 3,(HL)    ; {check bubble growth stage
+ $B278 JR Z,$B27E    ; }
+ $B27A BIT 4,(HL)    ; {skip if already at max stage
+ $B27C JR NZ,$B247   ; }
+*$B27E ADD HL,DE     ; {decrement bubble rise-timer
  $B27F DEC HL        ;
- $B280 DEC (HL)      ;
+ $B280 DEC (HL)      ; }
  $B281 JR Z,$B286    ;
  $B283 INC HL        ;
  $B284 JR $B247      ;
-*$B286 PUSH HL       ;
+*$B286 PUSH HL       ; {save state before random pick
  $B287 PUSH DE       ;
- $B288 PUSH BC       ;
+ $B288 PUSH BC       ; }
  $B289 CALL $9D84    ; Random
  $B28C POP BC        ;
  $B28D POP DE        ;
  $B28E LD A,H        ;
  $B28F POP HL        ;
- $B290 AND $7F       ;
- $B292 ADD A,$80     ;
+ $B290 AND $7F       ; {randomize row 128..255
+ $B292 ADD A,$80     ; }
  $B294 LD (HL),A     ;
  $B295 DEC HL        ;
  $B296 LD A,(HL)     ;
@@ -3179,9 +3224,9 @@ c$B213 CALL $B2C0    ; Octopus delay and process
  $B29A LD A,(HL)     ;
  $B29B SUB C         ;
  $B29C LD E,A        ;
- $B29D DEC HL        ;
+ $B29D DEC HL        ; {toggle bubble size flag
  $B29E LD A,$08      ;
- $B2A0 XOR (HL)      ;
+ $B2A0 XOR (HL)      ; }
  $B2A1 LD (HL),A     ;
  $B2A2 BIT 1,(HL)    ;
  $B2A4 PUSH HL       ;
@@ -3268,43 +3313,43 @@ b$B316 DEFB $09
 ;
 ; Used by the routine at #R$B2C0.
 @label=ProcessOctopus
-c$B317 LD A,($9C50)  ;
+c$B317 LD A,($9C50)  ; {skip if Octopus disabled
  $B31A OR A          ;
- $B31B RET Z         ;
- $B31C LD HL,$B316   ;
+ $B31B RET Z         ; }
+ $B31C LD HL,$B316   ; {animation timer countdown
  $B31F DEC (HL)      ;
- $B320 RET NZ        ;
- $B321 LD (HL),$10   ;
- $B323 LD A,($9C55)  ;
- $B326 LD B,A        ;
- $B327 BIT 7,A       ;
- $B329 JR NZ,$B339   ;
- $B32B LD A,R        ;
- $B32D JR Z,$B345    ;
- $B32F INC B         ;
+ $B320 RET NZ        ; }
+ $B321 LD (HL),$10   ; reset timer to 16
+ $B323 LD A,($9C55)  ; {get current phase
+ $B326 LD B,A        ; }
+ $B327 BIT 7,A       ; {branch by direction (retreating vs extending)
+ $B329 JR NZ,$B339   ; }
+ $B32B LD A,R        ; {random chance to hold phase
+ $B32D JR Z,$B345    ; }
+ $B32F INC B         ; {advance phase, check max reached
  $B330 LD A,$05      ;
- $B332 CP B          ;
+ $B332 CP B          ; }
  $B333 JR NZ,$B345   ;
- $B335 LD B,$83      ;
+ $B335 LD B,$83      ; wrap to retreat start
  $B337 JR $B345      ;
-*$B339 LD A,R        ;
- $B33B JR Z,$B345    ;
- $B33D DEC B         ;
+*$B339 LD A,R        ; {random chance to hold phase
+ $B33B JR Z,$B345    ; }
+ $B33D DEC B         ; {retreat phase, check min reached
  $B33E LD A,$7F      ;
- $B340 CP B          ;
+ $B340 CP B          ; }
  $B341 JR NZ,$B345   ;
- $B343 LD B,$01      ;
+ $B343 LD B,$01      ; wrap to extend start
 *$B345 LD A,B        ;
 ; This entry point is used by the routine at #R$9C56.
-*$B346 LD ($9C55),A  ;
+*$B346 LD ($9C55),A  ; store new phase
  $B349 LD HL,$8D74   ; Base address for Octopus phases
- $B34C AND $07       ;
- $B34E LD B,A        ;
- $B34F OR A          ;
+ $B34C AND $07       ; {phase index 0..7
+ $B34E LD B,A        ; }
+ $B34F OR A          ; {skip offset if phase 0
  $B350 JR Z,$B358    ;
- $B352 LD DE,$00C0   ;
-*$B355 ADD HL,DE     ;
- $B356 DJNZ $B355    ;
+ $B352 LD DE,$00C0   ; }
+*$B355 ADD HL,DE     ; {advance to phase's sprite block
+ $B356 DJNZ $B355    ; }
 *$B358 EX DE,HL      ;
  $B359 CALL $B35D    ; Draw Octopus sprite
  $B35C RET           ;
@@ -3315,45 +3360,45 @@ c$B317 LD A,($9C50)  ;
 ;
 ; DE Octopus sprite address, 6x4 tiles 8x8 pixels, 192 bytes
 @label=DrawOctopusSprite
-c$B35D DI            ;
- $B35E PUSH IY       ;
- $B360 LD IY,($9C53) ;
- $B364 LD ($9C53),DE ;
+c$B35D DI            ; {disable interrupts; save previous IY
+ $B35E PUSH IY       ; }
+ $B360 LD IY,($9C53) ; {swap in new mask table pointer
+ $B364 LD ($9C53),DE ; }
  $B368 LD HL,($9C51) ; get Octopus row/column
- $B36B INC HL        ;
+ $B36B INC HL        ; {skip header; loop 4 column blocks
  $B36C INC HL        ;
- $B36D LD C,$04      ;
-*$B36F LD B,$06      ;
+ $B36D LD C,$04      ; }
+*$B36F LD B,$06      ; 6 rows per block
  $B371 PUSH HL       ;
 *$B372 PUSH BC       ;
- $B373 LD B,$08      ;
+ $B373 LD B,$08      ; 8 pixel lines per tile
  $B375 PUSH HL       ;
-*$B376 LD A,(DE)     ;
+*$B376 LD A,(DE)     ; {XOR-blit sprite pixel with mask
  $B377 XOR (HL)      ;
  $B378 XOR (IY+$00)  ;
- $B37B LD (HL),A     ;
- $B37C INC DE        ;
+ $B37B LD (HL),A     ; }
+ $B37C INC DE        ; {advance sprite, mask, and screen row
  $B37D INC IY        ;
- $B37F INC H         ;
+ $B37F INC H         ; }
  $B380 DJNZ $B376    ;
- $B382 POP HL        ;
- $B383 INC L         ;
+ $B382 POP HL        ; {advance to next tile column
+ $B383 INC L         ; }
  $B384 POP BC        ;
  $B385 DJNZ $B372    ;
- $B387 POP HL        ;
+ $B387 POP HL        ; {advance to next column block
  $B388 LD A,L        ;
- $B389 ADD A,$20     ;
+ $B389 ADD A,$20     ; }
  $B38B LD L,A        ;
  $B38C DEC C         ;
  $B38D JR NZ,$B36F   ;
- $B38F POP IY        ;
+ $B38F POP IY        ; restore previous IY
  $B391 RET           ;
 
 ; Unused?
 b$B392 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $B39A DEFB $32,$32,$32,$1D,$02,$32
 
-; Routine at B3A0
+; Insert or remove object from packed record list
 ;
 ; Used by the routine at #R$B470.
 ;
@@ -3362,16 +3407,16 @@ b$B392 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 c$B3A0 BIT 4,(IX+$0D) ;
  $B3A4 JR Z,$B3AB     ;
 ; This entry point is used by the routine at #R$DFD5.
-*$B3A6 LD HL,($B7B9)  ;
- $B3A9 JR $B3B1       ;
+*$B3A6 LD HL,($B7B9)  ; {get default list address
+ $B3A9 JR $B3B1       ; }
 ; This entry point is used by the routine at #R$DFD5.
-*$B3AB LD H,(IX+$08)  ;
- $B3AE LD L,(IX+$07)  ;
+*$B3AB LD H,(IX+$08)  ; {get record's stored list address
+ $B3AE LD L,(IX+$07)  ; }
 *$B3B1 LD C,(IY+$0A)  ;
- $B3B4 LD A,(IX+$03)  ;
+ $B3B4 LD A,(IX+$03)  ; get record's state/count byte
  $B3B7 OR A           ;
  $B3B8 JR NZ,$B3D6    ;
- $B3BA SET 6,(IX+$0D) ;
+ $B3BA SET 6,(IX+$0D) ; set removed flag on record
  $B3BE BIT 3,(IX+$0D) ;
  $B3C2 JR Z,$B3CE     ;
  $B3C4 BIT 7,(IX+$12) ;
@@ -3383,32 +3428,32 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B3D4 LD A,$08       ;
 *$B3D6 LD B,A         ;
  $B3D7 XOR A          ;
-*$B3D8 ADD A,(IY+$07) ;
- $B3DB DJNZ $B3D8     ;
+*$B3D8 ADD A,(IY+$07) ; {sum sizes of preceding records
+ $B3DB DJNZ $B3D8     ; }
  $B3DD LD B,A         ;
  $B3DE LD C,A         ;
  $B3DF LD A,(IY+$0A)  ;
  $B3E2 SUB C          ;
  $B3E3 LD C,A         ;
  $B3E4 XOR A          ;
-*$B3E5 LD (HL),A      ;
+*$B3E5 LD (HL),A      ; {zero-fill freed slot
  $B3E6 INC HL         ;
- $B3E7 DJNZ $B3E5     ;
+ $B3E7 DJNZ $B3E5     ; }
 *$B3E9 PUSH HL        ;
  $B3EA LD D,(IX+$0C)  ;
  $B3ED LD E,(IX+$0B)  ;
- $B3F0 LD A,(DE)      ;
+ $B3F0 LD A,(DE)      ; {check for $FF end-of-list marker
  $B3F1 INC A          ;
- $B3F2 JR NZ,$B3FA    ;
+ $B3F2 JR NZ,$B3FA    ; }
  $B3F4 LD D,(IX+$0A)  ;
  $B3F7 LD E,(IX+$09)  ;
-*$B3FA LD ($5B11),DE  ;
+*$B3FA LD ($5B11),DE  ; store updated list-end pointer
  $B3FE LD B,(IY+$0B)  ;
 *$B401 PUSH BC        ;
  $B402 LD C,(IY+$06)  ;
  $B405 LD B,$00       ;
- $B407 EX DE,HL       ;
- $B408 LDIR           ;
+ $B407 EX DE,HL       ; {shift remaining records forward
+ $B408 LDIR           ; }
  $B40A EX DE,HL       ;
  $B40B LD (HL),$00    ;
  $B40D INC HL         ;
@@ -3419,9 +3464,9 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B413 OR A           ;
  $B414 JR Z,$B41B     ;
  $B416 XOR A          ;
-*$B417 LD (HL),A      ;
+*$B417 LD (HL),A      ; {zero-fill vacated tail
  $B418 INC HL         ;
- $B419 DJNZ $B417     ;
+ $B419 DJNZ $B417     ; }
 *$B41B LD (IX+$0C),D  ;
  $B41E LD (IX+$0B),E  ;
  $B421 LD B,(IX+$02)  ;
@@ -3440,8 +3485,8 @@ c$B3A0 BIT 4,(IX+$0D) ;
 *$B43E BIT 7,(IX+$11) ;
  $B442 JR NZ,$B43A    ;
  $B444 JR $B438       ;
-*$B446 LD A,B         ;
- $B447 CP $04         ;
+*$B446 LD A,B         ; {check shift count >= 4
+ $B447 CP $04         ; }
  $B449 JR C,$B45C     ;
  $B44B SUB $04        ;
  $B44D LD C,A         ;
@@ -3449,7 +3494,7 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B451 POP HL         ;
  $B452 PUSH HL        ;
  $B453 XOR A          ;
-*$B454 RRD            ;
+*$B454 RRD            ; shift nibbles right across buffer
  $B456 INC HL         ;
  $B457 DJNZ $B454     ;
  $B459 LD B,C         ;
@@ -3461,7 +3506,7 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B461 PUSH BC        ;
  $B462 LD B,(IY+$0D)  ;
  $B465 OR A           ;
-*$B466 RR (HL)        ;
+*$B466 RR (HL)        ; shift bits right across buffer
  $B468 INC HL         ;
  $B469 DJNZ $B466     ;
  $B46B POP BC         ;
@@ -3469,7 +3514,7 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B46E POP HL         ;
  $B46F RET            ;
 
-; Routine at B470
+; Draw object sprite, clipped to viewport
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
 ;
@@ -3477,14 +3522,14 @@ c$B3A0 BIT 4,(IX+$0D) ;
 ; I:IY record address in #R$C092 area
 c$B470 BIT 0,(IX+$0D) ;
  $B474 JR Z,$B479     ;
- $B476 CALL $B3A0     ;
-*$B479 LD D,(IX+$08)  ;
- $B47C LD E,(IX+$07)  ;
+ $B476 CALL $B3A0     ; Insert or remove object from packed record list
+*$B479 LD D,(IX+$08)  ; {get sprite bitmap address
+ $B47C LD E,(IX+$07)  ; }
  $B47F BIT 1,(IX+$0D) ;
  $B483 JR NZ,$B496    ;
  $B485 PUSH DE        ;
- $B486 LD C,(IY+$09)  ;
- $B489 LD L,(IY+$0A)  ;
+ $B486 LD C,(IY+$09)  ; {get draw-buffer dimensions
+ $B489 LD L,(IY+$0A)  ; }
  $B48C XOR A          ;
 *$B48D LD B,L         ;
 *$B48E LD (DE),A      ;
@@ -3493,15 +3538,15 @@ c$B470 BIT 0,(IX+$0D) ;
  $B492 DEC C          ;
  $B493 JR NZ,$B48D    ;
  $B495 POP DE         ;
-*$B496 LD HL,($B7B9)  ;
+*$B496 LD HL,($B7B9)  ; default to previous-frame sprite
  $B499 BIT 0,(IX+$0D) ;
  $B49D JR NZ,$B4A2    ;
- $B49F LD HL,$A41B    ;
-*$B4A2 LD B,(IY+$07)  ;
+ $B49F LD HL,$A41B    ; use empty sprite (hidden)
+*$B4A2 LD B,(IY+$07)  ; get sprite height in rows
 *$B4A5 LD A,(IY+$02)  ;
  $B4A8 AND $E0        ;
  $B4AA JR Z,$B4B4     ;
- $B4AC INC (IY+$02)   ;
+ $B4AC INC (IY+$02)   ; advance past left-clipped columns
  $B4AF INC DE         ;
  $B4B0 INC HL         ;
  $B4B1 DEC B          ;
@@ -3515,13 +3560,13 @@ c$B470 BIT 0,(IX+$0D) ;
  $B4C0 DEC B          ;
  $B4C1 LD A,C         ;
  $B4C2 JR $B4BB       ;
-*$B4C4 LD (IY+$0E),B  ;
+*$B4C4 LD (IY+$0E),B  ; store visible column count
  $B4C7 LD A,(IY+$07)  ;
  $B4CA SUB B          ;
- $B4CB LD (IY+$0F),A  ;
+ $B4CB LD (IY+$0F),A  ; store skipped column count
  $B4CE PUSH IX        ;
  $B4D0 PUSH HL        ;
- $B4D1 POP IX         ;
+ $B4D1 POP IX         ; IX = sprite bitmap pointer
  $B4D3 LD B,(IY+$09)  ;
 *$B4D6 PUSH BC        ;
 *$B4D7 LD A,(IY+$03)  ;
@@ -3545,21 +3590,21 @@ c$B470 BIT 0,(IX+$0D) ;
 *$B4FB PUSH BC        ;
  $B4FC PUSH HL        ;
  $B4FD LD B,(IY+$0E)  ;
-*$B500 LD A,(DE)      ;
- $B501 XOR (HL)       ;
+*$B500 LD A,(DE)      ; {diff screen pixels with sprite data
+ $B501 XOR (HL)       ; }
  $B502 LD (IY+$07),A  ;
- $B505 CPL            ;
- $B506 AND (IX+$00)   ;
+ $B505 CPL            ; {build mask limited to sprite shape
+ $B506 AND (IX+$00)   ; }
  $B509 LD (DE),A      ;
- $B50A LD A,(IX+$00)  ;
- $B50D OR (IY+$07)    ;
+ $B50A LD A,(IX+$00)  ; {combine sprite pixels with preserved background
+ $B50D OR (IY+$07)    ; }
  $B510 LD (HL),A      ;
  $B511 INC L          ;
  $B512 INC DE         ;
  $B513 INC IX         ;
  $B515 DJNZ $B500     ;
- $B517 LD A,(IY+$06)  ;
- $B51A INC A          ;
+ $B517 LD A,(IY+$06)  ; {advance row skip offset
+ $B51A INC A          ; }
  $B51B LD (IY+$07),A  ;
  $B51E LD L,(IY+$0F)  ;
  $B521 LD H,$00       ;
@@ -3582,12 +3627,12 @@ c$B470 BIT 0,(IX+$0D) ;
  $B540 JR NZ,$B547    ;
  $B542 BIT 6,(IX+$0D) ;
  $B546 RET Z          ;
-*$B547 LD H,(IX+$08)  ;
- $B54A LD L,(IX+$07)  ;
+*$B547 LD H,(IX+$08)  ; {get list address for record removal
+ $B54A LD L,(IX+$07)  ; }
  $B54D LD A,(IX+$02)  ;
  $B550 OR A           ;
  $B551 JR NZ,$B5A4    ;
- $B553 BIT 7,(IX+$11) ;
+ $B553 BIT 7,(IX+$11) ; check "moving left" flag
  $B557 JR NZ,$B57E    ;
  $B559 PUSH HL        ;
  $B55A POP DE         ;
@@ -3622,7 +3667,7 @@ c$B572 PUSH BC       ;
  $B57B DJNZ $B572    ;
  $B57D RET           ;
 
-; Routine at B57E
+; Remove first record: shift list backward by one slot
 ;
 ; Used by the routine at #R$B470.
 ;
@@ -3660,21 +3705,21 @@ c$B598 PUSH BC       ;
  $B5A1 DJNZ $B598    ;
  $B5A3 RET           ;
 
-; Routine at B5A4
+; Shift record block forward/backward by direction (Y axis)
 ;
 ; Used by the routine at #R$B470.
 ;
-; I:HL ???
+; I:HL record list base address to shift from
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
-c$B5A4 BIT 7,(IX+$12) ;
+c$B5A4 BIT 7,(IX+$12) ; check Y direction (moving up/down)
  $B5A8 JR NZ,$B5C1    ;
- $B5AA PUSH HL        ;
+ $B5AA PUSH HL        ; {advance target past one record
  $B5AB LD E,(IY+$0A)  ;
  $B5AE LD D,$00       ;
- $B5B0 ADD HL,DE      ;
+ $B5B0 ADD HL,DE      ; }
  $B5B1 POP DE         ;
- $B5B2 LD B,(IY+$08)  ;
+ $B5B2 LD B,(IY+$08)  ; number of records to shift
  $B5B5 CALL $B572     ; Copy records forward
  $B5B8 LD B,(IY+$0A)  ;
  $B5BB XOR A          ;
@@ -3682,9 +3727,9 @@ c$B5A4 BIT 7,(IX+$12) ;
  $B5BD INC DE         ;
  $B5BE DJNZ $B5BC     ;
  $B5C0 RET            ;
-*$B5C1 LD E,(IY+$0A)  ;
+*$B5C1 LD E,(IY+$0A)  ; {get record size, count (backward branch)
  $B5C4 LD D,$00       ;
- $B5C6 LD B,(IY+$08)  ;
+ $B5C6 LD B,(IY+$08)  ; }
 *$B5C9 ADD HL,DE      ;
  $B5CA DJNZ $B5C9     ;
  $B5CC DEC HL         ;
@@ -3701,7 +3746,7 @@ c$B5A4 BIT 7,(IX+$12) ;
  $B5DD DJNZ $B5DB     ;
  $B5DF RET            ;
 
-; Routine at B5E0
+; Clip object position to viewport, allocate/free screen slot
 ;
 ; Used by the routines at #R$B737, #R$B7BB and #R$BA64.
 ;
@@ -3712,9 +3757,9 @@ c$B5E0 RES 1,(IX+$0D) ;
  $B5E8 JR Z,$B5EE     ;
  $B5EA SET 1,(IX+$0D) ;
 *$B5EE RES 0,(IX+$0D) ;
- $B5F2 LD HL,($5B0B)  ;
- $B5F5 LD A,(IX+$00)  ;
- $B5F8 SUB L          ;
+ $B5F2 LD HL,($5B0B)  ; get screen scroll/viewport position
+ $B5F5 LD A,(IX+$00)  ; {column relative to viewport
+ $B5F8 SUB L          ; }
  $B5F9 LD C,A         ;
  $B5FA CP $18         ;
  $B5FC JR C,$B60A     ;
@@ -3722,11 +3767,11 @@ c$B5E0 RES 1,(IX+$0D) ;
  $B601 CP $18         ;
  $B603 LD A,C         ;
  $B604 JR C,$B60A     ;
- $B606 SET 0,(IX+$0D) ;
-*$B60A LD (IY+$02),A  ;
- $B60D LD (IY+$00),A  ;
- $B610 LD A,(IX+$01)  ;
- $B613 SUB H          ;
+ $B606 SET 0,(IX+$0D) ; mark column off-screen
+*$B60A LD (IY+$02),A  ; {store column in record
+ $B60D LD (IY+$00),A  ; }
+ $B610 LD A,(IX+$01)  ; {row relative to viewport
+ $B613 SUB H          ; }
  $B614 CP $18         ;
  $B616 LD C,A         ;
  $B617 JR C,$B62D     ;
@@ -3734,74 +3779,75 @@ c$B5E0 RES 1,(IX+$0D) ;
  $B61C CP $18         ;
  $B61E LD A,C         ;
  $B61F JR C,$B62D     ;
- $B621 LD (IY+$01),A  ;
+ $B621 LD (IY+$01),A  ; store row in record
  $B624 RES 0,(IX+$0D) ;
  $B628 LD A,(IX+$0D)  ;
  $B62B JR $B65F       ;
 *$B62D LD (IY+$03),A  ;
  $B630 LD (IY+$01),A  ;
  $B633 LD A,(IX+$0D)  ;
- $B636 XOR $01        ;
- $B638 LD (IX+$0D),A  ;
+ $B636 XOR $01        ; {toggle on-screen/off-screen state bit
+ $B638 LD (IX+$0D),A  ; }
  $B63B BIT 0,A        ;
  $B63D JR Z,$B65F     ;
  $B63F BIT 1,A        ;
  $B641 RET NZ         ;
- $B642 LD HL,$B676    ;
+ $B642 LD HL,$B676    ; get slot allocation table address
  $B645 XOR A          ;
-*$B646 BIT 7,(HL)     ;
+*$B646 BIT 7,(HL)     ; check slot free
  $B648 JR Z,$B655     ;
  $B64A INC HL         ;
  $B64B INC A          ;
  $B64C BIT 4,A        ;
  $B64E JR Z,$B646     ;
- $B650 SET 7,(IX+$0D) ;
+ $B650 SET 7,(IX+$0D) ; mark record as having no free slot
  $B654 RET            ;
-*$B655 AND $0F        ;
- $B657 OR $F0         ;
- $B659 LD (IX+$08),A  ;
- $B65C SET 7,(HL)     ;
+*$B655 AND $0F        ; {clamp slot index 0..15
+ $B657 OR $F0         ; }
+ $B659 LD (IX+$08),A  ; store allocated slot index
+ $B65C SET 7,(HL)     ; mark slot used
  $B65E RET            ;
 *$B65F BIT 1,A        ;
  $B661 RET Z          ;
  $B662 BIT 7,(IX+$0D) ;
  $B666 RET NZ         ;
- $B667 LD A,(IX+$08)  ;
- $B66A AND $0F        ;
+ $B667 LD A,(IX+$08)  ; {get slot index to free
+ $B66A AND $0F        ; }
  $B66C LD HL,$B676    ;
  $B66F LD E,A         ;
  $B670 LD D,$00       ;
  $B672 ADD HL,DE      ;
- $B673 RES 7,(HL)     ;
+ $B673 RES 7,(HL)     ; mark slot free
  $B675 RET            ;
 
-; Unused
-s$B676 DEFS $10
+; Slot allocation bitmap, 16 slots, bit7 = slot used
+b$B676 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $B67E DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at B686
+; Screen attribute change for object edges (vertical and horizontal)
 ;
 ; Used by the routines at #R$B737 and #R$B7BB.
 ;
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
-c$B686 BIT 5,(IX+$0D) ;
+c$B686 BIT 5,(IX+$0D) ; check vertical-edge flag
  $B68A JR Z,$B6D6     ;
- $B68C LD L,(IY+$00)  ;
- $B68F LD H,(IY+$01)  ;
- $B692 LD A,$06       ;
- $B694 XOR (IX+$04)   ;
+ $B68C LD L,(IY+$00)  ; {get object screen position
+ $B68F LD H,(IY+$01)  ; }
+ $B692 LD A,$06       ; {pick highlight color based on move direction
+ $B694 XOR (IX+$04)   ; }
  $B697 LD C,A         ;
- $B698 BIT 7,(IX+$11) ;
+ $B698 BIT 7,(IX+$11) ; check "moving left" flag
  $B69C JR NZ,$B6A6    ;
- $B69E INC (IX+$00)   ;
- $B6A1 INC (IY+$00)   ;
+ $B69E INC (IX+$00)   ; {advance column right
+ $B6A1 INC (IY+$00)   ; }
  $B6A4 JR $B6B1       ;
-*$B6A6 DEC (IX+$00)   ;
- $B6A9 DEC (IY+$00)   ;
- $B6AC LD A,L         ;
- $B6AD ADD A,(IY+$06) ;
+*$B6A6 DEC (IX+$00)   ; {advance column left
+ $B6A9 DEC (IY+$00)   ; }
+ $B6AC LD A,L         ; {compute far edge column
+ $B6AD ADD A,(IY+$06) ; }
  $B6B0 LD L,A         ;
-*$B6B1 LD B,(IY+$09)  ;
+*$B6B1 LD B,(IY+$09)  ; get rows to process
 *$B6B4 LD A,H         ;
  $B6B5 AND $E0        ;
  $B6B7 JR NZ,$B6D3    ;
@@ -3817,33 +3863,34 @@ c$B686 BIT 5,(IX+$0D) ;
  $B6C8 PUSH HL        ;
  $B6C9 CALL $A14C     ; Get screen attribute address
  $B6CC LD A,C         ;
- $B6CD CP (HL)        ;
+ $B6CD CP (HL)        ; compare to object's color
  $B6CE JR NZ,$B6D2    ;
- $B6D0 LD (HL),$06    ;
+ $B6D0 LD (HL),$06    ; paint highlight color
 *$B6D2 POP HL         ;
 *$B6D3 INC H          ;
  $B6D4 DJNZ $B6B4     ;
-*$B6D6 BIT 6,(IX+$0D) ;
+*$B6D6 BIT 6,(IX+$0D) ; check horizontal-edge flag
  $B6DA JR Z,$B704     ;
  $B6DC LD L,(IY+$00)  ;
  $B6DF LD H,(IY+$01)  ;
  $B6E2 LD A,$06       ;
  $B6E4 XOR (IX+$04)   ;
  $B6E7 LD C,A         ;
- $B6E8 BIT 7,(IX+$12) ;
+ $B6E8 BIT 7,(IX+$12) ; check "moving up" flag
  $B6EC JR NZ,$B6F6    ;
- $B6EE INC (IY+$01)   ;
- $B6F1 INC (IX+$01)   ;
+ $B6EE INC (IY+$01)   ; {advance row down
+ $B6F1 INC (IX+$01)   ; }
  $B6F4 JR $B701       ;
-*$B6F6 DEC (IY+$01)   ;
- $B6F9 DEC (IX+$01)   ;
+*$B6F6 DEC (IY+$01)   ; {advance row up
+ $B6F9 DEC (IX+$01)   ; }
  $B6FC LD A,H         ;
  $B6FD ADD A,(IY+$08) ;
  $B700 LD H,A         ;
-*$B701 CALL $B70F     ;
-*$B704 LD L,(IY+$00)  ;
+*$B701 CALL $B70F     ; Screen attribute change for horizontally oriented
+                      ; object
+*$B704 LD L,(IY+$00)  ; {reload position/color for common tail
  $B707 LD H,(IY+$01)  ;
- $B70A LD C,$06       ;
+ $B70A LD C,$06       ; }
  $B70C JP $B875       ;
 
 ; Screen attribute change for horizontally oriented object
@@ -3853,86 +3900,87 @@ c$B686 BIT 5,(IX+$0D) ;
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
 ; I:HL (row, column)
-c$B70F LD A,H        ;
+c$B70F LD A,H        ; {skip if row off-grid (bits 5-7 set)
  $B710 AND $E0       ;
- $B712 RET NZ        ;
- $B713 LD A,H        ;
+ $B712 RET NZ        ; }
+ $B713 LD A,H        ; {skip if row >= 24
  $B714 CP $18        ;
- $B716 RET NC        ;
+ $B716 RET NC        ; }
  $B717 PUSH HL       ;
- $B718 LD B,(IY+$07) ;
-*$B71B LD A,L        ;
+ $B718 LD B,(IY+$07) ; get width in columns
+*$B71B LD A,L        ; {skip column if bits 5-7 set
  $B71C AND $E0       ;
- $B71E JR NZ,$B732   ;
- $B720 LD A,L        ;
+ $B71E JR NZ,$B732   ; }
+ $B720 LD A,L        ; {skip if column >= 24
  $B721 CP $18        ;
- $B723 JR NC,$B732   ;
+ $B723 JR NC,$B732   ; }
  $B725 PUSH HL       ;
  $B726 CALL $A14C    ; Get screen attribute address
- $B729 LD A,(HL)     ;
- $B72A CP C          ;
+ $B729 LD A,(HL)     ; {compare current attribute to target color
+ $B72A CP C          ; }
  $B72B JR NZ,$B731   ;
- $B72D XOR (IX+$04)  ;
+ $B72D XOR (IX+$04)  ; flip color based on direction
  $B730 LD (HL),A     ;
 *$B731 POP HL        ;
-*$B732 INC L         ;
+*$B732 INC L         ; advance to next column
  $B733 DJNZ $B71B    ;
  $B735 POP HL        ;
  $B736 RET           ;
 
-; Routine at B737
+; Update fish object: advance shift, draw, run moving procedure
 ;
 ; Used by the routines at #R$BE40, #R$BE6D, #R$BE9A and #R$C431.
 ;
 ; I:IX record address in #R$C4F0 area
-c$B737 LD D,(IX+$14)  ;
- $B73A LD E,(IX+$13)  ;
- $B73D PUSH DE        ;
- $B73E POP IY         ;
- $B740 LD A,(IX+$0E)  ;
- $B743 LD (IX+$0F),A  ;
- $B746 RES 5,(IX+$0D) ;
- $B74A RES 6,(IX+$0D) ;
- $B74E LD A,(IX+$02)  ;
- $B751 ADD A,(IX+$11) ;
- $B754 AND $07        ;
- $B756 LD (IX+$02),A  ;
- $B759 LD A,(IX+$03)  ;
- $B75C ADD A,(IX+$12) ;
- $B75F AND $07        ;
- $B761 LD (IX+$03),A  ;
- $B764 CALL $B5E0     ;
- $B767 BIT 0,(IX+$0D) ;
+c$B737 LD D,(IX+$14)  ; {get object position into DE
+ $B73A LD E,(IX+$13)  ; }
+ $B73D PUSH DE        ; {IY = object position record
+ $B73E POP IY         ; }
+ $B740 LD A,(IX+$0E)  ; {reload speed counter from speed factor
+ $B743 LD (IX+$0F),A  ; }
+ $B746 RES 5,(IX+$0D) ; {clear off-grid row/column flags
+ $B74A RES 6,(IX+$0D) ; }
+ $B74E LD A,(IX+$02)  ; {add last DX to X shift
+ $B751 ADD A,(IX+$11) ; }
+ $B754 AND $07        ; {wrap X shift 0..7 and store
+ $B756 LD (IX+$02),A  ; }
+ $B759 LD A,(IX+$03)  ; {add last DY to Y shift
+ $B75C ADD A,(IX+$12) ; }
+ $B75F AND $07        ; {wrap Y shift 0..7 and store
+ $B761 LD (IX+$03),A  ; }
+ $B764 CALL $B5E0     ; Clip object position to viewport, allocate/free screen
+                      ; slot
+ $B767 BIT 0,(IX+$0D) ; check off-grid flag
  $B76B JR Z,$B77B     ;
- $B76D BIT 7,(IX+$0D) ;
+ $B76D BIT 7,(IX+$0D) ; check allocation-failed flag
  $B771 JR NZ,$B79E    ;
- $B773 CALL $B470     ;
- $B776 CALL $B686     ;
+ $B773 CALL $B470     ; Draw object sprite, clipped to viewport
+ $B776 CALL $B686     ; Screen attribute change for object edges
  $B779 JR $B79E       ;
-*$B77B LD A,(IX+$02)  ;
+*$B77B LD A,(IX+$02)  ; reload X shift
  $B77E RES 7,(IX+$0D) ;
  $B782 OR A           ;
  $B783 JR NZ,$B789    ;
- $B785 SET 5,(IX+$0D) ;
+ $B785 SET 5,(IX+$0D) ; mark X-centered (no shift)
 *$B789 LD A,(IX+$03)  ;
  $B78C OR A           ;
  $B78D JR NZ,$B793    ;
- $B78F SET 6,(IX+$0D) ;
+ $B78F SET 6,(IX+$0D) ; mark Y-centered (no shift)
 *$B793 LD A,(IX+$0D)  ;
- $B796 AND $60        ;
+ $B796 AND $60        ; check either center flag set
  $B798 JR Z,$B79E     ;
- $B79A CALL $B686     ;
+ $B79A CALL $B686     ; Screen attribute change for object edges
  $B79D RET            ;
 *$B79E LD A,(IX+$02)  ;
- $B7A1 BIT 2,(IX+$0D) ;
+ $B7A1 BIT 2,(IX+$0D) ; choose X or Y shift value
  $B7A5 JR Z,$B7AA     ;
  $B7A7 LD A,(IX+$03)  ;
-*$B7AA CP $04         ;
+*$B7AA CP $04         ; check shift reached midpoint
  $B7AC RET NZ         ;
  $B7AD LD HL,$B7B8    ; {address of the return point - put on the stack
  $B7B0 PUSH HL        ; }
- $B7B1 LD H,(IX+$06)  ;
- $B7B4 LD L,(IX+$05)  ;
+ $B7B1 LD H,(IX+$06)  ; {get moving-procedure address
+ $B7B4 LD L,(IX+$05)  ; }
  $B7B7 JP (HL)        ;
 ; Point of return
  $B7B8 RET            ;
@@ -3940,53 +3988,54 @@ c$B737 LD D,(IX+$14)  ;
 ; Unused
 s$B7B9 DEFW $0000    ; buffer address ??
 
-; Routine at B7BB
+; Update object: advance shift, draw, run moving procedure
 ;
 ; Used by the routines at #R$BE58, #R$BE85, #R$BEB2 and #R$C45C.
 ;
 ; I:IX object address in #R$C4F0 area
-c$B7BB LD A,(IX+$0D)  ;
+c$B7BB LD A,(IX+$0D)  ; {mask and store off-grid/center flags
  $B7BE AND $9E        ;
- $B7C0 LD (IX+$0D),A  ;
- $B7C3 LD E,(IX+$13)  ;
- $B7C6 LD D,(IX+$14)  ;
+ $B7C0 LD (IX+$0D),A  ; }
+ $B7C3 LD E,(IX+$13)  ; {get object position into DE
+ $B7C6 LD D,(IX+$14)  ; }
  $B7C9 PUSH DE        ;
  $B7CA POP IY         ; now IY = record address in block #R$C092
- $B7CC LD A,(IX+$02)  ;
- $B7CF ADD A,(IX+$11) ;
- $B7D2 AND $07        ;
- $B7D4 LD (IX+$02),A  ;
- $B7D7 LD A,(IX+$03)  ;
- $B7DA ADD A,(IX+$12) ;
- $B7DD AND $07        ;
- $B7DF LD (IX+$03),A  ;
- $B7E2 CALL $B5E0     ;
- $B7E5 BIT 0,(IX+$0D) ;
+ $B7CC LD A,(IX+$02)  ; {add last DX to X shift
+ $B7CF ADD A,(IX+$11) ; }
+ $B7D2 AND $07        ; {wrap X shift 0..7 and store
+ $B7D4 LD (IX+$02),A  ; }
+ $B7D7 LD A,(IX+$03)  ; {add last DY to Y shift
+ $B7DA ADD A,(IX+$12) ; }
+ $B7DD AND $07        ; {wrap Y shift 0..7 and store
+ $B7DF LD (IX+$03),A  ; }
+ $B7E2 CALL $B5E0     ; Clip object position to viewport, allocate/free screen
+                      ; slot
+ $B7E5 BIT 0,(IX+$0D) ; check off-grid flag
  $B7E9 JR Z,$B7F9     ;
- $B7EB BIT 7,(IX+$0D) ;
+ $B7EB BIT 7,(IX+$0D) ; check allocation-failed flag
  $B7EF JR NZ,$B81C    ;
- $B7F1 CALL $B470     ;
- $B7F4 CALL $B837     ;
+ $B7F1 CALL $B470     ; Draw object sprite, clipped to viewport
+ $B7F4 CALL $B837     ; Screen attribute change for vertically oriented object
  $B7F7 JR $B81C       ;
-*$B7F9 LD A,(IX+$02)  ;
+*$B7F9 LD A,(IX+$02)  ; reload X shift
  $B7FC RES 7,(IX+$0D) ;
  $B800 OR A           ;
  $B801 JR NZ,$B807    ;
- $B803 SET 5,(IX+$0D) ;
+ $B803 SET 5,(IX+$0D) ; mark X-centered (no shift)
 *$B807 LD A,(IX+$03)  ;
  $B80A OR A           ;
  $B80B JR NZ,$B811    ;
- $B80D SET 6,(IX+$0D) ;
+ $B80D SET 6,(IX+$0D) ; mark Y-centered (no shift)
 *$B811 LD A,(IX+$0D)  ;
- $B814 AND $60        ;
+ $B814 AND $60        ; check either center flag set
  $B816 JR Z,$B81C     ;
- $B818 CALL $B686     ;
+ $B818 CALL $B686     ; Screen attribute change for object edges
  $B81B RET            ;
 *$B81C LD A,(IX+$02)  ;
- $B81F BIT 2,(IX+$0D) ;
+ $B81F BIT 2,(IX+$0D) ; choose X or Y shift value
  $B823 JR Z,$B828     ;
  $B825 LD A,(IX+$03)  ;
-*$B828 CP $04         ;
+*$B828 CP $04         ; check shift reached midpoint
  $B82A RET NZ         ;
  $B82B LD HL,$B836    ;
  $B82E PUSH HL        ;
@@ -3994,48 +4043,49 @@ c$B7BB LD A,(IX+$0D)  ;
  $B832 LD L,(IX+$05)  ;
  $B835 JP (HL)        ; run the moving procedure
 
-; Routine at B836
+; No-op moving procedure (empty stub)
 c$B836 RET           ;
 
-; Routine at B837
+; Screen attribute change for vertically oriented object
 ;
 ; Used by the routines at #R$B7BB and #R$BA64.
 ;
 ; I:IX object address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
-c$B837 LD A,$06       ;
- $B839 BIT 0,(IX+$0D) ;
+c$B837 LD A,$06       ; base color value
+ $B839 BIT 0,(IX+$0D) ; check off-grid flag
  $B83D JR NZ,$B842    ;
- $B83F XOR (IX+$04)   ;
+ $B83F XOR (IX+$04)   ; flip color for direction
 *$B842 LD C,A         ;
- $B843 LD L,(IY+$00)  ;
- $B846 LD H,(IY+$01)  ;
+ $B843 LD L,(IY+$00)  ; {get screen position
+ $B846 LD H,(IY+$01)  ; }
  $B849 LD A,(IX+$02)  ;
  $B84C OR A           ;
  $B84D JR NZ,$B85F    ;
- $B84F BIT 7,(IX+$11) ;
+ $B84F BIT 7,(IX+$11) ; check "moving left" flag
  $B853 JR NZ,$B85B    ;
- $B855 INC (IX+$00)   ;
- $B858 INC L          ;
+ $B855 INC (IX+$00)   ; {advance column right
+ $B858 INC L          ; }
  $B859 JR $B85F       ;
-*$B85B DEC (IX+$00)   ;
- $B85E DEC L          ;
+*$B85B DEC (IX+$00)   ; {advance column left
+ $B85E DEC L          ; }
 *$B85F LD A,(IX+$03)  ;
  $B862 OR A           ;
  $B863 JR NZ,$B875    ;
- $B865 BIT 7,(IX+$12) ;
+ $B865 BIT 7,(IX+$12) ; check "moving up" flag
  $B869 JR NZ,$B871    ;
- $B86B INC (IX+$01)   ;
- $B86E INC H          ;
+ $B86B INC (IX+$01)   ; {advance row down
+ $B86E INC H          ; }
  $B86F JR $B875       ;
-*$B871 DEC (IX+$01)   ;
- $B874 DEC H          ;
+*$B871 DEC (IX+$01)   ; {advance row up
+ $B874 DEC H          ; }
 ; This entry point is used by the routine at #R$B686.
-*$B875 LD A,(IY+$09)  ;
- $B878 LD (IY+$0E),A  ;
-*$B87B CALL $B70F     ;
- $B87E INC H          ;
- $B87F DEC (IY+$0E)   ;
+*$B875 LD A,(IY+$09)  ; {set column loop count
+ $B878 LD (IY+$0E),A  ; }
+*$B87B CALL $B70F     ; Screen attribute change for horizontally oriented
+                      ; object
+ $B87E INC H          ; next row
+ $B87F DEC (IY+$0E)   ; decrement column count
  $B882 JR NZ,$B87B    ;
  $B884 RET            ;
 
@@ -4046,28 +4096,28 @@ c$B837 LD A,$06       ;
 ; I:IX object record
 c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B889 JP NZ,$B941     ;
- $B88C BIT 7,(IX+$11)  ;
+ $B88C BIT 7,(IX+$11)  ; check facing direction
  $B890 LD A,(IX+$00)   ;
  $B893 JR NZ,$B89C     ;
- $B895 INC A           ;
+ $B895 INC A           ; {probe tile ahead (right)
  $B896 INC A           ;
- $B897 ADD A,(IY+$07)  ;
+ $B897 ADD A,(IY+$07)  ; }
  $B89A JR $B89F        ;
-*$B89C DEC A           ;
+*$B89C DEC A           ; {probe tile ahead (left)
  $B89D DEC A           ;
- $B89E DEC A           ;
+ $B89E DEC A           ; }
 *$B89F LD L,A          ;
  $B8A0 LD H,(IX+$01)   ;
- $B8A3 CALL $A129      ;
+ $B8A3 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B8A6 OR A            ;
  $B8A7 JR NZ,$B903     ;
  $B8A9 INC H           ;
- $B8AA CALL $A129      ;
+ $B8AA CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B8AD OR A            ;
  $B8AE JR NZ,$B903     ;
- $B8B0 BIT 0,(IX+$0D)  ;
+ $B8B0 BIT 0,(IX+$0D)  ; check off-grid flag
  $B8B4 JR Z,$B8D7      ;
- $B8B6 BIT 7,(IX+$0D)  ;
+ $B8B6 BIT 7,(IX+$0D)  ; check allocation-failed flag
  $B8BA JR NZ,$B8D7     ;
  $B8BC LD DE,($5B0B)   ;
  $B8C0 LD A,H          ;
@@ -4085,50 +4135,50 @@ c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B8D2 LD A,(HL)       ;
  $B8D3 CP $06          ;
  $B8D5 JR NZ,$B903     ;
-*$B8D7 LD A,R          ;
+*$B8D7 LD A,R          ; get pseudo-random value
  $B8D9 JR Z,$B903      ;
  $B8DB LD C,A          ;
  $B8DC AND $40         ;
  $B8DE JR Z,$B8E5      ;
-*$B8E0 LD (IX+$12),$00 ;
+*$B8E0 LD (IX+$12),$00 ; stop moving (no direction change)
  $B8E4 RET             ;
 *$B8E5 BIT 2,C         ;
  $B8E7 JR Z,$B8F6      ;
  $B8E9 LD A,(IX+$01)   ;
- $B8EC CP (IX+$15)     ;
+ $B8EC CP (IX+$15)     ; compare row to lower bound
  $B8EF JR NC,$B8E0     ;
- $B8F1 LD (IX+$12),$01 ;
+ $B8F1 LD (IX+$12),$01 ; set direction = down
  $B8F5 RET             ;
-*$B8F6 LD A,(IX+$16)   ;
- $B8F9 CP (IX+$01)     ;
+*$B8F6 LD A,(IX+$16)   ; {compare row to upper bound
+ $B8F9 CP (IX+$01)     ; }
  $B8FC JR NC,$B8E0     ;
- $B8FE LD (IX+$12),$FF ;
+ $B8FE LD (IX+$12),$FF ; set direction = up
  $B902 RET             ;
 *$B903 BIT 7,(IX+$11)  ;
  $B907 JR Z,$B917      ;
  $B909 LD A,(IX+$17)   ;
  $B90C LD (IX+$18),A   ;
- $B90F LD L,(IY+$16)   ;
- $B912 LD H,(IY+$17)   ;
+ $B90F LD L,(IY+$16)   ; {get target tile offset (facing left)
+ $B912 LD H,(IY+$17)   ; }
  $B915 JR $B924        ;
 *$B917 XOR A           ;
  $B918 SUB (IX+$17)    ;
  $B91B LD (IX+$18),A   ;
- $B91E LD L,(IY+$14)   ;
- $B921 LD H,(IY+$15)   ;
+ $B91E LD L,(IY+$14)   ; {get target tile offset (facing right)
+ $B921 LD H,(IY+$15)   ; }
 *$B924 LD (IX+$0B),L   ;
  $B927 LD (IX+$0C),H   ;
  $B92A LD (IX+$11),$00 ;
  $B92E LD (IX+$12),$00 ;
  $B932 SET 0,(IX+$10)  ; set "moving" bit
- $B936 LD A,(IY+$0C)   ;
- $B939 LD (IX+$19),A   ;
- $B93C SLA (IX+$0E)    ;
+ $B936 LD A,(IY+$0C)   ; {get and store move timer
+ $B939 LD (IX+$19),A   ; }
+ $B93C SLA (IX+$0E)    ; double speed while moving
  $B940 RET             ;
 *$B941 DEC (IX+$19)    ;
  $B944 RET NZ          ;
- $B945 LD A,(IX+$18)   ;
- $B948 LD (IX+$11),A   ;
+ $B945 LD A,(IX+$18)   ; {restore facing direction
+ $B948 LD (IX+$11),A   ; }
  $B94B BIT 7,A         ;
  $B94D JR Z,$B957      ;
  $B94F LD L,(IY+$10)   ;
@@ -4144,31 +4194,31 @@ c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B96D SRL (IX+$0E)    ;
  $B971 RET             ;
 
-; Routine at B972
+; Moving procedure for fish object moving vertical
 c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $B976 JP NZ,$BA33     ;
- $B979 BIT 7,(IX+$12)  ;
+ $B979 BIT 7,(IX+$12)  ; check facing direction
  $B97D LD A,(IX+$01)   ;
  $B980 JR NZ,$B988     ;
- $B982 ADD A,(IY+$09)  ;
- $B985 INC A           ;
+ $B982 ADD A,(IY+$09)  ; {probe tile ahead (down)
+ $B985 INC A           ; }
  $B986 JR $B98A        ;
-*$B988 DEC A           ;
- $B989 DEC A           ;
+*$B988 DEC A           ; {probe tile ahead (up)
+ $B989 DEC A           ; }
 *$B98A LD H,A          ;
  $B98B LD L,(IX+$00)   ;
- $B98E CALL $A129      ;
+ $B98E CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B991 OR A            ;
  $B992 JR NZ,$B9F9     ;
  $B994 LD A,L          ;
  $B995 ADD A,(IY+$06)  ;
  $B998 LD L,A          ;
- $B999 CALL $A129      ;
+ $B999 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B99C OR A            ;
  $B99D JR NZ,$B9F9     ;
- $B99F BIT 0,(IX+$0D)  ;
+ $B99F BIT 0,(IX+$0D)  ; check off-grid flag
  $B9A3 JR Z,$B9C7      ;
- $B9A5 BIT 7,(IX+$0D)  ;
+ $B9A5 BIT 7,(IX+$0D)  ; check allocation-failed flag
  $B9A9 JR NZ,$B9C7     ;
  $B9AB LD DE,($5B0B)   ;
  $B9AF LD A,H          ;
@@ -4187,42 +4237,42 @@ c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $B9C2 LD A,(HL)       ;
  $B9C3 CP $06          ;
  $B9C5 JR NZ,$B9F9     ;
-*$B9C7 LD A,R          ;
+*$B9C7 LD A,R          ; get pseudo-random value
  $B9C9 JR Z,$B9F9      ;
  $B9CB BIT 6,A         ;
  $B9CD JR Z,$B9D4      ;
-*$B9CF LD (IX+$11),$00 ;
+*$B9CF LD (IX+$11),$00 ; stop moving (no direction change)
  $B9D3 RET             ;
-*$B9D4 BIT 2,A         ;
- $B9D6 LD C,$01        ;
+*$B9D4 BIT 2,A         ; {random bit test
+ $B9D6 LD C,$01        ; }
  $B9D8 JR Z,$B9E3      ;
- $B9DA LD C,$FF        ;
+ $B9DA LD C,$FF        ; set direction = up
  $B9DC LD A,L          ;
  $B9DD SUB (IY+$06)    ;
  $B9E0 SUB $02         ;
  $B9E2 LD L,A          ;
 *$B9E3 INC L           ;
- $B9E4 CALL $A129      ;
+ $B9E4 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B9E7 OR A            ;
  $B9E8 JR NZ,$B9CF     ;
- $B9EA LD A,H          ;
- $B9EB ADD A,(IY+$08)  ;
+ $B9EA LD A,H          ; {probe tile below
+ $B9EB ADD A,(IY+$08)  ; }
  $B9EE LD H,A          ;
- $B9EF CALL $A129      ;
+ $B9EF CALL $A129      ; Calculate address in relief block and Get tile nummber
  $B9F2 OR A            ;
  $B9F3 JR NZ,$B9CF     ;
  $B9F5 LD (IX+$11),C   ;
  $B9F8 RET             ;
-*$B9F9 BIT 7,(IX+$12)  ;
+*$B9F9 BIT 7,(IX+$12)  ; check facing direction
  $B9FD JR Z,$BA0A      ;
  $B9FF LD A,(IX+$17)   ;
- $BA02 LD L,(IY+$14)   ;
- $BA05 LD H,(IY+$15)   ;
+ $BA02 LD L,(IY+$14)   ; {get target tile offset (facing down)
+ $BA05 LD H,(IY+$15)   ; }
  $BA08 JR $BA14        ;
-*$BA0A XOR A           ;
- $BA0B SUB (IX+$17)    ;
- $BA0E LD L,(IY+$16)   ;
- $BA11 LD H,(IY+$17)   ;
+*$BA0A XOR A           ; {compute offset (facing up)
+ $BA0B SUB (IX+$17)    ; }
+ $BA0E LD L,(IY+$16)   ; {get target tile offset (facing up)
+ $BA11 LD H,(IY+$17)   ; }
 *$BA14 LD (IX+$18),A   ;
  $BA17 LD (IX+$0B),L   ;
  $BA1A LD (IX+$0C),H   ;
@@ -4230,14 +4280,14 @@ c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $BA1E LD (IX+$11),A   ;
  $BA21 LD (IX+$12),A   ;
  $BA24 SET 0,(IX+$10)  ; set "moving" bit
- $BA28 LD A,(IY+$0C)   ;
- $BA2B LD (IX+$19),A   ;
- $BA2E SLA (IX+$0E)    ;
+ $BA28 LD A,(IY+$0C)   ; {get and store move timer
+ $BA2B LD (IX+$19),A   ; }
+ $BA2E SLA (IX+$0E)    ; double speed while moving
  $BA32 RET             ;
 *$BA33 DEC (IX+$19)    ;
  $BA36 RET NZ          ;
- $BA37 LD A,(IX+$18)   ;
- $BA3A LD (IX+$12),A   ;
+ $BA37 LD A,(IX+$18)   ; {restore facing direction
+ $BA3A LD (IX+$12),A   ; }
  $BA3D BIT 7,A         ;
  $BA3F JR Z,$BA49      ;
  $BA41 LD L,(IY+$12)   ;
@@ -4253,15 +4303,15 @@ c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $BA5F SRL (IX+$0E)    ;
  $BA63 RET             ;
 
-; Routine at BA64
+; Moving procedure for fish object moving diagonal
 c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BA68 JP NZ,$BC8F     ;
- $BA6B SET 5,(IX+$10)  ;
- $BA6F BIT 2,(IX+$0D)  ;
+ $BA6B SET 5,(IX+$10)  ; mark as diagonal-move candidate
+ $BA6F BIT 2,(IX+$0D)  ; check current move axis
  $BA73 LD L,(IX+$00)   ;
  $BA76 LD H,(IX+$01)   ;
  $BA79 JP NZ,$BB94     ;
- $BA7C BIT 7,(IX+$11)  ;
+ $BA7C BIT 7,(IX+$11)  ; check facing direction
  $BA80 JR NZ,$BA8F     ;
  $BA82 LD A,L          ;
  $BA83 ADD A,(IY+$07)  ;
@@ -4272,18 +4322,18 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 *$BA8F DEC L           ;
  $BA90 LD D,(IY+$17)   ; Get screen attribute address
  $BA93 LD E,(IY+$16)   ;
-*$BA96 CALL $A129      ;
+*$BA96 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BA99 OR A            ;
  $BA9A JR NZ,$BADE     ;
  $BA9C LD A,H          ;
  $BA9D ADD A,(IY+$08)  ;
  $BAA0 LD H,A          ;
- $BAA1 CALL $A129      ;
+ $BAA1 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BAA4 OR A            ;
  $BAA5 JR NZ,$BADE     ;
- $BAA7 LD A,R          ;
+ $BAA7 LD A,R          ; get pseudo-random value
  $BAA9 JR Z,$BADE      ;
- $BAAB BIT 6,A         ;
+ $BAAB BIT 6,A         ; random bit test
  $BAAD JR NZ,$BAB4     ;
 *$BAAF LD (IX+$12),$00 ;
  $BAB3 RET             ;
@@ -4298,13 +4348,13 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BAC4 ADD A,(IY+$09)  ;
  $BAC7 LD H,A          ;
  $BAC8 INC H           ;
-*$BAC9 CALL $A129      ;
+*$BAC9 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BACC OR A            ;
  $BACD JR NZ,$BAAF     ;
  $BACF LD A,L          ;
  $BAD0 ADD A,(IY+$06)  ;
  $BAD3 LD L,A          ;
- $BAD4 CALL $A129      ;
+ $BAD4 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BAD7 OR A            ;
  $BAD8 JR NZ,$BAAF     ;
  $BADA LD (IX+$12),C   ;
@@ -4312,8 +4362,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 *$BADE LD (IX+$0B),E   ;
  $BAE1 LD (IX+$0C),D   ;
  $BAE4 SET 0,(IX+$10)  ; set "moving" bit
- $BAE8 RES 7,(IX+$10)  ;
- $BAEC SLA (IX+$0E)    ;
+ $BAE8 RES 7,(IX+$10)  ; clear facing-down flag
+ $BAEC SLA (IX+$0E)    ; double speed while moving
  $BAF0 LD L,(IX+$00)   ;
  $BAF3 LD H,(IX+$01)   ;
  $BAF6 BIT 7,(IX+$11)  ;
@@ -4322,7 +4372,7 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BAFD ADD A,(IY+$06)  ;
  $BB00 SUB (IY+$08)    ;
  $BB03 LD L,A          ;
-*$BB04 LD A,R          ;
+*$BB04 LD A,R          ; get pseudo-random value
  $BB06 JR Z,$BB32      ;
  $BB08 LD A,H          ;
  $BB09 CP $4A          ;
@@ -4330,41 +4380,41 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BB0D ADD A,(IY+$08)  ;
  $BB10 SUB (IY+$07)    ;
  $BB13 LD H,A          ;
- $BB14 CALL $A129      ;
+ $BB14 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BB17 OR A            ;
  $BB18 JR NZ,$BB32     ;
  $BB1A LD A,L          ;
  $BB1B LD C,L          ;
  $BB1C ADD A,(IY+$08)  ;
  $BB1F LD L,A          ;
- $BB20 CALL $A129      ;
+ $BB20 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BB23 OR A            ;
  $BB24 LD L,C          ;
  $BB25 JR NZ,$BB32     ;
- $BB27 SET 6,(IX+$10)  ;
+ $BB27 SET 6,(IX+$10)  ; mark diagonal state
  $BB2B XOR A           ;
  $BB2C SUB (IX+$17)    ;
  $BB2F INC H           ;
  $BB30 JR $BB5E        ;
-*$BB32 LD A,R          ;
+*$BB32 LD A,R          ; get pseudo-random value
  $BB34 JR Z,$BB75      ;
  $BB36 LD A,(IX+$01)   ;
  $BB39 CP $FA          ;
  $BB3B JR NC,$BB75     ;
  $BB3D ADD A,(IY+$07)  ;
  $BB40 LD H,A          ;
- $BB41 CALL $A129      ;
+ $BB41 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BB44 OR A            ;
  $BB45 JR NZ,$BB75     ;
  $BB47 LD C,L          ;
  $BB48 LD A,L          ;
  $BB49 ADD A,(IY+$08)  ;
  $BB4C LD L,A          ;
- $BB4D CALL $A129      ;
+ $BB4D CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BB50 OR A            ;
  $BB51 LD L,C          ;
  $BB52 JR NZ,$BB75     ;
- $BB54 SET 6,(IX+$10)  ;
+ $BB54 SET 6,(IX+$10)  ; mark diagonal state
  $BB58 LD A,(IX+$17)   ;
  $BB5B LD H,(IX+$01)   ;
 *$BB5E LD (IX+$18),A   ;
@@ -4376,8 +4426,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BB6E LD A,(IX+$15)   ;
  $BB71 LD (IX+$19),A   ;
  $BB74 RET             ;
-*$BB75 RES 6,(IX+$10)  ;
- $BB79 RES 5,(IX+$10)  ;
+*$BB75 RES 6,(IX+$10)  ; clear diagonal state
+ $BB79 RES 5,(IX+$10)  ; clear diagonal-candidate flag
  $BB7D LD H,(IX+$01)   ;
  $BB80 LD L,(IX+$00)   ;
  $BB83 BIT 7,(IX+$11)  ;
@@ -4387,7 +4437,7 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BB8D JR $BB5E        ;
 *$BB8F LD A,(IX+$17)   ;
  $BB92 JR $BB5E        ;
-*$BB94 BIT 7,(IX+$12)  ;
+*$BB94 BIT 7,(IX+$12)  ; check facing direction
  $BB98 JR NZ,$BBA7     ;
  $BB9A LD A,H          ;
  $BB9B ADD A,(IY+$09)  ;
@@ -4398,16 +4448,16 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 *$BBA7 DEC H           ;
  $BBA8 LD D,(IY+$15)   ;
  $BBAB LD E,(IY+$14)   ;
-*$BBAE CALL $A129      ;
+*$BBAE CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BBB1 OR A            ;
  $BBB2 JR NZ,$BBF6     ;
  $BBB4 LD A,L          ;
  $BBB5 ADD A,(IY+$06)  ;
  $BBB8 LD L,A          ;
- $BBB9 CALL $A129      ;
+ $BBB9 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BBBC OR A            ;
  $BBBD JR NZ,$BBF6     ;
- $BBBF LD A,R          ;
+ $BBBF LD A,R          ; get pseudo-random value
  $BBC1 JR Z,$BBF6      ;
  $BBC3 BIT 6,A         ;
  $BBC5 JR NZ,$BBCC     ;
@@ -4424,13 +4474,13 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BBDC ADD A,(IY+$07)  ;
  $BBDF INC A           ;
  $BBE0 LD L,A          ;
-*$BBE1 CALL $A129      ;
+*$BBE1 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BBE4 OR A            ;
  $BBE5 JR NZ,$BBC7     ;
  $BBE7 LD A,H          ;
  $BBE8 ADD A,(IY+$08)  ;
  $BBEB LD H,A          ;
- $BBEC CALL $A129      ;
+ $BBEC CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BBEF OR A            ;
  $BBF0 JR NZ,$BBC7     ;
  $BBF2 LD (IX+$11),C   ;
@@ -4438,8 +4488,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 *$BBF6 LD (IX+$0B),E   ;
  $BBF9 LD (IX+$0C),D   ;
  $BBFC SET 0,(IX+$10)  ; set "moving" bit
- $BC00 SET 7,(IX+$10)  ;
- $BC04 SLA (IX+$0E)    ;
+ $BC00 SET 7,(IX+$10)  ; set facing-down flag
+ $BC04 SLA (IX+$0E)    ; double speed while moving
  $BC08 LD L,(IX+$00)   ;
  $BC0B LD H,(IX+$01)   ;
  $BC0E BIT 7,(IX+$12)  ;
@@ -4448,24 +4498,24 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BC15 ADD A,(IY+$08)  ;
  $BC18 SUB (IY+$06)    ;
  $BC1B LD H,A          ;
-*$BC1C LD A,R          ;
+*$BC1C LD A,R          ; get pseudo-random value
  $BC1E JR Z,$BC47      ;
  $BC20 LD A,L          ;
  $BC21 ADD A,(IY+$06)  ;
  $BC24 SUB (IY+$09)    ;
  $BC27 LD L,A          ;
- $BC28 CALL $A129      ;
+ $BC28 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BC2B OR A            ;
  $BC2C JR NZ,$BC47     ;
  $BC2E LD A,H          ;
  $BC2F LD C,H          ;
  $BC30 ADD A,(IY+$06)  ;
  $BC33 LD H,A          ;
- $BC34 CALL $A129      ;
+ $BC34 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BC37 OR A            ;
  $BC38 LD H,C          ;
  $BC39 JR NZ,$BC47     ;
- $BC3B RES 6,(IX+$10)  ;
+ $BC3B RES 6,(IX+$10)  ; clear diagonal state
  $BC3F XOR A           ;
  $BC40 SUB (IX+$17)    ;
  $BC43 INC L           ;
@@ -4473,14 +4523,14 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 *$BC47 LD A,(IX+$00)   ;
  $BC4A ADD A,(IY+$09)  ;
  $BC4D LD L,A          ;
- $BC4E CALL $A129      ;
+ $BC4E CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BC51 OR A            ;
  $BC52 JR NZ,$BC6E     ;
  $BC54 LD C,H          ;
  $BC55 LD A,H          ;
  $BC56 ADD A,(IY+$06)  ;
  $BC59 LD H,A          ;
- $BC5A CALL $A129      ;
+ $BC5A CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BC5D OR A            ;
  $BC5E LD H,C          ;
  $BC5F JR NZ,$BC6E     ;
@@ -4488,7 +4538,7 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BC65 LD A,(IX+$17)   ;
  $BC68 LD L,(IX+$00)   ;
  $BC6B JP $BB5E        ;
-*$BC6E SET 6,(IX+$10)  ;
+*$BC6E SET 6,(IX+$10)  ; mark diagonal state
  $BC72 RES 5,(IX+$10)  ;
  $BC76 LD H,(IX+$01)   ;
  $BC79 LD L,(IX+$00)   ;
@@ -4499,18 +4549,19 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BC86 JP $BB5E        ;
 *$BC89 LD A,(IX+$17)   ;
  $BC8C JP $BB5E        ;
-*$BC8F BIT 1,(IX+$10)  ;
+*$BC8F BIT 1,(IX+$10)  ; check secondary "moving" flag
  $BC93 JP NZ,$BD4E     ;
- $BC96 DEC (IX+$19)    ;
+ $BC96 DEC (IX+$19)    ; wait for move timer
  $BC99 RET NZ          ;
- $BC9A CALL $B5E0      ;
+ $BC9A CALL $B5E0      ; Clip object position to viewport, allocate/free screen
+                       ; slot
  $BC9D BIT 0,(IX+$0D)  ;
  $BCA1 JR Z,$BCC1      ;
  $BCA3 BIT 7,(IX+$0D)  ;
  $BCA7 JR NZ,$BCC1     ;
  $BCA9 RES 0,(IX+$0D)  ;
- $BCAD CALL $B470      ;
- $BCB0 CALL $B837      ;
+ $BCAD CALL $B470      ; Draw object sprite, clipped to viewport
+ $BCB0 CALL $B837      ; Screen attribute change for vertically oriented object
  $BCB3 LD A,(IX+$08)   ;
  $BCB6 AND $0F         ;
  $BCB8 LD E,A          ;
@@ -4524,8 +4575,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BCCA LD B,(IX+$03)   ;
  $BCCD LD (IX+$03),A   ;
  $BCD0 LD (IX+$02),B   ;
- $BCD3 LD A,(IX+$0D)   ;
- $BCD6 XOR $04         ;
+ $BCD3 LD A,(IX+$0D)   ; {toggle relief-side flag
+ $BCD6 XOR $04         ; }
  $BCD8 LD (IX+$0D),A   ;
  $BCDB LD L,(IY+$04)   ;
  $BCDE LD H,(IY+$05)   ;
@@ -4533,10 +4584,10 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BCE2 POP IY          ;
  $BCE4 LD (IX+$13),L   ; set X value
  $BCE7 LD (IX+$14),H   ; set Y value
-*$BCEA LD A,(IX+$1A)   ;
- $BCED LD (IX+$00),A   ;
- $BCF0 LD A,(IX+$1B)   ;
- $BCF3 LD (IX+$01),A   ;
+*$BCEA LD A,(IX+$1A)   ; {restore column
+ $BCED LD (IX+$00),A   ; }
+ $BCF0 LD A,(IX+$1B)   ; {restore row
+ $BCF3 LD (IX+$01),A   ; }
  $BCF6 BIT 6,(IX+$10)  ;
  $BCFA JR Z,$BD04      ;
  $BCFC BIT 7,(IX+$18)  ;
@@ -4560,17 +4611,18 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BD30 LD A,(IX+$16)   ;
  $BD33 LD (IX+$19),A   ;
  $BD36 SET 1,(IX+$10)  ;
- $BD3A CALL $B5E0      ;
+ $BD3A CALL $B5E0      ; Clip object position to viewport, allocate/free screen
+                       ; slot
  $BD3D BIT 0,(IX+$0D)  ;
  $BD41 RET Z           ;
  $BD42 BIT 7,(IX+$0D)  ;
  $BD46 RET NZ          ;
- $BD47 CALL $B470      ;
- $BD4A CALL $B837      ;
+ $BD47 CALL $B470      ; Draw object sprite, clipped to viewport
+ $BD4A CALL $B837      ; Screen attribute change for vertically oriented object
  $BD4D RET             ;
-*$BD4E DEC (IX+$19)    ;
+*$BD4E DEC (IX+$19)    ; wait for move timer
  $BD51 RET NZ          ;
- $BD52 SRL (IX+$0E)    ;
+ $BD52 SRL (IX+$0E)    ; halve speed after move
  $BD56 LD A,(IX+$0A)   ;
  $BD59 LD (IX+$0C),A   ;
  $BD5C LD A,(IX+$09)   ;
@@ -4587,12 +4639,12 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BD7E SET 2,(IX+$0D)  ;
  $BD82 RET             ;
 
-; Routine at BD83
+; Set random speed and initial direction for spawned object
 ;
 ; Used by the routines at #R$BEDB, #R$BFB0 and #R$C009.
 ;
-; I:L ???
-; I:C ???
+; I:L random seed byte, masked by C to add speed spread
+; I:C speed base/mask; speed factor (IX+$0E) = (L AND C) + C
 ; I:IX record address in #R$C4F0 area
 c$BD83 LD A,L        ;
  $BD84 AND C         ;
@@ -4623,73 +4675,73 @@ b$BDA9 DEFB $00
  $BDAA DEFB $41,$44,$05,$45,$02,$42,$43,$40
  $BDB2 DEFB $05,$45,$02,$42,$43,$03,$40,$41
 
-; Routine at BDBA
+; Draw records for current mini-map row band
 ;
 ; Used by the routines at #R$D990, #R$DFD5 and #R$EEAD.
-c$BDBA CALL $BEC7    ;
+c$BDBA CALL $BEC7    ; Reset slot allocation bitmap and buffer pointer
  $BDBD LD A,($5B04)  ; get screen position (row) on mini-map
  $BDC0 CP $03        ;
  $BDC2 JR NC,$BDCB   ;
- $BDC4 CALL $BEB2    ;
- $BDC7 CALL $BE58    ;
+ $BDC4 CALL $BEB2    ; Process 21-byte records in group I
+ $BDC7 CALL $BE58    ; Process 26-byte records in group II
  $BDCA RET           ;
 *$BDCB CP $04        ;
  $BDCD JR NC,$BDD6   ;
- $BDCF CALL $BE58    ;
- $BDD2 CALL $BE85    ;
+ $BDCF CALL $BE58    ; Process 26-byte records in group II
+ $BDD2 CALL $BE85    ; Process 26-byte records in group III
  $BDD5 RET           ;
 *$BDD6 CP $06        ;
  $BDD8 JR NC,$BDDE   ;
- $BDDA CALL $BE85    ;
+ $BDDA CALL $BE85    ; Process 26-byte records in group III
  $BDDD RET           ;
 *$BDDE CP $09        ;
  $BDE0 JR NC,$BDE5   ;
- $BDE2 CALL $BE85    ;
-*$BDE5 CALL $C45C    ;
+ $BDE2 CALL $BE85    ; Process 26-byte records in group III
+*$BDE5 CALL $C45C    ; Draw group IV and V object records
  $BDE8 RET           ;
 
 ; Unused
 s$BDE9 DEFS $01
 
-; Routine at BDEA
+; Update records for current mini-map row band, with delay
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
 c$BDEA LD A,($5B04)  ;
  $BDED CP $03        ;
  $BDEF JR NC,$BDFE   ;
- $BDF1 CALL $BE9A    ;
- $BDF4 CALL $BE40    ;
+ $BDF1 CALL $BE9A    ; Process 21-byte records in group I
+ $BDF4 CALL $BE40    ; Process 26-byte records in group II
  $BDF7 LD A,($5B1A)  ;
- $BDFA CALL $C4D5    ;
+ $BDFA CALL $C4D5    ; Delay loop (busy-wait via LDIR)
  $BDFD RET           ;
 *$BDFE CP $04        ;
  $BE00 JR NC,$BE0F   ;
- $BE02 CALL $BE40    ;
- $BE05 CALL $BE6D    ;
+ $BE02 CALL $BE40    ; Process 26-byte records in group II
+ $BE05 CALL $BE6D    ; Process 26-byte records in group III
  $BE08 LD A,($5B1B)  ;
- $BE0B CALL $C4D5    ;
+ $BE0B CALL $C4D5    ; Delay loop (busy-wait via LDIR)
  $BE0E RET           ;
 *$BE0F CP $06        ;
  $BE11 JR NC,$BE1D   ;
- $BE13 CALL $BE6D    ;
+ $BE13 CALL $BE6D    ; Process 26-byte records in group III
  $BE16 LD A,($5B1C)  ;
- $BE19 CALL $C4D5    ;
+ $BE19 CALL $C4D5    ; Delay loop (busy-wait via LDIR)
  $BE1C RET           ;
 *$BE1D CP $09        ;
  $BE1F JR NC,$BE36   ;
- $BE21 CALL $BE6D    ;
+ $BE21 CALL $BE6D    ; Process 26-byte records in group III
  $BE24 LD HL,$BDE9   ;
  $BE27 LD A,($5B1D)  ;
- $BE2A CALL $C4D5    ;
+ $BE2A CALL $C4D5    ; Delay loop (busy-wait via LDIR)
  $BE2D LD A,$01      ;
  $BE2F XOR (HL)      ;
  $BE30 LD (HL),A     ;
  $BE31 RET Z         ;
- $BE32 CALL $C431    ;
+ $BE32 CALL $C431    ; Update group IV and V object records
  $BE35 RET           ;
-*$BE36 CALL $C431    ;
+*$BE36 CALL $C431    ; Update group IV and V object records
  $BE39 LD A,($5B1E)  ;
- $BE3C CALL $C4D5    ;
+ $BE3C CALL $C4D5    ; Delay loop (busy-wait via LDIR)
  $BE3F RET           ;
 
 ; Process 26-byte records in group II
@@ -4700,7 +4752,7 @@ c$BE40 LD A,($5B16)  ;
  $BE44 LD IX,($5B1F) ;
 *$BE48 PUSH BC       ;
  $BE49 DEC (IX+$0F)  ;
- $BE4C CALL Z,$B737  ;
+ $BE4C CALL Z,$B737  ; Update fish object
  $BE4F LD BC,$001A   ;
  $BE52 ADD IX,BC     ;
  $BE54 POP BC        ;
@@ -4714,7 +4766,7 @@ c$BE58 LD A,($5B16)  ;
  $BE5B LD B,A        ;
  $BE5C LD IX,($5B1F) ;
 *$BE60 PUSH BC       ;
- $BE61 CALL $B7BB    ;
+ $BE61 CALL $B7BB    ; Update object
  $BE64 LD BC,$001A   ;
  $BE67 ADD IX,BC     ;
  $BE69 POP BC        ;
@@ -4729,7 +4781,7 @@ c$BE6D LD A,($5B17)  ;
  $BE71 LD IX,($5B21) ;
 *$BE75 PUSH BC       ;
  $BE76 DEC (IX+$0F)  ;
- $BE79 CALL Z,$B737  ;
+ $BE79 CALL Z,$B737  ; Update fish object
  $BE7C LD BC,$001A   ;
  $BE7F ADD IX,BC     ;
  $BE81 POP BC        ;
@@ -4743,7 +4795,7 @@ c$BE85 LD A,($5B17)  ;
  $BE88 LD B,A        ;
  $BE89 LD IX,($5B21) ;
 *$BE8D PUSH BC       ;
- $BE8E CALL $B7BB    ;
+ $BE8E CALL $B7BB    ; Update object
  $BE91 LD BC,$001A   ;
  $BE94 ADD IX,BC     ;
  $BE96 POP BC        ;
@@ -4758,7 +4810,7 @@ c$BE9A LD A,($5B15)  ;
  $BE9E LD IX,$C4F0   ;
 *$BEA2 PUSH BC       ;
  $BEA3 DEC (IX+$0F)  ;
- $BEA6 CALL Z,$B737  ;
+ $BEA6 CALL Z,$B737  ; Update fish object
  $BEA9 LD BC,$0015   ;
  $BEAC ADD IX,BC     ;
  $BEAE POP BC        ;
@@ -4772,166 +4824,179 @@ c$BEB2 LD A,($5B15)  ;
  $BEB5 LD B,A        ;
  $BEB6 LD IX,$C4F0   ;
 *$BEBA PUSH BC       ;
- $BEBB CALL $B7BB    ;
+ $BEBB CALL $B7BB    ; Update object
  $BEBE LD BC,$0015   ;
  $BEC1 ADD IX,BC     ;
  $BEC3 POP BC        ;
  $BEC4 DJNZ $BEBA    ;
  $BEC6 RET           ;
 
-; Routine at BEC7
+; Reset slot allocation bitmap and buffer pointer
 ;
 ; Used by the routines at #R$BDBA and #R$BEDB.
-c$BEC7 LD HL,$B676   ;
+c$BEC7 LD HL,$B676   ; {mark slot 0 used, prepare to clear the rest
  $BECA LD (HL),$80   ;
- $BECC INC HL        ;
+ $BECC INC HL        ; }
  $BECD LD B,$0F      ;
  $BECF XOR A         ;
-*$BED0 LD (HL),A     ;
- $BED1 INC HL        ;
+*$BED0 LD (HL),A     ; {clear slots 1..15 (free)
+ $BED1 INC HL        ; }
  $BED2 DJNZ $BED0    ;
- $BED4 LD HL,$F000   ;
- $BED7 LD ($B7B9),HL ;
+ $BED4 LD HL,$F000   ; {set draw buffer address to $F000
+ $BED7 LD ($B7B9),HL ; }
  $BEDA RET           ;
 
-; Routine at BEDB
+; Initialize level: place random objects (groups I-V), boat objects
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
-c$BEDB CALL $BEC7      ;
- $BEDE LD HL,$BDAA     ;
- $BEE1 LD ($BD9C),HL   ;
+@label=InitLevel
+c$BEDB CALL $BEC7      ; Reset slot allocation bitmap and buffer pointer
+ $BEDE LD HL,$BDAA     ; {set draw-list pointer for group I
+ $BEE1 LD ($BD9C),HL   ; }
  $BEE4 LD HL,$C20A     ; {Copy 21 byte from $C20A to #R$C4F0
  $BEE7 LD DE,$C4F0     ;
  $BEEA LD BC,$0015     ;
  $BEED LDIR            ; }
- $BEEF LD A,($5B13)    ;
- $BEF2 LD B,A          ;
+ $BEEF LD A,($5B13)    ; {get count of group I objects
+ $BEF2 LD B,A          ; }
 *$BEF3 PUSH BC         ;
- $BEF4 LD HL,$C21F     ;
+ $BEF4 LD HL,$C21F     ; {copy template record for random init
  $BEF7 PUSH DE         ;
  $BEF8 POP IX          ;
  $BEFA LD BC,$0015     ;
- $BEFD LDIR            ;
+ $BEFD LDIR            ; }
  $BEFF PUSH DE         ;
  $BF00 CALL $9D84      ; Random
  $BF03 POP DE          ;
- $BF04 LD (IX+$00),H   ;
- $BF07 LD C,$3F        ;
- $BF09 CALL $BD83      ;
+ $BF04 LD (IX+$00),H   ; randomize column
+ $BF07 LD C,$3F        ; {place at random column
+ $BF09 CALL $BD83      ; }
  $BF0C POP BC          ;
  $BF0D DJNZ $BEF3      ;
- $BF0F LD A,($5B14)    ;
- $BF12 LD B,A          ;
- $BF13 LD C,$00        ;
+ $BF0F LD A,($5B14)    ; {get count of group II objects
+ $BF12 LD B,A          ; }
+ $BF13 LD C,$00        ; default sprite variant
  $BF15 LD A,($5B05)    ; get current Random
- $BF18 BIT 5,A         ;
+ $BF18 BIT 5,A         ; {random variant select
  $BF1A JR Z,$BF1D      ;
- $BF1C INC C           ;
+ $BF1C INC C           ; }
 *$BF1D PUSH BC         ;
- $BF1E LD HL,$C234     ;
+ $BF1E LD HL,$C234     ; {copy template record for random init
  $BF21 PUSH DE         ;
  $BF22 POP IX          ;
  $BF24 LD BC,$0015     ;
- $BF27 LDIR            ;
+ $BF27 LDIR            ; }
  $BF29 PUSH DE         ;
  $BF2A CALL $9D84      ; Random
  $BF2D POP DE          ;
- $BF2E LD (IX+$00),H   ;
- $BF31 LD A,L          ;
+ $BF2E LD (IX+$00),H   ; randomize column
+ $BF31 LD A,L          ; {randomize row offset
  $BF32 AND $03         ;
- $BF34 ADD A,(IX+$01)  ;
- $BF37 LD (IX+$01),A   ;
- $BF3A LD A,L          ;
+ $BF34 ADD A,(IX+$01)  ; }
+ $BF37 LD (IX+$01),A   ; store randomized row
+ $BF3A LD A,L          ; {randomize size/type 1..7
  $BF3B SRL A           ;
  $BF3D SRL A           ;
  $BF3F AND $07         ;
  $BF41 JR NZ,$BF44     ;
- $BF43 INC A           ;
+ $BF43 INC A           ; }
 *$BF44 LD (IX+$03),A   ;
- $BF47 LD C,$1F        ;
- $BF49 CALL $BD83      ;
+ $BF47 LD C,$1F        ; {place at random row
+ $BF49 CALL $BD83      ; }
  $BF4C POP BC          ;
- $BF4D BIT 0,C         ;
- $BF4F JR Z,$BF5D      ;
- $BF51 LD (IX+$09),$85 ;
+ $BF4D BIT 0,C         ; {check variant bit
+ $BF4F JR Z,$BF5D      ; }
+ $BF51 LD (IX+$09),$85 ; {set alternate sprite/state for variant
  $BF55 LD (IX+$0B),$85 ;
- $BF59 LD (IX+$11),$FE ;
+ $BF59 LD (IX+$11),$FE ; }
 *$BF5D DJNZ $BF1D      ;
  $BF5F LD ($5B1F),DE   ;
- $BF63 LD A,($5B16)    ;
+ $BF63 LD A,($5B16)    ; {init group IV parameters
  $BF66 LD HL,$0F1B     ;
- $BF69 LD IY,$C2EB     ;
- $BF6D CALL $BFB0      ;
+ $BF69 LD IY,$C2EB     ; }
+ $BF6D CALL $BFB0      ; Spawn N objects of one type at random positions from
+                       ; template table
  $BF70 LD ($5B21),DE   ;
- $BF74 LD A,($5B17)    ;
+ $BF74 LD A,($5B17)    ; {init group V parameters
  $BF77 LD HL,$2A3B     ;
- $BF7A LD IY,$C331     ;
- $BF7E CALL $BFB0      ;
+ $BF7A LD IY,$C331     ; }
+ $BF7E CALL $BFB0      ; Spawn N objects of one type at random positions from
+                       ; template table
  $BF81 LD ($5B23),DE   ;
  $BF85 LD IY,$BFA0     ;
- $BF89 LD A,($5B18)    ;
+ $BF89 LD A,($5B18)    ; {init boat objects, batch 1
  $BF8C LD HL,$BDB2     ;
- $BF8F LD ($BD9C),HL   ;
- $BF92 CALL $C009      ;
+ $BF8F LD ($BD9C),HL   ; }
+ $BF92 CALL $C009      ; Place N objects at random screen positions, avoiding
+                       ; the boat
  $BF95 LD IY,$BFA8     ;
- $BF99 LD A,($5B19)    ;
- $BF9C CALL $C009      ;
+ $BF99 LD A,($5B19)    ; boat objects, batch 2
+ $BF9C CALL $C009      ; Place N objects at random screen positions, avoiding
+                       ; the boat
  $BF9F RET             ;
 
 ; Data block at BFA0
 b$BFA0 DEFB $05,$00,$AD,$C3,$1A,$00,$00,$0F
  $BFA8 DEFB $10,$11,$29,$C4,$1C,$00,$00,$0F
 
-; Routine at BFB0
+; Spawn N objects of one type at random positions from template table
 ;
 ; Used by the routine at #R$BEDB.
 ;
-; I:HL ???
-; I:IY ???
-; I:A ???
-c$BFB0 LD ($BFC4),IY ;
- $BFB4 LD ($C007),HL ;
- $BFB7 LD B,A        ;
+; I:A number of records to create
+; I:HL parameter pair stored into each record's (IX+$15)/(IX+$16) fields
+; I:IY shape-record template table address (26-byte records)
+; I:DE destination record area write pointer
+; O:DE next free record slot after the created records
+;
+; Creates A objects of one type: for each, picks a random 26-byte shape record
+; from the IY template table, copies it to the destination area, then
+; randomizes its row (64..191) and column before placing it. Used to spawn the
+; fish/shark groups during level init.
+@label=SpawnObjectGroup
+c$BFB0 LD ($BFC4),IY ; {self-modify table pointer, save default column
+ $BFB4 LD ($C007),HL ; }
+ $BFB7 LD B,A        ; loop counter = object count
 *$BFB8 PUSH BC       ;
  $BFB9 PUSH DE       ;
  $BFBA CALL $9D84    ; Random
- $BFBD LD A,H        ;
- $BFBE AND $0E       ;
- $BFC0 LD E,A        ;
- $BFC1 LD D,$00      ;
+ $BFBD LD A,H        ; {random even index into shape table
+ $BFBE AND $0E       ; }
+ $BFC0 LD E,A        ; {index into words
+ $BFC1 LD D,$00      ; }
  $BFC3 LD HL,$0000   ; !!MUT-ARG!!
- $BFC6 ADD HL,DE     ;
+ $BFC6 ADD HL,DE     ; {get random shape record address
  $BFC7 LD C,(HL)     ;
  $BFC8 INC HL        ;
- $BFC9 LD B,(HL)     ;
- $BFCA LD L,C        ;
- $BFCB LD H,B        ;
- $BFCC LD BC,$001A   ;
- $BFCF POP DE        ;
+ $BFC9 LD B,(HL)     ; }
+ $BFCA LD L,C        ; {HL = shape record address
+ $BFCB LD H,B        ; }
+ $BFCC LD BC,$001A   ; record size 26 bytes
+ $BFCF POP DE        ; {IX = destination record
  $BFD0 PUSH DE       ;
- $BFD1 POP IX        ;
- $BFD3 LDIR          ;
- $BFD5 LD HL,($C007) ;
+ $BFD1 POP IX        ; }
+ $BFD3 LDIR          ; copy shape record
+ $BFD5 LD HL,($C007) ; {restore/store column
  $BFD8 LD (IX+$16),H ;
- $BFDB LD (IX+$15),L ;
+ $BFDB LD (IX+$15),L ; }
  $BFDE LD A,($5B05)  ; get current Random
- $BFE1 AND $7F       ;
- $BFE3 ADD A,$40     ;
- $BFE5 LD (IX+$00),A ;
- $BFE8 LD A,($5B06)  ;
+ $BFE1 AND $7F       ; {randomize row 64..191
+ $BFE3 ADD A,$40     ; }
+ $BFE5 LD (IX+$00),A ; store row
+ $BFE8 LD A,($5B06)  ; {randomize column offset 0..15
  $BFEB SRL A         ;
  $BFED SRL A         ;
  $BFEF SRL A         ;
- $BFF1 AND $0F       ;
- $BFF3 LD H,A        ;
+ $BFF1 AND $0F       ; }
+ $BFF3 LD H,A        ; {column = base - offset
  $BFF4 LD A,L        ;
- $BFF5 SUB H         ;
- $BFF6 LD (IX+$01),A ;
+ $BFF5 SUB H         ; }
+ $BFF6 LD (IX+$01),A ; store column
  $BFF9 PUSH DE       ;
  $BFFA CALL $9D84    ; Random
  $BFFD POP DE        ;
- $BFFE LD C,$0F      ;
- $C000 CALL $BD83    ;
+ $BFFE LD C,$0F      ; {place object, mask column to 0..15
+ $C000 CALL $BD83    ; }
  $C003 POP BC        ;
  $C004 DJNZ $BFB8    ;
  $C006 RET           ;
@@ -4939,82 +5004,84 @@ c$BFB0 LD ($BFC4),IY ;
 ; Data block at C007
 b$C007 DEFW $0000    ; ???
 
-; Routine at C009
+; Place N objects at random screen positions, avoiding the boat
 ;
 ; Used by the routine at #R$BEDB.
 ;
 ; I:A number of records
-c$C009 LD B,A        ;
+@label=PlaceObjectsRandom
+c$C009 LD B,A        ; {loop counter; init scan cursor position
  $C00A LD (IY+$05),E ;
- $C00D LD (IY+$06),D ;
- $C010 LD DE,$F8F8   ;
- $C013 LD HL,$B05C   ;
-*$C016 LD A,(HL)     ;
+ $C00D LD (IY+$06),D ; }
+ $C010 LD DE,$F8F8   ; {reset scan step/cursor
+ $C013 LD HL,$B05C   ; }
+*$C016 LD A,(HL)     ; {skip boat's own column/row
  $C017 CP (IY+$00)   ;
  $C01A JR Z,$C039    ;
  $C01C CP (IY+$01)   ;
- $C01F JR Z,$C039    ;
-*$C021 DEC HL        ;
+ $C01F JR Z,$C039    ; }
+*$C021 DEC HL        ; {advance scan cursor column
  $C022 LD A,E        ;
  $C023 SUB $08       ;
- $C025 LD E,A        ;
- $C026 CP $F8        ;
- $C028 JR NZ,$C037   ;
- $C02A LD A,D        ;
+ $C025 LD E,A        ; }
+ $C026 CP $F8        ; {check column wrap
+ $C028 JR NZ,$C037   ; }
+ $C02A LD A,D        ; {advance scan cursor row
  $C02B SUB $08       ;
- $C02D LD D,A        ;
- $C02E CP $38        ;
+ $C02D LD D,A        ; }
+ $C02E CP $38        ; {wrap scan back to start
  $C030 JR NZ,$C037   ;
  $C032 LD D,$F8      ;
- $C034 LD HL,$B05C   ;
+ $C034 LD HL,$B05C   ; }
 *$C037 JR $C016      ;
 *$C039 PUSH BC       ;
  $C03A PUSH HL       ;
  $C03B PUSH DE       ;
  $C03C CALL $9D84    ; Random
- $C03F LD D,(IY+$03) ;
- $C042 LD E,(IY+$02) ;
+ $C03F LD D,(IY+$03) ; {get shape-table base address
+ $C042 LD E,(IY+$02) ; }
  $C045 LD A,L        ;
- $C046 AND $F0       ;
- $C048 JR Z,$C04F    ;
- $C04A POP DE        ;
+ $C046 AND $F0       ; {reject positions too close together
+ $C048 JR Z,$C04F    ; }
+ $C04A POP DE        ; {retry search
  $C04B POP HL        ;
  $C04C POP BC        ;
- $C04D JR $C021      ;
-*$C04F LD A,H        ;
+ $C04D JR $C021      ; }
+*$C04F LD A,H        ; {random even shape index 0..6
  $C050 AND $06       ;
  $C052 LD L,A        ;
- $C053 LD H,$00      ;
- $C055 ADD HL,DE     ;
+ $C053 LD H,$00      ; }
+ $C055 ADD HL,DE     ; {get shape record address
  $C056 LD E,(HL)     ;
  $C057 INC HL        ;
  $C058 LD D,(HL)     ;
- $C059 EX DE,HL      ;
- $C05A LD C,(IY+$04) ;
+ $C059 EX DE,HL      ; }
+ $C05A LD C,(IY+$04) ; record size
  $C05D LD B,$00      ;
- $C05F LD E,(IY+$05) ;
+ $C05F LD E,(IY+$05) ; {IX = destination cursor
  $C062 LD D,(IY+$06) ;
  $C065 PUSH DE       ;
- $C066 POP IX        ;
- $C068 LDIR          ;
- $C06A LD (IY+$05),E ;
- $C06D LD (IY+$06),D ;
+ $C066 POP IX        ; }
+ $C068 LDIR          ; copy shape record
+ $C06A LD (IY+$05),E ; {advance destination cursor
+ $C06D LD (IY+$06),D ; }
  $C070 POP DE        ;
- $C071 LD A,D        ;
+ $C071 LD A,D        ; {set row = scan row + 3
  $C072 ADD A,$03     ;
- $C074 LD (IX+$01),A ;
- $C077 LD A,E        ;
+ $C074 LD (IX+$01),A ; }
+ $C077 LD A,E        ; {set column = scan column + 4
  $C078 ADD A,$04     ;
- $C07A LD (IX+$00),A ;
- $C07D LD A,($5B06)  ;
+ $C07A LD (IX+$00),A ; }
+ $C07D LD A,($5B06)  ; {random offset + column mask
  $C080 LD L,A        ;
- $C081 LD C,(IY+$07) ;
- $C084 CALL $BD83    ;
+ $C081 LD C,(IY+$07) ; }
+ $C084 CALL $BD83    ; Set random speed and initial direction for spawned
+                     ; object
  $C087 POP HL        ;
  $C088 POP BC        ;
  $C089 DJNZ $C021    ;
- $C08B LD E,(IY+$05) ;
- $C08E LD D,(IY+$06) ;
+ $C08B LD E,(IY+$05) ; {return final cursor position
+ $C08E LD D,(IY+$06) ; }
  $C091 RET           ;
 
 ; Object records
@@ -5233,7 +5300,7 @@ b$C20A DEFB $F8,$06,$04,$01,$05
  $C42D DEFW $C3EF
  $C42F DEFW $C40C
 
-; Routine at C431
+; Update group IV and V object records (movement)
 ;
 ; Used by the routine at #R$BDEA.
 c$C431 LD A,($5B18)  ; get Number of 26-byte records (5 / 10 / 15 / 20) in
@@ -5242,7 +5309,7 @@ c$C431 LD A,($5B18)  ; get Number of 26-byte records (5 / 10 / 15 / 20) in
  $C435 LD IX,($5B23) ; now IX = record address in #R$C4F0 area
 *$C439 PUSH BC       ;
  $C43A DEC (IX+$0F)  ;
- $C43D CALL Z,$B737  ;
+ $C43D CALL Z,$B737  ; Update fish object
  $C440 LD BC,$001A   ; 26 bytes - record size
  $C443 ADD IX,BC     ; next record
  $C445 POP BC        ;
@@ -5251,73 +5318,73 @@ c$C431 LD A,($5B18)  ; get Number of 26-byte records (5 / 10 / 15 / 20) in
  $C44B LD B,A        ;
 *$C44C PUSH BC       ;
  $C44D DEC (IX+$0F)  ;
- $C450 CALL Z,$B737  ;
+ $C450 CALL Z,$B737  ; Update fish object
  $C453 LD BC,$001C   ;
  $C456 ADD IX,BC     ;
  $C458 POP BC        ;
  $C459 DJNZ $C44C    ;
  $C45B RET           ;
 
-; Routine at C45C
+; Draw group IV and V object records
 ;
 ; Used by the routine at #R$BDBA.
-c$C45C LD A,($5B18)  ;
- $C45F LD B,A        ;
- $C460 LD IX,($5B23) ;
+c$C45C LD A,($5B18)  ; {get group IV record count
+ $C45F LD B,A        ; }
+ $C460 LD IX,($5B23) ; group IV record base address
 *$C464 PUSH BC       ;
- $C465 CALL $B7BB    ;
- $C468 LD BC,$001A   ;
- $C46B ADD IX,BC     ;
+ $C465 CALL $B7BB    ; Update object
+ $C468 LD BC,$001A   ; {advance to next record (26 bytes)
+ $C46B ADD IX,BC     ; }
  $C46D POP BC        ;
  $C46E DJNZ $C464    ;
- $C470 LD A,($5B19)  ;
- $C473 LD B,A        ;
+ $C470 LD A,($5B19)  ; {get group V record count
+ $C473 LD B,A        ; }
 *$C474 PUSH BC       ;
- $C475 CALL $B7BB    ;
- $C478 LD BC,$001C   ;
- $C47B ADD IX,BC     ;
+ $C475 CALL $B7BB    ; Update object
+ $C478 LD BC,$001C   ; {advance to next record (28 bytes)
+ $C47B ADD IX,BC     ; }
  $C47D POP BC        ;
  $C47E DJNZ $C474    ;
  $C480 RET           ;
 
-; Routine at C481
-c$C481 LD A,(IX+$10)   ;
- $C484 OR A            ;
+; Object idle animation state machine (frame cycle + random wait)
+c$C481 LD A,(IX+$10)   ; {get animation state
+ $C484 OR A            ; }
  $C485 JR NZ,$C490     ;
- $C487 DEC (IY+$0C)    ;
+ $C487 DEC (IY+$0C)    ; wait timer
  $C48A RET NZ          ;
- $C48B LD (IX+$10),$03 ;
+ $C48B LD (IX+$10),$03 ; switch to state 3
  $C48F RET             ;
 *$C490 DEC A           ;
  $C491 JR NZ,$C4A4     ;
  $C493 DEC (IY+$0C)    ;
  $C496 RET NZ          ;
- $C497 LD (IX+$0E),$28 ;
- $C49B LD (IX+$10),$02 ;
- $C49F LD (IX+$11),$FF ;
+ $C497 LD (IX+$0E),$28 ; reset frame to 40
+ $C49B LD (IX+$10),$02 ; {switch to state 2, set direction
+ $C49F LD (IX+$11),$FF ; }
  $C4A3 RET             ;
 *$C4A4 DEC A           ;
  $C4A5 JR NZ,$C4BA     ;
- $C4A7 DEC (IX+$0E)    ;
- $C4AA LD A,(IX+$0E)   ;
+ $C4A7 DEC (IX+$0E)    ; {decrement frame
+ $C4AA LD A,(IX+$0E)   ; }
  $C4AD CP $08          ;
  $C4AF RET NZ          ;
- $C4B0 LD (IX+$10),$00 ;
- $C4B4 LD A,R          ;
- $C4B6 LD (IY+$0C),A   ;
+ $C4B0 LD (IX+$10),$00 ; switch to state 0
+ $C4B4 LD A,R          ; {randomize wait timer
+ $C4B6 LD (IY+$0C),A   ; }
  $C4B9 RET             ;
-*$C4BA INC (IX+$0E)    ;
- $C4BD LD A,(IX+$0E)   ;
+*$C4BA INC (IX+$0E)    ; {increment frame
+ $C4BD LD A,(IX+$0E)   ; }
  $C4C0 CP $28          ;
  $C4C2 RET NZ          ;
- $C4C3 LD (IX+$0E),$64 ;
- $C4C7 LD (IX+$11),$00 ;
- $C4CB LD (IX+$10),$01 ;
- $C4CF LD A,R          ;
- $C4D1 LD (IY+$0C),A   ;
+ $C4C3 LD (IX+$0E),$64 ; {reset frame to 100, clear direction
+ $C4C7 LD (IX+$11),$00 ; }
+ $C4CB LD (IX+$10),$01 ; switch to state 1
+ $C4CF LD A,R          ; {randomize wait timer
+ $C4D1 LD (IY+$0C),A   ; }
  $C4D4 RET             ;
 
-; Delay ??
+; Delay loop (busy-wait via LDIR)
 ;
 ; Used by the routine at #R$BDEA.
 c$C4D5 OR A          ;
@@ -5344,6 +5411,13 @@ s$C500 DEFS $1490
 ; Game
 ;
 ; Used by the routine at #R$EE1C.
+;
+; .
+;
+; Top-level game loop: builds the world and level, then repeatedly runs one
+; frame (bubbles, object updates, diver logic) until the diver reaches the
+; boat. On success, advances the level and starts the next dive; on failure,
+; loses a life and retries or ends the game when lives run out.
 @label=Game
 c$D990 DI             ;
  $D991 PUSH IX        ;
@@ -5355,17 +5429,19 @@ c$D990 DI             ;
  $D9A0 LD ($5B37),A   ; set the initial value
 *$D9A3 CALL $9DAA     ; Prepare the world mini-map (#R$AC5D table)
  $D9A6 CALL $DBC2     ; Initialize variables depending of Game level
- $D9A9 CALL $BEDB     ;
+ $D9A9 CALL $BEDB     ; Initialize level
  $D9AC LD HL,$E361    ;
  $D9AF LD (HL),$00    ;
 *$D9B1 CALL $DAAD     ; Prepare game screen and some variables
- $D9B4 CALL $E6AB     ;
+ $D9B4 CALL $E6AB     ; Reset oxygen, draw divers on boat, position diver at
+                      ; dive start
  $D9B7 LD HL,($5B03)  ; get Screen position on mini-map
  $D9BA CALL $9C56     ; Draw game screen
- $D9BD CALL $BDBA     ;
-*$D9C0 CALL $B213     ;
- $D9C3 CALL $BDEA     ;
- $D9C6 CALL $E2A8     ;
+ $D9BD CALL $BDBA     ; Draw records for current mini-map row band
+*$D9C0 CALL $B213     ; Animate and draw rising air bubbles, plus Octopus
+ $D9C3 CALL $BDEA     ; Update records for current mini-map row band, with
+                      ; delay
+ $D9C6 CALL $E2A8     ; Diver frame update
  $D9C9 LD IX,$E33B    ; Diver object record address
  $D9CD BIT 4,(IX+$26) ;
  $D9D1 JR NZ,$D9DB    ;
@@ -5385,9 +5461,10 @@ c$D990 DI             ;
  $D9F2 JR $D9A3       ;
 *$D9F4 LD B,$00       ;
 *$D9F6 PUSH BC        ;
- $D9F7 CALL $B213     ;
- $D9FA CALL $BDEA     ;
- $D9FD CALL $E2A8     ;
+ $D9F7 CALL $B213     ; Animate and draw rising air bubbles, plus Octopus
+ $D9FA CALL $BDEA     ; Update records for current mini-map row band, with
+                      ; delay
+ $D9FD CALL $E2A8     ; Diver frame update
  $DA00 POP BC         ;
  $DA01 DJNZ $D9F6     ;
  $DA03 LD A,($5B00)   ;
@@ -5421,18 +5498,18 @@ c$D990 DI             ;
 ;
 ; Used by the routines at #R$DAAD and #R$EEAD.
 @label=ClearScreenFillAttr
-c$DA39 LD ($5B4A),A  ;
- $DA3C LD HL,$4000   ;
- $DA3F LD BC,$1800   ;
+c$DA39 LD ($5B4A),A  ; store attribute for later use
+ $DA3C LD HL,$4000   ; {zero out pixel area
+ $DA3F LD BC,$1800   ; }
 *$DA42 LD (HL),$00   ;
  $DA44 INC HL        ;
  $DA45 DEC BC        ;
  $DA46 LD A,B        ;
  $DA47 OR C          ;
  $DA48 JR NZ,$DA42   ;
- $DA4A LD A,($5B4A)  ;
- $DA4D LD E,A        ;
- $DA4E LD BC,$0300   ;
+ $DA4A LD A,($5B4A)  ; {reload attribute
+ $DA4D LD E,A        ; }
+ $DA4E LD BC,$0300   ; attributes area size
 *$DA51 LD (HL),E     ;
  $DA52 INC HL        ;
  $DA53 DEC BC        ;
@@ -5512,6 +5589,13 @@ c$DA98 LD ($DAA3),DE ;
 ; Prepare game screen and some variables
 ;
 ; Used by the routine at #R$D990.
+;
+; .
+;
+; Clears the screen and draws the side panel, resets the Depth/Oxygen gauges,
+; highlights the current skill and lives digits, prints the score numbers, then
+; copies the Game-level's parameter table and sets the diver's column/row
+; movement limits from it.
 @label=PrepareGame
 c$DAAD LD A,$30      ;
  $DAAF CALL $DA39    ; Clear screen with attribute A
@@ -5756,18 +5840,18 @@ b$DDF0 DEFW $0002,$0005,$004B,$0019,$0032,$00FA,$0019,$0000 ; Level 1
 ; I:HL old address for the indicator
 ; O:HL new address for the indicator
 @label=UpdateGauge
-c$DE2E LD (HL),$38   ;
- $DE30 RRCA          ;
+c$DE2E LD (HL),$38   ; erase old marker
+ $DE30 RRCA          ; {value*32 -> screen offset (row/col bits)
  $DE31 RRCA          ;
  $DE32 RRCA          ;
  $DE33 LD H,A        ;
  $DE34 AND $E0       ;
- $DE36 LD L,A        ;
+ $DE36 LD L,A        ; }
  $DE37 LD A,H        ;
  $DE38 AND $01       ;
  $DE3A LD H,A        ;
- $DE3B ADD HL,DE     ;
- $DE3C LD (HL),C     ;
+ $DE3B ADD HL,DE     ; {add base, draw new marker
+ $DE3C LD (HL),C     ; }
  $DE3D RET           ;
 
 ; Update Depth indicator
@@ -5781,7 +5865,7 @@ c$DE3E LD HL,($DE55) ;
  $DE49 INC A         ;
  $DE4A SRL A         ;
  $DE4C AND $0F       ;
- $DE4E CALL $DE2E    ;
+ $DE4E CALL $DE2E    ; Update gauge indicator on the screen
  $DE51 LD ($DE55),HL ;
  $DE54 RET           ;
 
@@ -5814,7 +5898,7 @@ c$DE5D LD ($DE5B),HL ;
  $DE77 JR C,$DE7E    ;
  $DE79 CALL $E645    ; Play melody $E629
  $DE7C LD C,$10      ;
-*$DE7E CALL $DE2E    ;
+*$DE7E CALL $DE2E    ; Update gauge indicator on the screen
  $DE81 LD ($DE57),HL ;
  $DE84 RET           ;
 
@@ -5822,39 +5906,40 @@ c$DE5D LD ($DE5B),HL ;
 ;
 ; Used by the routines at #R$DED9, #R$DEE5, #R$DEF1 and #R$EADE.
 ;
-; I:B ??? $00 $02
+; I:B number of leading digits to skip (field width): $00 prints 5 digits, $02
+; .   prints 3 (HELD)
 ; I:HL Number to print
 ; I:DE Address on the screen: $4059 $4099 $40DA
 @label=PrintDec
-c$DE85 LD (IX+$23),B  ;
- $DE88 PUSH DE        ;
+c$DE85 LD (IX+$23),B  ; {min-digits flag; save screen address
+ $DE88 PUSH DE        ; }
  $DE89 LD IY,$E5E0    ; address for list of dividers: 10000, 1000, 100, 10, 1
-*$DE8D LD C,$FF       ;
+*$DE8D LD C,$FF       ; digit counter reset
  $DE8F LD E,(IY+$00)  ; {get divider in DE
  $DE92 LD D,(IY+$01)  ; }
- $DE95 BIT 7,D        ;
- $DE97 JR Z,$DEA0     ;
- $DE99 LD (IX+$23),D  ;
+ $DE95 BIT 7,D        ; {not last divider (units digit)
+ $DE97 JR Z,$DEA0     ; }
+ $DE99 LD (IX+$23),D  ; {units digit, print directly
  $DE9C LD C,$00       ;
- $DE9E JR $DEB6       ;
-*$DEA0 INC C          ;
+ $DE9E JR $DEB6       ; }
+*$DEA0 INC C          ; {count how many times divider fits
  $DEA1 OR A           ;
  $DEA2 SBC HL,DE      ;
- $DEA4 JR NC,$DEA0    ;
- $DEA6 ADD HL,DE      ;
+ $DEA4 JR NC,$DEA0    ; }
+ $DEA6 ADD HL,DE      ; {undo last subtract; next divider
  $DEA7 INC IY         ;
- $DEA9 INC IY         ;
- $DEAB LD A,(IX+$23)  ;
+ $DEA9 INC IY         ; }
+ $DEAB LD A,(IX+$23)  ; {check min-digit count reached
  $DEAE OR A           ;
- $DEAF JR Z,$DEB6     ;
- $DEB1 DEC (IX+$23)   ;
- $DEB4 JR $DE8D       ;
+ $DEAF JR Z,$DEB6     ; }
+ $DEB1 DEC (IX+$23)   ; {count down, print next digit anyway
+ $DEB4 JR $DE8D       ; }
 *$DEB6 EX (SP),HL     ;
  $DEB7 EX DE,HL       ;
  $DEB8 LD B,$00       ;
- $DEBA SLA C          ;
+ $DEBA SLA C          ; {digit*8 = char pixel offset
  $DEBC SLA C          ;
- $DEBE SLA C          ;
+ $DEBE SLA C          ; }
  $DEC0 LD HL,$3D80    ; ZX Charset (3D00) + $80 = address of char '0'
  $DEC3 ADD HL,BC      ;
  $DEC4 LD B,$08       ;
@@ -5868,8 +5953,8 @@ c$DE85 LD (IX+$23),B  ;
  $DECE INC E          ;
  $DECF EX DE,HL       ;
  $DED0 EX (SP),HL     ;
- $DED1 BIT 7,(IX+$23) ;
- $DED5 JR Z,$DE8D     ;
+ $DED1 BIT 7,(IX+$23) ; {check more digits to print
+ $DED5 JR Z,$DE8D     ; }
  $DED7 POP DE         ;
  $DED8 RET            ;
 
@@ -5906,13 +5991,27 @@ c$DEF1 LD B,$02      ;
 ; Data block at DEFD
 b$DEFD DEFB $00,$00
 @label=HELD
- $DEFF DEFW $0000                           ; HELD value
+ $DEFF DEFW $0000                                           ; HELD value
  $DF01 DEFB $00,$00,$00,$00,$00,$00,$02,$03
  $DF09 DEFB $02,$03,$18,$10,$00,$30
- $DF0F DEFW $0000                           ; ???
- $DF11 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF19 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $DF21 DEFB $00,$00,$00,$00
+ $DF0F DEFW $0000                                           ; Write pointer
+                                                            ; into the
+                                                            ; collision-point
+                                                            ; list at #R$DF11;
+                                                            ; reset to $DF11
+                                                            ; each frame by
+                                                            ; #R$DFD5,
+                                                            ; $FF-terminated
+ $DF11 DEFW $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000 ; {Collision-point
+ $DF21 DEFW $0000,$0000                                     ; list: (row,
+                                                            ; column) byte
+                                                            ; pairs where the
+                                                            ; diver sprite
+                                                            ; overlapped
+                                                            ; relief,
+                                                            ; $FF-terminated;
+                                                            ; scanned by
+                                                            ; #R$E364}
 
 ; Table: Angle 0..15 -> (DX, DY)
 @label=AngleToDXDY
@@ -5939,7 +6038,7 @@ b$DF45 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DFC5 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $DFCD DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at DFD5
+; Update diver position, angle and sprite from movement state
 ;
 ; Used by the routines at #R$E2A8 and #R$E915.
 ;
@@ -6057,7 +6156,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E100 JR NZ,$E10A     ;
  $E102 LD A,(IX+$1A)   ;
  $E105 CP $46          ;
- $E107 CALL Z,$E9B0    ;
+ $E107 CALL Z,$E9B0    ; Plus one live
 *$E10A RES 3,(IX+$0D)  ;
  $E10E LD A,(IX+$01)   ;
  $E111 CP (IX+$1D)     ;
@@ -6083,12 +6182,12 @@ c$DFD5 LD HL,($B7B9)   ;
  $E13E LD H,A          ;
  $E13F LD ($5B03),HL   ; set Screen position on mini-map
  $E142 CALL $9C56      ; Draw game screen
- $E145 CALL $DE3E      ;
+ $E145 CALL $DE3E      ; Update Depth indicator
  $E148 LD HL,($B7B9)   ;
  $E14B LD DE,($5B35)   ;
  $E14F LD ($B7B9),DE   ;
  $E153 LD ($5B35),HL   ;
- $E156 CALL $BDBA      ;
+ $E156 CALL $BDBA      ; Draw records for current mini-map row band
  $E159 LD HL,($B7B9)   ;
  $E15C LD DE,($5B35)   ;
  $E160 LD ($B7B9),DE   ;
@@ -6228,7 +6327,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E2A5 LD (HL),$FF     ;
  $E2A7 RET             ;
 
-; Routine at E2A8
+; Diver frame update: speed timer moves diver, input timer reads keys
 ;
 ; Used by the routine at #R$D990.
 c$E2A8 LD IX,$E33B     ; Diver object record address
@@ -6241,12 +6340,13 @@ c$E2A8 LD IX,$E33B     ; Diver object record address
  $E2BF JR Z,$E2C5      ;
  $E2C1 SET 1,(IX+$0D)  ;
 *$E2C5 SET 0,(IX+$0D)  ;
- $E2C9 CALL $DFD5      ;
+ $E2C9 CALL $DFD5      ; Update diver position, angle and sprite from movement
+                       ; state
 *$E2CC DEC (IX+$20)    ;
  $E2CF RET NZ          ;
  $E2D0 LD (IX+$20),$14 ;
  $E2D4 CALL $E2DB      ; Read keyboard input
- $E2D7 CALL $E364      ;
+ $E2D7 CALL $E364      ; Diver per-frame logic
  $E2DA RET             ;
 
 ; Read and process keyboard input
@@ -6308,69 +6408,103 @@ c$E2DB BIT 3,(IX+$10) ;
 @label=DiverObj
 b$E33B DEFB $0A      ; (IX+$00) Column 0..31
  $E33C DEFB $0A      ; (IX+$01) Row
- $E33D DEFB $04      ; (IX+$02) ???
- $E33E DEFB $04
+ $E33D DEFB $04      ; (IX+$02) X shift 0..7, previous value
+ $E33E DEFB $04      ; (IX+$03) Y shift 0..7, previous value
  $E33F DEFB $00      ; (IX+$04) DX value for the Angle, -2..2, see table
                      ; #R$DF25
  $E340 DEFB $00      ; (IX+$05) DY value for the Angle, -2..2, see table
                      ; #R$DF25
  $E341 DEFB $04      ; (IX+$06) Angle 0..15, initially 4
- $E342 DEFB $8D
- $E343 DEFB $DF      ; (IX+$08) ???
+ $E342 DEFB $8D      ; (IX+$07) draw/erase-buffer pointer, low byte (see
+                     ; (IX+$08))
+ $E343 DEFB $DF      ; (IX+$08) draw/erase-buffer pointer, high byte; selects
+                     ; the object's slot page ($F0+slot for objects, $DF for
+                     ; diver), see #R$B5E0
  $E344 DEFW $0000    ; (IX+$09) Sprite address
  $E346 DEFW $0000    ; (IX+$0B) Sprite address
- $E348 DEFB $18      ; (IX+$0D) ??? bits 0/1/2/3/4/5/6/7
+ $E348 DEFB $18      ; (IX+$0D) object-engine control flags (shared by
+                     ; #R$B3A0/#R$B470/#R$B5E0/#R$B737); bit0: on-screen/slot
+                     ; allocated; bit1: was active last frame (redraw vs first
+                     ; draw); bits2/3/4: edge-crossing during scroll
+                     ; (column/row); bit5: X-centered (no X shift); bit6:
+                     ; Y-centered (no Y shift); bit7: slot allocation failed,
+                     ; skip draw
  $E349 DEFB $14      ; (IX+$0E) speed factor: 12 20 40 100; $08 max speed, $14
                      ; min speed
  $E34A DEFB $14      ; (IX+$0F) speed counter
  $E34B DEFB $00      ; (IX+$10) flag bits;
                      ; bit0: 1 = diver moving, 0 = stopped
- $E34C DEFB $00      ; (IX+$11) ??? $00 $FF
- $E34D DEFB $00      ; (IX+$12) ??? $00
+ $E34C DEFB $00      ; (IX+$11) last DX value, set when X shift changes; bit7
+                     ; used to test movement direction (left/right)
+ $E34D DEFB $00      ; (IX+$12) last DY value, set when Y shift changes; bit7
+                     ; used to test movement direction (up/down)
  $E34E DEFB $08      ; (IX+$13) X value
  $E34F DEFB $08      ; (IX+$14) Y value
  $E350 DEFB $00      ; (IX+$15) X shift 0..7
  $E351 DEFB $00      ; (IX+$16) Y shift 0..7
- $E352 DEFB $00      ; (IX+$17) ???
+ $E352 DEFB $00      ; (IX+$17) animation frame counter 0..3, incremented each
+                     ; frame; combined with Angle to pick swim sprite
  $E353 DEFB $00      ; (IX+$18) Column 0..31
  $E354 DEFB $00      ; (IX+$19) Row
- $E355 DEFB $0A,$12
- $E357 DEFB $03      ; (IX+$1C) ???
- $E358 DEFB $12,$03
- $E35A DEFB $40      ; (IX+$1F) Row??
- $E35B DEFB $00      ; (IX+$20) ??? $03
- $E35C DEFB $00      ; (IX+$21) ???
- $E35D DEFB $00      ; (IX+$22) ??? $F5
- $E35E DEFB $00
+ $E355 DEFB $0A      ; (IX+$1A) world row counter (depth),
+                     ; incremented/decremented with row moves; reaching $46
+                     ; grants extra life; compared to (IX+$28)
+ $E356 DEFB $12      ; (IX+$1B) right column limit
+ $E357 DEFB $03      ; (IX+$1C) left column limit
+ $E358 DEFB $12      ; (IX+$1D) bottom row limit
+ $E359 DEFB $03      ; (IX+$1E) top row limit
+ $E35A DEFB $40      ; (IX+$1F) unused during play; reused by #R$EADE as the
+                     ; current print row while listing the high-score table
+ $E35B DEFB $00      ; (IX+$20) periodic counter; controls how often keyboard
+                     ; input and diver logic (#R$E364) run
+ $E35C DEFB $00      ; (IX+$21) frame counter for drowned-diver periodic
+                     ; 180-degree turn (#R$E41B); wraps every 256 calls
+ $E35D DEFB $00      ; (IX+$22) drowning countdown; 0 = alive, increments each
+                     ; frame after drowning starts, reaching $FF triggers Diver
+                     ; explosion
+ $E35E DEFB $00      ; scratch byte, reused by #R$DE85 (PrintDec) as (IX+$23)
+                     ; digit-skip counter while printing
  $E35F DEFW $0000    ; (IX+$24) Sprite address
- $E361 DEFB $00      ; (IX+$26) ??? bits 0/1/2/3/4/5/6
- $E362 DEFB $00      ; (IX+$27) ???
- $E363 DEFB $00      ; (IX+$28) ???
+ $E361 DEFB $00      ; (IX+$26) flag bits; bit0: on boat/climbing sequence
+                     ; active; bit1: one-shot gate for boat animation step;
+                     ; bit3: climbing onto boat, immune to explosion; bit4: max
+                     ; score bonus already given this dive; bit5: extra life
+                     ; already awarded this dive
+ $E362 DEFB $00      ; (IX+$27) last known boat column (from #R$C4F0+2), used
+                     ; to detect boat movement
+ $E363 DEFB $00      ; (IX+$28) row limit for current dive phase, compared to
+                     ; (IX+$1A)
 
-; Routine at E364
+; Diver per-frame logic: oxygen drain, drowning, object interaction
 ;
 ; Used by the routine at #R$E2A8.
 ;
 ; I:IX Diver object address = #R$E33B
-c$E364 BIT 5,(IX+$10)  ;
+;
+; Runs once per frame while diving. Drains Oxygen (rate scales with Game level)
+; and triggers drowning if it runs out; periodically flips the drowned diver's
+; facing. Then walks the list of nearby screen objects, checking each for a
+; relief-wall hit (bounce back) or an interaction (take Oxygen, pick up
+; pearls/shells/chest) via #R$E476.
+c$E364 BIT 5,(IX+$10)  ; check drowning/exploding flag, skip if set
  $E368 RET NZ          ;
- $E369 BIT 7,(IX+$10)  ;
- $E36D JP Z,$E767      ;
- $E370 LD HL,($DE5B)   ;
+ $E369 BIT 7,(IX+$10)  ; {check underwater flag, else boat logic
+ $E36D JP Z,$E767      ; }
+ $E370 LD HL,($DE5B)   ; get oxygen level
  $E373 LD A,($5B10)    ; Game level 1..4
- $E376 ADD A,A         ;
+ $E376 ADD A,A         ; {oxygen drain rate = LEVEL*8+10
  $E377 ADD A,A         ;
  $E378 ADD A,A         ;
  $E379 ADD A,$0A       ;
  $E37B LD E,A          ;
- $E37C LD D,$00        ;
- $E37E LD A,H          ;
- $E37F SBC HL,DE       ;
+ $E37C LD D,$00        ; }
+ $E37E LD A,H          ; {subtract drain from oxygen
+ $E37F SBC HL,DE       ; }
  $E381 LD ($DE5B),HL   ;
  $E384 CP H            ;
- $E385 CALL NZ,$DE5D   ;
- $E388 LD A,($DE5C)    ;
- $E38B AND $F0         ;
+ $E385 CALL NZ,$DE5D   ; Update Oxygen indicator, maximum is $FFFF
+ $E388 LD A,($DE5C)    ; {check oxygen high byte, out-of-air
+ $E38B AND $F0         ; }
  $E38D JR NZ,$E393     ;
  $E38F CALL $E43A      ; Explosion
  $E392 RET             ;
@@ -6379,7 +6513,7 @@ c$E364 BIT 5,(IX+$10)  ;
  $E397 JR Z,$E39C      ;
  $E399 INC (IX+$22)    ;
 *$E39C BIT 4,(IX+$10)  ;
- $E3A0 CALL NZ,$E41B   ;
+ $E3A0 CALL NZ,$E41B   ; Drowned diver
  $E3A3 LD HL,$DF11     ;
 *$E3A6 LD A,(HL)       ;
  $E3A7 CP $FF          ;
@@ -6397,7 +6531,8 @@ c$E364 BIT 5,(IX+$10)  ;
  $E3B9 LD A,(HL)       ;
  $E3BA POP HL          ;
  $E3BB CP $02          ;
- $E3BD JP NZ,$E476     ;
+ $E3BD JP NZ,$E476     ; => Interact with object, like take Oxygen or pick up
+                       ; pearls
 ; This entry point is used by the routine at #R$E476.
 *$E3C0 BIT 4,(IX+$10)  ;
  $E3C4 JR NZ,$E418     ;
@@ -6438,7 +6573,7 @@ c$E364 BIT 5,(IX+$10)  ;
 *$E418 POP HL          ;
  $E419 JR $E3A6        ;
 
-; Routine at E41B
+; Drowned diver: periodic 180-degree turn
 ;
 ; Used by the routine at #R$E364.
 ;
@@ -6455,7 +6590,7 @@ c$E41B INC (IX+$21)    ;
  $E435 LD (IX+$0E),$14 ;
  $E439 RET             ;
 
-; Diver explosion ??
+; Diver explosion
 ;
 ; Used by the routine at #R$E364.
 ;
@@ -6512,7 +6647,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E49F ADD HL,BC      ;
  $E4A0 JR NC,$E4A5    ;
  $E4A2 LD HL,$FFFF    ;
-*$E4A5 CALL $DE5D     ;
+*$E4A5 CALL $DE5D     ; Update Oxygen indicator, maximum is $FFFF
  $E4A8 JP $E418       ;
 *$E4AB LD BC,$0004    ;
  $E4AE ADD IY,BC      ;
@@ -6548,7 +6683,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E4E2 LD B,$00       ;
  $E4E4 ADD HL,BC      ;
  $E4E5 PUSH DE        ;
- $E4E6 CALL $E5D2     ;
+ $E4E6 CALL $E5D2     ; DE = (L5B33) - HELD
  $E4E9 LD C,(HL)      ;
  $E4EA INC HL         ;
  $E4EB LD B,(HL)      ;
@@ -6627,7 +6762,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E579 BIT 4,A        ;
  $E57B JP NZ,$E418    ;
  $E57E PUSH BC        ;
- $E57F CALL $E5D2     ;
+ $E57F CALL $E5D2     ; DE = (L5B33) - HELD
  $E582 POP BC         ;
  $E583 EX DE,HL       ;
  $E584 OR A           ;
@@ -6760,25 +6895,25 @@ b$E652 DEFB $00,$0C,$00,$1E,$00,$0C,$00,$1E ; {#HTML[#UDGARRAY2,,,2,,($E652-$E66
  $E672 DEFB $31,$8C,$7B,$DE,$31,$8C,$7B,$DE ; {#HTML[#UDGARRAY2,,,2,,($E672-$E681-1-16)(lives3)]
  $E67A DEFB $7B,$DE,$7B,$DE,$FF,$FF,$FF,$FF ; }
 
-; Routine at E682
+; Draw Divers on the Boat
 ;
 ; Used by the routines at #R$E6AB and #R$E9B0.
-c$E682 OR A          ;
- $E683 JR NZ,$E68A   ;
- $E685 LD HL,$A41B   ;
+c$E682 OR A          ; {no divers left, use empty sprite
+ $E683 JR NZ,$E68A   ; }
+ $E685 LD HL,$A41B   ; empty sprite address
  $E688 JR $E697      ;
-*$E68A LD HL,$E652   ;
- $E68D LD DE,$0010   ;
+*$E68A LD HL,$E652   ; divers-on-boat sprite base
+ $E68D LD DE,$0010   ; {sprite step; skip if only one diver
  $E690 DEC A         ;
- $E691 JR Z,$E697    ;
+ $E691 JR Z,$E697    ; }
  $E693 LD B,A        ;
 *$E694 ADD HL,DE     ;
  $E695 DJNZ $E694    ;
-*$E697 LD B,$06      ;
- $E699 LD DE,$8CD6   ;
+*$E697 LD B,$06      ; {6 rows; boat destination address
+ $E699 LD DE,$8CD6   ; }
 *$E69C PUSH BC       ;
- $E69D LDI           ;
- $E69F LDI           ;
+ $E69D LDI           ; {copy 2 bytes of diver sprite onto boat
+ $E69F LDI           ; }
  $E6A1 LD BC,$0005   ;
  $E6A4 EX DE,HL      ;
  $E6A5 ADD HL,BC     ;
@@ -6787,7 +6922,7 @@ c$E682 OR A          ;
  $E6A8 DJNZ $E69C    ;
  $E6AA RET           ;
 
-; Routine at E6AB
+; Reset oxygen, draw divers on boat, position diver at dive start
 ;
 ; Used by the routine at #R$D990.
 c$E6AB LD IX,$E33B     ; Diver object record address
@@ -6795,7 +6930,7 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E6B2 LD ($DE5B),HL   ;
  $E6B5 LD A,($5B37)    ; get Number of lives
  $E6B8 DEC A           ;
- $E6B9 CALL $E682      ;
+ $E6B9 CALL $E682      ; Draw Divers on the Boat
  $E6BC LD A,($C4F0)    ;
  $E6BF LD C,A          ;
  $E6C0 SRL A           ;
@@ -6864,7 +6999,7 @@ c$E6AB LD IX,$E33B     ; Diver object record address
  $E762 SET 0,(IX+$10)  ; set "moving" bit
  $E766 RET             ;
 
-; Routine at E767
+; Diver on boat: idle, embark and disembark state machine
 ;
 ; Used by the routine at #R$E364.
 c$E767 BIT 0,(IX+$26)  ;
@@ -6989,7 +7124,7 @@ c$E767 BIT 0,(IX+$26)  ;
  $E8B6 CALL $DEF1      ; Print HELD number
  $E8B9 CALL $DEE5      ; Print score number
  $E8BC LD HL,$FFFF     ;
- $E8BF CALL $DE5D      ;
+ $E8BF CALL $DE5D      ; Update Oxygen indicator, maximum is $FFFF
  $E8C2 RES 6,(IX+$10)  ;
  $E8C6 RES 3,(IX+$26)  ;
  $E8CA RES 0,(IX+$26)  ;
@@ -7019,45 +7154,46 @@ c$E767 BIT 0,(IX+$26)  ;
  $E910 LD (IX+$04),$FE ;
  $E914 RET             ;
 
-; Routine at E915
+; Diver reaches boat: check collision, start climb sequence
 ;
 ; Used by the routine at #R$E476.
-c$E915 LD DE,($C4F0)   ;
- $E919 BIT 5,(IX+$10)  ;
- $E91D JP NZ,$E418     ;
- $E920 LD BC,($5B0B)   ;
- $E924 LD A,E          ;
+c$E915 LD DE,($C4F0)   ; get boat position
+ $E919 BIT 5,(IX+$10)  ; {skip if already drowned/exploding
+ $E91D JP NZ,$E418     ; }
+ $E920 LD BC,($5B0B)   ; get screen scroll position
+ $E924 LD A,E          ; {compute boat column relative to viewport
  $E925 SUB C           ;
- $E926 ADD A,$07       ;
+ $E926 ADD A,$07       ; }
  $E928 LD C,A          ;
- $E929 CP L            ;
- $E92A JP NZ,$E3CD     ;
- $E92D LD A,D          ;
+ $E929 CP L            ; {check diver column matches boat, else drown
+ $E92A JP NZ,$E3CD     ; }
+ $E92D LD A,D          ; {check diver row within boat height
  $E92E SUB B           ;
  $E92F INC A           ;
  $E930 CP H            ;
- $E931 JR Z,$E93C      ;
+ $E931 JR Z,$E93C      ; }
  $E933 INC A           ;
  $E934 CP H            ;
  $E935 JR Z,$E93C      ;
  $E937 INC A           ;
  $E938 CP H            ;
- $E939 JP NZ,$E3CD     ;
-*$E93C SET 1,(IX+$0D)  ;
- $E940 RES 0,(IX+$0D)  ;
+ $E939 JP NZ,$E3CD     ; not near boat, drown
+*$E93C SET 1,(IX+$0D)  ; {mark off-grid, clear moving flag
+ $E940 RES 0,(IX+$0D)  ; }
  $E944 PUSH IY         ;
  $E946 PUSH BC         ;
  $E947 LD (IX+$04),$00 ; clear DX value
  $E94B LD HL,($5B03)   ; get Screen position on mini-map
  $E94E PUSH HL         ;
- $E94F CALL $DFD5      ;
+ $E94F CALL $DFD5      ; Update diver position, angle and sprite from movement
+                       ; state
  $E952 POP HL          ;
- $E953 RES 7,(IX+$10)  ;
+ $E953 RES 7,(IX+$10)  ; {enter climbing state flags
  $E957 SET 0,(IX+$26)  ;
- $E95B SET 2,(IX+$26)  ;
+ $E95B SET 2,(IX+$26)  ; }
  $E95F SET 3,(IX+$26)  ;
- $E963 LD A,($C4F2)    ;
- $E966 LD (IX+$27),A   ;
+ $E963 LD A,($C4F2)    ; {store boat column reference
+ $E966 LD (IX+$27),A   ; }
  $E969 LD (IX+$04),$00 ; clear DX value
  $E96D LD (IX+$05),$FF ; set DY = -1
  $E971 POP BC          ;
@@ -7069,23 +7205,24 @@ c$E915 LD DE,($C4F0)   ;
  $E97B LD C,A          ;
 *$E97C LD (IX+$00),C   ; set Column value
  $E97F LD A,(IX+$27)   ;
- $E982 ADD A,A         ;
- $E983 LD (IX+$13),A   ;
+ $E982 ADD A,A         ; {set X value = column*2
+ $E983 LD (IX+$13),A   ; }
  $E986 LD (IX+$28),$00 ;
  $E98A LD HL,$9B8C     ; Sprite diver climbing on the boat
  $E98D LD (IX+$24),L   ; {set sprite address
  $E990 LD (IX+$25),H   ; }
- $E993 SET 0,(IX+$0D)  ;
- $E997 RES 1,(IX+$0D)  ;
- $E99B CALL $DFD5      ;
+ $E993 SET 0,(IX+$0D)  ; {mark on-grid, clear allocation-failed flag
+ $E997 RES 1,(IX+$0D)  ; }
+ $E99B CALL $DFD5      ; Update diver position, angle and sprite from movement
+                       ; state
  $E99E POP IY          ;
- $E9A0 LD (IX+$0F),$03 ;
- $E9A4 LD (IX+$20),$03 ;
+ $E9A0 LD (IX+$0F),$03 ; {reset speed/poll counters
+ $E9A4 LD (IX+$20),$03 ; }
  $E9A8 LD HL,$E632     ;
  $E9AB LD (HL),$00     ;
  $E9AD JP $E418        ;
 
-; Routine at E9B0
+; Plus one live
 ;
 ; Used by the routine at #R$DFD5.
 ;
@@ -7127,67 +7264,67 @@ b$E9DA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
  $EA6A DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00
  $EA74 DEFB $0A,$00,$00,$00,$00,$00
 
-; Routine at EA7A
+; Insert new high-score table entry if Score qualifies
 ;
 ; Used by the routine at #R$EE1C.
-c$EA7A LD ($E9D8),IX  ;
+c$EA7A LD ($E9D8),IX  ; save caller's IX
  $EA7E DI             ;
- $EA7F LD HL,($E9E4)  ;
- $EA82 LD DE,($5B44)  ;
- $EA86 LD A,E         ;
+ $EA7F LD HL,($E9E4)  ; {get lowest table score; get final Score
+ $EA82 LD DE,($5B44)  ; }
+ $EA86 LD A,E         ; {compare Score to lowest table entry
  $EA87 SUB L          ;
  $EA88 LD A,D         ;
- $EA89 SBC A,H        ;
- $EA8A JR C,$EADE     ;
+ $EA89 SBC A,H        ; }
+ $EA8A JR C,$EADE     ; Score too low, no new entry
  $EA8C EX DE,HL       ;
  $EA8D LD IX,$E9DA    ; Score table address
- $EA91 LD DE,$0010    ;
- $EA94 LD B,$0A       ;
-*$EA96 LD A,L         ;
+ $EA91 LD DE,$0010    ; table entry size (16 bytes)
+ $EA94 LD B,$0A       ; 10 table entries
+*$EA96 LD A,L         ; {compare Score to this entry
  $EA97 SUB (IX+$0A)   ;
  $EA9A LD A,H         ;
- $EA9B SBC A,(IX+$0B) ;
- $EA9E JR C,$EAA4     ;
- $EAA0 ADD IX,DE      ;
- $EAA2 DJNZ $EA96     ;
-*$EAA4 PUSH IX        ;
+ $EA9B SBC A,(IX+$0B) ; }
+ $EA9E JR C,$EAA4     ; found insertion position
+ $EAA0 ADD IX,DE      ; {next entry
+ $EAA2 DJNZ $EA96     ; }
+*$EAA4 PUSH IX        ; {bytes to shift down
  $EAA6 POP HL         ;
  $EAA7 OR A           ;
- $EAA8 SBC HL,DE      ;
- $EAAA PUSH HL        ;
+ $EAA8 SBC HL,DE      ; }
+ $EAAA PUSH HL        ; save shift length
  $EAAB LD DE,$E9DA    ; Score table address
- $EAAE LD A,$0A       ;
+ $EAAE LD A,$0A       ; {compute shift byte count
  $EAB0 SUB B          ;
  $EAB1 ADD A,A        ;
  $EAB2 ADD A,A        ;
  $EAB3 ADD A,A        ;
- $EAB4 ADD A,A        ;
- $EAB5 JR Z,$EABF     ;
+ $EAB4 ADD A,A        ; }
+ $EAB5 JR Z,$EABF     ; no entries to shift
  $EAB7 LD C,A         ;
- $EAB8 LD B,$00       ;
+ $EAB8 LD B,$00       ; {shift lower entries down
  $EABA LD HL,$E9EA    ;
- $EABD LDIR           ;
-*$EABF POP HL         ;
- $EAC0 LD B,$06       ;
-*$EAC2 LD (HL),$80    ;
+ $EABD LDIR           ; }
+*$EABF POP HL         ; {restore insert position
+ $EAC0 LD B,$06       ; }
+*$EAC2 LD (HL),$80    ; {fill name with blanks
  $EAC4 INC HL         ;
- $EAC5 DJNZ $EAC2     ;
- $EAC7 LD BC,($5B48)  ;
+ $EAC5 DJNZ $EAC2     ; }
+ $EAC7 LD BC,($5B48)  ; {store chests count
  $EACB LD (HL),C      ;
  $EACC INC HL         ;
  $EACD LD (HL),B      ;
- $EACE INC HL         ;
- $EACF LD BC,($5B46)  ;
+ $EACE INC HL         ; }
+ $EACF LD BC,($5B46)  ; {store pearls count
  $EAD3 LD (HL),C      ;
  $EAD4 INC HL         ;
  $EAD5 LD (HL),B      ;
- $EAD6 INC HL         ;
- $EAD7 LD BC,($5B44)  ;
+ $EAD6 INC HL         ; }
+ $EAD7 LD BC,($5B44)  ; {store final score
  $EADB LD (HL),C      ;
  $EADC INC HL         ;
- $EADD LD (HL),B      ;
+ $EADD LD (HL),B      ; }
 
-; Routine at EADE
+; Show Game Over screen and high-score table, prompt for name
 ;
 ; Used by the routines at #R$EA7A, #R$EE1C and #R$EEAD.
 c$EADE LD IX,$E33B     ; Diver object record address
@@ -7213,7 +7350,7 @@ c$EADE LD IX,$E33B     ; Diver object record address
 *$EB16 PUSH BC         ;
  $EB17 BIT 7,(HL)      ;
  $EB19 JR Z,$EB20      ;
- $EB1B CALL $EB82      ;
+ $EB1B CALL $EB82      ; Read player name for high-score entry
  $EB1E JR $EB2B        ;
 *$EB20 LD B,$06        ;
 *$EB22 LD A,(HL)       ;
@@ -7225,9 +7362,9 @@ c$EADE LD IX,$E33B     ; Diver object record address
  $EB28 POP HL          ;
  $EB29 DJNZ $EB22      ;
 *$EB2B LD B,$0B        ;
- $EB2D CALL $EBDB      ;
+ $EB2D CALL $EBDB      ; Print 16-bit number at TAB position
  $EB30 LD B,$13        ;
- $EB32 CALL $EBDB      ;
+ $EB32 CALL $EBDB      ; Print 16-bit number at TAB position
  $EB35 PUSH HL         ;
  $EB36 LD BC,$0003     ;
  $EB39 LD DE,$EC4B     ;
@@ -7267,78 +7404,78 @@ c$EADE LD IX,$E33B     ; Diver object record address
  $EB80 EI              ;
  $EB81 RET             ;
 
-; Routine at EB82
+; Read player name for high-score entry (up to 6 chars)
 ;
 ; Used by the routine at #R$EADE.
-c$EB82 LD B,$06      ;
-*$EB84 PUSH BC       ;
- $EB85 PUSH HL       ;
- $EB86 LD BC,$0006   ;
- $EB89 LD DE,$EC53   ;
+c$EB82 LD B,$06      ; max 6 chars
+*$EB84 PUSH BC       ; {save loop counter, buffer pointer
+ $EB85 PUSH HL       ; }
+ $EB86 LD BC,$0006   ; {print "SCORE" prompt text
+ $EB89 LD DE,$EC53   ; }
  $EB8C CALL $203C    ; ROM call PR-STRING
  $EB8F EI            ;
-*$EB90 LD A,($5C05)  ;
+*$EB90 LD A,($5C05)  ; {wait for previous key to release
  $EB93 OR A          ;
- $EB94 JR NZ,$EB90   ;
-*$EB96 LD A,($5C05)  ;
+ $EB94 JR NZ,$EB90   ; }
+*$EB96 LD A,($5C05)  ; {wait for next keypress
  $EB99 OR A          ;
- $EB9A JR Z,$EB96    ;
+ $EB9A JR Z,$EB96    ; }
  $EB9C LD A,($5C08)  ; get LAST-K - Last key pressed
- $EB9F CP $0C        ;
- $EBA1 JR Z,$EBB9    ;
- $EBA3 CP $0D        ;
- $EBA5 JR Z,$EBD3    ;
- $EBA7 BIT 7,A       ;
- $EBA9 JR NZ,$EB90   ;
- $EBAB CP $20        ;
- $EBAD JR C,$EB90    ;
- $EBAF PUSH AF       ;
- $EBB0 RST $10       ;
+ $EB9F CP $0C        ; {check for Delete key
+ $EBA1 JR Z,$EBB9    ; }
+ $EBA3 CP $0D        ; {check for Enter key
+ $EBA5 JR Z,$EBD3    ; }
+ $EBA7 BIT 7,A       ; {reject extended keys
+ $EBA9 JR NZ,$EB90   ; }
+ $EBAB CP $20        ; {reject control chars, keep printable
+ $EBAD JR C,$EB90    ; }
+ $EBAF PUSH AF       ; {print typed char
+ $EBB0 RST $10       ; }
  $EBB1 POP AF        ;
- $EBB2 POP HL        ;
+ $EBB2 POP HL        ; {store char in name buffer
  $EBB3 LD (HL),A     ;
- $EBB4 INC HL        ;
+ $EBB4 INC HL        ; }
  $EBB5 POP BC        ;
  $EBB6 DJNZ $EB84    ;
  $EBB8 RET           ;
-*$EBB9 POP HL        ;
- $EBBA POP BC        ;
- $EBBB LD A,B        ;
+*$EBB9 POP HL        ; {restore state on Delete
+ $EBBA POP BC        ; }
+ $EBBB LD A,B        ; {check nothing to delete
  $EBBC CP $06        ;
- $EBBE JR Z,$EB84    ;
- $EBC0 INC B         ;
+ $EBBE JR Z,$EB84    ; }
+ $EBC0 INC B         ; {undo last char, clear cell
  $EBC1 DEC HL        ;
- $EBC2 LD (HL),$80   ;
+ $EBC2 LD (HL),$80   ; }
  $EBC4 PUSH HL       ;
  $EBC5 PUSH BC       ;
- $EBC6 LD DE,$EC4E   ;
- $EBC9 LD BC,$0005   ;
+ $EBC6 LD DE,$EC4E   ; {reprint prompt after delete
+ $EBC9 LD BC,$0005   ; }
  $EBCC CALL $203C    ; ROM call PR-STRING
  $EBCF POP BC        ;
  $EBD0 POP HL        ;
  $EBD1 JR $EB84      ;
-*$EBD3 POP HL        ;
- $EBD4 POP BC        ;
-*$EBD5 LD (HL),$20   ;
+*$EBD3 POP HL        ; {Enter pressed, done
+ $EBD4 POP BC        ; }
+*$EBD5 LD (HL),$20   ; {blank-pad remaining name bytes
  $EBD7 INC HL        ;
- $EBD8 DJNZ $EBD5    ;
+ $EBD8 DJNZ $EBD5    ; }
  $EBDA RET           ;
 
-; Routine at EBDB
+; Print 16-bit number at TAB position (score table)
 ;
 ; Used by the routine at #R$EADE.
 c$EBDB PUSH HL       ;
  $EBDC PUSH BC       ;
- $EBDD LD A,$17      ;
+ $EBDD LD A,$17      ; {send TAB cursor-position control code
  $EBDF RST $10       ;
  $EBE0 POP AF        ;
  $EBE1 RST $10       ;
- $EBE2 RST $10       ;
- $EBE3 POP HL        ;
+ $EBE2 RST $10       ; }
+ $EBE3 POP HL        ; {read 16-bit value, advance pointer
  $EBE4 LD C,(HL)     ;
  $EBE5 INC HL        ;
  $EBE6 LD B,(HL)     ;
- $EBE7 INC HL        ;
+ $EBE7 INC HL        ; }
  $EBE8 PUSH HL       ;
  $EBE9 CALL $1A1B    ; ROM OUT-NUM-1 subroutine
  $EBEC POP HL        ;
@@ -7401,22 +7538,22 @@ c$EC7C LD A,$02      ;
  $ECE7 LD ($5B43),A  ; Save key for Decelerate
  $ECEA RET           ;
 
-; Sound??
+; Wait for keypress (with click sound), return key-row mask
 ;
 ; Used by the routine at #R$EC7C.
-c$ECEB LD C,$FE      ;
- $ECED LD B,C        ;
-*$ECEE IN A,(C)      ;
+c$ECEB LD C,$FE      ; {start scanning all keyboard half-rows
+ $ECED LD B,C        ; }
+*$ECEE IN A,(C)      ; {check if any key in this row pressed
  $ECF0 AND $1F       ;
  $ECF2 XOR $1F       ;
- $ECF4 JR NZ,$ECFA   ;
- $ECF6 RLC B         ;
- $ECF8 JR $ECEE      ;
-*$ECFA PUSH AF       ;
+ $ECF4 JR NZ,$ECFA   ; }
+ $ECF6 RLC B         ; {next half-row
+ $ECF8 JR $ECEE      ; }
+*$ECFA PUSH AF       ; {save key state while playing click
  $ECFB PUSH BC       ;
  $ECFC PUSH IX       ;
- $ECFE PUSH DE       ;
- $ECFF LD HL,$EDD5   ;
+ $ECFE PUSH DE       ; }
+ $ECFF LD HL,$EDD5   ; click melody address
 *$ED02 LD E,(HL)     ;
  $ED03 LD A,E        ;
  $ED04 INC A         ;
@@ -7432,14 +7569,14 @@ c$ECEB LD C,$FE      ;
  $ED10 CALL $03B5    ; ROM BEEPER subroutine
  $ED13 POP HL        ;
  $ED14 JR $ED02      ;
-*$ED16 POP DE        ;
+*$ED16 POP DE        ; {restore key state
  $ED17 POP IX        ;
  $ED19 POP BC        ;
- $ED1A POP AF        ;
- $ED1B LD L,A        ;
-*$ED1C IN A,(C)      ;
+ $ED1A POP AF        ; }
+ $ED1B LD L,A        ; key-row mask to test for release
+*$ED1C IN A,(C)      ; {wait until key released
  $ED1E AND L         ;
- $ED1F JR Z,$ED1C    ;
+ $ED1F JR Z,$ED1C    ; }
  $ED21 LD A,L        ;
  $ED22 RET           ;
 
@@ -7497,15 +7634,15 @@ c$EDDF LD A,$08      ;
  $EE19 POP BC        ;
  $EE1A DJNZ $EE12    ;
 
-; Routine at EE1C
+; Main menu: wait for K/L/S/skill key, dispatch action
 c$EE1C LD HL,$0000   ;
  $EE1F LD ($5C78),HL ;
-*$EE22 CALL $EEAD    ;
+*$EE22 CALL $EEAD    ; Attract-mode demo
  $EE25 LD A,($5C05)  ;
  $EE28 EI            ;
  $EE29 OR A          ;
  $EE2A JR NZ,$EE22   ;
-*$EE2C CALL $EEAD    ;
+*$EE2C CALL $EEAD    ; Attract-mode demo
  $EE2F LD A,($5C05)  ;
  $EE32 EI            ;
  $EE33 OR A          ;
@@ -7514,7 +7651,8 @@ c$EE1C LD HL,$0000   ;
  $EE39 CP $4B        ; 'K' ?
  $EE3B JR NZ,$EE45   ;
  $EE3D CALL $EC7C    ; Redefine keys
- $EE40 CALL $EADE    ;
+ $EE40 CALL $EADE    ; Show Game Over screen and high-score table, prompt for
+                     ; name
  $EE43 JR $EE1C      ;
 *$EE45 CP $4C        ; 'L' ?
  $EE47 JR NZ,$EE75   ;
@@ -7556,15 +7694,23 @@ c$EE1C LD HL,$0000   ;
  $EE98 LD HL,($EA74) ; get High Score value from the score table
  $EE9B LD ($5B4B),HL ; set High Score value for indicator
  $EE9E CALL $D990    ; Game
- $EEA1 CALL $EA7A    ;
- $EEA4 JP $EE1C      ;
+ $EEA1 CALL $EA7A    ; Insert new high-score table entry if Score qualifies
+ $EEA4 JP $EE1C      ; => Main menu
 ; This entry point is used by the routine at #R$EDDF.
-*$EEA7 CALL $EADE    ;
- $EEAA JP $EE1C      ;
+*$EEA7 CALL $EADE    ; Show Game Over screen and high-score table, prompt for
+                     ; name
+ $EEAA JP $EE1C      ; => Main menu
 
-; Routine at EEAD
+; Attract-mode demo: idle timeout starts animated level preview
 ;
 ; Used by the routine at #R$EE1C.
+;
+; .
+;
+; Called every menu loop iteration; returns immediately unless the idle timer
+; expires. On timeout, builds a skill-4 level and shows it animating (bubbles,
+; fish, Octopus) with a "PRESS ANY KEY" prompt until a key is pressed, then
+; returns to the menu.
 c$EEAD LD A,($5C79)  ;
  $EEB0 CP $0A        ;
  $EEB2 EI            ;
@@ -7578,9 +7724,9 @@ c$EEAD LD A,($5C79)  ;
  $EEC2 PUSH IX       ;
  $EEC4 PUSH IY       ;
  $EEC6 DI            ;
- $EEC7 CALL $9DAA    ;
+ $EEC7 CALL $9DAA    ; Prepare the mini-map
  $EECA CALL $DBC2    ; Initialize variables depending of Game level
- $EECD CALL $BEDB    ;
+ $EECD CALL $BEDB    ; Initialize level
  $EED0 LD HL,$0518   ;
  $EED3 LD ($5B03),HL ; set Screen position on mini-map
  $EED6 CALL $9C56    ; Draw game screen
@@ -7604,13 +7750,13 @@ c$EEAD LD A,($5C79)  ;
  $EF04 INC HL        ;
  $EF05 LD BC,$0D1E   ;
  $EF08 CALL $DA9C    ; Print string
- $EF0B CALL $BDBA    ;
+ $EF0B CALL $BDBA    ; Draw records for current mini-map row band
  $EF0E POP IY        ;
  $EF10 POP IX        ;
 *$EF12 PUSH IX       ;
  $EF14 PUSH IY       ;
- $EF16 CALL $B213    ;
- $EF19 CALL $BDEA    ;
+ $EF16 CALL $B213    ; Animate and draw rising air bubbles, plus Octopus
+ $EF19 CALL $BDEA    ; Update records for current mini-map row band, with delay
  $EF1C POP IY        ;
  $EF1E POP IX        ;
  $EF20 EI            ;
@@ -7624,7 +7770,8 @@ c$EEAD LD A,($5C79)  ;
  $EF2C DI            ;
  $EF2D JR Z,$EF12    ;
  $EF2F EI            ;
- $EF30 CALL $EADE    ;
+ $EF30 CALL $EADE    ; Show Game Over screen and high-score table, prompt for
+                     ; name
  $EF33 LD HL,$0000   ;
  $EF36 LD ($5C78),HL ;
  $EF39 RET           ;

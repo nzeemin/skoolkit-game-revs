@@ -1042,9 +1042,9 @@ C $8AAF,8 DE = jump target address read from the list at (HL)
 C $8ABA,10 Read keyboard port $00FE; low 5 bits (inverted) = pressed keys
 C $8AD6,8 Flash border while waiting for a key
 C $8ADE,7 A = the first phrase byte, masked to a note index (bits 0-4, 0-31)
-C $8AE5,3 Look up the note's pitch/period in #R$8B60
+C $8AE5,3 Look up A in the byte table at #R$8B60
 C $8AE8,9 C = first note's pitch period; A = the second (raw) phrase byte
-C $8AF1,3 Look up the second note's pitch/period in #R$8B60
+C $8AF1,3 Look up A in the byte table at #R$8B60
 C $8AF4,9 Compare the two decoded pitch periods; adjust A
 C $8AFD,13 Save the two decoded pitch periods; flag if either note index was 0 (rest)
 C $8B0A,13 Save more rest-flags for the notes just decoded
@@ -1109,6 +1109,11 @@ W $8C75,2
 B $8C77,1
 b $8C78
 c $8C8D Sound of evil laughter
+N $8C8D Replays the laugh bitstream at $8CD4 (via #R$8CAA) around 11 times ($02..$0D), patching a rising pitch/rate byte into $8CB1 before each play and burning time between plays with a zero-length LDIR (BC=$40) - giving the rising "ha-ha-ha-ha" cadence.
+C $8C8D,3 A = 2 (starting pitch/rate value)
+C $8C90,6 Patch the pitch/rate byte at $8CB1; HL -> laugh data
+C $8C99,8 Burn time via a zero-length LDIR delay (BC=$40)
+C $8CA3,7 Next pitch; loop until A=$0D (~11 replays)
 C $8C96,3 Play a sound effect encoded as a bit-per-border-flip stream
 c $8CAA Play a sound effect encoded as a bit-per-border-flip stream
 N $8CAA Called from #R$CD6C ("Sound of evil laughter" is one such effect). (HL) -> a 2-byte bit-count (DE), followed by the bitstream itself. Each bit is rotated out of the data byte via RLC (HL) and drives the border colour (bit set -> colour 0, clear -> low 3 bits of a counting value), with a small busy-wait between bits; continues until DE bits have been played.
@@ -1577,6 +1582,10 @@ b $BB7F
 c $BBC1 Update the object at $BC59: step its room-distance counter, animate
 N $BBC1 Every 4th call (counter at $BBC2/$BB92 by way of #R$BF80). Every 4th pass of an inner phase counter ($BC66) it also alternates a direction-table pair ($BC69/$BC75, toggled at $BBF4) into the frame pointer. Steps a position byte (IX+9, IX = fixed object at $BC59) by one toward/away from Robin's room ($C548) - tracked via the counter at $BC64 - wrapping at $70 as in #R$BA85, then redraws via #R$C8F7.
 C $BBC1,9 Divide the call rate by 4 using the counter at $BBC2
+C $BBD0,4 (HL) = $BC66 phase counter; decrement it
+C $BBD6,10 Toggle the direction-table selector
+C $BBE0,9 DE = direction table ($BC69 or $BC75), picked by the toggle bit
+C $BBE9,9 Save the frame pointer; mark the object's redraw flag
 C $BC18,10 Compare the tracked room distance ($BC64) to Robin's room ($C548)
 C $BC36,15 IX -> the object at $BC59; set the position and redraw flags
 C $BC45,3 Advance an object's animation, unlink it from the list if done
@@ -1601,13 +1610,16 @@ C $BD09,3 Mark the arrow's screen cell dirty in the $E500 buffer
 c $BD2A Mark the arrow's screen cell dirty in the $E500 buffer (glyph $46)
 N $BD2A Called from #R$BCC2's arrow-step loop and #R$BD09. Toggles (HL) - the arrow's collision byte - by XORing $FF into it, then packs B/C (row/column) into an offset into the $E500 change-buffer (the same buffer #R$C85C later flushes to the real screen) and writes glyph code $46 there, so the arrow appears/disappears at its new position.
 C $BD2A,8 Toggle the arrow's collision byte at (HL)
-C $BD32,18 Pack B/C into an $E500 buffer offset, write glyph $46
+C $BD32,10 Pack 3 row bits from B into A
+C $BD3C,8 HL -> $E500 buffer offset; write glyph $46
 c $BD49 Check an arrow hit against nearby guards, then a border-flash sound
 N $BD49 (HL) is the arrow object at $BF67; does nothing if it's inactive, or if its animation frame ($BF68 low 7 bits) isn't one of the "in flight" frames $0A..$0D. Otherwise scans 5 guard entries at #R$AC13 (skipping inactive/already-hit ones) for one whose position (IX+9) is close to the arrow's column, and on a match sets a "hit" flag on the guard and calls #R$BF1A. #R$BD84 (also entered from #R$BE43's sword check) then plays a longer border-flash effect ($14 outer x C inner loops, C counting 1..$27) as the hit/scream sound.
 C $BD49,4 (HL) -> arrow object at $BF67; bail out if inactive
 C $BD5A,6 IX -> guard table at $AC13; B = 5 guards to check
-C $BD60,23 Skip inactive/already-hit guards; check the guard's column vs arrow
-C $BD77,13 In range: mark the guard hit, call #R$BF1A
+C $BD60,12 Skip inactive/already-hit guards
+C $BD6C,11 A = (arrow column+2) x4 - guard's column
+C $BD77,6 In range (|diff| < 8): fall through, else skip
+C $BD7D,7 Mark the guard hit, call #R$BF1A
 C $BD84,2 Shared hit-sound entry: C = $14 outer passes
 c $BDA3 Check Robin against up to 3 room hotspots at $BF69 (e.g. ladders)
 N $BDA3 Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row byte, then a second byte read at +1); a non-$FF row byte is scaled (x4, then compared within an 8-pixel band against $CC85; x8 compared within a 24-pixel band against $CC86) to test whether Robin's position falls within the hotspot. On a hit, sets bit 6 of the entry and calls #R$BE25 then #R$BF54 (B=0) - likely starting a climb/interact state. Exact meaning of the entry's second byte and the two helper calls is not fully confirmed.
@@ -1634,7 +1646,10 @@ N $BE43 Only acts if Robin's current animation frame ($CC7E) is one of the sword
 C $BE43,10 A = Robin's current animation frame; only sword frames continue
 C $BE6C,10 BC = hit-rectangle position (Robin's position + facing offset)
 C $BE76,7 HL = 5 guards to check; IX -> guard table at $AC13
+C $BE7F,12 Skip inactive or already-hit guards (bits 0/5 of the flags)
+C $BE8B,13 EXX; load the guard's position and hit-box half-widths (D/E)
 C $BE98,3 Bounding-box overlap test
+C $BEA6,10 Advance IX to the next guard entry, loop for the remaining guards
 C $BEA0,3 Mark a hit guard as defeated
 c $BEB1 Defeat the special enemy: on contact, refill energy and celebrate
 N $BEB1 Only acts if bit 0 of $BC5D is set and bit 7 of $BC67 is clear (the special object at #R$BBC1 is active and not already defeated), and Robin overlaps it (#R$BEE3, using its position at $BC62). On contact: flashes the whole screen (#R$BEF7), refills Robin's energy to max and redraws the bar, prints a kill-count message (#R$D91A), and sets bit 6 of $BC67 to mark it defeated.
@@ -1709,7 +1724,7 @@ C $BFB4,3 Redraw the room when a special-event extra frame is armed
 C $BFB7,3 Special-scenario check
 C $BFEF,3 Move to an adjacent room on the 16x20 world map, by direction bits in E
 C $BFFE,3 Print an edge-of-map message and side-wipe back
-C $C014,3 Menu select
+C $C014,3 Play the death/edge-of-map melody ($8C74), called from #R$BF80
 C $C021,3 => Reset the stack and re-enter the menu procedure at $CD89
 C $C02A,3 Clear the shadow screen
 C $C02D,3 Draw current room on the shadow screen
@@ -1727,7 +1742,7 @@ N $C055 Only acts once bit 7 of the kill-count byte at $D5A4 is set (a "game com
 C $C055,6 Bail out unless the "game complete" flag (bit 7 of $D5A4) is set
 C $C05B,6 Bail out unless Robin's current frame is $3C
 C $C069,3 Print the string at the address pointed to by
-C $C06C,3 Menu select
+C $C06C,3 Play the victory-screen melody ($8C3E), called from #R$C055
 C $C06F,3 => Reset the stack and re-enter the menu procedure at $CD89
 c $C072 Draw current room on the shadow screen
 C $C075,3 Set room types block base address
@@ -1742,7 +1757,9 @@ C $C0B4,2 zero => end, return
 C $C0C8,3 Draw one block token onto the shadow screen, with mirroring
 c $C0D1 Draw one block token onto the shadow screen, with mirroring
 N $C0D1 A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see #R$79F9 token format). Looks up the block's data address (see #R$5BA8 for its header-byte format) in the table at #R$5B00, draws (header AND $1F) x 8 pixel rows (4 bytes/row) into #R$EB00, then (header AND $7) attribute rows (4 bytes/row, or a single byte reused if the header's flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along the way.
-C $C0D1,22 DE = block data address from #R$5B00; detect the mirror flag via XOR
+C $C0D1,8 Save BC x2; L = block number masked to 0-127
+C $C0D9,8 DE -> block data address, from the table at $5B00
+C $C0E1,6 XOR the block's own mirror bit with the header byte
 C $C0EE,3 Horizontally mirror a block's rows using the bit-reverse table at $FD00
 C $C0E9,5 Mirror flag set: call #R$C1D6 to flip the block's pixel/attribute data
 C $C0F1,1 Restore DE after the mirror call
@@ -1750,12 +1767,18 @@ C $C0F3,7 Header byte AND $07 = attribute row count, patched into #R$C14D's oper
 C $C0FA,13 HL = pixel address in #R$EB00 from the coordinate byte in C
 C $C107,6 DE = row stride ($0020); HL/DE = pixel dest/source (via EXX+stack)
 C $C10D,8 Header AND $1F, x8 (via RLCA x3/AND $F8) = pixel row count in C
-C $C115,16 Copy 4 bytes per pixel row, C rows total
+C $C115,8 Copy 4 bytes (one row), B=4
+C $C11D,8 Step to the next row (via shadow DE), loop C rows
 C $C125,9 Header bit 6 set -> flat-attribute flag (A=$00), else A=$13
 C $C12E,3 Patch the attribute loop's INC DE with A (enables/disables advance)
-C $C131,22 Compute the shadow attribute address from the pixel address
+C $C131,5 HL = pixel address x4 (column bits)
+C $C136,13 Shift the row/column bits right 3 (row-to-attribute scale)
+C $C143,4 Combine, apply the mirror-adjust patch
 C $C147,3 BC = shadow attribute area base ($E800)
-C $C14A,20 Copy the block's attribute rows into the shadow attribute area
+C $C14A,3 HL += $E800 (attribute base); A = flat-attribute patch value
+C $C14D,3 C = patched advance value; B = 4 bytes/row
+C $C150,6 Copy one attribute byte (DE-advance is self-modified, see $C12E)
+C $C156,7 Step to the next row, loop for the row count
 C $C0E7,2 !!MUT-ARG!! current room byte
 c $C15E Draw a scenario-specific token in one of the 3 random opening rooms
 N $C15E Compares the current room ($C548) against the three room numbers picked at random game start by #R$CF71 ($D3B2/$D3B4/$D3B6). If it matches one, draws a token from the corresponding fixed table ($C56A/$C573/$C57C) via #R$C0B2 (the token-drawing core shared with #R$C0AF).
@@ -1775,19 +1798,28 @@ C $C1CD,6 Skip this descriptor: DE = 2 x its token count + 1
 c $C1D6 Horizontally mirror a block's rows using the bit-reverse table at $FD00
 N $C1D6 Called by #R$C0D1 when a block's mirror flag is set. Bit-reverses each pixel byte via a table lookup at $FD00 (self-modifying the low address byte of "LD A,($FD00)" with the source byte first), swapping bytes from the left and right ends of each row inward. The first pass (up to $C20A) does this for the pixel rows (row count from the block length in A); if bit 6 of the saved flag byte is clear, a second pass (from #R$C213) mirrors the attribute row the same way.
 C $C1D6,5 Flip the block's own mirror-flag bit in its header byte
-C $C1EC,22 Bit-reverse and swap one pair of pixel bytes (left <-> right)
-C $C20B,8 Bit 6 of the saved flag clear: also mirror the attribute row below
-C $C215,14 Swap one pair of attribute bytes (left <-> right), no bit-reverse
+C $C1DC,5 Pixel row count (header AND $07) x8 -> A
+C $C1E1,8 DE -> the row's 4th byte (right end); B' = row count
+C $C1EC,8 Bit-reverse the left pixel byte into C
+C $C1F4,7 Bit-reverse the right pixel byte into A
+C $C1FB,7 Swap the two bytes, step inward, loop
+C $C202,6 Step HL/DE to the next pixel row
+C $C20B,8 Bit 6 of the saved flag clear: also mirror the attribute row below (IXl = row count)
+C $C215,9 Swap one pair of attribute bytes (left <-> right), no bit-reverse
+C $C21E,5 Step HL/DE to the next attribute row
 b $C228
 c $C22F Move to an adjacent room on the 16x20 world map, by direction bits in E
 N $C22F E bit 0/1 = step right/left (column, wrapping within 0-15 via the AND $0F on the nibble), bit 2/3 = step down/up (row H, clamped/wrapped within 0-19 to match the #R$79F9 map size). Packs the new row/column back into the 16-bit room number at $C548 (high nibble = column, rest = row - see #R$79F9).
 C $C22F,6 HL = current room x16 (room number's column nibble x $10)
+C $C249,12 Row +1, clamped to stay under 20 rows
 C $C255,10 Row -1 with wraparound to the last row ($13)
 C $C25F,22 Repack row/column into the 16-bit room number, save to $C548
 c $C276 Handle room entry: init guards on a room change, else blink a digit
 N $C276 Compares the current room ($C548) to the last-drawn room ($D3B8/#R$C54C-relative). If unchanged, just blinks one room-indicator digit cell on the shadow screen. If the room changed: sets up Robin's object record at $B8FB (position/frame via #R$C8F7), clears and re-initialises the 4-guard table at #R$AC13 from the room's block flags (bits 4/7 of the map block select which movement-table pair each guard starts with, mirroring #R$AA31's own logic), calls #R$AA31 once per guard, and rebuilds a second 4-entry table at $DD05 from door/exit data at $DD3F. Also resets several per-room state bytes ($BF67.., $BC5D, $BBC2, $BBA0, $BB91, $AC43) and a second special object at $CC7C.
 C $C27D,3 Compute an address in the 12-byte-stride table at $8A39
+C $C282,15 R-salted reset of 4 guard-state entries at $8A39
 C $C294,3 Compute an address in the 12-byte-stride table at $8A39
+C $C2AA,4 Compare current room to the last-drawn room
 C $C2FA,7 Look up the special-room flag (bit 7) for the current room in $79F9
 C $C312,3 Advance an object's animation, unlink it from the list if done
 C $C323,3 Reset the guard-state working copy
@@ -1799,6 +1831,8 @@ C $C342,4 Clear this guard's redraw flags before picking a starting state
 C $C346,13 Bit 4 of the block set: guard starts "away", direction table $AC7F
 C $C353,14 Otherwise bit 7 of the block picks between two direction tables
 C $C374,3 Update a patrolling enemy's direction/animation state
+C $C381,13 IX -> door-guard table at $DD05; HL -> door data at $DD3F
+C $C38E,5 Binary-scan door data for the current room's high byte
 C $C3F6,3 Advance an object's animation, unlink it from the list if done
 c $C3FA Compute an address in the 12-byte-stride table at $8A39
 N $C3FA Extracts bits 4-5 of A (0-3) and returns HL = that index x 12 + $8A39. Called from #R$C276 while setting up the score/room-indicator digit blink.
@@ -1808,6 +1842,7 @@ c $C40E Look up current room number in the $C550 table
 N $C40E Returns immediately if the room number's high byte is non-zero (rooms $0100+ never match). Otherwise scans the 26 bytes at #R$C550 for the room's low byte; on a match, recolours the shadow attribute area $E800..$E9FF.
 C $C414,5 Search table at $C550 for current room number
 C $C421,3 HL = attribute area, BC = $0200 bytes to scan
+C $C427,15 Zero cell: skip; non-black paper (bits 3-5): force $07; else force $45
 c $C444 In room $BB, recolour any non-black attribute cell to $04
 N $C444 Only acts in room $BB. Scans the whole shadow attribute area ($E800, $0240 bytes) and forces any cell with a non-zero paper colour (bits 3-5) to attribute $04, flattening the room's background colour.
 C $C444,10 Only run in room $BB
@@ -1876,21 +1911,42 @@ b $C584
 c $C585 Set up a glyph draw: pick branch targets, compute screen row/column
 N $C585 Called from #R$C6D6 while drawing a sprite frame's glyph/mask. (HL) gives a width-class nibble (compared against $04) that selects which pair of constants get patched into three self-modified branch sites ($C603/$C5E3/$C647, consumed by #R$C5E4); bit 7 of (HL) sets/clears another patch byte at $C651. B/C on entry give a row/column, converted to a shadow-screen address at #R$EB00, before falling into the pixel-plot loop at #R$C5E4/#R$C5D8.
 C $C585,7 E = saved parameter; check the glyph's width class in (HL)
-C $C58D,15 Width class < 4: patch $00 (skip) into the three branch sites
-C $C59C,15 Width class >= 4: patch $06/$07/$08 into the three branch sites
-C $C5AB,10 Bit 7 of (HL) selects the patch value written to $C651
-C $C5B5,35 HL -> next glyph data byte; compute the shadow-screen row/column address
+C $C58D,3 Width class < 4: skip ahead (else patch $06/$07/$08)
+C $C590,12 Patch $00 (skip) into the three branch sites
+C $C59C,5 A=$06; patch $C603
+C $C5A1,5 A=$07; patch $C5E3
+C $C5A6,5 A=$08; patch $C647
+C $C5AB,6 Bit 7 of (HL) set: patch value = $AF, skip ahead
+C $C5B1,4 Otherwise: patch value = $00; write to $C651
+C $C5B5,4 HL -> next glyph data byte; save to $C6A0
+C $C5B9,7 H = row (B >> 3)
+C $C5C0,7 A = column (C >> 2), biased by -3
+C $C5C7,5 Mirror flag (bit 7 of E) set: column -1
+C $C5CC,3 Wrap the column into L (0-31)
+C $C5CF,6 HL = shadow-screen address ($EB00 + row/column)
+C $C5D5,3 A=0 (plot accumulator); C=5
 c $C5E4 Glyph pixel-row draw loop (continues the routine at #R$C585)
 N $C5E4 Split from #R$C585 by the disassembler even though it's one routine: #R$C585 sets up self-modified branch targets (patched bytes at $C603/$C5E3/$C647, chosen from the glyph width nibble at (HL)) and jumps here; this block does the actual row lookup and XOR-plot of glyph pixels into $E500-relative screen data using the bit-reverse table at $FD00 (as in #R$C1D6/#R$C6D6), then loops back into #R$C585's counters via #R$C5D8/#R$C5DB. The exact meaning of each self-modified branch is not fully confirmed.
 C $C5E4,4 HL -> character code entry in a lookup table at $C682
 C $C5EB,5 HL -> glyph data pointer, from the base saved at $C6A0
 C $C5FA,7 HL = font data address for this glyph (table at $9AB3)
 C $C607,8 XOR-plot one bit-reversed pixel byte, advance L by $20 per row
+C $C613,7 Pop saved registers; wrap the column counter (L) to 0-31
+C $C61A,4 Pop A; loop for the next column (B) via $C5DB
+C $C61E,6 Pop HL; advance the row (H), loop via $C5D8
+C $C624,2 Pop BC; clear the accumulator
+C $C626,11 Pack 3 row-presence bits from B into C via A
 c $C648 Merge one glyph attribute cell onto the screen, advance to the next
 N $C648 Continues the glyph-draw routine at #R$C585/#R$C5E4 (loops back into it via #R$C640). Only copies the source attribute byte from the table at $C682 over the destination at (DE) when the destination is currently blank, so glyphs blend into existing scenery rather than overwriting it; then advances DE to the next character cell, wrapping to the next row every 32 columns.
-C $C648,7 HL -> this character's attribute byte in the table at $C682
-C $C656,9 Copy the source attribute over (DE) only if it's currently blank
-C $C65F,12 DE = next screen cell; wrap to the next attribute row every 32 columns
+C $C648,3 BC = A (attribute index)
+C $C64B,4 HL -> source attribute at $C682+BC
+C $C656,4 Skip if the destination cell is already occupied
+C $C65A,5 Copy the source attribute to (DE) unless it's blank
+C $C65F,5 A = E's row bits; HL -= BC
+C $C664,3 C = E's column bits
+C $C667,4 E = (column+1) mod 32, merged with the row bits
+C $C66B,6 Pop registers, loop the column count
+C $C671,5 Advance E by 32 columns, carry into D
 b $C682
 c $C6A2 Update Robin: move, pick action, advance animation
 N $C6A2 Called once per frame from #R$BF80. Runs every other frame (toggle at $C6A3), unless Robin is mid-animation ($CC7A/$CC7B non-zero, forcing every frame). Calls #R$C95A to move him, #R$C9E7 to pick his sword/arrow/walk action, then sets his object record's redraw flags (IX = $CC7C) and calls #R$C8F7 to advance/redraw his frame.
@@ -1912,6 +1968,14 @@ C $C72A,3 Shift the 32-bit value E:D:C:B right by 8 bits
 C $C72E,15 XOR the row's source bytes onto the shadow screen at (HL)
 c $C74D Shift the 32-bit value E:D:C:B right by 8 bits
 N $C74D Called once per row from #R$C6D6's plot loop with EDCB = the row's (position,length,source) tuple. Always shifts by a fixed 8 bits (32 RR passes through the carry chain E->D->C->B), rather than by a variable column-bit count; exact purpose within the plot loop is not fully confirmed.
+C $C74F,8 Bit 1 of 8: RR E/D/C/B
+C $C757,8 Bit 2 of 8: RR E/D/C/B
+C $C75F,8 Bit 3 of 8: RR E/D/C/B
+C $C767,8 Bit 4 of 8: RR E/D/C/B
+C $C76F,8 Bit 5 of 8: RR E/D/C/B
+C $C777,8 Bit 6 of 8: RR E/D/C/B
+C $C77F,8 Bit 7 of 8: RR E/D/C/B
+C $C787,8 Bit 8 of 8: RR E/D/C/B
 c $C790 Save the background under a sprite frame to the buffer at $E500
 N $C790 Called from #R$C6D6 while setting up a sprite frame. (HL) supplies width/height nibbles and a flag byte (bit 7/6 select self-modified skip logic at $C7F0/$C7FB for mirrored frames); a pointer table at $8E12 (indexed by the flag byte) gives the screen block to copy row by row into the save-buffer at $E500, so the original background can later be restored when the sprite moves or is erased.
 C $C794,10 C = column, clamped to a minimum of $10 then reduced by 8
@@ -1919,8 +1983,10 @@ C $C79E,9 E = 4 (rows); HL -> the frame's width/height byte
 C $C7A7,9 Bail out if width class is 0; else D = width, +1 if column is off-grid
 C $C7B0,10 HL -> the frame's flag byte; L = its low 7 bits (flag/skip index)
 C $C7BA,13 Bit 7 of the flag -> a skip value patched into $C7F0
-C $C7C7,37 HL = source screen address from the table at $8E12
-C $C7EC,21 Copy one row (E bytes) from (BC) to the buffer, D rows total
+C $C7C7,15 HL -> screen-block pointer entry in the table at $8E12
+C $C7D7,21 Combine row/column into an $E500-relative buffer offset
+C $C7EC,10 Copy one row (E bytes) from (BC) to the buffer
+C $C7F6,11 Step the buffer by 32, loop for D rows
 c $C806 Expand the $FE00 row-pointer table into shadow-screen rows
 N $C806 IX walks the row-pointer table at $FE00 (also used by #R$CE81/#R$C85C), HL walks the shadow area from $EAFE. For each of 18 rows, copies 32 bytes from the address stored at (IX+0/1)+2 to (HL), advancing both by one row's stride. The overall purpose (what these rows represent - likely per-row attribute or pixel data assembled during room drawing) is not fully confirmed.
 C $C806,10 HL/IX = destination/source-pointer-table bases; BC = row/byte counter
@@ -1930,9 +1996,20 @@ C $C820,60 32 LDI copies (one row); loop via BC's parity until all rows are done
 c $C85C Flush changed character cells from the $E500 buffer to the real screen
 N $C85C Scans the $0300-byte flag area at $E502 (28 flag bytes per row x 18 rows, IXl counts rows) for a non-zero "changed" marker. For each one found, computes the real Spectrum screen pixel address ($4000-region) from the cell's row/column and copies its 8-byte glyph from the shadow buffer at $EB00+$8D00 onto the screen, then clears the flag and continues scanning.
 C $C85C,6 HL -> flag area at $E502; IXl = 18 rows to scan
-C $C876,13 Clear the flag; HL,DE step toward the real-screen address ($5800 attrs)
-C $C88B,25 Standard ZX pixel-address formula: row/column (HL) -> screen byte
-C $C8A4,11 BC = 8 rows, $20 stride; copy the glyph row by row to the screen
+C $C864,2 B = 28 (columns per row)
+C $C866,3 Non-zero flag: found a changed cell
+C $C869,3 Next column
+C $C86C,9 Step to the next row (skip padding), loop for 18 rows
+C $C876,2 Clear the flag byte
+C $C878,7 HL -> the real attribute byte ($5800+$0300); DE=$7000
+C $C87F,4 Non-black attribute: skip the AF' swap
+C $C88B,7 D = screen third + coarse row bits
+C $C892,4 D = $40 | H; E = L (column)
+C $C896,4 L = column masked to 0-31
+C $C89A,7 Combine row-within-third bits into H
+C $C8A1,3 H += $EB (shadow buffer page)
+C $C8A4,3 BC = 8 rows, $20 stride
+C $C8A7,8 Copy one byte, step to the next screen row and buffer row
 c $C8B7 Horizontally mirror a sprite frame's row data (companion to #R$C1D6)
 N $C8B7 Called from #R$C6D6 after the width/height header is read. If the frame's mirror-flag bit (bit 7 of the header byte) differs from the last-drawn state, flips the stored flag and bit-reverses each row's 3 data bytes via the table at $FD00 (same technique as #R$C1D6), swapping the two ends of each row's tuple so the frame draws flipped.
 C $C8B7,16 Bail out unless the mirror flag changed; flip it and note the height
@@ -1995,6 +2072,10 @@ C $CB68,3 Timer still running: discard the caller's return address, return
 C $CB41,3 Pick Robin's sprite frame table for his current action and facing
 c $CB6B Pick a walking-frame table by movement bit (low nibble of A)
 N $CB6B Part of the facing-direction dispatch chain from #R$C9E7/#R$CB21. Tests bits 0-3 of A (right/left/down/up) in turn and returns A = a small type code (2-5) with HL -> the matching frame table ($CCFC/$CD11/$CD26/$CD2D); returns with the stack popped and no result if no bit is set.
+C $CB85,5 Bit 0 (right): A=2, HL=$CCFC
+C $CB8B,5 Bit 1 (left): A=3, HL=$CD11
+C $CB91,5 Bit 2 (down): A=4, HL=$CD26
+C $CB97,5 Bit 3 (up): A=5, HL=$CD2D
 c $CB9D Robin's critical-hit stagger: penalise the counter, recover after a timer
 N $CB9D Called from #R$C9E7's action code $6E - set by #R$BE25 when a hazard/guard hits Robin while his energy is already critical. Clears the animation timer and plays a short border-flash (not "evil laughter" - confirmed live/by ear that the laugh is reserved for the capture/ambush sequence at #R$B867, not this), penalises the kill counter at $D5A4 (2 decrements, offsetting #R$D91A's own increment to a net -1), arms a $001E recovery timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into #R$CBF7 to store it. Robin keeps playing afterwards - this is a stagger/penalty, not a game-over.
 C $CBA2,3 Set the border-flash colour/count operands without flashing
@@ -2010,6 +2091,8 @@ C $CBF1,3 Draw the energy bar
 c $CBF7 Store Robin's facing (A) and frame-table pointer (HL)
 c $CBFE Direction dispatcher: pick a frame table or hand off, by low nibble of A
 N $CBFE Another member of the facing-direction dispatch family (#R$CB6B/#R$CC1F/#R$CC52). Low nibble 0 falls to #R$CC13; else low 2 bits select frame table $CCF4 (A=3), a bare return, or fall to #R$CC3B.
+C $CC0B,5 A=3, HL=$CCF4
+C $CC13,5 A=0, HL=$CD0B
 c $CC1F Direction dispatcher: pick a walking frame or hand off by movement bits
 N $CC1F Part of the facing-direction chain from #R$C9E7/#R$CB21. Low nibble of A: 0 falls to #R$CC34 (frame table $CD20); else low 2 bits select a fixed frame table $CCF8 (A=2), a bare return (A=2, popping the caller), or fall to #R$CC3B which re-tests E's bits 2/3 to hand off to #R$CB97/#R$CB91.
 C $CC1F,5 Low nibble 0: fall to #R$CC34
@@ -2053,7 +2136,7 @@ C $CDAD,3 "(C) 1985  ODIN COMPUTER GRAPHICS"
 C $CDB0,3 Print string
 C $CDBC,3 Set the border-flash colour/count operands without flashing
 C $CDC0,3 Draw the main menu items
-C $CDC3,3 Menu select
+C $CDC3,3 Play the main menu melody ($8B82), called from #R$CD6C
 C $CDE7,3 Read keys 1-4 to pick a menu option
 C $CDEC,3 Clear 32 screen rows using the row-pointer table at $FF40
 C $CE13,3 Stir the pseudorandom seed at $D38D using the R register
@@ -2076,6 +2159,8 @@ C $CE62,3 Sound of evil laughter
 C $CE65,3 Side-wipe transition between the game screen and the Odin sign
 C $CE69,3 Clear E500 area
 c $CE6D Stir the pseudorandom seed at $D38D using the R register
+N $CE6D H=L=R, so (HL) samples memory at an R-dependent address; that byte XORed with R, then XORed into $D38D, is the new seed - a cheap way to fold in both R's own value and whatever byte happens to sit at that address.
+C $CE72,2 H=L=R: HL -> an R-dependent memory address
 c $CE81 Side-wipe transition between the game screen and the Odin sign
 N $CE81 Used by #R$CE47 to slide the screen open, revealing the Odin sign underneath. Copies columns from the two shadow screens a strip at a time, moving the boundary each pass, with border-colour stripes drawn via OUT ($FE),A while the copy runs.
 C $CE81,15 Snapshot non-zero attributes to $E500, enable the LDIR/LDDR copies in #R$CE81
@@ -2085,10 +2170,13 @@ C $CEAE,10 DE -> right-hand source; self-modified LDIR copies it into HL
 C $CEF5,11 DE -> left-hand source; self-modified LDDR copies it into HL
 C $CF06,4 Merge a screen byte in from beyond the current strip boundary
 C $CF2E,6 Advance to the next table entry; loop while rows remain
+C $CF3D,7 Shrink the strip boundary; exit once IXl underflows
 C $CF44,3 Disable the LDIR/LDDR copies inside #R$CE81
 c $CF4A Disable the LDIR/LDDR copies inside #R$CE81
 c $CF4D Snapshot non-zero attributes to $E500, enable the LDIR/LDDR copies in #R$CE81
 N $CF4D Copies the $E800..$EA3F attribute area into $E500, skipping zero bytes so old data shows through, then patches the opcode byte ($ED) at the four self-modified LDIR/LDDR sites inside #R$CE81 (called back once via #R$CF64, shared with #R$CF4A which patches $00 instead to disable them).
+C $CF56,4 Skip zero attribute bytes (leave old $E500 data in place)
+C $CF64,12 Patch $ED into the four LDIR/LDDR opcodes in #R$CE81
 c $CF71 Randomly pick the game's starting room and opening state
 N $CF71 Called from #R$CD6C when starting a new game. Uses the R register to roll one of 4 entries from each of three tables ($D38E bytes, $D392 pointer pairs, $D39A room-number pointers), storing them at $D3B2..$D3B6 and setting the starting room at $C548 - with a special-case swap when the rolled room's low byte is $9C.
 C $CF71,11 Roll 0-3 from R; pick a byte from the table at $D38E
@@ -2230,8 +2318,8 @@ B $D348
 b $D349
 T $D34B
 s $D36B
-t $D36C
-s $D38C
+b $D38D
+B $D38D,1,1
 t $D38E
 b $D391
 c $D3BB New-game state init: clear tables, spawn the initial extra guards
@@ -2261,6 +2349,8 @@ c $D47D Find a free (zero) slot in the 30-entry, 5-byte-stride table at $D4B1
 N $D47D Used by #R$D402/#R$D3F3 to find a spawn slot for an extra guard. Rolls a random start index 0-29 (R register, clamped below 30) into C, and scans forward from the matching entry in the table at $D4B1 for a zero byte, wrapping the index back to 0 after entry 29. Returns with DE pointing at the free slot (or with the zero flag set if it hit a genuinely empty entry immediately).
 C $D47D,11 Roll a start index 0-29 from the R register
 C $D488,11 DE -> the entry at that index in the table at $D4B1
+C $D494,3 Found a free (zero) slot: return
+C $D497,15 Advance to the next entry, wrapping to 0 at 30; loop
 b $D4AD
 c $D5A7 Room entry: spawn guards, reset triggers, print room-specific messages
 N $D5A7 Called on entering a room (from #R$BF80/#R$C4D2/#R$CD6C). Spawns extra guards via #R$D402, fills the 9-entry (3 bytes each) trigger table at $D57A with $FF, clears $DFE6, then scans the 30-entry table at $D4AD for the current room, printing an associated message via #R$D631 if found; finally scans the 11-entry room-position log at $D543 the same way, printing via #R$D631 if a match's message pointer/value is set.
@@ -2418,6 +2508,10 @@ c $DDC5 Check 3 horizontally-stepped attribute cells for a blocking tile
 N $DDC5 Same test as #R$DDB1 but for 3 adjacent cells in the same row (HL incrementing). Used by the horizontal movement checks #R$DD93/#R$DD9F.
 c $DDD6 Convert HL pixel coordinates to a shadow attribute address
 N $DDD6 Combines bits from H and L into an offset added to the shadow attribute area base at $E800.
+C $DDD6,5 Column component: L >>= 2, stashed in A'
+C $DDDC,7 Row component: (H AND $F8) x4 into HL
+C $DDE4,7 Combine column (biased -2) into HL
+C $DDEB,4 Add the shadow attribute base $E800
 c $DDF0 Update each guard's route-availability flags for the current room
 N $DDF0 IX -> the 4-entry guard table at ($C54C) (set up by #R$C276). For each guard, finds the entry in the 28-byte-stride table at $DEAB matching the guard's home room nibble (IX+0), tests one of its 3 flag bytes via #R$DE51 (picked by IX+1 bits 0-1) and, if clear, scans up to 25 further bytes to find where the guard's route re-opens, packing the result back into (IX+1). Exact meaning of the per-route flag bytes is not confirmed.
 C $DDF0,6 IX -> guard table at ($C54C); B = 4 guards

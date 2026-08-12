@@ -2765,14 +2765,14 @@ c$8AAF PUSH HL       ; {DE = jump target address read from the list at (HL)
  $8AE1 LD B,A        ;
  $8AE2 AND $1F       ;
  $8AE4 PUSH HL       ; }
- $8AE5 CALL $8B57    ; Look up the note's pitch/period in #R$8B60
+ $8AE5 CALL $8B57    ; Look up A in the byte table at #R$8B60
  $8AE8 POP HL        ; {C = first note's pitch period; A = the second (raw)
  $8AE9 LD ($8B2D),A  ; phrase byte
  $8AEC LD C,A        ;
  $8AED LD A,(HL)     ;
  $8AEE PUSH AF       ;
  $8AEF AND $1F       ; }
- $8AF1 CALL $8B57    ; Look up the second note's pitch/period in #R$8B60
+ $8AF1 CALL $8B57    ; Look up A in the byte table at #R$8B60
  $8AF4 LD E,C        ; {Compare the two decoded pitch periods; adjust A
  $8AF5 RLC E         ;
  $8AF7 CP C          ;
@@ -2982,23 +2982,30 @@ b$8C78 DEFB $0E,$4D,$F2,$54,$76,$54,$52,$79
 ; Sound of evil laughter
 ;
 ; Used by the routines at #R$B867 and #R$CD6C.
-c$8C8D LD A,$02      ;
-*$8C8F PUSH AF       ;
- $8C90 LD ($8CB1),A  ;
- $8C93 LD HL,$8CD4   ;
+;
+; .
+;
+; Replays the laugh bitstream at $8CD4 (via #R$8CAA) around 11 times
+; ($02..$0D), patching a rising pitch/rate byte into $8CB1 before each play and
+; burning time between plays with a zero-length LDIR (BC=$40) - giving the
+; rising "ha-ha-ha-ha" cadence.
+c$8C8D LD A,$02      ; {A = 2 (starting pitch/rate value)
+*$8C8F PUSH AF       ; }
+ $8C90 LD ($8CB1),A  ; {Patch the pitch/rate byte at $8CB1; HL -> laugh data
+ $8C93 LD HL,$8CD4   ; }
  $8C96 CALL $8CAA    ; Play a sound effect encoded as a bit-per-border-flip
                      ; stream
- $8C99 LD HL,$0000   ;
+ $8C99 LD HL,$0000   ; {Burn time via a zero-length LDIR delay (BC=$40)
  $8C9C LD D,H        ;
  $8C9D LD E,H        ;
  $8C9E LD C,H        ;
- $8C9F LD B,$40      ;
+ $8C9F LD B,$40      ; }
  $8CA1 LDIR          ;
- $8CA3 POP AF        ;
+ $8CA3 POP AF        ; {Next pitch; loop until A=$0D (~11 replays)
  $8CA4 INC A         ;
  $8CA5 CP $0D        ;
  $8CA7 JR NZ,$8C8F   ;
- $8CA9 RET           ;
+ $8CA9 RET           ; }
 
 ; Play a sound effect encoded as a bit-per-border-flip stream
 ;
@@ -5483,21 +5490,21 @@ c$BBC1 LD A,$00       ; {Divide the call rate by 4 using the counter at $BBC2
  $BBC9 RET NZ         ; }
  $BBCA LD HL,$8DEA    ;
  $BBCD LD ($C6D8),HL  ;
- $BBD0 LD HL,$BC66    ;
- $BBD3 DEC (HL)       ;
+ $BBD0 LD HL,$BC66    ; {(HL) = $BC66 phase counter; decrement it
+ $BBD3 DEC (HL)       ; }
  $BBD4 JR NZ,$BBF2    ;
- $BBD6 LD (HL),$E0    ;
+ $BBD6 LD (HL),$E0    ; {Toggle the direction-table selector
  $BBD8 LD A,($BBF4)   ;
  $BBDB XOR $01        ;
- $BBDD LD ($BBF4),A   ;
- $BBE0 LD DE,$BC69    ;
- $BBE3 RRA            ;
+ $BBDD LD ($BBF4),A   ; }
+ $BBE0 LD DE,$BC69    ; {DE = direction table ($BC69 or $BC75), picked by the
+ $BBE3 RRA            ; toggle bit
  $BBE4 JR NC,$BBE9    ;
- $BBE6 LD DE,$BC75    ;
-*$BBE9 LD ($BC5B),DE  ;
+ $BBE6 LD DE,$BC75    ; }
+*$BBE9 LD ($BC5B),DE  ; {Save the frame pointer; mark the object's redraw flag
  $BBED INC HL         ;
  $BBEE SET 7,(HL)     ;
- $BBF0 JR $BBF3       ;
+ $BBF0 JR $BBF3       ; }
 *$BBF2 INC HL         ;
 *$BBF3 INC HL         ;
  $BBF4 INC (HL)       ;
@@ -5679,14 +5686,14 @@ c$BD2A PUSH AF       ; {Toggle the arrow's collision byte at (HL)
  $BD2E LD A,$FF      ;
  $BD30 XOR (HL)      ;
  $BD31 LD (HL),A     ; }
- $BD32 XOR A         ; {Pack B/C into an $E500 buffer offset, write glyph $46
+ $BD32 XOR A         ; {Pack 3 row bits from B into A
  $BD33 RR B          ;
  $BD35 RRA           ;
  $BD36 RR B          ;
  $BD38 RRA           ;
  $BD39 RR B          ;
- $BD3B RRA           ;
- $BD3C OR C          ;
+ $BD3B RRA           ; }
+ $BD3C OR C          ; {HL -> $E500 buffer offset; write glyph $46
  $BD3D LD C,A        ;
  $BD3E LD HL,$E500   ;
  $BD41 ADD HL,BC     ;
@@ -5725,21 +5732,21 @@ c$BD49 LD HL,$BF67    ; {(HL) -> arrow object at $BF67; bail out if inactive
  $BD59 DEC HL         ;
  $BD5A LD B,$05       ; {IX -> guard table at $AC13; B = 5 guards to check
  $BD5C LD IX,$AC13    ; }
-*$BD60 BIT 0,(IX+$04) ; {Skip inactive/already-hit guards; check the guard's
- $BD64 JR Z,$BD9B     ; column vs arrow
+*$BD60 BIT 0,(IX+$04) ; {Skip inactive/already-hit guards
+ $BD64 JR Z,$BD9B     ;
  $BD66 BIT 5,(IX+$04) ;
- $BD6A JR NZ,$BD9B    ;
- $BD6C LD C,(HL)      ;
+ $BD6A JR NZ,$BD9B    ; }
+ $BD6C LD C,(HL)      ; {A = (arrow column+2) x4 - guard's column
  $BD6D INC C          ;
  $BD6E INC C          ;
  $BD6F SLA C          ;
  $BD71 SLA C          ;
  $BD73 LD A,C         ;
  $BD74 SUB (IX+$09)   ; }
- $BD77 JR C,$BD9B     ; {In range: mark the guard hit, call #R$BF1A
+ $BD77 JR C,$BD9B     ; {In range (|diff| < 8): fall through, else skip
  $BD79 CP $08         ;
- $BD7B JR NC,$BD9B    ;
- $BD7D INC HL         ;
+ $BD7B JR NC,$BD9B    ; }
+ $BD7D INC HL         ; {Mark the guard hit, call #R$BF1A
  $BD7E SET 6,(HL)     ;
  $BD80 LD A,B         ;
  $BD81 CALL $BF1A     ; }
@@ -5930,15 +5937,15 @@ c$BE43 LD HL,($CC7E)  ; {A = Robin's current animation frame; only sword frames
  $BE79 LD IX,$AC13    ; }
 *$BE7D PUSH BC        ;
  $BE7E PUSH HL        ;
- $BE7F BIT 0,(IX+$04) ;
- $BE83 JR Z,$BEA6     ;
+ $BE7F BIT 0,(IX+$04) ; {Skip inactive or already-hit guards (bits 0/5 of the
+ $BE83 JR Z,$BEA6     ; flags)
  $BE85 BIT 5,(IX+$04) ;
- $BE89 JR NZ,$BEA6    ;
- $BE8B LD DE,$1005    ;
- $BE8E EXX            ;
+ $BE89 JR NZ,$BEA6    ; }
+ $BE8B LD DE,$1005    ; {EXX; load the guard's position and hit-box half-widths
+ $BE8E EXX            ; (D/E)
  $BE8F LD C,(IX+$09)  ;
  $BE92 LD B,(IX+$0A)  ;
- $BE95 LD DE,$180B    ;
+ $BE95 LD DE,$180B    ; }
  $BE98 CALL $BEE3     ; Bounding-box overlap test
  $BE9B JR NC,$BEA6    ;
  $BE9D POP HL         ;
@@ -5946,12 +5953,12 @@ c$BE43 LD HL,($CC7E)  ; {A = Robin's current animation frame; only sword frames
  $BE9F LD A,L         ;
  $BEA0 CALL $BF1A     ; Mark a hit guard as defeated
  $BEA3 JP $BD84       ;
-*$BEA6 LD DE,$000B    ;
- $BEA9 ADD IX,DE      ;
+*$BEA6 LD DE,$000B    ; {Advance IX to the next guard entry, loop for the
+ $BEA9 ADD IX,DE      ; remaining guards
  $BEAB POP HL         ;
  $BEAC POP BC         ;
  $BEAD DEC L          ;
- $BEAE JR NZ,$BE7D    ;
+ $BEAE JR NZ,$BE7D    ; }
  $BEB0 RET            ;
 
 ; Defeat the special enemy: on contact, refill energy and celebrate
@@ -6245,7 +6252,8 @@ c$BF80 EI            ;
  $C010 LD A,B        ;
  $C011 OR C          ;
  $C012 JR NZ,$C00F   ;
- $C014 CALL $8A83    ; Menu select
+ $C014 CALL $8A83    ; Play the death/edge-of-map melody ($8C74), called from
+                     ; #R$BF80
 *$C017 LD BC,$00FE   ;
  $C01A IN A,(C)      ;
  $C01C CPL           ;
@@ -6295,7 +6303,8 @@ c$C055 LD A,($D5A4)  ; {Bail out unless the "game complete" flag (bit 7 of
  $C064 LD A,$60      ;
  $C066 LD ($D7F2),A  ;
  $C069 CALL $D619    ; Print the string at the address pointed to by
- $C06C CALL $8A7E    ; Menu select
+ $C06C CALL $8A7E    ; Play the victory-screen melody ($8C3E), called from
+                     ; #R$C055
  $C06F JP $BF79      ; => Reset the stack and re-enter the menu procedure at
                      ; $CD89
 
@@ -6376,19 +6385,19 @@ c$C0AF CALL $C1C1    ; Skip forward to the ($C547)-th descriptor in the table
 ; $7) attribute rows (4 bytes/row, or a single byte reused if the header's
 ; flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along
 ; the way.
-c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
- $C0D2 PUSH BC       ; flag via XOR
+c$C0D1 PUSH BC       ; {Save BC x2; L = block number masked to 0-127
+ $C0D2 PUSH BC       ;
  $C0D3 LD L,A        ;
  $C0D4 RES 7,L       ;
  $C0D6 LD H,$00      ;
- $C0D8 EX AF,AF'     ;
- $C0D9 ADD HL,HL     ;
+ $C0D8 EX AF,AF'     ; }
+ $C0D9 ADD HL,HL     ; {DE -> block data address, from the table at $5B00
  $C0DA LD DE,$5B00   ;
  $C0DD ADD HL,DE     ;
  $C0DE LD E,(HL)     ;
  $C0DF INC HL        ;
- $C0E0 LD D,(HL)     ;
- $C0E1 EX AF,AF'     ;
+ $C0E0 LD D,(HL)     ; }
+ $C0E1 EX AF,AF'     ; {XOR the block's own mirror bit with the header byte
  $C0E2 LD L,A        ;
  $C0E3 LD A,(DE)     ;
  $C0E4 EX AF,AF'     ;
@@ -6425,13 +6434,13 @@ c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
  $C111 RLCA          ;
  $C112 AND $F8       ;
  $C114 LD C,A        ; }
-*$C115 LD B,$04      ; {Copy 4 bytes per pixel row, C rows total
+*$C115 LD B,$04      ; {Copy 4 bytes (one row), B=4
 *$C117 LD A,(DE)     ;
  $C118 INC DE        ;
  $C119 LD (HL),A     ;
  $C11A INC HL        ;
- $C11B DJNZ $C117    ;
- $C11D EXX           ;
+ $C11B DJNZ $C117    ; }
+ $C11D EXX           ; {Step to the next row (via shadow DE), loop C rows
  $C11E ADD HL,DE     ;
  $C11F PUSH HL       ;
  $C120 EXX           ;
@@ -6446,35 +6455,35 @@ c$C0D1 PUSH BC       ; {DE = block data address from #R$5B00; detect the mirror
  $C12C LD A,$13      ; }
 *$C12E LD ($C151),A  ; Patch the attribute loop's INC DE with A
                      ; (enables/disables advance)
- $C131 POP HL        ; {Compute the shadow attribute address from the pixel
- $C132 SLA L         ; address
- $C134 SLA L         ;
- $C136 XOR A         ;
- $C137 RR H          ;
+ $C131 POP HL        ; {HL = pixel address x4 (column bits)
+ $C132 SLA L         ;
+ $C134 SLA L         ; }
+ $C136 XOR A         ; {Shift the row/column bits right 3 (row-to-attribute
+ $C137 RR H          ; scale)
  $C139 RR A          ;
  $C13B RR H          ;
  $C13D RR A          ;
  $C13F RR H          ;
- $C141 RR A          ;
- $C143 OR L          ;
+ $C141 RR A          ; }
+ $C143 OR L          ; {Combine, apply the mirror-adjust patch
  $C144 XOR $00       ;
  $C146 LD L,A        ; }
  $C147 LD BC,$E800   ; BC = shadow attribute area base ($E800)
- $C14A ADD HL,BC     ; {Copy the block's attribute rows into the shadow
- $C14B LD A,$00      ; attribute area
-*$C14D LD C,A        ;
- $C14E LD B,$04      ;
-*$C150 LD A,(DE)     ;
- $C151 INC DE        ;
+ $C14A ADD HL,BC     ; {HL += $E800 (attribute base); A = flat-attribute patch
+ $C14B LD A,$00      ; value}
+*$C14D LD C,A        ; {C = patched advance value; B = 4 bytes/row
+ $C14E LD B,$04      ; }
+*$C150 LD A,(DE)     ; {Copy one attribute byte (DE-advance is self-modified,
+ $C151 INC DE        ; see $C12E)
  $C152 LD (HL),A     ;
  $C153 INC HL        ;
- $C154 DJNZ $C150    ;
- $C156 LD A,C        ;
+ $C154 DJNZ $C150    ; }
+ $C156 LD A,C        ; {Step to the next row, loop for the row count
  $C157 LD C,$1C      ;
  $C159 ADD HL,BC     ;
  $C15A DEC A         ;
- $C15B JR NZ,$C14D   ;
- $C15D RET           ; }
+ $C15B JR NZ,$C14D   ; }
+ $C15D RET           ;
 
 ; Draw a scenario-specific token in one of the 3 random opening rooms
 ;
@@ -6585,42 +6594,42 @@ c$C1D6 EX DE,HL      ; {Flip the block's own mirror-flag bit in its header byte
  $C1D8 XOR $80       ;
  $C1DA LD (HL),A     ; }
  $C1DB PUSH AF       ;
- $C1DC AND $07       ;
+ $C1DC AND $07       ; {Pixel row count (header AND $07) x8 -> A
  $C1DE RLA           ;
  $C1DF RLA           ;
- $C1E0 RLA           ;
- $C1E1 INC HL        ;
+ $C1E0 RLA           ; }
+ $C1E1 INC HL        ; {DE -> the row's 4th byte (right end); B' = row count
  $C1E2 LD D,H        ;
  $C1E3 LD E,L        ;
  $C1E4 INC DE        ;
  $C1E5 INC DE        ;
  $C1E6 INC DE        ;
  $C1E7 EXX           ;
- $C1E8 LD B,A        ;
+ $C1E8 LD B,A        ; }
 *$C1E9 EXX           ;
  $C1EA LD B,$02      ;
-*$C1EC LD A,(HL)     ; {Bit-reverse and swap one pair of pixel bytes (left <->
- $C1ED LD ($C1F1),A  ; right)
+*$C1EC LD A,(HL)     ; {Bit-reverse the left pixel byte into C
+ $C1ED LD ($C1F1),A  ;
  $C1F0 LD A,($FD00)  ;
- $C1F3 LD C,A        ;
- $C1F4 LD A,(DE)     ;
+ $C1F3 LD C,A        ; }
+ $C1F4 LD A,(DE)     ; {Bit-reverse the right pixel byte into A
  $C1F5 LD ($C1F9),A  ;
- $C1F8 LD A,($FD00)  ;
- $C1FB EX DE,HL      ;
+ $C1F8 LD A,($FD00)  ; }
+ $C1FB EX DE,HL      ; {Swap the two bytes, step inward, loop
  $C1FC LD (HL),C     ;
  $C1FD LD (DE),A     ;
  $C1FE DEC HL        ;
  $C1FF INC DE        ;
  $C200 DJNZ $C1EC    ; }
- $C202 LD C,$07      ;
+ $C202 LD C,$07      ; {Step HL/DE to the next pixel row
  $C204 ADD HL,BC     ;
  $C205 EX DE,HL      ;
  $C206 INC HL        ;
- $C207 EXX           ;
+ $C207 EXX           ; }
  $C208 DJNZ $C1E9    ;
  $C20A EXX           ;
  $C20B POP AF        ; {Bit 6 of the saved flag clear: also mirror the
- $C20C BIT 6,A       ; attribute row below
+ $C20C BIT 6,A       ; attribute row below (IXl = row count)
  $C20E RET NZ        ;
  $C20F AND $07       ;
  $C211 LD IXl,A      ; }
@@ -6632,8 +6641,8 @@ c$C1D6 EX DE,HL      ; {Flip the block's own mirror-flag bit in its header byte
  $C219 LD (DE),A     ;
  $C21A DEC HL        ;
  $C21B INC DE        ;
- $C21C DJNZ $C215    ;
- $C21E LD C,$07      ;
+ $C21C DJNZ $C215    ; }
+ $C21E LD C,$07      ; {Step HL/DE to the next attribute row
  $C220 ADD HL,BC     ;
  $C221 EX DE,HL      ;
  $C222 INC HL        ; }
@@ -6672,13 +6681,13 @@ c$C22F LD E,A        ; {HL = current room x16 (room number's column nibble x
 *$C245 LD A,L        ;
  $C246 AND $0F       ;
  $C248 LD L,A        ;
- $C249 BIT 2,E       ;
+ $C249 BIT 2,E       ; {Row +1, clamped to stay under 20 rows
  $C24B JR Z,$C255    ;
  $C24D INC H         ;
  $C24E LD A,H        ;
  $C24F CP $14        ;
  $C251 JR C,$C255    ;
- $C253 LD H,$00      ;
+ $C253 LD H,$00      ; }
 *$C255 BIT 3,E       ; {Row -1 with wraparound to the last row ($13)
  $C257 JR Z,$C25F    ;
  $C259 DEC H         ;
@@ -6721,7 +6730,7 @@ c$C276 PUSH AF         ;
  $C27D CALL $C3FA      ; Compute an address in the 12-byte-stride table at
                        ; $8A39
  $C280 LD B,$04        ;
-*$C282 LD A,R          ;
+*$C282 LD A,R          ; {R-salted reset of 4 guard-state entries at $8A39
  $C284 XOR (HL)        ;
  $C285 AND $0F         ;
  $C287 LD (HL),A       ;
@@ -6730,7 +6739,7 @@ c$C276 PUSH AF         ;
  $C28A RES 5,(HL)      ;
  $C28C RES 4,(HL)      ;
  $C28E INC HL          ;
- $C28F DJNZ $C282      ;
+ $C28F DJNZ $C282      ; }
  $C291 LD A,($C548)    ;
  $C294 CALL $C3FA      ; Compute an address in the 12-byte-stride table at
                        ; $8A39
@@ -6741,8 +6750,8 @@ c$C276 PUSH AF         ;
  $C2A4 LD DE,($D3B8)   ;
  $C2A8 POP AF          ;
  $C2A9 OR A            ;
- $C2AA SBC HL,DE       ;
- $C2AC JR NZ,$C31A     ;
+ $C2AA SBC HL,DE       ; {Compare current room to the last-drawn room
+ $C2AC JR NZ,$C31A     ; }
  $C2AE EX AF,AF'       ;
  $C2AF LD A,($C548)    ;
  $C2B2 LD B,A          ;
@@ -6843,14 +6852,14 @@ c$C276 PUSH AF         ;
  $C37D LD A,H          ;
  $C37E OR A            ;
  $C37F JR Z,$C3BD      ;
- $C381 LD IX,$DD05     ;
- $C385 LD B,$04        ;
+ $C381 LD IX,$DD05     ; {IX -> door-guard table at $DD05; HL -> door data at
+ $C385 LD B,$04        ; $DD3F
  $C387 LD A,L          ;
  $C388 LD DE,$000C     ;
- $C38B LD HL,$DD3F     ;
-*$C38E ADD HL,DE       ;
- $C38F SUB $10         ;
- $C391 JR NC,$C38E     ;
+ $C38B LD HL,$DD3F     ; }
+*$C38E ADD HL,DE       ; {Binary-scan door data for the current room's high
+ $C38F SUB $10         ; byte
+ $C391 JR NC,$C38E     ; }
  $C393 OR A            ;
  $C394 SBC HL,DE       ;
  $C396 LD ($C54E),HL   ;
@@ -6942,15 +6951,15 @@ c$C40E LD HL,($C548) ;
  $C420 RET           ;
 *$C421 LD HL,$E800   ; HL = attribute area, BC = $0200 bytes to scan
  $C424 LD BC,$0200   ;
-*$C427 LD A,(HL)     ;
- $C428 OR A          ;
+*$C427 LD A,(HL)     ; {Zero cell: skip; non-black paper (bits 3-5): force $07;
+ $C428 OR A          ; else force $45
  $C429 JR Z,$C43C    ;
  $C42B AND $38       ;
  $C42D JR Z,$C433    ;
  $C42F LD (HL),$07   ;
  $C431 JR $C43C      ;
 *$C433 LD A,(HL)     ;
- $C434 AND $07       ;
+ $C434 AND $07       ; }
  $C436 CP $07        ;
  $C438 JR Z,$C43C    ;
  $C43A LD (HL),$45   ;
@@ -7219,44 +7228,44 @@ c$C585 LD E,A        ; {E = saved parameter; check the glyph's width class in
  $C589 CP $04        ;
  $C58B LD A,E        ; }
  $C58C RET C         ;
- $C58D RLA           ; {Width class < 4: patch $00 (skip) into the three branch
- $C58E JR NC,$C59C   ; sites
- $C590 XOR A         ;
+ $C58D RLA           ; {Width class < 4: skip ahead (else patch $06/$07/$08)
+ $C58E JR NC,$C59C   ; }
+ $C590 XOR A         ; {Patch $00 (skip) into the three branch sites
  $C591 LD ($C603),A  ;
  $C594 LD ($C5E3),A  ;
  $C597 LD ($C647),A  ;
  $C59A JR $C5AB      ; }
-*$C59C LD A,$06      ; {Width class >= 4: patch $06/$07/$08 into the three
- $C59E LD ($C603),A  ; branch sites
- $C5A1 LD A,$07      ;
- $C5A3 LD ($C5E3),A  ;
- $C5A6 LD A,$08      ;
+*$C59C LD A,$06      ; {A=$06; patch $C603
+ $C59E LD ($C603),A  ; }
+ $C5A1 LD A,$07      ; {A=$07; patch $C5E3
+ $C5A3 LD ($C5E3),A  ; }
+ $C5A6 LD A,$08      ; {A=$08; patch $C647
  $C5A8 LD ($C647),A  ; }
-*$C5AB BIT 7,(HL)    ; {Bit 7 of (HL) selects the patch value written to $C651
+*$C5AB BIT 7,(HL)    ; {Bit 7 of (HL) set: patch value = $AF, skip ahead
  $C5AD LD A,$AF      ;
- $C5AF JR NZ,$C5B2   ;
- $C5B1 XOR A         ;
+ $C5AF JR NZ,$C5B2   ; }
+ $C5B1 XOR A         ; {Otherwise: patch value = $00; write to $C651
 *$C5B2 LD ($C651),A  ; }
- $C5B5 INC HL        ; {HL -> next glyph data byte; compute the shadow-screen
- $C5B6 LD ($C6A0),HL ; row/column address
- $C5B9 LD H,B        ;
+ $C5B5 INC HL        ; {HL -> next glyph data byte; save to $C6A0
+ $C5B6 LD ($C6A0),HL ; }
+ $C5B9 LD H,B        ; {H = row (B >> 3)
  $C5BA SRL H         ;
  $C5BC SRL H         ;
- $C5BE SRL H         ;
- $C5C0 LD A,C        ;
+ $C5BE SRL H         ; }
+ $C5C0 LD A,C        ; {A = column (C >> 2), biased by -3
  $C5C1 SRL A         ;
  $C5C3 SRL A         ;
- $C5C5 SUB $03       ;
- $C5C7 BIT 7,E       ;
+ $C5C5 SUB $03       ; }
+ $C5C7 BIT 7,E       ; {Mirror flag (bit 7 of E) set: column -1
  $C5C9 JR Z,$C5CC    ;
- $C5CB DEC A         ;
-*$C5CC AND $1F       ;
- $C5CE LD L,A        ;
- $C5CF DEC H         ;
+ $C5CB DEC A         ; }
+*$C5CC AND $1F       ; {Wrap the column into L (0-31)
+ $C5CE LD L,A        ; }
+ $C5CF DEC H         ; {HL = shadow-screen address ($EB00 + row/column)
  $C5D0 PUSH HL       ;
  $C5D1 LD BC,$EB00   ;
- $C5D4 ADD HL,BC     ;
- $C5D5 XOR A         ;
+ $C5D4 ADD HL,BC     ; }
+ $C5D5 XOR A         ; {A=0 (plot accumulator); C=5
  $C5D6 LD C,$05      ; }
 ; This entry point is used by the routine at #R$C5E4.
 *$C5D8 PUSH HL       ;
@@ -7312,29 +7321,29 @@ c$C5E4 LD BC,$C682   ; {HL -> character code entry in a lookup table at $C682
  $C60F LD L,A        ;
  $C610 INC DE        ;
  $C611 DJNZ $C601    ;
-*$C613 POP HL        ;
- $C614 POP BC        ;
+*$C613 POP HL        ; {Pop saved registers; wrap the column counter (L) to
+ $C614 POP BC        ; 0-31
  $C615 LD A,L        ;
  $C616 INC A         ;
  $C617 AND $1F       ;
- $C619 LD L,A        ;
- $C61A POP AF        ;
+ $C619 LD L,A        ; }
+ $C61A POP AF        ; {Pop A; loop for the next column (B) via $C5DB
  $C61B INC A         ;
- $C61C DJNZ $C5DB    ;
- $C61E POP HL        ;
+ $C61C DJNZ $C5DB    ; }
+ $C61E POP HL        ; {Pop HL; advance the row (H), loop via $C5D8
  $C61F INC H         ;
  $C620 DEC C         ;
- $C621 JP NZ,$C5D8   ;
- $C624 POP BC        ;
- $C625 XOR A         ;
- $C626 RR B          ;
+ $C621 JP NZ,$C5D8   ; }
+ $C624 POP BC        ; {Pop BC; clear the accumulator
+ $C625 XOR A         ; }
+ $C626 RR B          ; {Pack 3 row-presence bits from B into C via A
  $C628 RRA           ;
  $C629 RR B          ;
  $C62B RRA           ;
  $C62C RR B          ;
  $C62E RRA           ;
  $C62F OR C          ;
- $C630 LD C,A        ;
+ $C630 LD C,A        ; }
  $C631 LD HL,$E500   ;
  $C634 ADD HL,BC     ;
  $C635 EX DE,HL      ;
@@ -7363,9 +7372,9 @@ c$C5E4 LD BC,$C682   ; {HL -> character code entry in a lookup table at $C682
 ; the destination at (DE) when the destination is currently blank, so glyphs
 ; blend into existing scenery rather than overwriting it; then advances DE to
 ; the next character cell, wrapping to the next row every 32 columns.
-c$C648 LD C,A        ; {HL -> this character's attribute byte in the table at
- $C649 LD B,$00      ; $C682
- $C64B LD HL,$C682   ;
+c$C648 LD C,A        ; {BC = A (attribute index)
+ $C649 LD B,$00      ; }
+ $C64B LD HL,$C682   ; {HL -> source attribute at $C682+BC
  $C64E ADD HL,BC     ; }
  $C64F LD A,(HL)     ;
  $C650 EXX           ;
@@ -7373,31 +7382,31 @@ c$C648 LD C,A        ; {HL -> this character's attribute byte in the table at
  $C652 LD C,A        ;
  $C653 LD B,$00      ;
  $C655 ADD HL,BC     ;
- $C656 LD A,(DE)     ; {Copy the source attribute over (DE) only if it's
- $C657 OR A          ; currently blank
- $C658 JR NZ,$C65F   ;
- $C65A LD A,(HL)     ;
+ $C656 LD A,(DE)     ; {Skip if the destination cell is already occupied
+ $C657 OR A          ;
+ $C658 JR NZ,$C65F   ; }
+ $C65A LD A,(HL)     ; {Copy the source attribute to (DE) unless it's blank
  $C65B OR A          ;
  $C65C JR Z,$C65F    ;
  $C65E LD (DE),A     ; }
-*$C65F LD A,E        ; {DE = next screen cell; wrap to the next attribute row
- $C660 AND $E0       ; every 32 columns
- $C662 SBC HL,BC     ;
- $C664 LD C,A        ;
+*$C65F LD A,E        ; {A = E's row bits; HL -= BC
+ $C660 AND $E0       ;
+ $C662 SBC HL,BC     ; }
+ $C664 LD C,A        ; {C = E's column bits
  $C665 XOR E         ;
- $C666 INC A         ;
- $C667 AND $1F       ;
+ $C666 INC A         ; }
+ $C667 AND $1F       ; {E = (column+1) mod 32, merged with the row bits
  $C669 OR C          ;
  $C66A LD E,A        ; }
- $C66B POP BC        ;
+ $C66B POP BC        ; {Pop registers, loop the column count
  $C66C POP AF        ;
  $C66D INC A         ;
  $C66E DJNZ $C643    ;
- $C670 POP DE        ;
- $C671 EX AF,AF'     ;
+ $C670 POP DE        ; }
+ $C671 EX AF,AF'     ; {Advance E by 32 columns, carry into D
  $C672 LD A,$20      ;
  $C674 ADD A,E       ;
- $C675 LD E,A        ;
+ $C675 LD E,A        ; }
  $C676 JP NC,$C67A   ;
  $C679 INC D         ;
 *$C67A EX AF,AF'     ;
@@ -7559,38 +7568,38 @@ c$C6D6 PUSH HL       ; {A -> pointer table entry -> frame data address in HL
 ; count; exact purpose within the plot loop is not fully confirmed.
 c$C74D XOR A         ;
  $C74E LD B,A        ;
- $C74F RR E          ;
+ $C74F RR E          ; {Bit 1 of 8: RR E/D/C/B
  $C751 RR D          ;
  $C753 RR C          ;
- $C755 RR B          ;
- $C757 RR E          ;
+ $C755 RR B          ; }
+ $C757 RR E          ; {Bit 2 of 8: RR E/D/C/B
  $C759 RR D          ;
  $C75B RR C          ;
- $C75D RR B          ;
- $C75F RR E          ;
+ $C75D RR B          ; }
+ $C75F RR E          ; {Bit 3 of 8: RR E/D/C/B
  $C761 RR D          ;
  $C763 RR C          ;
- $C765 RR B          ;
- $C767 RR E          ;
+ $C765 RR B          ; }
+ $C767 RR E          ; {Bit 4 of 8: RR E/D/C/B
  $C769 RR D          ;
  $C76B RR C          ;
- $C76D RR B          ;
- $C76F RR E          ;
+ $C76D RR B          ; }
+ $C76F RR E          ; {Bit 5 of 8: RR E/D/C/B
  $C771 RR D          ;
  $C773 RR C          ;
- $C775 RR B          ;
- $C777 RR E          ;
+ $C775 RR B          ; }
+ $C777 RR E          ; {Bit 6 of 8: RR E/D/C/B
  $C779 RR D          ;
  $C77B RR C          ;
- $C77D RR B          ;
- $C77F RR E          ;
+ $C77D RR B          ; }
+ $C77F RR E          ; {Bit 7 of 8: RR E/D/C/B
  $C781 RR D          ;
  $C783 RR C          ;
- $C785 RR B          ;
- $C787 RR E          ;
+ $C785 RR B          ; }
+ $C787 RR E          ; {Bit 8 of 8: RR E/D/C/B
  $C789 RR D          ;
  $C78B RR C          ;
- $C78D RR B          ;
+ $C78D RR B          ; }
  $C78F RET           ;
 
 ; Save the background under a sprite frame to the buffer at $E500
@@ -7641,7 +7650,7 @@ c$C790 PUSH AF       ;
  $C7C0 JR Z,$C7C4    ;
  $C7C2 LD A,$03      ;
 *$C7C4 LD ($C7FB),A  ; }
- $C7C7 PUSH BC       ; {HL = source screen address from the table at $8E12
+ $C7C7 PUSH BC       ; {HL -> screen-block pointer entry in the table at $8E12
  $C7C8 SLA L         ;
  $C7CA RES 7,L       ;
  $C7CC LD H,$00      ;
@@ -7650,9 +7659,9 @@ c$C790 PUSH AF       ;
  $C7D2 LD A,(HL)     ;
  $C7D3 INC HL        ;
  $C7D4 LD H,(HL)     ;
- $C7D5 LD L,A        ;
+ $C7D5 LD L,A        ; }
  $C7D6 EX (SP),HL    ;
- $C7D7 LD A,H        ;
+ $C7D7 LD A,H        ; {Combine row/column into an $E500-relative buffer offset
  $C7D8 LD C,L        ;
  $C7D9 AND $F8       ;
  $C7DB LD L,A        ;
@@ -7667,15 +7676,15 @@ c$C790 PUSH AF       ;
  $C7E7 LD BC,$E500   ;
  $C7EA ADD HL,BC     ;
  $C7EB POP BC        ; }
-*$C7EC PUSH DE       ; {Copy one row (E bytes) from (BC) to the buffer, D rows
- $C7ED PUSH HL       ; total
+*$C7EC PUSH DE       ; {Copy one row (E bytes) from (BC) to the buffer
+ $C7ED PUSH HL       ;
 *$C7EE LD A,(BC)     ;
  $C7EF LD (HL),A     ;
  $C7F0 INC BC        ;
  $C7F1 INC L         ;
  $C7F2 DEC E         ;
- $C7F3 JP NZ,$C7EE   ;
- $C7F6 POP HL        ;
+ $C7F3 JP NZ,$C7EE   ; }
+ $C7F6 POP HL        ; {Step the buffer by 32, loop for D rows
  $C7F7 LD DE,$0020   ;
  $C7FA ADD HL,DE     ;
  $C7FB INC BC        ;
@@ -7758,24 +7767,24 @@ c$C85C LD HL,$E502   ; {HL -> flag area at $E502; IXl = 18 rows to scan
  $C85F LD IXl,$12    ; }
  $C862 XOR A         ;
  $C863 LD C,A        ;
-*$C864 LD B,$1C      ;
-*$C866 OR (HL)       ;
- $C867 JR NZ,$C876   ;
-*$C869 INC L         ;
- $C86A DJNZ $C866    ;
- $C86C INC L         ;
+*$C864 LD B,$1C      ; B = 28 (columns per row)
+*$C866 OR (HL)       ; {Non-zero flag: found a changed cell
+ $C867 JR NZ,$C876   ; }
+*$C869 INC L         ; {Next column
+ $C86A DJNZ $C866    ; }
+ $C86C INC L         ; {Step to the next row (skip padding), loop for 18 rows
  $C86D INC HL        ;
  $C86E INC L         ;
  $C86F INC L         ;
  $C870 DEC IXl       ;
- $C872 JP NZ,$C864   ;
+ $C872 JP NZ,$C864   ; }
  $C875 RET           ;
-*$C876 LD (HL),C     ; {Clear the flag; HL,DE step toward the real-screen
- $C877 EX AF,AF'     ; address ($5800 attrs)
- $C878 LD DE,$0300   ;
+*$C876 LD (HL),C     ; {Clear the flag byte
+ $C877 EX AF,AF'     ; }
+ $C878 LD DE,$0300   ; {HL -> the real attribute byte ($5800+$0300); DE=$7000
  $C87B ADD HL,DE     ;
- $C87C LD DE,$7000   ;
- $C87F LD A,(HL)     ;
+ $C87C LD DE,$7000   ; }
+ $C87F LD A,(HL)     ; {Non-black attribute: skip the AF' swap
  $C880 OR A          ;
  $C881 JR NZ,$C884   ; }
  $C883 EX AF,AF'     ;
@@ -7785,29 +7794,29 @@ c$C85C LD HL,$E502   ; {HL -> flag area at $E502; IXl = 18 rows to scan
  $C888 PUSH HL       ;
  $C889 EXX           ;
  $C88A POP HL        ;
- $C88B LD A,H        ; {Standard ZX pixel-address formula: row/column (HL) ->
- $C88C RLA           ; screen byte
+ $C88B LD A,H        ; {D = screen third + coarse row bits
+ $C88C RLA           ;
  $C88D RLA           ;
  $C88E RLA           ;
  $C88F AND $18       ;
- $C891 LD H,A        ;
- $C892 OR $40        ;
+ $C891 LD H,A        ; }
+ $C892 OR $40        ; {D = $40 | H; E = L (column)
  $C894 LD D,A        ;
- $C895 LD E,L        ;
- $C896 LD A,L        ;
+ $C895 LD E,L        ; }
+ $C896 LD A,L        ; {L = column masked to 0-31
  $C897 AND $1F       ;
- $C899 LD L,A        ;
- $C89A XOR E         ;
+ $C899 LD L,A        ; }
+ $C89A XOR E         ; {Combine row-within-third bits into H
  $C89B RLCA          ;
  $C89C RLCA          ;
  $C89D RLCA          ;
  $C89E AND $07       ;
- $C8A0 OR H          ;
- $C8A1 ADD A,$EB     ;
+ $C8A0 OR H          ; }
+ $C8A1 ADD A,$EB     ; {H += $EB (shadow buffer page)
  $C8A3 LD H,A        ; }
- $C8A4 LD BC,$0820   ; {BC = 8 rows, $20 stride; copy the glyph row by row to
-*$C8A7 LD A,(HL)     ; the screen
- $C8A8 LD (DE),A     ;
+ $C8A4 LD BC,$0820   ; BC = 8 rows, $20 stride
+*$C8A7 LD A,(HL)     ; {Copy one byte, step to the next screen row and buffer
+ $C8A8 LD (DE),A     ; row
  $C8A9 INC D         ;
  $C8AA LD A,L        ;
  $C8AB ADD A,C       ;
@@ -8332,19 +8341,19 @@ c$CB6B AND $0F       ;
  $CB80 JP NZ,$CB91   ;
 *$CB83 POP HL        ;
  $CB84 RET           ;
-*$CB85 LD A,$02      ;
- $CB87 LD HL,$CCFC   ;
+*$CB85 LD A,$02      ; {Bit 0 (right): A=2, HL=$CCFC
+ $CB87 LD HL,$CCFC   ; }
  $CB8A RET           ;
-*$CB8B LD A,$03      ;
- $CB8D LD HL,$CD11   ;
+*$CB8B LD A,$03      ; {Bit 1 (left): A=3, HL=$CD11
+ $CB8D LD HL,$CD11   ; }
  $CB90 RET           ;
 ; This entry point is used by the routines at #R$CC1F and #R$CC52.
-*$CB91 LD A,$04      ;
- $CB93 LD HL,$CD26   ;
+*$CB91 LD A,$04      ; {Bit 2 (down): A=4, HL=$CD26
+ $CB93 LD HL,$CD26   ; }
  $CB96 RET           ;
 ; This entry point is used by the routines at #R$CC1F and #R$CC47.
-*$CB97 LD A,$05      ;
- $CB99 LD HL,$CD2D   ;
+*$CB97 LD A,$05      ; {Bit 3 (up): A=5, HL=$CD2D
+ $CB99 LD HL,$CD2D   ; }
  $CB9C RET           ;
 
 ; Robin's critical-hit stagger: penalise the counter, recover after a timer
@@ -8446,14 +8455,14 @@ c$CBFE AND $0F       ;
  $CC05 JR Z,$CC3B    ;
  $CC07 CP $01        ;
  $CC09 JR Z,$CC11    ;
- $CC0B LD A,$03      ;
- $CC0D LD HL,$CCF4   ;
+ $CC0B LD A,$03      ; {A=3, HL=$CCF4
+ $CC0D LD HL,$CCF4   ; }
  $CC10 RET           ;
 *$CC11 POP HL        ;
  $CC12 RET           ;
 ; This entry point is used by the routine at #R$CB21.
-*$CC13 LD A,$00      ;
- $CC15 LD HL,$CD0B   ;
+*$CC13 LD A,$00      ; {A=0, HL=$CD0B
+ $CC15 LD HL,$CD0B   ; }
 ; This entry point is used by the routine at #R$CC1F.
 *$CC18 LD ($CC88),A  ;
  $CC1B LD ($CC89),HL ;
@@ -8622,7 +8631,7 @@ c$CD6C LD A,$0B      ; Delay for sound procedure
                      ; flashing
  $CDBF DI            ;
 *$CDC0 CALL $AC83    ; Draw the main menu items
- $CDC3 CALL $8A79    ; Menu select
+ $CDC3 CALL $8A79    ; Play the main menu melody ($8B82), called from #R$CD6C
  $CDC6 LD HL,$0000   ;
  $CDC9 LD E,$0F      ;
 *$CDCB LD BC,$EFFE   ;
@@ -8701,12 +8710,18 @@ c$CD6C LD A,$0B      ; Delay for sound procedure
 ; Stir the pseudorandom seed at $D38D using the R register
 ;
 ; Used by the routines at #R$CD6C, #R$CFB3 and #R$DA0F.
+;
+; .
+;
+; H=L=R, so (HL) samples memory at an R-dependent address; that byte XORed with
+; R, then XORed into $D38D, is the new seed - a cheap way to fold in both R's
+; own value and whatever byte happens to sit at that address.
 c$CE6D PUSH BC       ;
  $CE6E PUSH HL       ;
  $CE6F LD A,R        ;
  $CE71 LD B,A        ;
- $CE72 LD L,A        ;
- $CE73 LD H,A        ;
+ $CE72 LD L,A        ; {H=L=R: HL -> an R-dependent memory address
+ $CE73 LD H,A        ; }
  $CE74 LD A,(HL)     ;
  $CE75 XOR B         ;
  $CE76 LD B,A        ;
@@ -8839,12 +8854,12 @@ c$CE81 CALL $CF4D    ; {Snapshot non-zero attributes to $E500, enable the
  $CF38 DEC A         ;
  $CF39 JP NZ,$CE99   ;
  $CF3C EXX           ;
- $CF3D POP HL        ;
+ $CF3D POP HL        ; {Shrink the strip boundary; exit once IXl underflows
  $CF3E POP DE        ;
  $CF3F DEC E         ;
  $CF40 INC L         ;
  $CF41 DEC IXl       ;
- $CF43 RET M         ;
+ $CF43 RET M         ; }
  $CF44 CALL Z,$CF4A  ; Disable the LDIR/LDDR copies inside #R$CE81
  $CF47 JP $CE90      ;
 
@@ -8867,9 +8882,9 @@ c$CF4A XOR A         ;
 c$CF4D LD BC,$0240   ;
  $CF50 LD HL,$E800   ;
  $CF53 LD DE,$E500   ;
-*$CF56 LD A,(HL)     ;
- $CF57 OR A          ;
- $CF58 JR Z,$CF5B    ;
+*$CF56 LD A,(HL)     ; {Skip zero attribute bytes (leave old $E500 data in
+ $CF57 OR A          ; place)
+ $CF58 JR Z,$CF5B    ; }
  $CF5A LD (DE),A     ;
 *$CF5B INC HL        ;
  $CF5C INC DE        ;
@@ -8878,10 +8893,10 @@ c$CF4D LD BC,$0240   ;
  $CF60 JR Z,$CF56    ;
  $CF62 LD A,$ED      ;
 ; This entry point is used by the routine at #R$CF4A.
-*$CF64 LD ($CEBA),A  ;
+*$CF64 LD ($CEBA),A  ; {Patch $ED into the four LDIR/LDDR opcodes in #R$CE81
  $CF67 LD ($CEE6),A  ;
  $CF6A LD ($CF04),A  ;
- $CF6D LD ($CF1E),A  ;
+ $CF6D LD ($CF1E),A  ; }
  $CF70 RET           ;
 
 ; Randomly pick the game's starting room and opening state
@@ -9489,13 +9504,14 @@ b$D349 DEFB $00,$B8
  $D34B DEFM "(C) 1985  ODIN COMPUTER GRAPHICS"
 
 ; Unused
-s$D36B DEFS $01
+s$D36B DEFB $00,$45,$43,$45,$45,$46,$46,$46
+ $D373 DEFB $46,$47,$47,$47,$47,$47,$47,$47
+ $D37B DEFB $47,$47,$47,$47,$47,$47,$47,$47
+ $D383 DEFB $47,$47,$47,$47,$47,$47,$47,$47
+ $D38B DEFB $47,$00
 
-; Message at D36C
-t$D36C DEFM "ECEEFFFFGGGGGGGGGGGGGGGGGGGGGGGG"
-
-; Unused
-s$D38C DEFS $02
+; Data block at D38D
+b$D38D DEFB $00
 
 ; Message at D38E
 t$D38E DEFM " &c"
@@ -9698,10 +9714,10 @@ c$D47D LD A,R        ; {Roll a start index 0-29 from the R register
  $D490 LD E,A        ;
  $D491 JR NC,$D494   ; }
  $D493 INC D         ;
-*$D494 LD A,(DE)     ;
+*$D494 LD A,(DE)     ; {Found a free (zero) slot: return
  $D495 OR A          ;
- $D496 RET Z         ;
- $D497 INC C         ;
+ $D496 RET Z         ; }
+ $D497 INC C         ; {Advance to the next entry, wrapping to 0 at 30; loop
  $D498 LD A,C        ;
  $D499 CP $1E        ;
  $D49B JR Z,$D4A6    ;
@@ -9710,7 +9726,7 @@ c$D47D LD A,R        ; {Roll a start index 0-29 from the R register
  $D4A0 LD E,A        ;
  $D4A1 JR NC,$D494   ;
  $D4A3 INC D         ;
- $D4A4 JR $D494      ;
+ $D4A4 JR $D494      ; }
 *$D4A6 LD DE,$D4B1   ;
  $D4A9 LD C,$00      ;
  $D4AB JR $D494      ;
@@ -11087,23 +11103,23 @@ c$DDC5 LD B,$03      ;
 ;
 ; Combines bits from H and L into an offset added to the shadow attribute area
 ; base at $E800.
-c$DDD6 SRL L         ;
+c$DDD6 SRL L         ; {Column component: L >>= 2, stashed in A'
  $DDD8 SRL L         ;
- $DDDA LD A,L        ;
+ $DDDA LD A,L        ; }
  $DDDB EX AF,AF'     ;
- $DDDC LD A,H        ;
+ $DDDC LD A,H        ; {Row component: (H AND $F8) x4 into HL
  $DDDD AND $F8       ;
  $DDDF LD L,A        ;
  $DDE0 LD H,$00      ;
- $DDE2 ADD HL,HL     ;
+ $DDE2 ADD HL,HL     ; }
  $DDE3 ADD HL,HL     ;
- $DDE4 EX AF,AF'     ;
+ $DDE4 EX AF,AF'     ; {Combine column (biased -2) into HL
  $DDE5 SUB $02       ;
  $DDE7 LD E,A        ;
  $DDE8 LD D,$00      ;
- $DDEA ADD HL,DE     ;
- $DDEB LD DE,$E800   ;
- $DDEE ADD HL,DE     ;
+ $DDEA ADD HL,DE     ; }
+ $DDEB LD DE,$E800   ; {Add the shadow attribute base $E800
+ $DDEE ADD HL,DE     ; }
  $DDEF RET           ;
 
 ; Update each guard's route-availability flags for the current room

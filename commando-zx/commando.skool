@@ -396,6 +396,8 @@ b$6433 DEFB $00,$00,$00,$00,$00,$00,$01
 ; Trigger sound effect A into free slot at $6433 (unconfirmed)
 ;
 ; Used by the routines at #R$6400, #R$6825 and #R$7637.
+;
+; I:A Sound effect number
 c$6456 CP $07        ;
  $6458 JR Z,$6469    ; Clear 7 bytes at $6433
  $645A LD E,A        ;
@@ -586,19 +588,19 @@ c$6593 LD HL,$6648   ;
  $6599 LD B,$05      ;
 *$659B LD A,(HL)     ;
  $659C CP $80        ;
- $659E CALL NZ,$65A5 ;
+ $659E CALL NZ,$65A5 ; Decrement counter, init menu record via IX=$6661 on zero
  $65A1 ADD HL,DE     ;
  $65A2 DJNZ $659B    ;
  $65A4 RET           ;
 
-; Routine at 65A5
+; Decrement counter, init menu record via IX=$6661 on zero (unconfirmed)
 ;
 ; Used by the routine at #R$6593.
-c$65A5 PUSH HL       ;
+c$65A5 PUSH HL       ; {Decrement counter at HL, return unless zero
  $65A6 ADD HL,DE     ;
  $65A7 DEC HL        ;
  $65A8 DEC (HL)      ;
- $65A9 JR Z,$65AD    ;
+ $65A9 JR Z,$65AD    ; }
  $65AB POP HL        ;
  $65AC RET           ;
 *$65AD LD (HL),$03   ;
@@ -606,9 +608,9 @@ c$65A5 PUSH HL       ;
  $65B0 PUSH HL       ;
  $65B1 PUSH DE       ;
  $65B2 PUSH BC       ;
- $65B3 LD IX,$6661   ;
+ $65B3 LD IX,$6661   ; {Set up IX record, copy X/Y from HL
  $65B7 LD A,(HL)     ;
- $65B8 LD (IX+$00),A ;
+ $65B8 LD (IX+$00),A ; }
  $65BB LD (IX+$04),A ;
  $65BE INC HL        ;
  $65BF LD B,(HL)     ;
@@ -842,7 +844,8 @@ b$681B DEFW $67D4                           ; Address of current char in
 ;
 ; Used by the routines at #R$6400 and #R$6BBB.
 ;
-; I:BC ??
+; I:B Value to add into the selected score digit
+; I:C Digit position, counted from the right (0 = units)
 c$6825 LD A,($FDE9)     ; Get Score 2nd char
  $6828 PUSH AF          ;
  $6829 LD A,$07         ;
@@ -1086,19 +1089,19 @@ c$6975 LD A,($FDBB)   ; {Check idle flag ($FDBB), clear on match
  $6997 DJNZ $698D     ;
  $6999 RET            ;
 
-; Routine at 699A
+; Compute attribute address for fixed tile row (unconfirmed)
 ;
 ; Used by the routine at #R$6975.
-c$699A PUSH AF       ;
+c$699A PUSH AF       ; {Set up bank/pointer, L=5
  $699B PUSH DE       ;
  $699C PUSH HL       ;
  $699D PUSH BC       ;
  $699E EXX           ;
- $699F LD DE,$7BE0   ;
+ $699F LD DE,$7BE0   ; }
  $69A2 EXX           ;
  $69A3 LD L,$05      ;
- $69A5 LD A,($FDBB)  ;
- $69A8 LD H,A        ;
+ $69A5 LD A,($FDBB)  ; {Load row ($FDBB), set size BC=$0016
+ $69A8 LD H,A        ; }
  $69A9 LD BC,$0016   ;
  $69AC CALL $69B4    ; Compute attribute address for tile
  $69AF POP BC        ;
@@ -1110,6 +1113,9 @@ c$699A PUSH AF       ;
 ; Compute attribute address for tile (D,E)
 ;
 ; Used by the routines at #R$6950 and #R$699A.
+;
+; I:D Row
+; I:E Column
 c$69B4 LD A,$1F      ;
  $69B6 SUB D         ;
  $69B7 SRL H         ;
@@ -1159,7 +1165,7 @@ c$69F3 CALL $7274    ; Print Score Table
 *$69F9 CALL $6469    ; Clear 7 bytes at $6433
  $69FC CALL $6B21    ; Clear playfield and status screen/attribute areas
  $69FF CALL $6751    ; Set up scrolling string
- $6A02 CALL $71B6    ;
+ $6A02 CALL $71B6    ; Print credits screen, scroll text into $5923 area
  $6A05 CALL $7251    ; Check menu keys
  $6A08 JR Z,$6A0F    ;
 ; This entry point is used by the routines at #R$6A1E and #R$7143.
@@ -1327,6 +1333,10 @@ c$6B21 RES 3,(IY+$07) ;
 ; Zero rectangle at HL (C rows x B bytes)
 ;
 ; Used by the routines at #R$6B21 and #R$6B87.
+;
+; I:HL Start screen address
+; I:B Row count per column
+; I:C Column count
 c$6B4C SLA C         ;
  $6B4E SLA C         ;
  $6B50 SLA C         ;
@@ -1355,7 +1365,7 @@ t$6B67 DEFM "ABCDEFGH"
 ;
 ; Used by the routines at #R$6BBB and #R$792C.
 ;
-; I:A ??
+; I:A Attribute byte for the box border/frame
 c$6B87 PUSH AF       ;
  $6B88 AND $38       ;
  $6B8A LD C,A        ;
@@ -1493,6 +1503,8 @@ c$6C96 LD A,($FDE5)  ; Get Area number
 ; Print 2-digit number A
 ;
 ; Used by the routine at #R$6C80.
+;
+; I:A Number to print (0-99)
 c$6C99 PUSH BC       ;
  $6C9A LD B,$2F      ;
 *$6C9C INC B         ;
@@ -1693,6 +1705,9 @@ c$6E11 LD HL,$6FE5   ;
 ; Print char with derived attribute (unconfirmed)
 ;
 ; Used by the routine at #R$6E11.
+;
+; I:A Row/position value
+; I:C Character code to print
 c$6E34 LD E,C        ;
  $6E35 LD D,A        ;
  $6E36 LD A,$16      ;
@@ -1868,6 +1883,8 @@ c$6F46 LD HL,$6FE5   ;
 ; Look up record in $6FE5 table, mask low bits (unconfirmed)
 ;
 ; Used by the routine at #R$6E7B.
+;
+; I:A Value to search for in the table
 c$6F52 LD C,A        ; {Scan table for matching value C
  $6F53 LD HL,$6FE5   ; }
  $6F56 LD B,$08      ;
@@ -2075,9 +2092,9 @@ b$709A DEFB $FF,$0B,$0D,$00,$02,$04,$FF,$08
 ; XOR attribute pattern onto screen, explosion effect (unconfirmed)
 ;
 ; Used by the routine at #R$6CAE.
-c$70BD LD A,($70B3)  ;
+c$70BD LD A,($70B3)  ; {Compute column*4, row from ($FDB2)+2
  $70C0 ADD A,A       ;
- $70C1 ADD A,A       ;
+ $70C1 ADD A,A       ; }
  $70C2 LD L,A        ;
  $70C3 LD A,($FDB2)  ;
  $70C6 ADD A,$02     ;
@@ -2216,7 +2233,7 @@ c$71A8 LD A,(HL)     ;
 ; Screen attributes, 4 bytes
 b$71B2 DEFB $07,$05,$46,$06
 
-; Routine at 71B6
+; Print credits screen, scroll text into $5923 area (unconfirmed)
 ;
 ; Used by the routine at #R$69F3.
 c$71B6 CALL $725D                              ; Print immediate string
@@ -2225,12 +2242,12 @@ c$71B6 CALL $725D                              ; Print immediate string
  $71C1 DEFB $01,$15,$00                        ;
  $71C4 DEFM "PUBLISHED BY"                     ;
  $71D0 DEFB $1F                                ;
- $71D1 LD DE,$71B2                             ;
- $71D4 LD HL,$5923                             ;
- $71D7 LD C,$04                                ;
-*$71D9 LD B,$0A                                ;
- $71DB LD A,(DE)                               ;
- $71DC INC DE                                  ;
+ $71D1 LD DE,$71B2                             ; {Set up source/dest pointers,
+ $71D4 LD HL,$5923                             ; C=4 lines
+ $71D7 LD C,$04                                ; }
+*$71D9 LD B,$0A                                ; {Copy 10 chars per line into
+ $71DB LD A,(DE)                               ; screen
+ $71DC INC DE                                  ; }
 *$71DD LD (HL),A                               ;
  $71DE INC L                                   ;
  $71DF DJNZ $71DD                              ;
@@ -2575,7 +2592,7 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer below $8000 or at/above $F000
  $74AD INC H         ;
  $74AE XOR (HL)      ;
  $74AF INC H         ;
- $74B0 XOR (HL)      ;
+ $74B0 XOR (HL)      ; ...continues through the middle pages
  $74B1 INC H         ;
  $74B2 XOR (HL)      ;
  $74B3 INC H         ;
@@ -3805,6 +3822,8 @@ b$8012 DEFB $F5,$86,$AC,$90,$14,$90,$05,$90
 ; Mark map cells for object IX, direction-aware
 ;
 ; Used by the routines at #R$800F and #R$82C1.
+;
+; I:IX Address of the 20-byte object record
 c$806B EXX           ;
  $806C LD D,(IX+$01) ;
  $806F LD E,(IX+$00) ;
@@ -3932,6 +3951,10 @@ c$8101 PUSH HL       ;
 ; Set/test flag in $1600 map at tile (D,E)
 ;
 ; Used by the routines at #R$80EA and #R$8101.
+;
+; I:D Row
+; I:E Column
+; I:B $01 = test only, else set
 c$8122 LD A,E        ;
  $8123 CP $20        ; {Reject if column (E) out of range
  $8125 RET NC        ; }
@@ -4091,6 +4114,9 @@ b$82B4 DEFB $0C,$FA,$00,$00,$0C,$FA,$00,$00
 ; Set object state flags, call $806B (unconfirmed)
 ;
 ; Used by the routines at #R$822B and #R$82E1.
+;
+; I:IX Address of the 20-byte object record
+; I:E New direction/type value
 c$82C1 LD (IX+$03),E   ;
  $82C4 LD (IX+$07),E   ;
  $82C7 PUSH AF         ;
@@ -4143,8 +4169,10 @@ b$8301 DEFB $CB,$7B,$CB,$BB,$28,$1F,$1D,$2A
 ;
 ; Used by the routine at #R$90AC.
 ;
-; I:A
+; I:A Attribute/color byte for the sprite
 ; I:B Sprite height??
+; I:D Row
+; I:E Column
 ; I:HL Sprite address
 c$834B EX AF,AF'     ; {Save/restore alt HL across bank switch
  $834C PUSH HL       ;
@@ -4382,6 +4410,8 @@ c$8471 LD HL,$FDC7   ;
 ; Get pseudo-random value / update counter at (HL) (unconfirmed)
 ;
 ; Used by the routine at #R$8471.
+;
+; I:HL Address of the counter byte
 c$8497 LD E,(HL)     ; {Check byte at HL, bump E if non-negative
  $8498 OR A          ;
  $8499 INC E         ;
@@ -4504,11 +4534,11 @@ c$8500 LD A,($FDCE)  ; {Check Motorbike state counter ($FDCE)
 ; Sprite draw dispatch: clip and compute screen address
 ;
 ; Used by the routines at #R$83B8, #R$8497, #R$85AB, #R$86F5 and #R$8EE3.
-c$854A LD A,C        ;
+c$854A LD A,C        ; {Compute index HL = C*2-1
  $854B EX AF,AF'     ;
  $854C LD A,C        ;
  $854D ADD A,A       ;
- $854E DEC A         ;
+ $854E DEC A         ; }
  $854F LD L,A        ;
  $8550 LD H,$00      ;
  $8552 PUSH HL       ;
@@ -4638,6 +4668,8 @@ c$85AB LD HL,$FDC3   ;
 ; Draw two-part sprite from record at HL (unconfirmed)
 ;
 ; Used by the routine at #R$85AB.
+;
+; I:HL Address of the 2-byte sprite record
 c$8618 LD A,(HL)     ; {Read frame byte, extract type into E
  $8619 INC A         ;
  $861A INC HL        ;
@@ -4715,6 +4747,9 @@ c$8618 LD A,(HL)     ; {Read frame byte, extract type into E
 ;
 ; Used by the routines at #R$834B, #R$83B8, #R$8497, #R$854A, #R$8618, #R$8A14,
 ; #R$8A7B, #R$8AC3, #R$8CC9 and #R$90AC.
+;
+; I:D Row
+; I:B Sprite height
 c$867C LD A,D        ;
  $867D CP $60        ;
  $867F JR NC,$869B   ;
@@ -4893,9 +4928,9 @@ c$876E LD A,D        ; {Check row on-screen, reject if not
  $8778 LD D,A        ;
  $8779 CP $04        ; }
  $877B JP P,$879E    ;
- $877E LD A,D        ;
+ $877E LD A,D        ; {Compute second band value, save B
  $877F ADD A,B       ;
- $8780 SUB $04       ;
+ $8780 SUB $04       ; }
  $8782 EXX           ;
  $8783 LD B,A        ;
  $8784 EXX           ;
@@ -5549,10 +5584,10 @@ c$8AC3 LD A,C        ; {Save color, prepare clip call
  $8AE9 OR E          ; }
  $8AEA LD (HL),A     ;
  $8AEB INC L         ;
- $8AEC POP DE        ;
+ $8AEC POP DE        ; {AND mask then OR sprite byte, row 3
  $8AED LD A,(HL)     ;
  $8AEE AND D         ;
- $8AEF OR E          ;
+ $8AEF OR E          ; }
  $8AF0 LD (HL),A     ;
  $8AF1 INC H         ;
  $8AF2 POP DE        ;
@@ -5705,9 +5740,9 @@ c$8CC9 LD A,C        ; {Save color, set width C=$20
  $8CCB LD C,$20      ; }
  $8CCD PUSH HL       ;
  $8CCE CALL $867C    ; Clip sprite rectangle against screen edge
- $8CD1 EX (SP),HL    ;
+ $8CD1 EX (SP),HL    ; {Swap position for return address
  $8CD2 ADD HL,DE     ;
- $8CD3 POP DE        ;
+ $8CD3 POP DE        ; }
  $8CD4 EX AF,AF'     ;
  $8CD5 LD C,A        ;
  $8CD6 LD A,$08      ; Set drop type A=8 for draw address calc
@@ -7437,6 +7472,8 @@ c$9913 LD A,H        ;
 ; Update object IX position, clip to screen, dispatch sprite draw
 ;
 ; Used by the routine at #R$98D0.
+;
+; I:IX Address of the 20-byte object record
 c$9922 SET 5,(IX+$0B) ;
  $9926 LD D,(IX+$04)  ;
  $9929 LD E,(IX+$00)  ;
@@ -7661,8 +7698,8 @@ c$9A6E SUB (IX+$05)  ; {Compare sprite width to clip limit
  $9A81 NEG           ;
  $9A83 LD B,A        ;
  $9A84 LD C,A        ; }
- $9A85 SCF           ;
- $9A86 EX AF,AF'     ;
+ $9A85 SCF           ; {Mark clip type, dispatch to masked blit
+ $9A86 EX AF,AF'     ; }
  $9A87 JP $9E98      ; => Masked-OR blit variant, draws sprite row across
                      ; screen thirds
 *$9A8A EXX           ;
@@ -7772,9 +7809,9 @@ c$9AE6 SUB (IX+$05)  ;
                      ; screen thirds
 
 ; Masked-OR blit variant, draws sprite row across screen thirds
-c$9B05 EXX           ;
+c$9B05 EXX           ; {Adjust column, dispatch entry
  $9B06 DEC E         ;
- $9B07 EXX           ;
+ $9B07 EXX           ; }
 ; This entry point is used by the routine at #R$9AE6.
 *$9B08 LD A,(IX+$0A) ;
  $9B0B SUB C         ;
@@ -7981,16 +8018,18 @@ c$9BF5 EXX            ;
 ; Compute screen address for sprite row via IX object (unconfirmed)
 ;
 ; Used by the routines at #R$9B61, #R$9B97, #R$9BCB and #R$9BF5.
+;
+; I:IX Address of the 20-byte object record
 c$9C23 CP (IX+$08)    ; {Check row against clip bound (IX+$08)
  $9C26 JP M,$9C47     ; }
  $9C29 LD L,A         ;
  $9C2A EX AF,AF'      ;
  $9C2B SLA L          ;
  $9C2D LD H,$FE       ; $FE00 - table of even screen lines addresses
- $9C2F LD A,(HL)      ;
+ $9C2F LD A,(HL)      ; {Look up screen line via $FE00 table
  $9C30 ADD A,B        ;
  $9C31 INC L          ;
- $9C32 LD H,(HL)      ;
+ $9C32 LD H,(HL)      ; }
  $9C33 LD L,A         ;
  $9C34 PUSH HL        ;
  $9C35 EXX            ;
@@ -8605,8 +8644,8 @@ c$9F1D PUSH HL        ; {Check width against clip limit
  $9F31 EX AF,AF'      ;
  $9F32 LD A,C         ;
  $9F33 EXX            ;
- $9F34 CP (IX+$08)    ;
- $9F37 JP P,$9F3D     ;
+ $9F34 CP (IX+$08)    ; {Clip column against (IX+$08)
+ $9F37 JP P,$9F3D     ; }
  $9F3A LD A,(IX+$08)  ;
 *$9F3D LD C,A         ;
  $9F3E ADD A,A        ;
@@ -9181,20 +9220,20 @@ b$A000 DEFB $03,$D0,$00,$00,$70,$06,$0D,$F0,$00,$00,$F0,$0F,$0F,$F0,$00,$00 ; {#
  $BBF0 DEFB $00,$3F,$C0,$C0,$3F,$00,$00,$1F,$80,$00,$06,$00,$00,$00,$00,$00 ; }
  $BC00 DEFB $37,$80,$00,$00,$40,$48,$53,$20,$00,$00,$E0,$5F,$50,$30,$00,$00 ; {#HTML[<img
  $BC10 DEFB $58,$48,$EF,$F8,$00,$00,$B8,$CA,$7D,$78,$00,$00,$F0,$4B,$36,$70 ; src="images/spriteBC00.png"
- $BC20 DEFB $00,$00,$20,$3F,$1F,$E0,$00,$00,$E0,$1F,$1D,$C0,$00,$00,$E0,$29 ; />]
- $BC30 DEFB $55,$D0,$00,$00,$E0,$2B,$55,$D0,$00,$00,$20,$0A,$00,$00,$00,$00 ; }
+ $BC20 DEFB $00,$00,$20,$3F,$1F,$E0,$00,$00,$E0,$1F,$1D,$C0,$00,$00,$E0,$29 ; />] Rocket
+ $BC30 DEFB $55,$D0,$00,$00,$E0,$2B,$55,$D0,$00,$00,$20,$0A,$00,$00,$00,$00 ; Launcher}
  $BC40 DEFB $0D,$E0,$00,$00,$10,$12,$14,$C8,$00,$00,$F8,$17,$14,$0E,$00,$00 ; {#HTML[<img
  $BC50 DEFB $16,$12,$3B,$FE,$00,$00,$AE,$32,$1F,$56,$00,$00,$AC,$12,$0D,$5C ; src="images/spriteBC40.png"
- $BC60 DEFB $00,$00,$F4,$0F,$07,$F8,$00,$00,$F8,$07,$07,$70,$00,$00,$F8,$0F ; />]
- $BC70 DEFB $17,$74,$00,$00,$F8,$0A,$15,$74,$00,$00,$A0,$08,$00,$00,$00,$00 ; }
+ $BC60 DEFB $00,$00,$F4,$0F,$07,$F8,$00,$00,$F8,$07,$07,$70,$00,$00,$F8,$0F ; />] Rocket
+ $BC70 DEFB $17,$74,$00,$00,$F8,$0A,$15,$74,$00,$00,$A0,$08,$00,$00,$00,$00 ; Launcher}
  $BC80 DEFB $00,$78,$00,$00,$84,$03,$05,$32,$00,$00,$FF,$05,$05,$03,$80,$80 ; {#HTML[<img
  $BC90 DEFB $85,$04,$04,$FF,$80,$80,$AB,$0E,$0C,$D5,$80,$00,$AB,$07,$04,$D7 ; src="images/spriteBC80.png"
- $BCA0 DEFB $00,$00,$FE,$03,$01,$FE,$00,$00,$FE,$01,$01,$DC,$00,$00,$FE,$03 ; />]
- $BCB0 DEFB $05,$DD,$00,$00,$EA,$03,$05,$D5,$00,$00,$2A,$02,$00,$00,$00,$00 ; }
+ $BCA0 DEFB $00,$00,$FE,$03,$01,$FE,$00,$00,$FE,$01,$01,$DC,$00,$00,$FE,$03 ; />] Rocket
+ $BCB0 DEFB $05,$DD,$00,$00,$EA,$03,$05,$D5,$00,$00,$2A,$02,$00,$00,$00,$00 ; Launcher}
  $BCC0 DEFB $00,$1E,$00,$00,$E1,$00,$01,$4C,$80,$80,$7F,$01,$01,$40,$E0,$60 ; {#HTML[<img
  $BCD0 DEFB $21,$01,$01,$3F,$E0,$E0,$AA,$03,$03,$35,$60,$C0,$EA,$01,$01,$35 ; src="images/spriteBCC0.png"
- $BCE0 DEFB $C0,$40,$FF,$00,$00,$7F,$80,$80,$7F,$00,$00,$77,$00,$80,$F2,$00 ; />]
- $BCF0 DEFB $01,$75,$40,$80,$F2,$00,$01,$75,$40,$80,$8A,$00,$00,$00,$00,$00 ; }
+ $BCE0 DEFB $C0,$40,$FF,$00,$00,$7F,$80,$80,$7F,$00,$00,$77,$00,$80,$F2,$00 ; />] Rocket
+ $BCF0 DEFB $01,$75,$40,$80,$F2,$00,$01,$75,$40,$80,$8A,$00,$00,$00,$00,$00 ; Launcher}
  $BD00 DEFB $02,$00,$00,$00,$00,$05,$06,$00,$00,$00,$00,$18,$38,$00,$00,$00 ; {#HTML[<img
  $BD10 DEFB $00,$78,$F0,$00,$00,$00,$00,$E0,$C0,$00,$00,$00,$00,$00,$00,$00 ; src="images/spriteBD00.png"
  $BD20 DEFB $00,$00,$00,$70,$F8,$00,$00,$00,$00,$70,$00,$00,$00,$00,$00,$00 ; />]
@@ -9483,38 +9522,22 @@ b$C718 DEFB $30,$80,$00,$00,$00,$2A,$30,$00,$00,$00,$00,$15 ; {#HTML[#UDGARRAY6,
  $C73C DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; }
 
 ; Sprite Truck; width 8
-b$C748 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $C750 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $C758 DEFB $00,$00,$D0,$01,$40,$29,$10,$44
- $C760 DEFB $07,$00,$AF,$F9,$FA,$50,$A8,$8E
- $C768 DEFB $08,$00,$DE,$05,$75,$A9,$08,$47
- $C770 DEFB $18,$00,$AF,$07,$EA,$54,$88,$22
- $C778 DEFB $18,$00,$CE,$05,$75,$80,$14,$07
- $C780 DEFB $18,$00,$A5,$07,$E8,$04,$AC,$23
- $C788 DEFB $28,$00,$CE,$05,$74,$80,$14,$07
- $C790 DEFB $28,$00,$E5,$07,$38,$02,$AC,$23
- $C798 DEFB $28,$00,$CA,$05,$75,$80,$D2,$11
- $C7A0 DEFB $28,$00,$E5,$07,$2A,$42,$EA,$83
- $C7A8 DEFB $48,$00,$EA,$05,$55,$80,$52,$11
- $C7B0 DEFB $68,$00,$FC,$07,$80,$03,$02,$0E
- $C7B8 DEFB $D7,$00,$EF,$FF,$E0,$04,$84,$31
- $C7C0 DEFB $B0,$00,$DF,$07,$7F,$FC,$FE,$E3
- $C7C8 DEFB $D7,$00,$CF,$B5,$FF,$F8,$FE,$F1
- $C7D0 DEFB $AF,$00,$DF,$B7,$7F,$FC,$FE,$E3
- $C7D8 DEFB $EF,$00,$CF,$75,$FF,$F8,$FE,$F1
- $C7E0 DEFB $DF,$00,$D7,$72,$7F,$F4,$FE,$E3
- $C7E8 DEFB $C0,$00,$CF,$03,$FF,$F8,$FE,$D1
- $C7F0 DEFB $C0,$00,$D7,$02,$7F,$F4,$FE,$E3
- $C7F8 DEFB $C0,$00,$CF,$03,$FF,$F8,$FE,$D1
- $C800 DEFB $4A,$00,$D7,$AA,$7F,$FC,$FE,$E3
- $C808 DEFB $57,$00,$CF,$F5,$FF,$F8,$FE,$F1
- $C810 DEFB $78,$00,$DF,$0E,$7F,$FC,$FE,$EB
- $C818 DEFB $20,$00,$FF,$07,$FF,$FF,$FC,$FF
- $C820 DEFB $27,$00,$AA,$FA,$AA,$AA,$AA,$AA
- $C828 DEFB $2F,$00,$00,$FF,$00,$00,$02,$00
- $C830 DEFB $16,$00,$FF,$31,$FF,$FF,$FC,$FF
- $C838 DEFB $07,$00,$00,$70,$73,$E0,$E0,$9C
- $C840 DEFB $03,$00,$00,$E0,$3F,$00,$C0,$0F
+b$C748 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ $C758 DEFB $00,$00,$D0,$01,$40,$29,$10,$44,$07,$00,$AF,$F9,$FA,$50,$A8,$8E
+ $C768 DEFB $08,$00,$DE,$05,$75,$A9,$08,$47,$18,$00,$AF,$07,$EA,$54,$88,$22
+ $C778 DEFB $18,$00,$CE,$05,$75,$80,$14,$07,$18,$00,$A5,$07,$E8,$04,$AC,$23
+ $C788 DEFB $28,$00,$CE,$05,$74,$80,$14,$07,$28,$00,$E5,$07,$38,$02,$AC,$23
+ $C798 DEFB $28,$00,$CA,$05,$75,$80,$D2,$11,$28,$00,$E5,$07,$2A,$42,$EA,$83
+ $C7A8 DEFB $48,$00,$EA,$05,$55,$80,$52,$11,$68,$00,$FC,$07,$80,$03,$02,$0E
+ $C7B8 DEFB $D7,$00,$EF,$FF,$E0,$04,$84,$31,$B0,$00,$DF,$07,$7F,$FC,$FE,$E3
+ $C7C8 DEFB $D7,$00,$CF,$B5,$FF,$F8,$FE,$F1,$AF,$00,$DF,$B7,$7F,$FC,$FE,$E3
+ $C7D8 DEFB $EF,$00,$CF,$75,$FF,$F8,$FE,$F1,$DF,$00,$D7,$72,$7F,$F4,$FE,$E3
+ $C7E8 DEFB $C0,$00,$CF,$03,$FF,$F8,$FE,$D1,$C0,$00,$D7,$02,$7F,$F4,$FE,$E3
+ $C7F8 DEFB $C0,$00,$CF,$03,$FF,$F8,$FE,$D1,$4A,$00,$D7,$AA,$7F,$FC,$FE,$E3
+ $C808 DEFB $57,$00,$CF,$F5,$FF,$F8,$FE,$F1,$78,$00,$DF,$0E,$7F,$FC,$FE,$EB
+ $C818 DEFB $20,$00,$FF,$07,$FF,$FF,$FC,$FF,$27,$00,$AA,$FA,$AA,$AA,$AA,$AA
+ $C828 DEFB $2F,$00,$00,$FF,$00,$00,$02,$00,$16,$00,$FF,$31,$FF,$FF,$FC,$FF
+ $C838 DEFB $07,$00,$00,$70,$73,$E0,$E0,$9C,$03,$00,$00,$E0,$3F,$00,$C0,$0F
 
 ; Sprite ???; width 2?
 b$C848 DEFB $00,$E7,$00,$FF,$00,$FF,$00,$C3
@@ -10435,9 +10458,9 @@ c$DD8D LD A,(IX+$0C)   ;
  $DDC3 JP NC,$DE65     ; }
  $DDC6 SUB $0D         ;
  $DDC8 JP C,$DE65      ;
- $DDCB CP $04          ;
+ $DDCB CP $04          ; {Check row within band, compare against (IX+$05)
  $DDCD JP C,$DE65      ;
- $DDD0 LD B,A          ;
+ $DDD0 LD B,A          ; }
  $DDD1 LD A,(IX+$05)   ;
  $DDD4 SUB B           ;
  $DDD5 JP P,$DE65      ;
@@ -10667,8 +10690,8 @@ c$DF71 SET 0,(IY+$62) ; {Player is dead??
 ; Used by the routine at #R$DF37.
 c$DF7B CP $80         ; {Check high bit of type byte, pick branch
  $DF7D JR Z,$DF67     ; }
- $DF7F AND $7F        ;
- $DF81 BIT 1,A        ;
+ $DF7F AND $7F        ; {Check bit 1 of type, branch on wall type
+ $DF81 BIT 1,A        ; }
  $DF83 JR Z,$DF96     ;
  $DF85 INC E          ;
  $DF86 DEC E          ;
@@ -11010,12 +11033,12 @@ c$E1D1 PUSH DE       ; {Compute scan address, scan $F8EA table via $E77D
  $E221 SET 6,(HL)    ;
  $E223 RET           ;
 
-; Routine at E224
+; Jeep hit check, kill/score, spawn next enemy (unconfirmed)
 ;
 ; Used by the routine at #R$E1B5.
-c$E224 LD A,($FDCB)   ;
+c$E224 LD A,($FDCB)   ; {Check Jeep flag ($FDCB), compute offset
  $E227 INC A          ;
- $E228 JP Z,$E2B2     ;
+ $E228 JP Z,$E2B2     ; }
  $E22B DEC A          ;
  $E22C ADD A,A        ;
  $E22D ADD A,A        ;
@@ -11023,9 +11046,9 @@ c$E224 LD A,($FDCB)   ;
  $E230 LD E,A         ;
  $E231 LD A,($FDCC)   ;
  $E234 LD D,A         ;
- $E235 CP $50         ;
+ $E235 CP $50         ; {Compare row bound, branch on threshold $50
  $E237 LD HL,$FDF8    ;
- $E23A JR C,$E241     ;
+ $E23A JR C,$E241     ; }
  $E23C INC L          ;
  $E23D LD (HL),$00    ;
  $E23F JR $E290       ;
@@ -11125,8 +11148,8 @@ c$E2DD LD BC,$0806     ;
 ; Decrement Enemy delay ($FDDD), spawn enemy by Area ($FDE5) when due
 ;
 ; Used by the routine at #R$E10C.
-c$E2EA CALL $E1B5      ;
- $E2ED DEC (IY+$5D)    ;
+c$E2EA CALL $E1B5      ; {Decrement timer, check spawn-eligible flag
+ $E2ED DEC (IY+$5D)    ; }
  $E2F0 JR Z,$E2FF      ;
  $E2F2 BIT 4,(IY+$15)  ;
  $E2F6 RET Z           ;
@@ -11529,6 +11552,8 @@ c$E5B8 LD B,A        ; {Mask direction to 0-15, check low range
 ; Move enemy toward target, clamp to bounds (unconfirmed)
 ;
 ; Used by the routines at #R$E4FC and #R$E972.
+;
+; I:IX Address of the 20-byte object record
 c$E5DB INC (IX+$10)  ; Load object position/velocity into HL/E
  $E5DE LD H,(IX+$05) ;
  $E5E1 LD L,(IX+$04) ;
@@ -11563,16 +11588,16 @@ c$E5DB INC (IX+$10)  ; Load object position/velocity into HL/E
  $E624 JR C,$E648    ;
  $E626 JR $E679      ;
 
-; Routine at E628
-c$E628 LD A,L         ;
+; Dispatch by direction, clear draw-active if off-screen (unconfirmed)
+c$E628 LD A,L         ; {Check column bound, clear active flag
  $E629 CP $81         ;
- $E62B JR C,$E636     ;
+ $E62B JR C,$E636     ; }
  $E62D CP $FE         ;
  $E62F JR NC,$E636    ;
  $E631 RES 5,(IX+$0B) ;
  $E635 RET            ;
-*$E636 LD A,D         ;
- $E637 CP $04         ;
+*$E636 LD A,D         ; {Check row band, dispatch by direction
+ $E637 CP $04         ; }
  $E639 JP Z,$E6C3     ;
  $E63C JR C,$E6A8     ;
  $E63E CP $0C         ;
@@ -11778,17 +11803,17 @@ c$E77C INC L         ;
  $E792 DEC B         ;
  $E793 RET           ;
 
-; Routine at E794
+; Enemy melee/contact check vs player, kill if close (unconfirmed)
 ;
 ; Used by the routine at #R$E6FE.
-c$E794 BIT 4,(IX+$0C)  ;
- $E798 JR NZ,$E7BD     ;
+c$E794 BIT 4,(IX+$0C)  ; {Check sub-state flag and AI state $09
+ $E798 JR NZ,$E7BD     ; }
  $E79A LD A,(IX+$12)   ;
  $E79D CP $09          ;
  $E79F JR Z,$E7BD      ;
- $E7A1 LD A,($FDE4)    ;
+ $E7A1 LD A,($FDE4)    ; {Compare player row/column against enemy
  $E7A4 SUB D           ;
- $E7A5 JR NC,$E7BD     ;
+ $E7A5 JR NC,$E7BD     ; }
  $E7A7 ADD A,$05       ;
  $E7A9 JR NC,$E7BD     ;
  $E7AB LD A,($FDE3)    ;
@@ -11953,17 +11978,17 @@ c$E8A0 DEC (IX+$11)   ;
 *$E904 LD (IX+$11),C  ;
  $E907 JP $E9B9       ;
 
-; Routine at E90A
+; Enemy AI: check row range, transition to attack state (unconfirmed)
 ;
 ; Used by the routine at #R$E972.
-c$E90A LD L,(IX+$04)   ;
+c$E90A LD L,(IX+$04)   ; {Load target row, check upper bound
  $E90D LD A,(IX+$05)   ;
- $E910 LD H,A          ;
+ $E910 LD H,A          ; }
  $E911 CP $60          ;
  $E913 JR NC,$E96F     ;
  $E915 CP $2E          ;
  $E917 JR C,$E92F      ;
- $E919 LD (IX+$12),$01 ;
+ $E919 LD (IX+$12),$01 ; Enter attack state
  $E91D CALL $E1AC      ; Common enemy-object init helper
  $E920 AND $0F         ;
  $E922 LD (IX+$0C),A   ;
@@ -12005,6 +12030,8 @@ c$E90A LD L,(IX+$04)   ;
 ; Dispatch enemy AI by state (IX+$12)
 ;
 ; Used by the routine at #R$E794.
+;
+; I:IX Address of the 20-byte object record
 c$E972 LD A,(IX+$12) ; {Special-case states $06 and $0A
  $E975 CP $06        ;
  $E977 JR Z,$E90A    ; }
@@ -12106,6 +12133,10 @@ b$EAC7 DEFB $FE,$14,$30,$02,$0E,$01,$DD,$E5
  $EB0F DEFB $1C,$C3,$92,$E9
 
 ; Set enemy AI delay/direction by Area number ($FDE5)
+;
+; .
+;
+; I:IX Address of the 20-byte object record
 c$EB13 LD B,$10      ;
  $EB15 LD A,($FDE5)  ; Get Area number
  $EB18 CP $04        ;
@@ -12200,6 +12231,9 @@ c$EB96 BIT 7,(IX+$0B)  ;
 ; Compute direction bits toward player position (unconfirmed)
 ;
 ; Used by the routines at #R$E794, #R$E881, #R$E8A0, #R$EB13 and #R$EB96.
+;
+; I:IX Address of the 20-byte object record
+; O:C Direction bit flags
 c$EBE1 LD A,($5BDF)  ; {Y distance to object, set right/left bound flags
  $EBE4 LD BC,$0000   ; }
  $EBE7 SUB (IX+$05)  ;
@@ -13201,6 +13235,11 @@ c$F26E LD IX,$F82D     ; {Set up marker at $F8ED, load first entry
 ; Clamp/check coordinate H (unconfirmed)
 ;
 ; Used by the routines at #R$F21E and #R$F381.
+;
+; I:H Coordinate to clamp
+; I:DE Value to add after clamping
+; O:H Clamped coordinate
+; O:Cy Set if coordinate was out of range
 c$F34F LD A,H        ; {Add $02, check sign, set carry if negative
  $F350 LD L,$00      ;
  $F352 ADD A,$02     ; }
@@ -13242,8 +13281,8 @@ c$F37B LD IX,$F7C9   ;
 ; Used by the routine at #R$F203.
 c$F381 LD IX,$F73C    ;
 ; This entry point is used by the routines at #R$F36D and #R$F37B.
-*$F385 LD C,(IX+$00)  ;
- $F388 INC C          ;
+*$F385 LD C,(IX+$00)  ; {Check slot empty/free, exit if end marker
+ $F388 INC C          ; }
  $F389 RET Z          ;
  $F38A DEC C          ;
  $F38B JP Z,$F4DB     ;
@@ -13716,8 +13755,8 @@ c$F68A EX DE,HL       ; {Compute column byte ($F8D0)
 ; Scan explosion-effect table $F856, find/init free entry (unconfirmed)
 ;
 ; Used by the routines at #R$F26E and #R$F381.
-c$F6C2 LD HL,$F856   ;
-*$F6C5 LD A,(HL)     ;
+c$F6C2 LD HL,$F856   ; {Load table pointer, check end marker
+*$F6C5 LD A,(HL)     ; }
  $F6C6 INC A         ;
  $F6C7 JR Z,$F704    ;
  $F6C9 LD BC,$0011   ; {Check delay field (+$11) for a free (zero) slot

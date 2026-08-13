@@ -10091,6 +10091,15 @@ Used by the routine at <a href="asm.html#54133">D375</a>.
 Used by the routine at <a href="asm.html#37632">9300</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the tone-group sequence to play</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -10253,6 +10262,15 @@ Used by the routine at <a href="asm.html#37632">9300</a>.
 Used by the routine at <a href="asm.html#38370">95E2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the tone table to play</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -18451,7 +18469,7 @@ Used by the routine at <a href="asm.html#38370">95E2</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="49152" class="description">C000: Routine at C000</div>
+<div id="49152" class="description">C000: Entry point, jump to start</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18793,6 +18811,15 @@ Used by the routine at <a href="asm.html#49155">C003</a>.
 Used by the routine at <a href="asm.html#49197">C02D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">raw input-source code (0-2) selecting keyboard/joystick decode</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -18956,7 +18983,7 @@ Used by the routine at <a href="asm.html#49197">C02D</a>.
 <td class="instruction">RET</td>
 </tr>
 </table>
-<div id="49367" class="description">C0D7: Routine at C0D7</div>
+<div id="49367" class="description">C0D7: Scan keyboard row, OR-accumulate matched key code</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -18965,52 +18992,62 @@ Used by the routine at <a href="asm.html#49197">C02D</a>.
 Used by the routine at <a href="asm.html#49285">C085</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">BC</td>
+<td class="register-desc">keyboard port to read</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the key-code table</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="49367"></span>C0D7</td>
 <td class="instruction">IN D,(C)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">D = key row bits, E = bit counter 5</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49369"></span>C0D9</td>
 <td class="instruction">LD E,$05</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="49371"></span>C0DB</td>
 <td class="instruction">RRC D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Skip table byte if key not pressed</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49373"></span>C0DD</td>
 <td class="instruction">JR C,$C0E0</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49375"></span>C0DF</td>
 <td class="instruction">OR (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">OR in table byte for pressed key</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49376"></span>C0E0</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Advance table pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49377"></span>C0E1</td>
 <td class="instruction">DEC E</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="49378"></span>C0E2</td>
 <td class="instruction">JR NZ,$C0DB</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop for 5 bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49380"></span>C0E4</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="49381" class="description">C0E5: Data block at C0E5</div>
@@ -20184,7 +20221,7 @@ Now draw scene to offline screen
 <td class="asm-label"></td>
 <td class="address-1"><span id="49805"></span>C28D</td>
 <td class="instruction">CALL <a href="#56897">$DE41</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store $4810 as active color-table pointer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -20337,7 +20374,7 @@ Used by the routines at <a href="asm.html#49518">prepare_level</a>, <a href="asm
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="49848" class="description">C2B8: Routine at C2B8</div>
+<div id="49848" class="description">C2B8: Store color byte to offscreen attribute cell</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20346,6 +20383,15 @@ Used by the routines at <a href="asm.html#49518">prepare_level</a>, <a href="asm
 Used by the routine at <a href="asm.html#56240">DBB0</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">attribute (color) byte to store</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -21792,7 +21838,7 @@ Left direction images address is a800h
 <td class="asm-label"></td>
 <td class="address-1"><span id="50211"></span>C423</td>
 <td class="instruction">CALL <a href="#50253">draw_personage_part</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Draw masked image fragment to offscreen buffer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -21933,7 +21979,7 @@ Left direction images address is a800h
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50253" class="description">C44D: Routine at C44D</div>
+<div id="50253" class="description">C44D: Draw masked image fragment to offscreen buffer (pixel-aligned)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -22456,7 +22502,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="50372"></span>C4C4</td>
 <td class="instruction">CALL <a href="#51425">init_1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Init title screen</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -22710,7 +22756,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-2"><span id="50480"></span>C530</td>
 <td class="instruction">CALL <a href="#51425">init_1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Init title screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50483"></span>C533</td>
@@ -22945,7 +22991,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50605"></span>C5AD</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50608"></span>C5B0</td>
@@ -22955,7 +23001,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50611"></span>C5B3</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50614"></span>C5B6</td>
@@ -22965,7 +23011,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50617"></span>C5B9</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50620"></span>C5BC</td>
@@ -23000,7 +23046,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50636"></span>C5CC</td>
 <td class="instruction">CALL <a href="#50883">$C6C3</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Wait for key release, then wait for key press</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50639"></span>C5CF</td>
@@ -23050,7 +23096,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50655"></span>C5DF</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50658"></span>C5E2</td>
@@ -23070,7 +23116,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50662"></span>C5E6</td>
 <td class="instruction">CALL <a href="#50939">$C6FB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50665"></span>C5E9</td>
@@ -23220,7 +23266,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50732"></span>C62C</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-2"><span id="50735"></span>C62F</td>
@@ -23305,7 +23351,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50765"></span>C64D</td>
 <td class="instruction">CALL <a href="#50950">fill_smth</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill attribute column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50768"></span>C650</td>
@@ -23315,7 +23361,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50769"></span>C651</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50772"></span>C654</td>
@@ -23335,7 +23381,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-2"><span id="50778"></span>C65A</td>
 <td class="instruction">CALL <a href="#50939">$C6FB</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-2"><span id="50781"></span>C65D</td>
@@ -23420,7 +23466,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50813"></span>C67D</td>
 <td class="instruction">CALL <a href="#50950">fill_smth</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill attribute column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50816"></span>C680</td>
@@ -23440,7 +23486,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-1"><span id="50820"></span>C684</td>
 <td class="instruction">CALL <a href="#50924">$C6EC</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Highlight menu-box attribute rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50823"></span>C687</td>
@@ -23570,7 +23616,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <tr>
 <td class="address-2"><span id="50877"></span>C6BD</td>
 <td class="instruction">CALL <a href="#50916">$C6E4</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Wait until debounced key-scan returns FFh</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50880"></span>C6C0</td>
@@ -23578,7 +23624,7 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 <td class="comment-1" rowspan="1">=&gt; looks like new game after pressing ENTER in main game menu</td>
 </tr>
 </table>
-<div id="50883" class="description">C6C3: Routine at C6C3</div>
+<div id="50883" class="description">C6C3: Wait for key release, then wait for key press</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23587,45 +23633,54 @@ This entry point is used by the routine at <a href="asm.html#49441">C121</a>.
 Used by the routines at <a href="asm.html#49441">C121</a>, <a href="asm.html#50480">C530</a> and <a href="asm.html#51904">CAC0</a>.
 </div>
 </div>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">key code pressed</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="50883"></span>C6C3</td>
 <td class="instruction">CALL <a href="#50898">$C6D2</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Debounced key-scan</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50886"></span>C6C6</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50888"></span>C6C8</td>
 <td class="instruction">JR NZ,$C6C3</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="50890"></span>C6CA</td>
 <td class="instruction">CALL <a href="#50898">$C6D2</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Debounced key-scan</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50893"></span>C6CD</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50895"></span>C6CF</td>
 <td class="instruction">JR Z,$C6CA</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50897"></span>C6D1</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50898" class="description">C6D2: Routine at C6D2</div>
+<div id="50898" class="description">C6D2: Debounced key-scan (2-frame check via ROM KEY_SCAN)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23634,70 +23689,88 @@ Used by the routines at <a href="asm.html#49441">C121</a>, <a href="asm.html#504
 Used by the routines at <a href="asm.html#50883">C6C3</a> and <a href="asm.html#50916">C6E4</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">key code to debounce against</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">key code pressed (FFh if none)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="50898"></span>C6D2</td>
 <td class="instruction">LD B,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50900"></span>C6D4</td>
 <td class="instruction">LD C,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="50901"></span>C6D5</td>
 <td class="instruction">HALT</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50902"></span>C6D6</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50903"></span>C6D7</td>
-<td class="instruction">CALL $028E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $CD,$8E,$02</td>
+<td class="comment-1" rowspan="1">KEY_SCAN</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50906"></span>C6DA</td>
 <td class="instruction">POP BC</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50907"></span>C6DB</td>
 <td class="instruction">JR NZ,$C6D2</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50909"></span>C6DD</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50910"></span>C6DE</td>
 <td class="instruction">CP C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50911"></span>C6DF</td>
 <td class="instruction">JR NZ,$C6D2</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50913"></span>C6E1</td>
 <td class="instruction">DJNZ $C6D5</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50915"></span>C6E3</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50916" class="description">C6E4: Routine at C6E4</div>
+<div id="50916" class="description">C6E4: Wait until debounced key-scan returns FFh (no key)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23711,25 +23784,25 @@ Used by the routines at <a href="asm.html#49441">C121</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="50916"></span>C6E4</td>
 <td class="instruction">CALL <a href="#50898">$C6D2</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Debounced key-scan</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50919"></span>C6E7</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50921"></span>C6E9</td>
 <td class="instruction">JR NZ,$C6E4</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50923"></span>C6EB</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50924" class="description">C6EC: Routine at C6EC</div>
+<div id="50924" class="description">C6EC: Highlight menu-box attribute rows (8 rows, color 28h)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23738,27 +23811,36 @@ Used by the routines at <a href="asm.html#49441">C121</a> and <a href="asm.html#
 Used by the routine at <a href="asm.html#50480">C530</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">screen-third base address</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="50924"></span>C6EC</td>
 <td class="instruction">CALL <a href="#50950">fill_smth</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill attribute column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50927"></span>C6EF</td>
 <td class="instruction">LD DE,$5807</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50930"></span>C6F2</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50931"></span>C6F3</td>
 <td class="instruction">LD B,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23773,25 +23855,25 @@ This entry point is used by the routine at <a href="asm.html#50939">C6FB</a>.
 <tr>
 <td class="address-2"><span id="50933"></span>C6F5</td>
 <td class="instruction">LD (HL),$28</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50935"></span>C6F7</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50936"></span>C6F8</td>
 <td class="instruction">DJNZ $C6F5</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50938"></span>C6FA</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50939" class="description">C6FB: Routine at C6FB</div>
+<div id="50939" class="description">C6FB: Highlight menu-box attribute rows (11 rows, color 28h)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23800,35 +23882,44 @@ This entry point is used by the routine at <a href="asm.html#50939">C6FB</a>.
 Used by the routine at <a href="asm.html#50480">C530</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">screen-third base address</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="50939"></span>C6FB</td>
 <td class="instruction">CALL <a href="#50950">fill_smth</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill attribute column</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50942"></span>C6FE</td>
 <td class="instruction">LD DE,$5813</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50945"></span>C701</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50946"></span>C702</td>
 <td class="instruction">LD B,$0B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50948"></span>C704</td>
 <td class="instruction">JR <a href="#50933">$C6F5</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="50950" class="description">C706: Routine at C706</div>
+<div id="50950" class="description">C706: Fill attribute column (23 rows, color 38h)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -23837,6 +23928,15 @@ Used by the routine at <a href="asm.html#50480">C530</a>.
 Used by the routines at <a href="asm.html#50480">C530</a>, <a href="asm.html#50924">C6EC</a> and <a href="asm.html#50939">C6FB</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">screen-third base address</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -24623,7 +24723,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="51226"></span>C81A</td>
 <td class="instruction">CALL <a href="#51938">$CAE2</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Respawn personage after death timer expires</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -24641,7 +24741,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="51236"></span>C824</td>
 <td class="instruction">CALL <a href="#51938">$CAE2</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Respawn personage after death timer expires</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -25112,7 +25212,7 @@ This entry point is used by the routine at <a href="asm.html#51782">CA46</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="51398" class="description">C8C6: Routine at C8C6</div>
+<div id="51398" class="description">C8C6: Clear offline screen buffer (attributes then pixels)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -25190,7 +25290,7 @@ Used by the routine at <a href="asm.html#51425">init_1</a>.
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="51425" class="description">C8E1: Routine at C8E1</div>
+<div id="51425" class="description">C8E1: Init title screen: clear buffer, draw logo, draw header message</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -25205,7 +25305,7 @@ Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html
 <td class="asm-label">init_1</td>
 <td class="address-2"><span id="51425"></span>C8E1</td>
 <td class="instruction">CALL <a href="#51398">clear_offline_screen</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Clear offline screen buffer</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -25295,6 +25395,19 @@ Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html
 Used by the routine at <a href="asm.html#51492">draw_message</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">character code to draw</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">screen coordinates</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -25503,6 +25616,23 @@ Used by the routines at <a href="asm.html#50360">start</a>, <a href="asm.html#50
 Used by the routine at <a href="asm.html#51552">draw_playscreen_header_message</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">screen coordinates</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">message address</td>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">message length</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -26616,7 +26746,7 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 <td class="comment-1" rowspan="1">Continue to next turn</td>
 </tr>
 </table>
-<div id="51894" class="description">CAB6: Routine at CAB6</div>
+<div id="51894" class="description">CAB6: Swap two memory blocks byte by byte</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -26625,6 +26755,23 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 Used by the routine at <a href="asm.html#51782">CA46</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of first block</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">address of second block</td>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">number of bytes to swap</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -26702,7 +26849,7 @@ Used by the routine at <a href="asm.html#51782">CA46</a>.
 <tr>
 <td class="address-1"><span id="51912"></span>CAC8</td>
 <td class="instruction">CALL <a href="#50883">$C6C3</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Wait for key release, then wait for key press</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51915"></span>CACB</td>
@@ -26719,6 +26866,19 @@ Used by the routine at <a href="asm.html#51782">CA46</a>.
 Used by the routines at <a href="asm.html#49441">C121</a>, <a href="asm.html#51904">CAC0</a> and <a href="asm.html#56679">DD67</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">message address</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">attribute (color) byte to fill screen with</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -26767,7 +26927,7 @@ Used by the routines at <a href="asm.html#49441">C121</a>, <a href="asm.html#519
 <td class="comment-1" rowspan="1">=&gt; Updates Video-RAM from offline drawing buffer</td>
 </tr>
 </table>
-<div id="51938" class="description">CAE2: Routine at CAE2</div>
+<div id="51938" class="description">CAE2: Respawn personage after death timer expires</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -26776,6 +26936,15 @@ Used by the routines at <a href="asm.html#49441">C121</a>, <a href="asm.html#519
 Used by the routine at <a href="asm.html#50964">start_game</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -28793,42 +28962,42 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="53016"></span>CF18</td>
 <td class="instruction">LD HL,$CB1C</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53019"></span>CF1B</td>
 <td class="instruction">CALL <a href="#54129">$D371</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Entry to melee-hit detection, D=8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53022"></span>CF1E</td>
 <td class="instruction">LD HL,$CBBE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53025"></span>CF21</td>
 <td class="instruction">CALL <a href="#54129">$D371</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Entry to melee-hit detection, D=8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53028"></span>CF24</td>
 <td class="instruction">LD HL,$CCA5</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53031"></span>CF27</td>
 <td class="instruction">CALL <a href="#54129">$D371</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Entry to melee-hit detection, D=8</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53034"></span>CF2A</td>
 <td class="instruction">LD A,$05</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53036"></span>CF2C</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53037" class="description">CF2D: Personage action handler 4: walking, advance one column, bump off obstacle</div>
@@ -29048,7 +29217,7 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-1"><span id="53143"></span>CF97</td>
 <td class="instruction">CALL <a href="#54331">$D43B</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check obstacle to the left, or left room edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53146"></span>CF9A</td>
@@ -29068,7 +29237,7 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="53153"></span>CFA1</td>
 <td class="instruction">CALL <a href="#54343">$D447</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Check obstacle to the right, or right room edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53156"></span>CFA4</td>
@@ -29282,35 +29451,35 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <tr>
 <td class="address-2"><span id="53240"></span>CFF8</td>
 <td class="instruction">CALL <a href="#53255">$D007</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance jump-cycle counter, look up next frame offset</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53243"></span>CFFB</td>
 <td class="instruction">BIT 0,(IX+$03)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53247"></span>CFFF</td>
 <td class="instruction">JR NZ,$D004</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53249"></span>D001</td>
 <td class="instruction">INC (IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53252"></span>D004</td>
 <td class="instruction">LD A,$09</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53254"></span>D006</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="53255" class="description">D007: Routine at D007</div>
+<div id="53255" class="description">D007: Advance jump-cycle counter, look up next frame offset</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -29319,6 +29488,15 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#53240">CFF8</a> and <a href="asm.html#53311">D03F</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29470,7 +29648,7 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <tr>
 <td class="address-2"><span id="53311"></span>D03F</td>
 <td class="instruction">CALL <a href="#53255">$D007</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance jump-cycle counter, look up next frame offset</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53314"></span>D042</td>
@@ -30625,6 +30803,15 @@ Used by the routines at <a href="asm.html#53081">CF59</a> and <a href="asm.html#
 Used by the routine at <a href="asm.html#50964">start_game</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30989,7 +31176,7 @@ Step for healthy and alive personage
 <td class="asm-label"></td>
 <td class="address-1"><span id="53948"></span>D2BC</td>
 <td class="instruction">CALL <a href="#53994">$D2EA</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Dispatch to personage action handler</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -31134,7 +31321,7 @@ Personage moved to up direction
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="53994" class="description">D2EA: Routine at D2EA</div>
+<div id="53994" class="description">D2EA: Dispatch to personage action handler (jump via HL)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31143,6 +31330,15 @@ Personage moved to up direction
 Used by the routine at <a href="asm.html#53838">personage_play_step</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the action handler to jump to</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -31547,7 +31743,7 @@ Used by the routines at <a href="asm.html#52808">CE48</a>, <a href="asm.html#532
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="54129" class="description">D371: Routine at D371</div>
+<div id="54129" class="description">D371: Entry to melee-hit detection, D=8 (kick damage)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -31556,6 +31752,15 @@ Used by the routines at <a href="asm.html#52808">CE48</a>, <a href="asm.html#532
 Used by the routine at <a href="asm.html#53016">CF18</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of target personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -31578,6 +31783,15 @@ Used by the routine at <a href="asm.html#53016">CF18</a>.
 Used by the routine at <a href="asm.html#53714">D1D2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of target personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32046,7 +32260,7 @@ Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#529
 <td class="instruction">RET</td>
 </tr>
 </table>
-<div id="54331" class="description">D43B: Routine at D43B</div>
+<div id="54331" class="description">D43B: Check obstacle to the left, or left room edge</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32055,6 +32269,15 @@ Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#529
 Used by the routines at <a href="asm.html#53081">CF59</a>, <a href="asm.html#53615">D16F</a> and <a href="asm.html#53666">D1A2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32093,7 +32316,7 @@ Used by the routines at <a href="asm.html#53081">CF59</a>, <a href="asm.html#536
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54343" class="description">D447: Routine at D447</div>
+<div id="54343" class="description">D447: Check obstacle to the right, or right room edge</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -32102,6 +32325,15 @@ Used by the routines at <a href="asm.html#53081">CF59</a>, <a href="asm.html#536
 Used by the routines at <a href="asm.html#53081">CF59</a>, <a href="asm.html#53615">D16F</a> and <a href="asm.html#53666">D1A2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32509,6 +32741,15 @@ Address is Y * 20h + X + current_room_playing_data
 Used by the routines at <a href="asm.html#50964">start_game</a>, <a href="asm.html#51959">CAF7</a>, <a href="asm.html#53347">D063</a>, <a href="asm.html#54066">D332</a>, <a href="asm.html#54099">D353</a>, <a href="asm.html#54277">D405</a>, <a href="asm.html#54358">D456</a>, <a href="asm.html#54508">review_personage_location</a> and <a href="asm.html#57053">DEDD</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32665,6 +32906,19 @@ Used by the routines at <a href="asm.html#50964">start_game</a>, <a href="asm.ht
 Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#52808">CE48</a>, <a href="asm.html#53081">CF59</a>, <a href="asm.html#53522">D112</a>, <a href="asm.html#53739">D1EB</a>, <a href="asm.html#53838">personage_play_step</a>, <a href="asm.html#53995">revive_personage</a>, <a href="asm.html#54133">D375</a>, <a href="asm.html#54508">review_personage_location</a> and <a href="asm.html#54901">get_personage_action_will</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">first struct address to compare</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">second struct address to compare</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -33549,6 +33803,19 @@ Used by the routine at <a href="asm.html#54508">review_personage_location</a>.
 Used by the routines at <a href="asm.html#54508">review_personage_location</a>, <a href="asm.html#55365">D845</a> and <a href="asm.html#55554">D902</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">personage index</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">target tile coordinates</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -33801,6 +34068,19 @@ Used by the routines at <a href="asm.html#54508">review_personage_location</a>, 
 Used by the routines at <a href="asm.html#55783">D9E7</a>, <a href="asm.html#55878">DA46</a>, <a href="asm.html#55907">handler_of_17_object</a>, <a href="asm.html#55956">DA94</a>, <a href="asm.html#56589">DD0D</a>, <a href="asm.html#56744">DDA8</a> and <a href="asm.html#57245">DF9D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">tile/element index to draw</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">tile coordinates (H=row, L=column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -33884,6 +34164,15 @@ Used by the routines at <a href="asm.html#55783">D9E7</a>, <a href="asm.html#558
 Used by the routines at <a href="asm.html#54715">D5BB</a>, <a href="asm.html#55783">D9E7</a>, <a href="asm.html#56589">DD0D</a>, <a href="asm.html#56744">DDA8</a> and <a href="asm.html#57245">DF9D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">tile coordinates (H=row, L=column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -35124,7 +35413,7 @@ code for each room number
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55332" class="description">D824: Routine at D824</div>
+<div id="55332" class="description">D824: No-op object handler (17h object, no room-specific trigger)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35148,6 +35437,27 @@ code for each room number
 Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html#51425">init_1</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">source graphics data address</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">destination address in offline screen buffer</td>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">number of 8-byte blocks per column</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">number of columns</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -35480,7 +35790,7 @@ This entry point is used by the routines at <a href="asm.html#55382">D856</a> an
 <td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
-<div id="55432" class="description">D888: Routine at D888</div>
+<div id="55432" class="description">D888: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35934,7 +36244,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-1" rowspan="1">=&gt; Draw personage's action-target tiles from will table</td>
 </tr>
 </table>
-<div id="55592" class="description">D928: Routine at D928</div>
+<div id="55592" class="description">D928: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -35988,7 +36298,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55608" class="description">D938: Routine at D938</div>
+<div id="55608" class="description">D938: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36042,7 +36352,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="55624" class="description">D948: Routine at D948</div>
+<div id="55624" class="description">D948: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36201,7 +36511,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-1" rowspan="1">Trigger target</td>
 </tr>
 </table>
-<div id="55677" class="description">D97D: Routine at D97D</div>
+<div id="55677" class="description">D97D: Object handler: room-specific trap trigger</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36361,7 +36671,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <tr>
 <td class="address-2"><span id="55739"></span>D9BB</td>
 <td class="instruction">CALL <a href="#55757">$D9CD</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">XOR 10 attribute bytes with 07h</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55742"></span>D9BE</td>
@@ -36404,7 +36714,7 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="55757" class="description">D9CD: Routine at D9CD</div>
+<div id="55757" class="description">D9CD: XOR 10 attribute bytes with 07h (flash effect)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -36413,6 +36723,15 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 Used by the routine at <a href="asm.html#55693">D98D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of first attribute byte</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36522,6 +36841,15 @@ Used by the routines at <a href="asm.html#56030">DADE</a>, <a href="asm.html#563
 Used by the routine at <a href="asm.html#55767">D9D7</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of a wall-crack record (counter byte + coord word)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36869,6 +37197,15 @@ Used by the routine at <a href="asm.html#55783">D9E7</a>.
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the object's cell in the playroom</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -37146,7 +37483,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="instruction">JP <a href="#54798">$D60E</a></td>
 </tr>
 </table>
-<div id="55981" class="description">DAAD: Routine at DAAD</div>
+<div id="55981" class="description">DAAD: Animate flickering tile (room-specific)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37204,7 +37541,7 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <td class="comment-1" rowspan="1">=&gt; Animate water ripple tiles</td>
 </tr>
 </table>
-<div id="56004" class="description">DAC4: Routine at DAC4</div>
+<div id="56004" class="description">DAC4: Randomly jump to $0000 based on R register (reset trap)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38768,6 +39105,15 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 Used by the routines at <a href="asm.html#56030">DADE</a>, <a href="asm.html#56099">DB23</a>, <a href="asm.html#56440">DC78</a> and <a href="asm.html#56558">DCEE</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of the moving-object descriptor</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -39090,7 +39436,7 @@ Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#560
 <td class="instruction">RET</td>
 </tr>
 </table>
-<div id="56888" class="description">DE38: Routine at DE38</div>
+<div id="56888" class="description">DE38: Store $C810 as active color-table pointer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39104,12 +39450,12 @@ Used by the routines at <a href="asm.html#55508">D8D4</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="56888"></span>DE38</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Save caller HL</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56889"></span>DE39</td>
 <td class="instruction">LD HL,$C810</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = color-table address (C810h)</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39124,20 +39470,20 @@ This entry point is used by the routine at <a href="asm.html#56897">DE41</a>.
 <tr>
 <td class="address-2"><span id="56892"></span>DE3C</td>
 <td class="instruction">LD ($FE9B),HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store as active pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56895"></span>DE3F</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56896"></span>DE40</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="56897" class="description">DE41: Routine at DE41</div>
+<div id="56897" class="description">DE41: Store $4810 as active color-table pointer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -39151,17 +39497,17 @@ Used by the routines at <a href="asm.html#49518">prepare_level</a> and <a href="
 <tr>
 <td class="address-2"><span id="56897"></span>DE41</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Save caller HL</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56898"></span>DE42</td>
 <td class="instruction">LD HL,$4810</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL = color-table address (4810h)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56901"></span>DE45</td>
 <td class="instruction">JR <a href="#56892">$DE3C</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="56903" class="description">DE47: Mirror attribute area to screen and check personage/object bounds</div>
@@ -39173,6 +39519,19 @@ Used by the routines at <a href="asm.html#49518">prepare_level</a> and <a href="
 Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#56012">DACC</a>, <a href="asm.html#56063">DAFF</a>, <a href="asm.html#56099">DB23</a> and <a href="asm.html#56306">DBF2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">offscreen attribute area address</td>
+</tr>
+<tr>
+<td class="register">BC</td>
+<td class="register-desc">area size (B=rows, C=columns)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -39536,6 +39895,15 @@ Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#560
 Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#57105">DF11</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">tile coordinates (H=row, L=column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -39761,6 +40129,19 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 Used by the routine at <a href="asm.html#56903">DE47</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">offscreen pixel area address</td>
+</tr>
+<tr>
+<td class="register">BC</td>
+<td class="register-desc">area size (B=rows, C=columns)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -40152,6 +40533,19 @@ Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#560
 Used by the routine at <a href="asm.html#57210">DF7A</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the obstacle/animation map byte</td>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of the object animation state block</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>

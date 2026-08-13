@@ -2036,6 +2036,8 @@ b$9312 DEFB $C5,$0E,$F5,$3A,$39,$93,$A7,$20
 ; Play music/sound-effect sequence (list of tone groups)
 ;
 ; Used by the routine at #R$9300.
+;
+; HL address of the tone-group sequence to play
 c$95E2 DI            ;
  $95E3 LD A,B        ;
  $95E4 LD ($963E),A  ;
@@ -2070,6 +2072,8 @@ c$95E2 DI            ;
 ; Play tone sequence via speaker (used for sound effects)
 ;
 ; Used by the routine at #R$95E2.
+;
+; HL address of the tone table to play
 c$960A LD E,(HL)     ; {E = table low byte, advance
  $960B INC HL        ; }
  $960C LD D,(HL)     ; {D = table high byte, advance
@@ -3464,7 +3468,7 @@ b$A000 DEFB $00,$00,$00,$3E,$7F,$79,$72,$70
  $BFF0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $BFF8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 
-; Routine at C000
+; Entry point, jump to start
 @label=begin
 c$C000 JP $C4B8      ; => Start point
 
@@ -3543,6 +3547,8 @@ c$C02D LD HL,$FE15   ; {Clear direction-changed flag
 ; Decode raw key/joystick input to direction code
 ;
 ; Used by the routine at #R$C02D.
+;
+; A raw input-source code (0-2) selecting keyboard/joystick decode
 c$C085 CP $01        ; {Dispatch by input source code (0/1/2)
  $C087 JR C,$C0C6    ;
  $C089 JR Z,$C0B5    ; }
@@ -3579,17 +3585,20 @@ c$C085 CP $01        ; {Dispatch by input source code (0/1/2)
 *$C0D3 LD ($FE10),A  ; {Store decoded key, return
  $C0D6 RET           ; }
 
-; Routine at C0D7
+; Scan keyboard row, OR-accumulate matched key code
 ;
 ; Used by the routine at #R$C085.
-c$C0D7 IN D,(C)      ;
- $C0D9 LD E,$05      ;
-*$C0DB RRC D         ;
- $C0DD JR C,$C0E0    ;
- $C0DF OR (HL)       ;
-*$C0E0 INC HL        ;
- $C0E1 DEC E         ;
- $C0E2 JR NZ,$C0DB   ;
+;
+; BC keyboard port to read
+; HL address of the key-code table
+c$C0D7 IN D,(C)      ; {D = key row bits, E = bit counter 5
+ $C0D9 LD E,$05      ; }
+*$C0DB RRC D         ; {Skip table byte if key not pressed
+ $C0DD JR C,$C0E0    ; }
+ $C0DF OR (HL)       ; OR in table byte for pressed key
+*$C0E0 INC HL        ; {Advance table pointer
+ $C0E1 DEC E         ; }
+ $C0E2 JR NZ,$C0DB   ; Loop for 5 bits
  $C0E4 RET           ;
 
 ; Data block at C0E5
@@ -3807,7 +3816,7 @@ c$C16E DI            ;
  $C284 LD ($CBCE),A  ;
  $C287 LD HL,$0000   ;
  $C28A LD ($FE05),HL ;
- $C28D CALL $DE41    ;
+ $C28D CALL $DE41    ; Store $4810 as active color-table pointer
  $C290 LD A,$5B      ;
  $C292 LD B,$00      ;
  $C294 LD HL,$5840   ;
@@ -3840,9 +3849,11 @@ c$C2B2 LD (HL),$00   ;
  $C2B5 DJNZ $C2B2    ;
  $C2B7 RET           ;
 
-; Routine at C2B8
+; Store color byte to offscreen attribute cell
 ;
 ; Used by the routine at #R$DBB0.
+;
+; A attribute (color) byte to store
 c$C2B8 LD HL,($FEA8) ;
  $C2BB LD DE,$6800   ;
  $C2BE ADD HL,DE     ;
@@ -4119,7 +4130,7 @@ c$C3CB PUSH IX       ;
 *$C420 INC HL        ;
  $C421 PUSH HL       ;
  $C422 PUSH BC       ;
- $C423 CALL $C44D    ;
+ $C423 CALL $C44D    ; Draw masked image fragment to offscreen buffer
  $C426 LD BC,($FEA0) ;
  $C42A INC BC        ;
  $C42B LD ($FEA0),BC ;
@@ -4145,7 +4156,7 @@ c$C3CB PUSH IX       ;
  $C44A POP HL        ;
  $C44B JR $C420      ;
 
-; Routine at C44D
+; Draw masked image fragment to offscreen buffer (pixel-aligned)
 ;
 ; Used by the routine at #R$C3CB.
 @label=draw_personage_part
@@ -4239,7 +4250,7 @@ c$C4B8 LD A,$01      ;
 *$C4BD LD A,$07      ;
  $C4BF LD ($600B),A  ;
  $C4C2 OUT ($FE),A   ;
- $C4C4 CALL $C8E1    ;
+ $C4C4 CALL $C8E1    ; Init title screen
  $C4C7 LD HL,$FC17   ;
  $C4CA LD DE,$00E7   ;
  $C4CD LD B,$12      ;
@@ -4282,7 +4293,7 @@ c$C4B8 LD A,$01      ;
 *$C52D CALL $9300    ; Play win/level-complete jingle
 
 ; Draws title screen and handles menu selection
-c$C530 CALL $C8E1    ;
+c$C530 CALL $C8E1    ; Init title screen
  $C533 LD HL,$FB12   ;
  $C536 LD DE,$00E2   ;
  $C539 LD B,$1A      ;
@@ -4329,18 +4340,18 @@ c$C530 CALL $C8E1    ;
  $C5A5 DJNZ $C5A3    ;
  $C5A7 CALL $C29C    ; Updates Video-RAM from offline drawing buffer
  $C5AA LD HL,$00E0   ;
- $C5AD CALL $C6EC    ;
+ $C5AD CALL $C6EC    ; Highlight menu-box attribute rows
  $C5B0 LD HL,$0120   ;
- $C5B3 CALL $C6EC    ;
+ $C5B3 CALL $C6EC    ; Highlight menu-box attribute rows
  $C5B6 LD HL,$0160   ;
- $C5B9 CALL $C6EC    ;
+ $C5B9 CALL $C6EC    ; Highlight menu-box attribute rows
  $C5BC LD HL,$FE02   ;
  $C5BF LD B,$17      ;
  $C5C1 CALL $C2B2    ; Fill BC bytes at HL address by zeros
  $C5C4 LD A,$04      ;
  $C5C6 LD ($FE0A),A  ;
 *$C5C9 CALL $C158    ;
- $C5CC CALL $C6C3    ;
+ $C5CC CALL $C6C3    ; Wait for key release, then wait for key press
  $C5CF CP $26        ;
  $C5D1 JR NZ,$C5EB   ;
  $C5D3 LD HL,$00E0   ;
@@ -4350,11 +4361,11 @@ c$C530 CALL $C8E1    ;
  $C5DB JR Z,$C5E4    ;
  $C5DD XOR A         ;
  $C5DE LD (DE),A     ;
- $C5DF CALL $C6EC    ;
+ $C5DF CALL $C6EC    ; Highlight menu-box attribute rows
  $C5E2 JR $C65D      ;
 *$C5E4 INC A         ;
  $C5E5 LD (DE),A     ;
- $C5E6 CALL $C6FB    ;
+ $C5E6 CALL $C6FB    ; Highlight menu-box attribute rows
  $C5E9 JR $C65D      ;
 *$C5EB AND A         ;
  $C5EC JR NZ,$C637   ;
@@ -4384,7 +4395,7 @@ c$C530 CALL $C8E1    ;
  $C624 LD BC,$003C   ;
  $C627 LDIR          ;
  $C629 LD HL,$01C0   ;
- $C62C CALL $C6EC    ;
+ $C62C CALL $C6EC    ; Highlight menu-box attribute rows
 *$C62F LD HL,$0120   ;
  $C632 LD DE,$FE08   ;
  $C635 JR $C5D9      ;
@@ -4401,13 +4412,13 @@ c$C530 CALL $C8E1    ;
  $C649 LD A,L        ;
  $C64A ADD A,$20     ;
  $C64C LD L,A        ;
- $C64D CALL $C706    ;
+ $C64D CALL $C706    ; Fill attribute column
  $C650 POP HL        ;
- $C651 CALL $C6EC    ;
+ $C651 CALL $C6EC    ; Highlight menu-box attribute rows
  $C654 JR $C65D      ;
 *$C656 CP $01        ;
  $C658 JR NZ,$C679   ;
-*$C65A CALL $C6FB    ;
+*$C65A CALL $C6FB    ; Highlight menu-box attribute rows
 *$C65D LD A,($FE09)  ;
  $C660 AND A         ;
  $C661 JR Z,$C666    ;
@@ -4424,11 +4435,11 @@ c$C530 CALL $C8E1    ;
  $C676 JP $C5C9      ;
 *$C679 CP $02        ;
  $C67B JR NZ,$C689   ;
- $C67D CALL $C706    ;
+ $C67D CALL $C706    ; Fill attribute column
  $C680 LD A,L        ;
  $C681 ADD A,$20     ;
  $C683 LD L,A        ;
- $C684 CALL $C6EC    ;
+ $C684 CALL $C6EC    ; Highlight menu-box attribute rows
  $C687 JR $C65D      ;
 *$C689 LD A,L        ;
  $C68A ADD A,$20     ;
@@ -4454,49 +4465,56 @@ c$C530 CALL $C8E1    ;
  $C6B7 JR NZ,$C6BD   ;
  $C6B9 XOR A         ;
  $C6BA LD ($FE15),A  ;
-*$C6BD CALL $C6E4    ;
+*$C6BD CALL $C6E4    ; Wait until debounced key-scan returns FFh
  $C6C0 JP $C714      ; => looks like new game after pressing ENTER in main game
                      ; menu
 
-; Routine at C6C3
+; Wait for key release, then wait for key press
 ;
 ; Used by the routines at #R$C121, #R$C530 and #R$CAC0.
-c$C6C3 CALL $C6D2    ;
+;
+; O:A key code pressed
+c$C6C3 CALL $C6D2    ; Debounced key-scan
  $C6C6 CP $FF        ;
  $C6C8 JR NZ,$C6C3   ;
-*$C6CA CALL $C6D2    ;
+*$C6CA CALL $C6D2    ; Debounced key-scan
  $C6CD CP $FF        ;
  $C6CF JR Z,$C6CA    ;
  $C6D1 RET           ;
 
-; Routine at C6D2
+; Debounced key-scan (2-frame check via ROM KEY_SCAN)
 ;
 ; Used by the routines at #R$C6C3 and #R$C6E4.
-c$C6D2 LD B,$02      ;
- $C6D4 LD C,A        ;
-*$C6D5 HALT          ;
- $C6D6 PUSH BC       ;
- $C6D7 CALL $028E    ;
- $C6DA POP BC        ;
- $C6DB JR NZ,$C6D2   ;
- $C6DD LD A,E        ;
- $C6DE CP C          ;
- $C6DF JR NZ,$C6D2   ;
- $C6E1 DJNZ $C6D5    ;
- $C6E3 RET           ;
+;
+;   A key code to debounce against
+; O:A key code pressed (FFh if none)
+c$C6D2 LD B,$02         ;
+ $C6D4 LD C,A           ;
+*$C6D5 HALT             ;
+ $C6D6 PUSH BC          ;
+ $C6D7 DEFB $CD,$8E,$02 ; KEY_SCAN
+ $C6DA POP BC           ;
+ $C6DB JR NZ,$C6D2      ;
+ $C6DD LD A,E           ;
+ $C6DE CP C             ;
+ $C6DF JR NZ,$C6D2      ;
+ $C6E1 DJNZ $C6D5       ;
+ $C6E3 RET              ;
 
-; Routine at C6E4
+; Wait until debounced key-scan returns FFh (no key)
 ;
 ; Used by the routines at #R$C121 and #R$C530.
-c$C6E4 CALL $C6D2    ;
+c$C6E4 CALL $C6D2    ; Debounced key-scan
  $C6E7 CP $FF        ;
  $C6E9 JR NZ,$C6E4   ;
  $C6EB RET           ;
 
-; Routine at C6EC
+; Highlight menu-box attribute rows (8 rows, color 28h)
 ;
 ; Used by the routine at #R$C530.
-c$C6EC CALL $C706    ;
+;
+; HL screen-third base address
+c$C6EC CALL $C706    ; Fill attribute column
  $C6EF LD DE,$5807   ;
  $C6F2 ADD HL,DE     ;
  $C6F3 LD B,$08      ;
@@ -4506,18 +4524,22 @@ c$C6EC CALL $C706    ;
  $C6F8 DJNZ $C6F5    ;
  $C6FA RET           ;
 
-; Routine at C6FB
+; Highlight menu-box attribute rows (11 rows, color 28h)
 ;
 ; Used by the routine at #R$C530.
-c$C6FB CALL $C706    ;
+;
+; HL screen-third base address
+c$C6FB CALL $C706    ; Fill attribute column
  $C6FE LD DE,$5813   ;
  $C701 ADD HL,DE     ;
  $C702 LD B,$0B      ;
  $C704 JR $C6F5      ;
 
-; Routine at C706
+; Fill attribute column (23 rows, color 38h)
 ;
 ; Used by the routines at #R$C530, #R$C6EC and #R$C6FB.
+;
+; HL screen-third base address
 @label=fill_smth
 c$C706 PUSH HL       ;
  $C707 LD DE,$5807   ;
@@ -4656,10 +4678,10 @@ c$C714 LD A,$01      ;
                      ; switch
  $C813 LD IX,$CB1C   ;
  $C817 CALL $CAF7    ; Kill personage that fell off bottom of screen
- $C81A CALL $CAE2    ;
+ $C81A CALL $CAE2    ; Respawn personage after death timer expires
  $C81D LD IX,$CBBE   ;
  $C821 CALL $CAF7    ; Kill personage that fell off bottom of screen
- $C824 CALL $CAE2    ;
+ $C824 CALL $CAE2    ; Respawn personage after death timer expires
  $C827 LD IX,$CCA5   ;
  $C82B LD A,($FE0C)  ;
  $C82E AND A         ;
@@ -4740,7 +4762,7 @@ c$C714 LD A,$01      ;
  $C8C0 LD ($CCAC),A  ;
  $C8C3 JP $C790      ;
 
-; Routine at C8C6
+; Clear offline screen buffer (attributes then pixels)
 ;
 ; Used by the routine at #R$C8E1.
 @label=clear_offline_screen
@@ -4756,11 +4778,11 @@ c$C8C6 LD HL,$F800   ;
  $C8DE LDIR          ;
  $C8E0 RET           ;
 
-; Routine at C8E1
+; Init title screen: clear buffer, draw logo, draw header message
 ;
 ; Used by the routines at #R$C4B8 and #R$C530.
 @label=init_1
-c$C8E1 CALL $C8C6    ;
+c$C8E1 CALL $C8C6    ; Clear offline screen buffer
  $C8E4 LD HL,$5B50   ;
  $C8E7 LD DE,$E067   ;
  $C8EA LD BC,$0312   ;
@@ -4778,6 +4800,9 @@ c$C8E1 CALL $C8C6    ;
 ; Draw single character to screen (8x8 font)
 ;
 ; Used by the routine at #R$C924.
+;
+; A character code to draw
+; DE screen coordinates
 c$C908 LD L,A        ; {HL = char index
  $C909 LD H,$00      ; }
  $C90B ADD HL,HL     ; {Multiply by 8
@@ -4824,6 +4849,10 @@ c$C924 LD A,(HL)     ;
 ; Draws a message and set screen dirty flag
 ;
 ; Used by the routine at #R$C960.
+;
+; DE screen coordinates
+; HL message address
+; B message length
 @label=draw_message_and_invalidate
 c$C933 CALL $C924    ; Draw message
  $C936 LD A,$01      ;
@@ -5067,9 +5096,13 @@ c$CA46 LD DE,($FED0) ; {DE = countdown timer, compare to 00:00
  $CAB0 CALL $CAB6    ; Swap bytes
  $CAB3 JP $C790      ; Continue to next turn
 
-; Routine at CAB6
+; Swap two memory blocks byte by byte
 ;
 ; Used by the routine at #R$CA46.
+;
+; HL address of first block
+; DE address of second block
+; B number of bytes to swap
 c$CAB6 LD A,(DE)     ;
  $CAB7 LD C,A        ;
  $CAB8 LD A,(HL)     ;
@@ -5086,12 +5119,15 @@ c$CAB6 LD A,(DE)     ;
 c$CAC0 LD HL,$FCDD   ;
  $CAC3 LD C,$B0      ;
  $CAC5 CALL $CACE    ; Draw message and fill screen background color
- $CAC8 CALL $C6C3    ;
+ $CAC8 CALL $C6C3    ; Wait for key release, then wait for key press
  $CACB JP $C4B8      ; => Start point
 
 ; Draw message and fill screen background color
 ;
 ; Used by the routines at #R$C121, #R$CAC0 and #R$DD67.
+;
+; HL message address
+; C attribute (color) byte to fill screen with
 c$CACE LD DE,$0020   ;
  $CAD1 LD B,$20      ;
  $CAD3 CALL $C924    ; Draw message
@@ -5102,9 +5138,11 @@ c$CACE LD DE,$0020   ;
  $CADD DJNZ $CADB    ;
  $CADF JP $C29C      ; => Updates Video-RAM from offline drawing buffer
 
-; Routine at CAE2
+; Respawn personage after death timer expires
 ;
 ; Used by the routine at #R$C714.
+;
+; IX address of personage description
 c$CAE2 LD A,(IX+$0A)   ;
  $CAE5 CP $64          ;
  $CAE7 RET C           ;
@@ -5541,11 +5579,11 @@ c$CF04 CALL $D332    ; Check for floor tile beneath personage
 
 ; Personage action handler 3: jump, obstacle collision check for all personages
 c$CF18 LD HL,$CB1C   ;
- $CF1B CALL $D371    ;
+ $CF1B CALL $D371    ; Entry to melee-hit detection, D=8
  $CF1E LD HL,$CBBE   ;
- $CF21 CALL $D371    ;
+ $CF21 CALL $D371    ; Entry to melee-hit detection, D=8
  $CF24 LD HL,$CCA5   ;
- $CF27 CALL $D371    ;
+ $CF27 CALL $D371    ; Entry to melee-hit detection, D=8
  $CF2A LD A,$05      ;
  $CF2C RET           ;
 
@@ -5593,11 +5631,11 @@ c$CF59 LD (IX+$04),$00 ;
 *$CF8D LD (IX+$00),$03 ;
  $CF91 BIT 0,(IX+$03)  ;
  $CF95 JR NZ,$CFA1     ;
- $CF97 CALL $D43B      ;
+ $CF97 CALL $D43B      ; Check obstacle to the left, or left room edge
  $CF9A JR Z,$CFAC      ;
  $CF9C DEC (IX+$06)    ;
  $CF9F JR $CFA9        ;
-*$CFA1 CALL $D447      ;
+*$CFA1 CALL $D447      ; Check obstacle to the right, or right room edge
  $CFA4 JR Z,$CFAC      ;
  $CFA6 INC (IX+$06)    ;
 *$CFA9 LD A,$07        ;
@@ -5643,16 +5681,18 @@ c$CFCE CALL $D007      ; {Look up frame offset, test zero
  $CFF5 JP $CEE9        ; }
 
 ; Personage action handler 9: jump, diagonal motion, advance column
-c$CFF8 CALL $D007     ;
+c$CFF8 CALL $D007     ; Advance jump-cycle counter, look up next frame offset
  $CFFB BIT 0,(IX+$03) ;
  $CFFF JR NZ,$D004    ;
  $D001 INC (IX+$06)   ;
 *$D004 LD A,$09       ;
  $D006 RET            ;
 
-; Routine at D007
+; Advance jump-cycle counter, look up next frame offset
 ;
 ; Used by the routines at #R$CFCE, #R$CFF8 and #R$D03F.
+;
+; IX address of personage description
 c$D007 INC (IX+$0C)  ;
  $D00A LD C,(IX+$0C) ;
  $D00D LD B,$00      ;
@@ -5684,7 +5724,7 @@ c$D032 LD (IX+$00),$06 ;
 
 ; Personage action handler 12: falling, descend via frame table, check rope
 ; catch
-c$D03F CALL $D007      ;
+c$D03F CALL $D007      ; Advance jump-cycle counter, look up next frame offset
  $D042 AND A           ;
  $D043 JR Z,$D052      ;
  $D045 LD A,(IX+$0C)   ;
@@ -5939,7 +5979,7 @@ c$D1EB LD A,(IX+$0E)   ;
 ;
 ; Used by the routine at #R$C714.
 ;
-; .
+; IX address of personage description
 ;
 ; Called once per frame for each of the 3 personage structs ($CB1C, $CBBE,
 ; $CCA5 - Bruce and two enemies), same as the Atari port's shared UpdateState
@@ -6011,7 +6051,7 @@ c$D24E LD A,(IX+$0A)   ;
  $D2B5 LD D,(IX+$07)   ; Get Y coordinate of personage
  $D2B8 PUSH DE         ;
  $D2B9 LD A,(IX+$02)   ; Get current image index of personage
- $D2BC CALL $D2EA      ;
+ $D2BC CALL $D2EA      ; Dispatch to personage action handler
  $D2BF LD (IX+$02),A   ; Store image index back
  $D2C2 POP HL          ; Restore original personage coordinates
  $D2C3 LD A,(IX+$06)   ; Get new X coordinate of personage
@@ -6039,9 +6079,11 @@ c$D24E LD A,(IX+$0A)   ;
 *$D2E6 LD (IX+$09),A   ;
  $D2E9 RET             ;
 
-; Routine at D2EA
+; Dispatch to personage action handler (jump via HL)
 ;
 ; Used by the routine at #R$D24E.
+;
+; HL address of the action handler to jump to
 c$D2EA JP (HL)       ;
 
 ; Return personage from the dead
@@ -6125,15 +6167,19 @@ c$D353 LD A,(IX+$07) ;
 *$D36F CP A          ;
  $D370 RET           ;
 
-; Routine at D371
+; Entry to melee-hit detection, D=8 (kick damage)
 ;
 ; Used by the routine at #R$CF18.
+;
+; HL address of target personage description
 c$D371 LD D,$08      ;
  $D373 JR $D377      ;
 
 ; Detect melee hit on adjacent personage and apply damage
 ;
 ; Used by the routine at #R$D1D2.
+;
+; HL address of target personage description
 c$D375 LD D,$09        ; D = damage amount
 ; This entry point is used by the routine at #R$D371.
 *$D377 CALL $D4E0      ; Compares IX and HL for equality
@@ -6235,9 +6281,11 @@ c$D405 CALL $D4A3    ; Return in HL address of personage's cell in playroom
  $D439 INC B         ; {Restore counter, return
  $D43A RET           ; }
 
-; Routine at D43B
+; Check obstacle to the left, or left room edge
 ;
 ; Used by the routines at #R$CF59, #R$D16F and #R$D1A2.
+;
+; IX address of personage description
 c$D43B CALL $D45C    ;
  $D43E RET Z         ;
  $D43F LD A,(IX+$06) ;
@@ -6246,9 +6294,11 @@ c$D43B CALL $D45C    ;
  $D444 CP $01        ;
  $D446 RET           ;
 
-; Routine at D447
+; Check obstacle to the right, or right room edge
 ;
 ; Used by the routines at #R$CF59, #R$D16F and #R$D1A2.
+;
+; IX address of personage description
 c$D447 CALL $D48F     ;
  $D44A RET Z          ;
  $D44B LD A,($FEA4)   ;
@@ -6337,6 +6387,8 @@ c$D4A3 LD L,(IX+$06) ; {HL = personage tile coords
 ;
 ; Used by the routines at #R$C714, #R$CAF7, #R$D063, #R$D332, #R$D353, #R$D405,
 ; #R$D456, #R$D4EC and #R$DEDD.
+;
+; IX address of personage description
 @label=get_personage_image_size
 c$D4BE PUSH HL       ;
  $D4BF PUSH DE       ;
@@ -6368,6 +6420,9 @@ c$D4BE PUSH HL       ;
 ;
 ; Used by the routines at #R$CD9B, #R$CE48, #R$CF59, #R$D112, #R$D1EB, #R$D24E,
 ; #R$D2EB, #R$D375, #R$D4EC and #R$D675.
+;
+; IX first struct address to compare
+; HL second struct address to compare
 @label=compare_IX_HL
 c$D4E0 PUSH BC       ;
  $D4E1 PUSH IX       ;
@@ -6535,6 +6590,9 @@ c$D587 PUSH DE        ;
 ; Draw personage's action-target tiles from will table
 ;
 ; Used by the routines at #R$D4EC, #R$D845 and #R$D902.
+;
+; A personage index
+; HL target tile coordinates
 c$D5BB LD ($FE98),A  ; {Save personage index and coords
  $D5BE LD ($FEAE),HL ; }
  $D5C1 ADD A,A       ; {L = index*2, H = table page
@@ -6594,6 +6652,9 @@ c$D5BB LD ($FE98),A  ; {Save personage index and coords
 ;
 ; Used by the routines at #R$D9E7, #R$DA46, #R$DA63, #R$DA94, #R$DD0D, #R$DDA8
 ; and #R$DF9D.
+;
+; A tile/element index to draw
+; HL tile coordinates (H=row, L=column)
 c$D60E PUSH AF       ; {Save tile index, rotate row bits
  $D60F RRC H         ; }
  $D611 RRC H         ; {Rotate row bits into low nibble
@@ -6614,6 +6675,8 @@ c$D60E PUSH AF       ; {Save tile index, rotate row bits
 ; Draw single scene tile to screen and offscreen buffer
 ;
 ; Used by the routines at #R$D5BB, #R$D9E7, #R$DD0D, #R$DDA8 and #R$DF9D.
+;
+; HL tile coordinates (H=row, L=column)
 c$D626 RRC H         ; {Rotate row bits into low nibble of H
  $D628 RRC H         ;
  $D62A RRC H         ; }
@@ -6841,13 +6904,18 @@ b$D7AC DEFB $94,$DA,$C4,$DA,$AD,$DA,$B2,$DA
  $D814 DEFB $63,$DA,$63,$DA,$63,$DA,$24,$D8
  $D81C DEFB $24,$D8,$24,$D8,$24,$D8,$24,$D8
 
-; Routine at D824
+; No-op object handler (17h object, no room-specific trigger)
 @label=empty_17_object_handler
 c$D824 RET           ;
 
 ; Draw
 ;
 ; Used by the routines at #R$C4B8 and #R$C8E1.
+;
+; HL source graphics data address
+; DE destination address in offline screen buffer
+; B number of 8-byte blocks per column
+; C number of columns
 @label=draw
 c$D825 PUSH BC       ; {Save block counter, row counter=8
 *$D826 LD B,$08      ; }
@@ -6915,7 +6983,7 @@ c$D856 LD A,D        ; {Check Y coord threshold
  $D884 LD H,$11      ; }
  $D886 JR $D853      ; Trigger target
 
-; Routine at D888
+; Object handler: room-specific trap trigger
 c$D888 LD HL,$FE36   ;
  $D88B INC (HL)      ;
  $D88C LD A,(HL)     ;
@@ -7012,7 +7080,7 @@ c$D902 LD A,D        ; {Check Y coord threshold
 ; #R$D958 and #R$D97D.
 *$D925 JP $D5BB      ; => Draw personage's action-target tiles from will table
 
-; Routine at D928
+; Object handler: room-specific trap trigger
 c$D928 LD HL,$FE2A   ;
  $D92B INC (HL)      ;
  $D92C LD A,(HL)     ;
@@ -7023,7 +7091,7 @@ c$D928 LD HL,$FE2A   ;
  $D934 LD H,$17      ;
  $D936 JR $D925      ;
 
-; Routine at D938
+; Object handler: room-specific trap trigger
 c$D938 LD HL,$FE2C   ;
  $D93B INC (HL)      ;
  $D93C LD A,(HL)     ;
@@ -7034,7 +7102,7 @@ c$D938 LD HL,$FE2C   ;
  $D944 LD H,$04      ;
  $D946 JR $D925      ;
 
-; Routine at D948
+; Object handler: room-specific trap trigger
 c$D948 LD HL,$FE2E   ;
  $D94B INC (HL)      ;
  $D94C LD A,(HL)     ;
@@ -7068,7 +7136,7 @@ c$D958 LD A,D        ; {Check Y coord threshold
  $D979 LD H,$12      ; }
  $D97B JR $D925      ; Trigger target
 
-; Routine at D97D
+; Object handler: room-specific trap trigger
 c$D97D LD HL,$FE34   ;
  $D980 INC (HL)      ;
  $D981 LD A,(HL)     ;
@@ -7099,7 +7167,7 @@ c$D98D LD HL,$C995   ;
  $D9B4 JR NZ,$D9A8   ;
  $D9B6 LD C,$08      ;
  $D9B8 LD HL,$586B   ;
-*$D9BB CALL $D9CD    ;
+*$D9BB CALL $D9CD    ; XOR 10 attribute bytes with 07h
  $D9BE LD DE,$0016   ;
  $D9C1 ADD HL,DE     ;
  $D9C2 DEC C         ;
@@ -7109,9 +7177,11 @@ c$D98D LD HL,$C995   ;
  $D9C9 LD ($FE0C),A  ;
  $D9CC RET           ;
 
-; Routine at D9CD
+; XOR 10 attribute bytes with 07h (flash effect)
 ;
 ; Used by the routine at #R$D98D.
+;
+; HL address of first attribute byte
 c$D9CD LD B,$0A      ;
 *$D9CF LD A,(HL)     ;
  $D9D0 XOR $07       ;
@@ -7137,6 +7207,8 @@ c$D9D7 LD HL,$FE60   ;
 ; Handle wall-crack hit counter and spread cracks
 ;
 ; Used by the routine at #R$D9D7.
+;
+; HL address of a wall-crack record (counter byte + coord word)
 c$D9E7 INC (HL)      ; {Increment hit counter, compare to threshold 20
  $D9E8 LD A,(HL)     ;
  $D9E9 CP $14        ; }
@@ -7214,6 +7286,10 @@ t$DA5D DEFM "    "
 b$DA61 DEFB $08,$20
 
 ; Tricky handler of object with 17h code for some rooms
+;
+; .
+;
+; HL address of the object's cell in the playroom
 @label=handler_of_17_object
 c$DA63 EX DE,HL      ; {HL = coord, DE = base address
  $DA64 AND A         ;
@@ -7268,7 +7344,7 @@ c$DA94 LD DE,$0F05   ; DE = tile coord for animated object 1
 *$DAA9 EX DE,HL      ; {Draw animated tile
  $DAAA JP $D60E      ; }
 
-; Routine at DAAD
+; Animate flickering tile (room-specific)
 c$DAAD LD DE,$0F1A   ;
  $DAB0 JR $DA97      ;
 
@@ -7281,7 +7357,7 @@ c$DAB2 CALL $DDFF    ; Advance water/crack animation phase
                      ; personage/object bounds
  $DAC1 JP $DF7A      ; => Animate water ripple tiles
 
-; Routine at DAC4
+; Randomly jump to $0000 based on R register (reset trap)
 c$DAC4 LD A,R        ;
  $DAC6 AND $80       ;
  $DAC8 RET NZ        ;
@@ -7625,6 +7701,8 @@ c$DD67 LD HL,$FE3E   ; {A = win-sequence timer
 ; Animate moving object between two columns (bounce pattern)
 ;
 ; Used by the routines at #R$DADE, #R$DB23, #R$DC78 and #R$DCEE.
+;
+; IX address of the moving-object descriptor
 c$DDA8 BIT 0,(IX+$04) ; {Check direction bit, A = current column
  $DDAC LD A,(IX+$05)  ; }
  $DDAF JR NZ,$DDE1    ; {Branch by direction, check right bound
@@ -7697,26 +7775,29 @@ c$DDFF LD A,($CCAF)  ; {A = difficulty/animation speed
  $DE36 CP A          ; {Return (Z set = OK to animate)
  $DE37 RET           ; }
 
-; Routine at DE38
+; Store $C810 as active color-table pointer
 ;
 ; Used by the routines at #R$D8D4 and #R$D902.
-c$DE38 PUSH HL       ;
- $DE39 LD HL,$C810   ;
+c$DE38 PUSH HL       ; Save caller HL
+ $DE39 LD HL,$C810   ; HL = color-table address (C810h)
 ; This entry point is used by the routine at #R$DE41.
-*$DE3C LD ($FE9B),HL ;
+*$DE3C LD ($FE9B),HL ; Store as active pointer
  $DE3F POP HL        ;
  $DE40 RET           ;
 
-; Routine at DE41
+; Store $4810 as active color-table pointer
 ;
 ; Used by the routines at #R$C16E and #R$D902.
-c$DE41 PUSH HL       ;
- $DE42 LD HL,$4810   ;
+c$DE41 PUSH HL       ; Save caller HL
+ $DE42 LD HL,$4810   ; HL = color-table address (4810h)
  $DE45 JR $DE3C      ;
 
 ; Mirror attribute area to screen and check personage/object bounds
 ;
 ; Used by the routines at #R$DAB2, #R$DACC, #R$DAFF, #R$DB23 and #R$DBF2.
+;
+; HL offscreen attribute area address
+; BC area size (B=rows, C=columns)
 c$DE47 LD A,$01        ; A=1 (draw-mode flag)
  $DE49 RES 5,H         ; {Clear bright/flash bits of H
  $DE4B RES 7,H         ; }
@@ -7799,6 +7880,8 @@ c$DE47 LD A,$01        ; A=1 (draw-mode flag)
 ; Fold coords into scene-map attribute address
 ;
 ; Used by the routines at #R$DE47 and #R$DF11.
+;
+; HL tile coordinates (H=row, L=column)
 c$DECD LD A,L        ; {A = column, rotate
  $DECE RLCA          ; }
  $DECF RLCA          ; {Continue rotate (x3 total)
@@ -7852,6 +7935,9 @@ c$DEDD LD A,(IX+$0A) ; {Return early if object not active
 ; Mirror pixel area to screen and check personage/object bounds
 ;
 ; Used by the routine at #R$DE47.
+;
+; HL offscreen pixel area address
+; BC area size (B=rows, C=columns)
 c$DF11 PUSH BC       ; {Save row/element counters
  $DF12 PUSH HL       ; }
 *$DF13 PUSH BC       ; {Save inner counters (loop entry)
@@ -7945,6 +8031,9 @@ c$DF7A PUSH IX       ;
 ; Handle single obstacle/collision step for personage or object
 ;
 ; Used by the routine at #R$DF7A.
+;
+; HL address of the obstacle/animation map byte
+; IX address of the object animation state block
 c$DF9D LD A,(HL)       ; {Return if no obstacle byte
  $DF9E AND A           ;
  $DF9F RET Z           ; }

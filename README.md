@@ -107,7 +107,7 @@ Volume: about 5000 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Have pretty good progress (131K .ctl file).
+Status: Have pretty good progress (143K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)
@@ -131,7 +131,7 @@ Volume: about 3700 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/brucelee-zx/brucelee/
 
-Status: Work in progress (74K .ctl file).
+Status: Work in progress (77K .ctl file).
 Based on great work done by Anatoly Vdovichev.
 
 
@@ -181,4 +181,4 @@ Volume: about 6900 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/flyingshark-zx/flyingshark/
 
-Status: Have a good progress (140K .ctl file).
+Status: Have a good progress (141K .ctl file).

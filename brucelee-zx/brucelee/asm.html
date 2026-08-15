@@ -19047,12 +19047,25 @@ Used by the routine at <a href="asm.html#49285">C085</a>.
 <th colspan="2">Input</th>
 </tr>
 <tr>
+<td class="register">A</td>
+<td class="register-desc">accumulated key code so far (OR-ed into)</td>
+</tr>
+<tr>
 <td class="register">BC</td>
 <td class="register-desc">keyboard port to read</td>
 </tr>
 <tr>
 <td class="register">HL</td>
 <td class="register-desc">address of the key-code table</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">key code with this row's matched bits added</td>
 </tr>
 </table>
 </td>
@@ -20123,7 +20136,7 @@ Now draw scene to offline screen
 <td class="asm-label"></td>
 <td class="address-1"><span id="49741"></span>C24D</td>
 <td class="instruction">CALL <a href="#49842">bzero_at_hl</a></td>
-<td class="comment-1" rowspan="1">Fill BC bytes at HL address by zeros</td>
+<td class="comment-1" rowspan="1">Fill B bytes at HL address by zeros</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -20141,7 +20154,7 @@ Now draw scene to offline screen
 <td class="asm-label"></td>
 <td class="address-1"><span id="49749"></span>C255</td>
 <td class="instruction">CALL <a href="#49842">bzero_at_hl</a></td>
-<td class="comment-1" rowspan="1">Fill BC bytes at HL address by zeros</td>
+<td class="comment-1" rowspan="1">Fill B bytes at HL address by zeros</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -20408,7 +20421,7 @@ Used by the routines at <a href="asm.html#50360">start</a>, <a href="asm.html#50
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="49842" class="description">C2B2: Fill BC bytes at HL address by zeros</div>
+<div id="49842" class="description">C2B2: Fill B bytes at HL address by zeros</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -20417,6 +20430,19 @@ Used by the routines at <a href="asm.html#50360">start</a>, <a href="asm.html#50
 Used by the routines at <a href="asm.html#49518">prepare_level</a>, <a href="asm.html#50480">C530</a> and <a href="asm.html#50964">start_game</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">start address to zero-fill</td>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">number of bytes</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -20705,6 +20731,15 @@ Draws one plain 8x8 scenery tile straight into the offline screen buffer at a fi
 Used by the routines at <a href="asm.html#50964">start_game</a> and <a href="asm.html#55693">D98D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -21223,6 +21258,15 @@ This entry point is used by the routine at <a href="asm.html#51938">CAE2</a>.
 Used by the routine at <a href="asm.html#50964">start_game</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -21566,6 +21610,15 @@ Wipes the character out of the offline buffer by repainting the room background 
 Used by the routines at <a href="asm.html#50964">start_game</a> and <a href="asm.html#55693">D98D</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -23185,7 +23238,7 @@ Paints the title/menu screen - game name, the option lines and credits - and hig
 <tr>
 <td class="address-1"><span id="50625"></span>C5C1</td>
 <td class="instruction">CALL <a href="#49842">bzero_at_hl</a></td>
-<td class="comment-1" rowspan="1">Fill BC bytes at HL address by zeros</td>
+<td class="comment-1" rowspan="1">Fill B bytes at HL address by zeros</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50628"></span>C5C4</td>
@@ -23869,19 +23922,28 @@ Used by the routines at <a href="asm.html#50883">C6C3</a> and <a href="asm.html#
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="50898"></span>
+<div class="comments">
+<div class="paragraph">
+Reads the keyboard through the ROM's KEY_SCAN and only accepts a keypress once it has held steady across two frames, so a single press isn't read twice or picked up mid-bounce. It returns the key code, or FFh if nothing settled.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="50898"></span>C6D2</td>
 <td class="instruction">LD B,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Need 2 steady frames, C = key to match</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50900"></span>C6D4</td>
 <td class="instruction">LD C,A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="50901"></span>C6D5</td>
 <td class="instruction">HALT</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Wait a frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50902"></span>C6D6</td>
@@ -23901,27 +23963,25 @@ Used by the routines at <a href="asm.html#50883">C6C3</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="50907"></span>C6DB</td>
 <td class="instruction">JR NZ,$C6D2</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restart on scan error / multiple keys</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50909"></span>C6DD</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Restart unless key matches target</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50910"></span>C6DE</td>
 <td class="instruction">CP C</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50911"></span>C6DF</td>
 <td class="instruction">JR NZ,$C6D2</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="50913"></span>C6E1</td>
 <td class="instruction">DJNZ $C6D5</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Loop for the second frame</td>
 </tr>
 <tr>
 <td class="address-1"><span id="50915"></span>C6E3</td>
@@ -24348,7 +24408,7 @@ This entry point is used by the routine at <a href="asm.html#56679">DD67</a>.
 <td class="asm-label"></td>
 <td class="address-1"><span id="51026"></span>C752</td>
 <td class="instruction">CALL <a href="#49842">bzero_at_hl</a></td>
-<td class="comment-1" rowspan="1">Fill BC bytes at HL address by zeros</td>
+<td class="comment-1" rowspan="1">Fill B bytes at HL address by zeros</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
@@ -25466,6 +25526,16 @@ Used by the routine at <a href="asm.html#51425">init_1</a>.
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#50360">start</a> and <a href="asm.html#50480">C530</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="51425"></span>
+<div class="comments">
+<div class="paragraph">
+Sets up the common top of the title and menu screens: it wipes the offline buffer, draws the publisher logo graphic, paints a strip of header colour, and prints the header text - leaving a clean backdrop that the title screen and the menu both build on.
 </div>
 </div>
 </td>
@@ -26647,76 +26717,82 @@ Used by the routines at <a href="asm.html#50964">start_game</a> and <a href="asm
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="51767"></span>
+<div class="comments">
+<div class="paragraph">
+Picks the right handler for an object the player touched, based on which room they're in: it indexes the given handler table by the current room number and jumps to that room's routine, passing the object's playroom address along. This is how the same object type can spring a different trap or event in each room.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="asm-label">handle_object_impact</td>
 <td class="address-2"><span id="51767"></span>CA37</td>
 <td class="instruction">LD A,($FE03)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Index handler table by current room number</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51770"></span>CA3A</td>
 <td class="instruction">ADD A,A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51771"></span>CA3B</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51772"></span>CA3C</td>
 <td class="instruction">LD E,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51773"></span>CA3D</td>
 <td class="instruction">LD D,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51775"></span>CA3F</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51776"></span>CA40</td>
 <td class="instruction">LD E,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Fetch this room's handler address</td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51777"></span>CA41</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51778"></span>CA42</td>
 <td class="instruction">LD D,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51779"></span>CA43</td>
 <td class="instruction">EX DE,HL</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51780"></span>CA44</td>
 <td class="instruction">POP DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="asm-label"></td>
 <td class="address-1"><span id="51781"></span>CA45</td>
 <td class="instruction">JP (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Jump to it (object address in DE)</td>
 </tr>
 </table>
 <div id="51782" class="description">CA46: Bruce died: lose a life, game over or restart room and switch player</div>
@@ -27208,6 +27284,15 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 Used by the routine at <a href="asm.html#50964">start_game</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -28326,6 +28411,24 @@ Used for Bruce/Yamo state 15.
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -28700,6 +28803,24 @@ This entry point is used by the routine at <a href="asm.html#52808">CE48</a>.
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29125,6 +29246,24 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29184,6 +29323,24 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29233,6 +29390,24 @@ This entry point is used by the routines at <a href="asm.html#52635">CD9B</a>, <
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29334,6 +29509,24 @@ The middle of a walk step: for the first few frames of the cycle it slides the c
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29528,6 +29721,24 @@ Plays out a kick: steps the character forward a little as the swing goes out (bu
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29557,6 +29768,24 @@ Plays out a kick: steps the character forward a little as the swing goes out (bu
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29606,6 +29835,24 @@ Plays out a kick: steps the character forward a little as the swing goes out (bu
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29703,6 +29950,24 @@ Carries a diagonal jump along one step: it advances the jump arc (getting the ne
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29822,6 +30087,24 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29861,6 +30144,24 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29900,6 +30201,24 @@ Used by the routines at <a href="asm.html#53198">CFCE</a>, <a href="asm.html#532
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -29999,6 +30318,24 @@ Runs a fall: it drops the character down following the arc frame table, and part
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30376,6 +30713,24 @@ This entry point is used by the routine at <a href="asm.html#53517">D10D</a>.
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30395,6 +30750,24 @@ This entry point is used by the routine at <a href="asm.html#53517">D10D</a>.
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30560,6 +30933,24 @@ Plays out the recovery pose after a punch/kick, cycling its own timer down; once
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30599,6 +30990,24 @@ Plays out the recovery pose after a punch/kick, cycling its own timer down; once
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30700,6 +31109,24 @@ The hurt reaction: while the character's damage total is still modest it just st
 Used by the routine at <a href="asm.html#53666">D1A2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30732,6 +31159,24 @@ Used by the routine at <a href="asm.html#53666">D1A2</a>.
 Used by the routine at <a href="asm.html#53615">D16F</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30832,6 +31277,24 @@ Handles the stagger after a character walks into an obstacle: it steps them one 
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">next state index</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -30889,6 +31352,24 @@ Handles the stagger after a character walks into an obstacle: it steps them one 
 Used by the routines at <a href="asm.html#53081">CF59</a> and <a href="asm.html#53656">D198</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">carry set if the personage was killed</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -31127,7 +31608,7 @@ Used by the routine at <a href="asm.html#50964">start_game</a>.
 <span id="53838"></span>
 <div class="comments">
 <div class="paragraph">
-Called once per frame for each of the 3 personage structs ($CB1C, $CBBE, $CCA5 - Bruce and two enemies), same as the Atari port's shared UpdateState looping actors 0-2. (IX+0) holds the current action-handler number (1 of 22, see <a href="asm.html#52635">CD9B</a>), dispatched via the table at <a href="asm.html#52411">bruce_image_refs</a> - same role as ActState. (IX+4) is the per-state animation/delay counter (ActStateTime), (IX+3) is the facing bit (ActFace), (IX+0B) is the decoded input direction (Joystick1,X).
+Called once per frame for each of the 3 personage structs ($CB1C, $CBBE, $CCA5 - Bruce and two enemies), same as the Atari port's shared UpdateState looping actors 0-2. The state index is (IX+2) (0 = dead); it selects an entry in the actor's state table (<a href="asm.html#52018">ninja_images_refs</a> and its Yamo/Bruce equivalents), whose second word is the handler run here and first word the sprite drawn by <a href="asm.html#50123">draw_pers</a>. Each handler returns the next state in A. (IX+0)/(IX+1) are the step-delay countdown and its reload (movement speed), (IX+3) is the facing bit, (IX+0B) is the decoded input / desired action (from <a href="asm.html#54901">get_pers_action_will</a>). See docs/Actors.md.
 </div>
 </div>
 </td>
@@ -31664,6 +32145,15 @@ Used by the routine at <a href="asm.html#53838">pers_play_step</a>.
 Used by the routine at <a href="asm.html#53838">pers_play_step</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -31854,6 +32344,24 @@ Brings a defeated enemy back to life once its respawn countdown runs out, droppi
 Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#52808">CE48</a>, <a href="asm.html#52996">CF04</a>, <a href="asm.html#53081">CF59</a>, <a href="asm.html#53522">D112</a> and <a href="asm.html#53666">D1A2</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Z if solid floor is present below</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -31990,6 +32498,24 @@ Looks at the room tiles just below the character's feet, across its full width, 
 Used by the routines at <a href="asm.html#52808">CE48</a>, <a href="asm.html#53298">D032</a>, <a href="asm.html#53347">D063</a>, <a href="asm.html#54901">get_pers_action_will</a> and <a href="asm.html#56903">DE47</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Z if a solid tile blocks upward movement</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32119,6 +32645,10 @@ Used by the routine at <a href="asm.html#53016">CF18</a>.
 <th colspan="2">Input</th>
 </tr>
 <tr>
+<td class="register">IX</td>
+<td class="register-desc">address of attacking personage description</td>
+</tr>
+<tr>
 <td class="register">HL</td>
 <td class="register-desc">address of target personage description</td>
 </tr>
@@ -32150,8 +32680,16 @@ Used by the routine at <a href="asm.html#53714">D1D2</a>.
 <th colspan="2">Input</th>
 </tr>
 <tr>
+<td class="register">IX</td>
+<td class="register-desc">address of attacking personage description</td>
+</tr>
+<tr>
 <td class="register">HL</td>
 <td class="register-desc">address of target personage description</td>
+</tr>
+<tr>
+<td class="register">D</td>
+<td class="register-desc">damage amount to apply on a hit</td>
 </tr>
 </table>
 </td>
@@ -32467,6 +33005,24 @@ This entry point is used by the routine at <a href="asm.html#54129">D371</a>.
 Used by the routines at <a href="asm.html#52635">CD9B</a>, <a href="asm.html#52996">CF04</a>, <a href="asm.html#53311">D03F</a>, <a href="asm.html#53347">D063</a> and <a href="asm.html#54901">get_pers_action_will</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Z if standing on a rope/ladder</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32803,6 +33359,24 @@ Used by the routines at <a href="asm.html#53081">CF59</a>, <a href="asm.html#536
 Used by the routines at <a href="asm.html#52635">CD9B</a> and <a href="asm.html#54901">get_pers_action_will</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Z if an obstacle blocks the way ahead</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -33424,6 +33998,15 @@ A tiny helper that checks whether IX and HL point to the same address (returning
 Used by the routine at <a href="asm.html#53838">pers_play_step</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -34024,6 +34607,28 @@ This object should be taken by Bruce
 Used by the routine at <a href="asm.html#54508">review_pers_location</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">address of the object's cell in the playroom</td>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of personage description</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">NZ if the sprites' pixels overlap (a hit), Z if not</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36393,6 +36998,15 @@ This entry point is used by the routines at <a href="asm.html#55382">D856</a> an
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">tile coordinate being tested (D = Y row, E = X column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36599,6 +37213,15 @@ This entry point is used by the routines at <a href="asm.html#55448">D898</a> an
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">tile coordinate being tested (D = Y row, E = X column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36769,6 +37392,15 @@ Watches Bruce's position in this room and, once he crosses a coordinate boundary
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">tile coordinate being tested (D = Y row, E = X column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -36903,6 +37535,15 @@ Watches Bruce's position in this room and, once he strays past a coordinate boun
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">tile coordinate being tested (D = Y row, E = X column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -37181,6 +37822,15 @@ This entry point is used by the routines at <a href="asm.html#55592">D928</a>, <
 <td class="routine-comment" colspan="5">
 <div class="details">
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">tile coordinate being tested (D = Y row, E = X column)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -37895,6 +38545,32 @@ Ages one crack: bumps its hit counter and, once it crosses set thresholds, redra
 Used by the routine at <a href="asm.html#55783">D9E7</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">pointer into the crack tile-index list</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">tile coordinate to draw at</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">advanced to next list entry</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">advanced to next column</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -37943,51 +38619,38 @@ Used by the routine at <a href="asm.html#55783">D9E7</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="55889" class="description">DA51: Data block at DA51</div>
+<div id="55889" class="description">DA51: Spread patterns</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="55889"></span>
+<div class="comments">
+<div class="paragraph">
+Three 6-byte crack-spread patterns, one chosen per stage by <a href="asm.html#55783">D9E7</a>. Each pattern gives the tile index to draw into the six cells surrounding a crack (top row of 3, then middle/bottom row of 3), which <a href="asm.html#55878">DA46</a> lays down one at a time. A value of $20 means "leave this cell blank", so a pattern picks which of the neighbours the crack grows into.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="55889"></span>DA51</td>
-<td class="instruction">DEFB $20,$0C,$20,$09,$0A,$0B,$0D,$0E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $20,$0C,$20,$09,$0A,$0B</td>
+<td class="comment-1" rowspan="1">Pattern A (stage at hit count 25/40)</td>
 </tr>
 <tr>
-<td class="address-1"><span id="55897"></span>DA59</td>
-<td class="instruction">DEFB $0F,$09,$0A,$0B</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="55901" class="description">DA5D: Message at DA5D</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
+<td class="address-1"><span id="55895"></span>DA57</td>
+<td class="instruction">DEFB $0D,$0E,$0F,$09,$0A,$0B</td>
+<td class="comment-1" rowspan="1">Pattern B (stage at hit count 30)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55901"></span>DA5D</td>
-<td class="instruction">DEFM "    "</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="55905" class="description">DA61: Data block at DA61</div>
-<table class="disassembly">
-<tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="55905"></span>DA61</td>
-<td class="instruction">DEFB $08,$20</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFB $20,$20,$20,$20,$08,$20</td>
+<td class="comment-1" rowspan="1">Pattern C (stage at hit count 45)</td>
 </tr>
 </table>
 <div id="55907" class="description">DA63: Tricky handler of object with 17h code for some rooms</div>
@@ -38214,6 +38877,16 @@ Starts a new wall crack at the given room cell: it finds a free slot in the 6-sl
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="55956"></span>
+<div class="comments">
+<div class="paragraph">
+Flickers a single decorative tile at a fixed spot by toggling it between two graphics each time it runs, driven by a small counter; while the counter is zero the tile is left alone. A sibling entry point sets it up for a second tile position.
+</div>
 </div>
 </td>
 </tr>
@@ -38506,6 +39179,16 @@ This entry point is used by the routine at <a href="asm.html#55981">DAAD</a>.
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="56063"></span>
+<div class="comments">
+<div class="paragraph">
+This room's per-frame scenery update: when the animation phase says it's time, it re-ripples the room's three wall-crack water patches, then falls through to the shared water-ripple animation.
+</div>
 </div>
 </td>
 </tr>
@@ -40816,6 +41499,16 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="57037"></span>
+<div class="comments">
+<div class="paragraph">
+Turns a row/column tile position into the matching address in the scene attribute map, using the standard bit-fold the tile code relies on. The water routines call it to find where a patch of the play area sits in memory before shuffling its colours.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="57037"></span>DECD</td>
 <td class="instruction">LD A,L</td>
 <td class="comment-1" rowspan="2">A = column, rotate</td>
@@ -40884,6 +41577,32 @@ Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#
 Used by the routines at <a href="asm.html#56903">DE47</a> and <a href="asm.html#57105">DF11</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">address of the personage/object to test</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">area top-left tile coordinate (L = X column, H = Y row)</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">area size (D = width, E = height)</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Z if the object overlaps the area, NZ if not</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -41388,6 +42107,16 @@ The pixel-based twin of <a href="asm.html#56903">DE47</a>: it animates a rectang
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#55986">DAB2</a>, <a href="asm.html#56012">DACC</a>, <a href="asm.html#56030">DADE</a>, <a href="asm.html#56063">DAFF</a>, <a href="asm.html#56099">DB23</a>, <a href="asm.html#56300">DBEC</a> and <a href="asm.html#56558">DCEE</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="57210"></span>
+<div class="comments">
+<div class="paragraph">
+Steps each of the room's three water strips forward one animation frame, calling the scripted-animation stepper once per strip with its own state block, so the water surface keeps rippling.
 </div>
 </div>
 </td>

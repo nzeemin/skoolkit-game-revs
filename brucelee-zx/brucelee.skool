@@ -3620,8 +3620,10 @@ c$C085 CP $01        ; {Dispatch by input source code (0/1/2)
 ;
 ; Used by the routine at #R$C085.
 ;
-; BC keyboard port to read
-; HL address of the key-code table
+;   A accumulated key code so far (OR-ed into)
+;   BC keyboard port to read
+;   HL address of the key-code table
+; O:A key code with this row's matched bits added
 c$C0D7 IN D,(C)      ; {D = key row bits, E = bit counter 5
  $C0D9 LD E,$05      ; }
 *$C0DB RRC D         ; {Skip table byte if key not pressed
@@ -3835,10 +3837,10 @@ c$C16E DI            ;
  $C245 LD ($CCA7),A  ;
  $C248 LD HL,$FE72   ;
  $C24B LD B,$0F      ;
- $C24D CALL $C2B2    ; Fill BC bytes at HL address by zeros
+ $C24D CALL $C2B2    ; Fill B bytes at HL address by zeros
  $C250 LD HL,$FE60   ;
  $C253 LD B,$12      ;
- $C255 CALL $C2B2    ; Fill BC bytes at HL address by zeros
+ $C255 CALL $C2B2    ; Fill B bytes at HL address by zeros
  $C258 LD A,($FE03)  ;
  $C25B AND A         ;
  $C25C JR Z,$C277    ;
@@ -3887,9 +3889,12 @@ c$C29C LD A,($600B)  ;
  $C2B0 EI            ;
  $C2B1 RET           ;
 
-; Fill BC bytes at HL address by zeros
+; Fill B bytes at HL address by zeros
 ;
 ; Used by the routines at #R$C16E, #R$C530 and #R$C714.
+;
+; HL start address to zero-fill
+; B number of bytes
 @label=bzero_at_hl
 c$C2B2 LD (HL),$00   ;
  $C2B4 INC HL        ;
@@ -3960,7 +3965,7 @@ c$C2C0 LD E,A        ; {DE = element index into scene data table
 ;
 ; Used by the routines at #R$C714 and #R$D98D.
 ;
-; .
+; IX address of personage description
 ;
 ; Copies the finished picture of a character from the offline buffer onto the
 ; real screen, so all the drawing work done off-screen becomes visible in one
@@ -4067,7 +4072,7 @@ c$C2EC LD A,(IX+$0A) ; {Skip ahead if area already shown (IX+0A)
 ;
 ; Used by the routine at #R$C714.
 ;
-; .
+; IX address of personage description
 ;
 ; Wipes the character out of the offline buffer by repainting the room
 ; background over the patch of screen it was occupying, ready for the next
@@ -4142,7 +4147,7 @@ c$C366 LD A,(IX+$02) ; {Return if personage isn't alive (IX+2)
 ;
 ; Used by the routines at #R$C714 and #R$D98D.
 ;
-; .
+; IX address of personage description
 ;
 ; Draws a whole character (Bruce or a foe) into the offline screen buffer,
 ; given its state record in IX, doing nothing if the character isn't currently
@@ -4471,7 +4476,7 @@ c$C530 CALL $C8E1    ; Init title screen
  $C5B9 CALL $C6EC    ; Highlight menu-box attribute rows
  $C5BC LD HL,$FE02   ;
  $C5BF LD B,$17      ;
- $C5C1 CALL $C2B2    ; Fill BC bytes at HL address by zeros
+ $C5C1 CALL $C2B2    ; Fill B bytes at HL address by zeros
  $C5C4 LD A,$04      ;
  $C5C6 LD ($FE0A),A  ;
 *$C5C9 CALL $C158    ;
@@ -4611,17 +4616,21 @@ c$C6C3 CALL $C6D2    ; Debounced key-scan
 ;
 ;   A key code to debounce against
 ; O:A key code pressed (FFh if none)
-c$C6D2 LD B,$02         ;
- $C6D4 LD C,A           ;
-*$C6D5 HALT             ;
+;
+; Reads the keyboard through the ROM's KEY_SCAN and only accepts a keypress
+; once it has held steady across two frames, so a single press isn't read twice
+; or picked up mid-bounce. It returns the key code, or FFh if nothing settled.
+c$C6D2 LD B,$02         ; {Need 2 steady frames, C = key to match
+ $C6D4 LD C,A           ; }
+*$C6D5 HALT             ; Wait a frame
  $C6D6 PUSH BC          ;
  $C6D7 DEFB $CD,$8E,$02 ; KEY_SCAN
  $C6DA POP BC           ;
- $C6DB JR NZ,$C6D2      ;
- $C6DD LD A,E           ;
+ $C6DB JR NZ,$C6D2      ; Restart on scan error / multiple keys
+ $C6DD LD A,E           ; {Restart unless key matches target
  $C6DE CP C             ;
- $C6DF JR NZ,$C6D2      ;
- $C6E1 DJNZ $C6D5       ;
+ $C6DF JR NZ,$C6D2      ; }
+ $C6E1 DJNZ $C6D5       ; Loop for the second frame
  $C6E3 RET              ;
 
 ; Wait until debounced key-scan returns FFh (no key)
@@ -4718,7 +4727,7 @@ c$C714 LD A,$01      ;
  $C74B LDIR          ;
  $C74D LD HL,$FE20   ;
  $C750 LD B,$40      ;
- $C752 CALL $C2B2    ; Fill BC bytes at HL address by zeros
+ $C752 CALL $C2B2    ; Fill B bytes at HL address by zeros
  $C755 LD HL,$6400   ;
 *$C758 PUSH HL       ;
  $C759 LD E,(HL)     ;
@@ -4914,6 +4923,13 @@ c$C8C6 LD HL,$F800   ;
 ; Init title screen: clear buffer, draw logo, draw header message
 ;
 ; Used by the routines at #R$C4B8 and #R$C530.
+;
+; .
+;
+; Sets up the common top of the title and menu screens: it wipes the offline
+; buffer, draws the publisher logo graphic, paints a strip of header colour,
+; and prints the header text - leaving a clean backdrop that the title screen
+; and the menu both build on.
 @label=init_1
 c$C8E1 CALL $C8C6    ; Clear offline screen buffer
  $C8E4 LD HL,$5B50   ;
@@ -5183,19 +5199,25 @@ c$CA1A PUSH HL       ;
 ;
 ; DE Object address in playroom
 ; HL object handlers table
+;
+; Picks the right handler for an object the player touched, based on which room
+; they're in: it indexes the given handler table by the current room number and
+; jumps to that room's routine, passing the object's playroom address along.
+; This is how the same object type can spring a different trap or event in each
+; room.
 @label=handle_object_impact
-c$CA37 LD A,($FE03)  ;
- $CA3A ADD A,A       ;
+c$CA37 LD A,($FE03)  ; {Index handler table by current room number
+ $CA3A ADD A,A       ; }
  $CA3B PUSH DE       ;
  $CA3C LD E,A        ;
  $CA3D LD D,$00      ;
  $CA3F ADD HL,DE     ;
- $CA40 LD E,(HL)     ;
+ $CA40 LD E,(HL)     ; {Fetch this room's handler address
  $CA41 INC HL        ;
  $CA42 LD D,(HL)     ;
- $CA43 EX DE,HL      ;
+ $CA43 EX DE,HL      ; }
  $CA44 POP DE        ;
- $CA45 JP (HL)       ;
+ $CA45 JP (HL)       ; Jump to it (object address in DE)
 
 ; Bruce died: lose a life, game over or restart room and switch player
 ;
@@ -5317,7 +5339,7 @@ c$CAE2 LD A,(IX+$0A)   ;
 ;
 ; Used by the routine at #R$C714.
 ;
-; .
+; IX address of personage description
 ;
 ; Checks whether a character has fallen far enough past the bottom of the play
 ; area to count as gone, and if it has (and it wasn't already dying) it starts
@@ -5579,7 +5601,8 @@ b$CD13 DEFB $02,$03,$00,$01,$20,$21,$40,$41 ; 2x3 + 6 bytes
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Runs whenever a character is standing still and reads its current input to
 ; decide what to do next: duck (Bruce only), start falling if there's no floor,
@@ -5663,7 +5686,8 @@ c$CD9B LD (IX+$0C),$00 ; {Clear jump counters
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Keeps a walk going frame by frame: falls off if the floor disappears,
 ; otherwise checks for an obstacle in the direction faced and reads the current
@@ -5755,6 +5779,11 @@ c$CE48 LD (IX+$0C),$00 ; Reset walk-cycle counter
  $CF03 RET             ;
 
 ; Personage action handler 2: jump, rising, check for floor landing
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$CF04 CALL $D332    ; Check for floor tile beneath personage
  $CF07 JR Z,$CF12    ;
  $CF09 CALL $D405    ; Check for rope/ladder under personage
@@ -5767,6 +5796,11 @@ c$CF04 CALL $D332    ; Check for floor tile beneath personage
  $CF17 RET           ;
 
 ; Personage action handler 3: jump, obstacle collision check for all personages
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$CF18 LD HL,$CB1C   ;
  $CF1B CALL $D371    ; Entry to melee-hit detection, D=8
  $CF1E LD HL,$CBBE   ;
@@ -5780,7 +5814,8 @@ c$CF18 LD HL,$CB1C   ;
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; The middle of a walk step: for the first few frames of the cycle it slides
 ; the character one column in the direction faced, stopping short if an
@@ -5809,7 +5844,8 @@ c$CF2D INC (IX+$0C)    ; {Advance walk-cycle counter, reload
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Plays out a kick: steps the character forward a little as the swing goes out
 ; (bumping off any obstacle in the way), and partway through checks whether the
@@ -5852,12 +5888,22 @@ c$CF59 LD (IX+$04),$00 ;
  $CFB2 RET             ;
 
 ; Personage action handler 6: jump, apex reached, prepare landing
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$CFB3 INC (IX+$0C)    ;
  $CFB6 LD (IX+$00),$03 ;
  $CFBA LD A,$06        ;
  $CFBC RET             ;
 
 ; Personage action handler 7: jump, rising motion (2 rows per tick)
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$CFBD LD A,(IX+$0B) ;
  $CFC0 CP $04        ;
  $CFC2 LD A,$08      ;
@@ -5872,7 +5918,8 @@ c$CFBD LD A,(IX+$0B) ;
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Carries a diagonal jump along one step: it advances the jump arc (getting the
 ; next height offset from the arc table) and moves the character one column in
@@ -5898,6 +5945,11 @@ c$CFCE CALL $D007      ; {Look up frame offset, test zero
  $CFF5 JP $CEE9        ; }
 
 ; Personage action handler 9: jump, diagonal motion, advance column
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$CFF8 CALL $D007     ; Advance jump-cycle counter, look up next frame offset
  $CFFB BIT 0,(IX+$03) ;
  $CFFF JR NZ,$D004    ;
@@ -5924,6 +5976,11 @@ b$D018 DEFB $07,$05,$03,$02,$01,$01,$02,$03
  $D020 DEFB $05,$07,$00
 
 ; Personage action handler 10: jump, landing, step forward one column
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$D023 LD (IX+$00),$0A ;
  $D027 BIT 0,(IX+$03)  ;
  $D02B LD A,$01        ;
@@ -5932,6 +5989,11 @@ c$D023 LD (IX+$00),$0A ;
  $D031 RET             ;
 
 ; Personage action handler 11: jump, landing, check floor and resume walking
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$D032 LD (IX+$00),$06 ;
  $D036 CALL $D353      ; Check for ceiling/obstacle above personage
  $D039 LD A,$01        ;
@@ -5944,7 +6006,8 @@ c$D032 LD (IX+$00),$06 ;
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Runs a fall: it drops the character down following the arc frame table, and
 ; part way through each drop checks whether they've caught a rope or ladder -
@@ -5972,7 +6035,8 @@ c$D03F CALL $D007      ; Advance jump-cycle counter, look up next frame offset
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Runs a character's climb one frame at a time: while up or down is held it
 ; steps them along the rope/ladder and cycles the climbing animation frame, and
@@ -6057,6 +6121,11 @@ c$D063 LD A,(IX+$02)   ; {Save input/state byte (IX+2)
  $D10C RET             ; }
 
 ; Personage action handler 14: climbing, dismount entry (falls into handler 13)
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$D10D LD A,$0F      ;
  $D10F JP $D066      ;
 
@@ -6065,7 +6134,8 @@ c$D10D LD A,$0F      ;
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Plays out the recovery pose after a punch/kick, cycling its own timer down;
 ; once the recovery is done and there's still floor underfoot, it checks
@@ -6104,6 +6174,11 @@ c$D112 LD A,(IX+$04)   ; {Recovery timer running?
  $D15A JP $CEE9        ; }
 
 ; Personage action handler 17: enter climbing, snap to ladder tile
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$D15D DEC (IX+$07)    ;
  $D160 LD (IX+$04),$07 ;
  $D164 LD (IX+$03),$00 ;
@@ -6116,7 +6191,8 @@ c$D15D DEC (IX+$07)    ;
 ;
 ; .
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; The hurt reaction: while the character's damage total is still modest it just
 ; staggers one step backwards away from the blow (checking that side is clear
@@ -6143,6 +6219,9 @@ c$D16F LD A,(IX+$0E)   ; {Check hit counter >= 10
 ; Personage action handler 19: hit reaction, apply damage and knockback flag
 ;
 ; Used by the routine at #R$D1A2.
+;
+;   IX address of personage description
+; O:A next state index
 c$D198 CALL $D1EB      ; Check hit threshold, kill personage and award points
  $D19B LD A,$01        ;
  $D19D LD (IX+$0F),$01 ;
@@ -6153,7 +6232,8 @@ c$D198 CALL $D1EB      ; Check hit threshold, kill personage and award points
 ;
 ; Used by the routine at #R$D16F.
 ;
-; .
+;   IX address of personage description
+; O:A next state index
 ;
 ; Handles the stagger after a character walks into an obstacle: it steps them
 ; one column back the way they came (checking that side is clear too), drops
@@ -6179,6 +6259,11 @@ c$D1A2 LD (IX+$0C),$00 ; Clear jump counter
 
 ; Personage action handler 21: attack, detect melee hit on all personages,
 ; trigger hurt state
+;
+; .
+;
+;   IX address of personage description
+; O:A next state index
 c$D1D2 LD HL,$CB1C     ;
  $D1D5 CALL $D375      ; Detect melee hit on adjacent personage and apply
                        ; damage
@@ -6196,7 +6281,8 @@ c$D1D2 LD HL,$CB1C     ;
 ;
 ; Used by the routines at #R$CF59 and #R$D198.
 ;
-; .
+;   IX address of personage description
+; O:F carry set if the personage was killed
 ;
 ; Decides if a character has taken enough punishment to go down: once its
 ; accumulated damage passes a limit (the Ninja gives out sooner than the
@@ -6252,10 +6338,13 @@ c$D1EB LD A,(IX+$0E)   ;
 ;
 ; Called once per frame for each of the 3 personage structs ($CB1C, $CBBE,
 ; $CCA5 - Bruce and two enemies), same as the Atari port's shared UpdateState
-; looping actors 0-2. (IX+0) holds the current action-handler number (1 of 22,
-; see #R$CD9B), dispatched via the table at #R$CCBB - same role as ActState.
-; (IX+4) is the per-state animation/delay counter (ActStateTime), (IX+3) is the
-; facing bit (ActFace), (IX+0B) is the decoded input direction (Joystick1,X).
+; looping actors 0-2. The state index is (IX+2) (0 = dead); it selects an entry
+; in the actor's state table (#R$CB32 and its Yamo/Bruce equivalents), whose
+; second word is the handler run here and first word the sprite drawn by
+; #R$C3CB. Each handler returns the next state in A. (IX+0)/(IX+1) are the
+; step-delay countdown and its reload (movement speed), (IX+3) is the facing
+; bit, (IX+0B) is the decoded input / desired action (from #R$D675). See
+; docs/Actors.md.
 @label=pers_play_step
 c$D24E LD A,(IX+$0A)   ;
  $D251 AND A           ;
@@ -6359,7 +6448,7 @@ c$D2EA JP (HL)       ;
 ;
 ; Used by the routine at #R$D24E.
 ;
-; .
+; IX address of personage description
 ;
 ; Brings a defeated enemy back to life once its respawn countdown runs out,
 ; dropping it back in at the room's spawn point with fresh state; the player
@@ -6402,7 +6491,8 @@ c$D2EB LD HL,$CCA5     ;
 ; Used by the routines at #R$CD9B, #R$CE48, #R$CF04, #R$CF59, #R$D112 and
 ; #R$D1A2.
 ;
-; .
+;   IX address of personage description
+; O:F Z if solid floor is present below
 ;
 ; Looks at the room tiles just below the character's feet, across its full
 ; width, and reports whether there's solid floor there (so the movement code
@@ -6432,7 +6522,8 @@ c$D332 CALL $D4A3    ; Return in HL address of personage's cell in playroom
 ;
 ; Used by the routines at #R$CE48, #R$D032, #R$D063, #R$D675 and #R$DE47.
 ;
-; .
+;   IX address of personage description
+; O:F Z if a solid tile blocks upward movement
 ;
 ; Looks at the room tiles just above the character's head, across its full
 ; width, and reports whether a solid tile is blocking upward movement (so the
@@ -6460,6 +6551,7 @@ c$D353 LD A,(IX+$07) ;
 ;
 ; Used by the routine at #R$CF18.
 ;
+; IX address of attacking personage description
 ; HL address of target personage description
 c$D371 LD D,$08      ;
  $D373 JR $D377      ;
@@ -6468,7 +6560,9 @@ c$D371 LD D,$08      ;
 ;
 ; Used by the routine at #R$D1D2.
 ;
+; IX address of attacking personage description
 ; HL address of target personage description
+; D damage amount to apply on a hit
 ;
 ; Decides whether an attacker's blow lands on a given target: it checks the
 ; target is alive and standing right next to the attacker on the side it's
@@ -6542,7 +6636,8 @@ c$D375 LD D,$09        ; D = damage amount
 ;
 ; Used by the routines at #R$CD9B, #R$CF04, #R$D03F, #R$D063 and #R$D675.
 ;
-; .
+;   IX address of personage description
+; O:F Z if standing on a rope/ladder
 ;
 ; Works out whether the character is standing over something climbable: it
 ; scans the room tiles across the character's footprint counting rope/ladder
@@ -6617,7 +6712,8 @@ c$D447 CALL $D48F     ;
 ;
 ; Used by the routines at #R$CD9B and #R$D675.
 ;
-; .
+;   IX address of personage description
+; O:F Z if an obstacle blocks the way ahead
 ;
 ; Scans the room tiles immediately beside the character, on whichever side it's
 ; currently facing, and reports whether something solid is blocking the way
@@ -6760,7 +6856,7 @@ c$D4E0 PUSH BC       ;
 ;
 ; Used by the routine at #R$D24E.
 ;
-; .
+; IX address of personage description
 ;
 ; Scans every room tile under the character's footprint each frame to see what
 ; it's standing on: harmless scenery is skipped, a "tricky" object dispatches
@@ -6881,7 +6977,9 @@ b$D586 DEFB $E9
 ;
 ; Used by the routine at #R$D4EC.
 ;
-; .
+;   HL address of the object's cell in the playroom
+;   IX address of personage description
+; O:F NZ if the sprites' pixels overlap (a hit), Z if not
 ;
 ; Does a pixel-perfect touch test between the character's sprite and an
 ; object's graphic, overlapping their pixel data row by row and reporting a hit
@@ -7365,7 +7463,7 @@ c$D845 LD HL,$FE20   ;
 ;
 ; .
 ;
-; .
+; DE tile coordinate being tested (D = Y row, E = X column)
 ;
 ; Watches Bruce's position in this room and, once he crosses a coordinate
 ; boundary, either switches the water-colour mode or triggers one of a couple
@@ -7414,7 +7512,7 @@ c$D888 LD HL,$FE36   ;
 ;
 ; .
 ;
-; .
+; DE tile coordinate being tested (D = Y row, E = X column)
 ;
 ; Watches Bruce's position in this room and, once he crosses a coordinate
 ; boundary on either side, triggers one of a few one-off scripted events, each
@@ -7457,7 +7555,7 @@ c$D898 LD A,D        ; {Check Y coord threshold
 ;
 ; .
 ;
-; .
+; DE tile coordinate being tested (D = Y row, E = X column)
 ;
 ; Watches Bruce's position in this room and, once he strays past a coordinate
 ; boundary, triggers a one-off scripted event there.
@@ -7491,7 +7589,7 @@ c$D8D4 LD A,E        ; {Check X coord threshold
 ;
 ; .
 ;
-; .
+; DE tile coordinate being tested (D = Y row, E = X column)
 ;
 ; Watches Bruce's position in this room and, once he strays past a coordinate
 ; boundary, either switches the water-colour mode or triggers a one-off
@@ -7555,7 +7653,7 @@ c$D948 LD HL,$FE2E   ;
 ;
 ; .
 ;
-; .
+; DE tile coordinate being tested (D = Y row, E = X column)
 ;
 ; Watches Bruce's position in this room and, once he lingers past a coordinate
 ; threshold on either side, triggers a one-off scripted event there.
@@ -7724,6 +7822,11 @@ c$D9E7 INC (HL)      ; {Increment hit counter, compare to threshold 20
 ; Draw one crack-spread tile, advance list and coord pointers
 ;
 ; Used by the routine at #R$D9E7.
+;
+;   DE pointer into the crack tile-index list
+;   HL tile coordinate to draw at
+; O:DE advanced to next list entry
+; O:HL advanced to next column
 c$DA46 PUSH DE       ;
  $DA47 LD A,(DE)     ;
  $DA48 PUSH HL       ;
@@ -7734,15 +7837,20 @@ c$DA46 PUSH DE       ;
  $DA4F INC DE        ;
  $DA50 RET           ;
 
-; Data block at DA51
-b$DA51 DEFB $20,$0C,$20,$09,$0A,$0B,$0D,$0E
- $DA59 DEFB $0F,$09,$0A,$0B
-
-; Message at DA5D
-t$DA5D DEFM "    "
-
-; Data block at DA61
-b$DA61 DEFB $08,$20
+; Spread patterns
+;
+; .
+;
+; .
+;
+; Three 6-byte crack-spread patterns, one chosen per stage by #R$D9E7. Each
+; pattern gives the tile index to draw into the six cells surrounding a crack
+; (top row of 3, then middle/bottom row of 3), which #R$DA46 lays down one at a
+; time. A value of $20 means "leave this cell blank", so a pattern picks which
+; of the neighbours the crack grows into.
+b$DA51 DEFB $20,$0C,$20,$09,$0A,$0B ; Pattern A (stage at hit count 25/40)
+ $DA57 DEFB $0D,$0E,$0F,$09,$0A,$0B ; Pattern B (stage at hit count 30)
+ $DA5D DEFB $20,$20,$20,$20,$08,$20 ; Pattern C (stage at hit count 45)
 
 ; Tricky handler of object with 17h code for some rooms
 ;
@@ -7791,6 +7899,15 @@ c$DA63 EX DE,HL      ; {HL = coord, DE = base address
  $DA91 JP $D60E      ; Draw crack tile
 
 ; Animate flickering tile (room-specific)
+;
+; .
+;
+; .
+;
+; Flickers a single decorative tile at a fixed spot by toggling it between two
+; graphics each time it runs, driven by a small counter; while the counter is
+; zero the tile is left alone. A sibling entry point sets it up for a second
+; tile position.
 c$DA94 LD DE,$0F05   ; DE = tile coord for animated object 1
 ; This entry point is used by the routine at #R$DAAD.
 *$DA97 LD HL,$FE38   ; {HL = counter, A = counter value
@@ -7851,6 +7968,14 @@ c$DADE LD HL,$FE99   ;
 b$DAF9 DEFB $14,$05,$05,$1C,$00,$06
 
 ; Redraw 3 wall-crack tiles (room-specific), then animate water
+;
+; .
+;
+; .
+;
+; This room's per-frame scenery update: when the animation phase says it's
+; time, it re-ripples the room's three wall-crack water patches, then falls
+; through to the shared water-ripple animation.
 c$DAFF CALL $DDFF    ; Advance water/crack animation phase
  $DB02 JP NZ,$DF7A   ; => Animate water ripple tiles
  $DB05 LD HL,$E801   ;
@@ -8412,6 +8537,11 @@ c$DE47 LD A,$01        ; A=1 (draw-mode flag)
 ; Used by the routines at #R$DE47 and #R$DF11.
 ;
 ; HL tile coordinates (H=row, L=column)
+;
+; Turns a row/column tile position into the matching address in the scene
+; attribute map, using the standard bit-fold the tile code relies on. The water
+; routines call it to find where a patch of the play area sits in memory before
+; shuffling its colours.
 c$DECD LD A,L        ; {A = column, rotate
  $DECE RLCA          ; }
  $DECF RLCA          ; {Continue rotate (x3 total)
@@ -8430,7 +8560,10 @@ c$DECD LD A,L        ; {A = column, rotate
 ;
 ; Used by the routines at #R$DE47 and #R$DF11.
 ;
-; .
+;   IX address of the personage/object to test
+;   HL area top-left tile coordinate (L = X column, H = Y row)
+;   DE area size (D = width, E = height)
+; O:F Z if the object overlaps the area, NZ if not
 ;
 ; Tests whether a character's rectangle overlaps a given patch of screen, by
 ; comparing their edges, and reports back yes or no. The water-animation code
@@ -8556,6 +8689,12 @@ c$DF11 PUSH BC       ; {Save row/element counters
 ;
 ; Used by the routines at #R$DAB2, #R$DACC, #R$DADE, #R$DAFF, #R$DB23, #R$DBEC
 ; and #R$DCEE.
+;
+; .
+;
+; Steps each of the room's three water strips forward one animation frame,
+; calling the scripted-animation stepper once per strip with its own state
+; block, so the water surface keeps rippling.
 c$DF7A PUSH IX       ;
  $DF7C LD HL,$6030   ;
  $DF7F LD IX,$FE72   ;

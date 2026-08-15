@@ -2038,6 +2038,11 @@ b$9312 DEFB $C5,$0E,$F5,$3A,$39,$93,$A7,$20
 ; Used by the routine at #R$9300.
 ;
 ; HL address of the tone-group sequence to play
+;
+; Plays a complete tune or sound effect by working through a list of note
+; groups, handing each one to #R$960A to sound on the speaker, and stops when
+; it reaches the end-of-list marker. Interrupts are turned off while it plays
+; so the timing of the notes stays accurate.
 c$95E2 DI            ;
  $95E3 LD A,B        ;
  $95E4 LD ($963E),A  ;
@@ -2074,6 +2079,11 @@ c$95E2 DI            ;
 ; Used by the routine at #R$95E2.
 ;
 ; HL address of the tone table to play
+;
+; Sounds one note group by clicking the speaker on and off for the durations
+; listed in its table, which sets the pitch, repeating the whole group a set
+; number of times to give it length. It also watches the keyboard so the player
+; can cut the sound short by pressing a key.
 c$960A LD E,(HL)     ; {E = table low byte, advance
  $960B INC HL        ; }
  $960C LD D,(HL)     ; {D = table high byte, advance
@@ -3473,6 +3483,15 @@ b$A000 DEFB $00,$00,$00,$3E,$7F,$79,$72,$70
 c$C000 JP $C4B8      ; => Start point
 
 ; Interrupt handler: decode input, tick frame counters
+;
+; .
+;
+; .
+;
+; Runs once every screen frame (50 times a second): it reads the player's
+; controls and advances the various timing counters the game uses to pace
+; movement and animation. This keeps input and timing ticking along steadily in
+; the background, independent of the main game code.
 c$C003 PUSH AF       ; {Save registers
  $C004 PUSH BC       ; }
  $C005 PUSH DE       ; {Save registers
@@ -3502,6 +3521,13 @@ c$C003 PUSH AF       ; {Save registers
 ; Decode and store player input direction
 ;
 ; Used by the routine at #R$C003.
+;
+; .
+;
+; Reads the current player's controls (via #R$C085) and saves the resulting
+; direction as the pending move, noting when it differs from last time; in a
+; two-player game the second player's input is read the same way. Runs off the
+; interrupt so the latest input is always ready when the game acts on it.
 c$C02D LD HL,$FE15   ; {Clear direction-changed flag
  $C030 RES 0,(HL)    ; }
  $C032 LD A,($FE09)  ; {A = raw joystick/key input, decode direction
@@ -3549,6 +3575,11 @@ c$C02D LD HL,$FE15   ; {Clear direction-changed flag
 ; Used by the routine at #R$C02D.
 ;
 ; A raw input-source code (0-2) selecting keyboard/joystick decode
+;
+; Reads whichever control device the player chose - one of the keyboard layouts
+; or a joystick - and boils it down to a single code saying which direction is
+; being held and whether the fire button is pressed, ready for the movement
+; code to act on.
 c$C085 CP $01        ; {Dispatch by input source code (0/1/2)
  $C087 JR C,$C0C6    ;
  $C089 JR Z,$C0B5    ; }
@@ -3614,6 +3645,12 @@ b$C0E5 DEFB $00,$00,$10,$10,$10,$00,$00,$00
 ; Check pause/reset keys, handle pause screen
 ;
 ; Used by the routine at #R$C714.
+;
+; .
+;
+; Checks the special control keys during play: the reset combination abandons
+; the game and restarts, the pause key shows a "pause" message and waits until
+; it's dismissed before resuming, and the sound key toggles sound on or off.
 c$C121 LD A,$7F      ; {Read keyboard row (SPACE)
  $C123 IN A,($FE)    ; }
  $C125 RRA           ; {Check SPACE pressed
@@ -3655,6 +3692,16 @@ b$C16D DEFB $C9
 ; Prepare level and draw it to playscreen
 ;
 ; Used by the routine at #R$C714.
+;
+; .
+;
+; Sets up the current room from scratch, ready to be played. It looks up the
+; room by number, copies its header into the working area and marks that the
+; current player has now visited it, then unpacks the room's compressed tile
+; layout (a simple run-length format) into the live tile map. Next it places
+; the room's keys at their positions - keys already collected are skipped
+; unless they're the respawning kind - and finally draws the whole scene into
+; the offline buffer and clears the per-character state ready for play.
 @label=prepare_level
 c$C16E DI            ;
  $C16F LD A,($FE03)  ;
@@ -3849,11 +3896,18 @@ c$C2B2 LD (HL),$00   ;
  $C2B5 DJNZ $C2B2    ;
  $C2B7 RET           ;
 
-; Store color byte to offscreen attribute cell
+; Record scene element in companion tile map, then draw it
 ;
 ; Used by the routine at #R$DBB0.
 ;
-; A attribute (color) byte to store
+; A scene element index to draw
+;
+; An extended entry to the scene-element drawing routine #R$C2C0: before
+; drawing, it also writes the element index into a second, parallel tile map
+; (offset $6800 from the main destination), so the change to that cell is
+; remembered and not lost. It then falls straight through into #R$C2C0 to
+; actually draw the 8x8 element. Used by the water-animation code to
+; permanently swap a tile as the water bubbles.
 c$C2B8 LD HL,($FEA8) ;
  $C2BB LD DE,$6800   ;
  $C2BE ADD HL,DE     ;
@@ -3862,6 +3916,13 @@ c$C2B8 LD HL,($FEA8) ;
 ; Draws an 8*8 pixels element of scene
 ;
 ; Used by the routines at #R$C16E and #R$C366.
+;
+; A scene element index to draw
+;
+; Draws one plain 8x8 scenery tile straight into the offline screen buffer at a
+; fixed destination held in a scratch variable, working out which graphic to
+; use from the given element index and copying its pixel rows across (unlike
+; #R$D626, it doesn't touch the room's tile map or the screen colours).
 @label=draw_scene_element
 c$C2C0 LD E,A        ; {DE = element index into scene data table
  $C2C1 LD A,($6003)  ;
@@ -3898,7 +3959,17 @@ c$C2C0 LD E,A        ; {DE = element index into scene data table
 ; Updates area of personage from offscreen to screen
 ;
 ; Used by the routines at #R$C714 and #R$D98D.
-@label=show_personage_area
+;
+; .
+;
+; Copies the finished picture of a character from the offline buffer onto the
+; real screen, so all the drawing work done off-screen becomes visible in one
+; go. It first checks the character is actually on screen and alive, then works
+; out where in video memory its patch belongs and copies the block of pixel
+; rows across, followed by the matching colour attributes. Only the small
+; rectangle the character occupies is copied, which keeps the update fast and
+; flicker-free.
+@label=show_pers_area
 c$C2EC LD A,(IX+$0A) ; {Skip ahead if area already shown (IX+0A)
  $C2EF AND A         ;
  $C2F0 JR NZ,$C2F7   ; }
@@ -3995,7 +4066,18 @@ c$C2EC LD A,(IX+$0A) ; {Skip ahead if area already shown (IX+0A)
 ; Redraw background of personage area to offscreen
 ;
 ; Used by the routine at #R$C714.
-@label=update_personage_background
+;
+; .
+;
+; Wipes the character out of the offline buffer by repainting the room
+; background over the patch of screen it was occupying, ready for the next
+; frame to be drawn cleanly. Using the character's state record in IX it works
+; out how many tile rows and columns that patch covers (clamped so it never
+; runs past the bottom of the play area), then finds the matching block of
+; tiles in the room's scene map. It walks that rectangle tile by tile,
+; redrawing each background scene element back onto the buffer. The character's
+; own image is left to be re-drawn separately by #R$C3CB.
+@label=update_pers_backgr
 c$C366 LD A,(IX+$02) ; {Return if personage isn't alive (IX+2)
  $C369 AND A         ;
  $C36A RET Z         ; }
@@ -4059,7 +4141,20 @@ c$C366 LD A,(IX+$02) ; {Return if personage isn't alive (IX+2)
 ; Draws personage to offscreen
 ;
 ; Used by the routines at #R$C714 and #R$D98D.
-@label=draw_personage
+;
+; .
+;
+; Draws a whole character (Bruce or a foe) into the offline screen buffer,
+; given its state record in IX, doing nothing if the character isn't currently
+; alive. It picks the graphics for the way the character is facing (separate
+; image banks for left and right), reads which pose to show plus its
+; pixel-precise Y offset and colour, and looks up an image descriptor giving
+; the sprite's width, height and on-screen position. It then walks the sprite
+; cell by cell - across each row, then dropping to the next - handing each 8x8
+; fragment to #R$C44D to blend onto the background. Running screen-position and
+; image pointers are passed through scratch variables that #R$C44D reads on
+; each call.
+@label=draw_pers
 c$C3CB PUSH IX       ;
  $C3CD POP HL        ;
  $C3CE INC HL        ;
@@ -4076,7 +4171,7 @@ c$C3CB PUSH IX       ;
 ; Right direction images address if a000h
 ; .
 ; Left direction images address is a800h
-@label=right_direction
+@label=draw_pers_rt
 *$C3DB ADD A,$A0     ;
  $C3DD LD D,A        ;
  $C3DE LD E,$00      ; DE now points to images set for current direction
@@ -4126,7 +4221,7 @@ c$C3CB PUSH IX       ;
  $C41A INC HL        ;
  $C41B LD B,(HL)     ; Get personage image height in 8-pixel units
  $C41C LD ($FEA4),BC ;
-@label=personage_draw_loop
+@label=draw_pers_loop
 *$C420 INC HL        ;
  $C421 PUSH HL       ;
  $C422 PUSH BC       ;
@@ -4159,7 +4254,19 @@ c$C3CB PUSH IX       ;
 ; Draw masked image fragment to offscreen buffer (pixel-aligned)
 ;
 ; Used by the routine at #R$C3CB.
-@label=draw_personage_part
+;
+; .
+;
+; Draws one small image fragment onto the offline screen buffer so it blends
+; over the existing background rather than overwriting it: for each row it
+; punches a hole in the background using the fragment's mask (found 1000h bytes
+; past the pixel data), then drops the fragment's pixels into that hole so
+; surrounding background survives. Because the fragment can sit at any
+; horizontal pixel offset, a column of it may straddle two neighbouring 8-pixel
+; character cells; when that happens the routine finishes the first cell then
+; steps across to the cell on the right to draw the leftover part. It also
+; updates the colour attribute of the affected cell.
+@label=draw_pers_part
 c$C44D LD BC,($FEA0) ;
  $C451 LD A,(BC)     ;
  $C452 LD D,A        ;
@@ -4243,6 +4350,13 @@ c$C44D LD BC,($FEA0) ;
 ; Start point
 ;
 ; Used by the routines at #R$C000 and #R$CAC0.
+;
+; .
+;
+; The game's actual boot sequence: sets up the border and speaker, paints the
+; title/copyright screen (credits text plus the publisher logo graphic), plays
+; the opening jingle, and then falls straight into #R$C530 to show the main
+; menu.
 @label=start
 c$C4B8 LD A,$01      ;
  $C4BA LD ($FE9A),A  ;
@@ -4293,6 +4407,16 @@ c$C4B8 LD A,$01      ;
 *$C52D CALL $9300    ; Play win/level-complete jingle
 
 ; Draws title screen and handles menu selection
+;
+; .
+;
+; .
+;
+; Paints the title/menu screen - game name, the option lines and credits - and
+; highlights the option boxes. It then sits in a loop reading the keyboard,
+; letting the player toggle the menu choices (one or two players, keyboard or
+; joystick, and so on) and redrawing the highlight as they change. Pressing
+; ENTER breaks out of the loop and starts the game via #R$C714.
 c$C530 CALL $C8E1    ; Init title screen
  $C533 LD HL,$FB12   ;
  $C536 LD DE,$00E2   ;
@@ -4466,8 +4590,7 @@ c$C530 CALL $C8E1    ; Init title screen
  $C6B9 XOR A         ;
  $C6BA LD ($FE15),A  ;
 *$C6BD CALL $C6E4    ; Wait until debounced key-scan returns FFh
- $C6C0 JP $C714      ; => looks like new game after pressing ENTER in main game
-                     ; menu
+ $C6C0 JP $C714      ; => Start new game (ENTER pressed in main menu)
 
 ; Wait for key release, then wait for key press
 ;
@@ -4551,9 +4674,21 @@ c$C706 PUSH HL       ;
  $C712 POP HL        ;
  $C713 RET           ;
 
-; looks like new game after pressing ENTER in main game menu
+; Start new game: reset scores, lives and players, prepare first level
 ;
 ; Used by the routine at #R$C530.
+;
+; .
+;
+; This block is really three things chained together, entered fresh only when a
+; game starts but ending in a loop that runs for the rest of the game. It first
+; resets scores, lives and the room-exit table for a brand new game; #R$C790
+; (also reached directly when a life or level ends) then loads whichever room
+; the current player is in and draws it; and #R$C7A4 is the actual
+; frame-by-frame game loop - it waits for the next screen update, redraws the
+; characters, steps everyone's movement and AI, checks for deaths (losing a
+; life when Bruce is killed), and finally checks whether a character has walked
+; off the edge of the room, loading the next one and looping back if so.
 @label=start_game
 c$C714 LD A,$01      ;
  $C716 LD ($FE04),A  ;
@@ -4652,7 +4787,7 @@ c$C714 LD A,$01      ;
  $C7C8 CALL $C2EC    ; Updates area of personage from offscreen to screen
  $C7CB LD IX,$CCA5   ;
  $C7CF CALL $C2EC    ; Updates area of personage from offscreen to screen
-@label=no_personages_update
+@label=no_perses_update
 *$C7D2 LD IX,$CB1C   ;
  $C7D6 CALL $C366    ; Redraw background of personage area to offscreen
  $C7D9 LD IX,$CBBE   ;
@@ -4674,8 +4809,7 @@ c$C714 LD A,$01      ;
  $C808 CALL $D24E    ; Single gameplay step of personage
 *$C80B LD A,($CCAF)  ;
  $C80E CP $64        ;
- $C810 JP NC,$CA46   ; => Countdown timer tick, handle time-out and player
-                     ; switch
+ $C810 JP NC,$CA46   ; => Bruce died: lose a life, game over or switch player
  $C813 LD IX,$CB1C   ;
  $C817 CALL $CAF7    ; Kill personage that fell off bottom of screen
  $C81A CALL $CAE2    ; Respawn personage after death timer expires
@@ -4751,8 +4885,7 @@ c$C714 LD A,$01      ;
  $C8B1 INC DE        ;
 *$C8B2 LD A,(HL)     ;
  $C8B3 CP $FF        ;
- $C8B5 JP Z,$CA46    ; => Countdown timer tick, handle time-out and player
-                     ; switch
+ $C8B5 JP Z,$CA46    ; => Bruce died: lose a life, game over or switch player
  $C8B8 LD (DE),A     ;
  $C8B9 INC HL        ;
  $C8BA LD A,(HL)     ;
@@ -4803,6 +4936,11 @@ c$C8E1 CALL $C8C6    ; Clear offline screen buffer
 ;
 ; A character code to draw
 ; DE screen coordinates
+;
+; Draws one text character straight onto the real screen at the given position,
+; working out its font shape from the character code and copying its 8 pixel
+; rows in - the low-level building block #R$C924 calls once per letter to print
+; a message.
 c$C908 LD L,A        ; {HL = char index
  $C909 LD H,$00      ; }
  $C90B ADD HL,HL     ; {Multiply by 8
@@ -4832,6 +4970,10 @@ c$C908 LD L,A        ; {HL = char index
 ; DE screen coordinates
 ; HL message address
 ; B message length
+;
+; Prints a text string by stepping through its bytes one at a time and drawing
+; each character to the screen with #R$C908, advancing to the next screen
+; position after each.
 @label=draw_message
 c$C924 LD A,(HL)     ;
  $C925 PUSH BC       ;
@@ -4862,6 +5004,13 @@ c$C933 CALL $C924    ; Draw message
 ; Fills offline color attributes of playscreen header
 ;
 ; Used by the routines at #R$C714 and #R$C99B.
+;
+; .
+;
+; Prepares the score/status header line: it paints the header's colour
+; attributes a uniform colour, writes the active player's number into the
+; message, and copies that player's six score digits into the header buffer
+; ready to be drawn.
 @label=fill_offscreen_header_color
 c$C93C LD HL,$F800   ; {HL = header attr address, BC = fill color/count
  $C93F LD BC,$4038   ; }
@@ -5004,21 +5153,27 @@ c$C99B PUSH BC       ; {Save registers
 ; Increase player lifes
 ;
 ; Used by the routines at #R$C99B and #R$DC27.
+;
+; .
+;
+; Awards a bonus life: bumps the two-digit lives count up by one (carrying
+; between digits and capping at 99) and redraws the header so the new total
+; shows.
 @label=increase_player_lifes
 c$CA1A PUSH HL       ;
- $CA1B LD HL,($FED0) ;
- $CA1E LD A,H        ;
- $CA1F INC A         ;
+ $CA1B LD HL,($FED0) ; HL = current lives (2-digit BCD)
+ $CA1E LD A,H        ; {Bump low digit
+ $CA1F INC A         ; }
  $CA20 CP $3A        ;
  $CA22 JR C,$CA27    ;
- $CA24 INC L         ;
+ $CA24 INC L         ; {Roll over: carry to high digit, reset low
  $CA25 LD A,$30      ;
-*$CA27 LD H,A        ;
+*$CA27 LD H,A        ; }
  $CA28 LD A,L        ;
  $CA29 CP $3A        ;
  $CA2B JR C,$CA30    ;
- $CA2D LD HL,$3939   ;
-*$CA30 LD ($FED0),HL ;
+ $CA2D LD HL,$3939   ; Clamp at 99
+*$CA30 LD ($FED0),HL ; Store new lives count
  $CA33 POP HL        ;
  $CA34 JP $C960      ; => Draws message at header of game screen
 
@@ -5042,30 +5197,37 @@ c$CA37 LD A,($FE03)  ;
  $CA44 POP DE        ;
  $CA45 JP (HL)       ;
 
-; Countdown timer tick, handle time-out and player switch
+; Bruce died: lose a life, game over or restart room and switch player
 ;
 ; Used by the routine at #R$C714.
-c$CA46 LD DE,($FED0) ; {DE = countdown timer, compare to 00:00
+;
+; .
+;
+; Runs when Bruce has finished his death animation: it takes one life off the
+; count and redraws the header, and if no lives remain the game is over.
+; Otherwise it reloads the room's colours, and in a two-player game hands the
+; turn to the other player by swapping the two players' saved state.
+c$CA46 LD DE,($FED0) ; {DE = lives count, compare to 00
  $CA4A LD HL,$3030   ; }
- $CA4D AND A         ; {Time's up: go to game-over
+ $CA4D AND A         ; {No lives left: game over
  $CA4E SBC HL,DE     ;
  $CA50 JP Z,$CAC0    ; }
- $CA53 DEC D         ; {Decrement timer digit, borrow across BCD digits
+ $CA53 DEC D         ; {Decrement lives, borrow across BCD digits
  $CA54 LD A,D        ;
  $CA55 CP $30        ;
  $CA57 JR NC,$CA5C   ;
  $CA59 LD D,$39      ;
  $CA5B DEC E         ; }
-*$CA5C LD ($FED0),DE ; Store decremented timer
+*$CA5C LD ($FED0),DE ; Store new lives count
  $CA60 CALL $C960    ; Draws message at header of game screen
- $CA63 LD B,$32      ; {Short delay (50 frames)
+ $CA63 LD B,$32      ; {Short death pause (50 frames)
 *$CA65 HALT          ;
  $CA66 DJNZ $CA65    ; }
- $CA68 LD A,($CCAC)  ; {Pick color table by remaining time
+ $CA68 LD A,($CCAC)  ; {Pick room colour table
  $CA6B LD HL,$6008   ; }
- $CA6E CP $12        ; {Use alt table below threshold
+ $CA6E CP $12        ; {Use alt table for later rooms
  $CA70 JR NC,$CA75   ; }
- $CA72 LD HL,$602D   ; Alt color table
+ $CA72 LD HL,$602D   ; Alt colour table
 *$CA75 LD A,(HL)     ; {Load border/paper color bytes
  $CA76 LD ($CCAB),A  ;
  $CA79 INC HL        ;
@@ -5154,20 +5316,26 @@ c$CAE2 LD A,(IX+$0A)   ;
 ; Kill personage that fell off bottom of screen
 ;
 ; Used by the routine at #R$C714.
+;
+; .
+;
+; Checks whether a character has fallen far enough past the bottom of the play
+; area to count as gone, and if it has (and it wasn't already dying) it starts
+; its death - remembering its last pose and setting the dying timer running.
 c$CAF7 CALL $D4A3      ; Return in HL address of personage's cell in playroom
  $CAFA CALL $D4BE      ; Store size of personage image to image_size variable
- $CAFD LD A,($FEA5)    ;
- $CB00 ADD A,(IX+$07)  ;
+ $CAFD LD A,($FEA5)    ; {Bottom edge + image height past floor line?
+ $CB00 ADD A,(IX+$07)  ; }
  $CB03 CP $17          ;
- $CB05 RET C           ;
- $CB06 LD A,(IX+$04)   ;
- $CB09 CP $04          ;
+ $CB05 RET C           ; Not off screen yet: return
+ $CB06 LD A,(IX+$04)   ; {Also require animation frame past 4
+ $CB09 CP $04          ; }
  $CB0B RET C           ;
- $CB0C LD A,(IX+$0A)   ;
+ $CB0C LD A,(IX+$0A)   ; {Return if already dying
  $CB0F AND A           ;
- $CB10 RET NZ          ;
- $CB11 LD A,(IX+$02)   ;
- $CB14 LD (IX+$0F),A   ;
+ $CB10 RET NZ          ; }
+ $CB11 LD A,(IX+$02)   ; {Remember last pose, start dying timer
+ $CB14 LD (IX+$0F),A   ; }
  $CB17 LD (IX+$0A),$5F ;
  $CB1B RET             ;
 
@@ -5408,47 +5576,57 @@ b$CD13 DEFB $02,$03,$00,$01,$20,$21,$40,$41 ; 2x3 + 6 bytes
  $CD99 DEFB $AF,$C9
 
 ; Personage action handler 0: idle, decode input and dispatch new state
-c$CD9B LD (IX+$0C),$00 ;
- $CD9F LD (IX+$0D),$00 ;
+;
+; .
+;
+; .
+;
+; Runs whenever a character is standing still and reads its current input to
+; decide what to do next: duck (Bruce only), start falling if there's no floor,
+; or otherwise switch to walking, punching, climbing or jumping based on the
+; direction held - checking for a blocking obstacle first where that matters
+; (like punching into a wall, or jumping into a ceiling).
+c$CD9B LD (IX+$0C),$00 ; {Clear jump counters
+ $CD9F LD (IX+$0D),$00 ; }
  $CDA3 LD HL,$CB1C     ;
  $CDA6 CALL $D4E0      ; Compares IX and HL for equality
  $CDA9 JR Z,$CDC8      ;
  $CDAB LD A,(IX+$0B)   ;
- $CDAE CP $09          ;
- $CDB0 JR NZ,$CDBB     ;
+ $CDAE CP $09          ; {Duck input (Bruce only)?
+ $CDB0 JR NZ,$CDBB     ; }
  $CDB2 LD (IX+$03),$00 ;
  $CDB6 LD A,$02        ;
  $CDB8 JP $CEE9        ;
-*$CDBB CP $0A          ;
- $CDBD JR NZ,$CDC8     ;
+*$CDBB CP $0A          ; {Duck input, other side?
+ $CDBD JR NZ,$CDC8     ; }
  $CDBF LD (IX+$03),$01 ;
  $CDC3 LD A,$02        ;
  $CDC5 JP $CEE9        ;
 *$CDC8 CALL $D332      ; Check for floor tile beneath personage
- $CDCB JR Z,$CDE2      ;
+ $CDCB JR Z,$CDE2      ; No floor: check rope/fall
 ; This entry point is used by the routine at #R$CE48.
 *$CDCD CALL $D405      ; Check for rope/ladder under personage
- $CDD0 LD A,$0E        ;
- $CDD2 RET Z           ;
+ $CDD0 LD A,$0E        ; {Return state 14 (falling) if no rope
+ $CDD2 RET Z           ; }
  $CDD3 LD HL,$CB1C     ;
  $CDD6 CALL $D4E0      ; Compares IX and HL for equality
  $CDD9 JR Z,$CDDF      ;
  $CDDB LD (IX+$03),$01 ;
-*$CDDF LD A,$11        ;
- $CDE1 RET             ;
+*$CDDF LD A,$11        ; {Return state 17 (on rope)
+ $CDE1 RET             ; }
 *$CDE2 LD A,(IX+$0B)   ;
  $CDE5 CP $10          ;
- $CDE7 JR NZ,$CDFB     ;
+ $CDE7 JR NZ,$CDFB     ; Punch input?
  $CDE9 CALL $D456      ; Check for obstacle ahead of personage
- $CDEC LD A,$01        ;
- $CDEE RET Z           ;
+ $CDEC LD A,$01        ; {Return idle if obstacle blocks
+ $CDEE RET Z           ; }
  $CDEF BIT 0,(IX+$03)  ;
  $CDF3 JR Z,$CDF8      ;
  $CDF5 DEC (IX+$06)    ;
-*$CDF8 LD A,$16        ;
- $CDFA RET             ;
+*$CDF8 LD A,$16        ; {Return state 22 (punch)
+ $CDFA RET             ; }
 *$CDFB CP $01          ;
- $CDFD JR NZ,$CE0E     ;
+ $CDFD JR NZ,$CE0E     ; Left input?
  $CDFF BIT 0,(IX+$03)  ;
  $CE03 JR NZ,$CE08     ;
 *$CE05 LD A,$02        ;
@@ -5456,23 +5634,23 @@ c$CD9B LD (IX+$0C),$00 ;
 *$CE08 LD (IX+$03),$00 ;
  $CE0C JR $CE1C        ;
 *$CE0E CP $02          ;
- $CE10 JR NZ,$CE1F     ;
+ $CE10 JR NZ,$CE1F     ; Right input?
  $CE12 BIT 0,(IX+$03)  ;
  $CE16 JR NZ,$CE05     ;
  $CE18 LD (IX+$03),$01 ;
 *$CE1C LD A,$01        ;
  $CE1E RET             ;
-*$CE1F CP $08          ;
- $CE21 JR NZ,$CE26     ;
- $CE23 LD A,$0C        ;
- $CE25 RET             ;
+*$CE1F CP $08          ; {Down input?
+ $CE21 JR NZ,$CE26     ; }
+ $CE23 LD A,$0C        ; {Return state 12 (climb-down)
+ $CE25 RET             ; }
 *$CE26 CP $04          ;
- $CE28 JR NZ,$CE1C     ;
+ $CE28 JR NZ,$CE1C     ; Up input?
  $CE2A LD HL,$CCA5     ;
  $CE2D CALL $D4E0      ; Compares IX and HL for equality
  $CE30 JR NZ,$CE1C     ;
- $CE32 CALL $D48F      ;
- $CE35 JR NZ,$CE3F     ;
+ $CE32 CALL $D48F      ; {Obstacle above? (Bruce only)
+ $CE35 JR NZ,$CE3F     ; }
  $CE37 CALL $D45C      ;
  $CE3A JR Z,$CE1C      ;
  $CE3C DEC (IX+$06)    ;
@@ -5482,43 +5660,54 @@ c$CD9B LD (IX+$0C),$00 ;
  $CE47 RET             ;
 
 ; Personage action handler 1: walking, continue movement and re-decode input
-c$CE48 LD (IX+$0C),$00 ;
+;
+; .
+;
+; .
+;
+; Keeps a walk going frame by frame: falls off if the floor disappears,
+; otherwise checks for an obstacle in the direction faced and reads the current
+; input to decide what happens next - keep walking, turn to face the other way,
+; start climbing at a ladder, or (if the walk has run long enough and the punch
+; key is still held) throw a kick instead. The same logic is duplicated for
+; facing left and facing right.
+c$CE48 LD (IX+$0C),$00 ; Reset walk-cycle counter
  $CE4C CALL $D332      ; Check for floor tile beneath personage
- $CE4F JP NZ,$CDCD     ;
- $CE52 BIT 0,(IX+$03)  ;
- $CE56 JR NZ,$CE9F     ;
+ $CE4F JP NZ,$CDCD     ; No floor: re-decode input
+ $CE52 BIT 0,(IX+$03)  ; {Branch by facing
+ $CE56 JR NZ,$CE9F     ; }
  $CE58 CALL $D48F      ;
- $CE5B JR Z,$CE9C      ;
+ $CE5B JR Z,$CE9C      ; Blocked ahead: idle
  $CE5D LD A,(IX+$0B)   ;
- $CE60 CP $01          ;
- $CE62 JR NZ,$CE6B     ;
+ $CE60 CP $01          ; {Input still same direction? continue
+ $CE62 JR NZ,$CE6B     ; }
 *$CE64 LD A,$03        ;
  $CE66 INC (IX+$06)    ;
  $CE69 JR $CEE9        ;
 *$CE6B LD HL,$CB1C     ;
  $CE6E CALL $D4E0      ; Compares IX and HL for equality
- $CE71 JR Z,$CE9C      ;
+ $CE71 JR Z,$CE9C      ; Bruce: idle instead of kick
  $CE73 LD A,(IX+$0B)   ;
- $CE76 CP $11          ;
- $CE78 JR NZ,$CE89     ;
+ $CE76 CP $11          ; {Punch held?
+ $CE78 JR NZ,$CE89     ; }
  $CE7A LD A,(IX+$0D)   ;
- $CE7D CP $02          ;
- $CE7F JR C,$CE64      ;
+ $CE7D CP $02          ; {Early in cycle: keep walking
+ $CE7F JR C,$CE64      ; }
  $CE81 CALL $D48F      ;
  $CE84 JR Z,$CE9C      ;
- $CE86 LD A,$04        ;
+ $CE86 LD A,$04        ; Return state 4 (kick)
  $CE88 RET             ;
 *$CE89 CP $09          ;
- $CE8B JR NZ,$CE9C     ;
+ $CE8B JR NZ,$CE9C     ; Diagonal-down input?
  $CE8D CALL $D353      ; Check for ceiling/obstacle above personage
- $CE90 JR Z,$CE64      ;
+ $CE90 JR Z,$CE64      ; Blocked above: keep walking
  $CE92 DEC (IX+$07)    ;
- $CE95 LD (IX+$04),$07 ;
- $CE99 LD A,$0A        ;
+ $CE95 LD (IX+$04),$07 ; Set climb frame
+ $CE99 LD A,$0A        ; Return state 10 (climb)
  $CE9B RET             ;
 *$CE9C LD A,$01        ;
  $CE9E RET             ;
-*$CE9F CALL $D45C      ;
+*$CE9F CALL $D45C      ; Mirror of above for left-facing
  $CEA2 JR Z,$CE9C      ;
  $CEA4 LD A,(IX+$0B)   ;
  $CEA7 CP $02          ;
@@ -5588,6 +5777,15 @@ c$CF18 LD HL,$CB1C   ;
  $CF2C RET           ;
 
 ; Personage action handler 4: walking, advance one column, bump off obstacle
+;
+; .
+;
+; .
+;
+; The middle of a walk step: for the first few frames of the cycle it slides
+; the character one column in the direction faced, stopping short if an
+; obstacle blocks the way, then hands back to the main walking handler to
+; re-read input for the next step.
 c$CF2D INC (IX+$0C)    ; {Advance walk-cycle counter, reload
  $CF30 LD A,(IX+$0C)   ; }
  $CF33 CP $04          ; {Check cycle < 4
@@ -5608,6 +5806,15 @@ c$CF2D INC (IX+$0C)    ; {Advance walk-cycle counter, reload
  $CF58 RET             ;
 
 ; Personage action handler 5: kick/attack, execute swing, resolve hit
+;
+; .
+;
+; .
+;
+; Plays out a kick: steps the character forward a little as the swing goes out
+; (bumping off any obstacle in the way), and partway through checks whether the
+; attacker itself has taken enough hits to go down instead of finishing the
+; move. Once the swing completes it settles back into walking.
 c$CF59 LD (IX+$04),$00 ;
  $CF5D CALL $D332      ; Check for floor tile beneath personage
  $CF60 JR Z,$CF65      ;
@@ -5662,6 +5869,16 @@ c$CFBD LD A,(IX+$0B) ;
 
 ; Personage action handler 8: jump, diagonal motion via frame table, bump off
 ; obstacle
+;
+; .
+;
+; .
+;
+; Carries a diagonal jump along one step: it advances the jump arc (getting the
+; next height offset from the arc table) and moves the character one column in
+; the direction faced, unless a wall blocks that side. When the arc reaches its
+; end - or an obstacle stops it - the character lands, drops a row and returns
+; to walking.
 c$CFCE CALL $D007      ; {Look up frame offset, test zero
  $CFD1 AND A           ; }
  $CFD2 JR Z,$CFEC      ; Cycle done: land
@@ -5724,6 +5941,15 @@ c$D032 LD (IX+$00),$06 ;
 
 ; Personage action handler 12: falling, descend via frame table, check rope
 ; catch
+;
+; .
+;
+; .
+;
+; Runs a fall: it drops the character down following the arc frame table, and
+; part way through each drop checks whether they've caught a rope or ladder -
+; grabbing it and switching to climbing if so. When the fall bottoms out it
+; lands and returns to walking.
 c$D03F CALL $D007      ; Advance jump-cycle counter, look up next frame offset
  $D042 AND A           ;
  $D043 JR Z,$D052      ;
@@ -5743,6 +5969,16 @@ c$D03F CALL $D007      ; Advance jump-cycle counter, look up next frame offset
 
 ; Personage action handler 13: climbing, handle up/down/left/right input on
 ; rope/ladder
+;
+; .
+;
+; .
+;
+; Runs a character's climb one frame at a time: while up or down is held it
+; steps them along the rope/ladder and cycles the climbing animation frame, and
+; if left or right is pressed instead it steps them off sideways (checking for
+; an obstacle first) and drops them out of the climb. With no direction held it
+; just switches to the standing-on-a-rope handler.
 c$D063 LD A,(IX+$02)   ; {Save input/state byte (IX+2)
 ; This entry point is used by the routine at #R$D10D.
 *$D066 PUSH AF         ; }
@@ -5826,37 +6062,46 @@ c$D10D LD A,$0F      ;
 
 ; Personage action handler 16: kick/attack, recovery animation, award points on
 ; hit
-c$D112 LD A,(IX+$04)   ;
- $D115 AND A           ;
+;
+; .
+;
+; .
+;
+; Plays out the recovery pose after a punch/kick, cycling its own timer down;
+; once the recovery is done and there's still floor underfoot, it checks
+; whether Bruce landed the hit right on top of an enemy's column and, if so,
+; awards a bonus, before switching back to walking.
+c$D112 LD A,(IX+$04)   ; {Recovery timer running?
+ $D115 AND A           ; }
  $D116 JR Z,$D12B      ;
- $D118 ADD A,$02       ;
- $D11A AND $06         ;
+ $D118 ADD A,$02       ; {Advance timer, wrap
+ $D11A AND $06         ; }
  $D11C JR NZ,$D121     ;
- $D11E INC (IX+$07)    ;
+ $D11E INC (IX+$07)    ; Step down one row
 *$D121 LD (IX+$04),A   ;
- $D124 LD (IX+$00),$02 ;
+ $D124 LD (IX+$00),$02 ; {Set state 2, return recovery frame
  $D128 LD A,$11        ;
- $D12A RET             ;
+ $D12A RET             ; }
 *$D12B CALL $D332      ; Check for floor tile beneath personage
- $D12E LD A,$02        ;
- $D130 JR NZ,$D121     ;
+ $D12E LD A,$02        ; {No floor: stay recovering
+ $D130 JR NZ,$D121     ; }
  $D132 LD HL,$CCA5     ;
  $D135 CALL $D4E0      ; Compares IX and HL for equality
- $D138 JR NZ,$D154     ;
- $D13A LD BC,($CCAB)   ;
+ $D138 JR NZ,$D154     ; Not Bruce: skip bonus
+ $D13A LD BC,($CCAB)   ; BC = Bruce's hit column
  $D13E LD HL,($CB22)   ;
- $D141 AND A           ;
- $D142 SBC HL,BC       ;
+ $D141 AND A           ; {Compare to Ninja's column
+ $D142 SBC HL,BC       ; }
  $D144 JR Z,$D14E      ;
  $D146 LD HL,($CBC4)   ;
- $D149 AND A           ;
- $D14A SBC HL,BC       ;
+ $D149 AND A           ; {Compare to Yamo's column
+ $D14A SBC HL,BC       ; }
  $D14C JR NZ,$D154     ;
 *$D14E LD HL,$C96B     ;
  $D151 CALL $C99B      ; Add points to current player score
-*$D154 LD (IX+$00),$06 ;
+*$D154 LD (IX+$00),$06 ; {Set state 6, dispatch
  $D158 LD A,$01        ;
- $D15A JP $CEE9        ;
+ $D15A JP $CEE9        ; }
 
 ; Personage action handler 17: enter climbing, snap to ladder tile
 c$D15D DEC (IX+$07)    ;
@@ -5868,6 +6113,15 @@ c$D15D DEC (IX+$07)    ;
 
 ; Personage action handler 18: being hit, recoil away, escalate to knockback at
 ; high hit count
+;
+; .
+;
+; .
+;
+; The hurt reaction: while the character's damage total is still modest it just
+; staggers one step backwards away from the blow (checking that side is clear
+; first), but once the damage passes a threshold it escalates to the heavier
+; knockback handler instead.
 c$D16F LD A,(IX+$0E)   ; {Check hit counter >= 10
  $D172 CP $0A          ; }
  $D174 JP NC,$D1A2     ; => Personage action handler 20
@@ -5898,6 +6152,13 @@ c$D198 CALL $D1EB      ; Check hit threshold, kill personage and award points
 ; walking
 ;
 ; Used by the routine at #R$D16F.
+;
+; .
+;
+; Handles the stagger after a character walks into an obstacle: it steps them
+; one column back the way they came (checking that side is clear too), drops
+; them to the floor if there's nothing underneath, and settles them back into
+; the walking state.
 c$D1A2 LD (IX+$0C),$00 ; Clear jump counter
  $D1A6 LD (IX+$00),$03 ; Switch to handler 3 (walking)
  $D1AA BIT 0,(IX+$03)  ; {Check facing direction
@@ -5934,6 +6195,14 @@ c$D1D2 LD HL,$CB1C     ;
 ; Check hit threshold, kill personage and award points
 ;
 ; Used by the routines at #R$CF59 and #R$D198.
+;
+; .
+;
+; Decides if a character has taken enough punishment to go down: once its
+; accumulated damage passes a limit (the Ninja gives out sooner than the
+; others) it's flagged as dying and its damage tally is cleared. If the one
+; that just died is an enemy, the player is awarded points for the kill; Bruce
+; dying scores nothing.
 c$D1EB LD A,(IX+$0E)   ;
  $D1EE CP $35          ;
  $D1F0 JR NC,$D201     ;
@@ -5987,7 +6256,7 @@ c$D1EB LD A,(IX+$0E)   ;
 ; see #R$CD9B), dispatched via the table at #R$CCBB - same role as ActState.
 ; (IX+4) is the per-state animation/delay counter (ActStateTime), (IX+3) is the
 ; facing bit (ActFace), (IX+0B) is the decoded input direction (Joystick1,X).
-@label=personage_play_step
+@label=pers_play_step
 c$D24E LD A,(IX+$0A)   ;
  $D251 AND A           ;
  $D252 JR Z,$D285      ;
@@ -6060,7 +6329,7 @@ c$D24E LD A,(IX+$0A)   ;
  $D2C9 LD A,L          ; Need to check that personage is not out off screen in
                        ; bottom direction
 ; Personage moved to up direction
-@label=personage_moved_up
+@label=pers_moved_up
 *$D2CA CP $1D          ;
  $D2CC JR C,$D2D0      ;
  $D2CE LD A,$1C        ; Return personage back to bottom of the screen
@@ -6089,43 +6358,56 @@ c$D2EA JP (HL)       ;
 ; Return personage from the dead
 ;
 ; Used by the routine at #R$D24E.
-@label=revive_personage
+;
+; .
+;
+; Brings a defeated enemy back to life once its respawn countdown runs out,
+; dropping it back in at the room's spawn point with fresh state; the player
+; (Bruce) is never revived this way and is skipped immediately.
+@label=revive_pers
 c$D2EB LD HL,$CCA5     ;
  $D2EE CALL $D4E0      ; Compares IX and HL for equality
- $D2F1 RET Z           ;
- $D2F2 LD A,($CCAC)    ;
- $D2F5 LD HL,$600A     ;
+ $D2F1 RET Z           ; Bruce: never revived, return
+ $D2F2 LD A,($CCAC)    ; {HL = spawn record for this room (early rooms use alt
+ $D2F5 LD HL,$600A     ; table)}
  $D2F8 CP $12          ;
  $D2FA JR NC,$D2FF     ;
- $D2FC LD HL,$602F     ;
-*$D2FF BIT 7,(HL)      ;
- $D301 RET NZ          ;
- $D302 DEC (IX+$10)    ;
- $D305 RET NZ          ;
+ $D2FC LD HL,$602F     ; Alt spawn table
+*$D2FF BIT 7,(HL)      ; {Spawn slot empty/disabled: return
+ $D301 RET NZ          ; }
+ $D302 DEC (IX+$10)    ; {Count down respawn timer, return until zero
+ $D305 RET NZ          ; }
 @label=do_revive
- $D306 LD A,(HL)       ;
+ $D306 LD A,(HL)       ; {Restore facing from spawn record
  $D307 AND $01         ;
- $D309 LD (IX+$03),A   ;
- $D30C DEC HL          ;
+ $D309 LD (IX+$03),A   ; }
+ $D30C DEC HL          ; {Restore X/Y position from spawn record
  $D30D LD A,(HL)       ;
  $D30E LD (IX+$07),A   ;
  $D311 DEC HL          ;
- $D312 LD A,(HL)       ;
+ $D312 LD A,(HL)       ; }
  $D313 LD (IX+$06),A   ;
- $D316 LD (IX+$00),$01 ;
+ $D316 LD (IX+$00),$01 ; {Reset to alive, standing, frame 0
  $D31A LD (IX+$02),$01 ;
  $D31E LD (IX+$04),$00 ;
- $D322 LD (IX+$0A),$00 ;
- $D326 LD HL,$CBBE     ;
+ $D322 LD (IX+$0A),$00 ; }
+ $D326 LD HL,$CBBE     ; Compares IX and HL for equality
  $D329 CALL $D4E0      ; Compares IX and HL for equality
  $D32C RET NZ          ;
- $D32D LD (IX+$00),$4B ;
+ $D32D LD (IX+$00),$4B ; Yamo gets a special entrance action
  $D331 RET             ;
 
 ; Check for floor tile beneath personage
 ;
 ; Used by the routines at #R$CD9B, #R$CE48, #R$CF04, #R$CF59, #R$D112 and
 ; #R$D1A2.
+;
+; .
+;
+; Looks at the room tiles just below the character's feet, across its full
+; width, and reports whether there's solid floor there (so the movement code
+; knows whether it's standing or should fall).
+@label=check_floor_below
 c$D332 CALL $D4A3    ; Return in HL address of personage's cell in playroom
  $D335 CALL $D4BE    ; Store size of personage image to image_size variable
  $D338 LD DE,$0020   ;
@@ -6149,6 +6431,13 @@ c$D332 CALL $D4A3    ; Return in HL address of personage's cell in playroom
 ; Check for ceiling/obstacle above personage
 ;
 ; Used by the routines at #R$CE48, #R$D032, #R$D063, #R$D675 and #R$DE47.
+;
+; .
+;
+; Looks at the room tiles just above the character's head, across its full
+; width, and reports whether a solid tile is blocking upward movement (so the
+; movement code knows if a jump or climb-up is possible).
+@label=check_ceiling_above
 c$D353 LD A,(IX+$07) ;
  $D356 CP $03        ;
  $D358 JR C,$D36F    ;
@@ -6180,6 +6469,13 @@ c$D371 LD D,$08      ;
 ; Used by the routine at #R$D1D2.
 ;
 ; HL address of target personage description
+;
+; Decides whether an attacker's blow lands on a given target: it checks the
+; target is alive and standing right next to the attacker on the side it's
+; facing, and if so adds to the target's damage total, knocks it into its hurt
+; reaction, and plays the hit sound. Most targets take doubled damage (one
+; particular enemy is exempted), and a solid kick also flags the attacker so
+; its own follow-through can be handled.
 c$D375 LD D,$09        ; D = damage amount
 ; This entry point is used by the routine at #R$D371.
 *$D377 CALL $D4E0      ; Compares IX and HL for equality
@@ -6220,10 +6516,10 @@ c$D375 LD D,$09        ; D = damage amount
 *$D3C9 LD A,(IY+$0E)   ; {Add damage to hit counter
  $D3CC ADD A,D         ; }
  $D3CD LD (IY+$0E),A   ; Store hit counter
- $D3D0 LD HL,$CB1C     ; Check if target is Bruce
+ $D3D0 LD HL,$CB1C     ; Check if target is the Ninja
  $D3D3 CALL $D4E0      ; Compares IX and HL for equality
- $D3D6 JR Z,$D3DF      ; Skip extra damage if Bruce
- $D3D8 LD A,(IY+$0E)   ; {Double damage for non-Bruce target
+ $D3D6 JR Z,$D3DF      ; Skip extra damage if Ninja
+ $D3D8 LD A,(IY+$0E)   ; {Double damage for non-Ninja target
  $D3DB ADD A,D         ;
  $D3DC LD (IY+$0E),A   ; }
 *$D3DF LD (IY+$02),$13 ; {Set target to hurt state
@@ -6231,10 +6527,10 @@ c$D375 LD D,$09        ; D = damage amount
  $D3E7 LD A,($FE9A)    ; {Check sound-enabled flag
  $D3EA AND A           ; }
  $D3EB CALL NZ,$9312   ; Play hit sound
- $D3EE LD HL,$CCA5     ; Check if target is weapon/object
+ $D3EE LD HL,$CCA5     ; Check if target is Bruce
  $D3F1 CALL $D4E0      ; Compares IX and HL for equality
- $D3F4 JR NZ,$D3F9     ; Skip if not weapon
- $D3F6 LD (IY+$11),D   ; Store damage on weapon
+ $D3F4 JR NZ,$D3F9     ; Skip if not Bruce
+ $D3F6 LD (IY+$11),D   ; Store kick damage on Bruce (IX+11)
 *$D3F9 LD A,D          ; {Check for kick damage amount
  $D3FA CP $08          ; }
  $D3FC JR NZ,$D402     ; Skip if not kick
@@ -6245,6 +6541,15 @@ c$D375 LD D,$09        ; D = damage amount
 ; Check for rope/ladder under personage
 ;
 ; Used by the routines at #R$CD9B, #R$CF04, #R$D03F, #R$D063 and #R$D675.
+;
+; .
+;
+; Works out whether the character is standing over something climbable: it
+; scans the room tiles across the character's footprint counting rope/ladder
+; tiles, and reports back whether enough were found to count as being on a
+; rope. This is what lets the movement code decide if up/down should start a
+; climb.
+@label=check_rope_below
 c$D405 CALL $D4A3    ; Return in HL address of personage's cell in playroom
  $D408 CALL $D4BE    ; Store size of personage image to image_size variable
  $D40B LD D,C        ; {D = row count - 1
@@ -6311,50 +6616,57 @@ c$D447 CALL $D48F     ;
 ; Check for obstacle ahead of personage (facing-direction aware)
 ;
 ; Used by the routines at #R$CD9B and #R$D675.
-c$D456 BIT 0,(IX+$03) ;
- $D45A JR Z,$D48F     ;
+;
+; .
+;
+; Scans the room tiles immediately beside the character, on whichever side it's
+; currently facing, and reports whether something solid is blocking the way
+; there; right at the edge of the room, Bruce is stopped but the Ninja and Yamo
+; are allowed through.
+c$D456 BIT 0,(IX+$03) ; {Branch by facing direction
+ $D45A JR Z,$D48F     ; }
 ; This entry point is used by the routines at #R$CD9B, #R$CE48, #R$CF2D,
 ; #R$CFCE, #R$D063, #R$D43B and #R$D675.
-*$D45C LD A,(IX+$06)  ;
+*$D45C LD A,(IX+$06)  ; {At column 0? else scan left
  $D45F AND A          ;
- $D460 JR NZ,$D472    ;
+ $D460 JR NZ,$D472    ; }
 *$D462 PUSH IX        ;
  $D464 POP DE         ;
- $D465 LD HL,$CB1C    ;
- $D468 SBC HL,DE      ;
+ $D465 LD HL,$CB1C    ; {Ninja allowed past edge
+ $D468 SBC HL,DE      ; }
  $D46A RET Z          ;
- $D46B LD HL,$CBBE    ;
+ $D46B LD HL,$CBBE    ; {Yamo allowed past edge, else blocked
  $D46E AND A          ;
- $D46F SBC HL,DE      ;
+ $D46F SBC HL,DE      ; }
  $D471 RET            ;
 *$D472 CALL $D4A3     ; Return in HL address of personage's cell in playroom
  $D475 CALL $D4BE     ; Store size of personage image to image_size variable
  $D478 DEC HL         ;
-*$D479 LD DE,$0020    ;
- $D47C LD A,(IX+$04)  ;
- $D47F AND A          ;
+*$D479 LD DE,$0020    ; DE = one room row step
+ $D47C LD A,(IX+$04)  ; {Extend scan if mid-frame
+ $D47F AND A          ; }
  $D480 JR Z,$D483     ;
  $D482 INC B          ;
-*$D483 LD A,(HL)      ;
+*$D483 LD A,(HL)      ; {Solid tile found?
  $D484 CP $40         ;
- $D486 JR NC,$D48D    ;
+ $D486 JR NC,$D48D    ; }
  $D488 ADD HL,DE      ;
  $D489 DJNZ $D483     ;
  $D48B INC B          ;
  $D48C RET            ;
-*$D48D XOR A          ;
- $D48E RET            ;
+*$D48D XOR A          ; {Clear: no obstacle
+ $D48E RET            ; }
 ; This entry point is used by the routines at #R$CD9B, #R$CE48, #R$CF2D,
 ; #R$CFCE, #R$D063, #R$D447 and #R$D675.
 *$D48F CALL $D4A3     ; Return in HL address of personage's cell in playroom
  $D492 CALL $D4BE     ; Store size of personage image to image_size variable
- $D495 LD A,(IX+$06)  ;
+ $D495 LD A,(IX+$06)  ; {At right edge?
  $D498 ADD A,C        ;
- $D499 CP $20         ;
+ $D499 CP $20         ; }
  $D49B JR NC,$D462    ;
- $D49D LD E,C         ;
+ $D49D LD E,C         ; {Skip past own width
  $D49E LD D,$00       ;
- $D4A0 ADD HL,DE      ;
+ $D4A0 ADD HL,DE      ; }
  $D4A1 JR $D479       ;
 
 ; Return in HL address of personage's cell in playroom
@@ -6365,7 +6677,7 @@ c$D456 BIT 0,(IX+$03) ;
 ; IX address of personage description
 ;
 ; Address is Y * 20h + X + current_room_playing_data
-@label=get_personage_room_addr
+@label=get_pers_room_addr
 c$D4A3 LD L,(IX+$06) ; {HL = personage tile coords
  $D4A6 LD H,(IX+$07) ; }
  $D4A9 RRC H         ; {Rotate row bits into low nibble
@@ -6389,7 +6701,12 @@ c$D4A3 LD L,(IX+$06) ; {HL = personage tile coords
 ; #R$D456, #R$D4EC and #R$DEDD.
 ;
 ; IX address of personage description
-@label=get_personage_image_size
+;
+; Looks up how big the character's current pose is: from its state record it
+; finds the matching image descriptor and reads out the sprite's width and
+; height (in 8-pixel cells), leaving them in a scratch variable for other
+; routines to use.
+@label=get_pers_image_size
 c$D4BE PUSH HL       ;
  $D4BF PUSH DE       ;
  $D4C0 LD A,(IX+$02) ; Get personage image index
@@ -6423,6 +6740,10 @@ c$D4BE PUSH HL       ;
 ;
 ; IX first struct address to compare
 ; HL second struct address to compare
+;
+; A tiny helper that checks whether IX and HL point to the same address
+; (returning with the zero flag set if they match), used all over the code to
+; ask "is this the player?" or "is this that particular character?".
 @label=compare_IX_HL
 c$D4E0 PUSH BC       ;
  $D4E1 PUSH IX       ;
@@ -6438,7 +6759,16 @@ c$D4E0 PUSH BC       ;
 ; Look up objects at personage location
 ;
 ; Used by the routine at #R$D24E.
-@label=review_personage_location
+;
+; .
+;
+; Scans every room tile under the character's footprint each frame to see what
+; it's standing on: harmless scenery is skipped, a "tricky" object dispatches
+; to its own room-specific handler, a dangerous object hurts the character if
+; their pixels actually touch, and a collectable (key, lamp, etc.) is picked up
+; by Bruce - awarding points, playing a sound, and permanently marking it taken
+; - once pixels confirm the touch too.
+@label=review_pers_location
 c$D4EC CALL $D4A3      ; Return in HL address of personage's cell in playroom
  $D4EF CALL $D4BE      ; Store size of personage image to image_size variable
  $D4F2 LD DE,($FEAC)   ;
@@ -6447,7 +6777,7 @@ c$D4EC CALL $D4A3      ; Return in HL address of personage's cell in playroom
 ; Review personage location in playroom
 ; .
 ; for various objects presence
-@label=personage_location_review_loop
+@label=pers_location_review_loop
 *$D4F8 LD A,(HL)       ;
  $D4F9 CP $17          ;
  $D4FB JR Z,$D51A      ;
@@ -6472,7 +6802,7 @@ c$D4EC CALL $D4A3      ; Return in HL address of personage's cell in playroom
  $D516 POP DE          ;
  $D517 DJNZ $D4F8      ;
  $D519 RET             ;
-@label=personage_on_17_object
+@label=pers_on_17_object
 *$D51A PUSH AF         ;
  $D51B PUSH BC         ;
  $D51C PUSH DE         ;
@@ -6550,6 +6880,12 @@ b$D586 DEFB $E9
 ; check collision between personage and an playroom object
 ;
 ; Used by the routine at #R$D4EC.
+;
+; .
+;
+; Does a pixel-perfect touch test between the character's sprite and an
+; object's graphic, overlapping their pixel data row by row and reporting a hit
+; as soon as any of the on pixels line up.
 @label=check_collision
 c$D587 PUSH DE        ;
  $D588 LD E,(HL)      ; Get playroom object code
@@ -6558,13 +6894,13 @@ c$D587 PUSH DE        ;
  $D58C ADD HL,HL      ; Multiply it on 8
  $D58D ADD HL,HL      ;
  $D58E ADD HL,HL      ;
- $D58F LD DE,($6000)  ;
+ $D58F LD DE,($6000)  ; DE = room tile data base
  $D593 ADD HL,DE      ;
  $D594 LD E,(IX+$04)  ; Get personage Y offset
  $D597 LD D,$00       ;
  $D599 ADD HL,DE      ;
- $D59A LD B,H         ;
- $D59B LD C,L         ;
+ $D59A LD B,H         ; {BC = sprite pixel address
+ $D59B LD C,L         ; }
  $D59C POP HL         ;
  $D59D LD E,(HL)      ;
  $D59E LD D,$00       ;
@@ -6572,19 +6908,19 @@ c$D587 PUSH DE        ;
  $D5A1 ADD HL,HL      ;
  $D5A2 ADD HL,HL      ;
  $D5A3 ADD HL,HL      ;
- $D5A4 LD DE,$A000    ;
- $D5A7 BIT 0,(IX+$03) ;
- $D5AB JR Z,$D5AF     ;
- $D5AD LD D,$A8       ;
+ $D5A4 LD DE,$A000    ; DE = right-facing sprite bank
+ $D5A7 BIT 0,(IX+$03) ; {Check facing direction
+ $D5AB JR Z,$D5AF     ; }
+ $D5AD LD D,$A8       ; Left-facing bank
 *$D5AF ADD HL,DE      ;
-*$D5B0 LD A,(BC)      ;
+*$D5B0 LD A,(BC)      ; {Test pixel overlap
  $D5B1 AND (HL)       ;
- $D5B2 RET NZ         ;
+ $D5B2 RET NZ         ; }
  $D5B3 INC L          ;
  $D5B4 INC C          ;
  $D5B5 LD A,C         ;
- $D5B6 AND $07        ;
- $D5B8 JR NZ,$D5B0    ;
+ $D5B6 AND $07        ; {Loop 8 rows
+ $D5B8 JR NZ,$D5B0    ; }
  $D5BA RET            ;
 
 ; Draw personage's action-target tiles from will table
@@ -6593,6 +6929,11 @@ c$D587 PUSH DE        ;
 ;
 ; A personage index
 ; HL target tile coordinates
+;
+; Looks up a character's "will" table to find the entry matching the given
+; position, then permanently redraws every tile listed for that entry - this is
+; how scenery changes for good once a character reaches the right spot (e.g. an
+; object appearing or a door opening).
 c$D5BB LD ($FE98),A  ; {Save personage index and coords
  $D5BE LD ($FEAE),HL ; }
  $D5C1 ADD A,A       ; {L = index*2, H = table page
@@ -6655,6 +6996,9 @@ c$D5BB LD ($FE98),A  ; {Save personage index and coords
 ;
 ; A tile/element index to draw
 ; HL tile coordinates (H=row, L=column)
+;
+; Same tile-drawing job as #R$D626, but for callers that already know which
+; graphic to use rather than looking it up from the room map.
 c$D60E PUSH AF       ; {Save tile index, rotate row bits
  $D60F RRC H         ; }
  $D611 RRC H         ; {Rotate row bits into low nibble
@@ -6677,6 +7021,10 @@ c$D60E PUSH AF       ; {Save tile index, rotate row bits
 ; Used by the routines at #R$D5BB, #R$D9E7, #R$DD0D, #R$DDA8 and #R$DF9D.
 ;
 ; HL tile coordinates (H=row, L=column)
+;
+; Redraws one scene tile at the given room coordinate: it looks up which
+; graphic belongs there, paints it into the offline pixel buffer, and updates
+; the matching screen colour too, so the tile and its colour stay in sync.
 c$D626 RRC H         ; {Rotate row bits into low nibble of H
  $D628 RRC H         ;
  $D62A RRC H         ; }
@@ -6741,37 +7089,48 @@ c$D626 RRC H         ; {Rotate row bits into low nibble of H
 ; Used by the routine at #R$D24E.
 ;
 ; IX address of personage description
-@label=get_personage_action_will
+;
+; The AI brain for a computer-controlled character: it works out a fake
+; joystick direction for this frame, the same kind of code the movement code
+; reads from a real controller, so it can steer the character without a human
+; touching it. Depending on what the character is doing it climbs ladders,
+; avoids ledges and obstacles, and heads towards or attacks the nearest target,
+; occasionally throwing in a random direction change so movement doesn't look
+; too robotic. Bruce normally skips all this and uses the real input instead -
+; this logic only drives him during the brief "computer takes over" moments,
+; and always drives the enemies.
+@label=get_pers_action_will
 c$D675 LD HL,$CCA5     ;
  $D678 CALL $D4E0      ; Compares IX and HL for equality
- $D67B LD A,($FE11)    ;
+ $D67B LD A,($FE11)    ; Bruce: return his real input, done
  $D67E RET Z           ;
- $D67F LD A,($FE08)    ;
+ $D67F LD A,($FE08)    ; {Skip Yamo timing if no player 2
  $D682 AND A           ;
- $D683 JR Z,$D6A1      ;
+ $D683 JR Z,$D6A1      ; }
  $D685 LD HL,$CBBE     ;
  $D688 CALL $D4E0      ; Compares IX and HL for equality
  $D68B JR NZ,$D6A1     ;
- $D68D LD HL,$FE06     ;
+ $D68D LD HL,$FE06     ; {Read/clamp Yamo aggression timer to max 6
  $D690 LD A,(HL)       ;
- $D691 CP $06          ;
+ $D691 CP $06          ; }
  $D693 JR C,$D699      ;
  $D695 LD (HL),$06     ;
  $D697 JR $D6A1        ;
-*$D699 LD A,($FE12)    ;
+*$D699 LD A,($FE12)    ; {Else clear timer if flagged
  $D69C AND A           ;
- $D69D RET Z           ;
+ $D69D RET Z           ; }
  $D69E LD (HL),$00     ;
  $D6A0 RET             ;
-*$D6A1 LD A,(IX+$02)   ;
+*$D6A1 LD A,(IX+$02)   ; Dispatch by current action: idle, walking, climbing or
+                       ; none
  $D6A4 CP $04          ;
  $D6A6 JR C,$D6D4      ;
  $D6A8 CP $0C          ;
  $D6AA JR C,$D6B0      ;
  $D6AC CP $10          ;
  $D6AE JR C,$D6B2      ;
-*$D6B0 XOR A           ;
- $D6B1 RET             ;
+*$D6B0 XOR A           ; {Mid-action: no AI input this frame
+ $D6B1 RET             ; }
 *$D6B2 CALL $D353      ; Check for ceiling/obstacle above personage
  $D6B5 JR Z,$D710      ;
  $D6B7 LD A,(IX+$04)   ;
@@ -6781,26 +7140,26 @@ c$D675 LD HL,$CCA5     ;
  $D6C0 JR Z,$D6D1      ;
  $D6C2 CALL $D48F      ;
  $D6C5 JR Z,$D6D1      ;
- $D6C7 LD A,($CCAC)    ;
- $D6CA CP (IX+$07)     ;
+ $D6C7 LD A,($CCAC)    ; {On rope: compare row to Bruce's
+ $D6CA CP (IX+$07)     ; }
  $D6CD JR Z,$D6DD      ;
  $D6CF JR NC,$D710     ;
 *$D6D1 LD A,$08        ;
  $D6D3 RET             ;
-*$D6D4 LD A,($CCAC)    ;
- $D6D7 CP (IX+$07)     ;
+*$D6D4 LD A,($CCAC)    ; {Same row as target?
+ $D6D7 CP (IX+$07)     ; }
  $D6DA JP NZ,$D742     ;
-*$D6DD LD A,($CCAB)    ;
+*$D6DD LD A,($CCAB)    ; {Adjacent left: punch/kick (state 10/11)
  $D6E0 SUB $02         ;
- $D6E2 CP (IX+$06)     ;
+ $D6E2 CP (IX+$06)     ; }
  $D6E5 JR NZ,$D6EE     ;
  $D6E7 LD A,$10        ;
  $D6E9 LD (IX+$03),$00 ;
  $D6ED RET             ;
-*$D6EE SUB $02         ;
+*$D6EE SUB $02         ; {Adjacent right: punch/kick (state 10/11)
  $D6F0 CP (IX+$06)     ;
  $D6F3 JR NZ,$D6F8     ;
- $D6F5 LD A,$11        ;
+ $D6F5 LD A,$11        ; }
  $D6F7 RET             ;
 *$D6F8 ADD A,$06       ;
  $D6FA CP (IX+$06)     ;
@@ -6808,13 +7167,13 @@ c$D675 LD HL,$CCA5     ;
  $D6FF LD A,$10        ;
  $D701 LD (IX+$03),$01 ;
  $D705 RET             ;
-*$D706 ADD A,$02       ;
+*$D706 ADD A,$02       ; {Two columns right: bokken/attack (state 12)
  $D708 CP (IX+$06)     ;
- $D70B JR NZ,$D710     ;
+ $D70B JR NZ,$D710     ; }
  $D70D LD A,$12        ;
  $D70F RET             ;
-*$D710 LD A,($CCAB)    ;
- $D713 CP (IX+$06)     ;
+*$D710 LD A,($CCAB)    ; {Not aligned: face toward target
+ $D713 CP (IX+$06)     ; }
  $D716 JR C,$D720      ;
  $D718 BIT 0,(IX+$03)  ;
  $D71C JR NZ,$D734     ;
@@ -6824,25 +7183,25 @@ c$D675 LD HL,$CCA5     ;
 *$D726 CALL $D456      ; Check for obstacle ahead of personage
  $D729 LD A,$00        ;
  $D72B RET Z           ;
- $D72C INC A           ;
+ $D72C INC A           ; {Return walk direction (1=left, 2=right)
  $D72D BIT 0,(IX+$03)  ;
  $D731 RET Z           ;
- $D732 INC A           ;
+ $D732 INC A           ; }
  $D733 RET             ;
-*$D734 LD A,(IX+$03)   ;
+*$D734 LD A,(IX+$03)   ; {Blocked: turn around, pause (state 32h)
  $D737 XOR $01         ;
- $D739 LD (IX+$03),A   ;
+ $D739 LD (IX+$03),A   ; }
  $D73C LD (IX+$00),$32 ;
  $D740 XOR A           ;
  $D741 RET             ;
-*$D742 LD A,($CCAC)    ;
+*$D742 LD A,($CCAC)    ; {Target above and adjacent row?
  $D745 INC A           ;
- $D746 CP (IX+$07)     ;
+ $D746 CP (IX+$07)     ; }
  $D749 JR NC,$D768     ;
  $D74B LD HL,$CBBE     ;
  $D74E CALL $D4E0      ; Compares IX and HL for equality
  $D751 JR NZ,$D768     ;
- $D753 DEC (IX+$07)    ;
+ $D753 DEC (IX+$07)    ; Step up toward target
  $D756 CALL $D405      ; Check for rope/ladder under personage
  $D759 JR NZ,$D765     ;
  $D75B CP $02          ;
@@ -6851,58 +7210,101 @@ c$D675 LD HL,$CCA5     ;
  $D762 LD A,$08        ;
  $D764 RET             ;
 *$D765 INC (IX+$07)    ;
-*$D768 LD A,R          ;
- $D76A AND $03         ;
+*$D768 LD A,R          ; {Occasionally (1 in 4) jump toward target's home spot
+ $D76A AND $03         ; }
  $D76C JR NZ,$D79D     ;
  $D76E LD HL,$CB1C     ;
  $D771 CALL $D4E0      ; Compares IX and HL for equality
- $D774 LD HL,($CB22)   ;
- $D777 JR NZ,$D77C     ;
+ $D774 LD HL,($CB22)   ; {Pick Ninja or Yamo home coordinate
+ $D777 JR NZ,$D77C     ; }
  $D779 LD HL,($CBC4)   ;
-*$D77C LD A,(IX+$07)   ;
+*$D77C LD A,(IX+$07)   ; {At home row and 2 left of it?
  $D77F CP H            ;
- $D780 JR NZ,$D79D     ;
+ $D780 JR NZ,$D79D     ; }
  $D782 LD A,(IX+$06)   ;
  $D785 SUB $02         ;
  $D787 CP L            ;
  $D788 JR NZ,$D791     ;
- $D78A LD (IX+$03),$01 ;
+ $D78A LD (IX+$03),$01 ; {Face and start jump (state 10)
  $D78E LD A,$10        ;
- $D790 RET             ;
-*$D791 ADD A,$04       ;
+ $D790 RET             ; }
+*$D791 ADD A,$04       ; {4 right of home? face and jump
  $D793 CP L            ;
- $D794 JR NZ,$D79D     ;
+ $D794 JR NZ,$D79D     ; }
  $D796 LD (IX+$03),$00 ;
  $D79A LD A,$10        ;
  $D79C RET             ;
 *$D79D CALL $D456      ; Check for obstacle ahead of personage
  $D7A0 JP Z,$D734      ;
- $D7A3 BIT 0,(IX+$03)  ;
+ $D7A3 BIT 0,(IX+$03)  ; {Return walk direction, else turn
  $D7A7 LD A,$01        ;
  $D7A9 RET Z           ;
  $D7AA INC A           ;
- $D7AB RET             ;
+ $D7AB RET             ; }
 
 ; Data block at D7AC
-b$D7AC DEFB $94,$DA,$C4,$DA,$AD,$DA,$B2,$DA
- $D7B4 DEFB $CC,$DA,$D7,$D9,$DE,$DA,$FF,$DA
- $D7BC DEFB $23,$DB,$B0,$DB,$EC,$DB,$F2,$DB
- $D7C4 DEFB $D7,$D9,$1D,$DC,$27,$DC,$78,$DC
- $D7CC DEFB $24,$D8,$EE,$DC,$0D,$DD,$67,$DD
- $D7D4 DEFB $45,$D8,$45,$D8,$45,$D8,$24,$D8
- $D7DC DEFB $56,$D8,$88,$D8,$98,$D8,$D4,$D8
- $D7E4 DEFB $02,$D9,$28,$D9,$38,$D9,$24,$D8
- $D7EC DEFB $48,$D9,$58,$D9,$7D,$D9,$24,$D8
- $D7F4 DEFB $24,$D8,$24,$D8,$8D,$D9,$24,$D8
-; Table of handlers of object with 17h
-; .
-; code for each room number
+b$D7AC DEFW $DA94
+ $D7AE DEFW $DAC4
+ $D7B0 DEFW $DAAD
+ $D7B2 DEFW $DAB2
+ $D7B4 DEFW $DACC
+ $D7B6 DEFW $D9D7
+ $D7B8 DEFW $DADE
+ $D7BA DEFW $DAFF
+ $D7BC DEFW $DB23
+ $D7BE DEFW $DBB0
+ $D7C0 DEFW $DBEC
+ $D7C2 DEFW $DBF2
+ $D7C4 DEFW $D9D7
+ $D7C6 DEFW $DC1D
+ $D7C8 DEFW $DC27
+ $D7CA DEFW $DC78
+ $D7CC DEFW $D824
+ $D7CE DEFW $DCEE
+ $D7D0 DEFW $DD0D
+ $D7D2 DEFW $DD67
+ $D7D4 DEFW $D845
+ $D7D6 DEFW $D845
+ $D7D8 DEFW $D845
+ $D7DA DEFW $D824
+ $D7DC DEFW $D856
+ $D7DE DEFW $D888
+ $D7E0 DEFW $D898
+ $D7E2 DEFW $D8D4
+ $D7E4 DEFW $D902
+ $D7E6 DEFW $D928
+ $D7E8 DEFW $D938
+ $D7EA DEFW $D824
+ $D7EC DEFW $D948
+ $D7EE DEFW $D958
+ $D7F0 DEFW $D97D
+ $D7F2 DEFW $D824
+ $D7F4 DEFW $D824
+ $D7F6 DEFW $D824
+ $D7F8 DEFW $D98D
+ $D7FA DEFW $D824
+; Table of handlers of object with 17h code for each room number
 @label=table_of_17_object_handlers
- $D7FC DEFB $24,$D8,$24,$D8,$24,$D8,$24,$D8
- $D804 DEFB $24,$D8,$63,$DA,$63,$DA,$24,$D8
- $D80C DEFB $24,$D8,$24,$D8,$63,$DA,$63,$DA
- $D814 DEFB $63,$DA,$63,$DA,$63,$DA,$24,$D8
- $D81C DEFB $24,$D8,$24,$D8,$24,$D8,$24,$D8
+ $D7FC DEFW $D824
+ $D7FE DEFW $D824
+ $D800 DEFW $D824
+ $D802 DEFW $D824
+ $D804 DEFW $D824
+ $D806 DEFW $DA63
+ $D808 DEFW $DA63
+ $D80A DEFW $D824
+ $D80C DEFW $D824
+ $D80E DEFW $D824
+ $D810 DEFW $DA63
+ $D812 DEFW $DA63
+ $D814 DEFW $DA63
+ $D816 DEFW $DA63
+ $D818 DEFW $DA63
+ $D81A DEFW $D824
+ $D81C DEFW $D824
+ $D81E DEFW $D824
+ $D820 DEFW $D824
+ $D822 DEFW $D824
 
 ; No-op object handler (17h object, no room-specific trigger)
 @label=empty_17_object_handler
@@ -6916,6 +7318,11 @@ c$D824 RET           ;
 ; DE destination address in offline screen buffer
 ; B number of 8-byte blocks per column
 ; C number of columns
+;
+; A general-purpose block-image copier: it copies a rectangular picture, one
+; 8-pixel-wide column at a time, straight from raw graphics data into the
+; offline screen buffer - used for the title-screen logo and other fixed images
+; rather than the sprite/tile machinery elsewhere.
 @label=draw
 c$D825 PUSH BC       ; {Save block counter, row counter=8
 *$D826 LD B,$08      ; }
@@ -6955,6 +7362,14 @@ c$D845 LD HL,$FE20   ;
 *$D853 JP $D5BB      ; => Draw personage's action-target tiles from will table
 
 ; Object handler: room-specific trap trigger
+;
+; .
+;
+; .
+;
+; Watches Bruce's position in this room and, once he crosses a coordinate
+; boundary, either switches the water-colour mode or triggers one of a couple
+; of one-off scripted events.
 c$D856 LD A,D        ; {Check Y coord threshold
  $D857 CP $10        ; }
  $D859 JR NC,$D86C   ; Else use alt path
@@ -6996,6 +7411,14 @@ c$D888 LD HL,$FE36   ;
 *$D896 JR $D853      ;
 
 ; Object handler: room-specific trap trigger
+;
+; .
+;
+; .
+;
+; Watches Bruce's position in this room and, once he crosses a coordinate
+; boundary on either side, triggers one of a few one-off scripted events, each
+; armed by lingering there for a set number of frames.
 c$D898 LD A,D        ; {Check Y coord threshold
  $D899 CP $0F        ; }
  $D89B JR NC,$D8B9   ; Else use alt path
@@ -7031,6 +7454,13 @@ c$D898 LD A,D        ; {Check Y coord threshold
  $D8D2 JR $D896      ; Trigger target
 
 ; Object handler: room-specific trap trigger
+;
+; .
+;
+; .
+;
+; Watches Bruce's position in this room and, once he strays past a coordinate
+; boundary, triggers a one-off scripted event there.
 c$D8D4 LD A,E        ; {Check X coord threshold
  $D8D5 CP $06        ; }
  $D8D7 JR NC,$D8EC   ; Else use alt path
@@ -7058,6 +7488,14 @@ c$D8D4 LD A,E        ; {Check X coord threshold
  $D900 JR $D896      ; Trigger target
 
 ; Object handler: room-specific trap trigger
+;
+; .
+;
+; .
+;
+; Watches Bruce's position in this room and, once he strays past a coordinate
+; boundary, either switches the water-colour mode or triggers a one-off
+; scripted event.
 c$D902 LD A,D        ; {Check Y coord threshold
  $D903 CP $06        ; }
  $D905 JP C,$DE38    ; Below: set water color mode 1
@@ -7114,6 +7552,13 @@ c$D948 LD HL,$FE2E   ;
  $D956 JR $D925      ;
 
 ; Object handler: room-specific trap trigger
+;
+; .
+;
+; .
+;
+; Watches Bruce's position in this room and, once he lingers past a coordinate
+; threshold on either side, triggers a one-off scripted event there.
 c$D958 LD A,D        ; {Check Y coord threshold
  $D959 CP $10        ; }
  $D95B JR NC,$D96D   ; Else use alt path
@@ -7148,6 +7593,14 @@ c$D97D LD HL,$FE34   ;
  $D98B JR $D925      ;
 
 ; Award points for picking up weapon, then flash animation
+;
+; .
+;
+; .
+;
+; Awards the player points for grabbing the weapon, redraws it as carried by
+; Bruce, and plays a brief screen flash before signalling that the pickup is
+; complete.
 c$D98D LD HL,$C995   ;
  $D990 CALL $C99B    ; Add points to current player score
  $D993 CALL $C2EC    ; Updates area of personage from offscreen to screen
@@ -7209,6 +7662,12 @@ c$D9D7 LD HL,$FE60   ;
 ; Used by the routine at #R$D9D7.
 ;
 ; HL address of a wall-crack record (counter byte + coord word)
+;
+; Ages one crack: bumps its hit counter and, once it crosses set thresholds,
+; redraws it a stage worse (a bigger crack, then final collapse which clears
+; the record). At a few in-between thresholds it also spreads copies of the
+; crack out to the 6 neighbouring cells around it, so a crack grows into a
+; spidering pattern over time rather than just deepening in place.
 c$D9E7 INC (HL)      ; {Increment hit counter, compare to threshold 20
  $D9E8 LD A,(HL)     ;
  $D9E9 CP $14        ; }
@@ -7290,6 +7749,10 @@ b$DA61 DEFB $08,$20
 ; .
 ;
 ; HL address of the object's cell in the playroom
+;
+; Starts a new wall crack at the given room cell: it finds a free slot in the
+; 6-slot crack-record table used by #R$D9E7/#R$D9D7, claims it with this tile's
+; coordinates, and draws the first crack tile there.
 @label=handler_of_17_object
 c$DA63 EX DE,HL      ; {HL = coord, DE = base address
  $DA64 AND A         ;
@@ -7353,8 +7816,7 @@ c$DAB2 CALL $DDFF    ; Advance water/crack animation phase
  $DAB5 JP NZ,$DF7A   ; => Animate water ripple tiles
  $DAB8 LD HL,$E091   ;
  $DABB LD BC,$0312   ;
- $DABE CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DABE CALL $DE47    ; Ripple water colour area and push characters clear
  $DAC1 JP $DF7A      ; => Animate water ripple tiles
 
 ; Randomly jump to $0000 based on R register (reset trap)
@@ -7369,8 +7831,7 @@ c$DACC CALL $DDFF    ; Advance water/crack animation phase
  $DACF JP NZ,$DF7A   ; => Animate water ripple tiles
  $DAD2 LD HL,$E09B   ;
  $DAD5 LD BC,$0214   ;
- $DAD8 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DAD8 CALL $DE47    ; Ripple water colour area and push characters clear
  $DADB JP $DF7A      ; => Animate water ripple tiles
 
 ; Redraw moving object (room-specific), update cracks, animate water
@@ -7394,19 +7855,25 @@ c$DAFF CALL $DDFF    ; Advance water/crack animation phase
  $DB02 JP NZ,$DF7A   ; => Animate water ripple tiles
  $DB05 LD HL,$E801   ;
  $DB08 LD BC,$020F   ;
- $DB0B CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB0B CALL $DE47    ; Ripple water colour area and push characters clear
  $DB0E LD HL,$E08E   ;
  $DB11 LD BC,$0412   ;
- $DB14 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB14 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB17 LD HL,$E81D   ;
  $DB1A LD BC,$020F   ;
- $DB1D CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB1D CALL $DE47    ; Ripple water colour area and push characters clear
  $DB20 JP $DF7A      ; => Animate water ripple tiles
 
-; Redraw cracked-wall tiles after level reset
+; Ripple all wall-crack water patches after level reset
+;
+; .
+;
+; .
+;
+; On the first call after a level reset it re-ripples every wall-crack water
+; patch in the room in turn, then goes on to advance a small decorative moving
+; pattern (or falls back to the ordinary water-ripple animation once enough
+; frames have passed without needing the full redraw).
 c$DB23 CALL $DDFF    ; {Skip crack redraw if already flagged
  $DB26 JR NZ,$DB82   ; }
  $DB28 LD HL,$E8A1   ; {Redraw crack tile (repeated below for other tiles)
@@ -7414,40 +7881,31 @@ c$DB23 CALL $DDFF    ; {Skip crack redraw if already flagged
  $DB2E CALL $DE47    ; }
  $DB31 LD HL,$E863   ;
  $DB34 LD BC,$0204   ;
- $DB37 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB37 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB3A LD HL,$E825   ;
  $DB3D LD BC,$0204   ;
- $DB40 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB40 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB43 LD HL,$E0E7   ;
  $DB46 LD BC,$0204   ;
- $DB49 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB49 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB4C LD HL,$E0E9   ;
  $DB4F LD BC,$0202   ;
- $DB52 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB52 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB55 LD HL,$E874   ;
  $DB58 LD BC,$0206   ;
- $DB5B CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB5B CALL $DE47    ; Ripple water colour area and push characters clear
  $DB5E LD HL,$E836   ;
  $DB61 LD BC,$0206   ;
- $DB64 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB64 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB67 LD HL,$E0F8   ;
  $DB6A LD BC,$0206   ;
- $DB6D CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB6D CALL $DE47    ; Ripple water colour area and push characters clear
  $DB70 LD HL,$E0FA   ;
  $DB73 LD BC,$0204   ;
- $DB76 CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB76 CALL $DE47    ; Ripple water colour area and push characters clear
  $DB79 LD HL,$E09D   ;
  $DB7C LD BC,$0213   ;
- $DB7F CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DB7F CALL $DE47    ; Ripple water colour area and push characters clear
 *$DB82 LD HL,$FE99   ; HL = redraw-counter flag
  $DB85 LD A,(HL)     ; {Skip further redraw below threshold
  $DB86 CP $02        ;
@@ -7468,6 +7926,14 @@ b$DBA4 DEFB $16,$04,$03,$15,$00,$06,$16,$04
  $DBAC DEFB $15,$03,$01,$06
 
 ; Animate water color cycle (bubbling effect)
+;
+; .
+;
+; .
+;
+; Ticks a counter and, at two points in its cycle, repaints two rows of the
+; water's attribute colours with a different colour pair, giving the water a
+; bubbling/flashing look; it also flags the screen as needing a redraw.
 c$DBB0 LD HL,$FE38   ; {Advance water color-cycle counter
  $DBB3 INC (HL)      ; }
  $DBB4 LD A,(HL)     ; {A = counter, DE = color pair 1
@@ -7483,7 +7949,7 @@ c$DBB0 LD HL,$FE38   ; {Advance water color-cycle counter
 *$DBCA LD A,D        ; {A = color byte 1, save regs
  $DBCB PUSH BC       ;
  $DBCC PUSH DE       ; }
- $DBCD CALL $C2B8    ; Fill color block
+ $DBCD CALL $C2B8    ; Record scene element in companion tile map, then draw it
  $DBD0 POP DE        ; {Restore regs
  $DBD1 POP BC        ; }
  $DBD2 DJNZ $DBCA    ; Loop 6 blocks
@@ -7493,7 +7959,7 @@ c$DBB0 LD HL,$FE38   ; {Advance water color-cycle counter
 *$DBDC LD A,E        ; {A = color byte 2, save regs
  $DBDD PUSH BC       ;
  $DBDE PUSH DE       ; }
- $DBDF CALL $C2B8    ; Fill color block
+ $DBDF CALL $C2B8    ; Record scene element in companion tile map, then draw it
  $DBE2 POP DE        ; {Restore regs
  $DBE3 POP BC        ; }
  $DBE4 DJNZ $DBDC    ; Loop 6 blocks
@@ -7506,12 +7972,19 @@ c$DBEC CALL $D9D7    ; Update all wall-crack counters and spread cracks
  $DBEF JP $DF7A      ; => Animate water ripple tiles
 
 ; Redraw wall-crack tile, update crack counters, check bonus condition
+;
+; .
+;
+; .
+;
+; Redraws this room's crack tile if it's time to animate, then ticks all the
+; wall-crack counters and checks whether the current score qualifies for the
+; wall-collapse bonus.
 c$DBF2 CALL $DDFF    ; Advance water/crack animation phase
  $DBF5 JR NZ,$DC00   ;
  $DBF7 LD HL,$E081   ;
  $DBFA LD BC,$0413   ;
- $DBFD CALL $DE47    ; Mirror attribute area to screen and check
-                     ; personage/object bounds
+ $DBFD CALL $DE47    ; Ripple water colour area and push characters clear
 *$DC00 CALL $D9D7    ; Update all wall-crack counters and spread cracks
  $DC03 LD A,($CCAB)  ;
  $DC06 CP $08        ;
@@ -7535,6 +8008,15 @@ c$DC1D LD HL,$FE95   ;
  $DC24 JP $D9D7      ; => Update all wall-crack counters and spread cracks
 
 ; Handle wall collapse and bonus-life award
+;
+; .
+;
+; .
+;
+; Watches the wall's hit counter: once it's been battered enough it collapses
+; (the crack tables are wiped and a collapse image shown), and if the collapse
+; happens to land on a particular score value the player is given a bonus life
+; for each remaining hit "charge" on the counter.
 c$DC27 LD HL,$FE95   ; {HL = wall-hit counter
  $DC2A LD A,(HL)     ; }
  $DC2B AND A         ; {Skip if not hit yet
@@ -7573,6 +8055,14 @@ c$DC27 LD HL,$FE95   ; {HL = wall-hit counter
  $DC76 JR $DC34      ; Loop: reset walls again
 
 ; Animate 8 moving objects (bubbles), gate by counter
+;
+; .
+;
+; .
+;
+; Once enough frames have passed, steps all 8 bubble objects in this room
+; forward one frame each, one after another, each using its own little
+; descriptor from the table that follows.
 c$DC78 LD HL,$FE99   ;
  $DC7B LD A,(HL)     ;
  $DC7C CP $03        ;
@@ -7622,6 +8112,14 @@ c$DCEE LD HL,$FE99   ;
 b$DD07 DEFB $0A,$05,$04,$17,$00,$06
 
 ; Animate wall-crumble tile
+;
+; .
+;
+; .
+;
+; While a crumbling-wall timer is running, steps the crumble animation down the
+; wall one tile row at a time; once the timer runs out it resets everything to
+; start crumbling from the top again.
 c$DD0D LD A,($FE3C)  ; {Skip if no active crumble timer
  $DD10 AND A         ;
  $DD11 JR Z,$DD48    ; }
@@ -7668,6 +8166,14 @@ c$DD0D LD A,($FE3C)  ; {Skip if no active crumble timer
  $DD66 RET           ; Return
 
 ; Level-complete sequence: show win message, play sound, restart level
+;
+; .
+;
+; .
+;
+; Runs the little celebration when the level is finished: shows the win message
+; right away, then after a short wait plays the win jingle, resets the players
+; ready for the next level, and loops the game back to start it.
 c$DD67 LD HL,$FE3E   ; {A = win-sequence timer
  $DD6A LD A,(HL)     ; }
  $DD6B INC (HL)      ; {Advance timer, branch if not first tick
@@ -7703,6 +8209,13 @@ c$DD67 LD HL,$FE3E   ; {A = win-sequence timer
 ; Used by the routines at #R$DADE, #R$DB23, #R$DC78 and #R$DCEE.
 ;
 ; IX address of the moving-object descriptor
+;
+; Moves a small scene object one step back and forth between a left and a right
+; column, given its descriptor in IX (which holds the object's row, current
+; column, the two end columns, and which way it's currently heading). Each call
+; it redraws the object at its current spot, then advances one column in the
+; travel direction - or flips direction when it reaches an end - so repeated
+; calls make it patrol between the two edges.
 c$DDA8 BIT 0,(IX+$04) ; {Check direction bit, A = current column
  $DDAC LD A,(IX+$05)  ; }
  $DDAF JR NZ,$DDE1    ; {Branch by direction, check right bound
@@ -7740,6 +8253,14 @@ c$DDA8 BIT 0,(IX+$04) ; {Check direction bit, A = current column
 ; Advance water/crack animation phase (bounce counter)
 ;
 ; Used by the routines at #R$DAB2, #R$DACC, #R$DAFF, #R$DB23 and #R$DBF2.
+;
+; .
+;
+; A timing gate for the water animation. It counts down a delay each call and
+; does nothing until the delay runs out; when it does, it steps a phase value
+; that gently sweeps up and down between limits (reversing at each end), which
+; is what drives the water's back-and-forth motion. Returns a flag telling the
+; caller whether this frame is one where the water should actually be redrawn.
 c$DDFF LD A,($CCAF)  ; {A = difficulty/animation speed
  $DE02 AND A         ; }
  $DE03 RET NZ        ; Return if not slowest speed
@@ -7792,12 +8313,21 @@ c$DE41 PUSH HL       ; Save caller HL
  $DE42 LD HL,$4810   ; HL = color-table address (4810h)
  $DE45 JR $DE3C      ;
 
-; Mirror attribute area to screen and check personage/object bounds
+; Ripple water colour area and push characters clear
 ;
 ; Used by the routines at #R$DAB2, #R$DACC, #R$DAFF, #R$DB23 and #R$DBF2.
 ;
 ; HL offscreen attribute area address
 ; BC area size (B=rows, C=columns)
+;
+; Animates a rectangular patch of the colour (attribute) area - the water
+; surface - by cyclically rotating the colour bytes within it, which makes the
+; water appear to ripple or flow. A saved animation-state bit decides the
+; direction, and when it's set the routine hands off to the pixel-based sibling
+; #R$DF11 instead. After shuffling the colours it checks each of the three
+; characters/objects against this patch, and any that are standing in it get
+; nudged out of the way (the water pushes them). Called by the various room
+; water-animation handlers.
 c$DE47 LD A,$01        ; A=1 (draw-mode flag)
  $DE49 RES 5,H         ; {Clear bright/flash bits of H
  $DE4B RES 7,H         ; }
@@ -7854,11 +8384,11 @@ c$DE47 LD A,$01        ; A=1 (draw-mode flag)
 *$DE8F POP HL          ; {Restore saved coords
  $DE90 POP DE          ; }
  $DE91 CALL $DECD      ; Fold coords into scene-map tile address
- $DE94 LD IX,$CB1C     ; IX = personage 1 struct
- $DE98 CALL $DEA6      ; Check/push personage 1 out of area
- $DE9B LD IX,$CBBE     ; IX = personage 2 struct
- $DE9F CALL $DEA6      ; Check/push personage 2 out of area
- $DEA2 LD IX,$CCA5     ; IX = weapon/object struct, fall into check below
+ $DE94 LD IX,$CB1C     ; IX = Ninja struct
+ $DE98 CALL $DEA6      ; Check/push Ninja out of area
+ $DE9B LD IX,$CBBE     ; IX = Yamo struct
+ $DE9F CALL $DEA6      ; Check/push Yamo out of area
+ $DEA2 LD IX,$CCA5     ; IX = Bruce struct, fall into check below
 *$DEA6 CALL $DEDD      ; {Skip if object not in area
  $DEA9 RET NZ          ; }
  $DEAA CALL $D353      ; {Skip if fall blocked
@@ -7899,6 +8429,13 @@ c$DECD LD A,L        ; {A = column, rotate
 ; Check if personage/object overlaps given screen area
 ;
 ; Used by the routines at #R$DE47 and #R$DF11.
+;
+; .
+;
+; Tests whether a character's rectangle overlaps a given patch of screen, by
+; comparing their edges, and reports back yes or no. The water-animation code
+; uses this to find which characters are standing in the water so it can push
+; them out.
 c$DEDD LD A,(IX+$0A) ; {Return early if object not active
  $DEE0 AND A         ;
  $DEE1 RET NZ        ; }
@@ -7932,12 +8469,19 @@ c$DEDD LD A,(IX+$0A) ; {Return early if object not active
  $DF0F AND A         ; }
  $DF10 RET           ; Return
 
-; Mirror pixel area to screen and check personage/object bounds
+; Ripple water pixel area and push characters clear
 ;
 ; Used by the routine at #R$DE47.
 ;
 ; HL offscreen pixel area address
 ; BC area size (B=rows, C=columns)
+;
+; The pixel-based twin of #R$DE47: it animates a rectangular patch of water by
+; cyclically rotating the pixel bytes within it (rather than the colour bytes),
+; producing the rippling motion in the opposite direction. As with its sibling,
+; after shuffling the pixels it checks each of the three characters against the
+; patch and nudges any standing in it out of the way. #R$DE47 hands off here
+; when the animation-state bit calls for this direction.
 c$DF11 PUSH BC       ; {Save row/element counters
  $DF12 PUSH HL       ; }
 *$DF13 PUSH BC       ; {Save inner counters (loop entry)
@@ -7989,11 +8533,11 @@ c$DF11 PUSH BC       ; {Save row/element counters
 *$DF49 POP HL        ; {Restore saved coords
  $DF4A POP DE        ; }
  $DF4B CALL $DECD    ; Fold coords into scene-map tile address
- $DF4E LD IX,$CB1C   ; IX = personage 1 struct
- $DF52 CALL $DF60    ; Check/push personage 1 out of area
- $DF55 LD IX,$CBBE   ; IX = personage 2 struct
- $DF59 CALL $DF60    ; Check/push personage 2 out of area
- $DF5C LD IX,$CCA5   ; IX = weapon/object struct, fall into check below
+ $DF4E LD IX,$CB1C   ; IX = Ninja struct
+ $DF52 CALL $DF60    ; Check/push Ninja out of area
+ $DF55 LD IX,$CBBE   ; IX = Yamo struct
+ $DF59 CALL $DF60    ; Check/push Yamo out of area
+ $DF5C LD IX,$CCA5   ; IX = Bruce struct, fall into check below
 *$DF60 CALL $DEDD    ; {Skip if object not in area
  $DF63 RET NZ        ; }
  $DF64 LD A,(IX+$07) ; {Check row + height against floor
@@ -8028,12 +8572,19 @@ c$DF7A PUSH IX       ;
  $DF9A POP IX        ;
  $DF9C RET           ;
 
-; Handle single obstacle/collision step for personage or object
+; Advance one scripted scenery animation by a step
 ;
 ; Used by the routine at #R$DF7A.
 ;
 ; HL address of the obstacle/animation map byte
 ; IX address of the object animation state block
+;
+; Drives one animated scenery element (like a patch of rippling water) one step
+; forward, using a little script in memory and a state block that remembers
+; where it's up to. Each call it waits out a short delay, then draws the
+; element's next frame from the script and steps its position on; when it
+; reaches the end of the run it either loops or moves to the next scripted
+; state. #R$DF7A calls it once for each of the three water strips.
 c$DF9D LD A,(HL)       ; {Return if no obstacle byte
  $DF9E AND A           ;
  $DF9F RET Z           ; }
@@ -8411,39 +8962,166 @@ b$E000 DEFB $00,$00,$09,$0B,$1F,$1F,$1C,$18,$00,$C0,$E0,$F0,$F8,$FC,$1C,$1C,$00,
  $FDE8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDF0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDF8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE08 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE10 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE18 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE20 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE28 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE30 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE38 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE40 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE48 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE50 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE58 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE60 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE68 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE70 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE78 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE80 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE88 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE90 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE98 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEA0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEA8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEB0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEB8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEC0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEC8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FED0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FED8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEE0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEE8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEF0 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FEF8 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FF00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+
+; Game working variables (RAM)
+;
+; .
+;
+; .
+;
+; Scratch and state variables used throughout the game. Widths (byte vs word)
+; are inferred from how the code loads/stores each address.
+b$FE00 DEFB $00,$00
+@label=frame_ready_flag
+ $FE02 DEFB $00                             ; Frame-ready flag: set by the
+                                            ; interrupt, cleared once the frame
+                                            ; is processed
+@label=current_room
+ $FE03 DEFB $00                             ; Current room number being played
+@label=active_player
+ $FE04 DEFB $00                             ; Active player number (1 or 2)
+@label=frame_counter
+ $FE05 DEFW $0000                           ; Free-running frame counter (high
+                                            ; byte $FE06 reused as an AI
+                                            ; aggression timer)
+ $FE07 DEFB $00                             ; Two-player game flag
+@label=player2_active
+ $FE08 DEFB $00                             ; Player 2 present/active flag
+@label=player1_input_raw
+ $FE09 DEFB $00                             ; Player 1 raw input reading
+@label=player2_input_raw
+ $FE0A DEFB $00                             ; Player 2 raw input reading
+@label=redraw_flag
+ $FE0B DEFB $00                             ; Screen-redraw-needed flag
+@label=pickup_done_flag
+ $FE0C DEFB $00                             ; Weapon-pickup-complete flag
+@label=restart_flag
+ $FE0D DEFB $00                             ; Level-restart flag
+@label=room_per_player
+ $FE0E DEFB $00,$00                         ; Current room number, one byte per
+                                            ; player
+@label=decoded_input
+ $FE10 DEFB $00                             ; Decoded input direction/key code
+@label=player_will
+ $FE11 DEFW $0000                           ; Player pending action ("will"),
+                                            ; read by the AI
+ $FE13 DEFB $00                             ; Previous decoded input, player 1
+ $FE14 DEFB $00                             ; Previous decoded input, player 2
+@label=input_changed_flags
+ $FE15 DEFB $00                             ; Input-changed flags
+ $FE16 DEFB $00
+@label=crumble_coord
+ $FE17 DEFW $0000                           ; Wall-crumble current tile
+                                            ; coordinate
+@label=crumble_step
+ $FE19 DEFB $00                             ; Wall-crumble column step
+@label=water_draw_mode
+ $FE1A DEFB $00                             ; Water-animation draw-mode flag
+@label=player_direction
+ $FE1B DEFB $00,$00                         ; Final player move direction, one
+                                            ; byte per player
+ $FE1D DEFB $00,$00,$00
+@label=player_room_state
+ $FE20 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Active player's room
+ $FE28 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; animation/trap state (per-object
+ $FE30 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; trigger counters, water-cycle and
+ $FE38 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; crumble timers); swapped with
+                                            ; $FE40 on player change, zeroed at
+                                            ; level start}
+@label=player2_room_state
+ $FE40 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Other player's saved copy of the
+ $FE48 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; room animation/trap state
+ $FE50 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ;
+ $FE58 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
+@label=wall_crack_records
+ $FE60 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Wall-crack records: 6 slots of 3
+ $FE68 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; bytes (hit counter + tile
+ $FE70 DEFB $00,$00                         ; coordinate)}
+ $FE72 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Water-ripple animation state: 3
+ $FE7A DEFB $00,$00,$00,$00,$00,$00,$00     ; strips of 5 bytes (see
+                                            ; #R$DF7A/#R$DF9D)}
+ $FE81 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Saved copy of the active
+ $FE89 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; personage's description block
+ $FE91 DEFB $00,$00                         ; }
+ $FE93 DEFB $00,$00
+@label=wall_hit_counter
+ $FE95 DEFB $00                             ; Wall-hit counter (drives cracking
+                                            ; and collapse)
+@label=draw_y_offset
+ $FE96 DEFB $00                             ; Pixel-precise Y offset for the
+                                            ; sprite being drawn
+@label=draw_colour
+ $FE97 DEFB $00                             ; Colour attribute for the sprite
+                                            ; being drawn
+@label=will_pers_index
+ $FE98 DEFB $00                             ; Personage index passed to the
+                                            ; will-table drawing routine
+@label=anim_gate_counter
+ $FE99 DEFB $00                             ; Animation-gate frame counter
+                                            ; (paces bubble/object animation)
+@label=sound_enabled
+ $FE9A DEFB $00                             ; Sound-enabled flag
+@label=water_anim_tick
+ $FE9B DEFB $00                             ; Water-animation delay countdown
+@label=water_anim_phase
+ $FE9C DEFB $00                             ; Water-animation phase byte (value
+                                            ; + direction bit)
+ $FE9D DEFB $00,$00,$00
+@label=sprite_dest_ptr
+ $FEA0 DEFW $0000                           ; Destination pointer into the
+                                            ; offline buffer for the current
+                                            ; sprite
+@label=sprite_data_ptr
+ $FEA2 DEFW $0000                           ; Pointer to the current sprite's
+                                            ; image data
+@label=image_size
+ $FEA4 DEFW $0000                           ; Current image size: width in
+                                            ; $FEA4, height in $FEA5 (8-pixel
+                                            ; cells)
+@label=scene_src_ptr
+ $FEA6 DEFW $0000                           ; Source pointer while drawing the
+                                            ; room scene
+@label=tile_dest_ptr
+ $FEA8 DEFW $0000                           ; Destination tile pointer for
+                                            ; scene/tile drawing
+@label=score_compare
+ $FEAA DEFW $0000                           ; Score value saved for the
+                                            ; high-score comparison
+@label=image_desc_ptr
+ $FEAC DEFW $0000                           ; Pointer to the current image
+                                            ; descriptor
+@label=will_coord_temp
+ $FEAE DEFW $0000                           ; Saved coordinate while scanning
+                                            ; the will table
+@label=will_default_entry
+ $FEB0 DEFW $0000                           ; Saved "default" will-table entry
+                                            ; pointer
+ $FEB2 DEFB $00,$00,$00,$00                 ; Header line: player number and
+                                            ; label
+@label=score_display
+ $FEB6 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Score shown in the header line
+ $FEBE DEFB $00,$00,$00,$00                 ; (first bytes reread as the
+                                            ; life-bonus check value)}
+@label=hiscore_digits
+ $FEC2 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {High-score digits shown in the
+ $FECA DEFB $00,$00,$00,$00,$00,$00         ; header}
+@label=player_lives
+ $FED0 DEFW $0000                           ; Player lives count, 2-digit BCD,
+                                            ; shown in the header (decremented
+                                            ; on death by #R$CA46, topped up by
+                                            ; #R$CA1A)
+ $FED2 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; {Header line tail / message text
+ $FEDA DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; area
+ $FEE2 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ;
+ $FEEA DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; }
+@label=player1_score
+ $FEF2 DEFB $00,$00,$00,$00,$00,$00         ; Player 1 score digits
+@label=player2_score
+ $FEF8 DEFB $00,$00,$00,$00,$00,$00         ; Player 2 score digits
+ $FEFE DEFB $00,$00
+
+; Data block at FF00
+b$FF00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FF08 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FF10 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FF18 DEFB $00,$00,$00,$00,$00,$00,$00,$00

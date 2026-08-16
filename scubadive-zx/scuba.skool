@@ -1620,8 +1620,8 @@ c$9C56 DI             ;
  $9CBB ADD HL,BC      ;
  $9CBC POP DE         ;
  $9CBD LD B,$08       ;
-*$9CBF LD A,(HL)      ;
- $9CC0 LD (DE),A      ;
+*$9CBF LD A,(HL)      ; {copy tile pixel row to screen
+ $9CC0 LD (DE),A      ; }
  $9CC1 INC HL         ;
  $9CC2 INC D          ;
  $9CC3 DJNZ $9CBF     ;
@@ -1632,9 +1632,9 @@ c$9C56 DI             ;
  $9CCC LD A,H         ;
  $9CCD AND $18        ;
  $9CCF JR NZ,$9CD5    ;
- $9CD1 LD C,$29       ;
+ $9CD1 LD C,$29       ; surface band colour
  $9CD3 JR $9CEB       ;
-*$9CD5 LD C,$06       ;
+*$9CD5 LD C,$06       ; pick colour from tile type
  $9CD7 LD A,(IY+$00)  ;
  $9CDA OR A           ;
  $9CDB JR Z,$9CEB     ;
@@ -1644,7 +1644,7 @@ c$9C56 DI             ;
  $9CE3 BIT 7,(IY+$00) ;
  $9CE7 JR Z,$9CEB     ;
  $9CE9 LD C,$06       ;
-*$9CEB LD (IX+$00),C  ;
+*$9CEB LD (IX+$00),C  ; store cell attribute
  $9CEE INC IY         ;
  $9CF0 INC IX         ;
  $9CF2 INC L          ;
@@ -1771,7 +1771,7 @@ c$9D79 PUSH HL       ;
  $9D7B PUSH AF       ;
  $9D7C CALL $9D40    ; Calculate address in the mini-map (#R$AC5D table)
  $9D7F POP AF        ;
- $9D80 LD (HL),A     ;
+ $9D80 LD (HL),A     ; store value in map cell
  $9D81 POP DE        ;
  $9D82 POP HL        ;
  $9D83 RET           ;
@@ -2091,6 +2091,13 @@ c$9DAA LD HL,$ACBF   ; $ACBF = $AC5D + 3 * 32 + 2: row 3 column 2
 ; Carve tunnel in world map: random-walk cave generator
 ;
 ; Used by the routine at #R$9DAA.
+;
+; .
+;
+; Digs a winding cave through the map by stepping one cell at a time, mostly
+; leftward, picking each next direction at random and stopping when it hits the
+; map edge. It opens up solid cells into water and marks the tile borders so
+; the passage stays connected.
 @label=CarveTunnelLeft
 c$9F81 LD ($5B01),HL ; save tunnel start position
 *$9F84 DEC L         ;
@@ -2193,6 +2200,12 @@ c$9F81 LD ($5B01),HL ; save tunnel start position
 ; Carve tunnel in world map: random-walk cave generator (rightward)
 ;
 ; Used by the routine at #R$9DAA.
+;
+; .
+;
+; Mirror of #R$9F81: digs a random winding cave the same way but biased
+; rightward, opening solid cells into water and marking tile borders until it
+; reaches the map edge.
 @label=CarveTunnelRight
 c$A03B LD ($5B01),HL ; save tunnel start position
 *$A03E INC L         ;
@@ -2494,19 +2507,19 @@ c$A193 LD HL,$20FF   ; start scan at bottom-right map cell
 *$A1DA LD A,($5B0F)  ; {skip if no chests left
  $A1DD OR A          ; }
  $A1DE JR Z,$A1F6    ;
- $A1E0 LD A,$40      ; {write chest record (flags/col/row)
- $A1E2 LD (DE),A     ;
+ $A1E0 LD A,$40      ; {write chest flags byte
+ $A1E2 LD (DE),A     ; }
  $A1E3 INC DE        ;
- $A1E4 LD A,L        ;
+ $A1E4 LD A,L        ; {write chest column
  $A1E5 LD (DE),A     ;
- $A1E6 INC DE        ;
- $A1E7 LD A,H        ;
+ $A1E6 INC DE        ; }
+ $A1E7 LD A,H        ; {write chest row
  $A1E8 LD (DE),A     ;
  $A1E9 INC DE        ; }
- $A1EA LD A,($5B0F)  ; {store index, decrement chests-left
+ $A1EA LD A,($5B0F)  ; {write chest index
  $A1ED LD (DE),A     ;
- $A1EE INC DE        ;
- $A1EF DEC A         ;
+ $A1EE INC DE        ; }
+ $A1EF DEC A         ; {one fewer chest to place
  $A1F0 LD ($5B0F),A  ; }
  $A1F3 POP HL        ;
  $A1F4 JR $A1A2      ;
@@ -2521,20 +2534,20 @@ c$A193 LD HL,$20FF   ; start scan at bottom-right map cell
  $A205 ADD HL,BC     ;
  $A206 POP BC        ; }
  $A207 LD B,$10      ;
-*$A209 LD A,(HL)     ; {check tile is open-water type
+*$A209 LD A,(HL)     ; {first tile must be open water
  $A20A INC HL        ;
  $A20B INC C         ;
  $A20C SUB $1C       ;
  $A20E JR C,$A278    ;
  $A210 CP $04        ;
  $A212 JR NC,$A278   ; }
- $A214 LD A,(HL)     ;
+ $A214 LD A,(HL)     ; {second tile must be open water
  $A215 INC HL        ;
  $A216 INC C         ;
  $A217 SUB $1C       ;
  $A219 JR C,$A278    ;
  $A21B CP $04        ;
- $A21D JR NC,$A278   ;
+ $A21D JR NC,$A278   ; }
  $A21F LD A,C        ; {skip 7 of 8 candidate tiles (spacing)
  $A220 AND $07       ;
  $A222 JR Z,$A278    ; }
@@ -2967,6 +2980,14 @@ b$B07D DEFB $01,$01,$01,$01
 ; Draw static objects on the screen; prepare LB07D table
 ;
 ; Used by the routine at #R$9C56.
+;
+; .
+;
+; Walks the world's static-object table and, for each object that falls inside
+; the current 24x24-tile view, records its on-screen position in the #R$B07D
+; list and draws its sprite (oxygen, pearls, small/big shell, or chest) with
+; the matching colour. The #R$B07D list is what the diver's interaction check
+; later scans.
 @label=DrawStatics
 c$B0A9 LD DE,($5B03)   ; get Screen position on mini-map
  $B0AD LD A,D          ; {multiply scroll position by 8
@@ -3148,6 +3169,13 @@ b$B210 DEFB $00      ; ???
 ; Animate and draw rising air bubbles, plus Octopus
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
+;
+; .
+;
+; Runs the ambient sea animation each frame: first ticks the Octopus, then, on
+; a level-dependent timer, walks the bubble slots and moves each active bubble
+; one step up the screen, occasionally spawning a new one at a random position
+; and growing small bubbles into big ones as they rise.
 c$B213 CALL $B2C0    ; Octopus delay and process
  $B216 LD HL,$B211   ; {spawn timer countdown
  $B219 DEC (HL)      ;
@@ -3283,16 +3311,16 @@ c$B2CE CALL $A164    ; Convert char coords HL to ZX screen address
 @label=DrawTileXor16x8
 c$B2DB CALL $A164    ; Convert char coords HL to ZX screen address
  $B2DE LD B,$08      ; tile height 8 pixels
-*$B2E0 LD A,(DE)     ;
+*$B2E0 LD A,(DE)     ; {XOR left column byte
  $B2E1 XOR (HL)      ;
- $B2E2 LD (HL),A     ;
+ $B2E2 LD (HL),A     ; }
  $B2E3 INC DE        ;
  $B2E4 INC L         ;
- $B2E5 LD A,(DE)     ;
+ $B2E5 LD A,(DE)     ; {XOR right column byte
  $B2E6 XOR (HL)      ;
- $B2E7 LD (HL),A     ;
+ $B2E7 LD (HL),A     ; }
  $B2E8 DEC L         ;
- $B2E9 INC H         ;
+ $B2E9 INC H         ; next pixel row
  $B2EA INC DE        ;
  $B2EB DJNZ $B2E0    ;
  $B2ED RET           ;
@@ -3404,7 +3432,12 @@ b$B392 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ;
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
-c$B3A0 BIT 4,(IX+$0D) ;
+;
+; Maintains the object's packed sprite-data list: it works out where the object
+; sits, sums up the space used by earlier entries, and either makes room for
+; the object's data or clears out the slot it vacated, shifting the remaining
+; bytes so the list stays tightly packed.
+c$B3A0 BIT 4,(IX+$0D) ; use default list or record's stored list?
  $B3A4 JR Z,$B3AB     ;
 ; This entry point is used by the routine at #R$DFD5.
 *$B3A6 LD HL,($B7B9)  ; {get default list address
@@ -3412,14 +3445,14 @@ c$B3A0 BIT 4,(IX+$0D) ;
 ; This entry point is used by the routine at #R$DFD5.
 *$B3AB LD H,(IX+$08)  ; {get record's stored list address
  $B3AE LD L,(IX+$07)  ; }
-*$B3B1 LD C,(IY+$0A)  ;
+*$B3B1 LD C,(IY+$0A)  ; get record size
  $B3B4 LD A,(IX+$03)  ; get record's state/count byte
  $B3B7 OR A           ;
  $B3B8 JR NZ,$B3D6    ;
  $B3BA SET 6,(IX+$0D) ; set removed flag on record
- $B3BE BIT 3,(IX+$0D) ;
+ $B3BE BIT 3,(IX+$0D) ; {pick byte-shift amount from direction bits
  $B3C2 JR Z,$B3CE     ;
- $B3C4 BIT 7,(IX+$12) ;
+ $B3C4 BIT 7,(IX+$12) ; }
  $B3C8 JR NZ,$B3E9    ;
  $B3CA LD A,$08       ;
  $B3CC JR $B3D6       ;
@@ -3440,8 +3473,8 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B3E6 INC HL         ;
  $B3E7 DJNZ $B3E5     ; }
 *$B3E9 PUSH HL        ;
- $B3EA LD D,(IX+$0C)  ;
- $B3ED LD E,(IX+$0B)  ;
+ $B3EA LD D,(IX+$0C)  ; {get record's list-end pointer
+ $B3ED LD E,(IX+$0B)  ; }
  $B3F0 LD A,(DE)      ; {check for $FF end-of-list marker
  $B3F1 INC A          ;
  $B3F2 JR NZ,$B3FA    ; }
@@ -3469,11 +3502,11 @@ c$B3A0 BIT 4,(IX+$0D) ;
  $B419 DJNZ $B417     ; }
 *$B41B LD (IX+$0C),D  ;
  $B41E LD (IX+$0B),E  ;
- $B421 LD B,(IX+$02)  ;
+ $B421 LD B,(IX+$02)  ; {X-shift centered (0)?
  $B424 LD A,B         ;
- $B425 OR A           ;
+ $B425 OR A           ; }
  $B426 JR NZ,$B446    ;
- $B428 SET 5,(IX+$0D) ;
+ $B428 SET 5,(IX+$0D) ; mark reached column center
  $B42C BIT 4,(IX+$0D) ;
  $B430 JR Z,$B43E     ;
  $B432 BIT 7,(IX+$11) ;
@@ -3520,18 +3553,24 @@ c$B3A0 BIT 4,(IX+$0D) ;
 ;
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
-c$B470 BIT 0,(IX+$0D) ;
+;
+; Draws one object's sprite into the play area, clipping it to the visible
+; window so partly-off-screen objects show only their visible part. It
+; XOR-blits the pixels (so drawing again erases cleanly) and skips columns that
+; fall outside the viewport, setting a collision flag if the sprite overlaps
+; existing pixels.
+c$B470 BIT 0,(IX+$0D) ; rebuild packed list first if flagged
  $B474 JR Z,$B479     ;
  $B476 CALL $B3A0     ; Insert or remove object from packed record list
 *$B479 LD D,(IX+$08)  ; {get sprite bitmap address
  $B47C LD E,(IX+$07)  ; }
- $B47F BIT 1,(IX+$0D) ;
+ $B47F BIT 1,(IX+$0D) ; skip buffer-clear if still active
  $B483 JR NZ,$B496    ;
  $B485 PUSH DE        ;
  $B486 LD C,(IY+$09)  ; {get draw-buffer dimensions
  $B489 LD L,(IY+$0A)  ; }
  $B48C XOR A          ;
-*$B48D LD B,L         ;
+*$B48D LD B,L         ; clear the draw buffer
 *$B48E LD (DE),A      ;
  $B48F INC DE         ;
  $B490 DJNZ $B48E     ;
@@ -3551,7 +3590,7 @@ c$B470 BIT 0,(IX+$0D) ;
  $B4B0 INC HL         ;
  $B4B1 DEC B          ;
  $B4B2 JR $B4A5       ;
-*$B4B4 LD A,(IY+$06)  ;
+*$B4B4 LD A,(IY+$06)  ; clip against right edge
  $B4B7 ADD A,(IY+$02) ;
  $B4BA LD C,A         ;
 *$B4BB CP $18         ;
@@ -3568,7 +3607,7 @@ c$B470 BIT 0,(IX+$0D) ;
  $B4D0 PUSH HL        ;
  $B4D1 POP IX         ; IX = sprite bitmap pointer
  $B4D3 LD B,(IY+$09)  ;
-*$B4D6 PUSH BC        ;
+*$B4D6 PUSH BC        ; skip fully-clipped top rows
 *$B4D7 LD A,(IY+$03)  ;
  $B4DA CP $18         ;
  $B4DC JR C,$B4F0     ;
@@ -3623,8 +3662,8 @@ c$B470 BIT 0,(IX+$0D) ;
  $B536 JR NC,$B53A    ;
  $B538 DJNZ $B4D6     ;
 *$B53A POP IX         ;
- $B53C BIT 5,(IX+$0D) ;
- $B540 JR NZ,$B547    ;
+ $B53C BIT 5,(IX+$0D) ; {record removal needed (bit5/6)?
+ $B540 JR NZ,$B547    ; }
  $B542 BIT 6,(IX+$0D) ;
  $B546 RET Z          ;
 *$B547 LD H,(IX+$08)  ; {get list address for record removal
@@ -3674,18 +3713,18 @@ c$B572 PUSH BC       ;
 ; I:IY record address in #R$C092 area; (IY+$0A) is record size
 c$B57E LD E,(IY+$0A) ; get record size
  $B581 LD D,$00      ;
- $B583 LD B,(IY+$09) ;
+ $B583 LD B,(IY+$09) ; {walk HL to last record
 *$B586 ADD HL,DE     ;
- $B587 DJNZ $B586    ;
+ $B587 DJNZ $B586    ; }
  $B589 DEC HL        ;
- $B58A LD D,H        ;
+ $B58A LD D,H        ; {DE = last record, HL = one before
  $B58B LD E,L        ;
- $B58C DEC HL        ;
+ $B58C DEC HL        ; }
  $B58D LD B,(IY+$09) ;
  $B590 CALL $B598    ; Copy records backward
- $B593 INC DE        ;
+ $B593 INC DE        ; {clear the freed first slot
  $B594 XOR A         ;
- $B595 LD (DE),A     ;
+ $B595 LD (DE),A     ; }
  $B596 JR $B565      ;
 
 ; Copy records backward
@@ -3752,6 +3791,11 @@ c$B5A4 BIT 7,(IX+$12) ; check Y direction (moving up/down)
 ;
 ; I:IX record address in #R$C4F0 area
 ; I:IY record address in #R$C092 area
+;
+; Works out where an object sits relative to the visible window and whether it
+; fits inside it, flagging it as on- or off-screen. Objects that are visible
+; get a screen slot reserved for their sprite data, and ones that leave the
+; view give their slot back, so only what's on screen uses buffer space.
 c$B5E0 RES 1,(IX+$0D) ;
  $B5E4 BIT 0,(IX+$0D) ;
  $B5E8 JR Z,$B5EE     ;
@@ -3848,8 +3892,8 @@ c$B686 BIT 5,(IX+$0D) ; check vertical-edge flag
  $B6AD ADD A,(IY+$06) ; }
  $B6B0 LD L,A         ;
 *$B6B1 LD B,(IY+$09)  ; get rows to process
-*$B6B4 LD A,H         ;
- $B6B5 AND $E0        ;
+*$B6B4 LD A,H         ; {skip cells outside the 24x24 viewport
+ $B6B5 AND $E0        ; }
  $B6B7 JR NZ,$B6D3    ;
  $B6B9 LD A,H         ;
  $B6BA CP $18         ;
@@ -3985,8 +4029,8 @@ c$B737 LD D,(IX+$14)  ; {get object position into DE
 ; Point of return
  $B7B8 RET            ;
 
-; Unused
-s$B7B9 DEFW $0000    ; buffer address ??
+; Data block at B7B9
+b$B7B9 DEFW $0000    ; buffer address ??
 
 ; Update object: advance shift, draw, run moving procedure
 ;
@@ -4094,6 +4138,11 @@ c$B837 LD A,$06       ; base color value
 ; .
 ;
 ; I:IX object record
+;
+; Steers a fish that swims left and right: it probes the relief tiles ahead to
+; see if the way is clear, reversing direction when blocked, then picks the
+; matching sprite and glides one step, alternating between the moving and
+; settled states each call.
 c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B889 JP NZ,$B941     ;
  $B88C BIT 7,(IX+$11)  ; check facing direction
@@ -4195,6 +4244,15 @@ c$B885 BIT 0,(IX+$10)  ; check "moving" bit
  $B971 RET             ;
 
 ; Moving procedure for fish object moving vertical
+;
+; .
+;
+; .
+;
+; Steers a fish that swims up and down: it probes the relief tiles above or
+; below to see if the way is clear, reversing direction when blocked, then
+; picks the matching sprite and glides one step, alternating between the moving
+; and settled states each call.
 c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $B976 JP NZ,$BA33     ;
  $B979 BIT 7,(IX+$12)  ; check facing direction
@@ -4304,6 +4362,16 @@ c$B972 BIT 0,(IX+$10)  ; check "moving" bit
  $BA63 RET             ;
 
 ; Moving procedure for fish object moving diagonal
+;
+; .
+;
+; .
+;
+; Steers a fish that swims diagonally: it probes the relief tiles ahead in both
+; directions to see where it can go, turning or reversing when blocked, and
+; picks the matching sprite for its current heading. Once lined up it commits
+; to a move and glides one step, alternating between the moving and settled
+; states each call.
 c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BA68 JP NZ,$BC8F     ;
  $BA6B SET 5,(IX+$10)  ; mark as diagonal-move candidate
@@ -4313,15 +4381,15 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BA79 JP NZ,$BB94     ;
  $BA7C BIT 7,(IX+$11)  ; check facing direction
  $BA80 JR NZ,$BA8F     ;
- $BA82 LD A,L          ;
+ $BA82 LD A,L          ; {compute tile-ahead position (right)
  $BA83 ADD A,(IY+$07)  ;
- $BA86 LD L,A          ;
+ $BA86 LD L,A          ; }
  $BA87 LD D,(IY+$15)   ;
  $BA8A LD E,(IY+$14)   ;
  $BA8D JR $BA96        ;
-*$BA8F DEC L           ;
- $BA90 LD D,(IY+$17)   ; Get screen attribute address
- $BA93 LD E,(IY+$16)   ;
+*$BA8F DEC L           ; {probe tile ahead-left; get its sprite
+ $BA90 LD D,(IY+$17)   ;
+ $BA93 LD E,(IY+$16)   ; }
 *$BA96 CALL $A129      ; Calculate address in relief block and Get tile nummber
  $BA99 OR A            ;
  $BA9A JR NZ,$BADE     ;
@@ -4337,10 +4405,10 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BAAD JR NZ,$BAB4     ;
 *$BAAF LD (IX+$12),$00 ;
  $BAB3 RET             ;
-*$BAB4 LD H,(IX+$01)   ;
+*$BAB4 LD H,(IX+$01)   ; {probe the diagonal-turn tile
  $BAB7 LD L,(IX+$00)   ;
  $BABA DEC H           ;
- $BABB LD C,$FF        ;
+ $BABB LD C,$FF        ; }
  $BABD BIT 2,A         ;
  $BABF JR Z,$BAC9      ;
  $BAC1 LD C,$01        ;
@@ -4359,8 +4427,8 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
  $BAD8 JR NZ,$BAAF     ;
  $BADA LD (IX+$12),C   ;
  $BADD RET             ;
-*$BADE LD (IX+$0B),E   ;
- $BAE1 LD (IX+$0C),D   ;
+*$BADE LD (IX+$0B),E   ; {way clear: commit sprite and move
+ $BAE1 LD (IX+$0C),D   ; }
  $BAE4 SET 0,(IX+$10)  ; set "moving" bit
  $BAE8 RES 7,(IX+$10)  ; clear facing-down flag
  $BAEC SLA (IX+$0E)    ; double speed while moving
@@ -4646,20 +4714,20 @@ c$BA64 BIT 0,(IX+$10)  ; check "moving" bit
 ; I:L random seed byte, masked by C to add speed spread
 ; I:C speed base/mask; speed factor (IX+$0E) = (L AND C) + C
 ; I:IX record address in #R$C4F0 area
-c$BD83 LD A,L        ;
+c$BD83 LD A,L        ; {set speed factor = (L AND C) + C
  $BD84 AND C         ;
  $BD85 ADD A,C       ;
- $BD86 LD (IX+$0E),A ;
- $BD89 LD HL,$BDA9   ;
+ $BD86 LD (IX+$0E),A ; }
+ $BD89 LD HL,$BDA9   ; {speed counter from rolling 0..31 index
  $BD8C INC (HL)      ;
  $BD8D LD A,$1F      ;
  $BD8F AND (HL)      ;
  $BD90 INC A         ;
- $BD91 LD (IX+$0F),A ;
+ $BD91 LD (IX+$0F),A ; }
  $BD94 PUSH DE       ;
  $BD95 CALL $9D84    ; Random
- $BD98 LD A,H        ;
- $BD99 AND $07       ;
+ $BD98 LD A,H        ; {random direction index 0..7
+ $BD99 AND $07       ; }
  $BD9B LD HL,$BDAA   ; !!MUT-ARG!! LBDAA or LBDB2
  $BD9E ADD A,L       ;
  $BD9F LD L,A        ;
@@ -4747,13 +4815,13 @@ c$BDEA LD A,($5B04)  ;
 ; Process 26-byte records in group II
 ;
 ; Used by the routine at #R$BDEA.
-c$BE40 LD A,($5B16)  ;
- $BE43 LD B,A        ;
+c$BE40 LD A,($5B16)  ; {group II record count; per-frame update pass
+ $BE43 LD B,A        ; }
  $BE44 LD IX,($5B1F) ;
 *$BE48 PUSH BC       ;
- $BE49 DEC (IX+$0F)  ;
+ $BE49 DEC (IX+$0F)  ; update only when speed counter reaches 0
  $BE4C CALL Z,$B737  ; Update fish object
- $BE4F LD BC,$001A   ;
+ $BE4F LD BC,$001A   ; 26 bytes - record size
  $BE52 ADD IX,BC     ;
  $BE54 POP BC        ;
  $BE55 DJNZ $BE48    ;
@@ -4762,12 +4830,12 @@ c$BE40 LD A,($5B16)  ;
 ; Process 26-byte records in group II
 ;
 ; Used by the routine at #R$BDBA.
-c$BE58 LD A,($5B16)  ;
- $BE5B LD B,A        ;
+c$BE58 LD A,($5B16)  ; {group II record count; initial draw pass
+ $BE5B LD B,A        ; }
  $BE5C LD IX,($5B1F) ;
 *$BE60 PUSH BC       ;
  $BE61 CALL $B7BB    ; Update object
- $BE64 LD BC,$001A   ;
+ $BE64 LD BC,$001A   ; 26 bytes - record size
  $BE67 ADD IX,BC     ;
  $BE69 POP BC        ;
  $BE6A DJNZ $BE60    ;
@@ -4776,13 +4844,13 @@ c$BE58 LD A,($5B16)  ;
 ; Process 26-byte records in group III
 ;
 ; Used by the routine at #R$BDEA.
-c$BE6D LD A,($5B17)  ;
- $BE70 LD B,A        ;
+c$BE6D LD A,($5B17)  ; {group III record count; per-frame update pass
+ $BE70 LD B,A        ; }
  $BE71 LD IX,($5B21) ;
 *$BE75 PUSH BC       ;
- $BE76 DEC (IX+$0F)  ;
+ $BE76 DEC (IX+$0F)  ; update only when speed counter reaches 0
  $BE79 CALL Z,$B737  ; Update fish object
- $BE7C LD BC,$001A   ;
+ $BE7C LD BC,$001A   ; 26 bytes - record size
  $BE7F ADD IX,BC     ;
  $BE81 POP BC        ;
  $BE82 DJNZ $BE75    ;
@@ -4791,12 +4859,12 @@ c$BE6D LD A,($5B17)  ;
 ; Process 26-byte records in group III
 ;
 ; Used by the routine at #R$BDBA.
-c$BE85 LD A,($5B17)  ;
- $BE88 LD B,A        ;
+c$BE85 LD A,($5B17)  ; {group III record count; initial draw pass
+ $BE88 LD B,A        ; }
  $BE89 LD IX,($5B21) ;
 *$BE8D PUSH BC       ;
  $BE8E CALL $B7BB    ; Update object
- $BE91 LD BC,$001A   ;
+ $BE91 LD BC,$001A   ; 26 bytes - record size
  $BE94 ADD IX,BC     ;
  $BE96 POP BC        ;
  $BE97 DJNZ $BE8D    ;
@@ -4805,13 +4873,13 @@ c$BE85 LD A,($5B17)  ;
 ; Process 21-byte records in group I: Boat, meduzas, round fishes
 ;
 ; Used by the routine at #R$BDEA.
-c$BE9A LD A,($5B15)  ;
- $BE9D LD B,A        ;
+c$BE9A LD A,($5B15)  ; {group I record count; per-frame update pass
+ $BE9D LD B,A        ; }
  $BE9E LD IX,$C4F0   ;
 *$BEA2 PUSH BC       ;
- $BEA3 DEC (IX+$0F)  ;
+ $BEA3 DEC (IX+$0F)  ; update only when speed counter reaches 0
  $BEA6 CALL Z,$B737  ; Update fish object
- $BEA9 LD BC,$0015   ;
+ $BEA9 LD BC,$0015   ; 21 bytes - record size
  $BEAC ADD IX,BC     ;
  $BEAE POP BC        ;
  $BEAF DJNZ $BEA2    ;
@@ -4820,14 +4888,14 @@ c$BE9A LD A,($5B15)  ;
 ; Process 21-byte records in group I: Boat, meduzas, round fishes
 ;
 ; Used by the routine at #R$BDBA.
-c$BEB2 LD A,($5B15)  ;
- $BEB5 LD B,A        ;
+c$BEB2 LD A,($5B15)  ; {group I record count; initial draw pass
+ $BEB5 LD B,A        ; }
  $BEB6 LD IX,$C4F0   ;
 *$BEBA PUSH BC       ;
  $BEBB CALL $B7BB    ; Update object
  $BEBE LD BC,$0015   ;
- $BEC1 ADD IX,BC     ;
- $BEC3 POP BC        ;
+ $BEC1 ADD IX,BC     ; {21 bytes - record size
+ $BEC3 POP BC        ; }
  $BEC4 DJNZ $BEBA    ;
  $BEC6 RET           ;
 
@@ -5009,6 +5077,11 @@ b$C007 DEFW $0000    ; ???
 ; Used by the routine at #R$BEDB.
 ;
 ; I:A number of records
+;
+; Scatters a given number of objects across the map: for each one it walks to a
+; free spot that isn't the boat's own cell and isn't too close to a previously
+; chosen spot, then copies in a random shape template and places it there with
+; a small random offset.
 @label=PlaceObjectsRandom
 c$C009 LD B,A        ; {loop counter; init scan cursor position
  $C00A LD (IY+$05),E ;
@@ -5348,6 +5421,14 @@ c$C45C LD A,($5B18)  ; {get group IV record count
  $C480 RET           ;
 
 ; Object idle animation state machine (frame cycle + random wait)
+;
+; .
+;
+; .
+;
+; Drives a slow idle animation by cycling an object's frame back and forth
+; between two limits, pausing for a random spell at each end so the motion
+; looks natural rather than mechanical.
 c$C481 LD A,(IX+$10)   ; {get animation state
  $C484 OR A            ; }
  $C485 JR NZ,$C490     ;
@@ -5521,9 +5602,14 @@ c$DA39 LD ($5B4A),A  ; store attribute for later use
 ; Print char and shift current position right
 ;
 ; Used by the routine at #R$DA98.
+;
+; .
+;
+; Prints one character then nudges the current print position one cell to the
+; right, so callers can print a string cell by cell.
 @label=PrintCharRt
 c$DA59 LD HL,($DC7E) ;
- $DA5C INC L         ;
+ $DA5C INC L         ; advance print column right
  $DA5D LD ($DC7E),HL ;
  $DA60 DEC L         ;
  $DA61 JR $DA6B      ;
@@ -5540,21 +5626,21 @@ c$DA59 LD HL,($DC7E) ;
  $DA6D CALL $A164    ; Convert char coords HL to ZX screen address
  $DA70 EX DE,HL      ;
  $DA71 POP AF        ;
- $DA72 LD L,A        ;
+ $DA72 LD L,A        ; {char code to glyph index
  $DA73 LD H,$00      ;
- $DA75 RES 7,L       ;
+ $DA75 RES 7,L       ; }
  $DA77 ADD HL,HL     ;
  $DA78 ADD HL,HL     ;
  $DA79 ADD HL,HL     ; *8
- $DA7A BIT 7,A       ;
+ $DA7A BIT 7,A       ; tile char ($80+)?
  $DA7C JR NZ,$DA83   ;
  $DA7E LD BC,$3D00   ; ROM font address, for chars $20..$7F
  $DA81 JR $DA86      ;
 *$DA83 LD BC,$DC80   ; Tiles 8x8 address, for chars $80..$AE
 *$DA86 ADD HL,BC     ;
  $DA87 LD B,$08      ;
-*$DA89 LD A,(HL)     ;
- $DA8A LD (DE),A     ;
+*$DA89 LD A,(HL)     ; {copy glyph pixel row
+ $DA8A LD (DE),A     ; }
  $DA8B INC HL        ;
  $DA8C INC D         ;
  $DA8D DJNZ $DA89    ;
@@ -5572,17 +5658,17 @@ c$DA59 LD HL,($DC7E) ;
 ; I:BC Row and column
 ; I:DE Print char procedure address
 @label=PrintStringEx
-c$DA98 LD ($DAA3),DE ;
+c$DA98 LD ($DAA3),DE ; self-modify: set print-char routine from DE
 ; This entry point is used by the routines at #R$DAAD and #R$EEAD.
 @label=PrintString
-*$DA9C LD ($DC7E),BC ;
+*$DA9C LD ($DC7E),BC ; set start row/column
  $DAA0 LD A,(HL)     ;
 *$DAA1 PUSH HL       ;
  $DAA2 CALL $DA59    ; Print char and shift !!MUT-ARG!! #R$DA59 / #R$DA63
  $DAA5 POP HL        ;
  $DAA6 INC HL        ;
  $DAA7 LD A,(HL)     ;
- $DAA8 CP $FF        ;
+ $DAA8 CP $FF        ; stop at $FF terminator
  $DAAA JR NZ,$DAA1   ;
  $DAAC RET           ;
 
@@ -5717,6 +5803,12 @@ c$DAAD LD A,$30      ;
 ; Initialize variables depending of Game level
 ;
 ; Used by the routines at #R$D990 and #R$EEAD.
+;
+; .
+;
+; Works out this level's difficulty numbers from the chosen skill - how many
+; creatures of each group to spawn and the movement delay - and stores them for
+; the level setup to use.
 @label=InitLevelVars
 c$DBC2 LD A,($5B10)  ; Game level 1..4
  $DBC5 ADD A,A       ;
@@ -5859,12 +5951,12 @@ c$DE2E LD (HL),$38   ; erase old marker
 ; Used by the routine at #R$DFD5.
 @label=UpdateDepth
 c$DE3E LD HL,($DE55) ;
- $DE41 LD DE,$58FB   ;
- $DE44 LD C,$28      ;
- $DE46 LD A,($5B04)  ;
+ $DE41 LD DE,$58FB   ; {gauge base address + marker colour
+ $DE44 LD C,$28      ; }
+ $DE46 LD A,($5B04)  ; {depth level 0..15 from mini-map row
  $DE49 INC A         ;
  $DE4A SRL A         ;
- $DE4C AND $0F       ;
+ $DE4C AND $0F       ; }
  $DE4E CALL $DE2E    ; Update gauge indicator on the screen
  $DE51 LD ($DE55),HL ;
  $DE54 RET           ;
@@ -5882,22 +5974,22 @@ b$DE55 DEFW $0000    ; Depth indicator, address in screen area
 ;
 ; I:HL New value for Oxygen
 @label=UpdateOxygen
-c$DE5D LD ($DE5B),HL ;
- $DE60 LD A,H        ;
+c$DE5D LD ($DE5B),HL ; store new Oxygen level
+ $DE60 LD A,H        ; {gauge level = 15 - (high byte >> 4)
  $DE61 SRL A         ;
  $DE63 SRL A         ;
  $DE65 SRL A         ;
  $DE67 SRL A         ;
- $DE69 LD H,A        ;
+ $DE69 LD H,A        ; }
  $DE6A LD A,$0F      ;
  $DE6C SUB H         ;
  $DE6D LD DE,$58F9   ;
  $DE70 LD C,$20      ;
  $DE72 LD HL,($DE57) ;
- $DE75 CP $0E        ;
- $DE77 JR C,$DE7E    ;
+ $DE75 CP $0E        ; {low on oxygen? warning
+ $DE77 JR C,$DE7E    ; }
  $DE79 CALL $E645    ; Play melody $E629
- $DE7C LD C,$10      ;
+ $DE7C LD C,$10      ; use warning marker colour
 *$DE7E CALL $DE2E    ; Update gauge indicator on the screen
  $DE81 LD ($DE57),HL ;
  $DE84 RET           ;
@@ -6043,13 +6135,18 @@ b$DF45 DEFB $00,$00,$00,$00,$00,$00,$00,$00
 ; Used by the routines at #R$E2A8 and #R$E915.
 ;
 ; I:IX Diver object address = #R$E33B
-c$DFD5 LD HL,($B7B9)   ;
+;
+; Moves the diver one step: turns the current angle into an X/Y speed, updates
+; the position, and scrolls the view when the diver crosses a tile or screen
+; edge. It then picks the right swim sprite for the facing direction and draws
+; the diver, redrawing the whole screen when the view has scrolled.
+c$DFD5 LD HL,($B7B9)   ; {swap the two draw buffers (double-buffering)
  $DFD8 LD DE,($5B35)   ;
  $DFDC LD ($5B35),HL   ;
- $DFDF LD ($B7B9),DE   ;
+ $DFDF LD ($B7B9),DE   ; }
  $DFE3 LD IY,$DF01     ;
- $DFE7 LD HL,$DF11     ;
- $DFEA LD ($DF0F),HL   ;
+ $DFE7 LD HL,$DF11     ; {reset collision-point list pointer
+ $DFEA LD ($DF0F),HL   ; }
  $DFED LD A,(IX+$09)   ;
  $DFF0 LD (IX+$0B),A   ;
  $DFF3 LD A,(IX+$0A)   ;
@@ -6075,8 +6172,8 @@ c$DFD5 LD HL,($B7B9)   ;
  $E024 LD HL,($5B03)   ; get Screen position on mini-map
  $E027 ADD A,(IX+$04)  ; add DX
  $E02A LD (IX+$13),A   ; set X value
- $E02D SRL A           ;
- $E02F AND $07         ;
+ $E02D SRL A           ; {X shift within tile 0..7
+ $E02F AND $07         ; }
  $E031 CP (IX+$02)     ;
  $E034 LD (IX+$15),A   ;
  $E037 JR Z,$E08D      ;
@@ -6088,7 +6185,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E045 JR Z,$E08D      ;
  $E047 BIT 7,(IX+$11)  ;
  $E04B JR Z,$E08D      ;
- $E04D DEC (IX+$00)    ;
+ $E04D DEC (IX+$00)    ; crossed left tile edge: shift column, scroll left
  $E050 RES 4,(IX+$0D)  ;
  $E054 LD A,(IX+$00)   ;
  $E057 CP (IX+$1C)     ;
@@ -6102,7 +6199,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E06C JR NZ,$E08D     ;
  $E06E BIT 7,(IX+$11)  ;
  $E072 JR NZ,$E08D     ;
- $E074 INC (IX+$00)    ;
+ $E074 INC (IX+$00)    ; crossed right tile edge: shift column, scroll right
  $E077 RES 4,(IX+$0D)  ;
  $E07B LD A,(IX+$00)   ;
  $E07E CP (IX+$1B)     ;
@@ -6114,8 +6211,8 @@ c$DFD5 LD HL,($B7B9)   ;
 *$E08D LD A,(IX+$14)   ; get Y value
  $E090 ADD A,(IX+$05)  ; add DY
  $E093 LD (IX+$14),A   ; set Y value
- $E096 SRL A           ;
- $E098 AND $07         ;
+ $E096 SRL A           ; {Y shift within tile 0..7
+ $E098 AND $07         ; }
  $E09A CP (IX+$03)     ;
  $E09D LD (IX+$16),A   ;
  $E0A0 JP Z,$E120      ;
@@ -6135,7 +6232,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E0C6 ADD A,A         ;
  $E0C7 LD (IX+$14),A   ; set Y value
  $E0CA JR $E120        ;
-*$E0CC DEC (IX+$01)    ;
+*$E0CC DEC (IX+$01)    ; crossed top tile edge: shift row, scroll up
  $E0CF DEC (IX+$1A)    ;
  $E0D2 RES 3,(IX+$0D)  ;
  $E0D6 LD A,(IX+$01)   ;
@@ -6150,12 +6247,12 @@ c$DFD5 LD HL,($B7B9)   ;
  $E0EE JR NZ,$E120     ;
  $E0F0 BIT 7,(IX+$12)  ;
  $E0F4 JR NZ,$E120     ;
- $E0F6 INC (IX+$01)    ;
+ $E0F6 INC (IX+$01)    ; crossed bottom tile edge: shift row, scroll down
  $E0F9 INC (IX+$1A)    ;
  $E0FC BIT 5,(IX+$26)  ;
  $E100 JR NZ,$E10A     ;
- $E102 LD A,(IX+$1A)   ;
- $E105 CP $46          ;
+ $E102 LD A,(IX+$1A)   ; {reached depth $46 => extra life
+ $E105 CP $46          ; }
  $E107 CALL Z,$E9B0    ; Plus one live
 *$E10A RES 3,(IX+$0D)  ;
  $E10E LD A,(IX+$01)   ;
@@ -6165,28 +6262,28 @@ c$DFD5 LD HL,($B7B9)   ;
  $E118 LD (IX+$01),A   ;
  $E11B INC H           ;
  $E11C SET 2,(IX+$10)  ;
-*$E120 LD A,(IX+$0D)   ;
- $E123 AND $18         ;
+*$E120 LD A,(IX+$0D)   ; {both axes crossed a screen edge?
+ $E123 AND $18         ; }
  $E125 CP $18          ;
  $E127 JR Z,$E174      ;
- $E129 BIT 2,(IX+$10)  ;
+ $E129 BIT 2,(IX+$10)  ; view scrolled this frame?
  $E12D JR Z,$E171      ;
  $E12F RES 1,(IX+$0D)  ;
  $E133 PUSH IX         ;
  $E135 PUSH IY         ;
- $E137 LD A,L          ;
+ $E137 LD A,L          ; {wrap mini-map position to 0..31
  $E138 AND $1F         ;
  $E13A LD L,A          ;
  $E13B LD A,H          ;
  $E13C AND $1F         ;
- $E13E LD H,A          ;
+ $E13E LD H,A          ; }
  $E13F LD ($5B03),HL   ; set Screen position on mini-map
  $E142 CALL $9C56      ; Draw game screen
  $E145 CALL $DE3E      ; Update Depth indicator
- $E148 LD HL,($B7B9)   ;
+ $E148 LD HL,($B7B9)   ; {swap buffers around row-band redraw
  $E14B LD DE,($5B35)   ;
  $E14F LD ($B7B9),DE   ;
- $E153 LD ($5B35),HL   ;
+ $E153 LD ($5B35),HL   ; }
  $E156 CALL $BDBA      ; Draw records for current mini-map row band
  $E159 LD HL,($B7B9)   ;
  $E15C LD DE,($5B35)   ;
@@ -6196,9 +6293,9 @@ c$DFD5 LD HL,($B7B9)   ;
  $E169 POP IX          ;
  $E16B RES 2,(IX+$10)  ;
  $E16F JR $E174        ;
-*$E171 CALL $B3AB      ;
-*$E174 SET 4,(IX+$0D)  ;
- $E178 SET 3,(IX+$0D)  ;
+*$E171 CALL $B3AB      ; no scroll: partial redraw only
+*$E174 SET 4,(IX+$0D)  ; {enable both draw passes
+ $E178 SET 3,(IX+$0D)  ; }
  $E17C LD E,(IX+$04)   ;
  $E17F LD A,(IX+$15)   ;
  $E182 CP (IX+$02)     ;
@@ -6211,7 +6308,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E196 JR Z,$E19E      ;
  $E198 LD (IX+$12),E   ;
  $E19B LD (IX+$03),A   ;
-*$E19E BIT 7,(IX+$10)  ;
+*$E19E BIT 7,(IX+$10)  ; not swimming: use current sprite
  $E1A2 JR NZ,$E1B8     ;
  $E1A4 LD A,(IX+$24)   ;
  $E1A7 LD (IX+$09),A   ;
@@ -6220,7 +6317,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E1B0 LD (IX+$0A),A   ;
  $E1B3 LD (IX+$0C),A   ;
  $E1B6 JR $E1F4        ;
-*$E1B8 BIT 4,(IX+$10)  ;
+*$E1B8 BIT 4,(IX+$10)  ; exploding/drowned: keep sprite
  $E1BC JR NZ,$E1C4     ;
  $E1BE BIT 5,(IX+$10)  ;
  $E1C2 JR Z,$E1D2      ;
@@ -6229,7 +6326,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E1CA LD A,(IX+$0A)   ;
  $E1CD LD (IX+$0C),A   ;
  $E1D0 JR $E1F4        ;
-*$E1D2 INC (IX+$17)    ;
+*$E1D2 INC (IX+$17)    ; swimming: advance animation frame
  $E1D5 LD H,(IX+$06)   ; get Angle 0..15
  $E1D8 LD A,(IX+$17)   ;
  $E1DB AND $03         ;
@@ -6244,13 +6341,13 @@ c$DFD5 LD HL,($B7B9)   ;
  $E1EB LD (IX+$0C),H   ;
  $E1EE LD (IX+$09),L   ;
  $E1F1 LD (IX+$0B),L   ;
-*$E1F4 CALL $B3A6      ;
+*$E1F4 CALL $B3A6      ; rebuild packed sprite list
  $E1F7 LD A,(IX+$01)   ;
  $E1FA LD (IX+$19),A   ; set Row
  $E1FD LD IY,($B7B9)   ;
  $E201 LD D,(IX+$08)   ;
  $E204 LD E,(IX+$07)   ;
- $E207 BIT 0,(IX+$0D)  ;
+ $E207 BIT 0,(IX+$0D)  ; use empty sprite where not drawn
  $E20B JR NZ,$E211     ;
  $E20D LD IY,$A41B     ;
 *$E211 BIT 1,(IX+$0D)  ;
@@ -6269,11 +6366,11 @@ c$DFD5 LD HL,($B7B9)   ;
  $E22E PUSH IY         ;
  $E230 PUSH DE         ;
  $E231 LD B,$08        ;
-*$E233 LD A,(DE)       ;
+*$E233 LD A,(DE)       ; {XOR sprite pixels onto screen
  $E234 XOR (HL)        ;
- $E235 LD C,A          ;
- $E236 AND (IY+$00)    ;
- $E239 JR Z,$E23F      ;
+ $E235 LD C,A          ; }
+ $E236 AND (IY+$00)    ; {flag collision with existing pixels
+ $E239 JR Z,$E23F      ; }
  $E23B SET 1,(IX+$10)  ;
 *$E23F LD A,(IY+$00)   ;
  $E242 XOR C           ;
@@ -6287,7 +6384,7 @@ c$DFD5 LD HL,($B7B9)   ;
  $E24C INC IY          ;
  $E24E DJNZ $E233      ;
  $E250 INC (IX+$18)    ; one Column right
- $E253 BIT 1,(IX+$10)  ;
+ $E253 BIT 1,(IX+$10)  ; record collision point (row/col)
  $E257 JR Z,$E26E      ;
  $E259 LD HL,($DF0F)   ;
  $E25C LD A,(IX+$19)   ; get Row
@@ -6323,8 +6420,8 @@ c$DFD5 LD HL,($B7B9)   ;
  $E298 LD ($5B35),DE   ;
  $E29C LD (IX+$08),H   ;
  $E29F LD (IX+$07),L   ;
- $E2A2 LD HL,($DF0F)   ;
- $E2A5 LD (HL),$FF     ;
+ $E2A2 LD HL,($DF0F)   ; {mark end of collision list
+ $E2A5 LD (HL),$FF     ; }
  $E2A7 RET             ;
 
 ; Diver frame update: speed timer moves diver, input timer reads keys
@@ -6624,6 +6721,12 @@ c$E43A BIT 3,(IX+$26) ;
 ;
 ; I:IX Diver object address = #R$E33B
 ; I:HL column and row
+;
+; Scans the on-screen object list for whatever the diver is touching and
+; handles it by type: oxygen refills the tank, chests and shells add their
+; pearls to the amount carried (up to the level's limit) and mark the object
+; taken, while closed clams and relief block the diver. If nothing matches,
+; control falls through to the boat-collision check.
 c$E476 LD IY,$B07D    ; Table of objects on the screen
 *$E47A LD A,(IY+$01)  ; get address high
  $E47D CP $FF         ; end of list marker?
@@ -6635,64 +6738,64 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E48C LD A,(BC)      ; get record flags
  $E48D BIT 5,A        ; check "oxygen" bit
  $E48F JR Z,$E4B2     ; not oxygen => jump
- $E491 LD A,D         ;
+ $E491 LD A,D         ; {object at diver's exact cell?
  $E492 CP H           ;
  $E493 JR NZ,$E4AB    ;
  $E495 LD A,E         ;
  $E496 CP L           ;
- $E497 JR NZ,$E4AB    ;
+ $E497 JR NZ,$E4AB    ; }
 ; We've got Oxygen object
- $E499 LD HL,($DE5B)  ;
+ $E499 LD HL,($DE5B)  ; {add 200 oxygen, cap at $FFFF
  $E49C LD BC,$00C8    ;
- $E49F ADD HL,BC      ;
+ $E49F ADD HL,BC      ; }
  $E4A0 JR NC,$E4A5    ;
  $E4A2 LD HL,$FFFF    ;
 *$E4A5 CALL $DE5D     ; Update Oxygen indicator, maximum is $FFFF
  $E4A8 JP $E418       ;
-*$E4AB LD BC,$0004    ;
- $E4AE ADD IY,BC      ;
+*$E4AB LD BC,$0004    ; {advance to next object record
+ $E4AE ADD IY,BC      ; }
  $E4B0 JR $E47A       ;
-*$E4B2 BIT 6,A        ;
+*$E4B2 BIT 6,A        ; check "chest" bit
  $E4B4 JP Z,$E553     ;
- $E4B7 LD A,H         ;
+ $E4B7 LD A,H         ; {chest row/column match?
  $E4B8 CP D           ;
- $E4B9 JR NZ,$E4AB    ;
+ $E4B9 JR NZ,$E4AB    ; }
  $E4BB LD A,L         ;
  $E4BC CP E           ;
  $E4BD JR Z,$E4C3     ;
- $E4BF DEC A          ;
+ $E4BF DEC A          ; {also allow chest's second column (2 wide)
  $E4C0 CP E           ;
- $E4C1 JR NZ,$E4AB    ;
+ $E4C1 JR NZ,$E4AB    ; }
 ; We've got Chest object
-*$E4C3 BIT 6,(IX+$10) ;
- $E4C7 JP NZ,$E418    ;
+*$E4C3 BIT 6,(IX+$10) ; {skip if HELD full or not carrying
+ $E4C7 JP NZ,$E418    ; }
  $E4CA BIT 4,(IX+$10) ;
  $E4CE JP NZ,$E418    ;
- $E4D1 LD A,(BC)      ;
+ $E4D1 LD A,(BC)      ; {skip if chest already opened
  $E4D2 BIT 3,A        ;
- $E4D4 JP NZ,$E418    ;
+ $E4D4 JP NZ,$E418    ; }
  $E4D7 PUSH BC        ;
- $E4D8 INC BC         ;
+ $E4D8 INC BC         ; {read chest's pearl-value index
  $E4D9 INC BC         ;
  $E4DA INC BC         ;
  $E4DB LD A,(BC)      ;
  $E4DC DEC A          ;
- $E4DD ADD A,A        ;
+ $E4DD ADD A,A        ; }
  $E4DE LD HL,$5B2B    ; get value 75 / 50 / 150 / 100, depending on Game level
  $E4E1 LD C,A         ;
  $E4E2 LD B,$00       ;
  $E4E4 ADD HL,BC      ;
  $E4E5 PUSH DE        ;
  $E4E6 CALL $E5D2     ; DE = (L5B33) - HELD
- $E4E9 LD C,(HL)      ;
+ $E4E9 LD C,(HL)      ; {get chest's pearl value
  $E4EA INC HL         ;
  $E4EB LD B,(HL)      ;
- $E4EC DEC HL         ;
+ $E4EC DEC HL         ; }
  $E4ED EX DE,HL       ;
  $E4EE PUSH HL        ;
  $E4EF PUSH BC        ;
- $E4F0 OR A           ;
- $E4F1 SBC HL,BC      ;
+ $E4F0 OR A           ; {fits in remaining capacity?
+ $E4F1 SBC HL,BC      ; }
  $E4F3 POP BC         ;
  $E4F4 POP HL         ;
  $E4F5 JR Z,$E4FB     ;
@@ -6700,7 +6803,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E4F9 JR $E509       ;
 *$E4FB LD BC,($5B33)  ; get value depending of game level
  $E4FF LD ($DEFF),BC  ; set HELD value
- $E503 SET 6,(IX+$10) ;
+ $E503 SET 6,(IX+$10) ; mark HELD at limit
  $E507 JR $E510       ;
 *$E509 LD HL,($DEFF)  ; get HELD value
  $E50C ADD HL,BC      ;
@@ -6708,26 +6811,26 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
 *$E510 POP DE         ;
  $E511 EX DE,HL       ;
  $E512 CALL $A14C     ; Get screen attribute address
- $E515 LD (HL),$06    ;
+ $E515 LD (HL),$06    ; {paint chest cells collected
  $E517 INC HL         ;
- $E518 LD (HL),$06    ;
+ $E518 LD (HL),$06    ; }
  $E51A POP BC         ;
- $E51B LD A,(BC)      ;
+ $E51B LD A,(BC)      ; {mark chest opened
  $E51C SET 3,A        ;
- $E51E LD (BC),A      ;
+ $E51E LD (BC),A      ; }
  $E51F CALL $DEF1     ; Print HELD number
  $E522 CALL $E615     ; Play melody $E60B
- $E525 LD HL,$5B0F    ;
- $E528 INC (HL)       ;
- $E529 LD HL,($5B48)  ;
+ $E525 LD HL,$5B0F    ; {count chest collected
+ $E528 INC (HL)       ; }
+ $E529 LD HL,($5B48)  ; {add to chests total
  $E52C INC HL         ;
- $E52D LD ($5B48),HL  ;
+ $E52D LD ($5B48),HL  ; }
  $E530 JP $E418       ;
-*$E533 PUSH BC        ;
+*$E533 PUSH BC        ; {partial fill: keep remainder
  $E534 EX (SP),HL     ;
- $E535 POP BC         ;
- $E536 OR A           ;
- $E537 SBC HL,BC      ;
+ $E535 POP BC         ; }
+ $E536 OR A           ; {compute leftover in chest
+ $E537 SBC HL,BC      ; }
  $E539 LD A,L         ;
  $E53A LD (DE),A      ;
  $E53B INC DE         ;
@@ -6742,7 +6845,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E54D CALL $E615     ; Play melody $E60B
  $E550 JP $E418       ;
 ; We've got a shell, big or small
-*$E553 BIT 1,A        ;
+*$E553 BIT 1,A        ; small or big shell?
  $E555 JR Z,$E5A9     ;
  $E557 LD A,H         ;
  $E558 CP D           ;
@@ -6750,7 +6853,7 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E55C LD A,L         ;
  $E55D CP E           ;
  $E55E JP NZ,$E4AB    ;
- $E561 BIT 6,(IX+$10) ;
+ $E561 BIT 6,(IX+$10) ; skip if HELD already full
  $E565 JP NZ,$E418    ;
  $E568 BIT 4,(IX+$10) ;
  $E56C JP NZ,$E418    ;
@@ -6758,45 +6861,45 @@ c$E476 LD IY,$B07D    ; Table of objects on the screen
  $E570 BIT 3,A        ;
  $E572 JP NZ,$E418    ;
  $E575 LD HL,($5B27)  ; get value 2 / 4 / 6 / 8, depending on Game level
-*$E578 LD A,(BC)      ;
- $E579 BIT 4,A        ;
+*$E578 LD A,(BC)      ; {already collected?
+ $E579 BIT 4,A        ; }
  $E57B JP NZ,$E418    ;
  $E57E PUSH BC        ;
  $E57F CALL $E5D2     ; DE = (L5B33) - HELD
  $E582 POP BC         ;
  $E583 EX DE,HL       ;
- $E584 OR A           ;
- $E585 SBC HL,DE      ;
+ $E584 OR A           ; {room left for more pearls?
+ $E585 SBC HL,DE      ; }
  $E587 JP C,$E418     ;
- $E58A LD HL,($DEFF)  ;
+ $E58A LD HL,($DEFF)  ; {add pearls to HELD
  $E58D ADD HL,DE      ;
- $E58E LD ($DEFF),HL  ;
- $E591 LD A,(BC)      ;
+ $E58E LD ($DEFF),HL  ; }
+ $E591 LD A,(BC)      ; {mark shell taken
  $E592 SET 4,A        ;
- $E594 LD (BC),A      ;
+ $E594 LD (BC),A      ; }
  $E595 CALL $DEF1     ; Print HELD number
  $E598 CALL $E615     ; Play melody $E60B
- $E59B LD HL,$5B00    ;
- $E59E DEC (HL)       ;
- $E59F LD HL,($5B46)  ;
+ $E59B LD HL,$5B00    ; {one less shell to find
+ $E59E DEC (HL)       ; }
+ $E59F LD HL,($5B46)  ; {count a pearl
  $E5A2 INC HL         ;
- $E5A3 LD ($5B46),HL  ;
+ $E5A3 LD ($5B46),HL  ; }
  $E5A6 JP $E418       ;
-*$E5A9 LD A,H         ;
+*$E5A9 LD A,H         ; {big shell: match its 2x2 area
  $E5AA CP D           ;
  $E5AB JR Z,$E5B2     ;
  $E5AD INC A          ;
  $E5AE CP D           ;
- $E5AF JP NZ,$E4AB    ;
+ $E5AF JP NZ,$E4AB    ; }
 *$E5B2 LD A,L         ;
  $E5B3 CP E           ;
  $E5B4 JR Z,$E5BB     ;
  $E5B6 DEC A          ;
  $E5B7 CP E           ;
  $E5B8 JP NZ,$E4AB    ;
-*$E5BB LD A,(BC)      ;
+*$E5BB LD A,(BC)      ; {closed clam blocks the diver
  $E5BC BIT 3,A        ;
- $E5BE JP NZ,$E3C0    ;
+ $E5BE JP NZ,$E3C0    ; }
  $E5C1 LD A,L         ;
  $E5C2 CP E           ;
  $E5C3 JP NZ,$E418    ;
@@ -6826,19 +6929,22 @@ b$E5E0 DEFW $2710,$03E8,$0064,$000A,$0001 ; 10000, 1000, 100, 10, 1
 ; and #R$EE1C.
 ;
 ; I:HL Melody address
+;
+; Plays a short tune by reading notes one at a time from a list and sounding
+; each through the ROM beeper, stopping when it hits the $FF end marker.
 @label=PlayMelody
-c$E5EC LD E,(HL)     ;
+c$E5EC LD E,(HL)     ; {get note byte; $FF ends melody
  $E5ED LD A,E        ;
- $E5EE INC A         ;
+ $E5EE INC A         ; }
  $E5EF RET Z         ;
- $E5F0 LD D,$00      ;
+ $E5F0 LD D,$00      ; {read pitch bytes into BC
  $E5F2 INC HL        ;
  $E5F3 LD C,(HL)     ;
  $E5F4 INC HL        ;
  $E5F5 LD B,(HL)     ;
- $E5F6 INC HL        ;
- $E5F7 PUSH BC       ;
- $E5F8 EX (SP),HL    ;
+ $E5F6 INC HL        ; }
+ $E5F7 PUSH BC       ; {set up beeper args (pitch/duration)
+ $E5F8 EX (SP),HL    ; }
  $E5F9 PUSH IX       ;
  $E5FB CALL $03B5    ; ROM Beeper subroutine
  $E5FE DI            ;
@@ -6925,6 +7031,12 @@ c$E682 OR A          ; {no divers left, use empty sprite
 ; Reset oxygen, draw divers on boat, position diver at dive start
 ;
 ; Used by the routine at #R$D990.
+;
+; .
+;
+; Sets up the diver for the start of a dive: refills the oxygen tank, draws the
+; spare divers waiting on the boat, and places the diver at the boat's position
+; on the map with the sitting sprite and starting state ready to go.
 c$E6AB LD IX,$E33B     ; Diver object record address
  $E6AF LD HL,$FFFF     ;
  $E6B2 LD ($DE5B),HL   ;
@@ -7002,6 +7114,15 @@ c$E6AB LD IX,$E33B     ; Diver object record address
 ; Diver on boat: idle, embark and disembark state machine
 ;
 ; Used by the routine at #R$E364.
+;
+; .
+;
+; Runs the diver's above-water behaviour while on the boat, stepping through
+; phases held in the object's flag byte: sit and wait for the dive key, jump
+; off into the water to begin a dive, and (on return) cycle the climb-aboard
+; sprites. When the diver settles back on deck it banks the collected pearls
+; into the score, refills oxygen, and awards a bonus if every object was
+; collected.
 c$E767 BIT 0,(IX+$26)  ;
  $E76B JR NZ,$E7E0     ;
  $E76D LD (IX+$20),$03 ;
@@ -7157,6 +7278,14 @@ c$E767 BIT 0,(IX+$26)  ;
 ; Diver reaches boat: check collision, start climb sequence
 ;
 ; Used by the routine at #R$E476.
+;
+; .
+;
+; Reached when the diver touches something at the surface. It checks whether
+; that something is actually the boat (right column, within its rows); if not,
+; the diver drowns. If it is the boat, it switches the diver into the
+; climbing-aboard state, sets the climb sprite and upward movement, and lines
+; the diver up with the boat's column.
 c$E915 LD DE,($C4F0)   ; get boat position
  $E919 BIT 5,(IX+$10)  ; {skip if already drowned/exploding
  $E91D JP NZ,$E418     ; }
@@ -7267,6 +7396,13 @@ b$E9DA DEFB $44,$55,$52,$45,$4C,$4C,$00,$00,$00,$00,$0A,$00,$00,$00,$00,$00
 ; Insert new high-score table entry if Score qualifies
 ;
 ; Used by the routine at #R$EE1C.
+;
+; .
+;
+; Compares the finished game's score against the high-score table. If it beats
+; the lowest entry, it finds the right rank, shifts the lower entries down to
+; make room, and writes a fresh entry there (blank name, plus this game's
+; chests, pearls and score).
 c$EA7A LD ($E9D8),IX  ; save caller's IX
  $EA7E DI             ;
  $EA7F LD HL,($E9E4)  ; {get lowest table score; get final Score
@@ -7327,6 +7463,13 @@ c$EA7A LD ($E9D8),IX  ; save caller's IX
 ; Show Game Over screen and high-score table, prompt for name
 ;
 ; Used by the routines at #R$EA7A, #R$EE1C and #R$EEAD.
+;
+; .
+;
+; Clears the screen and prints the high-score table, showing each entry's name,
+; chests, pearls and score. If the just-finished game earned a place on the
+; table, it lets the player type their name into that row before returning to
+; the menu.
 c$EADE LD IX,$E33B     ; Diver object record address
  $EAE2 LD (IX+$1F),$07 ;
  $EAE6 LD IX,($E9D8)   ;
@@ -7791,14 +7934,12 @@ b$EF3A DEFB $89,$8A,$00,$8B,$8C,$00,$8D,$8E
 t$EF7F DEFM $16,$0B,$05,$11,$00,$10,$06
  $EF86 DEFM "PRESS ANY KEY"
 
-; Data block at EF93
-b$EF93 DEFB $11,$01,$10,$07,$16,$0B,$0A
-
-; Message at EF9A
-t$EF9A DEFM "LOAD ? (Y/N)"
+; Message at EF93
+t$EF93 DEFM $11,$01,$10,$07,$16,$0B,$0A
+ $EF9A DEFM "LOAD ? (Y/N)"
 
 ; Unused
 s$EFA6 DEFS $5A
 
-; Buffer??
+; Draw buffer
 s$F000 DEFS $1000

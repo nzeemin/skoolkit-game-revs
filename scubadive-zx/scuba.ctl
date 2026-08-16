@@ -489,7 +489,11 @@ C $9CA5,2 height for block of tiles = 8
 C $9CAB,3 get tile number
 C $9CB7,1 *8
 C $9CB8,3 base address for relief tiles, 8x8 pixels each tile
+C $9CBF,2 copy tile pixel row to screen
 C $9CC6,6 check depth zone for water color
+C $9CD1,2 surface band colour
+C $9CD5,2 pick colour from tile type
+C $9CEB,3 store cell attribute
 C $9CF6,11 advance attribute pointer to next block
 C $9D14,9 advance to next block row
 C $9D35,3 Draw Octopus
@@ -519,6 +523,7 @@ c $9D79 Calculate address in the mini-map (#R$AC5D table) and Set
 R $9D79 I:HL H = row, L = column 0..31
 R $9D79 I:A Value to set
 C $9D7C,3 Calculate address in the mini-map (#R$AC5D table)
+C $9D80,1 store value in map cell
 c $9D84 Generate next pseudo-random 16-bit value
 R $9D84 O:HL new random value, also saved to #R$5B05
 @ $9D84 label=NextRandom
@@ -614,6 +619,7 @@ C $9F72,3 Calc address in #R$AC5D and Set
 C $9F75,3 Carve tunnel in world map
 c $9F81 Carve tunnel in world map: random-walk cave generator
 @ $9F81 label=CarveTunnelLeft
+N $9F81 Digs a winding cave through the map by stepping one cell at a time, mostly leftward, picking each next direction at random and stopping when it hits the map edge. It opens up solid cells into water and marks the tile borders so the passage stays connected.
 C $9F81,3 save tunnel start position
 C $9F86,3 Random
 C $9F8B,5 pick digging direction from random bits
@@ -639,6 +645,7 @@ C $A02F,3 Calc address in #R$AC5D and Get
 C $A034,3 Calc address in #R$AC5D and Get
 c $A03B Carve tunnel in world map: random-walk cave generator (rightward)
 @ $A03B label=CarveTunnelRight
+N $A03B Mirror of #R$9F81: digs a random winding cave the same way but biased rightward, opening solid cells into water and marking tile borders until it reaches the map edge.
 C $A03B,3 save tunnel start position
 C $A040,3 Random
 C $A045,5 pick digging direction from random bits
@@ -729,11 +736,15 @@ C $A1C1,9 compute chest spawn coords (left side)
 C $A1CC,5 only at map column 31
 C $A1D1,9 compute chest spawn coords (right side)
 C $A1DA,4 skip if no chests left
-C $A1E0,10 write chest record (flags/col/row)
-C $A1EA,9 store index, decrement chests-left
+C $A1E0,3 write chest flags byte
+C $A1E4,3 write chest column
+C $A1E7,3 write chest row
+C $A1EA,5 write chest index
+C $A1EF,4 one fewer chest to place
 C $A1F6,11 compute relief-block scan address
 C $A201,6 add relief data base
-C $A209,11 check tile is open-water type
+C $A209,11 first tile must be open water
+C $A214,11 second tile must be open water
 C $A21F,5 skip 7 of 8 candidate tiles (spacing)
 C $A227,3 Random
 C $A22A,8 random 50% skip
@@ -792,6 +803,7 @@ b $B07D Table of objects on the screen
 B $B07D,,4
 c $B0A9 Draw static objects on the screen; prepare LB07D table
 @ $B0A9 label=DrawStatics
+N $B0A9 Walks the world's static-object table and, for each object that falls inside the current 24x24-tile view, records its on-screen position in the #R$B07D list and draws its sprite (oxygen, pearls, small/big shell, or chest) with the matching colour. The #R$B07D list is what the diver's interaction check later scans.
 C $B0A9,4 get Screen position on mini-map
 C $B0AD,10 multiply scroll position by 8
 C $B0B7,4 store screen scroll (pixels)
@@ -874,6 +886,7 @@ B $B210,1,1 ???
 B $B211,1,1 ???
 B $B212,1,1 ???
 c $B213 Animate and draw rising air bubbles, plus Octopus
+N $B213 Runs the ambient sea animation each frame: first ticks the Octopus, then, on a level-dependent timer, walks the bubble slots and moves each active bubble one step up the screen, occasionally spawning a new one at a random position and growing small bubbles into big ones as they rise.
 C $B213,3 Octopus delay and process
 C $B216,5 spawn timer countdown
 C $B21C,3 get value 7 / 5 / 3 / 1, depending on Game level 1..4
@@ -920,6 +933,9 @@ R $B2DB I:HL Char coords H = 0..23, L = 0..31
 R $B2DB I:DE Tile address
 C $B2DB,3 Convert char coords HL to ZX screen address
 C $B2DE,2 tile height 8 pixels
+C $B2E0,3 XOR left column byte
+C $B2E5,3 XOR right column byte
+C $B2E9,1 next pixel row
 b $B2EE Sprite 8x8 address, 8 bytes
 B $B2EE,8,8 #HTML[#UDGARRAY1,,,1,,($B2EE-$B2F5-1-8)(sprB2EE)]
 b $B2F6 Sprite 16x16, 32 bytes; first lower part then upper
@@ -964,37 +980,51 @@ b $B392 Unused?
 c $B3A0 Insert or remove object from packed record list
 R $B3A0 I:IX record address in #R$C4F0 area
 R $B3A0 I:IY record address in #R$C092 area
+N $B3A0 Maintains the object's packed sprite-data list: it works out where the object sits, sums up the space used by earlier entries, and either makes room for the object's data or clears out the slot it vacated, shifting the remaining bytes so the list stays tightly packed.
+C $B3A0,4 use default list or record's stored list?
 C $B3A6,5 get default list address
 C $B3AB,6 get record's stored list address
+C $B3B1,3 get record size
 C $B3B4,3 get record's state/count byte
 C $B3BA,4 set removed flag on record
+C $B3BE,10 pick byte-shift amount from direction bits
 C $B3D8,5 sum sizes of preceding records
 C $B3E5,4 zero-fill freed slot
+C $B3EA,6 get record's list-end pointer
 C $B3F0,4 check for $FF end-of-list marker
 C $B3FA,4 store updated list-end pointer
 C $B407,3 shift remaining records forward
 C $B417,4 zero-fill vacated tail
+C $B421,5 X-shift centered (0)?
+C $B428,4 mark reached column center
 C $B446,3 check shift count >= 4
 C $B454,2 shift nibbles right across buffer
 C $B466,2 shift bits right across buffer
 c $B470 Draw object sprite, clipped to viewport
 R $B470 I:IX record address in #R$C4F0 area
 R $B470 I:IY record address in #R$C092 area
+N $B470 Draws one object's sprite into the play area, clipping it to the visible window so partly-off-screen objects show only their visible part. It XOR-blits the pixels (so drawing again erases cleanly) and skips columns that fall outside the viewport, setting a collision flag if the sprite overlaps existing pixels.
+C $B470,4 rebuild packed list first if flagged
 C $B476,3 Insert or remove object from packed record list
 C $B479,6 get sprite bitmap address
+C $B47F,4 skip buffer-clear if still active
 C $B486,6 get draw-buffer dimensions
+C $B48D,1 clear the draw buffer
 C $B496,3 default to previous-frame sprite
 C $B49F,3 use empty sprite (hidden)
 C $B4A2,3 get sprite height in rows
 C $B4AC,3 advance past left-clipped columns
+C $B4B4,3 clip against right edge
 C $B4C4,3 store visible column count
 C $B4CB,3 store skipped column count
 C $B4D1,2 IX = sprite bitmap pointer
+C $B4D6,1 skip fully-clipped top rows
 C $B500,2 diff screen pixels with sprite data
 C $B505,4 build mask limited to sprite shape
 C $B50A,6 combine sprite pixels with preserved background
 C $B517,4 advance row skip offset
 C $B4F6,3 Convert char coords HL to ZX screen address
+C $B53C,6 record removal needed (bit5/6)?
 C $B547,6 get list address for record removal
 C $B553,4 check "moving left" flag
 C $B55F,3 Copy records forward
@@ -1007,7 +1037,10 @@ R $B572 I:B number of records to copy
 c $B57E Remove first record: shift list backward by one slot
 R $B57E I:IY record address in #R$C092 area; (IY+$0A) is record size
 C $B57E,3 get record size
+C $B583,6 walk HL to last record
+C $B58A,3 DE = last record, HL = one before
 C $B590,3 Copy records backward
+C $B593,3 clear the freed first slot
 c $B598 Copy records backward
 @ $B598 label=CopyRecordsBck
 R $B598 I:HL source address
@@ -1027,6 +1060,7 @@ C $B5D4,3 Copy records backward
 c $B5E0 Clip object position to viewport, allocate/free screen slot
 R $B5E0 I:IX record address in #R$C4F0 area
 R $B5E0 I:IY record address in #R$C092 area
+N $B5E0 Works out where an object sits relative to the visible window and whether it fits inside it, flagging it as on- or off-screen. Objects that are visible get a screen slot reserved for their sprite data, and ones that leave the view give their slot back, so only what's on screen uses buffer space.
 C $B5F2,3 get screen scroll/viewport position
 C $B5F5,4 column relative to viewport
 C $B606,4 mark column off-screen
@@ -1054,6 +1088,7 @@ C $B69E,6 advance column right
 C $B6A6,6 advance column left
 C $B6AC,4 compute far edge column
 C $B6B1,3 get rows to process
+C $B6B4,3 skip cells outside the 24x24 viewport
 C $B6C9,3 Get screen attribute address
 C $B6CD,1 compare to object's color
 C $B6D0,2 paint highlight color
@@ -1101,7 +1136,7 @@ C $B7AA,2 check shift reached midpoint
 C $B7AD,4 address of the return point - put on the stack
 C $B7B1,6 get moving-procedure address
 N $B7B8 Point of return
-s $B7B9
+b $B7B9
 W $B7B9,2,2 buffer address ??
 c $B7BB Update object: advance shift, draw, run moving procedure
 R $B7BB I:IX object address in #R$C4F0 area
@@ -1146,6 +1181,7 @@ C $B87F,3 decrement column count
 C $B87B,3 Screen attribute change for horizontally oriented object
 c $B885 Moving procedure for fish object moving horizontal
 R $B885 I:IX object record
+N $B885 Steers a fish that swims left and right: it probes the relief tiles ahead to see if the way is clear, reversing direction when blocked, then picks the matching sprite and glides one step, alternating between the moving and settled states each call.
 C $B885,4 check "moving" bit
 C $B88C,4 check facing direction
 C $B895,5 probe tile ahead (right)
@@ -1171,6 +1207,7 @@ C $B95D,6 set sprite address
 C $B963,6 set sprite address
 C $B969,4 clear "moving" bit
 c $B972 Moving procedure for fish object moving vertical
+N $B972 Steers a fish that swims up and down: it probes the relief tiles above or below to see if the way is clear, reversing direction when blocked, then picks the matching sprite and glides one step, alternating between the moving and settled states each call.
 C $B972,4 check "moving" bit
 C $B979,4 check facing direction
 C $B982,4 probe tile ahead (down)
@@ -1197,17 +1234,21 @@ C $BA2E,4 double speed while moving
 C $BA37,6 restore facing direction
 C $BA5B,4 clear "moving" bit
 c $BA64 Moving procedure for fish object moving diagonal
+N $BA64 Steers a fish that swims diagonally: it probes the relief tiles ahead in both directions to see where it can go, turning or reversing when blocked, and picks the matching sprite for its current heading. Once lined up it commits to a move and glides one step, alternating between the moving and settled states each call.
 C $BA64,4 check "moving" bit
 C $BA6B,4 mark as diagonal-move candidate
 C $BA6F,4 check current move axis
 C $BA7C,4 check facing direction
-C $BA90,3 Get screen attribute address
+C $BA82,5 compute tile-ahead position (right)
+C $BA8F,7 probe tile ahead-left; get its sprite
 C $BA96,3 Calculate address in relief block and Get tile nummber
 C $BAA1,3 Calculate address in relief block and Get tile nummber
 C $BAA7,2 get pseudo-random value
 C $BAAB,2 random bit test
+C $BAB4,9 probe the diagonal-turn tile
 C $BAC9,3 Calculate address in relief block and Get tile nummber
 C $BAD4,3 Calculate address in relief block and Get tile nummber
+C $BADE,6 way clear: commit sprite and move
 C $BAE4,4 set "moving" bit
 C $BAE8,4 clear facing-down flag
 C $BAEC,4 double speed while moving
@@ -1257,6 +1298,9 @@ c $BD83 Set random speed and initial direction for spawned object
 R $BD83 I:L random seed byte, masked by C to add speed spread
 R $BD83 I:C speed base/mask; speed factor (IX+$0E) = (L AND C) + C
 R $BD83 I:IX record address in #R$C4F0 area
+C $BD83,6 set speed factor = (L AND C) + C
+C $BD89,11 speed counter from rolling 0..31 index
+C $BD98,3 random direction index 0..7
 C $BD95,3 Random
 C $BD9B,3 !!MUT-ARG!! LBDAA or LBDB2
 C $BDA4,3 set DX value
@@ -1288,16 +1332,31 @@ C $BE32,3 Update group IV and V object records
 C $BE36,3 Update group IV and V object records
 C $BE3C,3 Delay loop (busy-wait via LDIR)
 c $BE40 Process 26-byte records in group II
+C $BE40,4 group II record count; per-frame update pass
+C $BE49,3 update only when speed counter reaches 0
 C $BE4C,3 Update fish object
+C $BE4F,3 26 bytes - record size
 c $BE58 Process 26-byte records in group II
+C $BE58,4 group II record count; initial draw pass
 C $BE61,3 Update object
+C $BE64,3 26 bytes - record size
 c $BE6D Process 26-byte records in group III
+C $BE6D,4 group III record count; per-frame update pass
+C $BE76,3 update only when speed counter reaches 0
 C $BE79,3 Update fish object
+C $BE7C,3 26 bytes - record size
 c $BE85 Process 26-byte records in group III
+C $BE85,4 group III record count; initial draw pass
 C $BE8E,3 Update object
+C $BE91,3 26 bytes - record size
 c $BE9A Process 21-byte records in group I: Boat, meduzas, round fishes
+C $BE9A,4 group I record count; per-frame update pass
+C $BEA3,3 update only when speed counter reaches 0
 C $BEA6,3 Update fish object
+C $BEA9,3 21 bytes - record size
 c $BEB2 Process 21-byte records in group I: Boat, meduzas, round fishes
+C $BEB2,4 group I record count; initial draw pass
+C $BEC1,3 21 bytes - record size
 C $BEBB,3 Update object
 c $BEC7 Reset slot allocation bitmap and buffer pointer
 C $BEC7,6 mark slot 0 used, prepare to clear the rest
@@ -1368,6 +1427,7 @@ W $C007,2,2 ???
 c $C009 Place N objects at random screen positions, avoiding the boat
 @ $C009 label=PlaceObjectsRandom
 R $C009 I:A number of records
+N $C009 Scatters a given number of objects across the map: for each one it walks to a free spot that isn't the boat's own cell and isn't too close to a previously chosen spot, then copies in a random shape template and places it there with a small random offset.
 C $C009,7 loop counter; init scan cursor position
 C $C010,6 reset scan step/cursor
 C $C016,11 skip boat's own column/row
@@ -1582,6 +1642,7 @@ C $C470,4 get group V record count
 C $C475,3 Update object
 C $C478,5 advance to next record (28 bytes)
 c $C481 Object idle animation state machine (frame cycle + random wait)
+N $C481 Drives a slow idle animation by cycling an object's frame back and forth between two limits, pausing for a random spell at each end so the motion looks natural rather than mechanical.
 C $C481,4 get animation state
 C $C487,3 wait timer
 C $C48B,4 switch to state 3
@@ -1639,23 +1700,31 @@ C $DA3C,6 zero out pixel area
 C $DA4A,4 reload attribute
 C $DA4E,3 attributes area size
 c $DA59 Print char and shift current position right
+N $DA59 Prints one character then nudges the current print position one cell to the right, so callers can print a string cell by cell.
 @ $DA59 label=PrintCharRt
 @ $DA63 label=PrintCharDn
 N $DA63 Print char and shift current position down
 N $DA6B Print char
 @ $DA6B label=PrintChar
+C $DA5C,1 advance print column right
 C $DA6D,3 Convert char coords HL to ZX screen address
+C $DA72,5 char code to glyph index
 C $DA79,1 *8
+C $DA7A,2 tile char ($80+)?
 C $DA7E,3 ROM font address, for chars $20..$7F
 C $DA83,3 Tiles 8x8 address, for chars $80..$AE
+C $DA89,2 copy glyph pixel row
 C $DA90,3 Get screen attribute address
 c $DA98 Print string
 R $DA98 I:HL String address
 R $DA98 I:BC Row and column
 R $DA98 I:DE Print char procedure address
 @ $DA98 label=PrintStringEx
+C $DA98,4 self-modify: set print-char routine from DE
 @ $DA9C label=PrintString
+C $DA9C,4 set start row/column
 C $DAA2,3 Print char and shift !!MUT-ARG!! #R$DA59 / #R$DA63
+C $DAA8,2 stop at $FF terminator
 c $DAAD Prepare game screen and some variables
 @ $DAAD label=PrepareGame
 N $DAAD Clears the screen and draws the side panel, resets the Depth/Oxygen gauges, highlights the current skill and lives digits, prints the score numbers, then copies the Game-level's parameter table and sets the diver's column/row movement limits from it.
@@ -1708,6 +1777,7 @@ C $DBB9,3 = 10 - [Game level] * 2 + 2 => 10 / 8 / 6 / 4
 C $DBBE,3 = 10 - [Game level] * 2 + 2 - 3 => 7 / 5 / 3 / 1
 c $DBC2 Initialize variables depending of Game level
 @ $DBC2 label=InitLevelVars
+N $DBC2 Works out this level's difficulty numbers from the chosen skill - how many creatures of each group to spawn and the movement delay - and stores them for the level setup to use.
 C $DBC2,3 Game level 1..4
 C $DBC6,1 *4
 C $DBC7,2 A = [Game level] * 4 + 9 => 13 / 17 / 21 / 25
@@ -1756,6 +1826,8 @@ C $DE30,7 value*32 -> screen offset (row/col bits)
 C $DE3B,2 add base, draw new marker
 c $DE3E Update Depth indicator
 @ $DE3E label=UpdateDepth
+C $DE41,5 gauge base address + marker colour
+C $DE46,8 depth level 0..15 from mini-map row
 C $DE4E,3 Update gauge indicator on the screen
 b $DE55
 W $DE55,2,2 Depth indicator, address in screen area
@@ -1766,6 +1838,10 @@ W $DE5B,2,2 Oxygen level, maximum is $FFFF
 c $DE5D Update Oxygen indicator, maximum is $FFFF
 @ $DE5D label=UpdateOxygen
 R $DE5D I:HL New value for Oxygen
+C $DE5D,3 store new Oxygen level
+C $DE60,10 gauge level = 15 - (high byte >> 4)
+C $DE75,4 low on oxygen? warning
+C $DE7C,2 use warning marker colour
 C $DE79,3 Play melody $E629
 C $DE7E,3 Update gauge indicator on the screen
 c $DE85 Print decimal number
@@ -1808,6 +1884,9 @@ B $DF25,,16
 b $DF45
 c $DFD5 Update diver position, angle and sprite from movement state
 R $DFD5 I:IX Diver object address = #R$E33B
+N $DFD5 Moves the diver one step: turns the current angle into an X/Y speed, updates the position, and scrolls the view when the diver crosses a tile or screen edge. It then picks the right swim sprite for the facing direction and draws the diver, redrawing the whole screen when the view has scrolled.
+C $DFD5,14 swap the two draw buffers (double-buffering)
+C $DFE7,6 reset collision-point list pointer
 C $DFFF,3 get Angle 0..15
 C $E006,3 Table base address
 C $E00A,1 get DX value for the Angle
@@ -1821,29 +1900,51 @@ C $E021,3 get X value
 C $E024,3 get Screen position on mini-map
 C $E027,3 add DX
 C $E02A,3 set X value
+C $E02D,4 X shift within tile 0..7
 C $E041,4 set DX value
+C $E04D,3 crossed left tile edge: shift column, scroll left
+C $E074,3 crossed right tile edge: shift column, scroll right
 C $E08D,3 get Y value
 C $E090,3 add DY
 C $E093,3 set Y value
+C $E096,4 Y shift within tile 0..7
 C $E0AC,4 check DY value - moving up?
 C $E0C7,3 set Y value
+C $E0CC,3 crossed top tile edge: shift row, scroll up
 C $E0EA,4 check DY value - moving up?
+C $E0F6,3 crossed bottom tile edge: shift row, scroll down
+C $E102,5 reached depth $46 => extra life
 C $E107,3 Plus one live
+C $E120,5 both axes crossed a screen edge?
+C $E129,4 view scrolled this frame?
+C $E137,8 wrap mini-map position to 0..31
 C $E13F,3 set Screen position on mini-map
 C $E142,3 Draw game screen
 C $E145,3 Update Depth indicator
+C $E148,14 swap buffers around row-band redraw
 C $E156,3 Draw records for current mini-map row band
+C $E171,3 no scroll: partial redraw only
+C $E174,8 enable both draw passes
+C $E19E,4 not swimming: use current sprite
+C $E1B8,4 exploding/drowned: keep sprite
+C $E1D2,3 swimming: advance animation frame
 C $E1D5,3 get Angle 0..15
 C $E1E4,3 Diver sprites base address
 C $E1E7,1 now HL = diver sprite address
+C $E1F4,3 rebuild packed sprite list
 C $E1FA,3 set Row
+C $E207,4 use empty sprite where not drawn
 C $E220,3 set Column
 C $E224,3 get Row
 C $E227,3 Convert char coords HL to ZX screen address
+C $E233,3 XOR sprite pixels onto screen
+C $E236,5 flag collision with existing pixels
 C $E250,3 one Column right
+C $E253,4 record collision point (row/col)
 C $E25C,3 get Row
 C $E261,3 get Column
 C $E279,3 one Row down
+C $E2A2,5 mark end of collision list
 c $E2A8 Diver frame update: speed timer moves diver, input timer reads keys
 C $E2A8,4 Diver object record address
 C $E2B1,3 get speed factor
@@ -1968,6 +2069,7 @@ C $E472,3 Print HELD number
 c $E476 Interact with object, like take Oxygen or pick up pearls
 R $E476 I:IX Diver object address = #R$E33B
 R $E476 I:HL column and row
+N $E476 Scans the on-screen object list for whatever the diver is touching and handles it by type: oxygen refills the tank, chests and shells add their pearls to the amount carried (up to the level's limit) and mark the object taken, while closed clams and relief block the diver. If nothing matches, control falls through to the boat-collision check.
 C $E476,4 Table of objects on the screen
 C $E47A,3 get address high
 C $E47D,2 end of list marker?
@@ -1979,27 +2081,55 @@ C $E489,3 record address lo
 C $E48C,1 get record flags
 C $E48D,2 check "oxygen" bit
 C $E48F,2 not oxygen => jump
+C $E491,8 object at diver's exact cell?
 N $E499 We've got Oxygen object
+C $E499,7 add 200 oxygen, cap at $FFFF
 C $E4A5,3 Update Oxygen indicator, maximum is $FFFF
+C $E4AB,5 advance to next object record
+C $E4B2,2 check "chest" bit
+C $E4B7,4 chest row/column match?
+C $E4BF,4 also allow chest's second column (2 wide)
 N $E4C3 We've got Chest object
+C $E4C3,7 skip if HELD full or not carrying
+C $E4D1,6 skip if chest already opened
+C $E4D8,6 read chest's pearl-value index
 C $E4DE,3 get value 75 / 50 / 150 / 100, depending on Game level
 C $E4E6,3 DE = (L5B33) - HELD
-C $E4FF,4 set HELD value
+C $E4E9,4 get chest's pearl value
+C $E4F0,3 fits in remaining capacity?
 C $E4FB,4 get value depending of game level
+C $E4FF,4 set HELD value
+C $E503,4 mark HELD at limit
 C $E509,3 get HELD value
 C $E50D,3 set HELD value
 C $E512,3 Get screen attribute address
+C $E515,5 paint chest cells collected
+C $E51B,4 mark chest opened
 C $E51F,3 Print HELD number
 C $E522,3 Play melody $E60B
+C $E525,4 count chest collected
+C $E529,7 add to chests total
+C $E533,3 partial fill: keep remainder
+C $E536,3 compute leftover in chest
 C $E53E,3 get value depending of game level
 C $E541,3 set HELD value
 C $E54A,3 Print HELD number
 C $E54D,3 Play melody $E60B
 N $E553 We've got a shell, big or small
+C $E553,2 small or big shell?
+C $E561,4 skip if HELD already full
 C $E575,3 get value 2 / 4 / 6 / 8, depending on Game level
+C $E578,3 already collected?
 C $E57F,3 DE = (L5B33) - HELD
+C $E584,3 room left for more pearls?
+C $E58A,7 add pearls to HELD
+C $E591,4 mark shell taken
 C $E595,3 Print HELD number
 C $E598,3 Play melody $E60B
+C $E59B,4 one less shell to find
+C $E59F,7 count a pearl
+C $E5A9,9 big shell: match its 2x2 area
+C $E5BB,6 closed clam blocks the diver
 C $E5CD,3 get value 5 / 10 / 15 / 20, depending on Game level
 c $E5D2 DE = (L5B33) - HELD
 C $E5D2,4 get HELD value
@@ -2011,6 +2141,10 @@ W $E5EA,2,2
 c $E5EC Play melody
 @ $E5EC label=PlayMelody
 R $E5EC I:HL Melody address
+N $E5EC Plays a short tune by reading notes one at a time from a list and sounding each through the ROM beeper, stopping when it hits the $FF end marker.
+C $E5EC,3 get note byte; $FF ends melody
+C $E5F0,7 read pitch bytes into BC
+C $E5F7,2 set up beeper args (pitch/duration)
 C $E5FB,3 ROM Beeper subroutine
 C $E602,2 continue
 b $E604 Melodies
@@ -2038,6 +2172,7 @@ C $E68D,6 sprite step; skip if only one diver
 C $E697,5 6 rows; boat destination address
 C $E69D,4 copy 2 bytes of diver sprite onto boat
 c $E6AB Reset oxygen, draw divers on boat, position diver at dive start
+N $E6AB Sets up the diver for the start of a dive: refills the oxygen tank, draws the spare divers waiting on the boat, and places the diver at the boat's position on the map with the sitting sprite and starting state ready to go.
 C $E6AB,4 Diver object record address
 C $E6B5,3 get Number of lives
 C $E6B9,3 Draw Divers on the Boat
@@ -2057,6 +2192,7 @@ C $E759,3 Sprite diver sitting on the boat
 C $E75C,6 set sprite address
 C $E762,4 set "moving" bit
 c $E767 Diver on boat: idle, embark and disembark state machine
+N $E767 Runs the diver's above-water behaviour while on the boat, stepping through phases held in the object's flag byte: sit and wait for the dive key, jump off into the water to begin a dive, and (on return) cycle the climb-aboard sprites. When the diver settles back on deck it banks the collected pearls into the score, refills oxygen, and awards a bonus if every object was collected.
 C $E775,4 clear DX value
 C $E779,4 clear DY value
 C $E788,4 set DX value = -2
@@ -2100,6 +2236,7 @@ C $E8F7,3 Play melody
 C $E8B6,3 Print HELD number
 C $E8B9,3 Print score number
 c $E915 Diver reaches boat: check collision, start climb sequence
+N $E915 Reached when the diver touches something at the surface. It checks whether that something is actually the boat (right column, within its rows); if not, the diver drowns. If it is the boat, it switches the diver into the climbing-aboard state, sets the climb sprite and upward movement, and lines the diver up with the boat's column.
 C $E915,4 get boat position
 C $E919,7 skip if already drowned/exploding
 C $E920,4 get screen scroll position
@@ -2136,6 +2273,7 @@ b $E9DA Score table, 160 bytes
 B $E9DA,,16
 B $EA74,,16
 c $EA7A Insert new high-score table entry if Score qualifies
+N $EA7A Compares the finished game's score against the high-score table. If it beats the lowest entry, it finds the right rank, shifts the lower entries down to make room, and writes a fresh entry there (blank name, plus this game's chests, pearls and score).
 C $EA7A,4 save caller's IX
 C $EA7F,7 get lowest table score; get final Score
 C $EA86,4 compare Score to lowest table entry
@@ -2158,6 +2296,7 @@ C $EAD7,7 store final score
 C $EA8D,4 Score table address
 C $EAAB,3 Score table address
 c $EADE Show Game Over screen and high-score table, prompt for name
+N $EADE Clears the screen and prints the high-score table, showing each entry's name, chests, pearls and score. If the just-finished game earned a place on the table, it lets the player type their name into that row before returning to the menu.
 C $EADE,4 Diver object record address
 C $EAEC,3 set ATTR-P - Permanent current colours
 C $EAF1,3 ROM call CHAN-OPEN
@@ -2335,7 +2474,7 @@ B $EF3A,15
 B $EF49,15
 t $EF7F
 T $EF86
-b $EF93
-t $EF9A
+t $EF93
+T $EF9A
 s $EFA6
-s $F000 Buffer??
+s $F000 Draw buffer

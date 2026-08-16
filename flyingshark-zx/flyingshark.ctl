@@ -169,14 +169,20 @@ C $64E1,3 jump to blank-glyph exit if char=$FE
 C $64E4,7 load cursor position
 C $64F4,3 store advanced cursor column
 C $6513,1 start of unrolled pixel-shift blit (glyph rows 0-7)
+C $652E,1 row 1
+C $653C,1 row 2
 C $6549,3 advance destination to next screen third (row wrap)
+C $6553,1 row 3
+C $655F,1 row 4
+C $656D,1 row 5
+C $6578,1 row 6/7 (adjacent-cell merge, different masking)
 C $658C,1 restore registers and return
 C $6590,3 store last-printed char as new skip-print flag
 C $6594,2 control-code path: codes >=9 treated as space
 C $659C,3 dispatch via jump table #R$65B3
 w $65B3 Control-code dispatch table (9 entries, codes 0-8, used by $6594)
 c $65C5 Control code $00: reset $9CC9 row, skip-count 7
-N $65C5 C still holds the control code value (0, since dispatch index = code). Zeroes the low byte of $9CC9 (part of the cursor position pair), sets a skip-count of 7 into A, then jumps into #R$65AB (the tail of the space-handling path) to store that count as the new skip-print flag ($9CCB) and return. Reads like a "reset row / pad N characters" control character; not fully confirmed against live behaviour.
+N $65C5 Resets the cursor's row and skips ahead 7 characters, like a "start new row" print control code.
 C $65C5,4 zero the low byte of $9CC9 (cursor row reset)
 C $65C9,2 skip-count = 7
 C $65CB,3 discard pushed return address, jump into skip-flag setter
@@ -194,6 +200,9 @@ N $65F2 Shared: also called by control code $08 with C=8 instead of 3.
 C $65F8,1 OR C into bits 0-4 of #R$9CC7
 c $65FB Control code $04: convert $9CC7 to screen pixel address
 N $65FB Shared: also reached from control code $06 with a different C value. Converts the cursor field #R$9CC7 into a screen pixel address (same bit-twiddle as #R$64CC's blit), folding in C.
+C $65FB,8 Rotate C into the row-third bits
+C $6603,5 Fold in the screen-third base ($58xx)
+C $6608,6 Combine column and row bits into the low byte
 C $660E,3 store converted pixel address back into #R$9CC7
 c $6612 Control code $05: add code value to $9CC7 low byte
 C $6616,1 add code value (5) to low byte of #R$9CC7
@@ -202,6 +211,7 @@ C $6620,3 mask to 5 bits, add code value (6)
 C $6624,2 reuse control code $04's conversion with this C
 c $6626 Print string (control codes + ROM-font text) from HL
 @ $6626 label=print_string
+N $6626 Prints a $FF-terminated string, treating bytes below $20 as control codes (position/attribute changes) rather than characters.
 R $6626 HL pointer to $FF-terminated string
 C $6626,2 save AF/HL
 C $6628,3 check skip-print flag at $9CCB
@@ -216,6 +226,7 @@ C $6643,2 loop back
 C $6645,3 restore AF/HL and return
 c $6648 Print message N from table $627A
 @ $6648 label=print_message
+N $6648 Looks up a message by its number and prints it via #R$6626.
 R $6648 A message number (0-based) to print
 C $6648,4 save AF/HL/DE/BC
 C $664C,3 point HL at string index table #R$627A
@@ -267,6 +278,7 @@ C $6707,4 set print cursor row ($9CC9)
 C $670B,3 IX = score data pointer
 C $6712,3 Print packed-BCD number with leading-zero suppression
 c $6717 Compare 3 bytes at (DE) vs (HL); NC if all equal
+N $6717 Checks whether two 3-character sequences match, such as a player's initials against a high-score entry.
 R $6717 DE,HL pointers to the two 3-byte sequences
 R $6717 O:Cy set if any byte differs, clear if all 3 match
 C $671C,2 Compare a byte pair
@@ -510,16 +522,25 @@ N $7B00 Page 2: bottom-left character code of each block.
 N $7C00 Page 3: bottom-right character code of each block.
 c $7D00 Initialize IM 2 interrupt vector table and set light ISR
 @ $7D00 label=init_im2
-N $7D00 Standard IM 2 setup: I=$FE (vector table at #R$FE00), fills #R$FE00-$FFFF with $FD so every vector reads the byte at #R$FDFD, which is set to $C3 (JP opcode) - making #R$FDFD/$FDFE act as a self-modifying "JP (isr-handler)" trampoline used by #R$A0C4/#R$A0B0 elsewhere. Points that trampoline at #R$A0B0 (the light/per-frame ISR) before returning.
+N $7D00 Sets up the interrupt system (IM 2) and starts it pointing at the light per-frame handler.
+C $7D01,6 Set interrupt mode 2, vector table at #R$FE00
+C $7D07,5 Fill the vector table so every vector reads $FDFD
+C $7D12,5 Plant a JP opcode at $FDFD, turning it into a trampoline
 C $7D17,3 point to per-frame handler #R$A0B0 (light ISR)
 C $7D1A,3 set ISR handler address
 c $7D1F Clear screen and draw title screen graphics
 @ $7D1F label=draw_title_screen
-N $7D1F Clears the bitmap ($4000-$5AFE), sets border black, then draws two compressed graphic blocks (data at $CB91 and #R$CA09, via the decompressor at #R$7D5C) onto the screen at $4000/$5800 and $4019/$5819 - almost certainly the title-screen logo/artwork. The block at #R$7D4E-$7D5B is likely parameter data, currently mistyped as code in the ctl (renders as garbage "LD B,x" instructions) - not yet fixed.
+N $7D1F Clears the screen to black, then draws the title-screen logo/artwork.
+C $7D20,2 Set border colour to black
+C $7D22,7 Clear the bitmap ($4000-$5AFE)
+C $7D2E,4 IY = attribute data for the graphic blocks (#R$7D4E)
+C $7D36,3 Left half source data (#R$CB91)
 C $7D3C,3 Draw title screen graphic block
+C $7D44,3 Right half source data (#R$CA09)
 C $7D4A,3 Draw title screen graphic block
 b $7D4E
 c $7D5C Draw title screen graphic block (attribute rows + bitmap columns)
+N $7D5C Paints a 7x7 block of coloured character cells onto the screen, using one data stream for the colours and another for the pixel shapes.
 @ $7D5C label=draw_title_block
 R $7D5C IY attribute data pointer
 R $7D5C DE bitmap data pointer
@@ -534,9 +555,9 @@ C $7D8D,2 Row 4: crossing into next screen third
 C $7D92,3 Bump H to next screen third (+$10)
 C $7D95,2 Next of 7 rows
 c $7D98 Decode 9 graphic blocks, then substitute every other byte via table $9A00
-N $7D98 Called from #R$A5A5/$A5B2. HL starts at #R$CA09 and is threaded, unsaved, through all 9 calls to #R$7DC9/#R$7DF3 as their shared output cursor - #R$7DF3 writes decoded graphics data to (HL) and advances it, so HL ends up pointing past everything written by the 9 blocks (overwriting the #R$CA09 descriptor data in place as it's consumed). The total byte count written (HL-#R$CA09) is then halved and used as a loop count for a second pass: walking from #R$CA09, every other byte is treated as an index into a fixed 256-entry table at #R$9A00 and replaced with the looked-up value in place - a substitution/palette pass over half the decoded stream (the alternating bytes are left untouched).
+N $7D98 Decodes 9 graphic blocks into the #R$CA09 sprite area, then runs a second pass to mirror half the decoded bytes.
 C $7DA3,2 9 block-descriptor entries
-C $7DA6,3 Decode one graphic-block descriptor entry
+C $7DA6,3 Decode one graphic-block descriptor entry; HL (the output cursor) is shared and left advancing across all 9 calls
 C $7DAC,2 Advance IY to the next 17-byte entry
 C $7DAF,2 Loop 9 times
 C $7DB5,2 Total bytes written = HL - #R$CA09
@@ -545,18 +566,31 @@ C $7DBF,3 Substitute this byte via table #R$9A00
 C $7DC2,1 Skip the alternate (untouched) byte
 C $7DC6,2 Loop until the halved count reaches zero
 c $7DC9 Decode one graphic-block descriptor entry (IY-indexed)
-N $7DC9 Called 9 times from #R$7D98's loop, once per 17-byte ($11) IY-indexed entry. Calls #R$7DF3 to decode the block's data, stores the resulting pointer into IY+$02/$03, then calls #R$7E4A; if IY+$0E (a repeat count) is nonzero, repeats the #R$7DF3/#R$7E4A pair that many more times. Finishes by shifting a flag at IY+$0A and, if IY+$06 is set, incrementing a counter at IY+$0B.
+N $7DC9 Decodes one 17-byte block descriptor, expanding its graphic data one or more times as the descriptor requests.
+R $7DC9 IY 17-byte block descriptor (called once per entry from #R$7D98's loop)
+C $7DCC,6 Store the decoded data pointer into the descriptor (IY+$02/$03)
+C $7DD5,4 Repeat count (IY+$0E); skip the extra loop if zero
+C $7DE5,4 Shift a flag in the descriptor (IY+$0A)
+C $7DE9,6 Bump a counter (IY+$0B) if a flag (IY+$06) is set
 C $7DC9,3 Expand one graphic block
 C $7DD2,3 Build bit-shifted copies of a graphic block
 C $7DDC,3 Expand one graphic block
 C $7DDF,3 Build bit-shifted copies of a graphic block
 c $7DF3 Expand one graphic block (with optional blank-row padding)
 R $7DF3 HL destination cursor (in/out, advanced past the written data)
-N $7DF3 Called from #R$7DC9. If IY+$06 is set, first pads (IY+$07) blank rows via #R$7E3D. Writes (IY+$0B) rows of (IY+$0A) columns, each column as two interleaved source bytes ($20 apart) from IX; the per-row column count is summed into a self-modified operand at $7E1B for later use. If IY+$06 is set, pads (IY+$07) more blank rows afterwards, then advances IX by the total column width read back from $7E1B.
+R $7DF3 IX source graphic data pointer (in/out, advanced past the block)
+R $7DF3 IY block descriptor
+N $7DF3 Expands one graphic block into interleaved pixel/mask data at HL, optionally padded with blank rows above and below.
+C $7DF3,3 IY+$06 selects optional blank-row padding
 C $7DF7,2 Skip leading padding if flag clear
+C $7DF9,3 Padding row count (IY+$07)
 C $7DFC,3 Write one blank padding row
 C $7DFF,2 Pad blank rows before the block
+C $7E02,7 Sum per-row column width (IY+$0A x IY+$0B) into A
 C $7E09,2 Sum column width into A (total block width)
+C $7E0B,3 Stash total block width for later
+C $7E0E,3 Row count (IY+$0B)
+C $7E11,3 Column count for this row (IY+$0A)
 C $7E20,2 Write interleaved byte pair for this column
 C $7E23,2 Next row
 C $7E29,2 Skip trailing padding if flag clear
@@ -566,7 +600,9 @@ C $7E39,2 Advance IX by the block's total width
 c $7E3D Write one blank padding row (8x $00/$FF byte pairs)
 N $7E3D Called from #R$7DF3 to pad a leading/trailing blank row. Writes 8 columns of the same interleaved byte-pair layout #R$7DF3 writes for real data (pixel byte $00, mask/second-plane byte $FF - i.e. blank pixels, fully transparent).
 c $7E4A Build bit-shifted copies of a graphic block (smooth-scroll variants)
-N $7E4A Called from #R$7DC9 after #R$7DF3 has expanded the block. If IY+$06 is zero, just advances HL past the block (+IY+$0C) and returns. Otherwise: derives a shift-step count from the lowest set bit of IY+$06 doubled, and for each step duplicates the block (LDIR, offset by IY+$0C) into a working copy, then right-shifts every column of it by 1 bit with carry propagating between bytes (RLA/RR (HL)/RRA/ADD HL,DE) - building successive sub-pixel-shifted copies of the graphic for smooth horizontal scrolling.
+R $7E4A HL working cursor (in/out, advanced past the block and its copies)
+R $7E4A IY block descriptor
+N $7E4A Makes extra copies of a graphic block, each shifted one bit further right, for smooth sub-pixel horizontal scrolling.
 C $7E4E,2 Skip shift generation if flag is zero: just advance pointer
 C $7E54,2 Shift-step count = lowest set bit of doubled flag
 C $7E61,2 Duplicate block into working copy (offset by IY+$0C)
@@ -694,8 +730,19 @@ b $A092
 c $A0B0 Interrupt handler (light): bump frame counter, set vblank flag
 @ $A0B0 label=isr_light
 N $A0B0 Live-traced: this is the active per-frame handler right after pressing "1" to start. Which game phase uses this vs #R$A0C4 is not yet confirmed.
+C $A0B2,5 Set vblank flag ($9BA2 bit 7)
+C $A0B7,4 Bump frame counter ($9BA0)
+C $A0BB,5 Reset $A1BB to $7F
 c $A0C4 Interrupt handler (heavy): saves shadow regs, dispatches enemy/player/collision/sprite updates
 @ $A0C4 label=isr_heavy
+N $A0C4 The main per-frame handler: saves all registers, updates the frame counter and a couple of pseudo-random values, burns some fixed time, then runs the frame's game logic before restoring everything and returning.
+C $A0C4,14 Save all registers (both banks)
+C $A0D2,5 Set vblank flag ($9BA2 bit 7)
+C $A0D7,5 Bump frame counter and rotate a byte ($9BA0/$9BA1)
+C $A0DE,5 Reset $A1BB to $7F
+C $A0E3,11 Advance pseudo-random shift value ($9C35/$9C34)
+C $A0EE,11 Advance another pseudo-random shift value ($9C39/$9C38)
+C $A0F9,10 Burn fixed time in a delay loop
 C $A106,3 Animate active player's indicator box colour
 C $A109,3 Mark active objects into the attribute-buffer collision mask
 C $A10C,3 Draw active objects' collision masks into attribute buffer
@@ -709,7 +756,8 @@ C $A121,3 Update randomized countdown, then enter player update
 C $A127,3 Player respawn/continue state check
 c $A13A Dispatch highest-priority pending deferred event
 @ $A13A label=dispatch_deferred_event
-N $A13A Reads the pending-events bitmask ($9C27) ANDed with an enable/priority mask ($9C28); finds the lowest-numbered surviving bit (highest priority), clears it, and dispatches its handler via the $A042 sub-range of the #R$A000 jump table. General deferred-event dispatcher (bits set by #R$66B5 bit 1 HUD-redraw, $A1EA bit 0, $A8CF/$BF57/$C33B/$C373 bit 2, $C8C9 bit 3) - not sound-specific.
+N $A13A Picks the highest-priority pending deferred event (bits set by #R$66B5, $A1EA, $A8CF/$BF57/$C33B/$C373, $C8C9) and dispatches its handler.
+C $A13A,6 Pending events ($9C27) ANDed with enable/priority mask ($9C28)
 C $A140,2 Exit if no enabled event pending
 C $A142,2 Save current enable mask
 C $A148,5 Find lowest set bit (highest priority)
@@ -734,12 +782,18 @@ C $A182,3 Print a player's score at its HUD position
 C $A185,3 Award bonus life when score threshold reached
 c $A189 Award bonus life when score threshold reached
 @ $A189 label=award_bonus_life
-N $A189 Compares a progress value (IX+0) against a threshold table at $9CB8 (indexed by IX+4); if not yet crossed, returns. Otherwise advances the threshold index (IX+4) and, unless lives are already at the cap of 10 (IX+3), grants an extra life and redraws the lives/bombs icon row via #R$672C.
+R $A189 IX active player's data block
+N $A189 Checks a player's score against the next bonus-life threshold, and if crossed, grants an extra life (up to a cap) and redraws the lives/bombs icons.
+C $A189,4 Threshold index (IX+$04)
+C $A192,7 Compare score (IX+$00) against threshold table $9CB8
+C $A19B,3 Advance threshold index
+C $A19E,7 Cap lives at 10 (IX+$03), else grant one more life
 C $A1A8,3 get Active player
 C $A1AB,3 Draw lives/bombs icon rows for a player
 N $A1AF Handler for index $25 of the #R$A000 jump table (see #R$B7F6).
 c $A1AF Restrict event mask to bit 7, run scenery script
-N $A1AF Masks the deferred-event enable mask ($9C28) down to just bit 7 (only the highest-priority event class stays enabled), then runs the scenery/event script interpreter (#R$A3A0). Likely used during a state where only critical events (e.g. game-over) may interrupt while background scenery keeps animating.
+N $A1AF Restricts which deferred events can interrupt to only the highest-priority class, then runs the scenery/event script interpreter.
+C $A1AF,7 Mask event-enable mask ($9C28) down to bit 7 only
 C $A1B6,3 Scenery/event script interpreter
 b $A1BA
 c $A1C8 Clear pending sound-effect priority
@@ -759,7 +813,7 @@ C $A1E5,5 Mark ready flag $A1BB=$80
 C $A1EA,5 Request dispatch via $9C27 bit 0
 c $A1F2 Load parameters for the pending sound effect
 @ $A1F2 label=sfx_load_params
-N $A1F2 Reads the pending sound-effect priority (low nibble of #R$A1BA, set by #R$A1D4); if zero, jumps to the idle path (#R$A324). Otherwise indexes an 8-byte-stride parameter table at #R$A329 by (priority-1), copies 7 bytes into a working buffer at $A1BC, and unpacks further fields from it via nibble/bit extraction. Continues the sound-effect pipeline started by #R$A1CE/#R$A1D4/#R$A13A.
+N $A1F2 Loads the parameters for the currently-pending sound effect from a table into a working buffer, ready for #R$A222 to play it.
 C $A1F5,5 Check priority nibble; jump to idle if zero
 C $A1FA,4 (priority-1)*8 -> byte offset into #R$A329 table
 C $A201,4 Point HL at this priority's 8-byte parameter entry
@@ -770,7 +824,8 @@ C $A218,4 C = last copied parameter byte
 C $A21C,6 HL -> tone-length source; A = first parameter byte
 c $A222 Play sound effect (timed speaker-bit toggle)
 @ $A222 label=sfx_play_tone
-N $A222 Alternates the value written to port $FE between $18 and $00 (toggling bit 4, the speaker/EAR bit, along with border colour bits) inside a precisely NOP-counted delay loop - a square-wave tone generator, same technique as the #R$AA0F/#R$AA34 music engine but used here for a sound effect rather than music. Exact trigger context not confirmed.
+N $A222 Plays the loaded sound effect as a square-wave tone by toggling the speaker bit in a timed delay loop, the same technique used by the music engine.
+C $A222,6 Store two more parameter bytes into the working buffer
 C $A228,6 Copy $A1C3 into $A1C7 (setup source pointer)
 C $A22E,2 Select tone-length source via C bit 7
 C $A236,2 Pick $A1C5 vs $A1C6 pointer variant
@@ -794,20 +849,42 @@ C $A2BC,2 C bit 3: negate pitch delta ($A1BD) - sweep reversal
 C $A2CF,2 C bit 4: negate duration delta ($A1BF) - sweep reversal
 C $A2E2,2 C bit 6: reload base pitch/duration from $A1BC/$A1BE
 c $A31D Sound-effect helper entry points, ending in priority-clear idle path
-N $A31D Entry #R$A31E stores A into $A1C7 then jumps back into #R$A222's border loop (#R$A23E). Entry #R$A324 (used by both #R$A1F2 and #R$A255) clears the pending sound-effect priority (#R$A1BA) and returns - the "no sound active" idle state. The bytes right after (#R$A329 onward) are the 8-byte-stride parameter table indexed by #R$A1F2.
+N $A31D Two shared tail entry points for the sound-effect player: one resumes the tone loop, the other clears the pending effect to idle.
+C $A31E,3 Store A, resume #R$A222's tone loop
+C $A324,4 Clear pending sound-effect priority (idle)
 b $A329 Sound-effect parameter table (9 entries, 8 bytes each)
 c $A371 Reset various state pointers/counters to defaults
-N $A371 Resets $9BAD=$1C, $9BA9/$9BAB=#R$7D00 (the system-init routine, used here as a sentinel/default value rather than being called), $9BAE/$9C00/$9BF8=0, $9BF9=$FA79 (the menu fill-buffer target from #R$6498), $9BAF=0, $9BFF=$FF, $9BFB=#R$6D71. Looks like a general "clear pointers to defaults" step run when (re)starting a level, called from #R$A4E7.
+N $A371 Resets a batch of scenery/event-script state variables to their default values, run when (re)starting a level.
+C $A379,3 Sentinel/default pointer value ($9BA9)
 C $A37C,3 set Scenery data pointer
+C $A38A,6 Menu fill-buffer target ($9BF9)
+C $A394,5 Script-active flag ($9BFF)
+C $A399,6 Default scenery-script pointer ($9BFB)
 c $A3A0 Scenery/event script interpreter (wait or dispatch event)
 @ $A3A0 label=scenery_script
-N $A3A0 Reads bytes from a script pointer ($9BFD, defaulting to #R$6D71 via #R$A371). If the script-active flag ($9BFF) isn't $FF, returns immediately (see #R$A3E2 continuation). Otherwise: a byte with the top bit set dispatches a scene event via an offset-chain table at $6E06 (summing B DE-strides to find the target, stored into $9C0C); $FF rewinds the script pointer back to the default ($9BFB) and loops; anything else is a "wait" delay (masked to a nibble, stored at $9BAF) and the script pointer advances. Distinct from the enemy-formation (#R$AFB8) and object-movement (#R$B8F9) script systems - likely drives background/scenery timing.
+N $A3A0 Steps the background scenery/event script one instruction at a time. Each script byte is either a wait delay, a loop-back-to-start marker, or an event to dispatch; once a wait or event has been actioned, this also renders the sub-pixel scrolled scenery graphic. Distinct from the enemy-formation (#R$AFB8) and object-movement (#R$B8F9) script systems.
+C $A3A0,7 Bail out if the script isn't currently active
+C $A3A7,8 Read next script byte; if not top-bit-set, handle wait/loop below
+C $A3AF,4 $FF: loop-back marker
+C $A3B3,5 Otherwise: wait delay = byte's low nibble
+C $A3B8,6 Advance pointer past a wait byte, loop
+C $A3BE,8 Rewind script pointer to default, loop
+C $A3C6,13 Top bit set: sum offset-chain table $6E06 to find event target
+C $A3D3,9 Store event pointer, reset its parameter-nibble parity
+C $A3DC,6 Extract the event's first parameter nibble
+C $A3E2,7 Advance the wait/shift timer; return early while still counting
+C $A3E9,5 Reset a per-event byte counter
+C $A3EE,3 Extract this event's next parameter nibble
+C $A3F1,3 Point to jump table
+C $A3FA,7 Advance past the consumed script byte
+C $A401,9 Reset wait timer and mark script active again
 C $A3DC,3 Extract next 4-bit parameter from scenery-event data
 C $A3EE,3 Extract next 4-bit parameter from scenery-event data
 C $A3F4,3 Jump-table dispatcher
 C $A3F7,3 Render sub-pixel scrolled graphic
 c $A40B Render sub-pixel scrolled graphic (shift amount from scenery script)
-N $A40B If the scenery-script wait value ($9BAF) is zero, skips ahead (#R$A441). Otherwise uses it as a pixel-shift amount (self-modifies an operand at $A436 with NEG+8), then copies 9 bytes from the scenery data pointer ($9BAB) into a double buffer at $9BE6 (both IX+0 and IX+9), continuing into shift-based blit logic. Looks like a smoothly-scrolling scenery/marquee graphic renderer, reusing #R$A3A0's wait-timer as the sub-pixel offset.
+N $A40B Renders the scenery graphic shifted by the scenery-script's wait value, for smooth sub-pixel horizontal scrolling.
+C $A418,4 C = pass count
 C $A40F,2 Skip render if wait value is zero
 C $A413,2 Displacement = 8 - wait value
 C $A415,3 Self-modify the shifted-read operand at $A436
@@ -822,16 +899,25 @@ N $A445 Handler for index $15 of the #R$A000 jump table (see #R$B7F6).
 c $A445 Draw scrolling scenery column using tile generator
 C $A44E,3 Generate next scenery/terrain cell value
 C $A45F,3 Generate next scenery/terrain cell value
+C $A445,3 get Scenery data pointer
+C $A458,4 Wrap column offset back +8 rows for the descending pass
 N $A46C Handler for index $16 of the #R$A000 jump table (see #R$B7F6).
 c $A46C Draw scrolling scenery column (variant, using tile generator)
+C $A46C,9 HL = source pointer; C = pass count; E = 5 (outer loop count)
+C $A47A,7 Store cell, advance column by +9, loop
+C $A481,6 Wrap column back -8 for the descending pass
+C $A48C,7 Store cell, advance column by -9, loop
+C $A493,5 Wrap column back +10, loop the outer pass
 N $A46C Structurally similar to #R$A445 (same #R$A499 tile-generator calls building a column into HL) but with a +9 row stride and 5-row outer loop instead of #R$A445's layout - likely a different scenery band/type sharing the same generator.
 C $A477,3 Generate next scenery/terrain cell value
 C $A489,3 Generate next scenery/terrain cell value
 c $A499 Generate next scenery/terrain cell value
 R $A499 O:A generated cell value (base $9C0B + next script nibble)
 R $A499 HL preserved
-N $A499 Every $9C0A calls, refreshes a base value ($9C0B) by reading a fresh byte from the scenery-event data via #R$A4B5; otherwise decrements the counter. Adds the next scenery-script nibble parameter (#R$A4C4) to that base value to produce the returned cell value - so the base periodically re-reads from the script data, not from randomness.
+N $A499 Generates the next terrain cell value, periodically refreshing its base value from the scenery data.
+C $A49A,7 Refresh counter ($9C0A) hit zero? refresh base value below
 C $A4A1,3 Read next byte (2 nibbles) from scenery-event data
+C $A4AB,1 Otherwise just count down to the next refresh
 C $A4A7,3 Read next byte (2 nibbles) from scenery-event data
 C $A4AC,3 Extract next 4-bit parameter from scenery-event data
 c $A4B5 Read next byte (2 nibbles) from scenery-event data
@@ -840,7 +926,7 @@ C $A4B6,3 Extract next 4-bit parameter from scenery-event data
 C $A4BE,3 Extract next 4-bit parameter from scenery-event data
 c $A4C4 Extract next 4-bit parameter from scenery-event data
 R $A4C4 O:A the extracted nibble (0-15)
-N $A4C4 Reads a byte from the event-data pointer $9C0C and, alternating via the flag $9C0E (which flips $0F/$F0 each call), returns first its high nibble then its low nibble; the pointer only advances after both nibbles of a byte have been consumed. Used by #R$A3A0's scenery/event script system to unpack 2 packed 4-bit parameters per data byte.
+N $A4C4 Unpacks the next 4-bit parameter from the scenery-event data, alternating between a byte's high and low nibble on successive calls.
 C $A4C6,3 HL = current byte pointer ($9C0C)
 C $A4CC,2 Mask out the selected nibble
 C $A4D1,6 Flip nibble-select mask ($9C0E); test which nibble just finished
@@ -849,8 +935,18 @@ C $A4DA,6 Advance byte pointer (low nibble just consumed) and return
 C $A4E0,4 Shift high nibble down to low bits
 c $A4E7 Find level index from formation tag, reset state, select colour scheme
 @ $A4E7 label=select_level_colour
-N $A4E7 Searches an 8-entry table (from ($9BA7)) for the first entry >= the current object's wave/formation tag (IX+7), storing the found level index into $9BA4. Calls #R$A371 to reset various state pointers. Then scans a second, 3-byte-stride table (cursor persisted at $9BA5) while $9BA4 >= the table's threshold byte, and once found, reads the level's colour/type value into $9C59 and $9C5A - the value used throughout the game for wipe-effect colour, screen fills etc (see #R$C6A6, #R$66B5). So the active colour scheme is level-dependent, selected here.
+N $A4E7 Finds which level a wave belongs to, resets scenery/event state for it, and selects that level's colour scheme.
+C $A4E7,10 IX = current object's data; set a status flag
+C $A4F1,8 Point at 8-entry threshold table; B=8, A=wave's tag (IX+$07)
+C $A4F9,9 Search for the first entry >= the wave's tag
 C $A503,3 set Level progress / index
+C $A50C,11 Level index * 16 + $D0 -> starting scroll offset
+C $A51E,6 Decrement offset, loop until column exhausted
+C $A52A,4 DE = 3 (table stride)
+C $A530,4 Advance cursor until entry covers the level index
+C $A537,19 Init a couple of timer/event fields for the new level
+C $A54D,5 Scan colour-scheme table until the level's threshold entry
+C $A555,2 Step back to the entry, read its colour/type value
 C $A506,3 Reset various state pointers/counters to defaults
 C $A509,3 get Level progress / index
 C $A518,3 Scenery/event script interpreter
@@ -862,7 +958,9 @@ C $A54A,3 get Level progress / index
 C $A557,3 set Active colour scheme
 c $A561 Player respawn/continue state check
 @ $A561 label=respawn_check
-N $A561 Called every frame from #R$A0C4. If the death/recovery timer ($9C3C, armed by #R$BF22) is active, counts it down and signals A=4 on expiry; if disabled ($FF), instead polls the ENTER key (row $F7 bit 3) for a manual continue (A=0 if held, else A=2). Either way calls #R$A599 then dispatches the player's next state via the $A038 sub-range of the shared #R$A000 table (the same range used by #R$BE03's index $2B handler).
+N $A561 Runs the death/recovery timer, or if it's disabled, polls ENTER for a manual continue, then dispatches the player's next state.
+C $A561,15 Death/recovery timer ($9C3C); count down, A=4 on expiry
+C $A570,12 Timer disabled: poll ENTER key, A=0 if held else A=2
 C $A57C,3 Ratchet player state forward
 C $A585,3 Jump-table dispatcher
 @ $A588 label=noop_A588
@@ -873,7 +971,8 @@ N $A588 Handler for index $1C of the #R$A000 jump table (see #R$B7F6).
 N $A589 Handler for indices $1F, $20 of the #R$A000 jump table (see #R$B7F6).
 c $A588 No-op state (index $1C)
 c $A589 Exit gameplay: mirror state, play alert sound, switch to light ISR
-N $A589 Copies $9C3D into $9C3E (a mirrored/confirmed-state value), requests the maximum-priority sound effect via #R$A1CE (likely a game-over/death jingle), then repoints the ISR ($FDFE) back to the light handler #R$A0B0 - taking the game out of active gameplay. Handler for indices $1F/$20 of the shared table.
+N $A589 Takes the game out of active gameplay: confirms the player state, plays an alert sound, and switches back to the light per-frame handler.
+C $A589,3 Confirm the player state ($9C3D -> $9C3E)
 c $A599 Ratchet player state forward (only increase, never decrease)
 R $A599 A candidate new state value
 N $A599 Updates $9C3D (the state #R$A561/$A57F reads for its dispatch) only if A is >= the current value; otherwise leaves it unchanged. Ensures the respawn/continue state only ever advances.
@@ -881,13 +980,20 @@ c $A5A0 Start music track 0
 @ $A5A0 label=music_start_0
 C $A5A1,3 Start playing music track A
 c $A5A5 Show title screen once, then (re)initialize interrupts
-N $A5A5 Used by $A902's menu loop. Checks a "shown once" flag at $9B9F; if not yet set, sets it and calls #R$7D1F to clear the screen and draw the title artwork. Either way falls through into $A5B2: CALL #R$7D98 (build the shift-copy tables), CALL #R$7D00 (re-init IM 2 vectors), then point the ISR trampoline at #R$A0B0 and EI/RET.
+N $A5A5 Draws the title screen once (on first call), then (re)builds the graphics tables and points the ISR back at the light per-frame handler.
+C $A5A5,10 "Shown once" flag ($9B9F); skip drawing if already set
+C $A5B8,3 point to per-frame handler #R$A0B0 (light ISR)
+C $A5BB,3 set ISR handler address
 C $A5AF,3 Clear screen and draw title screen graphics
 C $A5B2,3 Decode 9 graphic blocks, then substitute every other byte via table $9A00
 C $A5B5,3 Initialize IM 2 interrupt vector table and set light ISR
 c $A5C0 Initialize both players' game state (lives, bombs, HUD)
 @ $A5C0 label=init_players
-N $A5C0 Used by #R$A8C0 when starting a new game. Zeroes each player's 11-byte state block ($9C79/$9C85), then sets starting lives ($9C88/$9C7C, POKE 42464), starting bombs ($9C82/$9C8E, POKE 42490), and other per-player defaults (active-player flag $9C76, HUD pointer $9C77, misc fields).
+N $A5C0 Sets up both players' game state (lives, bombs, HUD pointers) at the start of a new game.
+C $A5C5,13 Zero player 1's 11-byte state block ($9C79)
+C $A5D2,13 Zero player 2's 11-byte state block ($9C85)
+C $A5ED,6 HUD pointer for the active player ($9C77)
+C $A601,8 Reset explosion-data index ($9C84/$9C90)
 C $A5C2,3 Init menu screen
 C $A5DF,2 POKE 42464,N sets starting lives count
 C $A5EA,3 set Active player
@@ -911,7 +1017,8 @@ C $A6B4,3 Find level index from formation tag, reset state, select colour scheme
 C $A6B7,3 Show credits screen
 c $A6BB Show title screen and credits (attract sequence)
 @ $A6BB label=show_title_attract
-N $A6BB Called from #R$A8C0's attract loop. Draws the title screen (message $01, "FIREBIRD...FLYING SHARK...GRAFTGOLD LTD...COPYRIGHT 1987") and starts music track 0; returns early with carry set if fire is pressed. The #R$A6C9 entry then shows the credits (message $02, design/graphics/music by-line), runs the #R$C6A6 wipe, and waits ~200 frames or until fire.
+N $A6BB Shows the title screen with music, then (via the #R$A6C9 entry) the credits screen, waiting for fire to skip ahead at either point.
+C $A6DB,2 Wait up to 200 frames (or until fire is pressed)
 C $A6BD,3 Init menu screen
 C $A6C0,2 "FIREBIRD...FLYING SHARK...GRAFTGOLD LTD...COPYRIGHT 1987"
 C $A6C2,3 Print message N from table $627A
@@ -924,6 +1031,7 @@ C $A6D8,3 Screen wipe transition effect
 C $A6DE,3 Read fire button (Kempston/keyboard) with debounce
 c $A6E5 Print high-score table
 @ $A6E5 label=print_high_scores
+N $A6E5 Prints the 6-row high-score table, one row of name and score per iteration, then runs a wipe transition into the table screen.
 C $A6E7,3 Init menu screen
 C $A6EA,6 set cursor position, point HL at high-score name table #R$6238
 C $A6F3,3 loop 6 rows
@@ -969,7 +1077,7 @@ C $A7D0,3 Decrement current player's lives
 c $A7D7 Decrement current player's lives; switch turn to other player if any remain
 @ $A7D7 label=player_lose_life
 R $A7D7 IX current player's state block base (lives at IX+$03)
-N $A7D7 Called on death/wave-loss (from $A7B6/$A7D0). If only one player ($9C75==1), just decrements the current player's lives (IX+$03) and returns. In 2-player mode, checks the *other* player's lives (IY, selected as the block that isn't the active one at $9C76); if they still have lives, switches control to them (updates the current-player pointer $9C77, toggles the active-player flag at $9C76). Either way, finishes by decrementing the now-current player's lives.
+N $A7D7 Handles a player's death: in 2-player mode, hands control to the other player if they still have lives, then decrements the (now-current) player's life count.
 C $A7DB,2 Single-player: skip switch, just decrement lives
 C $A7E1,4 Default: select the other player's state block
 C $A7E6,2 Active player was 2: keep player-1 block selected instead
@@ -978,7 +1086,7 @@ C $A7F6,4 Switch current-player pointer to the other player
 C $A7FB,2 Toggle active-player flag
 C $A7FE,3 Decrement the (now-current) player's lives
 c $A802 Show bonus-points award screen, transition onward
-N $A802 Prints "3000 POINTS" (message $12), draws a box graphic (#R$6B09), then (further in, at #R$A862/#R$A866) prints another message, starts music track 1, resets the colour scheme, and runs the #R$C6A6 wipe transition. Also plays a tone effect (#R$A84D-$A85B, same timed border/speaker-toggle technique as #R$A222) partway through. Handler for index $1A of the shared table.
+N $A802 Shows the end-of-wave bonus-points award screen (message and box graphics, score/life update, music and tone effect), then wipes into the next screen.
 C $A806,3 get Wave type / group id
 C $A80C,2 "3000 POINTS"
 C $A80E,3 Print message N from table $627A
@@ -1006,8 +1114,16 @@ C $A897,3 set ISR handler address
 c $A8A7
 c $A8C0 Start new game: reset game state
 @ $A8C0 label=new_game_reset
-N $A8C0 Waits for input, then resets core per-game state: deferred-event mask $9C27 (via #R$A1C8/#R$FF00), player state $9C3D/$9C3E, immobilise flag $9C3B, redefine-key debounce $9CDC, and disables the death/recovery timer ($9C3C=$FF, the sentinel #R$A561 checks). Called at the start of a new game (from the game-start sequence via #R$A6BB/#R$A6C9).
+N $A8C0 Resets core per-game state at the start of a new game, then waits for the first deferred event (player death/continue) before returning.
 C $A8C0,3 Wait for input
+C $A8C6,11 Clear the deferred-event mask ($9C27), mark event bit 2 pending
+C $A8D1,5 Player state $9C3D=0
+C $A8D6,3 Player state $9C3E=0
+C $A8D9,4 Immobilise flag $9C3B=0
+C $A8E0,4 Disable the death/recovery timer (#R$A561 sentinel, $9C3C=$FF)
+C $A8EF,3 point to per-frame handler #R$A0C4 (heavy ISR)
+C $A8F2,3 set ISR handler address
+C $A8F8,6 Poll deferred events until player state $9C3E is set
 C $A8C3,3 Clear pending sound-effect priority
 C $A8DD,3 set Input state / action code
 C $A8E5,3 Clear buffers at $7F00-$7FFF and $8000-$80FF
@@ -1026,7 +1142,10 @@ C $A91D,3 Handle player death
 c $A927 Start playing music track A
 @ $A927 label=music_start
 R $A927 A music track number
-N $A927 Sets $9C29 = A (also used by #R$6A4A as a "menu busy" guard - only one track/menu action active at a time), then looks up a pointer from the track table at #R$AB03 (indexed by A*2) and stores it into $AA8E, the note pointer consumed by the #R$AA0F/#R$AA34 music engine.
+N $A927 Starts playing a music track: marks the menu system busy, then points the music engine's note reader at the requested track's score data.
+C $A927,3 Mark menu/music busy ($9C29 guard used by #R$6A4A)
+C $A92B,4 Track number * 2 -> byte offset into #R$AB03
+C $A92F,8 Look up the track's score pointer
 c $A937 Point score reader at next event, check for end
 C $A937,3 Save score pointer ($AA8E)
 C $A93B,5 End marker $FF: stop the track (#R$AA32)
@@ -1065,6 +1184,7 @@ C $AA28,3 => Parse next music score byte
 C $AA2F,3 => Point score reader at next event, check for end
 c $AA34 Play beeper music note (square-wave tone generator)
 @ $AA34 label=beep_play_note
+N $AA34 Plays one note for its duration as a square wave, with a short attack click at the start. Timing is derived directly from the note's pitch period, the same technique used by the sound-effect player at #R$A222.
 C $AA35,4 Save note period parameters ($AA94)
 C $AA39,3 Initial 32-step attack/click burst
 C $AA3F,2 Toggle border/speaker bit during attack
@@ -1137,6 +1257,8 @@ C $ACAC,4 Clear "busy" flag ($9D1E+$04 bit 0) once duration elapses
 C $ACB4,3 Entry: force-stop (reset SP, no toggle)
 C $ACB8,4 Entry: request toggle loop (sets IY+$04 bit 5)
 C $ACBC,4 Only continue toggling while bit 4 flag is set
+C $ACC3,3 Start of object-column draw phase (separate from the border-toggle head)
+C $ACF4,4 Alternate entry: request toggle loop (mirrors $ACB8)
 C $AE38,3 => Formation script
 C $AEB0,3 => Formation script
 C $AED9,3 => Formation script
@@ -1148,7 +1270,7 @@ c $AFB8 Formation script: read next byte, dispatch via $A000 table (SP=addr/RET 
 R $AFB8 IX formation-script pointer
 C $AFB8,5 read next script byte from (IX), advance script pointer
 C $AFBD,4 form address $A0xx from script byte, jump there via faked RET
-N $AFB8 Reads the byte at (IX), advances IX, then forms address $A0xx (xx = that byte) and jumps there by setting SP to it and executing RET - the byte value doubles as a direct low-byte offset into the same #R$A000 word table used by #R$B7F6 elsewhere. Called by 17 different formation/wave routines (#R$ADB8, #R$AFC3, #R$B005, #R$B072, #R$B0B4, #R$B15B, #R$B1BE, #R$B24A, #R$B2DA, #R$B36A, #R$B3FE, #R$B452, #R$B4AA, $B567, $B5FE, #R$B61A, #R$B6BF, #R$B72D) - this is the shared bytecode-dispatch core of the enemy formation/wave scripting system.
+N $AFB8 The shared bytecode-dispatch core of the enemy formation/wave scripting system: reads the next script byte and jumps to its handler in the #R$A000 table. Continued into by 17 different formation/wave routines.
 C $B002,3 => Formation script
 N $B005 Handler for index $02 of the #R$A000 jump table (see #R$B7F6).
 C $B06F,3 => Formation script
@@ -1159,13 +1281,28 @@ c $AFC1 Formation opcode $14: jump to (IX)
 @ $AFC1 label=jp_ix
 N $AFC1 Handler for index $14 of the #R$A000 jump table (see #R$B7F6). A single JP (IX) - an indirect dispatch that continues execution at whatever address IX currently holds.
 c $AFC3 Update tile-block tables ($7900+) from SP-fed data (index $00, INC L)
-N $AFC3 Handler for index $00 of the #R$A000 jump table (see #R$B7F6). Twin of #R$B072 but fills ascending: writes the low byte of each popped word into a page of the 2x2 tile-block tables (#R$7900-$7CFF, see #R$7900), L rising from $F0, then INC H advances to the next page ($7A/$7B/$7C) for each of B ($9C1A) passes. Continues into the formation script (#R$AFB8).
+N $AFC3 Handler for index $00 of the #R$A000 jump table. Fills a page of the 2x2 tile-block tables from popped stack data, ascending; twin of #R$B072 which fills descending. Continues into the formation script (#R$AFB8).
 C $AFC3,4 Source data via SP (POP-fed)
 C $AFC7,3 B = column/pass count ($9C1A)
 C $AFCB,2 H=$79: destination tile-block table page
 C $AFCD,2 A=$F0: row index start (writes ascending)
 C $AFCF,1 Set row index for this pass
-C $AFD0,3 Store low byte of popped word, ascending
+C $AFD0,3 Store low byte of popped word, ascending (iteration 1/16)
+C $AFD3,3 iteration 2/16
+C $AFD6,3 iteration 3/16
+C $AFD9,3 iteration 4/16
+C $AFDC,3 iteration 5/16
+C $AFDF,3 iteration 6/16
+C $AFE2,3 iteration 7/16
+C $AFE5,3 iteration 8/16
+C $AFE8,3 iteration 9/16
+C $AFEB,3 iteration 10/16
+C $AFEE,3 iteration 11/16
+C $AFF1,3 iteration 12/16
+C $AFF4,3 iteration 13/16
+C $AFF7,3 iteration 14/16
+C $AFFA,3 iteration 15/16
+C $AFFD,2 iteration 16/16 (no INC L, next page picks up at $F0)
 C $AFFF,1 Next page ($7A/$7B/$7C)
 C $B000,2 Loop B passes
 C $B002,3 => Formation script
@@ -1174,18 +1311,48 @@ C $B00A,4 Source tile data via SP (POP-fed)
 C $B00E,3 Destination high byte = width + $78
 C $B013,3 Self-modify row-start column operand
 C $B016,2 H=$9A: point at the #R$9A00 lookup table
-C $B01C,5 Copy column: store #R$9A00[C] straight to screen (opaque, no mask)
+C $B01C,5 Copy column: store #R$9A00[C] straight to screen (opaque, no mask) (iteration 1/16)
+C $B021,5 iteration 2/16
+C $B026,5 iteration 3/16
+C $B02B,5 iteration 4/16
+C $B030,5 iteration 5/16
+C $B035,5 iteration 6/16
+C $B03A,5 iteration 7/16
+C $B03F,5 iteration 8/16
+C $B044,5 iteration 9/16
+C $B049,5 iteration 10/16
+C $B04E,5 iteration 11/16
+C $B053,5 iteration 12/16
+C $B058,5 iteration 13/16
+C $B05D,5 iteration 14/16
+C $B062,5 iteration 15/16
+C $B067,4 iteration 16/16 (no INC E, row-base decrement follows)
 C $B06B,1 Next row column-base
 C $B06D,2 Loop $9C1A rows
 C $B06F,3 => Formation script
 c $B072 Update tile-block tables ($7900+) from SP-fed data (index $04)
-N $B072 Handler for index $04 of the #R$A000 jump table (see #R$B7F6). Writes into the 2x2 tile-block lookup tables at #R$7900-$7CFF (see #R$7900) rather than to the screen. For B ($9C1A) passes it fills a descending run of one page (H=$79, L from $FF down) with the low byte of each popped word, then INC H advances to the next page ($7A/$7B/$7C) - so successive passes populate the parallel quadrant tables. Continues into the formation script (#R$AFB8).
+N $B072 Handler for index $04 of the #R$A000 jump table. Fills a page of the 2x2 tile-block tables from popped stack data, descending; twin of #R$AFC3 which fills ascending. Continues into the formation script (#R$AFB8).
 C $B072,4 Source data via SP (POP-fed)
 C $B076,3 B = column/pass count ($9C1A)
 C $B07A,2 H=$79: destination tile-block table page
 C $B07C,2 A=$FF: row index start (writes descending)
 C $B07E,1 Set row index for this pass
-C $B07F,3 Store low byte of popped word, descending
+C $B07F,3 Store low byte of popped word, descending (iteration 1/16)
+C $B082,3 iteration 2/16
+C $B085,3 iteration 3/16
+C $B088,3 iteration 4/16
+C $B08B,3 iteration 5/16
+C $B08E,3 iteration 6/16
+C $B091,3 iteration 7/16
+C $B094,3 iteration 8/16
+C $B097,3 iteration 9/16
+C $B09A,3 iteration 10/16
+C $B09D,3 iteration 11/16
+C $B0A0,3 iteration 12/16
+C $B0A3,3 iteration 13/16
+C $B0A6,3 iteration 14/16
+C $B0A9,3 iteration 15/16
+C $B0AC,2 iteration 16/16 (no DEC L, next page picks up at $FF)
 C $B0AE,1 Next page ($7A/$7B/$7C)
 C $B0AF,2 Loop B passes
 C $B0B1,3 => Formation script
@@ -1194,7 +1361,22 @@ C $B0B9,4 Source tile data via SP (POP-fed)
 C $B0BD,3 Destination high byte = width + $78
 C $B0C2,3 Self-modify row-start column operand
 C $B0C5,2 H=$9A: point at the #R$9A00 lookup table
-C $B0CB,5 Copy column: store #R$9A00[C] straight to screen (opaque, no mask)
+C $B0CB,5 Copy column: store #R$9A00[C] straight to screen (opaque, no mask) (iteration 1/16)
+C $B0D0,5 iteration 2/16
+C $B0D5,5 iteration 3/16
+C $B0DA,5 iteration 4/16
+C $B0DF,5 iteration 5/16
+C $B0E4,5 iteration 6/16
+C $B0E9,5 iteration 7/16
+C $B0EE,5 iteration 8/16
+C $B0F3,5 iteration 9/16
+C $B0F8,5 iteration 10/16
+C $B0FD,5 iteration 11/16
+C $B102,5 iteration 12/16
+C $B107,5 iteration 13/16
+C $B10C,5 iteration 14/16
+C $B111,5 iteration 15/16
+C $B116,4 iteration 16/16 (no DEC E, row-base decrement follows)
 C $B11A,1 Next row column-base
 C $B11C,2 Loop $9C1A rows
 C $B11E,3 => Formation script
@@ -1221,12 +1403,19 @@ C $B14F,4 Source tile data via SP (POP-fed)
 C $B153,3 Destination high byte = width + $78
 C $B158,3 Run the shared masked-blit body (#R$B36A)
 c $B15B OR-composite tile-block pages onto screen (index $10)
-N $B15B Handler for index $10 of the #R$A000 jump table (see #R$B7F6). Reads the four tile-block table pages ($79F0 upward, SP-fed) and OR-merges them onto the destination screen area at $9C13: for each of B ($9C1A) passes it ORs a run of source bytes into consecutive dest cells (additive overlay, not opaque), then INC H moves to the next source page ($7A/$7B/$7C) and INC D to the next dest row. Continues into the formation script (#R$AFB8).
+N $B15B Handler for index $10 of the #R$A000 jump table. OR-merges the tile-block table pages onto the destination screen (additive overlay, not opaque). Continues into the formation script (#R$AFB8).
 C $B15B,4 Destination screen address ($9C13)
 C $B160,3 Self-modify row-start column operand
 C $B163,3 Source = tile-block buffer $79F0
 C $B16C,1 Source via SP (POP-fed)
-C $B16F,9 OR-merge two source bytes into consecutive dest cells
+C $B16F,9 OR-merge two source bytes into consecutive dest cells (iteration 1/8)
+C $B178,9 iteration 2/8
+C $B181,9 iteration 3/8
+C $B18A,9 iteration 4/8
+C $B193,9 iteration 5/8
+C $B19C,9 iteration 6/8
+C $B1A5,9 iteration 7/8
+C $B1AE,8 iteration 8/8 (no final INC E, next page/row follows)
 C $B1B6,1 Next source page ($7A/$7B/$7C)
 C $B1B7,1 Next dest row
 C $B1B9,2 Loop $9C1A passes
@@ -1243,84 +1432,180 @@ N $B4AA Handler for index $0C of the #R$A000 jump table (see #R$B7F6).
 C $B4FF,3 => Formation script
 N $B502 Handler for index $0E of the #R$A000 jump table (see #R$B7F6).
 c $B1BE Draw masked sprite 16-row, mask-rev (index $09): AND $9A00[B], XOR C, INC E
+N $B1BE Draws a masked sprite column by column onto the screen, blending each byte with the background through a lookup-table mask. Handler for index $09 of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B1BE,4 Source sprite data via SP (POP-fed)
 C $B1C2,4 Destination screen address ($9C13)
 C $B1C6,2 H=$9A: point at the #R$9A00 lookup table
 C $B1C9,3 Self-modify row-start column operand
-C $B1D4,7 Blit column: mask via #R$9A00[B], merge XOR C, store
+C $B1D4,7 Blit column: mask via #R$9A00[B], merge XOR C, store (iteration 1/16)
+C $B1DB,7 iteration 2/16
+C $B1E2,7 iteration 3/16
+C $B1E9,7 iteration 4/16
+C $B1F0,7 iteration 5/16
+C $B1F7,7 iteration 6/16
+C $B1FE,7 iteration 7/16
+C $B205,7 iteration 8/16
+C $B20C,7 iteration 9/16
+C $B213,7 iteration 10/16
+C $B21A,7 iteration 11/16
+C $B221,7 iteration 12/16
+C $B228,7 iteration 13/16
+C $B22F,7 iteration 14/16
+C $B236,7 iteration 15/16
+C $B23D,6 iteration 16/16 (no final INC E, row-base decrement follows)
 C $B243,1 Next row column-base
 C $B245,2 Loop $9C1A rows
 C $B247,3 => Formation script
 c $B24A Draw masked sprite 16-row, pixel-rev (index $0B): AND B, XOR $9A00[C], INC E
+N $B24A Draws a masked sprite column by column onto the screen, same technique as #R$B1BE but with the mask/pixel roles swapped. Handler for index $0B of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B24F,4 Source sprite data via SP (POP-fed)
 C $B253,4 Destination screen address ($9C13)
 C $B25B,3 Self-modify row-start column operand
 C $B25E,2 H=$9A: point at the #R$9A00 lookup table
-C $B264,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store
+C $B264,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store (iteration 1/16)
+C $B26B,7 iteration 2/16
+C $B272,7 iteration 3/16
+C $B279,7 iteration 4/16
+C $B280,7 iteration 5/16
+C $B287,7 iteration 6/16
+C $B28E,7 iteration 7/16
+C $B295,7 iteration 8/16
+C $B29C,7 iteration 9/16
+C $B2A3,7 iteration 10/16
+C $B2AA,7 iteration 11/16
+C $B2B1,7 iteration 12/16
+C $B2B8,7 iteration 13/16
+C $B2BF,7 iteration 14/16
+C $B2C6,7 iteration 15/16
+C $B2CD,6 iteration 16/16 (no final INC E, row-base decrement follows)
 C $B2D3,1 Next row column-base
 C $B2D5,2 Loop $9C1A rows
 C $B2D7,3 => Formation script
 c $B2DA Draw masked sprite 16-row, mask-rev (index $0D): AND $9A00[B], XOR C, DEC E
+N $B2DA Draws a masked sprite column by column onto the screen, same technique as #R$B1BE but scanning right-to-left. Handler for index $0D of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B2DA,4 Source sprite data via SP (POP-fed)
 C $B2DE,4 Destination screen address ($9C13)
 C $B2E9,3 Self-modify row-start column operand
 C $B2E7,2 H=$9A: point at the #R$9A00 lookup table
-C $B2F4,7 Blit column (DEC E stride): mask via #R$9A00[B], merge XOR C, store
+C $B2F4,7 Blit column (DEC E stride): mask via #R$9A00[B], merge XOR C, store (iteration 1/16)
+C $B2FB,7 iteration 2/16
+C $B302,7 iteration 3/16
+C $B309,7 iteration 4/16
+C $B310,7 iteration 5/16
+C $B317,7 iteration 6/16
+C $B31E,7 iteration 7/16
+C $B325,7 iteration 8/16
+C $B32C,7 iteration 9/16
+C $B333,7 iteration 10/16
+C $B33A,7 iteration 11/16
+C $B341,7 iteration 12/16
+C $B348,7 iteration 13/16
+C $B34F,7 iteration 14/16
+C $B356,7 iteration 15/16
+C $B35D,6 iteration 16/16 (no final DEC E, row-base increment follows)
 C $B363,1 Next row column-base
 C $B365,2 Loop rows
 C $B367,3 => Formation script
 c $B36A Draw masked sprite 16-row, pixel-rev (index $0F): AND B, XOR $9A00[C], DEC E
+N $B36A Draws a masked sprite column by column onto the screen, same technique as #R$B24A but scanning right-to-left. Handler for index $0F of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B36F,4 Source sprite data via SP (POP-fed)
 C $B373,4 Destination screen address ($9C13)
 C $B377,3 Add X offset ($9C1A) to dest high byte
 C $B37A,3 Add Y offset ($9C1B) to dest low byte
 C $B37F,3 Self-modify row-start column operand
 C $B382,2 H=$9A: point at the #R$9A00 lookup table
-C $B388,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store
+C $B388,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store (iteration 1/16)
+C $B38F,7 iteration 2/16
+C $B396,7 iteration 3/16
+C $B39D,7 iteration 4/16
+C $B3A4,7 iteration 5/16
+C $B3AB,7 iteration 6/16
+C $B3B2,7 iteration 7/16
+C $B3B9,7 iteration 8/16
+C $B3C0,7 iteration 9/16
+C $B3C7,7 iteration 10/16
+C $B3CE,7 iteration 11/16
+C $B3D5,7 iteration 12/16
+C $B3DC,7 iteration 13/16
+C $B3E3,7 iteration 14/16
+C $B3EA,7 iteration 15/16
+C $B3F1,6 iteration 16/16 (no final DEC E, row-base decrement follows)
 C $B3F7,1 Next row column-base
 C $B3F9,2 Loop rows
 C $B3FB,3 => Formation script
 c $B3FE Draw masked sprite 8-row, mask-rev (index $08): AND $9A00[B], XOR C, INC E
+N $B3FE Draws a masked sprite column by column onto the screen, same technique as #R$B1BE but 8 rows tall. Handler for index $08 of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B3FE,4 Source tile data via SP (POP-fed)
 C $B402,4 Destination screen address ($9C13)
 C $B406,2 H=$9A: point at the #R$9A00 lookup table
 C $B409,3 Self-modify row-start column operand
-C $B414,7 Blit column: mask via #R$9A00[B], merge XOR C, store
+C $B414,7 Blit column: mask via #R$9A00[B], merge XOR C, store (iteration 1/8)
+C $B41B,7 iteration 2/8
+C $B422,7 iteration 3/8
+C $B429,7 iteration 4/8
+C $B430,7 iteration 5/8
+C $B437,7 iteration 6/8
+C $B43E,7 iteration 7/8
+C $B445,6 iteration 8/8 (no final INC E, row-base increment follows)
 C $B44B,1 Next row column-base
 C $B44D,2 Loop $9C1A rows
 C $B44F,3 => Formation script
 c $B452 Draw masked sprite 8-row, pixel-rev (index $0A): AND B, XOR $9A00[C], INC E
+N $B452 Draws a masked sprite column by column onto the screen, same technique as #R$B24A but 8 rows tall. Handler for index $0A of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B457,4 Source tile data via SP (POP-fed)
 C $B45B,4 Destination screen address ($9C13)
 C $B45F,3 Add X offset ($9C1A) to dest high byte
 C $B463,3 Self-modify row-start column operand
 C $B466,2 H=$9A: point at the #R$9A00 lookup table
-C $B46C,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store
+C $B46C,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store (iteration 1/8)
+C $B473,7 iteration 2/8
+C $B47A,7 iteration 3/8
+C $B481,7 iteration 4/8
+C $B488,7 iteration 5/8
+C $B48F,7 iteration 6/8
+C $B496,7 iteration 7/8
+C $B49D,6 iteration 8/8 (no final INC E, row-base decrement follows)
 C $B4A3,1 Next row column-base
 C $B4A5,2 Loop $9C1A rows
 C $B4A7,3 => Formation script
 c $B4AA Draw masked sprite 8-row, mask-rev (index $0C): AND $9A00[B], XOR C, DEC E
+N $B4AA Draws a masked sprite column by column onto the screen, same technique as #R$B1BE but 8 rows tall and scanning right-to-left. Handler for index $0C of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B4AA,4 Source tile data via SP (POP-fed)
 C $B4AE,4 Destination screen address ($9C13)
 C $B4B2,3 Add Y offset ($9C1B) to dest low byte
 C $B4B7,2 H=$9A: point at the #R$9A00 lookup table
 C $B4B9,3 Self-modify row-start column operand
-C $B4C4,7 Blit column: mask via #R$9A00[B], merge XOR C, store
+C $B4C4,7 Blit column: mask via #R$9A00[B], merge XOR C, store (iteration 1/8)
+C $B4CB,7 iteration 2/8
+C $B4D2,7 iteration 3/8
+C $B4D9,7 iteration 4/8
+C $B4E0,7 iteration 5/8
+C $B4E7,7 iteration 6/8
+C $B4EE,7 iteration 7/8
+C $B4F5,6 iteration 8/8 (no final DEC E, row-base increment follows)
 C $B4FB,1 Next row column-base
 C $B4FD,2 Loop $9C1A rows
 c $B502 Draw masked sprite 8-row, pixel-rev (index $0E): AND B, XOR $9A00[C], DEC E
+N $B502 Draws a masked sprite column by column onto the screen, same technique as #R$B24A but 8 rows tall and scanning right-to-left. Handler for index $0E of the #R$A000 jump table; continues into the formation script (#R$AFB8).
 C $B507,4 Source tile data via SP (POP-fed)
 C $B50B,4 Destination screen address ($9C13)
 C $B50F,3 Add X offset ($9C1A) to dest high byte
 C $B512,3 Add Y offset ($9C1B) to dest low byte
 C $B517,3 Self-modify row-start column operand
 C $B51A,2 H=$9A: point at the #R$9A00 lookup table
-C $B520,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store
+C $B520,7 Blit column: mask background (AND B), merge sprite (XOR #R$9A00[C]), store (iteration 1/8)
+C $B527,7 iteration 2/8
+C $B52E,7 iteration 3/8
+C $B535,7 iteration 4/8
+C $B53C,7 iteration 5/8
+C $B543,7 iteration 6/8
+C $B54A,7 iteration 7/8
+C $B551,6 iteration 8/8 (no final DEC E, row-base decrement follows)
 C $B557,1 Next row column-base
 C $B559,2 Loop $9C1A rows
 C $B55B,3 => Formation script
 c $B55E Copy 8-wide screen strips (SP-trick, screen-third aware)
-N $B55E Handler for index $11 of the #R$A000 jump table (see #R$B7F6). Copies vertical 8-byte-wide strips of screen memory using an SP/EX (SP),HL trick to alternate source and destination pointers: each row LDIs 8 bytes then advances by $0024. Column source at $9C0F is range-checked against $C8 to pick which of three copy loops runs (#R$B577 plain, #R$B599 with INC H, #R$B5CE with DEC H) so the copy steps correctly across the ZX screen's non-linear thirds. Continues into the formation script (#R$AFB8).
+N $B55E Handler for index $11 of the #R$A000 jump table. Copies vertical 8-byte-wide screen strips, picking one of three copy loops so the blit steps correctly across the ZX screen's non-linear thirds. Continues into the formation script (#R$AFB8).
 C $B561,5 Row count from $9C19 (+1)
 C $B56C,4 Pick copy variant by column vs $C8 (screen-third boundary)
 C $B577,1 Point SP at strip for the pointer-swap trick
@@ -1329,14 +1614,29 @@ C $B57C,16 Copy 8 bytes of this strip row
 C $B58E,3 Advance column (+8) and dest row (+$24)
 C $B591,2 Loop rows
 C $B593,3 => Formation script
+C $B599,5 Point SP at this strip, swap source/dest pointers via EX (SP),HL
+C $B59E,16 Copy 8 bytes of this strip row
+C $B5AE,5 Advance to the next screen third (INC H), point at the next strip
+C $B5B3,16 Copy 8 bytes of this strip row
+C $B5C3,2 Mirror back (DEC H) after crossing the third
 C $B5CB,3 => Formation script
+C $B5CE,1 B = row count
+C $B5CF,5 Point SP at this strip, swap source/dest pointers via EX (SP),HL
+C $B5D4,16 Copy 8 bytes of this strip row
+C $B5E4,5 Advance to the next screen third (INC H), point at the next strip
+C $B5E9,16 Copy 8 bytes of this strip row
+C $B5F9,5 Advance to the next screen third (INC H), point at the next strip
+C $B5FE,16 Copy 8 bytes of this strip row
+C $B60E,3 Mirror back (2x DEC H) after crossing both thirds
 C $B617,3 => Formation script
 c $B61A Copy 8-wide screen strips with transparency skip (screen-third aware)
-N $B61A Handler for index $12 of the #R$A000 jump table (see #R$B7F6). Like #R$B55E, copies vertical 8-byte-wide screen strips via the SP/EX trick with three screen-third variants, but tests each strip's high byte (AND $7E) and skips the copy when zero - a transparent-strip blit. Continues into the formation script (#R$AFB8).
+N $B61A Handler for index $12 of the #R$A000 jump table. Same vertical strip copy as #R$B55E, but skips strips that are entirely blank - a transparent-strip blit. Continues into the formation script (#R$AFB8).
 C $B61D,5 Row count from $9C19 (+1)
 C $B62C,4 Pick copy variant by column vs $C8 (screen-third boundary)
+C $B623,4 Column source ($9C0F)
 C $B637,1 Point SP at this strip
 C $B63A,1 Read the strip's first word
+C $B65A,7 Check whether the last strip was the rightmost column
 C $B63B,5 Skip strip if high byte masks to zero (transparent)
 C $B642,16 Copy 8 bytes of this strip
 C $B653,3 Advance column (+8)
@@ -1354,7 +1654,7 @@ c $B72D => Formation script
 @ $B72D label=jp_formation_dispatch
 C $B72D,3 => Formation script
 c $B730 Initialize wave: build object pool, reset counts, spawn first object
-N $B730 Builds the 19-slot object free-list at $9D40 (linked via IY+0/+1, head at $9D1C), inits 4 fixed slots at $9D1E (stride 6, "active"+"alive" flags set), clears the 15-byte formation-slot bitmap at $9B4F, sets four per-group enemy counts ($9D19=6/$9D18=8/$9D1A=4/$9D1B=1, totalling 19 = pool size), then allocates the first object via #R$C559. Called by $A696.
+N $B730 Sets up the object pool and enemy-group counters for a new wave, then spawns the first object.
 C $B733,3 Free-list head ($9D1C) = first pool slot
 C $B742,10 Link each slot to the next (IY+0/+1), clear IY+$14
 C $B74F,2 Loop 19 pool slots
@@ -1365,7 +1665,7 @@ C $B785,20 Set the four per-group enemy counts
 C $B79A,3 Allocate object from free-list pool and initialize
 c $B79F Mark formation slot done, trigger completion effect when group empties
 R $B79F IY object struct base
-N $B79F Clears/masks a bit in a table at $9B50 (indexed by IY+13, a formation-slot id) then decrements an adjacent per-formation counter; when that counter reaches zero, marks the slot done (IY+13=$FF) and either calls #R$C648 or #R$C5D2 (start explosion) depending on the $9C3F flag, then decrements a group counter at $9D18. Entry at #R$B79F uses C=0 (set bit), entry at #R$B7A3 uses C=$FF (clear bit) - exact meaning of the $9B50 bitmap not yet confirmed. The tail from #R$B7DC onward (an SP=IY stack trick) is not yet analyzed.
+N $B79F Marks an object's formation slot done. Once its whole group has emptied, triggers the group's completion effect (explosion or score-award) and decrements the group counter. The tail from #R$B7DC onward (an SP=IY stack trick) is not yet analyzed.
 C $B79F,4 entry: normal call, C=0
 C $B7A3,3 entry: alternate call, C=$FF
 C $B7A6,7 clear flag at IY+14; read formation-slot index from IY+13
@@ -1386,6 +1686,7 @@ R $B7F6 A word index into the jump table
 R $B7F6 HL jump table base address
 c $B7FE Pseudo-random number generator (advances LFSR state at $9C2B-$9C32)
 @ $B7FE label=random
+N $B7FE Advances an 8-byte shift-register state and returns a new pseudo-random byte, without disturbing the caller's registers.
 R $B7FE O:A pseudo-random byte
 R $B7FE BC,DE,HL preserved (saved into self-modified operands at entry, restored before RET)
 C $B7FE,3 Self-modify: save caller's HL (restored at $B841)
@@ -1401,7 +1702,7 @@ c $B845 Compute angle from object IX to target IY
 @ $B845 label=calc_angle
 R $B845 IX object position (shooter)
 R $B845 IY target position (e.g. player)
-N $B845 Rounds IX's fixed-point X/Y position (lo/hi at IX+$0B/$0C and IX+$0D/$0E) to the nearest integer (RLA into the low byte's top bit, then ADC A,$00 on the high byte), subtracts IY's integer column/row (IY+$0C/$0E) to get delta X (C) and delta Y (B), takes their absolute values while recording quadrant bits in D, then refines to an octant and runs a linear-search division ($B889-#R$B89C) to approximate the angle - a coarse atan2 feeding aiming/movement code such as #R$C43C.
+N $B845 Computes the coarse angle (0-63) from the shooter to its target, for use by aiming/movement code such as #R$C43C. A rough atan2 built from position deltas and a linear-search division, not a lookup table.
 C $B84E,3 Delta X = rounded IX position minus IY column
 C $B85B,3 Delta Y = rounded IX position minus IY row
 C $B863,3 Skip abs-negate if delta Y already positive
@@ -1433,22 +1734,39 @@ C $B8D4,6 store dy at IY+9/+10
 C $B8DA,1 return
 c $B8DB Set object position from $9C01, clamp column (IY+$0C) to 8-24
 @ $B8DB label=set_object_position
+N $B8DB Sets an object's on-screen position, keeping its column within the playable screen area.
 R $B8DB IY object struct base (writes position fields IY+$0B/$0C/$0D)
+C $B8DB,10 Snap Y to the top ($9C01), reset X to the left edge
+C $B8E5,5 Read the object's column
+C $B8EA,2 Skip left-edge clamp if column is already in range
+C $B8EC,5 Clamp column at the left edge (8)
+C $B8F1,3 Skip right-edge clamp if column is already in range
+C $B8F4,5 Clamp column at the right edge ($18)
 c $B8F9 Movement-pattern script interpreter
 @ $B8F9 label=movement_script_run
 R $B8F9 IY object struct base
-N $B8F9 Counts down a per-object frame-delay timer (IY+18); once it expires, reads the next byte of a movement script (pointer at IY+15/16) into IY+17, masks it to 0-7, and dispatches that step through the $A076 sub-table (indices $3B-$48) via #R$B7F6. If a dispatched step signals carry, it loops back immediately to process the next script byte in the same frame; otherwise it returns and waits for the timer to expire again.
+N $B8F9 Runs an object's movement-pattern script one step at a time, waiting out a per-object timer between steps. Continues into #R$B920 to decode the next script byte once the timer expires.
+C $B8F9,11 Count down the frame-delay timer (IY+$18); branch when it expires
+C $B904,3 Dispatched step's script byte (IY+$17)
+C $B907,6 Mask to 0-7, dispatch via the #R$A076 sub-table
+C $B914,10 Timer expired: default to 1 frame, load the script pointer
 C $B90D,3 Jump-table dispatcher
 C $B911,3 => Movement-pattern script interpreter
 c $B920 Decode movement-script "wait" byte (bit 7 set = wait N or random frames)
-N $B920 Continues #R$B8F9/#R$B920's script reader: if the script byte's high bit is set, it's a wait command - the low 7 bits give the frame count directly, except value 1 which means "random wait" (1-32 frames via #R$B7FE). Result is stored into the frame-delay timer at IY+18. If the high bit is clear, the byte is instead a movement-step index, handled by the fallthrough at #R$B935.
+N $B920 Decodes the next movement-script byte: a wait command reloads the frame-delay timer, otherwise it's a step index handled by the fallthrough at #R$B935.
+R $B920 A script byte to decode
+C $B920,4 High bit clear: not a wait, fall through to step dispatch
+C $B924,4 Low 7 bits = wait frame count
+C $B928,2 Value 1 means random wait
 C $B92A,3 Pseudo-random number generator
+C $B92D,3 Random wait = 1-32 frames
 N $B941 Handler for index $3B of the #R$A000 jump table (see #R$B7F6).
 c $B941 Movement opcode $3B: dispatch sub-command (C bits 3-6) via $A082
 @ $B941 label=mvop_dispatch_sub
 C $B94A,3 Jump-table dispatcher
 c $B94E Read next movement-script byte into E
 @ $B94E label=movement_next_byte
+N $B94E Fetches the next byte of an object's movement script and advances its script pointer.
 R $B94E IY object struct base (script pointer at IY+$15/$16)
 R $B94E O:E the fetched script byte
 R $B94E HL preserved; advances the object's script pointer (IY+$15/$16)
@@ -1458,12 +1776,26 @@ N $B974 Handler for index $3D of the #R$A000 jump table (see #R$B7F6).
 C $B98A,3 Compute velocity vector (dx,dy) from angle and speed
 c $B95F Movement opcode $3C: set field IY+$19 (from C or next script byte)
 @ $B95F label=mvop_set_iy19
+N $B95F Sets a per-object field, its value either packed into the opcode byte itself or, if that's zero, read as a following script byte.
+C $B95F,3 C's high nibble as the value; skip if zero
+C $B964,7 Extract the value, store, signal continue
+C $B96F,3 Otherwise: store the value read by #R$B94E, signal continue
 c $B974 Movement opcode $3D: set absolute heading, apply velocity
+N $B974 Sets the object's heading to a value packed into the opcode byte, mirroring it if the object faces left, then moves it.
+C $B974,4 Extract heading value from C
+C $B978,6 Mirror the heading if the object faces left (IY+$04 bit 7)
+C $B984,3 Store the new heading
+C $B987,3 B = speed (IY+$11)
 @ $B974 label=mvop_set_heading
 C $B98D,3 Apply object velocity (dx,dy) to position
 c $B992 Movement opcode $3E: turn heading relative, apply velocity
 @ $B992 label=mvop_turn_heading
-N $B992 Handler for index $3E of the #R$A000 jump table (see #R$B7F6).
+N $B992 Turns the object's heading by an amount and sign packed into the opcode byte, then moves it.
+C $B992,6 Mirror the turn direction if the object faces left (IY+$04 bit 7)
+C $B99C,7 Extract turn amount from C
+C $B9A3,6 Negate the turn if C bit 6 is set
+C $B9A9,8 Apply the turn to the current heading (IY+$10)
+C $B9B1,3 B = speed (IY+$11)
 C $B9B4,3 Compute velocity vector (dx,dy) from angle and speed
 C $B9B7,3 Apply object velocity (dx,dy) to position
 N $B9BC Handler for index $3F of the #R$A000 jump table (see #R$B7F6).
@@ -1481,6 +1813,8 @@ c $B9F1 Movement opcode $42: loop back in script until counter IY+$19 expires
 @ $B9F1 label=mvop_loop
 N $B9F1 Handler for index $42 of the #R$A000 jump table (see #R$B7F6).
 C $B9F1,3 Read next movement-script byte into E
+C $B9F4,5 Decrement loop counter (IY+$19), return if it hit zero
+C $B9F9,15 Otherwise rewind the script pointer by E bytes
 c $BA0A Apply object velocity (dx,dy) to position
 @ $BA0A label=apply_velocity
 R $BA0A IY object struct base
@@ -1558,7 +1892,7 @@ C $BBB9,1 Swap it with the stack top
 C $BBBA,3 Write the swapped value back to the fixed-slot address
 c $BBC2 Clear buffers at $7F00-$7FFF and $8000-$80FF (fast PUSH fill)
 @ $BBC2 label=clear_buffers
-N $BBC2 Called once per frame from the main loop ($A10F). Fills 256 bytes at $7F00 then 256 bytes at $8000 with DE ($0000), using the SP-trick PUSH-unroll pattern (B=$10 outer, 8 PUSHes/inner) shared with other fast fill routines in this game.
+N $BBC2 Zeroes two 256-byte buffers each frame using a fast PUSH-unroll fill, the same technique shared by other fast-fill routines in this game.
 C $BBC2,3 DE=$0000 (fill value)
 C $BBC5,5 Point HL/B at first buffer ($7F00, 16 groups of 8)
 C $BBCA,3 Fill first buffer, then set up second buffer ($8000)
@@ -1567,8 +1901,38 @@ C $BBD7,8 Unrolled PUSH DE x8, looped B times
 C $BBE1,3 Restore SP and return
 c $BBE5 Mark active objects into the attribute-buffer collision mask
 @ $BBE5 label=mark_collision_masks
-N $BBE5 Called every interrupt from #R$A0C4. Iterates the object list at $9D30 (B = $06 minus the count at $9D19; falls straight to #R$BC79 if none remain - the branch corrupted by POKE 48115,58/Immunity). For each object: E is set to C if (IY+$05)==$03, else 0; a row is computed from the object's Y (IY+$0D/$0E, then IY+$0B/$0C), and E is ORed into that row across the $7Exx/$7Fxx attribute buffers ($BC35/$BC3D continue the row loop started here). The object's bit is then stored at IY+$14 and C is rotated left (RLC C) so each object gets a distinct single-bit identifier for the next pass.
+N $BBE5 Marks each active object's position into the collision attribute buffers, one distinct bit per object, for damage/collision checks to test against later.
 C $BBE5,4 Save SP (restored via the $7E-page LD SP tail)
+C $BBE9,4 IY = object list head ($9D30)
+C $BBED,6 B = 6 - active object count ($9D19)
+C $BBF6,3 B = object count; C = 1: first object's mask bit
+C $BBF9,10 E = object's mask bit only when type (IY+$05) is 3
+C $BC03,2 H=$7E: point at the low-page attribute buffer
+C $BC05,13 Compute $7Exx attribute-row address from object Y (IY+$0D/$0E)
+C $BC12,3 OR mask bit into this attribute row (row 1/12)
+C $BC15,4 row 2/12
+C $BC19,4 row 3/12
+C $BC1D,4 row 4/12
+C $BC21,4 row 5/12
+C $BC25,4 row 6/12
+C $BC29,4 row 7/12
+C $BC2D,4 row 8/12
+C $BC31,4 row 9/12
+C $BC35,4 row 10/12
+C $BC39,4 row 11/12
+C $BC3D,4 row 12/12
+C $BC41,2 H=$7F: point at the high-page attribute buffer
+C $BC43,12 Compute $7Fxx attribute-row address from object Y (IY+$0B/$0C)
+C $BC4F,3 OR mask bit into this attribute row (row 1/8)
+C $BC52,4 row 2/8
+C $BC56,4 row 3/8
+C $BC5A,4 row 4/8
+C $BC5E,4 row 5/8
+C $BC62,4 row 6/8
+C $BC66,4 row 7/8
+C $BC6A,4 row 8/8
+C $BC6E,5 Store the object's mask bit (IY+$14), rotate C for the next object
+C $BC73,4 Advance to the next object in the list
 C $BBE9,4 IY = object list head ($9D30)
 C $BBED,6 B = 6 - active object count ($9D19)
 C $BBF3,3 POKE 48115,58 corrupts this JP Z, disabling the damage/collision branch (Immunity)
@@ -1577,16 +1941,57 @@ C $BC05,13 Compute $7Exx attribute-row address from object Y (IY+$0D/$0E)
 C $BC12,3 OR mask bit into this attribute row
 N $BC79 Entry point reached from #R$BBE5's mask-draw loop; also entered directly when POKE 48115,58 (Immunity) forces the mask byte to $80, skipping the normal per-object bit rotation (RLC C) at $BC71 and disabling the damage/collision branch.
 c $BC7D Draw fixed 8-row collision mask into both attribute buffers
-N $BC7D Entered from #R$BBE5's per-object loop (and the #R$BC79 Immunity entry). ORs the object's mask bit into 8 consecutive rows of each of the $7Exx/$7Fxx attribute buffers - the fixed-height counterpart to #R$BCE9's variable-height object masks.
+N $BC7D Marks a fixed 8-row collision mask into both attribute buffers around the object's position; the fixed-height counterpart to #R$BCE9's variable-height masks.
+R $BC7D C object's mask bit
+R $BC7D IY object struct base
 C $BC7D,3 Row offset from object Y (IY+$0D/$0E)
+C $BC8B,3 OR mask bit into this attribute row (row 1/8)
+C $BC8F,4 row 2/8
+C $BC93,4 row 3/8
+C $BC97,4 row 4/8
+C $BC9B,4 row 5/8
+C $BC9F,4 row 6/8
+C $BCA3,4 row 7/8
+C $BCA7,3 row 8/8
+C $BCAC,3 Row offset from object Y (IY+$0B/$0C)
+C $BCBA,3 OR mask bit into this attribute row (row 1/8)
+C $BCBD,4 row 2/8
+C $BCC1,4 row 3/8
+C $BCC5,4 row 4/8
+C $BCC9,4 row 5/8
+C $BCCD,4 row 6/8
+C $BCD1,4 row 7/8
+C $BCD5,4 row 8/8
 C $BCAA,2 Switch to second attribute page ($7Fxx)
 C $BCAC,3 Row offset from object Y (IY+$0B/$0C)
 C $BCD9,3 Restore SP
 C $BCE0,1 Exit if no objects to process ($9D19 counter is zero)
 c $BCE9 Draw active objects' collision masks into attribute buffer
 @ $BCE9 label=draw_object_masks
-N $BCE9 Called every interrupt from #R$A0C4 and $A8E8. Iterates the object linked list (via $9D18/EXX, same list style as #R$BC7D/#R$BBE5), and for each object with the right IY+$04 status bits, computes an attribute row from its Y position (IY+$0D/$0E and IY+$0B/$0C) and ORs a variable-height mask (row count from IX-$01/IX-$02) into the $7Exx/$7Fxx attribute buffers - building the per-object hit/collision mask consumed elsewhere.
+N $BCE9 Marks each active object's variable-height collision mask into the attribute buffers, the variable-height counterpart to #R$BC7D's fixed 8-row mask.
 C $BCE9,4 Save SP (restored at $BD7F)
+C $BCED,5 Optional player-hit row/page setup, gated by flag $9C70
+C $BCF5,15 Compute the player's attribute row for the collision test below
+C $BD04,3 Stash that row for later use
+C $BD07,7 IY = object list head ($9D1E)
+C $BD0E,8 B = active object count
+C $BD19,3 DE = 8 (attribute-row stride)
+C $BD1E,4 Skip normal draw path for a special object type (IY+$04 bit 3)
+C $BD25,5 Reset accumulator; check IY+$04 status bits
+C $BD32,2 Point SP at the object's mask-pointer fields (IY)
+C $BD34,3 Pop the object's mask row-count pointer (IX)
+C $BD37,2 H=$7E: point at the low-page attribute buffer
+C $BD39,12 Compute $7Exx attribute-row address from object Y (IY+$0D/$0E)
+C $BD45,4 Clamp row start if it wrapped past the top
+C $BD4C,3 B = mask row count (IX-$01)
+C $BD4F,4 OR mask row into buffer, advance to next row
+C $BD53,2 OR the final row, stash accumulated mask in C
+C $BD55,2 H=$7F: point at the high-page attribute buffer
+C $BD57,12 Compute $7Fxx attribute-row address from object Y (IY+$0B/$0C)
+C $BD63,2 A=$40 (mask row seed)
+C $BD65,3 B = mask row count (IX-$02)
+C $BD68,4 OR mask row into buffer, advance to next row
+C $BD6C,2 OR the final row, AND with the low-page accumulator
 C $BCF2,2 Skip row/page setup if flag at $9C70 is zero
 C $BD17,2 No objects to draw: skip to cleanup
 C $BD22,2 Skip normal draw path if IY+$04 bit 3 is set
@@ -1596,6 +2001,7 @@ C $BD49,2 Clamp row start if carry
 C $BD76,2 Next object
 C $BD7F,3 Restore SP
 c $BD99 Update randomized countdown, then enter player update ($BDAE)
+N $BD99 Randomly ticks down a shared timer used elsewhere for homing/steering, then falls through into the per-frame player update loop.
 C $BD99,3 Pseudo-random number generator
 C $BDAE,7 flip and mask border colour bits at $9C33/$9C34, output to port $FE
 C $BDB9,10 load player object pointer into IY, save previous IY
@@ -1628,7 +2034,9 @@ c $BE02 Player idle: no-op
 c $BE03 Player: skip movement if immobilised, else read input and move
 c $BE4A Clamp player position to screen bounds, update bank animation
 @ $BE4A label=clamp_player_pos
-N $BE4A Clamps the player object's X position ($IY+0B/0C) between $0700 and $18E0, then its Y position (IY+0D/0E) between $0300 and $18E0, then steps a "bank angle" frame (IY+16, target IY+17) toward its target by 1 per call (with a short delay after a direction change) and looks up the resulting sprite frame from a table at $9B4C. Entered from $BE2E/#R$BE4C with B already set to the bank-frame target: 2 if Right is held (X increasing), 0 if Left is held (X decreasing), 1 if neither (level flight, no X movement) - this is the actual Left/Right-to-plane-tilt conversion.
+N $BE4A Clamps the player's position to the screen bounds, then converts left/right input into a banking-tilt sprite frame - stepping the bank angle one frame at a time rather than snapping directly to it.
+R $BE4A B bank-frame target (2=right, 0=left, 1=level)
+R $BE4A IY player object struct base
 C $BE4A,2 entry: X delta already applied, skip add
 C $BE4C,1 entry: add X delta (HL+=DE)
 C $BE4D,6 check X within left bound
@@ -1664,7 +2072,7 @@ C $BF1E,3 Ratchet player state forward
 c $BF22 Handle player hit: switch to hit/explosion animation, arm recovery timer
 @ $BF22 label=player_hit
 R $BF22 IY player object base (inherited from $BDAE's caller)
-N $BF22 Called from #R$BDAE right after the immunity flag check fails (both immunity POKEs disable that call). Tags the object at $9C77 (the thing that hit the player) with the current wave/formation id from $9BA4, then repoints the player's per-frame update-routine pointer (IY+2/+3, little-endian) to $6B86 - the hit/explosion animation handler, same pointer-swap trick used by #R$C5AF for enemies - and arms a 38-frame ($26) timer at $9C3C, presumably the death/respawn delay.
+N $BF22 Switches the player into its hit/explosion animation and arms the death/respawn recovery timer.
 C $BF22,4 IX = object that hit the player
 C $BF26,6 tag it with current wave/formation id
 C $BF2C,8 arm hit-reaction timer; set player's IX+$02/$03 (record ptr, not code) to $6B86...
@@ -1672,7 +2080,7 @@ C $BF34,8 ...(hit/explosion animation); set visual state
 C $BF3C,5 arm 38-frame recovery/death timer at $9C3C
 C $BF41,1 return
 c $BF42 Use bomb: consume inventory, trigger flash effect
-N $BF42 Triggered when the input state at $9CDC equals $09. Decrements the player's bomb count (IX+9, confirmed via #R$66DE), sets bit 2 of the deferred-event mask $9C27, adds to a bonus accumulator ($9C70), and points the screen-flash sequence pointer $9C5B at $9C5E - the same mechanism #R$6A88 and #R$C72A use for the corner-box/screen flash. Once the input state reaches exactly 1 (key released), it also allocates a new object from the free-list pool ($9D1C, same trick as #R$C559), copies initial fields from a spawn-parameter data table at #R$6BB9 (BC points there; NOT a code handler), and positions it at the player's location (from IY+0D/0E) - spawning the actual bomb-explosion object.
+N $BF42 Handles the bomb key: consumes a bomb and triggers the screen-flash effect on press, then spawns the actual bomb-explosion object once the key is released.
 C $BF46,4 Trigger only when input state ($9CDC) is $09
 C $BF54,3 Consume one bomb (IX+$09)
 C $BF5A,2 Request the screen-flash deferred event ($9C27 bit 2)
@@ -1686,7 +2094,7 @@ C $BFC6,17 Copy velocity/offset fields from spawn data
 C $BFE0,2 Next object
 C $BFE2,3 Restore SP
 C $BFE7,3 Request sound effect if higher priority than current
-N $BFEB Handler for index $2C of the #R$A000 jump table (see #R$B7F6).
+N $BFEB Checks whether this object has been hit and starts its explosion, otherwise moves it and retires it once it leaves the play area.
 C $BFFE,3 Start object explosion sequence
 C $C002,3 Apply object velocity (dx,dy) to position
 C $C011,3 Mark formation slot done, trigger completion effect when group empties
@@ -1703,7 +2111,15 @@ C $C088,3 Mark formation slot done, trigger completion effect when group empties
 C $C0AB,3 Pseudo-random number generator
 c $BFEB Check for bullet hit, start explosion
 c $C015 Launch and move projectile; explode on hit
-N $C015 On first call (IY+10 != $FF) computes a launch velocity via #R$B8A2 from angle IY+10/speed IY+11, then marks IY+10=$FF so it only fires once. Every call then moves the object via #R$BA0A. If flag bit 5 of IY+4 is set and IY+14 indicates a hit (bit 7 set, not bit 6), sets the global hit flag at $9C6B and starts an explosion via #R$C5AF; otherwise, once flag bit 5 is clear, retires the object and signals formation completion via #R$B79F.
+N $C015 Launches a projectile on its first call, then moves it every frame; explodes it on a confirmed hit, or retires it and signals formation completion once its lifetime flag clears.
+C $C015,8 First call only (IY+$10 != $FF)
+C $C01D,3 B = launch speed (IY+$11)
+C $C026,4 Mark launched, so this only fires once
+C $C02D,6 Skip hit/retire handling unless flag bit 5 (IY+$04) is set
+C $C033,7 Skip if IY+$14 bit 6 is set (not a hit)
+C $C03A,3 Bail out unless IY+$14 bit 7 (hit) is set
+C $C03D,5 Set the global hit flag ($9C6B)
+C $C049,4 Otherwise: mark this formation group's slot count
 c $C051 Move straight down at fixed speed; advance animation frame
 C $C051,8 add fixed step $20 to Y position low byte
 C $C059,5 carry into Y position high byte
@@ -1719,17 +2135,34 @@ C $C0D6,3 Add BCD score value to current player's score
 C $C0DC,3 Start object explosion sequence
 C $C106,3 Enemy fire-decision timer and heading steering
 C $C10A,12 step sprite frame (IY+6), 8-direction wrap, mirrored via IY+4 bit 7
-N $C11C Handler for index $35 of the #R$A000 jump table (see #R$B7F6). Runs the movement script, then handles retirement (IY+4 bit 1 -> #R$C191/#R$B79F). On a hit (IY+14 nonzero), decodes a variable damage amount from it via 6 rotate/add steps into E, ORs the hit flag into the global $9C6B, and subtracts the damage from health (IY+12); once health goes negative it awards a score bonus (#R$66B5) and explodes (#R$C5AF). Otherwise falls through to #R$C16E, which handles fire timing and 8-direction sprite-frame selection from the aim angle (IY+0F/+10).
+N $C11C Runs an enemy's movement script, applies variable damage on a hit and explodes it once destroyed, otherwise handles its fire timing and aim-based sprite frame.
 c $C11C Scripted-movement enemy: take variable damage, explode when destroyed
 C $C11C,3 Movement-pattern script interpreter
+C $C11F,6 Skip damage handling and retire if flag bit 1 (IY+$04) is set
+C $C125,7 Skip damage handling entirely if not hit (IY+$14 zero)
+C $C12C,6 Decode whether this hit deals extra (+2) damage
+C $C134,9 Mask hit byte to the aim-angle range, stash it ($9C6C)
+C $C13D,21 Otherwise: decode a variable damage amount via 6 rotate/add steps
+C $C152,6 OR the hit flag into the global hit-flag ($9C6B)
+C $C158,7 Subtract damage from health (IY+$12)
+C $C15F,3 Skip explosion unless health went negative
+C $C162,2 Award a destruction score bonus
 C $C164,3 Add BCD score value to current player's score
 C $C16A,3 Start object explosion sequence
 C $C18D,3 Enemy fire-decision timer and heading steering
 C $C195,3 Mark formation slot done, trigger completion effect when group empties
 N $C199 Handler for indices $32, $33, $3A of the #R$A000 jump table (see #R$B7F6).
 c $C199 Multi-hit enemy: move straight down, take damage
-N $C199 Runs the movement script, retires if the "alive" flag (IY+4 bit 1) is set. Otherwise moves straight down ($0020/frame, same as #R$C051) and retires once past a Y boundary ($1C). On a hit (IY+14, masked to 7 bits), ORs it into the global hit flag $9C6B and decrements health (IY+12); once health reaches zero, checks a secondary counter (IY+1A, cp $08) suggesting a multi-stage/multi-hit-phase enemy - not fully traced.
+N $C199 Runs a multi-hit enemy's movement script, moves it straight down, and applies damage on a hit - exploding it once its hit-point counter and a secondary stage counter both run out. Otherwise sets its sprite frame and fire-decision timer.
 C $C199,3 Movement-pattern script interpreter
+C $C19C,6 Skip movement/damage handling and retire if "alive" flag is set
+C $C1A2,8 Move straight down at fixed speed ($0020/frame)
+C $C1AF,7 Retire once past a Y boundary ($1C)
+C $C1B6,8 Mask hit byte to 7 bits; skip damage handling if not hit
+C $C1BE,6 OR the hit flag into the global hit-flag ($9C6B)
+C $C1C4,5 Decrement health; skip the rest while still nonzero
+C $C1C9,5 Check secondary stage counter (IY+$1A) against $08
+C $C1D0,8 First stage cleared: reset stage counter, arm 1 more hit
 C $C1DA,3 Add BCD score value to current player's score
 C $C1E1,3 Add BCD score value to current player's score
 C $C1E7,3 Start object explosion sequence
@@ -1744,11 +2177,36 @@ C $C294,3 Enemy fire-decision timer and heading steering
 N $C298 Handler for index $34 of the #R$A000 jump table (see #R$B7F6).
 c $C217 Movement handler $37: run movement script, then advance and act on IY+$14 flags
 R $C217 IY object struct base (status IY+$04 bit 1, Y at IY+$0D/$0E, action flags IY+$14)
-N $C217 Handler for index $37 of the #R$A000 jump table. First calls #R$B8F9 to run the object's movement-pattern script. Unless status flag IY+$04 bit 1 is set, advances Y (IY+$0D/$0E) by $20 like the other movement handlers (#R$C298/#R$C31A/#R$C359/#R$C388), then decodes the IY+$14 action byte into a steering/target angle stored at $9C6C.
+N $C217 Runs an enemy's movement script, moves it down, and applies variable damage on a hit - exploding it once destroyed. Otherwise sets its sprite frame and fire-decision timer.
+C $C21A,6 Skip movement/damage handling and retire if flag bit 1 (IY+$04) is set
+C $C220,8 Move straight down at fixed speed ($0020/frame)
+C $C22D,6 Skip damage handling entirely if not hit (IY+$14 zero)
+C $C235,8 Decode whether this hit deals extra (+2) damage
+C $C23D,9 Mask hit byte to the aim-angle range, stash it ($9C6C)
+C $C246,21 Otherwise: decode a variable damage amount via 6 rotate/add steps
+C $C25B,6 OR the hit flag into the global hit-flag ($9C6B)
+C $C261,7 Subtract damage from health (IY+$12)
+C $C268,3 Skip to lower-score award unless health went negative
+C $C26B,2 Award the higher destruction score bonus
+C $C277,2 Award the lower destruction score bonus
 c $C298 Movement handler $34: advance object down-screen, then act on IY+$14 flags
 R $C298 IY object struct base (Y at IY+$0D/$0E, action flags IY+$14)
+N $C298 Moves an enemy down, applies variable damage on a hit and explodes it once destroyed - switching to a near-death animation just before that. Otherwise retires it once it leaves the play area.
+C $C298,8 Move straight down at fixed speed ($0020/frame)
+C $C2A5,8 Skip damage handling entirely if not hit (IY+$14 zero)
+C $C2AD,6 Decode whether this hit deals extra (+2) damage
+C $C2B5,9 Mask hit byte to the aim-angle range, stash it ($9C6C)
+C $C2BE,21 Otherwise: decode a variable damage amount via 6 rotate/add steps
+C $C2D3,6 OR the hit flag into the global hit-flag ($9C6B)
+C $C2D9,7 Subtract damage from health (IY+$12)
+C $C2E0,4 Skip near-death switch unless health dropped below 3
+C $C2E4,8 Point at the near-death animation record (IY+$02/$03)
+C $C2EC,4 Skip to lower-score award unless health went negative
+C $C2F0,2 Award the higher destruction score bonus
 C $C2F2,3 Add BCD score value to current player's score
 C $C2F8,3 Start object explosion sequence
+C $C2FC,2 Award the lower destruction score bonus
+C $C301,7 Retire once past a Y boundary ($1B)
 C $C2FE,3 Add BCD score value to current player's score
 C $C30C,3 Mark formation slot done, trigger completion effect when group empties
 C $C310,3 Enemy fire-decision timer and heading steering
@@ -1763,13 +2221,46 @@ C $C3C3,3 Mark formation slot done, trigger completion effect when group empties
 N $C3C7 Handler for index $30 of the #R$A000 jump table (see #R$B7F6).
 c $C31A Movement handler $31: advance object down-screen; on flag, score and mark progress
 R $C31A IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
+N $C31A Moves an enemy down; when its action flag fires, awards score and bumps a per-object counter (up to a cap) before joining the shared wave-completion tail. Otherwise retires it once it leaves the play area.
+C $C31A,8 Move straight down at fixed speed ($0020/frame)
+C $C327,4 Skip scoring unless the action flag (IY+$14 bit 7) is set
+C $C32D,4 IX = the object that hit the player
+C $C331,5 Skip scoring once the per-object counter (IX+$09) hits its cap
+C $C338,8 Otherwise bump the counter and request the screen-flash event
+C $C340,2 Award a fixed score bonus
+C $C347,5 Otherwise: retire once past a Y boundary ($1B)
+C $C34D,4 Decrement the wave-progress counter ($9C3F)
 c $C359 Movement handler $39: advance object down-screen; on flag, bump IX+$03
 R $C359 IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
+N $C359 Moves an enemy down; when its action flag fires, bumps a field on the object that hit the player and requests the screen-flash event before joining the shared wave-completion tail. Otherwise retires it once it leaves the play area.
+C $C359,8 Move straight down at fixed speed ($0020/frame)
+C $C366,4 Skip the flag-triggered step unless IY+$14 bit 7 is set
+C $C36C,4 IX = the object that hit the player
+C $C370,8 Bump a field on it (IX+$03), request the screen-flash event
+C $C37A,5 Otherwise: retire once past a Y boundary ($1B)
 c $C388 Movement handler $38: advance object down-screen; on flag, score and mark completion
 R $C388 IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
+N $C388 Flickers a visual flag periodically, moves an enemy down, and when its action flag fires, awards score and bumps a wave-progress counter. Otherwise decrements a countdown before completing the formation slot.
+C $C388,5 Every 4th frame ($9BA0): flicker a visual flag (IY+$04 bit 4)
+C $C39D,8 Move straight down at fixed speed ($0020/frame)
+C $C3AA,4 Skip scoring unless the action flag (IY+$14 bit 7) is set
+C $C3B0,2 Award a fixed score bonus
+C $C3B5,4 Bump a wave-progress counter ($9C6A)
+C $C3BB,3 Otherwise: count down before completing (IY+$15)
 c $C3C7 Movement handler $30: angle-steered weave with edge bounce, velocity apply
 R $C3C7 IY object struct base (column IY+$0C, angle IY+$10, direction-rate IY+$15, speed IY+$11, action flag IY+$14 bit 7)
-N $C3C7 Outside a central column band (IY+$0C-6 not in 0-$14), flips the direction-rate sign (IY+$15) and mirrors the angle target ($20-(IY+$10), masked to 0-$3F) - an edge-bounce for a zigzag/weaving movement. Advances angle (IY+$10) by the direction-rate, computes velocity via #R$B8A2 and applies it via #R$BA0A. If the action flag (IY+$14 bit 7) is set, scores +5, conditionally bumps the wave counter $9C68 and the explosion-data pointer $9C73 (13-byte stride, see #R$A612), then joins the plain down-screen-advance tail shared with #R$C388/#R$C298/#R$C31A/#R$C359.
+N $C3C7 Steers an enemy in a zigzag weave, bouncing its heading back when it strays outside a central column band. When its action flag fires, awards score and advances the wave/explosion-data trackers; otherwise moves it down and retires it once it leaves the play area.
+C $C3C7,7 Outside a central column band (IY+$0C-6 not in 0-$14)
+C $C3D0,8 Flip the direction-rate sign (IY+$15), edge-bounce
+C $C3D8,7 Mirror the angle target, masked to 0-$3F
+C $C3E2,11 Advance angle (IY+$10) by the direction-rate
+C $C3ED,3 B = speed (IY+$11)
+C $C3F6,4 Skip scoring unless the action flag (IY+$14 bit 7) is set
+C $C3FC,4 Bump the wave counter ($9C68)
+C $C400,2 Award a fixed score bonus
+C $C405,11 Advance the explosion-data pointer once its group counter allows
+C $C41D,11 Otherwise: move straight down at fixed speed ($0020/frame)
+C $C42E,6 Retire once outside a Y band ($1C-$22)
 C $C3F0,3 Compute velocity vector (dx,dy) from angle and speed
 C $C3F3,3 Apply object velocity (dx,dy) to position
 C $C402,3 Add BCD score value to current player's score
@@ -1777,7 +2268,7 @@ C $C438,3 Mark formation slot done, trigger completion effect when group empties
 c $C43C Enemy fire-decision timer and heading steering
 @ $C43C label=enemy_fire_steer
 R $C43C IY enemy object struct base (status IY+$04, target ref IY+$1A, heading IY+$1C)
-N $C43C Decrements the shared randomized-reload timer at $9C42 (reloaded from $9C43 on expiry - same mechanism as #R$BD99). Once expired, checks activity flags (IY+4 bits 0 and 5) and a target reference (IY+1A, $FF = no target), computes an aim angle via #R$B845 toward the target (IX=($9C6D)), then turns the enemy's current heading (IY+1C) toward that angle by a rate-limited step (clamped to +-4) rather than snapping directly to it - a homing/steering behaviour.
+N $C43C Runs an enemy's shared fire-decision timer, and once it expires, steers the enemy's heading toward its target one rate-limited step at a time rather than snapping to it. The enemy only actually fires once its heading lines up closely enough with the target and a free bullet slot is available.
 C $C43F,2 Fire timer countdown; exit until it expires
 C $C441,4 Reload fire timer from $9C43
 C $C445,5 Exit if busy flag set (IY+$04 bit 0)
@@ -1802,7 +2293,7 @@ C $C4A6,3 Pseudo-random number generator
 C $C538,3 Pseudo-random number generator
 c $C559 Allocate object from free-list pool and initialize
 @ $C559 label=alloc_object
-N $C559 Pops a free object slot from the linked list at $9D1C (pushing the previous head onto a secondary stack at $9D30), then initializes its struct: IX+$02/$03 (a record pointer into the shared #R$6B42 table, not executable code - see #R$5B55) -> $6B42 (record 0), state flags, default position, and stores the new object's address into $9C6D - the same field #R$C43C reads as its aim/steering target. Looks like the enemy-bullet or enemy-spawn allocator.
+N $C559 Allocates a new object from the free-list pool and sets it up with default state and position. Publishes it as the current aim/steering target for enemy fire-decision code.
 C $C559,4 Save caller's SP (restored at $C56F)
 C $C55D,7 Pop free-list head ($9D1C) into IX
 C $C567,8 Push old head onto secondary stack ($9D30)
@@ -1815,7 +2306,7 @@ c $C5AF Start object explosion sequence
 @ $C5AF label=start_explosion
 R $C5AF IY object struct base
 R $C5AF D,E position offset for the explosion
-N $C5AF Sets the object's per-frame update-routine pointer (IY+2/+3, little-endian) to $6BCA and initializes state fields IY+5/IY+6, then resets two global countdown/growth values at $9C35 and $9C39. Called by 7 different enemy/object update routines (BDAE, BF42, C0B2, C168, C1E0, C1E8, C2D6), very likely the shared "object destroyed, switch to explosion animation" entry point. $6BCA itself and the exact role of $9C35/$9C39 not yet traced.
+N $C5AF Switches an object into its explosion animation and resets two global explosion-growth timers. The shared "object destroyed" entry point used by several enemy/object update routines.
 C $C5AF,8 set object's IX+$02/$03 (record ptr into #R$6B42's table, not code) to $6BCA (record 8)
 C $C5B7,8 init state fields IY+5=4, IY+6=8
 C $C5BF,6 store caller's position offset (D,E) into object struct
@@ -1825,18 +2316,45 @@ C $C5D1,1 return
 c $C5D2 Convert object to explosion (set state-record pointer to $6BF3)
 @ $C5D2 label=object_to_explosion
 R $C5D2 IY object struct base
-N $C5D2 Called from #R$B79F on the $9C3F path. Increments $9C3F, positions the object via #R$B8DB, then sets IY+$02/$03 to $6BF3 - entry 4 of the #R$6BDB explosion/state descriptor table (not executable code, see #R$5B55/#R$6BDB) - and inits state fields; the sibling of #R$C5AF (which uses $6BCA, record 8 of #R$6B42's table). The #R$C5EE entry (from #R$C648) additionally awards score (+8) and sets up a follow-up object based on the current player's state.
+N $C5D2 Converts an object into an explosion, the sibling of #R$C5AF. The alternate #R$C5EE entry additionally awards score and sets up a follow-up object based on how many bonus objects remain, either upgrading it to a bigger explosion or spawning the next object in the sequence.
+C $C5D2,4 Bump the shared explosion-conversion counter ($9C3F)
+C $C5D9,4 Clear the banking-in-progress flag
+C $C5DD,8 Point at the explosion state-record entry ($6BF3)
+C $C5E5,8 Init state fields (IY+$05/$06)
+C $C5F1,2 Award a fixed score bonus
+C $C5F6,4 Clear the banking-in-progress flag
+C $C5FA,4 Reset frame
+C $C5FE,6 Snap Y to the top ($9C01)
+C $C604,4 Reset X to the left edge
+C $C608,4 IX = the object that hit the player
+C $C60C,6 Check whether it has bonus follow-up objects remaining (IX+$0B)
+C $C612,7 Skip the upgrade check once the group-clear rate cap is reached
+C $C61C,4 Otherwise randomly decide whether to upgrade
+C $C620,8 Upgrade to a bigger explosion (record $ED)
+C $C628,8 Init state fields (IY+$05, growth rate IY+$15)
+C $C631,4 Otherwise: reset the group-clear rate counter
+C $C638,3 Consume one bonus follow-up object (IX+$0B)
+C $C63B,8 Spawn the next object in the sequence (record $E7)
+C $C643,4 Init state field (IY+$05)
 C $C5D6,3 Set object position from $9C01, clamp column (IY+$0C) to 8-24
 C $C5EE,3 Set object position from $9C01, clamp column (IY+$0C) to 8-24
 C $C5F3,3 Add BCD score value to current player's score
 C $C619,3 Pseudo-random number generator
 C $C635,3 Set object position from $9C01, clamp column (IY+$0C) to 8-24
 c $C648 Decrement wave-group counter; trigger group-clear bonus when it hits zero
-N $C648 Called from #R$B79F when a formation slot finishes. Decrements the wave-group counter at $9C68; while nonzero, falls through into #R$C5EE (per-kill score/bonus handling). Once it reaches zero, reloads it from $9C72 and sets up a bonus-animation script on IY (pointer $6B97, duration fields), choosing between two outcomes based on IY+$0C vs $12.
+N $C648 Decrements the wave-group counter; once the whole group is cleared, sets up a bonus-award animation, otherwise falls through to per-kill scoring.
+C $C648,4 Decrement the wave-group counter ($9C68)
+C $C64E,4 Group cleared: reload the counter from $9C72
+C $C652,8 Point at the bonus-animation record ($6B97)
+C $C65A,8 Init state fields (IY+$05/$06)
+C $C662,5 Pick the animation's direction based on column (IY+$0C vs $12)
+C $C669,8 Rightward outcome: set growth rate and angle
+C $C673,8 Otherwise: leftward outcome, no angle
+C $C67B,4 Set the animation's duration (IY+$11)
 C $C64E,3 get Wave type / group id
 c $C680 Scroll background (periodic LDDR shift, gated by counter $9C2A)
 @ $C680 label=scroll_background
-N $C680 Called every frame from #R$A0C4. Decrements counter $9C2A; every 3rd call ($9C2A reloaded to 3) it shifts two 15-byte blocks ($850E-$851D and $851E-$852D) backward by one byte via LDDR - the periodic scroll-step mechanism for the background graphics.
+N $C680 Shifts the background graphics one byte, but only every 3rd frame.
 C $C683,2 Act only every 3rd frame ($9C2A countdown)
 C $C685,2 Reload the frame counter (3)
 C $C687,3 First block: shift $850E-$851D back one byte
@@ -1847,8 +2365,7 @@ C $C6A0,2 Shift 15 bytes down (LDDR)
 C $C6A2,3 Wrap the scrolled-off byte to $8510
 c $C6A6 Screen wipe transition effect (colour set in $9C59)
 @ $C6A6 label=screen_wipe
-R $C6A6 none; uses colour from $9C59 (set by caller beforehand)
-N $C6A6 Diamond/cross wipe: repeatedly paints a full-height column and full-width row on each side of screen centre, growing outward frame by frame, using #R$C6D3 (fill column) and #R$C6EB (fill row) with the attribute byte at $9C59. All callers set $9C59 to the desired colour just before calling this.
+N $C6A6 Wipes the screen to a solid colour (from $9C59, set by the caller beforehand) with a diamond/cross pattern growing outward from the centre.
 C $C6A6,2 wait ~18 frames before starting wipe
 C $C6A8,3 loop: wait 18 frames
 C $C6AB,3 wait one more frame; init centre offset
@@ -1867,10 +2384,14 @@ C $C6CF,3 repeat, shrinking step outward
 C $C6D2,1 return
 c $C6D3 Fill screen attribute column with colour from $9C59
 @ $C6D3 label=fill_attr_column
+N $C6D3 Fills one full-height screen column with the wipe colour, ignoring out-of-range columns.
 R $C6D3 A screen column (7-24 valid, else no-op)
+C $C6D3,6 Ignore out-of-range columns (valid range 7-24)
+C $C6D9,9 Point at the attribute-area column start ($58xx)
 C $C6E2,3 get Active colour scheme
 c $C6EB Fill screen attribute row with colour from $9C59
 @ $C6EB label=fill_attr_row
+N $C6EB Fills one full-width screen row with the wipe colour.
 R $C6EB A row/column offset (encodes screen position)
 C $C6EC,3 Rotate position code into attribute-row high bits
 C $C6F8,3 Form attribute-area address in $58xx
@@ -1879,6 +2400,7 @@ C $C701,4 Load fill colour from $9C59
 C $C705,2 Propagate colour across the row (18 cells)
 c $C709 Fill entire attribute screen with colour A (fast SP-push fill)
 @ $C709 label=fill_attr_screen
+N $C709 Fills the whole screen attribute area with a single colour, using a fast PUSH-unroll fill.
 R $C709 A attribute colour
 C $C709,4 Save caller's SP (restored at $C726)
 C $C70F,2 A = 23 row groups to fill
@@ -1890,7 +2412,13 @@ C $C723,3 Loop 23 rows
 C $C726,3 Restore SP
 c $C72A Animate active player's indicator box colour
 @ $C72A label=animate_player_box
-N $C72A Called every interrupt from #R$A0C4. Reads the next colour byte from a repeating sequence (pointer $9C45, reset via $9C44/$9C47 on terminator $FF), then applies it to the active player's corner box ($58C4 or $58DA, chosen via $9C76) - the same corner boxes highlighted (statically) by #R$6A88's credits screen.
+N $C72A Cycles the active player's corner-box indicator through a repeating colour sequence, one step per interrupt. Also drives the full-screen flash effect if one is pending.
+C $C72A,4 Read next byte of the colour sequence ($9C45)
+C $C732,7 Sequence exhausted: check repeat count, reload if any remain
+C $C73B,5 Reload the sequence pointer from its start ($9C47)
+C $C740,5 Advance the sequence pointer, C = colour to apply
+C $C748,6 Point at the active player's corner box ($58C4 or $58DA)
+C $C750,10 Paint the box's 4 corner cells
 C $C745,3 get Active player
 C $C75A,3 read next full-screen flash colour byte (sequence $9C5B, set by #R$6A88)
 C $C766,3 get Active colour scheme
@@ -1909,13 +2437,20 @@ C $C792,2 Inner unroll count B=$06 (6x3 stores per pass)
 C $C799,4 Save source read pointer (SP) before switching back
 C $C79D,1 SP=HL: point stack at destination write area
 C $C79E,1 EXX: back to normal registers for the unrolled store sequence
+C $C7A1,20 Store 4 pairs from HL-fed source (source 1/3)
+C $C7B5,8 Switch page, advance to next source (SP=IX)
+C $C7BD,20 Store 4 pairs from IX-fed source (source 2/3)
+C $C7D1,8 Switch page, advance to next source (SP=IY)
+C $C7D9,20 Store 4 pairs from IY-fed source (source 3/3)
+C $C7ED,8 Switch page, reset source pointer for next pass
+C $C7F5,2 Loop $C792's inner unroll count
 C $C80A,14 Advance the 3 self-modified destination operands by 8
 C $C81A,1 Next row-group
 C $C81B,3 Loop back into the unrolled mover body
 C $C81E,3 Done: restore SP
 C $C821,3 Reset $C772 mover body opcodes to INC H
 c $C825 Configure $C772 mover: set fill displacement, patch 3 body opcodes to EX DE,HL
-N $C825 Patches the IX-displacement operand at $C846 from the frame-indexed table ($9C02 + $9C00 mod 8), then via the shared tail writes $EB (EX DE,HL) into three opcode slots ($C7A1/$C7BD/$C7D9) in #R$C772's unrolled store body.
+N $C825 Reconfigures #R$C772's self-modifying mover for the current frame's row displacement.
 C $C828,3 Frame counter $9C00 mod 8
 C $C830,2 Index byte table at $9C02
 C $C832,3 Patch fill-loop IX displacement operand ($C846)
@@ -1929,12 +2464,14 @@ C $C847,2 Advance to next slot (+$1C)
 C $C849,2 Loop 3 slots
 c $C84C Build wrapped scroll-window row into $F6D1 buffer
 @ $C84C label=build_scroll_row
-N $C84C Called every interrupt from #R$A0C4. Source is the circular scroll buffer: base pointer ($9BF9)+$0024 plus a wrap count derived from the scroll offset at $9BF8. Copies up to 24 bytes via LDI into #R$F6D1, and if the window runs past the buffer end, continues the remaining bytes from the wrap point at $FA79 (the same circular buffer filled by #R$6498). The resulting #R$F6D1 row is consumed by #R$C772's fast attribute mover.
+N $C84C Copies the next window of the circular scroll buffer into #R$F6D1, wrapping around to the buffer's start if the window runs past its end. The resulting row is what #R$C772 draws to the screen.
 C $C84C,10 HL = scroll-window source pointer, DE = dest #R$F6D1
 C $C859,9 C = scroll offset, B = bytes remaining before wrap ($18-offset)
+C $C862,2 C=$FF: BC = byte count for the LDI runs below
+C $C864,72 Copy up to 36 bytes into #R$F6D1, one LDI per byte
 C $C8AE,9 Wrap: continue remaining bytes from buffer start $FA79
 c $C8B8 Advance background scroll: every 8th frame swap column buffer and render row
-N $C8B8 Called every frame from #R$A0C4 and #R$A4E7. Advances a mod-8 frame counter at $9C00; only on the 8th frame does it request deferred event bit 3 ($9C27), toggle the ping-pong column-buffer selector ($9BAE), copy the active 18-byte column row into staging ($9BD4), call #R$C941 to decode the next column, and convert each row cell into an attribute-code pair (>=$60 clamped to $62) written to the on-screen scroll target ($9BF9).
+N $C8B8 Advances the background scroll one column every 8th frame: decodes the next column of scenery tiles and converts it into attribute codes for the on-screen scroll buffer.
 C $C8BD,2 Test for 8th frame (mod-8 wrap)
 C $C8C7,2 Only continue every 8th call
 C $C8CC,2 Mark deferred event bit 3 pending
@@ -1942,29 +2479,43 @@ C $C8D2,2 Toggle ping-pong buffer selector
 C $C8DC,2 Select this pass's ping-pong buffer
 C $C8EB,2 Copy 18-byte row into staging buffer $9BD4
 C $C8ED,3 Decode next column's tile data into ping-pong buffer
+C $C8F0,9 HL/DE = staging row / on-screen scroll target; B = 18 cells
+C $C8FB,5 Get this cell's character code, advance the ping-pong buffer
+C $C907,15 Clamp tile-set index ranges to a valid attribute code
+C $C917,4 Rotate character code into position for the pair
+C $C91B,9 Write the attribute-code pair, advance the write pointer
+C $C926,8 Advance the scroll target pointer, back up 36 bytes
+C $C92E,5 Level-progress counter ($9BAD); clamp at $1C
+C $C93B,5 Store the new scroll target pointer
 c $C941 Decode next column's tile data into ping-pong buffer
 @ $C941 label=decode_column
-N $C941 Called from #R$C8B8 every 8th frame. If the column-ready flag ($9BA2 bit 5) is clear, first calls #R$C981 to scan/spawn enemies from the previous column. Then decodes 9 map cells from the column-source pointer ($9BA9) into the ping-pong buffer at $9BB0: each cell byte indexes the four 2x2 tile-block tables at #R$7900-$7CFF (see #R$7900), and the four resulting character codes are stored as top pair (#R$7900/$7A00 -> IX+0/IX+1, row A) and bottom pair ($7B00/$7C00 -> IX+$12/IX+$13, row B). So the 9 cells expand to two 18-char column rows. Advances the source pointer ($9BA9) and bumps a level-progress counter ($9BAD) clamped at $1C.
+N $C941 Decodes the next 9 map cells into the ping-pong tile buffer, expanding each cell into its 2x2 tile block, and advances the level-progress counter. First spawns any enemies queued in the previous column.
 C $C944,2 Check "column ready" flag before advancing
 C $C946,3 Scan incoming column for spawn markers and allocate enemy objects
+C $C949,11 HL = column-source pointer; IX = ping-pong buffer; C = table page
 C $C954,1 Start of 9-entry decode loop
+C $C955,20 Read the cell's 4 tile-block bytes, store as a 2x2 char block
 C $C969,4 Advance to next buffer entry (IX+=2)
+C $C96D,5 Advance source cell (L), bump table row (shadow A')
 C $C972,2 Loop 9 times
+C $C974,7 Store the advanced source pointer ($9BA9)
 C $C97B,2 Clamp progress counter at $1C
 C $C97D,1 Stop if counter already at max
 c $C981 Scan incoming column for spawn markers and allocate enemy objects
 @ $C981 label=scan_spawn_markers
-N $C981 Called from #R$C941 when the "column ready" flag ($9BA2 bit 5) is clear. Scans 9 entries of the newly-decoded column buffer ($9BA9, stride $10) for spawn markers $05/$55; for each match, calls #R$BA5F to spawn a group (D = entry offset, used there as the enemy's row/type). #R$BA5F returns carry set on success: on a successful spawn the marker byte is left unchanged, but if the pool was full (carry clear) the cell is overwritten with $33 to mark it consumed/blocked.
+N $C981 Scans the newly-decoded column for enemy spawn markers and allocates an object for each one found, marking cells that couldn't be spawned due to a full object pool.
 C $C984,2 Skip if column-ready flag already set
+C $C987,7 HL = column-source pointer; B = 9 entries; C = table page
 C $C98F,2 Check for spawn marker $05
 C $C993,4 Check for spawn marker $55; skip entry if neither
+C $C997,7 D = entry offset (enemy row/type); A = 9 (formation size)
 C $C99E,3 Spawn a group of formation objects from the free-list pool
 C $C9A3,2 Skip the $33 write if the spawn succeeded (carry set)
 C $C9A5,2 Pool full (carry clear): mark cell $33 (consumed/blocked)
 C $C9AC,2 Loop 9 entries
 c $C9AF Advance enemy timeline: fire due entries and dispatch their commands
 @ $C9AF label=enemy_timeline
-N $C9AF Called every frame from #R$A0C4. Every 16th tick, advances the level-progress counter ($9BA4) and processes all timeline entries whose trigger byte matches it: each 3-byte entry [trigger, param D, command] either dispatches a special command ($FB-$FE) or, for any other value, treats it as a formation tag and spawns via $C9E4/#R$BA5F. Ends the frame's processing at the first non-matching or $FF entry. See docs/Level-Format.md.
+N $C9AF Fires the level's due timeline entries: special commands (screen pokes, flag sets) or, for anything else, spawning an enemy formation. Runs once every 16 frames.
 C $C9AF,3 POKE 51631,201 patches entry to RET, disabling this routine (No Enemies)
 C $C9B3,4 Advance tick counter mod 16; act only every 16th tick
 C $C9BB,1 Advance level-progress counter ($9BA4)

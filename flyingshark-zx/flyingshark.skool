@@ -595,7 +595,7 @@ c$64CC PUSH AF       ;
  $652B LD A,C        ;
  $652C LD (DE),A     ;
  $652D INC D         ;
- $652E LD A,(HL)     ;
+ $652E LD A,(HL)     ; row 1
  $652F RRCA          ;
  $6530 AND $F8       ;
  $6532 LD B,A        ;
@@ -608,7 +608,7 @@ c$64CC PUSH AF       ;
  $6539 INC D         ;
  $653A LD (DE),A     ;
  $653B INC D         ;
- $653C LD A,(HL)     ;
+ $653C LD A,(HL)     ; row 2
  $653D RRCA          ;
  $653E AND $F8       ;
  $6540 LD B,A        ;
@@ -627,7 +627,7 @@ c$64CC PUSH AF       ;
  $654E ADC A,$00     ;
  $6550 AND $F8       ;
  $6552 LD D,A        ;
- $6553 LD A,(HL)     ;
+ $6553 LD A,(HL)     ; row 3
  $6554 RRCA          ;
  $6555 AND $F8       ;
  $6557 LD B,A        ;
@@ -638,7 +638,7 @@ c$64CC PUSH AF       ;
  $655C LD (DE),A     ;
  $655D INC L         ;
  $655E INC D         ;
- $655F LD A,(HL)     ;
+ $655F LD A,(HL)     ; row 4
  $6560 RRCA          ;
  $6561 AND $F8       ;
  $6563 LD B,A        ;
@@ -651,7 +651,7 @@ c$64CC PUSH AF       ;
  $656A INC D         ;
  $656B LD (DE),A     ;
  $656C INC D         ;
- $656D LD A,(HL)     ;
+ $656D LD A,(HL)     ; row 5
  $656E RRCA          ;
  $656F AND $F8       ;
  $6571 LD B,A        ;
@@ -661,7 +661,7 @@ c$64CC PUSH AF       ;
  $6575 OR (HL)       ;
  $6576 LD (DE),A     ;
  $6577 INC D         ;
- $6578 LD C,A        ;
+ $6578 LD C,A        ; row 6/7 (adjacent-cell merge, different masking)
  $6579 SRL A         ;
  $657B AND $F8       ;
  $657D LD B,A        ;
@@ -724,12 +724,8 @@ w$65B3 DEFW $65C5
 ;
 ; .
 ;
-; C still holds the control code value (0, since dispatch index = code). Zeroes
-; the low byte of $9CC9 (part of the cursor position pair), sets a skip-count
-; of 7 into A, then jumps into #R$65AB (the tail of the space-handling path) to
-; store that count as the new skip-print flag ($9CCB) and return. Reads like a
-; "reset row / pad N characters" control character; not fully confirmed against
-; live behaviour.
+; Resets the cursor's row and skips ahead 7 characters, like a "start new row"
+; print control code.
 c$65C5 LD HL,$9CC9   ; {zero the low byte of $9CC9 (cursor row reset)
  $65C8 LD (HL),C     ; }
  $65C9 LD A,$07      ; skip-count = 7
@@ -798,20 +794,20 @@ c$65F2 LD HL,$9CC7   ;
 ; Shared: also reached from control code $06 with a different C value. Converts
 ; the cursor field #R$9CC7 into a screen pixel address (same bit-twiddle as
 ; #R$64CC's blit), folding in C.
-c$65FB LD HL,($9CC7) ;
+c$65FB LD HL,($9CC7) ; {Rotate C into the row-third bits
  $65FE LD A,C        ;
  $65FF RRCA          ;
  $6600 RRCA          ;
  $6601 RRCA          ;
- $6602 LD C,A        ;
- $6603 AND $03       ;
+ $6602 LD C,A        ; }
+ $6603 AND $03       ; {Fold in the screen-third base ($58xx)
  $6605 OR $58        ;
- $6607 LD H,A        ;
- $6608 LD A,C        ;
+ $6607 LD H,A        ; }
+ $6608 LD A,C        ; {Combine column and row bits into the low byte
  $6609 XOR L         ;
  $660A AND $E0       ;
  $660C XOR L         ;
- $660D LD L,A        ;
+ $660D LD L,A        ; }
  $660E LD ($9CC7),HL ; store converted pixel address back into #R$9CC7
  $6611 RET           ;
 
@@ -838,6 +834,9 @@ c$6619 LD HL,($9CC7) ;
 ; Used by the routines at #R$6648 and #R$A6E5.
 ;
 ; HL pointer to $FF-terminated string
+;
+; Prints a $FF-terminated string, treating bytes below $20 as control codes
+; (position/attribute changes) rather than characters.
 @label=print_string
 c$6626 PUSH AF       ; {save AF/HL
  $6627 PUSH HL       ; }
@@ -866,6 +865,8 @@ c$6626 PUSH AF       ; {save AF/HL
 ; #R$6A88, #R$A6BB, #R$A6E5, #R$A783 and #R$A802.
 ;
 ; A message number (0-based) to print
+;
+; Looks up a message by its number and prints it via #R$6626.
 @label=print_message
 c$6648 PUSH AF       ; {save AF/HL/DE/BC
  $6649 PUSH HL       ;
@@ -1032,6 +1033,9 @@ c$66DE PUSH AF       ;
 ;
 ;   DE,HL pointers to the two 3-byte sequences
 ; O:Cy set if any byte differs, clear if all 3 match
+;
+; Checks whether two 3-character sequences match, such as a player's initials
+; against a high-score entry.
 c$6717 PUSH HL       ;
  $6718 PUSH DE       ;
  $6719 PUSH BC       ;
@@ -2470,25 +2474,22 @@ b$7900 DEFB $71,$38,$2B,$22,$28,$04,$85,$85
 ;
 ; .
 ;
-; Standard IM 2 setup: I=$FE (vector table at #R$FE00), fills #R$FE00-$FFFF
-; with $FD so every vector reads the byte at #R$FDFD, which is set to $C3 (JP
-; opcode) - making #R$FDFD/$FDFE act as a self-modifying "JP (isr-handler)"
-; trampoline used by #R$A0C4/#R$A0B0 elsewhere. Points that trampoline at
-; #R$A0B0 (the light/per-frame ISR) before returning.
+; Sets up the interrupt system (IM 2) and starts it pointing at the light
+; per-frame handler.
 @label=init_im2
 c$7D00 DI            ;
- $7D01 LD A,$FE      ;
+ $7D01 LD A,$FE      ; {Set interrupt mode 2, vector table at #R$FE00
  $7D03 LD I,A        ;
- $7D05 IM 2          ;
- $7D07 LD HL,$FE00   ;
- $7D0A LD A,$FD      ;
+ $7D05 IM 2          ; }
+ $7D07 LD HL,$FE00   ; {Fill the vector table so every vector reads $FDFD
+ $7D0A LD A,$FD      ; }
 *$7D0C LD (HL),A     ;
  $7D0D INC L         ;
  $7D0E JR NZ,$7D0C   ;
  $7D10 INC H         ;
  $7D11 LD (HL),A     ;
- $7D12 LD A,$C3      ;
- $7D14 LD ($FDFD),A  ;
+ $7D12 LD A,$C3      ; {Plant a JP opcode at $FDFD, turning it into a
+ $7D14 LD ($FDFD),A  ; trampoline}
  $7D17 LD HL,$A0B0   ; point to per-frame handler #R$A0B0 (light ISR)
  $7D1A LD ($FDFE),HL ; set ISR handler address
  $7D1D EI            ;
@@ -2500,30 +2501,25 @@ c$7D00 DI            ;
 ;
 ; .
 ;
-; Clears the bitmap ($4000-$5AFE), sets border black, then draws two compressed
-; graphic blocks (data at $CB91 and #R$CA09, via the decompressor at #R$7D5C)
-; onto the screen at $4000/$5800 and $4019/$5819 - almost certainly the
-; title-screen logo/artwork. The block at #R$7D4E-$7D5B is likely parameter
-; data, currently mistyped as code in the ctl (renders as garbage "LD B,x"
-; instructions) - not yet fixed.
+; Clears the screen to black, then draws the title-screen logo/artwork.
 @label=draw_title_screen
 c$7D1F XOR A         ;
- $7D20 OUT ($FE),A   ;
- $7D22 LD HL,$4000   ;
+ $7D20 OUT ($FE),A   ; Set border colour to black
+ $7D22 LD HL,$4000   ; {Clear the bitmap ($4000-$5AFE)
  $7D25 LD DE,$4001   ;
- $7D28 LD (HL),A     ;
+ $7D28 LD (HL),A     ; }
  $7D29 LD BC,$1AFF   ;
  $7D2C LDIR          ;
- $7D2E LD IY,$7D4E   ;
+ $7D2E LD IY,$7D4E   ; IY = attribute data for the graphic blocks (#R$7D4E)
  $7D32 LD HL,$5800   ;
  $7D35 EXX           ;
- $7D36 LD DE,$CB91   ;
+ $7D36 LD DE,$CB91   ; Left half source data (#R$CB91)
  $7D39 LD HL,$4000   ;
  $7D3C CALL $7D5C    ; Draw title screen graphic block
  $7D3F EXX           ;
  $7D40 LD HL,$5819   ;
  $7D43 EXX           ;
- $7D44 LD DE,$CA09   ;
+ $7D44 LD DE,$CA09   ; Right half source data (#R$CA09)
  $7D47 LD HL,$4019   ;
  $7D4A CALL $7D5C    ; Draw title screen graphic block
  $7D4D RET           ;
@@ -2539,6 +2535,9 @@ b$7D4E DEFB $06,$06,$06,$06,$47,$47,$45,$42
 ; IY attribute data pointer
 ; DE bitmap data pointer
 ; HL destination screen address
+;
+; Paints a 7x7 block of coloured character cells onto the screen, using one
+; data stream for the colours and another for the pixel shapes.
 @label=draw_title_block
 c$7D5C LD B,$07      ;
 *$7D5E PUSH BC       ;
@@ -2589,22 +2588,16 @@ c$7D5C LD B,$07      ;
 ;
 ; .
 ;
-; Called from #R$A5A5/$A5B2. HL starts at #R$CA09 and is threaded, unsaved,
-; through all 9 calls to #R$7DC9/#R$7DF3 as their shared output cursor -
-; #R$7DF3 writes decoded graphics data to (HL) and advances it, so HL ends up
-; pointing past everything written by the 9 blocks (overwriting the #R$CA09
-; descriptor data in place as it's consumed). The total byte count written
-; (HL-#R$CA09) is then halved and used as a loop count for a second pass:
-; walking from #R$CA09, every other byte is treated as an index into a fixed
-; 256-entry table at #R$9A00 and replaced with the looked-up value in place - a
-; substitution/palette pass over half the decoded stream (the alternating bytes
-; are left untouched).
+; Decodes 9 graphic blocks into the #R$CA09 sprite area, then runs a second
+; pass to mirror half the decoded bytes.
 c$7D98 LD IY,$6B42   ;
  $7D9C LD IX,$F765   ;
  $7DA0 LD HL,$CA09   ;
  $7DA3 LD B,$09      ; 9 block-descriptor entries
 *$7DA5 PUSH BC       ;
- $7DA6 CALL $7DC9    ; Decode one graphic-block descriptor entry
+ $7DA6 CALL $7DC9    ; Decode one graphic-block descriptor entry; HL (the
+                     ; output cursor) is shared and left advancing across all 9
+                     ; calls
  $7DA9 LD DE,$0011   ;
  $7DAC ADD IY,DE     ; Advance IY to the next 17-byte entry
  $7DAE POP BC        ;
@@ -2631,29 +2624,26 @@ c$7D98 LD IY,$6B42   ;
 ;
 ; Used by the routine at #R$7D98.
 ;
-; .
+; IY 17-byte block descriptor (called once per entry from #R$7D98's loop)
 ;
-; Called 9 times from #R$7D98's loop, once per 17-byte ($11) IY-indexed entry.
-; Calls #R$7DF3 to decode the block's data, stores the resulting pointer into
-; IY+$02/$03, then calls #R$7E4A; if IY+$0E (a repeat count) is nonzero,
-; repeats the #R$7DF3/#R$7E4A pair that many more times. Finishes by shifting a
-; flag at IY+$0A and, if IY+$06 is set, incrementing a counter at IY+$0B.
+; Decodes one 17-byte block descriptor, expanding its graphic data one or more
+; times as the descriptor requests.
 c$7DC9 CALL $7DF3    ; Expand one graphic block
- $7DCC LD (IY+$02),L ;
- $7DCF LD (IY+$03),H ;
+ $7DCC LD (IY+$02),L ; {Store the decoded data pointer into the descriptor
+ $7DCF LD (IY+$03),H ; (IY+$02/$03)}
  $7DD2 CALL $7E4A    ; Build bit-shifted copies of a graphic block
- $7DD5 LD B,(IY+$0E) ;
- $7DD8 DEC B         ;
+ $7DD5 LD B,(IY+$0E) ; {Repeat count (IY+$0E); skip the extra loop if zero
+ $7DD8 DEC B         ; }
  $7DD9 JR Z,$7DE5    ;
 *$7DDB PUSH BC       ;
  $7DDC CALL $7DF3    ; Expand one graphic block
  $7DDF CALL $7E4A    ; Build bit-shifted copies of a graphic block
  $7DE2 POP BC        ;
  $7DE3 DJNZ $7DDB    ;
-*$7DE5 SLA (IY+$0A)  ;
- $7DE9 LD A,(IY+$06) ;
+*$7DE5 SLA (IY+$0A)  ; Shift a flag in the descriptor (IY+$0A)
+ $7DE9 LD A,(IY+$06) ; {Bump a counter (IY+$0B) if a flag (IY+$06) is set
  $7DEC AND A         ;
- $7DED JR Z,$7DF2    ;
+ $7DED JR Z,$7DF2    ; }
  $7DEF INC (IY+$0B)  ;
 *$7DF2 RET           ;
 
@@ -2662,27 +2652,25 @@ c$7DC9 CALL $7DF3    ; Expand one graphic block
 ; Used by the routine at #R$7DC9.
 ;
 ; HL destination cursor (in/out, advanced past the written data)
+; IX source graphic data pointer (in/out, advanced past the block)
+; IY block descriptor
 ;
-; Called from #R$7DC9. If IY+$06 is set, first pads (IY+$07) blank rows via
-; #R$7E3D. Writes (IY+$0B) rows of (IY+$0A) columns, each column as two
-; interleaved source bytes ($20 apart) from IX; the per-row column count is
-; summed into a self-modified operand at $7E1B for later use. If IY+$06 is set,
-; pads (IY+$07) more blank rows afterwards, then advances IX by the total
-; column width read back from $7E1B.
-c$7DF3 LD A,(IY+$06)  ;
+; Expands one graphic block into interleaved pixel/mask data at HL, optionally
+; padded with blank rows above and below.
+c$7DF3 LD A,(IY+$06)  ; IY+$06 selects optional blank-row padding
  $7DF6 AND A          ;
  $7DF7 JR Z,$7E01     ; Skip leading padding if flag clear
- $7DF9 LD B,(IY+$07)  ;
+ $7DF9 LD B,(IY+$07)  ; Padding row count (IY+$07)
 *$7DFC CALL $7E3D     ; Write one blank padding row
  $7DFF DJNZ $7DFC     ; Pad blank rows before the block
 *$7E01 PUSH HL        ;
- $7E02 XOR A          ;
+ $7E02 XOR A          ; {Sum per-row column width (IY+$0A x IY+$0B) into A
  $7E03 LD B,(IY+$0B)  ;
-*$7E06 ADD A,(IY+$0A) ;
+*$7E06 ADD A,(IY+$0A) ; }
  $7E09 DJNZ $7E06     ; Sum column width into A (total block width)
- $7E0B LD ($7E1B),A   ;
- $7E0E LD C,(IY+$0B)  ;
-*$7E11 LD B,(IY+$0A)  ;
+ $7E0B LD ($7E1B),A   ; Stash total block width for later
+ $7E0E LD C,(IY+$0B)  ; Row count (IY+$0B)
+*$7E11 LD B,(IY+$0A)  ; Column count for this row (IY+$0A)
 *$7E14 LD A,(IX+$00)  ;
  $7E17 LD (HL),A      ;
  $7E18 INC HL         ;
@@ -2729,15 +2717,11 @@ c$7E3D PUSH BC       ;
 ;
 ; Used by the routine at #R$7DC9.
 ;
-; .
+; HL working cursor (in/out, advanced past the block and its copies)
+; IY block descriptor
 ;
-; Called from #R$7DC9 after #R$7DF3 has expanded the block. If IY+$06 is zero,
-; just advances HL past the block (+IY+$0C) and returns. Otherwise: derives a
-; shift-step count from the lowest set bit of IY+$06 doubled, and for each step
-; duplicates the block (LDIR, offset by IY+$0C) into a working copy, then
-; right-shifts every column of it by 1 bit with carry propagating between bytes
-; (RLA/RR (HL)/RRA/ADD HL,DE) - building successive sub-pixel-shifted copies of
-; the graphic for smooth horizontal scrolling.
+; Makes extra copies of a graphic block, each shifted one bit further right,
+; for smooth sub-pixel horizontal scrolling.
 c$7E4A LD A,(IY+$06) ;
  $7E4D ADD A,A       ;
  $7E4E JR Z,$7E92    ; Skip shift generation if flag is zero: just advance
@@ -4046,12 +4030,12 @@ b$A092 DEFB $00,$00,$10,$00,$02,$00,$00,$01
 @label=isr_light
 c$A0B0 PUSH AF       ;
  $A0B1 PUSH HL       ;
- $A0B2 LD HL,$9BA2   ;
- $A0B5 SET 7,(HL)    ;
- $A0B7 LD HL,$9BA0   ;
- $A0BA INC (HL)      ;
- $A0BB LD HL,$A1BB   ;
- $A0BE LD (HL),$7F   ;
+ $A0B2 LD HL,$9BA2   ; {Set vblank flag ($9BA2 bit 7)
+ $A0B5 SET 7,(HL)    ; }
+ $A0B7 LD HL,$9BA0   ; {Bump frame counter ($9BA0)
+ $A0BA INC (HL)      ; }
+ $A0BB LD HL,$A1BB   ; {Reset $A1BB to $7F
+ $A0BE LD (HL),$7F   ; }
  $A0C0 POP HL        ;
  $A0C1 POP AF        ;
  $A0C2 EI            ;
@@ -4059,8 +4043,16 @@ c$A0B0 PUSH AF       ;
 
 ; Interrupt handler (heavy): saves shadow regs, dispatches
 ; enemy/player/collision/sprite updates
+;
+; .
+;
+; .
+;
+; The main per-frame handler: saves all registers, updates the frame counter
+; and a couple of pseudo-random values, burns some fixed time, then runs the
+; frame's game logic before restoring everything and returning.
 @label=isr_heavy
-c$A0C4 PUSH AF       ;
+c$A0C4 PUSH AF       ; {Save all registers (both banks)
  $A0C5 PUSH HL       ;
  $A0C6 PUSH DE       ;
  $A0C7 PUSH BC       ;
@@ -4071,31 +4063,31 @@ c$A0C4 PUSH AF       ;
  $A0CC PUSH DE       ;
  $A0CD PUSH BC       ;
  $A0CE PUSH IX       ;
- $A0D0 PUSH IY       ;
- $A0D2 LD HL,$9BA2   ;
- $A0D5 SET 7,(HL)    ;
- $A0D7 LD HL,$9BA0   ;
+ $A0D0 PUSH IY       ; }
+ $A0D2 LD HL,$9BA2   ; {Set vblank flag ($9BA2 bit 7)
+ $A0D5 SET 7,(HL)    ; }
+ $A0D7 LD HL,$9BA0   ; {Bump frame counter and rotate a byte ($9BA0/$9BA1)
  $A0DA INC (HL)      ;
- $A0DB INC HL        ;
+ $A0DB INC HL        ; }
  $A0DC RLC (HL)      ;
- $A0DE LD HL,$A1BB   ;
- $A0E1 LD (HL),$7F   ;
- $A0E3 LD HL,($9C35) ;
+ $A0DE LD HL,$A1BB   ; {Reset $A1BB to $7F
+ $A0E1 LD (HL),$7F   ; }
+ $A0E3 LD HL,($9C35) ; {Advance pseudo-random shift value ($9C35/$9C34)
  $A0E6 ADD HL,HL     ;
  $A0E7 LD ($9C35),HL ;
  $A0EA SBC A,A       ;
- $A0EB LD ($9C34),A  ;
- $A0EE LD HL,($9C39) ;
+ $A0EB LD ($9C34),A  ; }
+ $A0EE LD HL,($9C39) ; {Advance another pseudo-random shift value ($9C39/$9C38)
  $A0F1 ADD HL,HL     ;
  $A0F2 LD ($9C39),HL ;
  $A0F5 SBC A,A       ;
- $A0F6 LD ($9C38),A  ;
- $A0F9 LD A,$08      ;
+ $A0F6 LD ($9C38),A  ; }
+ $A0F9 LD A,$08      ; {Burn fixed time in a delay loop
 *$A0FB LD B,$0F      ;
 *$A0FD DJNZ $A0FD    ;
  $A0FF AND $FF       ;
  $A101 INC HL        ;
- $A102 DEC A         ;
+ $A102 DEC A         ; }
  $A103 JP NZ,$A0FB   ;
  $A106 CALL $C72A    ; Animate active player's indicator box colour
  $A109 CALL $BBE5    ; Mark active objects into the attribute-buffer collision
@@ -4132,15 +4124,11 @@ c$A0C4 PUSH AF       ;
 ;
 ; .
 ;
-; Reads the pending-events bitmask ($9C27) ANDed with an enable/priority mask
-; ($9C28); finds the lowest-numbered surviving bit (highest priority), clears
-; it, and dispatches its handler via the $A042 sub-range of the #R$A000 jump
-; table. General deferred-event dispatcher (bits set by #R$66B5 bit 1
-; HUD-redraw, $A1EA bit 0, $A8CF/$BF57/$C33B/$C373 bit 2, $C8C9 bit 3) - not
-; sound-specific.
+; Picks the highest-priority pending deferred event (bits set by #R$66B5,
+; $A1EA, $A8CF/$BF57/$C33B/$C373, $C8C9) and dispatches its handler.
 @label=dispatch_deferred_event
-c$A13A LD HL,$9C28   ;
- $A13D LD A,($9C27)  ;
+c$A13A LD HL,$9C28   ; {Pending events ($9C27) ANDed with enable/priority mask
+ $A13D LD A,($9C27)  ; ($9C28)}
  $A140 AND (HL)      ; {Exit if no enabled event pending
  $A141 RET Z         ; }
  $A142 LD B,(HL)     ; {Save current enable mask
@@ -4227,26 +4215,25 @@ c$A178 LD HL,$9C28   ;
 ;
 ; Used by the routines at #R$A178 and #R$A802.
 ;
-; .
+; IX active player's data block
 ;
-; Compares a progress value (IX+0) against a threshold table at $9CB8 (indexed
-; by IX+4); if not yet crossed, returns. Otherwise advances the threshold index
-; (IX+4) and, unless lives are already at the cap of 10 (IX+3), grants an extra
-; life and redraws the lives/bombs icon row via #R$672C.
+; Checks a player's score against the next bonus-life threshold, and if
+; crossed, grants an extra life (up to a cap) and redraws the lives/bombs
+; icons.
 @label=award_bonus_life
-c$A189 LD IX,($9C77) ;
+c$A189 LD IX,($9C77) ; Threshold index (IX+$04)
  $A18D LD E,(IX+$04) ;
  $A190 LD D,$00      ;
- $A192 LD HL,$9CB8   ;
+ $A192 LD HL,$9CB8   ; {Compare score (IX+$00) against threshold table $9CB8
  $A195 ADD HL,DE     ;
- $A196 LD A,(IX+$00) ;
+ $A196 LD A,(IX+$00) ; }
  $A199 CP (HL)       ;
  $A19A RET C         ;
- $A19B INC (IX+$04)  ;
- $A19E LD A,(IX+$03) ;
+ $A19B INC (IX+$04)  ; Advance threshold index
+ $A19E LD A,(IX+$03) ; {Cap lives at 10 (IX+$03), else grant one more life
  $A1A1 CP $0A        ;
  $A1A3 RET Z         ;
- $A1A4 INC A         ;
+ $A1A4 INC A         ; }
  $A1A5 LD (IX+$03),A ;
  $A1A8 LD A,($9C76)  ; get Active player
  $A1AB CALL $672C    ; Draw lives/bombs icon rows for a player
@@ -4260,15 +4247,12 @@ c$A189 LD IX,($9C77) ;
 ;
 ; Handler for index $25 of the #R$A000 jump table (see #R$B7F6).
 ; .
-; Masks the deferred-event enable mask ($9C28) down to just bit 7 (only the
-; highest-priority event class stays enabled), then runs the scenery/event
-; script interpreter (#R$A3A0). Likely used during a state where only critical
-; events (e.g. game-over) may interrupt while background scenery keeps
-; animating.
-c$A1AF LD HL,$9C28   ;
+; Restricts which deferred events can interrupt to only the highest-priority
+; class, then runs the scenery/event script interpreter.
+c$A1AF LD HL,$9C28   ; {Mask event-enable mask ($9C28) down to bit 7 only
  $A1B2 LD A,$80      ;
  $A1B4 AND (HL)      ;
- $A1B5 LD (HL),A     ;
+ $A1B5 LD (HL),A     ; }
  $A1B6 CALL $A3A0    ; Scenery/event script interpreter
  $A1B9 RET           ;
 
@@ -4329,12 +4313,8 @@ c$A1D4 PUSH HL       ;
 ;
 ; .
 ;
-; Reads the pending sound-effect priority (low nibble of #R$A1BA, set by
-; #R$A1D4); if zero, jumps to the idle path (#R$A324). Otherwise indexes an
-; 8-byte-stride parameter table at #R$A329 by (priority-1), copies 7 bytes into
-; a working buffer at $A1BC, and unpacks further fields from it via nibble/bit
-; extraction. Continues the sound-effect pipeline started by
-; #R$A1CE/#R$A1D4/#R$A13A.
+; Loads the parameters for the currently-pending sound effect from a table into
+; a working buffer, ready for #R$A222 to play it.
 @label=sfx_load_params
 c$A1F2 LD A,($A1BA)  ;
  $A1F5 AND $0F       ; {Check priority nibble; jump to idle if zero
@@ -4371,16 +4351,13 @@ c$A1F2 LD A,($A1BA)  ;
 ;
 ; .
 ;
-; Alternates the value written to port $FE between $18 and $00 (toggling bit 4,
-; the speaker/EAR bit, along with border colour bits) inside a precisely
-; NOP-counted delay loop - a square-wave tone generator, same technique as the
-; #R$AA0F/#R$AA34 music engine but used here for a sound effect rather than
-; music. Exact trigger context not confirmed.
+; Plays the loaded sound effect as a square-wave tone by toggling the speaker
+; bit in a timed delay loop, the same technique used by the music engine.
 @label=sfx_play_tone
-c$A222 LD (HL),A     ;
+c$A222 LD (HL),A     ; {Store two more parameter bytes into the working buffer
  $A223 INC HL        ;
  $A224 LD A,($A1BE)  ;
- $A227 LD (HL),A     ;
+ $A227 LD (HL),A     ; }
  $A228 LD A,($A1C3)  ; {Copy $A1C3 into $A1C7 (setup source pointer)
  $A22B LD ($A1C7),A  ; }
  $A22E BIT 7,C       ; Select tone-length source via C bit 7
@@ -4536,18 +4513,15 @@ c$A255 AND A         ;
 ;
 ; .
 ;
-; Entry #R$A31E stores A into $A1C7 then jumps back into #R$A222's border loop
-; (#R$A23E). Entry #R$A324 (used by both #R$A1F2 and #R$A255) clears the
-; pending sound-effect priority (#R$A1BA) and returns - the "no sound active"
-; idle state. The bytes right after (#R$A329 onward) are the 8-byte-stride
-; parameter table indexed by #R$A1F2.
+; Two shared tail entry points for the sound-effect player: one resumes the
+; tone loop, the other clears the pending effect to idle.
 c$A31D EXX           ;
 ; This entry point is used by the routine at #R$A255.
-*$A31E LD ($A1C7),A  ;
+*$A31E LD ($A1C7),A  ; Store A, resume #R$A222's tone loop
  $A321 JP $A23E      ;
 ; This entry point is used by the routines at #R$A1F2 and #R$A255.
-*$A324 XOR A         ;
- $A325 LD ($A1BA),A  ;
+*$A324 XOR A         ; {Clear pending sound-effect priority (idle)
+ $A325 LD ($A1BA),A  ; }
  $A328 RET           ;
 
 ; Sound-effect parameter table (9 entries, 8 bytes each)
@@ -4567,28 +4541,25 @@ b$A329 DEFB $70,$FE,$F1,$01,$00,$03,$04,$23
 ;
 ; .
 ;
-; Resets $9BAD=$1C, $9BA9/$9BAB=#R$7D00 (the system-init routine, used here as
-; a sentinel/default value rather than being called), $9BAE/$9C00/$9BF8=0,
-; $9BF9=$FA79 (the menu fill-buffer target from #R$6498), $9BAF=0, $9BFF=$FF,
-; $9BFB=#R$6D71. Looks like a general "clear pointers to defaults" step run
-; when (re)starting a level, called from #R$A4E7.
+; Resets a batch of scenery/event-script state variables to their default
+; values, run when (re)starting a level.
 c$A371 LD A,$1C      ;
  $A373 LD ($9BAD),A  ;
  $A376 LD HL,$7D00   ;
- $A379 LD ($9BA9),HL ;
+ $A379 LD ($9BA9),HL ; Sentinel/default pointer value ($9BA9)
  $A37C LD ($9BAB),HL ; set Scenery data pointer
  $A37F LD A,$00      ;
  $A381 LD ($9BAE),A  ;
  $A384 LD ($9C00),A  ;
  $A387 LD ($9BF8),A  ;
- $A38A LD HL,$FA79   ;
- $A38D LD ($9BF9),HL ;
+ $A38A LD HL,$FA79   ; {Menu fill-buffer target ($9BF9)
+ $A38D LD ($9BF9),HL ; }
  $A390 XOR A         ;
  $A391 LD ($9BAF),A  ;
- $A394 LD A,$FF      ;
- $A396 LD ($9BFF),A  ;
- $A399 LD HL,$6D71   ;
- $A39C LD ($9BFB),HL ;
+ $A394 LD A,$FF      ; {Script-active flag ($9BFF)
+ $A396 LD ($9BFF),A  ; }
+ $A399 LD HL,$6D71   ; {Default scenery-script pointer ($9BFB)
+ $A39C LD ($9BFB),HL ; }
  $A39F RET           ;
 
 ; Scenery/event script interpreter (wait or dispatch event)
@@ -4597,65 +4568,61 @@ c$A371 LD A,$1C      ;
 ;
 ; .
 ;
-; Reads bytes from a script pointer ($9BFD, defaulting to #R$6D71 via #R$A371).
-; If the script-active flag ($9BFF) isn't $FF, returns immediately (see #R$A3E2
-; continuation). Otherwise: a byte with the top bit set dispatches a scene
-; event via an offset-chain table at $6E06 (summing B DE-strides to find the
-; target, stored into $9C0C); $FF rewinds the script pointer back to the
-; default ($9BFB) and loops; anything else is a "wait" delay (masked to a
-; nibble, stored at $9BAF) and the script pointer advances. Distinct from the
-; enemy-formation (#R$AFB8) and object-movement (#R$B8F9) script systems -
-; likely drives background/scenery timing.
+; Steps the background scenery/event script one instruction at a time. Each
+; script byte is either a wait delay, a loop-back-to-start marker, or an event
+; to dispatch; once a wait or event has been actioned, this also renders the
+; sub-pixel scrolled scenery graphic. Distinct from the enemy-formation
+; (#R$AFB8) and object-movement (#R$B8F9) script systems.
 @label=scenery_script
-c$A3A0 LD A,($9BFF)  ;
+c$A3A0 LD A,($9BFF)  ; {Bail out if the script isn't currently active
  $A3A3 CP $FF        ;
- $A3A5 JR NZ,$A3E2   ;
-*$A3A7 LD HL,($9BFD) ;
- $A3AA LD A,(HL)     ;
+ $A3A5 JR NZ,$A3E2   ; }
+*$A3A7 LD HL,($9BFD) ; {Read next script byte; if not top-bit-set, handle
+ $A3AA LD A,(HL)     ; wait/loop below
  $A3AB AND A         ;
- $A3AC JP P,$A3C6    ;
- $A3AF CP $FF        ;
- $A3B1 JR Z,$A3BE    ;
- $A3B3 AND $0F       ;
- $A3B5 LD ($9BAF),A  ;
- $A3B8 INC HL        ;
+ $A3AC JP P,$A3C6    ; }
+ $A3AF CP $FF        ; {$FF: loop-back marker
+ $A3B1 JR Z,$A3BE    ; }
+ $A3B3 AND $0F       ; {Otherwise: wait delay = byte's low nibble
+ $A3B5 LD ($9BAF),A  ; }
+ $A3B8 INC HL        ; {Advance pointer past a wait byte, loop
  $A3B9 LD ($9BFD),HL ;
- $A3BC JR $A3A7      ;
-*$A3BE LD HL,($9BFB) ;
+ $A3BC JR $A3A7      ; }
+*$A3BE LD HL,($9BFB) ; {Rewind script pointer to default, loop
  $A3C1 LD ($9BFD),HL ;
- $A3C4 JR $A3A7      ;
-*$A3C6 LD HL,$6E06   ;
- $A3C9 AND A         ;
+ $A3C4 JR $A3A7      ; }
+*$A3C6 LD HL,$6E06   ; {Top bit set: sum offset-chain table $6E06 to find event
+ $A3C9 AND A         ; target
  $A3CA JR Z,$A3D3    ;
  $A3CC LD B,A        ;
  $A3CD LD D,$00      ;
 *$A3CF LD E,(HL)     ;
  $A3D0 ADD HL,DE     ;
- $A3D1 DJNZ $A3CF    ;
-*$A3D3 INC HL        ;
+ $A3D1 DJNZ $A3CF    ; }
+*$A3D3 INC HL        ; {Store event pointer, reset its parameter-nibble parity
  $A3D4 LD ($9C0C),HL ;
  $A3D7 LD A,$F0      ;
- $A3D9 LD ($9C0E),A  ;
+ $A3D9 LD ($9C0E),A  ; }
  $A3DC CALL $A4C4    ; Extract next 4-bit parameter from scenery-event data
  $A3DF LD ($9BFF),A  ;
-*$A3E2 LD HL,$9BAD   ;
- $A3E5 NEG           ;
+*$A3E2 LD HL,$9BAD   ; {Advance the wait/shift timer; return early while still
+ $A3E5 NEG           ; counting
  $A3E7 ADD A,(HL)    ;
- $A3E8 RET NC        ;
- $A3E9 LD (HL),A     ;
+ $A3E8 RET NC        ; }
+ $A3E9 LD (HL),A     ; {Reset a per-event byte counter
  $A3EA XOR A         ;
- $A3EB LD ($9C0A),A  ;
+ $A3EB LD ($9C0A),A  ; }
  $A3EE CALL $A4C4    ; Extract next 4-bit parameter from scenery-event data
- $A3F1 LD HL,$A02A   ;
+ $A3F1 LD HL,$A02A   ; Point to jump table
  $A3F4 CALL $B7F6    ; Jump-table dispatcher
  $A3F7 CALL $A40B    ; Render sub-pixel scrolled graphic
- $A3FA LD HL,($9BFD) ;
+ $A3FA LD HL,($9BFD) ; {Advance past the consumed script byte
  $A3FD INC HL        ;
- $A3FE LD ($9BFD),HL ;
- $A401 XOR A         ;
+ $A3FE LD ($9BFD),HL ; }
+ $A401 XOR A         ; {Reset wait timer and mark script active again
  $A402 LD ($9BAF),A  ;
  $A405 LD A,$FF      ;
- $A407 LD ($9BFF),A  ;
+ $A407 LD ($9BFF),A  ; }
  $A40A RET           ;
 
 ; Render sub-pixel scrolled graphic (shift amount from scenery script)
@@ -4664,20 +4631,16 @@ c$A3A0 LD A,($9BFF)  ;
 ;
 ; .
 ;
-; If the scenery-script wait value ($9BAF) is zero, skips ahead (#R$A441).
-; Otherwise uses it as a pixel-shift amount (self-modifies an operand at $A436
-; with NEG+8), then copies 9 bytes from the scenery data pointer ($9BAB) into a
-; double buffer at $9BE6 (both IX+0 and IX+9), continuing into shift-based blit
-; logic. Looks like a smoothly-scrolling scenery/marquee graphic renderer,
-; reusing #R$A3A0's wait-timer as the sub-pixel offset.
+; Renders the scenery graphic shifted by the scenery-script's wait value, for
+; smooth sub-pixel horizontal scrolling.
 c$A40B LD A,($9BAF)  ;
  $A40E AND A         ;
  $A40F JR Z,$A441    ; Skip render if wait value is zero
  $A411 NEG           ;
  $A413 ADD A,$08     ; Displacement = 8 - wait value
  $A415 LD ($A436),A  ; Self-modify the shifted-read operand at $A436
- $A418 LD A,($9BFF)  ;
- $A41B LD C,A        ;
+ $A418 LD A,($9BFF)  ; {C = pass count
+ $A41B LD C,A        ; }
  $A41C LD HL,($9BAB) ; get Scenery data pointer
  $A41F LD IX,$9BE6   ;
 *$A423 LD B,$09      ; Outer: 9-byte copy loop setup
@@ -4707,7 +4670,7 @@ c$A40B LD A,($9BAF)  ;
 ; .
 ;
 ; Handler for index $15 of the #R$A000 jump table (see #R$B7F6).
-c$A445 LD HL,($9BAB) ;
+c$A445 LD HL,($9BAB) ; get Scenery data pointer
  $A448 LD A,($9BFF)  ;
  $A44B LD C,A        ;
 *$A44C LD B,$09      ;
@@ -4717,9 +4680,9 @@ c$A445 LD HL,($9BAB) ;
  $A453 DJNZ $A44E    ;
  $A455 DEC C         ;
  $A456 JR Z,$A46B    ;
- $A458 LD A,L        ;
+ $A458 LD A,L        ; {Wrap column offset back +8 rows for the descending pass
  $A459 ADD A,$08     ;
- $A45B LD L,A        ;
+ $A45B LD L,A        ; }
  $A45C PUSH HL       ;
  $A45D LD B,$09      ;
 *$A45F CALL $A499    ; Generate next scenery/terrain cell value
@@ -4744,33 +4707,33 @@ c$A445 LD HL,($9BAB) ;
 ; column into HL) but with a +9 row stride and 5-row outer loop instead of
 ; #R$A445's layout - likely a different scenery band/type sharing the same
 ; generator.
-c$A46C LD HL,($9BAB) ;
- $A46F LD A,($9BFF)  ;
+c$A46C LD HL,($9BAB) ; {HL = source pointer; C = pass count; E = 5 (outer loop
+ $A46F LD A,($9BFF)  ; count)
  $A472 LD C,A        ;
- $A473 LD E,$05      ;
+ $A473 LD E,$05      ; }
 *$A475 LD B,C        ;
  $A476 LD A,L        ;
 *$A477 CALL $A499    ; Generate next scenery/terrain cell value
- $A47A LD (HL),A     ;
+ $A47A LD (HL),A     ; {Store cell, advance column by +9, loop
  $A47B LD A,L        ;
  $A47C ADD A,$09     ;
  $A47E LD L,A        ;
- $A47F DJNZ $A477    ;
- $A481 SUB $08       ;
+ $A47F DJNZ $A477    ; }
+ $A481 SUB $08       ; {Wrap column back -8 for the descending pass
  $A483 LD L,A        ;
  $A484 DEC E         ;
- $A485 JR Z,$A498    ;
+ $A485 JR Z,$A498    ; }
  $A487 LD B,C        ;
  $A488 LD A,L        ;
 *$A489 CALL $A499    ; Generate next scenery/terrain cell value
- $A48C LD (HL),A     ;
+ $A48C LD (HL),A     ; {Store cell, advance column by -9, loop
  $A48D LD A,L        ;
  $A48E SUB $09       ;
  $A490 LD L,A        ;
- $A491 DJNZ $A489    ;
- $A493 ADD A,$0A     ;
+ $A491 DJNZ $A489    ; }
+ $A493 ADD A,$0A     ; {Wrap column back +10, loop the outer pass
  $A495 LD L,A        ;
- $A496 JR $A475      ;
+ $A496 JR $A475      ; }
 *$A498 RET           ;
 
 ; Generate next scenery/terrain cell value
@@ -4780,21 +4743,18 @@ c$A46C LD HL,($9BAB) ;
 ; O:A generated cell value (base $9C0B + next script nibble)
 ;   HL preserved
 ;
-; Every $9C0A calls, refreshes a base value ($9C0B) by reading a fresh byte
-; from the scenery-event data via #R$A4B5; otherwise decrements the counter.
-; Adds the next scenery-script nibble parameter (#R$A4C4) to that base value to
-; produce the returned cell value - so the base periodically re-reads from the
-; script data, not from randomness.
+; Generates the next terrain cell value, periodically refreshing its base value
+; from the scenery data.
 c$A499 PUSH HL       ;
- $A49A LD HL,$9C0A   ;
- $A49D LD A,(HL)     ;
+ $A49A LD HL,$9C0A   ; {Refresh counter ($9C0A) hit zero? refresh base value
+ $A49D LD A,(HL)     ; below
  $A49E AND A         ;
- $A49F JR NZ,$A4AB   ;
+ $A49F JR NZ,$A4AB   ; }
  $A4A1 CALL $A4B5    ; Read next byte (2 nibbles) from scenery-event data
  $A4A4 LD ($9C0B),A  ;
  $A4A7 CALL $A4B5    ; Read next byte (2 nibbles) from scenery-event data
  $A4AA LD (HL),A     ;
-*$A4AB DEC (HL)      ;
+*$A4AB DEC (HL)      ; Otherwise just count down to the next refresh
  $A4AC CALL $A4C4    ; Extract next 4-bit parameter from scenery-event data
  $A4AF LD HL,$9C0B   ;
  $A4B2 ADD A,(HL)    ;
@@ -4828,11 +4788,8 @@ c$A4B5 PUSH BC       ;
 ;
 ; O:A the extracted nibble (0-15)
 ;
-; Reads a byte from the event-data pointer $9C0C and, alternating via the flag
-; $9C0E (which flips $0F/$F0 each call), returns first its high nibble then its
-; low nibble; the pointer only advances after both nibbles of a byte have been
-; consumed. Used by #R$A3A0's scenery/event script system to unpack 2 packed
-; 4-bit parameters per data byte.
+; Unpacks the next 4-bit parameter from the scenery-event data, alternating
+; between a byte's high and low nibble on successive calls.
 c$A4C4 PUSH HL       ;
  $A4C5 PUSH BC       ;
  $A4C6 LD HL,($9C0C) ; HL = current byte pointer ($9C0C)
@@ -4862,72 +4819,66 @@ c$A4C4 PUSH HL       ;
 ;
 ; .
 ;
-; Searches an 8-entry table (from ($9BA7)) for the first entry >= the current
-; object's wave/formation tag (IX+7), storing the found level index into $9BA4.
-; Calls #R$A371 to reset various state pointers. Then scans a second,
-; 3-byte-stride table (cursor persisted at $9BA5) while $9BA4 >= the table's
-; threshold byte, and once found, reads the level's colour/type value into
-; $9C59 and $9C5A - the value used throughout the game for wipe-effect colour,
-; screen fills etc (see #R$C6A6, #R$66B5). So the active colour scheme is
-; level-dependent, selected here.
+; Finds which level a wave belongs to, resets scenery/event state for it, and
+; selects that level's colour scheme.
 @label=select_level_colour
-c$A4E7 LD IX,($9C77) ;
+c$A4E7 LD IX,($9C77) ; {IX = current object's data; set a status flag
  $A4EB LD HL,$9BA2   ;
  $A4EE SET 5,(HL)    ;
- $A4F0 PUSH HL       ;
- $A4F1 LD HL,($9BA7) ;
- $A4F4 LD A,(IX+$07) ;
- $A4F7 LD B,$08      ;
-*$A4F9 CP (HL)       ;
+ $A4F0 PUSH HL       ; }
+ $A4F1 LD HL,($9BA7) ; {Point at 8-entry threshold table; B=8, A=wave's tag
+ $A4F4 LD A,(IX+$07) ; (IX+$07)
+ $A4F7 LD B,$08      ; }
+*$A4F9 CP (HL)       ; {Search for the first entry >= the wave's tag
  $A4FA JR Z,$A502    ;
  $A4FC JR C,$A501    ;
  $A4FE INC HL        ;
  $A4FF DJNZ $A4F9    ;
-*$A501 DEC HL        ;
+*$A501 DEC HL        ; }
 *$A502 LD A,(HL)     ;
  $A503 LD ($9BA4),A  ; set Level progress / index
  $A506 CALL $A371    ; Reset various state pointers/counters to defaults
  $A509 LD A,($9BA4)  ; get Level progress / index
- $A50C LD L,A        ;
+ $A50C LD L,A        ; {Level index * 16 + $D0 -> starting scroll offset
  $A50D LD H,$00      ;
  $A50F ADD HL,HL     ;
  $A510 ADD HL,HL     ;
  $A511 ADD HL,HL     ;
  $A512 ADD HL,HL     ;
  $A513 LD DE,$00D0   ;
- $A516 ADD HL,DE     ;
+ $A516 ADD HL,DE     ; }
 *$A517 PUSH HL       ;
  $A518 CALL $A3A0    ; Scenery/event script interpreter
  $A51B CALL $C8B8    ; Advance background scroll
- $A51E POP HL        ;
+ $A51E POP HL        ; {Decrement offset, loop until column exhausted
  $A51F DEC HL        ;
  $A520 LD A,L        ;
  $A521 OR H          ;
- $A522 JR NZ,$A517   ;
+ $A522 JR NZ,$A517   ; }
  $A524 LD HL,($9BA5) ; get Timeline table cursor
  $A527 LD A,($9BA4)  ; get Level progress / index
- $A52A LD DE,$0003   ;
- $A52D AND A         ;
+ $A52A LD DE,$0003   ; {DE = 3 (table stride)
+ $A52D AND A         ; }
  $A52E SBC HL,DE     ;
-*$A530 ADD HL,DE     ;
+*$A530 ADD HL,DE     ; {Advance cursor until entry covers the level index
  $A531 CP (HL)       ;
- $A532 JR NC,$A530   ;
+ $A532 JR NC,$A530   ; }
  $A534 LD ($9BA5),HL ; set Timeline table cursor
- $A537 LD A,$07      ;
+ $A537 LD A,$07      ; {Init a couple of timer/event fields for the new level
  $A539 LD ($9BA3),A  ;
  $A53C LD HL,$9C47   ;
  $A53F LD ($9C45),HL ;
  $A542 LD A,$02      ;
  $A544 LD ($9C44),A  ;
- $A547 LD HL,($9C57) ;
+ $A547 LD HL,($9C57) ; }
  $A54A LD A,($9BA4)  ; get Level progress / index
-*$A54D CP (HL)       ;
- $A54E INC HL        ;
+*$A54D CP (HL)       ; {Scan colour-scheme table until the level's threshold
+ $A54E INC HL        ; entry
  $A54F INC HL        ;
- $A550 JR C,$A54D    ;
+ $A550 JR C,$A54D    ; }
  $A552 LD ($9C57),HL ;
- $A555 DEC HL        ;
- $A556 LD A,(HL)     ;
+ $A555 DEC HL        ; {Step back to the entry, read its colour/type value
+ $A556 LD A,(HL)     ; }
  $A557 LD ($9C59),A  ; set Active colour scheme
  $A55A LD ($9C5A),A  ;
  $A55D POP HL        ;
@@ -4940,27 +4891,23 @@ c$A4E7 LD IX,($9C77) ;
 ;
 ; .
 ;
-; Called every frame from #R$A0C4. If the death/recovery timer ($9C3C, armed by
-; #R$BF22) is active, counts it down and signals A=4 on expiry; if disabled
-; ($FF), instead polls the ENTER key (row $F7 bit 3) for a manual continue (A=0
-; if held, else A=2). Either way calls #R$A599 then dispatches the player's
-; next state via the $A038 sub-range of the shared #R$A000 table (the same
-; range used by #R$BE03's index $2B handler).
+; Runs the death/recovery timer, or if it's disabled, polls ENTER for a manual
+; continue, then dispatches the player's next state.
 @label=respawn_check
-c$A561 LD HL,$9C3C   ;
+c$A561 LD HL,$9C3C   ; {Death/recovery timer ($9C3C); count down, A=4 on expiry
  $A564 LD A,(HL)     ;
  $A565 CP $FF        ;
  $A567 JR Z,$A570    ;
  $A569 DEC (HL)      ;
  $A56A JR NZ,$A570   ;
  $A56C LD A,$04      ;
- $A56E JR $A57C      ;
-*$A570 LD A,$F7      ;
+ $A56E JR $A57C      ; }
+*$A570 LD A,$F7      ; {Timer disabled: poll ENTER key, A=0 if held else A=2
  $A572 IN A,($FE)    ;
  $A574 BIT 3,A       ;
  $A576 LD A,$00      ;
  $A578 JR NZ,$A57C   ;
- $A57A LD A,$02      ;
+ $A57A LD A,$02      ; }
 *$A57C CALL $A599    ; Ratchet player state forward
  $A57F LD A,($9C3D)  ;
  $A582 LD HL,$A038   ;
@@ -4984,11 +4931,9 @@ c$A588 RET           ;
 ;
 ; Handler for indices $1F, $20 of the #R$A000 jump table (see #R$B7F6).
 ; .
-; Copies $9C3D into $9C3E (a mirrored/confirmed-state value), requests the
-; maximum-priority sound effect via #R$A1CE (likely a game-over/death jingle),
-; then repoints the ISR ($FDFE) back to the light handler #R$A0B0 - taking the
-; game out of active gameplay. Handler for indices $1F/$20 of the shared table.
-c$A589 LD A,($9C3D)  ;
+; Takes the game out of active gameplay: confirms the player state, plays an
+; alert sound, and switches back to the light per-frame handler.
+c$A589 LD A,($9C3D)  ; Confirm the player state ($9C3D -> $9C3E)
  $A58C LD ($9C3E),A  ;
  $A58F CALL $A1CE    ; Request sound effect at maximum priority
  $A592 LD HL,$A0B0   ; point to per-frame handler #R$A0B0 (light ISR)
@@ -5024,23 +4969,20 @@ c$A5A0 XOR A         ;
 ;
 ; .
 ;
-; Used by $A902's menu loop. Checks a "shown once" flag at $9B9F; if not yet
-; set, sets it and calls #R$7D1F to clear the screen and draw the title
-; artwork. Either way falls through into $A5B2: CALL #R$7D98 (build the
-; shift-copy tables), CALL #R$7D00 (re-init IM 2 vectors), then point the ISR
-; trampoline at #R$A0B0 and EI/RET.
-c$A5A5 DI            ;
+; Draws the title screen once (on first call), then (re)builds the graphics
+; tables and points the ISR back at the light per-frame handler.
+c$A5A5 DI            ; {"Shown once" flag ($9B9F); skip drawing if already set
  $A5A6 LD HL,$9B9F   ;
  $A5A9 LD A,$FF      ;
  $A5AB CP (HL)       ;
  $A5AC LD (HL),A     ;
- $A5AD JR Z,$A5B8    ;
+ $A5AD JR Z,$A5B8    ; }
  $A5AF CALL $7D1F    ; Clear screen and draw title screen graphics
  $A5B2 CALL $7D98    ; Decode 9 graphic blocks, then substitute every other
                      ; byte via table $9A00
  $A5B5 CALL $7D00    ; Initialize IM 2 interrupt vector table and set light ISR
-*$A5B8 LD HL,$A0B0   ;
- $A5BB LD ($FDFE),HL ;
+*$A5B8 LD HL,$A0B0   ; point to per-frame handler #R$A0B0 (light ISR)
+ $A5BB LD ($FDFE),HL ; set ISR handler address
  $A5BE EI            ;
  $A5BF RET           ;
 
@@ -5050,39 +4992,37 @@ c$A5A5 DI            ;
 ;
 ; .
 ;
-; Used by #R$A8C0 when starting a new game. Zeroes each player's 11-byte state
-; block ($9C79/$9C85), then sets starting lives ($9C88/$9C7C, POKE 42464),
-; starting bombs ($9C82/$9C8E, POKE 42490), and other per-player defaults
-; (active-player flag $9C76, HUD pointer $9C77, misc fields).
+; Sets up both players' game state (lives, bombs, HUD pointers) at the start of
+; a new game.
 @label=init_players
 c$A5C0 LD A,$00      ;
  $A5C2 CALL $6498    ; Init menu screen
- $A5C5 LD HL,$9C79   ;
+ $A5C5 LD HL,$9C79   ; {Zero player 1's 11-byte state block ($9C79)
  $A5C8 LD DE,$9C7A   ;
  $A5CB LD BC,$000B   ;
  $A5CE LD (HL),$00   ;
- $A5D0 LDIR          ;
- $A5D2 LD HL,$9C85   ;
+ $A5D0 LDIR          ; }
+ $A5D2 LD HL,$9C85   ; {Zero player 2's 11-byte state block ($9C85)
  $A5D5 LD DE,$9C86   ;
  $A5D8 LD BC,$000B   ;
  $A5DB LD (HL),$00   ;
- $A5DD LDIR          ;
+ $A5DD LDIR          ; }
  $A5DF LD A,$03      ; POKE 42464,N sets starting lives count
  $A5E1 LD ($9C88),A  ;
  $A5E4 DEC A         ;
  $A5E5 LD ($9C7C),A  ;
  $A5E8 LD A,$01      ;
  $A5EA LD ($9C76),A  ; set Active player
- $A5ED LD HL,$9C79   ;
- $A5F0 LD ($9C77),HL ;
+ $A5ED LD HL,$9C79   ; {HUD pointer for the active player ($9C77)
+ $A5F0 LD ($9C77),HL ; }
  $A5F3 LD ($9C81),A  ;
  $A5F6 LD ($9C8D),A  ;
  $A5F9 LD A,$03      ; POKE 42490,N sets starting bomb count
  $A5FB LD ($9C82),A  ;
  $A5FE LD ($9C8E),A  ;
- $A601 LD A,$02      ;
+ $A601 LD A,$02      ; {Reset explosion-data index ($9C84/$9C90)
  $A603 LD ($9C84),A  ;
- $A606 LD ($9C90),A  ;
+ $A606 LD ($9C90),A  ; }
  $A609 LD A,$00      ;
  $A60B LD ($9C7F),A  ;
  $A60E LD ($9C8B),A  ;
@@ -5187,11 +5127,8 @@ c$A612 LD IX,($9C77)  ;
 ;
 ; .
 ;
-; Called from #R$A8C0's attract loop. Draws the title screen (message $01,
-; "FIREBIRD...FLYING SHARK...GRAFTGOLD LTD...COPYRIGHT 1987") and starts music
-; track 0; returns early with carry set if fire is pressed. The #R$A6C9 entry
-; then shows the credits (message $02, design/graphics/music by-line), runs the
-; #R$C6A6 wipe, and waits ~200 frames or until fire.
+; Shows the title screen with music, then (via the #R$A6C9 entry) the credits
+; screen, waiting for fire to skip ahead at either point.
 @label=show_title_attract
 c$A6BB LD A,$00      ;
  $A6BD CALL $6498    ; Init menu screen
@@ -5210,7 +5147,7 @@ c$A6BB LD A,$00      ;
  $A6D3 LD A,$47      ;
  $A6D5 LD ($9C59),A  ; set Active colour scheme
  $A6D8 CALL $C6A6    ; Screen wipe transition effect
- $A6DB LD B,$C8      ;
+ $A6DB LD B,$C8      ; Wait up to 200 frames (or until fire is pressed)
 *$A6DD HALT          ;
  $A6DE CALL $6943    ; Read fire button (Kempston/keyboard) with debounce
  $A6E1 RET C         ;
@@ -5220,6 +5157,11 @@ c$A6BB LD A,$00      ;
 ; Print high-score table
 ;
 ; Used by the routine at #R$A8C0.
+;
+; .
+;
+; Prints the 6-row high-score table, one row of name and score per iteration,
+; then runs a wipe transition into the table screen.
 @label=print_high_scores
 c$A6E5 LD A,$09      ;
  $A6E7 CALL $6498    ; Init menu screen
@@ -5356,12 +5298,9 @@ c$A783 LD IX,($9C77)   ; load player object pointer into IX
 ;
 ; IX current player's state block base (lives at IX+$03)
 ;
-; Called on death/wave-loss (from $A7B6/$A7D0). If only one player ($9C75==1),
-; just decrements the current player's lives (IX+$03) and returns. In 2-player
-; mode, checks the *other* player's lives (IY, selected as the block that isn't
-; the active one at $9C76); if they still have lives, switches control to them
-; (updates the current-player pointer $9C77, toggles the active-player flag at
-; $9C76). Either way, finishes by decrementing the now-current player's lives.
+; Handles a player's death: in 2-player mode, hands control to the other player
+; if they still have lives, then decrements the (now-current) player's life
+; count.
 @label=player_lose_life
 c$A7D7 LD A,($9C75)  ;
  $A7DA DEC A         ;
@@ -5391,11 +5330,8 @@ c$A7D7 LD A,($9C75)  ;
 ;
 ; .
 ;
-; Prints "3000 POINTS" (message $12), draws a box graphic (#R$6B09), then
-; (further in, at #R$A862/#R$A866) prints another message, starts music track
-; 1, resets the colour scheme, and runs the #R$C6A6 wipe transition. Also plays
-; a tone effect (#R$A84D-$A85B, same timed border/speaker-toggle technique as
-; #R$A222) partway through. Handler for index $1A of the shared table.
+; Shows the end-of-wave bonus-points award screen (message and box graphics,
+; score/life update, music and tone effect), then wipes into the next screen.
 c$A802 LD IX,($9C77)   ;
  $A806 LD A,($9C72)    ; get Wave type / group id
  $A809 LD (IX+$08),A   ;
@@ -5508,26 +5444,23 @@ c$A8A7 CALL $A1CE    ; Request sound effect at maximum priority
 ;
 ; .
 ;
-; Waits for input, then resets core per-game state: deferred-event mask $9C27
-; (via #R$A1C8/#R$FF00), player state $9C3D/$9C3E, immobilise flag $9C3B,
-; redefine-key debounce $9CDC, and disables the death/recovery timer
-; ($9C3C=$FF, the sentinel #R$A561 checks). Called at the start of a new game
-; (from the game-start sequence via #R$A6BB/#R$A6C9).
+; Resets core per-game state at the start of a new game, then waits for the
+; first deferred event (player death/continue) before returning.
 @label=new_game_reset
 c$A8C0 CALL $6971    ; Wait for input
  $A8C3 CALL $A1C8    ; Clear pending sound-effect priority
- $A8C6 LD HL,$FF00   ;
- $A8C9 LD ($9C27),HL ;
+ $A8C6 LD HL,$FF00   ; {Clear the deferred-event mask ($9C27), mark event bit 2
+ $A8C9 LD ($9C27),HL ; pending
  $A8CC LD HL,$9C27   ;
- $A8CF SET 2,(HL)    ;
- $A8D1 LD A,$00      ;
- $A8D3 LD ($9C3D),A  ;
- $A8D6 LD ($9C3E),A  ;
- $A8D9 XOR A         ;
- $A8DA LD ($9C3B),A  ;
+ $A8CF SET 2,(HL)    ; }
+ $A8D1 LD A,$00      ; {Player state $9C3D=0
+ $A8D3 LD ($9C3D),A  ; }
+ $A8D6 LD ($9C3E),A  ; Player state $9C3E=0
+ $A8D9 XOR A         ; {Immobilise flag $9C3B=0
+ $A8DA LD ($9C3B),A  ; }
  $A8DD LD ($9CDC),A  ; set Input state / action code
- $A8E0 DEC A         ;
- $A8E1 LD ($9C3C),A  ;
+ $A8E0 DEC A         ; {Disable the death/recovery timer (#R$A561 sentinel,
+ $A8E1 LD ($9C3C),A  ; $9C3C=$FF)}
  $A8E4 DI            ;
  $A8E5 CALL $BBC2    ; Clear buffers at $7F00-$7FFF and $8000-$80FF
  $A8E8 CALL $BCE9    ; Draw active objects' collision masks into attribute
@@ -5537,9 +5470,9 @@ c$A8C0 CALL $6971    ; Wait for input
  $A8EF LD HL,$A0C4   ; point to per-frame handler #R$A0C4 (heavy ISR)
  $A8F2 LD ($FDFE),HL ; set ISR handler address
 *$A8F5 CALL $A13A    ; Dispatch highest-priority pending deferred event
- $A8F8 LD A,($9C3E)  ;
+ $A8F8 LD A,($9C3E)  ; {Poll deferred events until player state $9C3E is set
  $A8FB AND A         ;
- $A8FC JR Z,$A8F5    ;
+ $A8FC JR Z,$A8F5    ; }
  $A8FE LD A,($9C3D)  ;
  $A901 RET           ;
  $A902 LD SP,$0000   ;
@@ -5565,22 +5498,20 @@ c$A8C0 CALL $6971    ; Wait for input
 ;
 ; A music track number
 ;
-; Sets $9C29 = A (also used by #R$6A4A as a "menu busy" guard - only one
-; track/menu action active at a time), then looks up a pointer from the track
-; table at #R$AB03 (indexed by A*2) and stores it into $AA8E, the note pointer
-; consumed by the #R$AA0F/#R$AA34 music engine.
+; Starts playing a music track: marks the menu system busy, then points the
+; music engine's note reader at the requested track's score data.
 @label=music_start
-c$A927 LD ($9C29),A  ;
+c$A927 LD ($9C29),A  ; Mark menu/music busy ($9C29 guard used by #R$6A4A)
  $A92A DI            ;
- $A92B ADD A,A       ;
+ $A92B ADD A,A       ; {Track number * 2 -> byte offset into #R$AB03
  $A92C LD E,A        ;
- $A92D LD D,$00      ;
- $A92F LD HL,$AB03   ;
+ $A92D LD D,$00      ; }
+ $A92F LD HL,$AB03   ; {Look up the track's score pointer
  $A932 ADD HL,DE     ;
  $A933 LD A,(HL)     ;
  $A934 INC HL        ;
  $A935 LD H,(HL)     ;
- $A936 LD L,A        ;
+ $A936 LD L,A        ; }
 
 ; Point score reader at next event, check for end
 ;
@@ -5756,6 +5687,12 @@ c$A94C LD ($AA90),HL ;
 ; Play beeper music note (square-wave tone generator)
 ;
 ; Used by the routine at #R$A94C.
+;
+; .
+;
+; Plays one note for its duration as a square wave, with a short attack click
+; at the start. Timing is derived directly from the note's pitch period, the
+; same technique used by the sound-effect player at #R$A222.
 @label=beep_play_note
 c$AA34 DI            ;
  $AA35 LD ($AA94),DE ; Save note period parameters ($AA94)
@@ -6023,7 +5960,8 @@ c$AC8D LD ($ACB5),SP  ; Save SP (restored at $ACB4)
  $ACB8 SET 5,(IY+$04) ; Entry: request toggle loop (sets IY+$04 bit 5)
  $ACBC BIT 4,(IY+$04) ; Only continue toggling while bit 4 flag is set
  $ACC0 JP NZ,$AC95    ;
- $ACC3 LD A,(IY+$06)  ;
+ $ACC3 LD A,(IY+$06)  ; Start of object-column draw phase (separate from the
+                      ; border-toggle head)
  $ACC6 POP HL         ;
  $ACC7 ADD A,H        ;
  $ACC8 LD H,A         ;
@@ -6056,7 +5994,7 @@ c$AC8D LD ($ACB5),SP  ; Save SP (restored at $ACB4)
  $ACEF ADD HL,DE      ;
  $ACF0 PUSH HL        ;
  $ACF1 JP $AC95       ;
- $ACF4 SET 5,(IY+$04) ;
+ $ACF4 SET 5,(IY+$04) ; Alternate entry: request toggle loop (mirrors $ACB8)
  $ACF8 LD A,($9C01)   ;
  $ACFB NEG            ;
  $ACFD ADD A,(IY+$0D) ;
@@ -6455,14 +6393,9 @@ c$AC8D LD ($ACB5),SP  ; Save SP (restored at $ACB4)
 ;
 ; IX formation-script pointer
 ;
-; Reads the byte at (IX), advances IX, then forms address $A0xx (xx = that
-; byte) and jumps there by setting SP to it and executing RET - the byte value
-; doubles as a direct low-byte offset into the same #R$A000 word table used by
-; #R$B7F6 elsewhere. Called by 17 different formation/wave routines (#R$ADB8,
-; #R$AFC3, #R$B005, #R$B072, #R$B0B4, #R$B15B, #R$B1BE, #R$B24A, #R$B2DA,
-; #R$B36A, #R$B3FE, #R$B452, #R$B4AA, $B567, $B5FE, #R$B61A, #R$B6BF, #R$B72D)
-; - this is the shared bytecode-dispatch core of the enemy formation/wave
-; scripting system.
+; The shared bytecode-dispatch core of the enemy formation/wave scripting
+; system: reads the next script byte and jumps to its handler in the #R$A000
+; table. Continued into by 17 different formation/wave routines.
 @label=formation_dispatch
 c$AFB8 LD L,(IX+$00) ; {read next script byte from (IX), advance script pointer
  $AFBB INC IX        ; }
@@ -6488,64 +6421,62 @@ c$AFC1 JP (IX)       ;
 ;
 ; .
 ;
-; Handler for index $00 of the #R$A000 jump table (see #R$B7F6). Twin of
-; #R$B072 but fills ascending: writes the low byte of each popped word into a
-; page of the 2x2 tile-block tables (#R$7900-$7CFF, see #R$7900), L rising from
-; $F0, then INC H advances to the next page ($7A/$7B/$7C) for each of B ($9C1A)
-; passes. Continues into the formation script (#R$AFB8).
+; Handler for index $00 of the #R$A000 jump table. Fills a page of the 2x2
+; tile-block tables from popped stack data, ascending; twin of #R$B072 which
+; fills descending. Continues into the formation script (#R$AFB8).
 c$AFC3 LD SP,($9C15) ; Source data via SP (POP-fed)
  $AFC7 LD A,($9C1A)  ; B = column/pass count ($9C1A)
  $AFCA LD B,A        ;
  $AFCB LD H,$79      ; H=$79: destination tile-block table page
  $AFCD LD A,$F0      ; A=$F0: row index start (writes ascending)
 *$AFCF LD L,A        ; Set row index for this pass
- $AFD0 POP DE        ; {Store low byte of popped word, ascending
- $AFD1 LD (HL),E     ;
+ $AFD0 POP DE        ; {Store low byte of popped word, ascending (iteration
+ $AFD1 LD (HL),E     ; 1/16)
  $AFD2 INC L         ; }
- $AFD3 POP DE        ;
+ $AFD3 POP DE        ; {iteration 2/16
  $AFD4 LD (HL),E     ;
- $AFD5 INC L         ;
- $AFD6 POP DE        ;
+ $AFD5 INC L         ; }
+ $AFD6 POP DE        ; {iteration 3/16
  $AFD7 LD (HL),E     ;
- $AFD8 INC L         ;
- $AFD9 POP DE        ;
+ $AFD8 INC L         ; }
+ $AFD9 POP DE        ; {iteration 4/16
  $AFDA LD (HL),E     ;
- $AFDB INC L         ;
- $AFDC POP DE        ;
+ $AFDB INC L         ; }
+ $AFDC POP DE        ; {iteration 5/16
  $AFDD LD (HL),E     ;
- $AFDE INC L         ;
- $AFDF POP DE        ;
+ $AFDE INC L         ; }
+ $AFDF POP DE        ; {iteration 6/16
  $AFE0 LD (HL),E     ;
- $AFE1 INC L         ;
- $AFE2 POP DE        ;
+ $AFE1 INC L         ; }
+ $AFE2 POP DE        ; {iteration 7/16
  $AFE3 LD (HL),E     ;
- $AFE4 INC L         ;
- $AFE5 POP DE        ;
+ $AFE4 INC L         ; }
+ $AFE5 POP DE        ; {iteration 8/16
  $AFE6 LD (HL),E     ;
- $AFE7 INC L         ;
- $AFE8 POP DE        ;
+ $AFE7 INC L         ; }
+ $AFE8 POP DE        ; {iteration 9/16
  $AFE9 LD (HL),E     ;
- $AFEA INC L         ;
- $AFEB POP DE        ;
+ $AFEA INC L         ; }
+ $AFEB POP DE        ; {iteration 10/16
  $AFEC LD (HL),E     ;
- $AFED INC L         ;
- $AFEE POP DE        ;
+ $AFED INC L         ; }
+ $AFEE POP DE        ; {iteration 11/16
  $AFEF LD (HL),E     ;
- $AFF0 INC L         ;
- $AFF1 POP DE        ;
+ $AFF0 INC L         ; }
+ $AFF1 POP DE        ; {iteration 12/16
  $AFF2 LD (HL),E     ;
- $AFF3 INC L         ;
- $AFF4 POP DE        ;
+ $AFF3 INC L         ; }
+ $AFF4 POP DE        ; {iteration 13/16
  $AFF5 LD (HL),E     ;
- $AFF6 INC L         ;
- $AFF7 POP DE        ;
+ $AFF6 INC L         ; }
+ $AFF7 POP DE        ; {iteration 14/16
  $AFF8 LD (HL),E     ;
- $AFF9 INC L         ;
- $AFFA POP DE        ;
+ $AFF9 INC L         ; }
+ $AFFA POP DE        ; {iteration 15/16
  $AFFB LD (HL),E     ;
- $AFFC INC L         ;
- $AFFD POP DE        ;
- $AFFE LD (HL),E     ;
+ $AFFC INC L         ; }
+ $AFFD POP DE        ; {iteration 16/16 (no INC L, next page picks up at $F0)
+ $AFFE LD (HL),E     ; }
  $AFFF INC H         ; Next page ($7A/$7B/$7C)
  $B000 DJNZ $AFCF    ; Loop B passes
  $B002 JP $AFB8      ; => Formation script
@@ -6570,84 +6501,84 @@ c$B005 LD A,($9C1A)  ;
 *$B019 EXX           ;
  $B01A LD E,$00      ;
  $B01C POP BC        ; {Copy column: store #R$9A00[C] straight to screen
- $B01D LD L,C        ; (opaque, no mask)
+ $B01D LD L,C        ; (opaque, no mask) (iteration 1/16)
  $B01E LD A,(HL)     ;
  $B01F LD (DE),A     ;
  $B020 INC E         ; }
- $B021 POP BC        ;
+ $B021 POP BC        ; {iteration 2/16
  $B022 LD L,C        ;
  $B023 LD A,(HL)     ;
  $B024 LD (DE),A     ;
- $B025 INC E         ;
- $B026 POP BC        ;
+ $B025 INC E         ; }
+ $B026 POP BC        ; {iteration 3/16
  $B027 LD L,C        ;
  $B028 LD A,(HL)     ;
  $B029 LD (DE),A     ;
- $B02A INC E         ;
- $B02B POP BC        ;
+ $B02A INC E         ; }
+ $B02B POP BC        ; {iteration 4/16
  $B02C LD L,C        ;
  $B02D LD A,(HL)     ;
  $B02E LD (DE),A     ;
- $B02F INC E         ;
- $B030 POP BC        ;
+ $B02F INC E         ; }
+ $B030 POP BC        ; {iteration 5/16
  $B031 LD L,C        ;
  $B032 LD A,(HL)     ;
  $B033 LD (DE),A     ;
- $B034 INC E         ;
- $B035 POP BC        ;
+ $B034 INC E         ; }
+ $B035 POP BC        ; {iteration 6/16
  $B036 LD L,C        ;
  $B037 LD A,(HL)     ;
  $B038 LD (DE),A     ;
- $B039 INC E         ;
- $B03A POP BC        ;
+ $B039 INC E         ; }
+ $B03A POP BC        ; {iteration 7/16
  $B03B LD L,C        ;
  $B03C LD A,(HL)     ;
  $B03D LD (DE),A     ;
- $B03E INC E         ;
- $B03F POP BC        ;
+ $B03E INC E         ; }
+ $B03F POP BC        ; {iteration 8/16
  $B040 LD L,C        ;
  $B041 LD A,(HL)     ;
  $B042 LD (DE),A     ;
- $B043 INC E         ;
- $B044 POP BC        ;
+ $B043 INC E         ; }
+ $B044 POP BC        ; {iteration 9/16
  $B045 LD L,C        ;
  $B046 LD A,(HL)     ;
  $B047 LD (DE),A     ;
- $B048 INC E         ;
- $B049 POP BC        ;
+ $B048 INC E         ; }
+ $B049 POP BC        ; {iteration 10/16
  $B04A LD L,C        ;
  $B04B LD A,(HL)     ;
  $B04C LD (DE),A     ;
- $B04D INC E         ;
- $B04E POP BC        ;
+ $B04D INC E         ; }
+ $B04E POP BC        ; {iteration 11/16
  $B04F LD L,C        ;
  $B050 LD A,(HL)     ;
  $B051 LD (DE),A     ;
- $B052 INC E         ;
- $B053 POP BC        ;
+ $B052 INC E         ; }
+ $B053 POP BC        ; {iteration 12/16
  $B054 LD L,C        ;
  $B055 LD A,(HL)     ;
  $B056 LD (DE),A     ;
- $B057 INC E         ;
- $B058 POP BC        ;
+ $B057 INC E         ; }
+ $B058 POP BC        ; {iteration 13/16
  $B059 LD L,C        ;
  $B05A LD A,(HL)     ;
  $B05B LD (DE),A     ;
- $B05C INC E         ;
- $B05D POP BC        ;
+ $B05C INC E         ; }
+ $B05D POP BC        ; {iteration 14/16
  $B05E LD L,C        ;
  $B05F LD A,(HL)     ;
  $B060 LD (DE),A     ;
- $B061 INC E         ;
- $B062 POP BC        ;
+ $B061 INC E         ; }
+ $B062 POP BC        ; {iteration 15/16
  $B063 LD L,C        ;
  $B064 LD A,(HL)     ;
  $B065 LD (DE),A     ;
- $B066 INC E         ;
- $B067 POP BC        ;
+ $B066 INC E         ; }
+ $B067 POP BC        ; {iteration 16/16 (no INC E, row-base decrement follows)
  $B068 LD L,C        ;
  $B069 LD A,(HL)     ;
- $B06A LD (DE),A     ;
+ $B06A LD (DE),A     ; }
  $B06B DEC D         ; Next row column-base
  $B06C EXX           ;
  $B06D DJNZ $B019    ; Loop $9C1A rows
@@ -6659,65 +6590,62 @@ c$B005 LD A,($9C1A)  ;
 ;
 ; .
 ;
-; Handler for index $04 of the #R$A000 jump table (see #R$B7F6). Writes into
-; the 2x2 tile-block lookup tables at #R$7900-$7CFF (see #R$7900) rather than
-; to the screen. For B ($9C1A) passes it fills a descending run of one page
-; (H=$79, L from $FF down) with the low byte of each popped word, then INC H
-; advances to the next page ($7A/$7B/$7C) - so successive passes populate the
-; parallel quadrant tables. Continues into the formation script (#R$AFB8).
+; Handler for index $04 of the #R$A000 jump table. Fills a page of the 2x2
+; tile-block tables from popped stack data, descending; twin of #R$AFC3 which
+; fills ascending. Continues into the formation script (#R$AFB8).
 c$B072 LD SP,($9C15) ; Source data via SP (POP-fed)
  $B076 LD A,($9C1A)  ; B = column/pass count ($9C1A)
  $B079 LD B,A        ;
  $B07A LD H,$79      ; H=$79: destination tile-block table page
  $B07C LD A,$FF      ; A=$FF: row index start (writes descending)
 *$B07E LD L,A        ; Set row index for this pass
- $B07F POP DE        ; {Store low byte of popped word, descending
- $B080 LD (HL),E     ;
+ $B07F POP DE        ; {Store low byte of popped word, descending (iteration
+ $B080 LD (HL),E     ; 1/16)
  $B081 DEC L         ; }
- $B082 POP DE        ;
+ $B082 POP DE        ; {iteration 2/16
  $B083 LD (HL),E     ;
- $B084 DEC L         ;
- $B085 POP DE        ;
+ $B084 DEC L         ; }
+ $B085 POP DE        ; {iteration 3/16
  $B086 LD (HL),E     ;
- $B087 DEC L         ;
- $B088 POP DE        ;
+ $B087 DEC L         ; }
+ $B088 POP DE        ; {iteration 4/16
  $B089 LD (HL),E     ;
- $B08A DEC L         ;
- $B08B POP DE        ;
+ $B08A DEC L         ; }
+ $B08B POP DE        ; {iteration 5/16
  $B08C LD (HL),E     ;
- $B08D DEC L         ;
- $B08E POP DE        ;
+ $B08D DEC L         ; }
+ $B08E POP DE        ; {iteration 6/16
  $B08F LD (HL),E     ;
- $B090 DEC L         ;
- $B091 POP DE        ;
+ $B090 DEC L         ; }
+ $B091 POP DE        ; {iteration 7/16
  $B092 LD (HL),E     ;
- $B093 DEC L         ;
- $B094 POP DE        ;
+ $B093 DEC L         ; }
+ $B094 POP DE        ; {iteration 8/16
  $B095 LD (HL),E     ;
- $B096 DEC L         ;
- $B097 POP DE        ;
+ $B096 DEC L         ; }
+ $B097 POP DE        ; {iteration 9/16
  $B098 LD (HL),E     ;
- $B099 DEC L         ;
- $B09A POP DE        ;
+ $B099 DEC L         ; }
+ $B09A POP DE        ; {iteration 10/16
  $B09B LD (HL),E     ;
- $B09C DEC L         ;
- $B09D POP DE        ;
+ $B09C DEC L         ; }
+ $B09D POP DE        ; {iteration 11/16
  $B09E LD (HL),E     ;
- $B09F DEC L         ;
- $B0A0 POP DE        ;
+ $B09F DEC L         ; }
+ $B0A0 POP DE        ; {iteration 12/16
  $B0A1 LD (HL),E     ;
- $B0A2 DEC L         ;
- $B0A3 POP DE        ;
+ $B0A2 DEC L         ; }
+ $B0A3 POP DE        ; {iteration 13/16
  $B0A4 LD (HL),E     ;
- $B0A5 DEC L         ;
- $B0A6 POP DE        ;
+ $B0A5 DEC L         ; }
+ $B0A6 POP DE        ; {iteration 14/16
  $B0A7 LD (HL),E     ;
- $B0A8 DEC L         ;
- $B0A9 POP DE        ;
+ $B0A8 DEC L         ; }
+ $B0A9 POP DE        ; {iteration 15/16
  $B0AA LD (HL),E     ;
- $B0AB DEC L         ;
- $B0AC POP DE        ;
- $B0AD LD (HL),E     ;
+ $B0AB DEC L         ; }
+ $B0AC POP DE        ; {iteration 16/16 (no DEC L, next page picks up at $FF)
+ $B0AD LD (HL),E     ; }
  $B0AE INC H         ; Next page ($7A/$7B/$7C)
  $B0AF DJNZ $B07E    ; Loop B passes
  $B0B1 JP $AFB8      ; => Formation script
@@ -6742,84 +6670,84 @@ c$B0B4 LD A,($9C1A)  ;
 *$B0C8 EXX           ;
  $B0C9 LD E,$00      ;
  $B0CB POP BC        ; {Copy column: store #R$9A00[C] straight to screen
- $B0CC LD L,C        ; (opaque, no mask)
+ $B0CC LD L,C        ; (opaque, no mask) (iteration 1/16)
  $B0CD LD A,(HL)     ;
  $B0CE LD (DE),A     ;
  $B0CF DEC E         ; }
- $B0D0 POP BC        ;
+ $B0D0 POP BC        ; {iteration 2/16
  $B0D1 LD L,C        ;
  $B0D2 LD A,(HL)     ;
  $B0D3 LD (DE),A     ;
- $B0D4 DEC E         ;
- $B0D5 POP BC        ;
+ $B0D4 DEC E         ; }
+ $B0D5 POP BC        ; {iteration 3/16
  $B0D6 LD L,C        ;
  $B0D7 LD A,(HL)     ;
  $B0D8 LD (DE),A     ;
- $B0D9 DEC E         ;
- $B0DA POP BC        ;
+ $B0D9 DEC E         ; }
+ $B0DA POP BC        ; {iteration 4/16
  $B0DB LD L,C        ;
  $B0DC LD A,(HL)     ;
  $B0DD LD (DE),A     ;
- $B0DE DEC E         ;
- $B0DF POP BC        ;
+ $B0DE DEC E         ; }
+ $B0DF POP BC        ; {iteration 5/16
  $B0E0 LD L,C        ;
  $B0E1 LD A,(HL)     ;
  $B0E2 LD (DE),A     ;
- $B0E3 DEC E         ;
- $B0E4 POP BC        ;
+ $B0E3 DEC E         ; }
+ $B0E4 POP BC        ; {iteration 6/16
  $B0E5 LD L,C        ;
  $B0E6 LD A,(HL)     ;
  $B0E7 LD (DE),A     ;
- $B0E8 DEC E         ;
- $B0E9 POP BC        ;
+ $B0E8 DEC E         ; }
+ $B0E9 POP BC        ; {iteration 7/16
  $B0EA LD L,C        ;
  $B0EB LD A,(HL)     ;
  $B0EC LD (DE),A     ;
- $B0ED DEC E         ;
- $B0EE POP BC        ;
+ $B0ED DEC E         ; }
+ $B0EE POP BC        ; {iteration 8/16
  $B0EF LD L,C        ;
  $B0F0 LD A,(HL)     ;
  $B0F1 LD (DE),A     ;
- $B0F2 DEC E         ;
- $B0F3 POP BC        ;
+ $B0F2 DEC E         ; }
+ $B0F3 POP BC        ; {iteration 9/16
  $B0F4 LD L,C        ;
  $B0F5 LD A,(HL)     ;
  $B0F6 LD (DE),A     ;
- $B0F7 DEC E         ;
- $B0F8 POP BC        ;
+ $B0F7 DEC E         ; }
+ $B0F8 POP BC        ; {iteration 10/16
  $B0F9 LD L,C        ;
  $B0FA LD A,(HL)     ;
  $B0FB LD (DE),A     ;
- $B0FC DEC E         ;
- $B0FD POP BC        ;
+ $B0FC DEC E         ; }
+ $B0FD POP BC        ; {iteration 11/16
  $B0FE LD L,C        ;
  $B0FF LD A,(HL)     ;
  $B100 LD (DE),A     ;
- $B101 DEC E         ;
- $B102 POP BC        ;
+ $B101 DEC E         ; }
+ $B102 POP BC        ; {iteration 12/16
  $B103 LD L,C        ;
  $B104 LD A,(HL)     ;
  $B105 LD (DE),A     ;
- $B106 DEC E         ;
- $B107 POP BC        ;
+ $B106 DEC E         ; }
+ $B107 POP BC        ; {iteration 13/16
  $B108 LD L,C        ;
  $B109 LD A,(HL)     ;
  $B10A LD (DE),A     ;
- $B10B DEC E         ;
- $B10C POP BC        ;
+ $B10B DEC E         ; }
+ $B10C POP BC        ; {iteration 14/16
  $B10D LD L,C        ;
  $B10E LD A,(HL)     ;
  $B10F LD (DE),A     ;
- $B110 DEC E         ;
- $B111 POP BC        ;
+ $B110 DEC E         ; }
+ $B111 POP BC        ; {iteration 15/16
  $B112 LD L,C        ;
  $B113 LD A,(HL)     ;
  $B114 LD (DE),A     ;
- $B115 DEC E         ;
- $B116 POP BC        ;
+ $B115 DEC E         ; }
+ $B116 POP BC        ; {iteration 16/16 (no DEC E, row-base decrement follows)
  $B117 LD L,C        ;
  $B118 LD A,(HL)     ;
- $B119 LD (DE),A     ;
+ $B119 LD (DE),A     ; }
  $B11A DEC D         ; Next row column-base
  $B11B EXX           ;
  $B11C DJNZ $B0C8    ; Loop $9C1A rows
@@ -6894,12 +6822,9 @@ c$B14A LD A,($9C1A)  ; B = column/pass count ($9C1A)
 ;
 ; .
 ;
-; Handler for index $10 of the #R$A000 jump table (see #R$B7F6). Reads the four
-; tile-block table pages ($79F0 upward, SP-fed) and OR-merges them onto the
-; destination screen area at $9C13: for each of B ($9C1A) passes it ORs a run
-; of source bytes into consecutive dest cells (additive overlay, not opaque),
-; then INC H moves to the next source page ($7A/$7B/$7C) and INC D to the next
-; dest row. Continues into the formation script (#R$AFB8).
+; Handler for index $10 of the #R$A000 jump table. OR-merges the tile-block
+; table pages onto the destination screen (additive overlay, not opaque).
+; Continues into the formation script (#R$AFB8).
 c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B15F LD A,E        ;
  $B160 LD ($B16E),A  ; Self-modify row-start column operand
@@ -6911,7 +6836,7 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B16C LD SP,HL      ; Source via SP (POP-fed)
  $B16D LD E,$00      ;
  $B16F POP BC        ; {OR-merge two source bytes into consecutive dest cells
- $B170 LD A,(DE)     ;
+ $B170 LD A,(DE)     ; (iteration 1/8)
  $B171 OR C          ;
  $B172 LD (DE),A     ;
  $B173 INC E         ;
@@ -6919,7 +6844,7 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B175 OR B          ;
  $B176 LD (DE),A     ;
  $B177 INC E         ; }
- $B178 POP BC        ;
+ $B178 POP BC        ; {iteration 2/8
  $B179 LD A,(DE)     ;
  $B17A OR C          ;
  $B17B LD (DE),A     ;
@@ -6927,8 +6852,8 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B17D LD A,(DE)     ;
  $B17E OR B          ;
  $B17F LD (DE),A     ;
- $B180 INC E         ;
- $B181 POP BC        ;
+ $B180 INC E         ; }
+ $B181 POP BC        ; {iteration 3/8
  $B182 LD A,(DE)     ;
  $B183 OR C          ;
  $B184 LD (DE),A     ;
@@ -6936,8 +6861,8 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B186 LD A,(DE)     ;
  $B187 OR B          ;
  $B188 LD (DE),A     ;
- $B189 INC E         ;
- $B18A POP BC        ;
+ $B189 INC E         ; }
+ $B18A POP BC        ; {iteration 4/8
  $B18B LD A,(DE)     ;
  $B18C OR C          ;
  $B18D LD (DE),A     ;
@@ -6945,8 +6870,8 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B18F LD A,(DE)     ;
  $B190 OR B          ;
  $B191 LD (DE),A     ;
- $B192 INC E         ;
- $B193 POP BC        ;
+ $B192 INC E         ; }
+ $B193 POP BC        ; {iteration 5/8
  $B194 LD A,(DE)     ;
  $B195 OR C          ;
  $B196 LD (DE),A     ;
@@ -6954,8 +6879,8 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B198 LD A,(DE)     ;
  $B199 OR B          ;
  $B19A LD (DE),A     ;
- $B19B INC E         ;
- $B19C POP BC        ;
+ $B19B INC E         ; }
+ $B19C POP BC        ; {iteration 6/8
  $B19D LD A,(DE)     ;
  $B19E OR C          ;
  $B19F LD (DE),A     ;
@@ -6963,8 +6888,8 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B1A1 LD A,(DE)     ;
  $B1A2 OR B          ;
  $B1A3 LD (DE),A     ;
- $B1A4 INC E         ;
- $B1A5 POP BC        ;
+ $B1A4 INC E         ; }
+ $B1A5 POP BC        ; {iteration 7/8
  $B1A6 LD A,(DE)     ;
  $B1A7 OR C          ;
  $B1A8 LD (DE),A     ;
@@ -6972,15 +6897,15 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B1AA LD A,(DE)     ;
  $B1AB OR B          ;
  $B1AC LD (DE),A     ;
- $B1AD INC E         ;
- $B1AE POP BC        ;
+ $B1AD INC E         ; }
+ $B1AE POP BC        ; {iteration 8/8 (no final INC E, next page/row follows)
  $B1AF LD A,(DE)     ;
  $B1B0 OR C          ;
  $B1B1 LD (DE),A     ;
  $B1B2 INC E         ;
  $B1B3 LD A,(DE)     ;
  $B1B4 OR B          ;
- $B1B5 LD (DE),A     ;
+ $B1B5 LD (DE),A     ; }
  $B1B6 INC H         ; Next source page ($7A/$7B/$7C)
  $B1B7 INC D         ; Next dest row
  $B1B8 EXX           ;
@@ -6988,6 +6913,14 @@ c$B15B LD DE,($9C13) ; Destination screen address ($9C13)
  $B1BB JP $AFB8      ; => Formation script
 
 ; Draw masked sprite 16-row, mask-rev (index $09): AND $9A00[B], XOR C, INC E
+;
+; .
+;
+; .
+;
+; Draws a masked sprite column by column onto the screen, blending each byte
+; with the background through a lookup-table mask. Handler for index $09 of the
+; #R$A000 jump table; continues into the formation script (#R$AFB8).
 c$B1BE LD SP,($9C15) ; Source sprite data via SP (POP-fed)
  $B1C2 LD DE,($9C13) ; Destination screen address ($9C13)
 ; This entry point is used by the routine at #R$B121.
@@ -7000,122 +6933,130 @@ c$B1BE LD SP,($9C15) ; Source sprite data via SP (POP-fed)
 *$B1D1 EXX           ;
  $B1D2 LD E,$00      ;
  $B1D4 POP BC        ; {Blit column: mask via #R$9A00[B], merge XOR C, store
- $B1D5 LD A,(DE)     ;
+ $B1D5 LD A,(DE)     ; (iteration 1/16)
  $B1D6 LD L,B        ;
  $B1D7 AND (HL)      ;
  $B1D8 XOR C         ;
  $B1D9 LD (DE),A     ;
  $B1DA INC E         ; }
- $B1DB POP BC        ;
+ $B1DB POP BC        ; {iteration 2/16
  $B1DC LD A,(DE)     ;
  $B1DD LD L,B        ;
  $B1DE AND (HL)      ;
  $B1DF XOR C         ;
  $B1E0 LD (DE),A     ;
- $B1E1 INC E         ;
- $B1E2 POP BC        ;
+ $B1E1 INC E         ; }
+ $B1E2 POP BC        ; {iteration 3/16
  $B1E3 LD A,(DE)     ;
  $B1E4 LD L,B        ;
  $B1E5 AND (HL)      ;
  $B1E6 XOR C         ;
  $B1E7 LD (DE),A     ;
- $B1E8 INC E         ;
- $B1E9 POP BC        ;
+ $B1E8 INC E         ; }
+ $B1E9 POP BC        ; {iteration 4/16
  $B1EA LD A,(DE)     ;
  $B1EB LD L,B        ;
  $B1EC AND (HL)      ;
  $B1ED XOR C         ;
  $B1EE LD (DE),A     ;
- $B1EF INC E         ;
- $B1F0 POP BC        ;
+ $B1EF INC E         ; }
+ $B1F0 POP BC        ; {iteration 5/16
  $B1F1 LD A,(DE)     ;
  $B1F2 LD L,B        ;
  $B1F3 AND (HL)      ;
  $B1F4 XOR C         ;
  $B1F5 LD (DE),A     ;
- $B1F6 INC E         ;
- $B1F7 POP BC        ;
+ $B1F6 INC E         ; }
+ $B1F7 POP BC        ; {iteration 6/16
  $B1F8 LD A,(DE)     ;
  $B1F9 LD L,B        ;
  $B1FA AND (HL)      ;
  $B1FB XOR C         ;
  $B1FC LD (DE),A     ;
- $B1FD INC E         ;
- $B1FE POP BC        ;
+ $B1FD INC E         ; }
+ $B1FE POP BC        ; {iteration 7/16
  $B1FF LD A,(DE)     ;
  $B200 LD L,B        ;
  $B201 AND (HL)      ;
  $B202 XOR C         ;
  $B203 LD (DE),A     ;
- $B204 INC E         ;
- $B205 POP BC        ;
+ $B204 INC E         ; }
+ $B205 POP BC        ; {iteration 8/16
  $B206 LD A,(DE)     ;
  $B207 LD L,B        ;
  $B208 AND (HL)      ;
  $B209 XOR C         ;
  $B20A LD (DE),A     ;
- $B20B INC E         ;
- $B20C POP BC        ;
+ $B20B INC E         ; }
+ $B20C POP BC        ; {iteration 9/16
  $B20D LD A,(DE)     ;
  $B20E LD L,B        ;
  $B20F AND (HL)      ;
  $B210 XOR C         ;
  $B211 LD (DE),A     ;
- $B212 INC E         ;
- $B213 POP BC        ;
+ $B212 INC E         ; }
+ $B213 POP BC        ; {iteration 10/16
  $B214 LD A,(DE)     ;
  $B215 LD L,B        ;
  $B216 AND (HL)      ;
  $B217 XOR C         ;
  $B218 LD (DE),A     ;
- $B219 INC E         ;
- $B21A POP BC        ;
+ $B219 INC E         ; }
+ $B21A POP BC        ; {iteration 11/16
  $B21B LD A,(DE)     ;
  $B21C LD L,B        ;
  $B21D AND (HL)      ;
  $B21E XOR C         ;
  $B21F LD (DE),A     ;
- $B220 INC E         ;
- $B221 POP BC        ;
+ $B220 INC E         ; }
+ $B221 POP BC        ; {iteration 12/16
  $B222 LD A,(DE)     ;
  $B223 LD L,B        ;
  $B224 AND (HL)      ;
  $B225 XOR C         ;
  $B226 LD (DE),A     ;
- $B227 INC E         ;
- $B228 POP BC        ;
+ $B227 INC E         ; }
+ $B228 POP BC        ; {iteration 13/16
  $B229 LD A,(DE)     ;
  $B22A LD L,B        ;
  $B22B AND (HL)      ;
  $B22C XOR C         ;
  $B22D LD (DE),A     ;
- $B22E INC E         ;
- $B22F POP BC        ;
+ $B22E INC E         ; }
+ $B22F POP BC        ; {iteration 14/16
  $B230 LD A,(DE)     ;
  $B231 LD L,B        ;
  $B232 AND (HL)      ;
  $B233 XOR C         ;
  $B234 LD (DE),A     ;
- $B235 INC E         ;
- $B236 POP BC        ;
+ $B235 INC E         ; }
+ $B236 POP BC        ; {iteration 15/16
  $B237 LD A,(DE)     ;
  $B238 LD L,B        ;
  $B239 AND (HL)      ;
  $B23A XOR C         ;
  $B23B LD (DE),A     ;
- $B23C INC E         ;
- $B23D POP BC        ;
- $B23E LD A,(DE)     ;
+ $B23C INC E         ; }
+ $B23D POP BC        ; {iteration 16/16 (no final INC E, row-base decrement
+ $B23E LD A,(DE)     ; follows)
  $B23F LD L,B        ;
  $B240 AND (HL)      ;
  $B241 XOR C         ;
- $B242 LD (DE),A     ;
+ $B242 LD (DE),A     ; }
  $B243 INC D         ; Next row column-base
  $B244 EXX           ;
  $B245 DJNZ $B1D1    ; Loop $9C1A rows
  $B247 JP $AFB8      ; => Formation script
 
 ; Draw masked sprite 16-row, pixel-rev (index $0B): AND B, XOR $9A00[C], INC E
+;
+; .
+;
+; .
+;
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B1BE but with the mask/pixel roles swapped. Handler for index $0B of the
+; #R$A000 jump table; continues into the formation script (#R$AFB8).
 c$B24A LD A,($9C1A)  ;
  $B24D LD B,A        ;
  $B24E EXX           ;
@@ -7132,122 +7073,130 @@ c$B24A LD A,($9C1A)  ;
 *$B261 EXX           ;
  $B262 LD E,$00      ;
  $B264 POP BC        ; {Blit column: mask background (AND B), merge sprite (XOR
- $B265 LD A,(DE)     ; #R$9A00[C]), store
+ $B265 LD A,(DE)     ; #R$9A00[C]), store (iteration 1/16)
  $B266 AND B         ;
  $B267 LD L,C        ;
  $B268 XOR (HL)      ;
  $B269 LD (DE),A     ;
  $B26A INC E         ; }
- $B26B POP BC        ;
+ $B26B POP BC        ; {iteration 2/16
  $B26C LD A,(DE)     ;
  $B26D AND B         ;
  $B26E LD L,C        ;
  $B26F XOR (HL)      ;
  $B270 LD (DE),A     ;
- $B271 INC E         ;
- $B272 POP BC        ;
+ $B271 INC E         ; }
+ $B272 POP BC        ; {iteration 3/16
  $B273 LD A,(DE)     ;
  $B274 AND B         ;
  $B275 LD L,C        ;
  $B276 XOR (HL)      ;
  $B277 LD (DE),A     ;
- $B278 INC E         ;
- $B279 POP BC        ;
+ $B278 INC E         ; }
+ $B279 POP BC        ; {iteration 4/16
  $B27A LD A,(DE)     ;
  $B27B AND B         ;
  $B27C LD L,C        ;
  $B27D XOR (HL)      ;
  $B27E LD (DE),A     ;
- $B27F INC E         ;
- $B280 POP BC        ;
+ $B27F INC E         ; }
+ $B280 POP BC        ; {iteration 5/16
  $B281 LD A,(DE)     ;
  $B282 AND B         ;
  $B283 LD L,C        ;
  $B284 XOR (HL)      ;
  $B285 LD (DE),A     ;
- $B286 INC E         ;
- $B287 POP BC        ;
+ $B286 INC E         ; }
+ $B287 POP BC        ; {iteration 6/16
  $B288 LD A,(DE)     ;
  $B289 AND B         ;
  $B28A LD L,C        ;
  $B28B XOR (HL)      ;
  $B28C LD (DE),A     ;
- $B28D INC E         ;
- $B28E POP BC        ;
+ $B28D INC E         ; }
+ $B28E POP BC        ; {iteration 7/16
  $B28F LD A,(DE)     ;
  $B290 AND B         ;
  $B291 LD L,C        ;
  $B292 XOR (HL)      ;
  $B293 LD (DE),A     ;
- $B294 INC E         ;
- $B295 POP BC        ;
+ $B294 INC E         ; }
+ $B295 POP BC        ; {iteration 8/16
  $B296 LD A,(DE)     ;
  $B297 AND B         ;
  $B298 LD L,C        ;
  $B299 XOR (HL)      ;
  $B29A LD (DE),A     ;
- $B29B INC E         ;
- $B29C POP BC        ;
+ $B29B INC E         ; }
+ $B29C POP BC        ; {iteration 9/16
  $B29D LD A,(DE)     ;
  $B29E AND B         ;
  $B29F LD L,C        ;
  $B2A0 XOR (HL)      ;
  $B2A1 LD (DE),A     ;
- $B2A2 INC E         ;
- $B2A3 POP BC        ;
+ $B2A2 INC E         ; }
+ $B2A3 POP BC        ; {iteration 10/16
  $B2A4 LD A,(DE)     ;
  $B2A5 AND B         ;
  $B2A6 LD L,C        ;
  $B2A7 XOR (HL)      ;
  $B2A8 LD (DE),A     ;
- $B2A9 INC E         ;
- $B2AA POP BC        ;
+ $B2A9 INC E         ; }
+ $B2AA POP BC        ; {iteration 11/16
  $B2AB LD A,(DE)     ;
  $B2AC AND B         ;
  $B2AD LD L,C        ;
  $B2AE XOR (HL)      ;
  $B2AF LD (DE),A     ;
- $B2B0 INC E         ;
- $B2B1 POP BC        ;
+ $B2B0 INC E         ; }
+ $B2B1 POP BC        ; {iteration 12/16
  $B2B2 LD A,(DE)     ;
  $B2B3 AND B         ;
  $B2B4 LD L,C        ;
  $B2B5 XOR (HL)      ;
  $B2B6 LD (DE),A     ;
- $B2B7 INC E         ;
- $B2B8 POP BC        ;
+ $B2B7 INC E         ; }
+ $B2B8 POP BC        ; {iteration 13/16
  $B2B9 LD A,(DE)     ;
  $B2BA AND B         ;
  $B2BB LD L,C        ;
  $B2BC XOR (HL)      ;
  $B2BD LD (DE),A     ;
- $B2BE INC E         ;
- $B2BF POP BC        ;
+ $B2BE INC E         ; }
+ $B2BF POP BC        ; {iteration 14/16
  $B2C0 LD A,(DE)     ;
  $B2C1 AND B         ;
  $B2C2 LD L,C        ;
  $B2C3 XOR (HL)      ;
  $B2C4 LD (DE),A     ;
- $B2C5 INC E         ;
- $B2C6 POP BC        ;
+ $B2C5 INC E         ; }
+ $B2C6 POP BC        ; {iteration 15/16
  $B2C7 LD A,(DE)     ;
  $B2C8 AND B         ;
  $B2C9 LD L,C        ;
  $B2CA XOR (HL)      ;
  $B2CB LD (DE),A     ;
- $B2CC INC E         ;
- $B2CD POP BC        ;
- $B2CE LD A,(DE)     ;
+ $B2CC INC E         ; }
+ $B2CD POP BC        ; {iteration 16/16 (no final INC E, row-base decrement
+ $B2CE LD A,(DE)     ; follows)
  $B2CF AND B         ;
  $B2D0 LD L,C        ;
  $B2D1 XOR (HL)      ;
- $B2D2 LD (DE),A     ;
+ $B2D2 LD (DE),A     ; }
  $B2D3 DEC D         ; Next row column-base
  $B2D4 EXX           ;
  $B2D5 DJNZ $B261    ; Loop $9C1A rows
  $B2D7 JP $AFB8      ; => Formation script
 
 ; Draw masked sprite 16-row, mask-rev (index $0D): AND $9A00[B], XOR C, DEC E
+;
+; .
+;
+; .
+;
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B1BE but scanning right-to-left. Handler for index $0D of the #R$A000 jump
+; table; continues into the formation script (#R$AFB8).
 c$B2DA LD SP,($9C15) ; Source sprite data via SP (POP-fed)
  $B2DE LD DE,($9C13) ; Destination screen address ($9C13)
  $B2E2 LD A,($9C1B)  ;
@@ -7262,122 +7211,130 @@ c$B2DA LD SP,($9C15) ; Source sprite data via SP (POP-fed)
 *$B2F1 EXX           ;
  $B2F2 LD E,$00      ;
  $B2F4 POP BC        ; {Blit column (DEC E stride): mask via #R$9A00[B], merge
- $B2F5 LD A,(DE)     ; XOR C, store
+ $B2F5 LD A,(DE)     ; XOR C, store (iteration 1/16)
  $B2F6 LD L,B        ;
  $B2F7 AND (HL)      ;
  $B2F8 XOR C         ;
  $B2F9 LD (DE),A     ;
  $B2FA DEC E         ; }
- $B2FB POP BC        ;
+ $B2FB POP BC        ; {iteration 2/16
  $B2FC LD A,(DE)     ;
  $B2FD LD L,B        ;
  $B2FE AND (HL)      ;
  $B2FF XOR C         ;
  $B300 LD (DE),A     ;
- $B301 DEC E         ;
- $B302 POP BC        ;
+ $B301 DEC E         ; }
+ $B302 POP BC        ; {iteration 3/16
  $B303 LD A,(DE)     ;
  $B304 LD L,B        ;
  $B305 AND (HL)      ;
  $B306 XOR C         ;
  $B307 LD (DE),A     ;
- $B308 DEC E         ;
- $B309 POP BC        ;
+ $B308 DEC E         ; }
+ $B309 POP BC        ; {iteration 4/16
  $B30A LD A,(DE)     ;
  $B30B LD L,B        ;
  $B30C AND (HL)      ;
  $B30D XOR C         ;
  $B30E LD (DE),A     ;
- $B30F DEC E         ;
- $B310 POP BC        ;
+ $B30F DEC E         ; }
+ $B310 POP BC        ; {iteration 5/16
  $B311 LD A,(DE)     ;
  $B312 LD L,B        ;
  $B313 AND (HL)      ;
  $B314 XOR C         ;
  $B315 LD (DE),A     ;
- $B316 DEC E         ;
- $B317 POP BC        ;
+ $B316 DEC E         ; }
+ $B317 POP BC        ; {iteration 6/16
  $B318 LD A,(DE)     ;
  $B319 LD L,B        ;
  $B31A AND (HL)      ;
  $B31B XOR C         ;
  $B31C LD (DE),A     ;
- $B31D DEC E         ;
- $B31E POP BC        ;
+ $B31D DEC E         ; }
+ $B31E POP BC        ; {iteration 7/16
  $B31F LD A,(DE)     ;
  $B320 LD L,B        ;
  $B321 AND (HL)      ;
  $B322 XOR C         ;
  $B323 LD (DE),A     ;
- $B324 DEC E         ;
- $B325 POP BC        ;
+ $B324 DEC E         ; }
+ $B325 POP BC        ; {iteration 8/16
  $B326 LD A,(DE)     ;
  $B327 LD L,B        ;
  $B328 AND (HL)      ;
  $B329 XOR C         ;
  $B32A LD (DE),A     ;
- $B32B DEC E         ;
- $B32C POP BC        ;
+ $B32B DEC E         ; }
+ $B32C POP BC        ; {iteration 9/16
  $B32D LD A,(DE)     ;
  $B32E LD L,B        ;
  $B32F AND (HL)      ;
  $B330 XOR C         ;
  $B331 LD (DE),A     ;
- $B332 DEC E         ;
- $B333 POP BC        ;
+ $B332 DEC E         ; }
+ $B333 POP BC        ; {iteration 10/16
  $B334 LD A,(DE)     ;
  $B335 LD L,B        ;
  $B336 AND (HL)      ;
  $B337 XOR C         ;
  $B338 LD (DE),A     ;
- $B339 DEC E         ;
- $B33A POP BC        ;
+ $B339 DEC E         ; }
+ $B33A POP BC        ; {iteration 11/16
  $B33B LD A,(DE)     ;
  $B33C LD L,B        ;
  $B33D AND (HL)      ;
  $B33E XOR C         ;
  $B33F LD (DE),A     ;
- $B340 DEC E         ;
- $B341 POP BC        ;
+ $B340 DEC E         ; }
+ $B341 POP BC        ; {iteration 12/16
  $B342 LD A,(DE)     ;
  $B343 LD L,B        ;
  $B344 AND (HL)      ;
  $B345 XOR C         ;
  $B346 LD (DE),A     ;
- $B347 DEC E         ;
- $B348 POP BC        ;
+ $B347 DEC E         ; }
+ $B348 POP BC        ; {iteration 13/16
  $B349 LD A,(DE)     ;
  $B34A LD L,B        ;
  $B34B AND (HL)      ;
  $B34C XOR C         ;
  $B34D LD (DE),A     ;
- $B34E DEC E         ;
- $B34F POP BC        ;
+ $B34E DEC E         ; }
+ $B34F POP BC        ; {iteration 14/16
  $B350 LD A,(DE)     ;
  $B351 LD L,B        ;
  $B352 AND (HL)      ;
  $B353 XOR C         ;
  $B354 LD (DE),A     ;
- $B355 DEC E         ;
- $B356 POP BC        ;
+ $B355 DEC E         ; }
+ $B356 POP BC        ; {iteration 15/16
  $B357 LD A,(DE)     ;
  $B358 LD L,B        ;
  $B359 AND (HL)      ;
  $B35A XOR C         ;
  $B35B LD (DE),A     ;
- $B35C DEC E         ;
- $B35D POP BC        ;
- $B35E LD A,(DE)     ;
+ $B35C DEC E         ; }
+ $B35D POP BC        ; {iteration 16/16 (no final DEC E, row-base increment
+ $B35E LD A,(DE)     ; follows)
  $B35F LD L,B        ;
  $B360 AND (HL)      ;
  $B361 XOR C         ;
- $B362 LD (DE),A     ;
+ $B362 LD (DE),A     ; }
  $B363 INC D         ; Next row column-base
  $B364 EXX           ;
  $B365 DJNZ $B2F1    ; Loop rows
  $B367 JP $AFB8      ; => Formation script
 
 ; Draw masked sprite 16-row, pixel-rev (index $0F): AND B, XOR $9A00[C], DEC E
+;
+; .
+;
+; .
+;
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B24A but scanning right-to-left. Handler for index $0F of the #R$A000 jump
+; table; continues into the formation script (#R$AFB8).
 c$B36A LD A,($9C1A)  ;
  $B36D LD B,A        ;
  $B36E EXX           ;
@@ -7396,116 +7353,116 @@ c$B36A LD A,($9C1A)  ;
 *$B385 EXX           ;
  $B386 LD E,$00      ;
  $B388 POP BC        ; {Blit column: mask background (AND B), merge sprite (XOR
- $B389 LD A,(DE)     ; #R$9A00[C]), store
+ $B389 LD A,(DE)     ; #R$9A00[C]), store (iteration 1/16)
  $B38A AND B         ;
  $B38B LD L,C        ;
  $B38C XOR (HL)      ;
  $B38D LD (DE),A     ;
  $B38E DEC E         ; }
- $B38F POP BC        ;
+ $B38F POP BC        ; {iteration 2/16
  $B390 LD A,(DE)     ;
  $B391 AND B         ;
  $B392 LD L,C        ;
  $B393 XOR (HL)      ;
  $B394 LD (DE),A     ;
- $B395 DEC E         ;
- $B396 POP BC        ;
+ $B395 DEC E         ; }
+ $B396 POP BC        ; {iteration 3/16
  $B397 LD A,(DE)     ;
  $B398 AND B         ;
  $B399 LD L,C        ;
  $B39A XOR (HL)      ;
  $B39B LD (DE),A     ;
- $B39C DEC E         ;
- $B39D POP BC        ;
+ $B39C DEC E         ; }
+ $B39D POP BC        ; {iteration 4/16
  $B39E LD A,(DE)     ;
  $B39F AND B         ;
  $B3A0 LD L,C        ;
  $B3A1 XOR (HL)      ;
  $B3A2 LD (DE),A     ;
- $B3A3 DEC E         ;
- $B3A4 POP BC        ;
+ $B3A3 DEC E         ; }
+ $B3A4 POP BC        ; {iteration 5/16
  $B3A5 LD A,(DE)     ;
  $B3A6 AND B         ;
  $B3A7 LD L,C        ;
  $B3A8 XOR (HL)      ;
  $B3A9 LD (DE),A     ;
- $B3AA DEC E         ;
- $B3AB POP BC        ;
+ $B3AA DEC E         ; }
+ $B3AB POP BC        ; {iteration 6/16
  $B3AC LD A,(DE)     ;
  $B3AD AND B         ;
  $B3AE LD L,C        ;
  $B3AF XOR (HL)      ;
  $B3B0 LD (DE),A     ;
- $B3B1 DEC E         ;
- $B3B2 POP BC        ;
+ $B3B1 DEC E         ; }
+ $B3B2 POP BC        ; {iteration 7/16
  $B3B3 LD A,(DE)     ;
  $B3B4 AND B         ;
  $B3B5 LD L,C        ;
  $B3B6 XOR (HL)      ;
  $B3B7 LD (DE),A     ;
- $B3B8 DEC E         ;
- $B3B9 POP BC        ;
+ $B3B8 DEC E         ; }
+ $B3B9 POP BC        ; {iteration 8/16
  $B3BA LD A,(DE)     ;
  $B3BB AND B         ;
  $B3BC LD L,C        ;
  $B3BD XOR (HL)      ;
  $B3BE LD (DE),A     ;
- $B3BF DEC E         ;
- $B3C0 POP BC        ;
+ $B3BF DEC E         ; }
+ $B3C0 POP BC        ; {iteration 9/16
  $B3C1 LD A,(DE)     ;
  $B3C2 AND B         ;
  $B3C3 LD L,C        ;
  $B3C4 XOR (HL)      ;
  $B3C5 LD (DE),A     ;
- $B3C6 DEC E         ;
- $B3C7 POP BC        ;
+ $B3C6 DEC E         ; }
+ $B3C7 POP BC        ; {iteration 10/16
  $B3C8 LD A,(DE)     ;
  $B3C9 AND B         ;
  $B3CA LD L,C        ;
  $B3CB XOR (HL)      ;
  $B3CC LD (DE),A     ;
- $B3CD DEC E         ;
- $B3CE POP BC        ;
+ $B3CD DEC E         ; }
+ $B3CE POP BC        ; {iteration 11/16
  $B3CF LD A,(DE)     ;
  $B3D0 AND B         ;
  $B3D1 LD L,C        ;
  $B3D2 XOR (HL)      ;
  $B3D3 LD (DE),A     ;
- $B3D4 DEC E         ;
- $B3D5 POP BC        ;
+ $B3D4 DEC E         ; }
+ $B3D5 POP BC        ; {iteration 12/16
  $B3D6 LD A,(DE)     ;
  $B3D7 AND B         ;
  $B3D8 LD L,C        ;
  $B3D9 XOR (HL)      ;
  $B3DA LD (DE),A     ;
- $B3DB DEC E         ;
- $B3DC POP BC        ;
+ $B3DB DEC E         ; }
+ $B3DC POP BC        ; {iteration 13/16
  $B3DD LD A,(DE)     ;
  $B3DE AND B         ;
  $B3DF LD L,C        ;
  $B3E0 XOR (HL)      ;
  $B3E1 LD (DE),A     ;
- $B3E2 DEC E         ;
- $B3E3 POP BC        ;
+ $B3E2 DEC E         ; }
+ $B3E3 POP BC        ; {iteration 14/16
  $B3E4 LD A,(DE)     ;
  $B3E5 AND B         ;
  $B3E6 LD L,C        ;
  $B3E7 XOR (HL)      ;
  $B3E8 LD (DE),A     ;
- $B3E9 DEC E         ;
- $B3EA POP BC        ;
+ $B3E9 DEC E         ; }
+ $B3EA POP BC        ; {iteration 15/16
  $B3EB LD A,(DE)     ;
  $B3EC AND B         ;
  $B3ED LD L,C        ;
  $B3EE XOR (HL)      ;
  $B3EF LD (DE),A     ;
- $B3F0 DEC E         ;
- $B3F1 POP BC        ;
- $B3F2 LD A,(DE)     ;
+ $B3F0 DEC E         ; }
+ $B3F1 POP BC        ; {iteration 16/16 (no final DEC E, row-base decrement
+ $B3F2 LD A,(DE)     ; follows)
  $B3F3 AND B         ;
  $B3F4 LD L,C        ;
  $B3F5 XOR (HL)      ;
- $B3F6 LD (DE),A     ;
+ $B3F6 LD (DE),A     ; }
  $B3F7 DEC D         ; Next row column-base
  $B3F8 EXX           ;
  $B3F9 DJNZ $B385    ; Loop rows
@@ -7518,6 +7475,10 @@ c$B36A LD A,($9C1A)  ;
 ; .
 ;
 ; Handler for index $08 of the #R$A000 jump table (see #R$B7F6).
+; .
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B1BE but 8 rows tall. Handler for index $08 of the #R$A000 jump table;
+; continues into the formation script (#R$AFB8).
 c$B3FE LD SP,($9C15) ; Source tile data via SP (POP-fed)
  $B402 LD DE,($9C13) ; Destination screen address ($9C13)
  $B406 LD H,$9A      ; H=$9A: point at the #R$9A00 lookup table
@@ -7529,60 +7490,60 @@ c$B3FE LD SP,($9C15) ; Source tile data via SP (POP-fed)
 *$B411 EXX           ;
  $B412 LD E,$00      ;
  $B414 POP BC        ; {Blit column: mask via #R$9A00[B], merge XOR C, store
- $B415 LD A,(DE)     ;
+ $B415 LD A,(DE)     ; (iteration 1/8)
  $B416 LD L,B        ;
  $B417 AND (HL)      ;
  $B418 XOR C         ;
  $B419 LD (DE),A     ;
  $B41A INC E         ; }
- $B41B POP BC        ;
+ $B41B POP BC        ; {iteration 2/8
  $B41C LD A,(DE)     ;
  $B41D LD L,B        ;
  $B41E AND (HL)      ;
  $B41F XOR C         ;
  $B420 LD (DE),A     ;
- $B421 INC E         ;
- $B422 POP BC        ;
+ $B421 INC E         ; }
+ $B422 POP BC        ; {iteration 3/8
  $B423 LD A,(DE)     ;
  $B424 LD L,B        ;
  $B425 AND (HL)      ;
  $B426 XOR C         ;
  $B427 LD (DE),A     ;
- $B428 INC E         ;
- $B429 POP BC        ;
+ $B428 INC E         ; }
+ $B429 POP BC        ; {iteration 4/8
  $B42A LD A,(DE)     ;
  $B42B LD L,B        ;
  $B42C AND (HL)      ;
  $B42D XOR C         ;
  $B42E LD (DE),A     ;
- $B42F INC E         ;
- $B430 POP BC        ;
+ $B42F INC E         ; }
+ $B430 POP BC        ; {iteration 5/8
  $B431 LD A,(DE)     ;
  $B432 LD L,B        ;
  $B433 AND (HL)      ;
  $B434 XOR C         ;
  $B435 LD (DE),A     ;
- $B436 INC E         ;
- $B437 POP BC        ;
+ $B436 INC E         ; }
+ $B437 POP BC        ; {iteration 6/8
  $B438 LD A,(DE)     ;
  $B439 LD L,B        ;
  $B43A AND (HL)      ;
  $B43B XOR C         ;
  $B43C LD (DE),A     ;
- $B43D INC E         ;
- $B43E POP BC        ;
+ $B43D INC E         ; }
+ $B43E POP BC        ; {iteration 7/8
  $B43F LD A,(DE)     ;
  $B440 LD L,B        ;
  $B441 AND (HL)      ;
  $B442 XOR C         ;
  $B443 LD (DE),A     ;
- $B444 INC E         ;
- $B445 POP BC        ;
- $B446 LD A,(DE)     ;
+ $B444 INC E         ; }
+ $B445 POP BC        ; {iteration 8/8 (no final INC E, row-base increment
+ $B446 LD A,(DE)     ; follows)
  $B447 LD L,B        ;
  $B448 AND (HL)      ;
  $B449 XOR C         ;
- $B44A LD (DE),A     ;
+ $B44A LD (DE),A     ; }
  $B44B INC D         ; Next row column-base
  $B44C EXX           ;
  $B44D DJNZ $B411    ; Loop $9C1A rows
@@ -7595,6 +7556,10 @@ c$B3FE LD SP,($9C15) ; Source tile data via SP (POP-fed)
 ; .
 ;
 ; Handler for index $0A of the #R$A000 jump table (see #R$B7F6).
+; .
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B24A but 8 rows tall. Handler for index $0A of the #R$A000 jump table;
+; continues into the formation script (#R$AFB8).
 c$B452 LD A,($9C1A)  ;
  $B455 LD B,A        ;
  $B456 EXX           ;
@@ -7610,60 +7575,60 @@ c$B452 LD A,($9C1A)  ;
 *$B469 EXX           ;
  $B46A LD E,$00      ;
  $B46C POP BC        ; {Blit column: mask background (AND B), merge sprite (XOR
- $B46D LD A,(DE)     ; #R$9A00[C]), store
+ $B46D LD A,(DE)     ; #R$9A00[C]), store (iteration 1/8)
  $B46E AND B         ;
  $B46F LD L,C        ;
  $B470 XOR (HL)      ;
  $B471 LD (DE),A     ;
  $B472 INC E         ; }
- $B473 POP BC        ;
+ $B473 POP BC        ; {iteration 2/8
  $B474 LD A,(DE)     ;
  $B475 AND B         ;
  $B476 LD L,C        ;
  $B477 XOR (HL)      ;
  $B478 LD (DE),A     ;
- $B479 INC E         ;
- $B47A POP BC        ;
+ $B479 INC E         ; }
+ $B47A POP BC        ; {iteration 3/8
  $B47B LD A,(DE)     ;
  $B47C AND B         ;
  $B47D LD L,C        ;
  $B47E XOR (HL)      ;
  $B47F LD (DE),A     ;
- $B480 INC E         ;
- $B481 POP BC        ;
+ $B480 INC E         ; }
+ $B481 POP BC        ; {iteration 4/8
  $B482 LD A,(DE)     ;
  $B483 AND B         ;
  $B484 LD L,C        ;
  $B485 XOR (HL)      ;
  $B486 LD (DE),A     ;
- $B487 INC E         ;
- $B488 POP BC        ;
+ $B487 INC E         ; }
+ $B488 POP BC        ; {iteration 5/8
  $B489 LD A,(DE)     ;
  $B48A AND B         ;
  $B48B LD L,C        ;
  $B48C XOR (HL)      ;
  $B48D LD (DE),A     ;
- $B48E INC E         ;
- $B48F POP BC        ;
+ $B48E INC E         ; }
+ $B48F POP BC        ; {iteration 6/8
  $B490 LD A,(DE)     ;
  $B491 AND B         ;
  $B492 LD L,C        ;
  $B493 XOR (HL)      ;
  $B494 LD (DE),A     ;
- $B495 INC E         ;
- $B496 POP BC        ;
+ $B495 INC E         ; }
+ $B496 POP BC        ; {iteration 7/8
  $B497 LD A,(DE)     ;
  $B498 AND B         ;
  $B499 LD L,C        ;
  $B49A XOR (HL)      ;
  $B49B LD (DE),A     ;
- $B49C INC E         ;
- $B49D POP BC        ;
- $B49E LD A,(DE)     ;
+ $B49C INC E         ; }
+ $B49D POP BC        ; {iteration 8/8 (no final INC E, row-base decrement
+ $B49E LD A,(DE)     ; follows)
  $B49F AND B         ;
  $B4A0 LD L,C        ;
  $B4A1 XOR (HL)      ;
- $B4A2 LD (DE),A     ;
+ $B4A2 LD (DE),A     ; }
  $B4A3 DEC D         ; Next row column-base
  $B4A4 EXX           ;
  $B4A5 DJNZ $B469    ; Loop $9C1A rows
@@ -7676,6 +7641,10 @@ c$B452 LD A,($9C1A)  ;
 ; .
 ;
 ; Handler for index $0C of the #R$A000 jump table (see #R$B7F6).
+; .
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B1BE but 8 rows tall and scanning right-to-left. Handler for index $0C of
+; the #R$A000 jump table; continues into the formation script (#R$AFB8).
 c$B4AA LD SP,($9C15) ; Source tile data via SP (POP-fed)
  $B4AE LD DE,($9C13) ; Destination screen address ($9C13)
  $B4B2 LD A,($9C1B)  ; Add Y offset ($9C1B) to dest low byte
@@ -7689,60 +7658,60 @@ c$B4AA LD SP,($9C15) ; Source tile data via SP (POP-fed)
 *$B4C1 EXX           ;
  $B4C2 LD E,$00      ;
  $B4C4 POP BC        ; {Blit column: mask via #R$9A00[B], merge XOR C, store
- $B4C5 LD A,(DE)     ;
+ $B4C5 LD A,(DE)     ; (iteration 1/8)
  $B4C6 LD L,B        ;
  $B4C7 AND (HL)      ;
  $B4C8 XOR C         ;
  $B4C9 LD (DE),A     ;
  $B4CA DEC E         ; }
- $B4CB POP BC        ;
+ $B4CB POP BC        ; {iteration 2/8
  $B4CC LD A,(DE)     ;
  $B4CD LD L,B        ;
  $B4CE AND (HL)      ;
  $B4CF XOR C         ;
  $B4D0 LD (DE),A     ;
- $B4D1 DEC E         ;
- $B4D2 POP BC        ;
+ $B4D1 DEC E         ; }
+ $B4D2 POP BC        ; {iteration 3/8
  $B4D3 LD A,(DE)     ;
  $B4D4 LD L,B        ;
  $B4D5 AND (HL)      ;
  $B4D6 XOR C         ;
  $B4D7 LD (DE),A     ;
- $B4D8 DEC E         ;
- $B4D9 POP BC        ;
+ $B4D8 DEC E         ; }
+ $B4D9 POP BC        ; {iteration 4/8
  $B4DA LD A,(DE)     ;
  $B4DB LD L,B        ;
  $B4DC AND (HL)      ;
  $B4DD XOR C         ;
  $B4DE LD (DE),A     ;
- $B4DF DEC E         ;
- $B4E0 POP BC        ;
+ $B4DF DEC E         ; }
+ $B4E0 POP BC        ; {iteration 5/8
  $B4E1 LD A,(DE)     ;
  $B4E2 LD L,B        ;
  $B4E3 AND (HL)      ;
  $B4E4 XOR C         ;
  $B4E5 LD (DE),A     ;
- $B4E6 DEC E         ;
- $B4E7 POP BC        ;
+ $B4E6 DEC E         ; }
+ $B4E7 POP BC        ; {iteration 6/8
  $B4E8 LD A,(DE)     ;
  $B4E9 LD L,B        ;
  $B4EA AND (HL)      ;
  $B4EB XOR C         ;
  $B4EC LD (DE),A     ;
- $B4ED DEC E         ;
- $B4EE POP BC        ;
+ $B4ED DEC E         ; }
+ $B4EE POP BC        ; {iteration 7/8
  $B4EF LD A,(DE)     ;
  $B4F0 LD L,B        ;
  $B4F1 AND (HL)      ;
  $B4F2 XOR C         ;
  $B4F3 LD (DE),A     ;
- $B4F4 DEC E         ;
- $B4F5 POP BC        ;
- $B4F6 LD A,(DE)     ;
+ $B4F4 DEC E         ; }
+ $B4F5 POP BC        ; {iteration 8/8 (no final DEC E, row-base increment
+ $B4F6 LD A,(DE)     ; follows)
  $B4F7 LD L,B        ;
  $B4F8 AND (HL)      ;
  $B4F9 XOR C         ;
- $B4FA LD (DE),A     ;
+ $B4FA LD (DE),A     ; }
  $B4FB INC D         ; Next row column-base
  $B4FC EXX           ;
  $B4FD DJNZ $B4C1    ; Loop $9C1A rows
@@ -7755,6 +7724,10 @@ c$B4AA LD SP,($9C15) ; Source tile data via SP (POP-fed)
 ; .
 ;
 ; Handler for index $0E of the #R$A000 jump table (see #R$B7F6).
+; .
+; Draws a masked sprite column by column onto the screen, same technique as
+; #R$B24A but 8 rows tall and scanning right-to-left. Handler for index $0E of
+; the #R$A000 jump table; continues into the formation script (#R$AFB8).
 c$B502 LD A,($9C1A)  ;
  $B505 LD B,A        ;
  $B506 EXX           ;
@@ -7772,60 +7745,60 @@ c$B502 LD A,($9C1A)  ;
 *$B51D EXX           ;
  $B51E LD E,$00      ;
  $B520 POP BC        ; {Blit column: mask background (AND B), merge sprite (XOR
- $B521 LD A,(DE)     ; #R$9A00[C]), store
+ $B521 LD A,(DE)     ; #R$9A00[C]), store (iteration 1/8)
  $B522 AND B         ;
  $B523 LD L,C        ;
  $B524 XOR (HL)      ;
  $B525 LD (DE),A     ;
  $B526 DEC E         ; }
- $B527 POP BC        ;
+ $B527 POP BC        ; {iteration 2/8
  $B528 LD A,(DE)     ;
  $B529 AND B         ;
  $B52A LD L,C        ;
  $B52B XOR (HL)      ;
  $B52C LD (DE),A     ;
- $B52D DEC E         ;
- $B52E POP BC        ;
+ $B52D DEC E         ; }
+ $B52E POP BC        ; {iteration 3/8
  $B52F LD A,(DE)     ;
  $B530 AND B         ;
  $B531 LD L,C        ;
  $B532 XOR (HL)      ;
  $B533 LD (DE),A     ;
- $B534 DEC E         ;
- $B535 POP BC        ;
+ $B534 DEC E         ; }
+ $B535 POP BC        ; {iteration 4/8
  $B536 LD A,(DE)     ;
  $B537 AND B         ;
  $B538 LD L,C        ;
  $B539 XOR (HL)      ;
  $B53A LD (DE),A     ;
- $B53B DEC E         ;
- $B53C POP BC        ;
+ $B53B DEC E         ; }
+ $B53C POP BC        ; {iteration 5/8
  $B53D LD A,(DE)     ;
  $B53E AND B         ;
  $B53F LD L,C        ;
  $B540 XOR (HL)      ;
  $B541 LD (DE),A     ;
- $B542 DEC E         ;
- $B543 POP BC        ;
+ $B542 DEC E         ; }
+ $B543 POP BC        ; {iteration 6/8
  $B544 LD A,(DE)     ;
  $B545 AND B         ;
  $B546 LD L,C        ;
  $B547 XOR (HL)      ;
  $B548 LD (DE),A     ;
- $B549 DEC E         ;
- $B54A POP BC        ;
+ $B549 DEC E         ; }
+ $B54A POP BC        ; {iteration 7/8
  $B54B LD A,(DE)     ;
  $B54C AND B         ;
  $B54D LD L,C        ;
  $B54E XOR (HL)      ;
  $B54F LD (DE),A     ;
- $B550 DEC E         ;
- $B551 POP BC        ;
- $B552 LD A,(DE)     ;
+ $B550 DEC E         ; }
+ $B551 POP BC        ; {iteration 8/8 (no final DEC E, row-base decrement
+ $B552 LD A,(DE)     ; follows)
  $B553 AND B         ;
  $B554 LD L,C        ;
  $B555 XOR (HL)      ;
- $B556 LD (DE),A     ;
+ $B556 LD (DE),A     ; }
  $B557 DEC D         ; Next row column-base
  $B558 EXX           ;
  $B559 DJNZ $B51D    ; Loop $9C1A rows
@@ -7837,13 +7810,10 @@ c$B502 LD A,($9C1A)  ;
 ;
 ; .
 ;
-; Handler for index $11 of the #R$A000 jump table (see #R$B7F6). Copies
-; vertical 8-byte-wide strips of screen memory using an SP/EX (SP),HL trick to
-; alternate source and destination pointers: each row LDIs 8 bytes then
-; advances by $0024. Column source at $9C0F is range-checked against $C8 to
-; pick which of three copy loops runs (#R$B577 plain, #R$B599 with INC H,
-; #R$B5CE with DEC H) so the copy steps correctly across the ZX screen's
-; non-linear thirds. Continues into the formation script (#R$AFB8).
+; Handler for index $11 of the #R$A000 jump table. Copies vertical 8-byte-wide
+; screen strips, picking one of three copy loops so the blit steps correctly
+; across the ZX screen's non-linear thirds. Continues into the formation script
+; (#R$AFB8).
 c$B55E LD HL,($9C11) ;
  $B561 LD BC,($9C19) ; {Row count from $9C19 (+1)
  $B565 INC C         ; }
@@ -7878,82 +7848,82 @@ c$B55E LD HL,($9C11) ;
  $B593 JP $AFB8      ; => Formation script
 *$B596 DJNZ $B5CE    ;
  $B598 LD B,C        ;
-*$B599 LD SP,HL      ;
- $B59A EXX           ;
+*$B599 LD SP,HL      ; {Point SP at this strip, swap source/dest pointers via
+ $B59A EXX           ; EX (SP),HL
  $B59B LD L,A        ;
  $B59C EX (SP),HL    ;
- $B59D POP DE        ;
- $B59E LDI           ;
+ $B59D POP DE        ; }
+ $B59E LDI           ; {Copy 8 bytes of this strip row
  $B5A0 LDI           ;
  $B5A2 LDI           ;
  $B5A4 LDI           ;
  $B5A6 LDI           ;
  $B5A8 LDI           ;
  $B5AA LDI           ;
- $B5AC LDI           ;
- $B5AE EX DE,HL      ;
- $B5AF INC H         ;
+ $B5AC LDI           ; }
+ $B5AE EX DE,HL      ; {Advance to the next screen third (INC H), point at the
+ $B5AF INC H         ; next strip
  $B5B0 LD L,A        ;
  $B5B1 EX (SP),HL    ;
- $B5B2 POP DE        ;
- $B5B3 LDI           ;
+ $B5B2 POP DE        ; }
+ $B5B3 LDI           ; {Copy 8 bytes of this strip row
  $B5B5 LDI           ;
  $B5B7 LDI           ;
  $B5B9 LDI           ;
  $B5BB LDI           ;
  $B5BD LDI           ;
  $B5BF LDI           ;
- $B5C1 LDI           ;
- $B5C3 EX DE,HL      ;
- $B5C4 DEC H         ;
+ $B5C1 LDI           ; }
+ $B5C3 EX DE,HL      ; {Mirror back (DEC H) after crossing the third
+ $B5C4 DEC H         ; }
  $B5C5 EXX           ;
  $B5C6 ADD A,$08     ;
  $B5C8 ADD HL,DE     ;
  $B5C9 DJNZ $B599    ;
  $B5CB JP $AFB8      ; => Formation script
-*$B5CE LD B,C        ;
-*$B5CF LD SP,HL      ;
- $B5D0 EXX           ;
+*$B5CE LD B,C        ; B = row count
+*$B5CF LD SP,HL      ; {Point SP at this strip, swap source/dest pointers via
+ $B5D0 EXX           ; EX (SP),HL
  $B5D1 LD L,A        ;
  $B5D2 EX (SP),HL    ;
- $B5D3 POP DE        ;
- $B5D4 LDI           ;
+ $B5D3 POP DE        ; }
+ $B5D4 LDI           ; {Copy 8 bytes of this strip row
  $B5D6 LDI           ;
  $B5D8 LDI           ;
  $B5DA LDI           ;
  $B5DC LDI           ;
  $B5DE LDI           ;
  $B5E0 LDI           ;
- $B5E2 LDI           ;
- $B5E4 EX DE,HL      ;
- $B5E5 INC H         ;
+ $B5E2 LDI           ; }
+ $B5E4 EX DE,HL      ; {Advance to the next screen third (INC H), point at the
+ $B5E5 INC H         ; next strip
  $B5E6 LD L,A        ;
  $B5E7 EX (SP),HL    ;
- $B5E8 POP DE        ;
- $B5E9 LDI           ;
+ $B5E8 POP DE        ; }
+ $B5E9 LDI           ; {Copy 8 bytes of this strip row
  $B5EB LDI           ;
  $B5ED LDI           ;
  $B5EF LDI           ;
  $B5F1 LDI           ;
  $B5F3 LDI           ;
  $B5F5 LDI           ;
- $B5F7 LDI           ;
- $B5F9 EX DE,HL      ;
- $B5FA INC H         ;
+ $B5F7 LDI           ; }
+ $B5F9 EX DE,HL      ; {Advance to the next screen third (INC H), point at the
+ $B5FA INC H         ; next strip
  $B5FB LD L,A        ;
  $B5FC EX (SP),HL    ;
- $B5FD POP DE        ;
- $B5FE LDI           ;
+ $B5FD POP DE        ; }
+ $B5FE LDI           ; {Copy 8 bytes of this strip row
  $B600 LDI           ;
  $B602 LDI           ;
  $B604 LDI           ;
  $B606 LDI           ;
  $B608 LDI           ;
  $B60A LDI           ;
- $B60C LDI           ;
- $B60E EX DE,HL      ;
+ $B60C LDI           ; }
+ $B60E EX DE,HL      ; {Mirror back (2x DEC H) after crossing both thirds
  $B60F DEC H         ;
- $B610 DEC H         ;
+ $B610 DEC H         ; }
  $B611 EXX           ;
  $B612 ADD A,$08     ;
  $B614 ADD HL,DE     ;
@@ -7966,16 +7936,14 @@ c$B55E LD HL,($9C11) ;
 ;
 ; .
 ;
-; Handler for index $12 of the #R$A000 jump table (see #R$B7F6). Like #R$B55E,
-; copies vertical 8-byte-wide screen strips via the SP/EX trick with three
-; screen-third variants, but tests each strip's high byte (AND $7E) and skips
-; the copy when zero - a transparent-strip blit. Continues into the formation
-; script (#R$AFB8).
+; Handler for index $12 of the #R$A000 jump table. Same vertical strip copy as
+; #R$B55E, but skips strips that are entirely blank - a transparent-strip blit.
+; Continues into the formation script (#R$AFB8).
 c$B61A LD HL,($9C11)  ;
  $B61D LD BC,($9C19)  ; {Row count from $9C19 (+1)
  $B621 INC C          ; }
  $B622 EXX            ;
- $B623 LD DE,($9C0F)  ;
+ $B623 LD DE,($9C0F)  ; Column source ($9C0F)
  $B627 LD A,E         ;
  $B628 LD B,E         ;
  $B629 LD C,$FF       ;
@@ -8009,13 +7977,13 @@ c$B61A LD HL,($9C11)  ;
  $B656 EXX            ;
  $B657 ADD HL,DE      ; Advance dest row (+$24)
  $B658 DJNZ $B637     ; Loop rows
- $B65A LD A,C         ;
+ $B65A LD A,C         ; {Check whether the last strip was the rightmost column
  $B65B ADD A,A        ;
  $B65C ADD A,A        ;
  $B65D ADD A,A        ;
  $B65E EXX            ;
  $B65F ADD A,C        ;
- $B660 INC A          ;
+ $B660 INC A          ; }
  $B661 JP Z,$AFB8     ; => Formation script
  $B664 SET 0,(IY+$04) ; Set redraw flag (IY+$04 bit 0)
  $B668 JP $AFB8       ; => Formation script
@@ -8160,11 +8128,8 @@ c$B72D JP $AFB8      ; => Formation script
 ;
 ; .
 ;
-; Builds the 19-slot object free-list at $9D40 (linked via IY+0/+1, head at
-; $9D1C), inits 4 fixed slots at $9D1E (stride 6, "active"+"alive" flags set),
-; clears the 15-byte formation-slot bitmap at $9B4F, sets four per-group enemy
-; counts ($9D19=6/$9D18=8/$9D1A=4/$9D1B=1, totalling 19 = pool size), then
-; allocates the first object via #R$C559. Called by $A696.
+; Sets up the object pool and enemy-group counters for a new wave, then spawns
+; the first object.
 c$B730 LD HL,$9D40     ;
  $B733 LD ($9D1C),HL   ; Free-list head ($9D1C) = first pool slot
  $B736 LD IY,$9D40     ;
@@ -8215,13 +8180,10 @@ c$B730 LD HL,$9D40     ;
 ;
 ; IY object struct base
 ;
-; Clears/masks a bit in a table at $9B50 (indexed by IY+13, a formation-slot
-; id) then decrements an adjacent per-formation counter; when that counter
-; reaches zero, marks the slot done (IY+13=$FF) and either calls #R$C648 or
-; #R$C5D2 (start explosion) depending on the $9C3F flag, then decrements a
-; group counter at $9D18. Entry at #R$B79F uses C=0 (set bit), entry at #R$B7A3
-; uses C=$FF (clear bit) - exact meaning of the $9B50 bitmap not yet confirmed.
-; The tail from #R$B7DC onward (an SP=IY stack trick) is not yet analyzed.
+; Marks an object's formation slot done. Once its whole group has emptied,
+; triggers the group's completion effect (explosion or score-award) and
+; decrements the group counter. The tail from #R$B7DC onward (an SP=IY stack
+; trick) is not yet analyzed.
 c$B79F LD C,$00        ; {entry: normal call, C=0
  $B7A1 JR $B7A6        ; }
 ; This entry point is used by the routine at #R$C051.
@@ -8291,6 +8253,9 @@ c$B7F6 ADD A,A       ;
 ; O:A pseudo-random byte
 ;   BC,DE,HL preserved (saved into self-modified operands at entry, restored
 ; .          before RET)
+;
+; Advances an 8-byte shift-register state and returns a new pseudo-random byte,
+; without disturbing the caller's registers.
 @label=random
 c$B7FE LD ($B842),HL ; Self-modify: save caller's HL (restored at $B841)
  $B801 LD ($B83F),DE ; Self-modify: save caller's DE (restored at $B83E)
@@ -8344,13 +8309,9 @@ c$B7FE LD ($B842),HL ; Self-modify: save caller's HL (restored at $B841)
 ; IX object position (shooter)
 ; IY target position (e.g. player)
 ;
-; Rounds IX's fixed-point X/Y position (lo/hi at IX+$0B/$0C and IX+$0D/$0E) to
-; the nearest integer (RLA into the low byte's top bit, then ADC A,$00 on the
-; high byte), subtracts IY's integer column/row (IY+$0C/$0E) to get delta X (C)
-; and delta Y (B), takes their absolute values while recording quadrant bits in
-; D, then refines to an octant and runs a linear-search division
-; ($B889-#R$B89C) to approximate the angle - a coarse atan2 feeding
-; aiming/movement code such as #R$C43C.
+; Computes the coarse angle (0-63) from the shooter to its target, for use by
+; aiming/movement code such as #R$C43C. A rough atan2 built from position
+; deltas and a linear-search division, not a lookup table.
 @label=calc_angle
 c$B845 LD A,(IX+$0B) ;
  $B848 RLA           ;
@@ -8467,19 +8428,22 @@ c$B8A2 LD C,B        ; {save speed (B->C), point HL at sine table $9B5F
 ; Used by the routine at #R$C5D2.
 ;
 ; IY object struct base (writes position fields IY+$0B/$0C/$0D)
+;
+; Sets an object's on-screen position, keeping its column within the playable
+; screen area.
 @label=set_object_position
-c$B8DB LD A,($9C01)    ;
+c$B8DB LD A,($9C01)    ; {Snap Y to the top ($9C01), reset X to the left edge
  $B8DE LD (IY+$0D),A   ;
- $B8E1 LD (IY+$0B),$00 ;
- $B8E5 LD A,(IY+$0C)   ;
- $B8E8 CP $08          ;
- $B8EA JR NC,$B8F1     ;
- $B8EC LD (IY+$0C),$08 ;
- $B8F0 RET             ;
-*$B8F1 CP $19          ;
- $B8F3 RET C           ;
- $B8F4 LD (IY+$0C),$18 ;
- $B8F8 RET             ;
+ $B8E1 LD (IY+$0B),$00 ; }
+ $B8E5 LD A,(IY+$0C)   ; {Read the object's column
+ $B8E8 CP $08          ; }
+ $B8EA JR NC,$B8F1     ; Skip left-edge clamp if column is already in range
+ $B8EC LD (IY+$0C),$08 ; {Clamp column at the left edge (8)
+ $B8F0 RET             ; }
+*$B8F1 CP $19          ; {Skip right-edge clamp if column is already in range
+ $B8F3 RET C           ; }
+ $B8F4 LD (IY+$0C),$18 ; {Clamp column at the right edge ($18)
+ $B8F8 RET             ; }
 
 ; Movement-pattern script interpreter
 ;
@@ -8487,28 +8451,25 @@ c$B8DB LD A,($9C01)    ;
 ;
 ; IY object struct base
 ;
-; Counts down a per-object frame-delay timer (IY+18); once it expires, reads
-; the next byte of a movement script (pointer at IY+15/16) into IY+17, masks it
-; to 0-7, and dispatches that step through the $A076 sub-table (indices
-; $3B-$48) via #R$B7F6. If a dispatched step signals carry, it loops back
-; immediately to process the next script byte in the same frame; otherwise it
-; returns and waits for the timer to expire again.
+; Runs an object's movement-pattern script one step at a time, waiting out a
+; per-object timer between steps. Continues into #R$B920 to decode the next
+; script byte once the timer expires.
 @label=movement_script_run
-c$B8F9 DEC (IY+$18)    ;
- $B8FC JR Z,$B914      ;
+c$B8F9 DEC (IY+$18)    ; {Count down the frame-delay timer (IY+$18); branch
+ $B8FC JR Z,$B914      ; when it expires
  $B8FE JP P,$B904      ;
- $B901 INC (IY+$18)    ;
-*$B904 LD A,(IY+$17)   ;
+ $B901 INC (IY+$18)    ; }
+*$B904 LD A,(IY+$17)   ; Dispatched step's script byte (IY+$17)
 ; This entry point is used by the routine at #R$B920.
-*$B907 LD C,A          ;
+*$B907 LD C,A          ; {Mask to 0-7, dispatch via the #R$A076 sub-table
  $B908 AND $07         ;
- $B90A LD HL,$A076     ;
+ $B90A LD HL,$A076     ; }
  $B90D CALL $B7F6      ; Jump-table dispatcher
  $B910 RET NC          ;
  $B911 JP $B8F9        ; => Movement-pattern script interpreter
-*$B914 LD (IY+$18),$01 ;
- $B918 LD L,(IY+$15)   ;
- $B91B LD H,(IY+$16)   ;
+*$B914 LD (IY+$18),$01 ; {Timer expired: default to 1 frame, load the script
+ $B918 LD L,(IY+$15)   ; pointer
+ $B91B LD H,(IY+$16)   ; }
 ; This entry point is used by the routine at #R$B920.
 *$B91E LD A,(HL)       ;
  $B91F INC HL          ;
@@ -8517,21 +8478,18 @@ c$B8F9 DEC (IY+$18)    ;
 ;
 ; .
 ;
-; .
+; A script byte to decode
 ;
-; Continues #R$B8F9/#R$B920's script reader: if the script byte's high bit is
-; set, it's a wait command - the low 7 bits give the frame count directly,
-; except value 1 which means "random wait" (1-32 frames via #R$B7FE). Result is
-; stored into the frame-delay timer at IY+18. If the high bit is clear, the
-; byte is instead a movement-step index, handled by the fallthrough at #R$B935.
-c$B920 AND A         ;
- $B921 JP P,$B935    ;
- $B924 AND $7F       ;
- $B926 CP $01        ;
- $B928 JR NZ,$B930   ;
+; Decodes the next movement-script byte: a wait command reloads the frame-delay
+; timer, otherwise it's a step index handled by the fallthrough at #R$B935.
+c$B920 AND A         ; {High bit clear: not a wait, fall through to step
+ $B921 JP P,$B935    ; dispatch}
+ $B924 AND $7F       ; {Low 7 bits = wait frame count
+ $B926 CP $01        ; }
+ $B928 JR NZ,$B930   ; Value 1 means random wait
  $B92A CALL $B7FE    ; Pseudo-random number generator
- $B92D AND $1F       ;
- $B92F INC A         ;
+ $B92D AND $1F       ; {Random wait = 1-32 frames
+ $B92F INC A         ; }
 *$B930 LD (IY+$18),A ;
  $B933 JR $B91E      ;
 *$B935 LD (IY+$17),A ;
@@ -8563,6 +8521,9 @@ c$B941 LD A,C        ;
 ;   IY object struct base (script pointer at IY+$15/$16)
 ; O:E the fetched script byte
 ;   HL preserved; advances the object's script pointer (IY+$15/$16)
+;
+; Fetches the next byte of an object's movement script and advances its script
+; pointer.
 @label=movement_next_byte
 c$B94E PUSH HL       ;
  $B94F LD L,(IY+$15) ;
@@ -8581,18 +8542,22 @@ c$B94E PUSH HL       ;
 ; .
 ;
 ; Handler for index $3C of the #R$A000 jump table (see #R$B7F6).
+; .
+; Sets a per-object field, its value either packed into the opcode byte itself
+; or, if that's zero, read as a following script byte.
 @label=mvop_set_iy19
-c$B95F LD A,C        ;
- $B960 AND $78       ;
+c$B95F LD A,C        ; {C's high nibble as the value; skip if zero
+ $B960 AND $78       ; }
  $B962 JR Z,$B96C    ;
- $B964 RRCA          ;
+ $B964 RRCA          ; {Extract the value, store, signal continue
  $B965 RRCA          ;
  $B966 RRCA          ;
  $B967 LD (IY+$19),A ;
- $B96A SCF           ;
+ $B96A SCF           ; }
  $B96B RET           ;
 *$B96C CALL $B94E    ; Read next movement-script byte into E
- $B96F LD (IY+$19),E ;
+ $B96F LD (IY+$19),E ; Otherwise: store the value read by #R$B94E, signal
+                     ; continue
  $B972 SCF           ;
  $B973 RET           ;
 
@@ -8603,17 +8568,20 @@ c$B95F LD A,C        ;
 ; .
 ;
 ; Handler for index $3D of the #R$A000 jump table (see #R$B7F6).
+; .
+; Sets the object's heading to a value packed into the opcode byte, mirroring
+; it if the object faces left, then moves it.
 @label=mvop_set_heading
-c$B974 LD A,C         ;
+c$B974 LD A,C         ; {Extract heading value from C
  $B975 AND $78        ;
- $B977 RRCA           ;
- $B978 BIT 7,(IY+$04) ;
- $B97C JR Z,$B984     ;
+ $B977 RRCA           ; }
+ $B978 BIT 7,(IY+$04) ; {Mirror the heading if the object faces left (IY+$04
+ $B97C JR Z,$B984     ; bit 7)}
  $B97E NEG            ;
  $B980 ADD A,$20      ;
  $B982 AND $3F        ;
-*$B984 LD (IY+$10),A  ;
- $B987 LD B,(IY+$11)  ;
+*$B984 LD (IY+$10),A  ; Store the new heading
+ $B987 LD B,(IY+$11)  ; B = speed (IY+$11)
  $B98A CALL $B8A2     ; Compute velocity vector (dx,dy) from angle and speed
  $B98D CALL $BA0A     ; Apply object velocity (dx,dy) to position
  $B990 AND A          ;
@@ -8625,26 +8593,27 @@ c$B974 LD A,C         ;
 ;
 ; .
 ;
-; Handler for index $3E of the #R$A000 jump table (see #R$B7F6).
+; Turns the object's heading by an amount and sign packed into the opcode byte,
+; then moves it.
 @label=mvop_turn_heading
-c$B992 BIT 7,(IY+$04) ;
- $B996 JR Z,$B99C     ;
+c$B992 BIT 7,(IY+$04) ; {Mirror the turn direction if the object faces left
+ $B996 JR Z,$B99C     ; (IY+$04 bit 7)}
  $B998 LD A,C         ;
  $B999 XOR $40        ;
  $B99B LD C,A         ;
-*$B99C LD A,C         ;
+*$B99C LD A,C         ; {Extract turn amount from C
  $B99D AND $38        ;
  $B99F RRCA           ;
  $B9A0 RRCA           ;
  $B9A1 RRCA           ;
- $B9A2 INC A          ;
- $B9A3 BIT 6,C        ;
+ $B9A2 INC A          ; }
+ $B9A3 BIT 6,C        ; {Negate the turn if C bit 6 is set
  $B9A5 JR Z,$B9A9     ;
- $B9A7 NEG            ;
-*$B9A9 ADD A,(IY+$10) ;
+ $B9A7 NEG            ; }
+*$B9A9 ADD A,(IY+$10) ; {Apply the turn to the current heading (IY+$10)
  $B9AC AND $3F        ;
- $B9AE LD (IY+$10),A  ;
- $B9B1 LD B,(IY+$11)  ;
+ $B9AE LD (IY+$10),A  ; }
+ $B9B1 LD B,(IY+$11)  ; B = speed (IY+$11)
  $B9B4 CALL $B8A2     ; Compute velocity vector (dx,dy) from angle and speed
  $B9B7 CALL $BA0A     ; Apply object velocity (dx,dy) to position
  $B9BA AND A          ;
@@ -8713,15 +8682,15 @@ c$B9E3 XOR A         ;
 ; Handler for index $42 of the #R$A000 jump table (see #R$B7F6).
 @label=mvop_loop
 c$B9F1 CALL $B94E    ; Read next movement-script byte into E
- $B9F4 DEC (IY+$19)  ;
+ $B9F4 DEC (IY+$19)  ; {Decrement loop counter (IY+$19), return if it hit zero
  $B9F7 SCF           ;
- $B9F8 RET Z         ;
- $B9F9 LD D,$FF      ;
+ $B9F8 RET Z         ; }
+ $B9F9 LD D,$FF      ; {Otherwise rewind the script pointer by E bytes
  $B9FB LD L,(IY+$15) ;
  $B9FE LD H,(IY+$16) ;
  $BA01 ADD HL,DE     ;
  $BA02 LD (IY+$15),L ;
- $BA05 LD (IY+$16),H ;
+ $BA05 LD (IY+$16),H ; }
  $BA08 SCF           ;
  $BA09 RET           ;
 
@@ -9051,10 +9020,8 @@ c$BA5F EX AF,AF'       ;
 ;
 ; .
 ;
-; Called once per frame from the main loop ($A10F). Fills 256 bytes at $7F00
-; then 256 bytes at $8000 with DE ($0000), using the SP-trick PUSH-unroll
-; pattern (B=$10 outer, 8 PUSHes/inner) shared with other fast fill routines in
-; this game.
+; Zeroes two 256-byte buffers each frame using a fast PUSH-unroll fill, the
+; same technique shared by other fast-fill routines in this game.
 @label=clear_buffers
 c$BBC2 LD DE,$0000   ; DE=$0000 (fill value)
  $BBC5 LD HL,$7F00   ; {Point HL/B at first buffer ($7F00, 16 groups of 8)
@@ -9082,14 +9049,8 @@ c$BBC2 LD DE,$0000   ; DE=$0000 (fill value)
 ;
 ; .
 ;
-; Called every interrupt from #R$A0C4. Iterates the object list at $9D30 (B =
-; $06 minus the count at $9D19; falls straight to #R$BC79 if none remain - the
-; branch corrupted by POKE 48115,58/Immunity). For each object: E is set to C
-; if (IY+$05)==$03, else 0; a row is computed from the object's Y (IY+$0D/$0E,
-; then IY+$0B/$0C), and E is ORed into that row across the $7Exx/$7Fxx
-; attribute buffers ($BC35/$BC3D continue the row loop started here). The
-; object's bit is then stored at IY+$14 and C is rotated left (RLC C) so each
-; object gets a distinct single-bit identifier for the next pass.
+; Marks each active object's position into the collision attribute buffers, one
+; distinct bit per object, for damage/collision checks to test against later.
 @label=mark_collision_masks
 c$BBE5 LD ($BCDA),SP ; Save SP (restored via the $7E-page LD SP tail)
  $BBE9 LD IY,($9D30) ; IY = object list head ($9D30)
@@ -9098,14 +9059,14 @@ c$BBE5 LD ($BCDA),SP ; Save SP (restored via the $7E-page LD SP tail)
  $BBF2 SUB (HL)      ; }
  $BBF3 JP Z,$BC79    ; POKE 48115,58 corrupts this JP Z, disabling the
                      ; damage/collision branch (Immunity)
- $BBF6 LD B,A        ;
- $BBF7 LD C,$01      ;
+ $BBF6 LD B,A        ; {B = object count; C = 1: first object's mask bit
+ $BBF7 LD C,$01      ; }
 *$BBF9 LD A,(IY+$05) ; {E = object's mask bit only when type (IY+$05) is 3
  $BBFC CP $03        ;
  $BBFE LD E,C        ;
  $BBFF JR Z,$BC03    ;
  $BC01 LD E,$00      ; }
-*$BC03 LD H,$7E      ;
+*$BC03 LD H,$7E      ; H=$7E: point at the low-page attribute buffer
  $BC05 LD A,(IY+$0D) ; {Compute $7Exx attribute-row address from object Y
  $BC08 AND $E0       ; (IY+$0D/$0E)
  $BC0A OR (IY+$0E)   ;
@@ -9117,93 +9078,93 @@ c$BBE5 LD ($BCDA),SP ; Save SP (restored via the $7E-page LD SP tail)
  $BC12 LD A,(HL)     ; {OR mask bit into this attribute row
  $BC13 OR E          ;
  $BC14 LD (HL),A     ; }
- $BC15 INC L         ;
+ $BC15 INC L         ; {row 2/12
  $BC16 LD A,(HL)     ;
  $BC17 OR E          ;
- $BC18 LD (HL),A     ;
- $BC19 INC L         ;
+ $BC18 LD (HL),A     ; }
+ $BC19 INC L         ; {row 3/12
  $BC1A LD A,(HL)     ;
  $BC1B OR E          ;
- $BC1C LD (HL),A     ;
- $BC1D INC L         ;
+ $BC1C LD (HL),A     ; }
+ $BC1D INC L         ; {row 4/12
  $BC1E LD A,(HL)     ;
  $BC1F OR E          ;
- $BC20 LD (HL),A     ;
- $BC21 INC L         ;
+ $BC20 LD (HL),A     ; }
+ $BC21 INC L         ; {row 5/12
  $BC22 LD A,(HL)     ;
  $BC23 OR E          ;
- $BC24 LD (HL),A     ;
- $BC25 INC L         ;
+ $BC24 LD (HL),A     ; }
+ $BC25 INC L         ; {row 6/12
  $BC26 LD A,(HL)     ;
  $BC27 OR E          ;
- $BC28 LD (HL),A     ;
- $BC29 INC L         ;
+ $BC28 LD (HL),A     ; }
+ $BC29 INC L         ; {row 7/12
  $BC2A LD A,(HL)     ;
  $BC2B OR E          ;
- $BC2C LD (HL),A     ;
- $BC2D INC L         ;
+ $BC2C LD (HL),A     ; }
+ $BC2D INC L         ; {row 8/12
  $BC2E LD A,(HL)     ;
  $BC2F OR E          ;
- $BC30 LD (HL),A     ;
- $BC31 INC L         ;
+ $BC30 LD (HL),A     ; }
+ $BC31 INC L         ; {row 9/12
  $BC32 LD A,(HL)     ;
  $BC33 OR E          ;
- $BC34 LD (HL),A     ;
- $BC35 INC L         ;
+ $BC34 LD (HL),A     ; }
+ $BC35 INC L         ; {row 10/12
  $BC36 LD A,(HL)     ;
  $BC37 OR E          ;
- $BC38 LD (HL),A     ;
- $BC39 INC L         ;
+ $BC38 LD (HL),A     ; }
+ $BC39 INC L         ; {row 11/12
  $BC3A LD A,(HL)     ;
  $BC3B OR E          ;
- $BC3C LD (HL),A     ;
- $BC3D INC L         ;
+ $BC3C LD (HL),A     ; }
+ $BC3D INC L         ; {row 12/12
  $BC3E LD A,(HL)     ;
  $BC3F OR E          ;
- $BC40 LD (HL),A     ;
- $BC41 LD H,$7F      ;
- $BC43 LD A,(IY+$0B) ;
- $BC46 AND $E0       ;
+ $BC40 LD (HL),A     ; }
+ $BC41 LD H,$7F      ; H=$7F: point at the high-page attribute buffer
+ $BC43 LD A,(IY+$0B) ; {Compute $7Fxx attribute-row address from object Y
+ $BC46 AND $E0       ; (IY+$0B/$0C)
  $BC48 OR (IY+$0C)   ;
  $BC4B RLCA          ;
  $BC4C RLCA          ;
  $BC4D RLCA          ;
- $BC4E LD L,A        ;
- $BC4F LD A,(HL)     ;
+ $BC4E LD L,A        ; }
+ $BC4F LD A,(HL)     ; {OR mask bit into this attribute row (row 1/8)
  $BC50 OR E          ;
- $BC51 LD (HL),A     ;
- $BC52 INC L         ;
+ $BC51 LD (HL),A     ; }
+ $BC52 INC L         ; {row 2/8
  $BC53 LD A,(HL)     ;
  $BC54 OR E          ;
- $BC55 LD (HL),A     ;
- $BC56 INC L         ;
+ $BC55 LD (HL),A     ; }
+ $BC56 INC L         ; {row 3/8
  $BC57 LD A,(HL)     ;
  $BC58 OR E          ;
- $BC59 LD (HL),A     ;
- $BC5A INC L         ;
+ $BC59 LD (HL),A     ; }
+ $BC5A INC L         ; {row 4/8
  $BC5B LD A,(HL)     ;
  $BC5C OR E          ;
- $BC5D LD (HL),A     ;
- $BC5E INC L         ;
+ $BC5D LD (HL),A     ; }
+ $BC5E INC L         ; {row 5/8
  $BC5F LD A,(HL)     ;
  $BC60 OR E          ;
- $BC61 LD (HL),A     ;
- $BC62 INC L         ;
+ $BC61 LD (HL),A     ; }
+ $BC62 INC L         ; {row 6/8
  $BC63 LD A,(HL)     ;
  $BC64 OR E          ;
- $BC65 LD (HL),A     ;
- $BC66 INC L         ;
+ $BC65 LD (HL),A     ; }
+ $BC66 INC L         ; {row 7/8
  $BC67 LD A,(HL)     ;
  $BC68 OR E          ;
- $BC69 LD (HL),A     ;
- $BC6A INC L         ;
+ $BC69 LD (HL),A     ; }
+ $BC6A INC L         ; {row 8/8
  $BC6B LD A,(HL)     ;
  $BC6C OR E          ;
- $BC6D LD (HL),A     ;
- $BC6E LD (IY+$14),C ;
- $BC71 RLC C         ;
- $BC73 LD SP,IY      ;
- $BC75 POP IY        ;
+ $BC6D LD (HL),A     ; }
+ $BC6E LD (IY+$14),C ; {Store the object's mask bit (IY+$14), rotate C for the
+ $BC71 RLC C         ; next object}
+ $BC73 LD SP,IY      ; {Advance to the next object in the list
+ $BC75 POP IY        ; }
  $BC77 DJNZ $BBF9    ;
 ; Entry point reached from #R$BBE5's mask-draw loop; also entered directly when
 ; POKE 48115,58 (Immunity) forces the mask byte to $80, skipping the normal
@@ -9216,12 +9177,12 @@ c$BBE5 LD ($BCDA),SP ; Save SP (restored via the $7E-page LD SP tail)
 ;
 ; .
 ;
-; .
+; C object's mask bit
+; IY object struct base
 ;
-; Entered from #R$BBE5's per-object loop (and the #R$BC79 Immunity entry). ORs
-; the object's mask bit into 8 consecutive rows of each of the $7Exx/$7Fxx
-; attribute buffers - the fixed-height counterpart to #R$BCE9's variable-height
-; object masks.
+; Marks a fixed 8-row collision mask into both attribute buffers around the
+; object's position; the fixed-height counterpart to #R$BCE9's variable-height
+; masks.
 c$BC7D LD A,(IY+$0D) ; Row offset from object Y (IY+$0D/$0E)
  $BC80 AND $E0       ;
  $BC82 OR (IY+$0E)   ;
@@ -9230,37 +9191,37 @@ c$BC7D LD A,(IY+$0D) ; Row offset from object Y (IY+$0D/$0E)
  $BC87 RLCA          ;
  $BC88 ADD A,$04     ;
  $BC8A LD L,A        ;
- $BC8B LD A,(HL)     ;
+ $BC8B LD A,(HL)     ; {OR mask bit into this attribute row (row 1/8)
  $BC8C OR C          ;
- $BC8D LD (HL),A     ;
+ $BC8D LD (HL),A     ; }
  $BC8E INC L         ;
- $BC8F LD A,(HL)     ;
+ $BC8F LD A,(HL)     ; {row 2/8
  $BC90 OR C          ;
  $BC91 LD (HL),A     ;
- $BC92 INC L         ;
- $BC93 LD A,(HL)     ;
+ $BC92 INC L         ; }
+ $BC93 LD A,(HL)     ; {row 3/8
  $BC94 OR C          ;
  $BC95 LD (HL),A     ;
- $BC96 INC L         ;
- $BC97 LD A,(HL)     ;
+ $BC96 INC L         ; }
+ $BC97 LD A,(HL)     ; {row 4/8
  $BC98 OR C          ;
  $BC99 LD (HL),A     ;
- $BC9A INC L         ;
- $BC9B LD A,(HL)     ;
+ $BC9A INC L         ; }
+ $BC9B LD A,(HL)     ; {row 5/8
  $BC9C OR C          ;
  $BC9D LD (HL),A     ;
- $BC9E INC L         ;
- $BC9F LD A,(HL)     ;
+ $BC9E INC L         ; }
+ $BC9F LD A,(HL)     ; {row 6/8
  $BCA0 OR C          ;
  $BCA1 LD (HL),A     ;
- $BCA2 INC L         ;
- $BCA3 LD A,(HL)     ;
+ $BCA2 INC L         ; }
+ $BCA3 LD A,(HL)     ; {row 7/8
  $BCA4 OR C          ;
  $BCA5 LD (HL),A     ;
- $BCA6 INC L         ;
- $BCA7 LD A,(HL)     ;
+ $BCA6 INC L         ; }
+ $BCA7 LD A,(HL)     ; {row 8/8
  $BCA8 OR C          ;
- $BCA9 LD (HL),A     ;
+ $BCA9 LD (HL),A     ; }
  $BCAA LD H,$7F      ; Switch to second attribute page ($7Fxx)
  $BCAC LD A,(IY+$0B) ; Row offset from object Y (IY+$0B/$0C)
  $BCAF AND $E0       ;
@@ -9270,37 +9231,37 @@ c$BC7D LD A,(IY+$0D) ; Row offset from object Y (IY+$0D/$0E)
  $BCB6 RLCA          ;
  $BCB7 ADD A,$04     ;
  $BCB9 LD L,A        ;
- $BCBA LD A,(HL)     ;
+ $BCBA LD A,(HL)     ; {OR mask bit into this attribute row (row 1/8)
  $BCBB OR C          ;
- $BCBC LD (HL),A     ;
- $BCBD INC L         ;
+ $BCBC LD (HL),A     ; }
+ $BCBD INC L         ; {row 2/8
  $BCBE LD A,(HL)     ;
  $BCBF OR C          ;
- $BCC0 LD (HL),A     ;
- $BCC1 INC L         ;
+ $BCC0 LD (HL),A     ; }
+ $BCC1 INC L         ; {row 3/8
  $BCC2 LD A,(HL)     ;
  $BCC3 OR C          ;
- $BCC4 LD (HL),A     ;
- $BCC5 INC L         ;
+ $BCC4 LD (HL),A     ; }
+ $BCC5 INC L         ; {row 4/8
  $BCC6 LD A,(HL)     ;
  $BCC7 OR C          ;
- $BCC8 LD (HL),A     ;
- $BCC9 INC L         ;
+ $BCC8 LD (HL),A     ; }
+ $BCC9 INC L         ; {row 5/8
  $BCCA LD A,(HL)     ;
  $BCCB OR C          ;
- $BCCC LD (HL),A     ;
- $BCCD INC L         ;
+ $BCCC LD (HL),A     ; }
+ $BCCD INC L         ; {row 6/8
  $BCCE LD A,(HL)     ;
  $BCCF OR C          ;
- $BCD0 LD (HL),A     ;
- $BCD1 INC L         ;
+ $BCD0 LD (HL),A     ; }
+ $BCD1 INC L         ; {row 7/8
  $BCD2 LD A,(HL)     ;
  $BCD3 OR C          ;
- $BCD4 LD (HL),A     ;
- $BCD5 INC L         ;
+ $BCD4 LD (HL),A     ; }
+ $BCD5 INC L         ; {row 8/8
  $BCD6 LD A,(HL)     ;
  $BCD7 OR C          ;
- $BCD8 LD (HL),A     ;
+ $BCD8 LD (HL),A     ; }
  $BCD9 LD SP,$0000   ; Restore SP
  $BCDC LD A,($9D19)  ;
  $BCDF AND A         ;
@@ -9317,82 +9278,79 @@ c$BC7D LD A,(IY+$0D) ; Row offset from object Y (IY+$0D/$0E)
 ;
 ; .
 ;
-; Called every interrupt from #R$A0C4 and $A8E8. Iterates the object linked
-; list (via $9D18/EXX, same list style as #R$BC7D/#R$BBE5), and for each object
-; with the right IY+$04 status bits, computes an attribute row from its Y
-; position (IY+$0D/$0E and IY+$0B/$0C) and ORs a variable-height mask (row
-; count from IX-$01/IX-$02) into the $7Exx/$7Fxx attribute buffers - building
-; the per-object hit/collision mask consumed elsewhere.
+; Marks each active object's variable-height collision mask into the attribute
+; buffers, the variable-height counterpart to #R$BC7D's fixed 8-row mask.
 @label=draw_object_masks
 c$BCE9 LD ($BD80),SP  ; Save SP (restored at $BD7F)
- $BCED LD HL,$9C70    ;
- $BCF0 LD A,(HL)      ;
- $BCF1 AND A          ;
+ $BCED LD HL,$9C70    ; {Optional player-hit row/page setup, gated by flag
+ $BCF0 LD A,(HL)      ; $9C70
+ $BCF1 AND A          ; }
  $BCF2 JR Z,$BD04     ; Skip row/page setup if flag at $9C70 is zero
  $BCF4 DEC (HL)       ;
- $BCF5 LD IY,($9C6D)  ;
- $BCF9 LD A,(IY+$0D)  ;
+ $BCF5 LD IY,($9C6D)  ; {Compute the player's attribute row for the collision
+ $BCF9 LD A,(IY+$0D)  ; test below
  $BCFC AND $E0        ;
  $BCFE OR (IY+$0E)    ;
  $BD01 RLCA           ;
  $BD02 RLCA           ;
- $BD03 RLCA           ;
-*$BD04 LD ($BD46),A   ;
- $BD07 LD IY,($9D1E)  ;
- $BD0B LD HL,$9D18    ;
- $BD0E LD A,$08       ;
+ $BD03 RLCA           ; }
+*$BD04 LD ($BD46),A   ; Stash that row for later use
+ $BD07 LD IY,($9D1E)  ; {IY = object list head ($9D1E)
+ $BD0B LD HL,$9D18    ; }
+ $BD0E LD A,$08       ; {B = active object count
  $BD10 SUB (HL)       ;
  $BD11 LD HL,$9D1A    ;
- $BD14 ADD A,$04      ;
+ $BD14 ADD A,$04      ; }
  $BD16 SUB (HL)       ;
  $BD17 JR Z,$BD78     ; No objects to draw: skip to cleanup
- $BD19 LD DE,$0008    ;
+ $BD19 LD DE,$0008    ; DE = 8 (attribute-row stride)
  $BD1C EXX            ;
  $BD1D LD B,A         ;
-*$BD1E BIT 3,(IY+$04) ;
+*$BD1E BIT 3,(IY+$04) ; Skip normal draw path for a special object type (IY+$04
+                      ; bit 3)
  $BD22 JR NZ,$BD92    ; Skip normal draw path if IY+$04 bit 3 is set
  $BD24 EXX            ;
- $BD25 XOR A          ;
- $BD26 BIT 0,(IY+$04) ;
+ $BD25 XOR A          ; {Reset accumulator; check IY+$04 status bits
+ $BD26 BIT 0,(IY+$04) ; }
  $BD2A JR NZ,$BD6E    ; Skip mask draw if IY+$04 bit 0 is set
  $BD2C BIT 5,(IY+$04) ;
  $BD30 JR Z,$BD6E     ; Skip mask draw unless IY+$04 bit 5 is set
- $BD32 LD SP,IY       ;
- $BD34 POP HL         ;
- $BD35 POP IX         ;
- $BD37 LD H,$7E       ;
- $BD39 LD A,(IY+$0D)  ;
- $BD3C AND $E0        ;
+ $BD32 LD SP,IY       ; Point SP at the object's mask-pointer fields (IY)
+ $BD34 POP HL         ; {Pop the object's mask row-count pointer (IX)
+ $BD35 POP IX         ; }
+ $BD37 LD H,$7E       ; H=$7E: point at the low-page attribute buffer
+ $BD39 LD A,(IY+$0D)  ; {Compute $7Exx attribute-row address from object Y
+ $BD3C AND $E0        ; (IY+$0D/$0E)
  $BD3E OR (IY+$0E)    ;
  $BD41 RLCA           ;
  $BD42 RLCA           ;
  $BD43 RLCA           ;
- $BD44 LD L,A         ;
- $BD45 CP $00         ;
- $BD47 LD A,$40       ;
+ $BD44 LD L,A         ; }
+ $BD45 CP $00         ; {Clamp row start if it wrapped past the top
+ $BD47 LD A,$40       ; }
  $BD49 JR C,$BD4C     ; Clamp row start if carry
  $BD4B XOR A          ;
-*$BD4C LD B,(IX-$01)  ;
-*$BD4F OR (HL)        ;
+*$BD4C LD B,(IX-$01)  ; B = mask row count (IX-$01)
+*$BD4F OR (HL)        ; {OR mask row into buffer, advance to next row
  $BD50 ADD HL,DE      ;
- $BD51 DJNZ $BD4F     ;
- $BD53 OR (HL)        ;
- $BD54 LD C,A         ;
- $BD55 LD H,$7F       ;
- $BD57 LD A,(IY+$0B)  ;
- $BD5A AND $E0        ;
+ $BD51 DJNZ $BD4F     ; }
+ $BD53 OR (HL)        ; {OR the final row, stash accumulated mask in C
+ $BD54 LD C,A         ; }
+ $BD55 LD H,$7F       ; H=$7F: point at the high-page attribute buffer
+ $BD57 LD A,(IY+$0B)  ; {Compute $7Fxx attribute-row address from object Y
+ $BD5A AND $E0        ; (IY+$0B/$0C)
  $BD5C OR (IY+$0C)    ;
  $BD5F RLCA           ;
  $BD60 RLCA           ;
  $BD61 RLCA           ;
- $BD62 LD L,A         ;
- $BD63 LD A,$40       ;
- $BD65 LD B,(IX-$02)  ;
-*$BD68 OR (HL)        ;
+ $BD62 LD L,A         ; }
+ $BD63 LD A,$40       ; A=$40 (mask row seed)
+ $BD65 LD B,(IX-$02)  ; B = mask row count (IX-$02)
+*$BD68 OR (HL)        ; {OR mask row into buffer, advance to next row
  $BD69 ADD HL,DE      ;
- $BD6A DJNZ $BD68     ;
- $BD6C OR (HL)        ;
- $BD6D AND C          ;
+ $BD6A DJNZ $BD68     ; }
+ $BD6C OR (HL)        ; {OR the final row, AND with the low-page accumulator
+ $BD6D AND C          ; }
 *$BD6E LD (IY+$14),A  ;
  $BD71 LD SP,IY       ;
  $BD73 POP IY         ;
@@ -9418,6 +9376,11 @@ c$BCE9 LD ($BD80),SP  ; Save SP (restored at $BD7F)
 ; Update randomized countdown, then enter player update ($BDAE)
 ;
 ; Used by the routine at #R$A0C4.
+;
+; .
+;
+; Randomly ticks down a shared timer used elsewhere for homing/steering, then
+; falls through into the per-frame player update loop.
 c$BD99 CALL $B7FE     ; Pseudo-random number generator
  $BD9C AND $01        ;
  $BD9E JR NZ,$BDAA    ;
@@ -9526,16 +9489,12 @@ c$BE03 LD A,($9C3B)  ; {skip movement if immobilised flag at $9C3B set
 ;
 ; .
 ;
-; .
+; B bank-frame target (2=right, 0=left, 1=level)
+; IY player object struct base
 ;
-; Clamps the player object's X position ($IY+0B/0C) between $0700 and $18E0,
-; then its Y position (IY+0D/0E) between $0300 and $18E0, then steps a "bank
-; angle" frame (IY+16, target IY+17) toward its target by 1 per call (with a
-; short delay after a direction change) and looks up the resulting sprite frame
-; from a table at $9B4C. Entered from $BE2E/#R$BE4C with B already set to the
-; bank-frame target: 2 if Right is held (X increasing), 0 if Left is held (X
-; decreasing), 1 if neither (level flight, no X movement) - this is the actual
-; Left/Right-to-plane-tilt conversion.
+; Clamps the player's position to the screen bounds, then converts left/right
+; input into a banking-tilt sprite frame - stepping the bank angle one frame at
+; a time rather than snapping directly to it.
 @label=clamp_player_pos
 c$BE4A JR $BE4D        ; entry: X delta already applied, skip add
 ; This entry point is used by the routine at #R$BE03.
@@ -9642,13 +9601,8 @@ c$BE4A JR $BE4D        ; entry: X delta already applied, skip add
 ;
 ; IY player object base (inherited from $BDAE's caller)
 ;
-; Called from #R$BDAE right after the immunity flag check fails (both immunity
-; POKEs disable that call). Tags the object at $9C77 (the thing that hit the
-; player) with the current wave/formation id from $9BA4, then repoints the
-; player's per-frame update-routine pointer (IY+2/+3, little-endian) to $6B86 -
-; the hit/explosion animation handler, same pointer-swap trick used by #R$C5AF
-; for enemies - and arms a 38-frame ($26) timer at $9C3C, presumably the
-; death/respawn delay.
+; Switches the player into its hit/explosion animation and arms the
+; death/respawn recovery timer.
 @label=player_hit
 c$BF22 LD IX,($9C77)   ; IX = object that hit the player
  $BF26 LD A,($9BA4)    ; {tag it with current wave/formation id
@@ -9667,16 +9621,8 @@ c$BF22 LD IX,($9C77)   ; IX = object that hit the player
 ;
 ; .
 ;
-; Triggered when the input state at $9CDC equals $09. Decrements the player's
-; bomb count (IX+9, confirmed via #R$66DE), sets bit 2 of the deferred-event
-; mask $9C27, adds to a bonus accumulator ($9C70), and points the screen-flash
-; sequence pointer $9C5B at $9C5E - the same mechanism #R$6A88 and #R$C72A use
-; for the corner-box/screen flash. Once the input state reaches exactly 1 (key
-; released), it also allocates a new object from the free-list pool ($9D1C,
-; same trick as #R$C559), copies initial fields from a spawn-parameter data
-; table at #R$6BB9 (BC points there; NOT a code handler), and positions it at
-; the player's location (from IY+0D/0E) - spawning the actual bomb-explosion
-; object.
+; Handles the bomb key: consumes a bomb and triggers the screen-flash effect on
+; press, then spawns the actual bomb-explosion object once the key is released.
 c$BF42 LD DE,$9CDC     ;
  $BF45 LD A,(DE)       ;
  $BF46 CP $09          ; {Trigger only when input state ($9CDC) is $09
@@ -9760,7 +9706,8 @@ c$BF42 LD DE,$9CDC     ;
 ;
 ; .
 ;
-; Handler for index $2C of the #R$A000 jump table (see #R$B7F6).
+; Checks whether this object has been hit and starts its explosion, otherwise
+; moves it and retires it once it leaves the play area.
 c$BFEB LD A,($9C6B)  ;
  $BFEE AND (IY+$14)  ;
  $BFF1 JR Z,$C002    ;
@@ -9790,34 +9737,31 @@ c$BFEB LD A,($9C6B)  ;
 ;
 ; Handler for index $36 of the #R$A000 jump table (see #R$B7F6).
 ; .
-; On first call (IY+10 != $FF) computes a launch velocity via #R$B8A2 from
-; angle IY+10/speed IY+11, then marks IY+10=$FF so it only fires once. Every
-; call then moves the object via #R$BA0A. If flag bit 5 of IY+4 is set and
-; IY+14 indicates a hit (bit 7 set, not bit 6), sets the global hit flag at
-; $9C6B and starts an explosion via #R$C5AF; otherwise, once flag bit 5 is
-; clear, retires the object and signals formation completion via #R$B79F.
-c$C015 LD A,(IY+$10)   ;
+; Launches a projectile on its first call, then moves it every frame; explodes
+; it on a confirmed hit, or retires it and signals formation completion once
+; its lifetime flag clears.
+c$C015 LD A,(IY+$10)   ; {First call only (IY+$10 != $FF)
  $C018 CP $FF          ;
- $C01A JP Z,$C02A      ;
- $C01D LD B,(IY+$11)   ;
+ $C01A JP Z,$C02A      ; }
+ $C01D LD B,(IY+$11)   ; B = launch speed (IY+$11)
  $C020 CALL $B8A2      ; Compute velocity vector (dx,dy) from angle and speed
  $C023 CALL $BA0A      ; Apply object velocity (dx,dy) to position
- $C026 LD (IY+$10),$FF ;
+ $C026 LD (IY+$10),$FF ; Mark launched, so this only fires once
 *$C02A CALL $BA0A      ; Apply object velocity (dx,dy) to position
- $C02D BIT 5,(IY+$04)  ;
- $C031 JR Z,$C049      ;
- $C033 LD A,(IY+$14)   ;
+ $C02D BIT 5,(IY+$04)  ; {Skip hit/retire handling unless flag bit 5 (IY+$04)
+ $C031 JR Z,$C049      ; is set}
+ $C033 LD A,(IY+$14)   ; {Skip if IY+$14 bit 6 is set (not a hit)
  $C036 BIT 6,A         ;
- $C038 JR NZ,$C049     ;
- $C03A AND $80         ;
- $C03C RET Z           ;
- $C03D LD HL,$9C6B     ;
- $C040 SET 7,(HL)      ;
+ $C038 JR NZ,$C049     ; }
+ $C03A AND $80         ; {Bail out unless IY+$14 bit 7 (hit) is set
+ $C03C RET Z           ; }
+ $C03D LD HL,$9C6B     ; {Set the global hit flag ($9C6B)
+ $C040 SET 7,(HL)      ; }
  $C042 LD DE,$9D1A     ;
  $C045 CALL $C5AF      ; Start object explosion sequence
  $C048 RET             ;
-*$C049 LD HL,$9D1A     ;
- $C04C INC (HL)        ;
+*$C049 LD HL,$9D1A     ; {Otherwise: mark this formation group's slot count
+ $C04C INC (HL)        ; }
  $C04D CALL $B79F      ; Mark formation slot done, trigger completion effect
                        ; when group empties
  $C050 RET             ;
@@ -9938,32 +9882,27 @@ c$C075 CALL $B8F9      ; Movement-pattern script interpreter
 ;
 ; .
 ;
-; Handler for index $35 of the #R$A000 jump table (see #R$B7F6). Runs the
-; movement script, then handles retirement (IY+4 bit 1 -> #R$C191/#R$B79F). On
-; a hit (IY+14 nonzero), decodes a variable damage amount from it via 6
-; rotate/add steps into E, ORs the hit flag into the global $9C6B, and
-; subtracts the damage from health (IY+12); once health goes negative it awards
-; a score bonus (#R$66B5) and explodes (#R$C5AF). Otherwise falls through to
-; #R$C16E, which handles fire timing and 8-direction sprite-frame selection
-; from the aim angle (IY+0F/+10).
+; Runs an enemy's movement script, applies variable damage on a hit and
+; explodes it once destroyed, otherwise handles its fire timing and aim-based
+; sprite frame.
 c$C11C CALL $B8F9     ; Movement-pattern script interpreter
- $C11F BIT 1,(IY+$04) ;
- $C123 JR NZ,$C191    ;
- $C125 LD A,(IY+$14)  ;
+ $C11F BIT 1,(IY+$04) ; {Skip damage handling and retire if flag bit 1 (IY+$04)
+ $C123 JR NZ,$C191    ; is set}
+ $C125 LD A,(IY+$14)  ; {Skip damage handling entirely if not hit (IY+$14 zero)
  $C128 LD C,A         ;
  $C129 AND A          ;
- $C12A JR Z,$C16E     ;
- $C12C BIT 6,A        ;
+ $C12A JR Z,$C16E     ; }
+ $C12C BIT 6,A        ; {Decode whether this hit deals extra (+2) damage
  $C12E LD E,$00       ;
- $C130 JR Z,$C134     ;
+ $C130 JR Z,$C134     ; }
  $C132 LD E,$02       ;
-*$C134 AND $3F        ;
+*$C134 AND $3F        ; {Mask hit byte to the aim-angle range, stash it ($9C6C)
  $C136 LD ($9C6C),A   ;
  $C139 LD L,A         ;
  $C13A LD A,E         ;
- $C13B JR Z,$C152     ;
- $C13D LD D,$00       ;
- $C13F RR L           ;
+ $C13B JR Z,$C152     ; }
+ $C13D LD D,$00       ; {Otherwise: decode a variable damage amount via 6
+ $C13F RR L           ; rotate/add steps
  $C141 ADC A,D        ;
  $C142 RR L           ;
  $C144 ADC A,D        ;
@@ -9975,16 +9914,16 @@ c$C11C CALL $B8F9     ; Movement-pattern script interpreter
  $C14D ADC A,D        ;
  $C14E RR L           ;
  $C150 ADC A,D        ;
- $C151 LD E,A         ;
-*$C152 LD HL,$9C6B    ;
+ $C151 LD E,A         ; }
+*$C152 LD HL,$9C6B    ; {OR the hit flag into the global hit-flag ($9C6B)
  $C155 LD A,C         ;
  $C156 OR (HL)        ;
- $C157 LD (HL),A      ;
- $C158 LD A,(IY+$12)  ;
+ $C157 LD (HL),A      ; }
+ $C158 LD A,(IY+$12)  ; {Subtract damage from health (IY+$12)
  $C15B SUB E          ;
- $C15C LD (IY+$12),A  ;
- $C15F JP P,$C16E     ;
- $C162 LD A,$09       ;
+ $C15C LD (IY+$12),A  ; }
+ $C15F JP P,$C16E     ; Skip explosion unless health went negative
+ $C162 LD A,$09       ; Award a destruction score bonus
  $C164 CALL $66B5     ; Add BCD score value to current player's score
  $C167 LD DE,$9D18    ;
  $C16A CALL $C5AF     ; Start object explosion sequence
@@ -10020,38 +9959,36 @@ c$C11C CALL $B8F9     ; Movement-pattern script interpreter
 ;
 ; Handler for indices $32, $33, $3A of the #R$A000 jump table (see #R$B7F6).
 ; .
-; Runs the movement script, retires if the "alive" flag (IY+4 bit 1) is set.
-; Otherwise moves straight down ($0020/frame, same as #R$C051) and retires once
-; past a Y boundary ($1C). On a hit (IY+14, masked to 7 bits), ORs it into the
-; global hit flag $9C6B and decrements health (IY+12); once health reaches
-; zero, checks a secondary counter (IY+1A, cp $08) suggesting a
-; multi-stage/multi-hit-phase enemy - not fully traced.
+; Runs a multi-hit enemy's movement script, moves it straight down, and applies
+; damage on a hit - exploding it once its hit-point counter and a secondary
+; stage counter both run out. Otherwise sets its sprite frame and fire-decision
+; timer.
 c$C199 CALL $B8F9      ; Movement-pattern script interpreter
- $C19C BIT 1,(IY+$04)  ;
- $C1A0 JR NZ,$C1EB     ;
- $C1A2 LD A,(IY+$0D)   ;
+ $C19C BIT 1,(IY+$04)  ; {Skip movement/damage handling and retire if "alive"
+ $C1A0 JR NZ,$C1EB     ; flag is set}
+ $C1A2 LD A,(IY+$0D)   ; {Move straight down at fixed speed ($0020/frame)
  $C1A5 ADD A,$20       ;
- $C1A7 LD (IY+$0D),A   ;
+ $C1A7 LD (IY+$0D),A   ; }
  $C1AA JR NC,$C1AF     ;
  $C1AC INC (IY+$0E)    ;
-*$C1AF LD A,(IY+$0E)   ;
+*$C1AF LD A,(IY+$0E)   ; {Retire once past a Y boundary ($1C)
  $C1B2 CP $1C          ;
- $C1B4 JR NC,$C1EB     ;
- $C1B6 LD A,(IY+$14)   ;
- $C1B9 AND $7F         ;
+ $C1B4 JR NC,$C1EB     ; }
+ $C1B6 LD A,(IY+$14)   ; {Mask hit byte to 7 bits; skip damage handling if not
+ $C1B9 AND $7F         ; hit
  $C1BB LD C,A          ;
- $C1BC JR Z,$C1F3      ;
- $C1BE LD HL,$9C6B     ;
+ $C1BC JR Z,$C1F3      ; }
+ $C1BE LD HL,$9C6B     ; {OR the hit flag into the global hit-flag ($9C6B)
  $C1C1 LD A,C          ;
  $C1C2 OR (HL)         ;
- $C1C3 LD (HL),A       ;
- $C1C4 DEC (IY+$12)    ;
- $C1C7 JR NZ,$C1F3     ;
- $C1C9 LD A,(IY+$1A)   ;
- $C1CC CP $08          ;
+ $C1C3 LD (HL),A       ; }
+ $C1C4 DEC (IY+$12)    ; {Decrement health; skip the rest while still nonzero
+ $C1C7 JR NZ,$C1F3     ; }
+ $C1C9 LD A,(IY+$1A)   ; {Check secondary stage counter (IY+$1A) against $08
+ $C1CC CP $08          ; }
  $C1CE JR NC,$C1DF     ;
- $C1D0 LD (IY+$1A),$FF ;
- $C1D4 LD (IY+$12),$01 ;
+ $C1D0 LD (IY+$1A),$FF ; {First stage cleared: reset stage counter, arm 1 more
+ $C1D4 LD (IY+$12),$01 ; hit}
  $C1D8 LD A,$02        ;
  $C1DA CALL $66B5      ; Add BCD score value to current player's score
  $C1DD JR $C1F3        ;
@@ -10095,34 +10032,32 @@ c$C199 CALL $B8F9      ; Movement-pattern script interpreter
 ;
 ; Handler for index $37 of the #R$A000 jump table (see #R$B7F6).
 ; .
-; Handler for index $37 of the #R$A000 jump table. First calls #R$B8F9 to run
-; the object's movement-pattern script. Unless status flag IY+$04 bit 1 is set,
-; advances Y (IY+$0D/$0E) by $20 like the other movement handlers
-; (#R$C298/#R$C31A/#R$C359/#R$C388), then decodes the IY+$14 action byte into a
-; steering/target angle stored at $9C6C.
+; Runs an enemy's movement script, moves it down, and applies variable damage
+; on a hit - exploding it once destroyed. Otherwise sets its sprite frame and
+; fire-decision timer.
 c$C217 CALL $B8F9     ; Movement-pattern script interpreter
- $C21A BIT 1,(IY+$04) ;
- $C21E JR NZ,$C270    ;
- $C220 LD A,(IY+$0D)  ;
+ $C21A BIT 1,(IY+$04) ; {Skip movement/damage handling and retire if flag bit 1
+ $C21E JR NZ,$C270    ; (IY+$04) is set}
+ $C220 LD A,(IY+$0D)  ; {Move straight down at fixed speed ($0020/frame)
  $C223 ADD A,$20      ;
- $C225 LD (IY+$0D),A  ;
+ $C225 LD (IY+$0D),A  ; }
  $C228 JR NC,$C22D    ;
  $C22A INC (IY+$0E)   ;
-*$C22D LD A,(IY+$14)  ;
+*$C22D LD A,(IY+$14)  ; {Skip damage handling entirely if not hit (IY+$14 zero)
  $C230 LD C,A         ;
- $C231 AND $7F        ;
+ $C231 AND $7F        ; }
  $C233 JR Z,$C27C     ;
- $C235 BIT 6,A        ;
+ $C235 BIT 6,A        ; {Decode whether this hit deals extra (+2) damage
  $C237 LD E,$00       ;
  $C239 JR Z,$C23D     ;
- $C23B LD E,$02       ;
-*$C23D AND $3F        ;
+ $C23B LD E,$02       ; }
+*$C23D AND $3F        ; {Mask hit byte to the aim-angle range, stash it ($9C6C)
  $C23F LD ($9C6C),A   ;
  $C242 LD L,A         ;
  $C243 LD A,E         ;
- $C244 JR Z,$C25B     ;
- $C246 LD D,$00       ;
- $C248 RR L           ;
+ $C244 JR Z,$C25B     ; }
+ $C246 LD D,$00       ; {Otherwise: decode a variable damage amount via 6
+ $C248 RR L           ; rotate/add steps
  $C24A ADC A,D        ;
  $C24B RR L           ;
  $C24D ADC A,D        ;
@@ -10134,21 +10069,21 @@ c$C217 CALL $B8F9     ; Movement-pattern script interpreter
  $C256 ADC A,D        ;
  $C257 RR L           ;
  $C259 ADC A,D        ;
- $C25A LD E,A         ;
-*$C25B LD HL,$9C6B    ;
+ $C25A LD E,A         ; }
+*$C25B LD HL,$9C6B    ; {OR the hit flag into the global hit-flag ($9C6B)
  $C25E LD A,C         ;
  $C25F OR (HL)        ;
- $C260 LD (HL),A      ;
- $C261 LD A,(IY+$12)  ;
+ $C260 LD (HL),A      ; }
+ $C261 LD A,(IY+$12)  ; {Subtract damage from health (IY+$12)
  $C264 SUB E          ;
- $C265 LD (IY+$12),A  ;
- $C268 JP P,$C277     ;
- $C26B LD A,$01       ;
+ $C265 LD (IY+$12),A  ; }
+ $C268 JP P,$C277     ; Skip to lower-score award unless health went negative
+ $C26B LD A,$01       ; Award the higher destruction score bonus
  $C26D CALL $66B5     ; Add BCD score value to current player's score
 *$C270 LD DE,$9D18    ;
  $C273 CALL $C5AF     ; Start object explosion sequence
  $C276 RET            ;
-*$C277 LD A,$00       ;
+*$C277 LD A,$00       ; Award the lower destruction score bonus
  $C279 CALL $66B5     ; Add BCD score value to current player's score
 *$C27C LD A,(IY+$10)  ;
  $C27F ADD A,$03      ;
@@ -10172,26 +10107,30 @@ c$C217 CALL $B8F9     ; Movement-pattern script interpreter
 ; IY object struct base (Y at IY+$0D/$0E, action flags IY+$14)
 ;
 ; Handler for index $34 of the #R$A000 jump table (see #R$B7F6).
-c$C298 LD A,(IY+$0D)   ;
+; .
+; Moves an enemy down, applies variable damage on a hit and explodes it once
+; destroyed - switching to a near-death animation just before that. Otherwise
+; retires it once it leaves the play area.
+c$C298 LD A,(IY+$0D)   ; {Move straight down at fixed speed ($0020/frame)
  $C29B ADD A,$20       ;
- $C29D LD (IY+$0D),A   ;
+ $C29D LD (IY+$0D),A   ; }
  $C2A0 JR NC,$C2A5     ;
  $C2A2 INC (IY+$0E)    ;
-*$C2A5 LD A,(IY+$14)   ;
- $C2A8 LD C,A          ;
+*$C2A5 LD A,(IY+$14)   ; {Skip damage handling entirely if not hit (IY+$14
+ $C2A8 LD C,A          ; zero)
  $C2A9 AND $7F         ;
- $C2AB JR Z,$C301      ;
- $C2AD BIT 6,A         ;
+ $C2AB JR Z,$C301      ; }
+ $C2AD BIT 6,A         ; {Decode whether this hit deals extra (+2) damage
  $C2AF LD E,$00        ;
- $C2B1 JR Z,$C2B5      ;
+ $C2B1 JR Z,$C2B5      ; }
  $C2B3 LD E,$02        ;
-*$C2B5 AND $3F         ;
- $C2B7 LD ($9C6C),A    ;
+*$C2B5 AND $3F         ; {Mask hit byte to the aim-angle range, stash it
+ $C2B7 LD ($9C6C),A    ; ($9C6C)
  $C2BA LD L,A          ;
  $C2BB LD A,E          ;
- $C2BC JR Z,$C2D3      ;
- $C2BE LD D,$00        ;
- $C2C0 RR L            ;
+ $C2BC JR Z,$C2D3      ; }
+ $C2BE LD D,$00        ; {Otherwise: decode a variable damage amount via 6
+ $C2C0 RR L            ; rotate/add steps
  $C2C2 ADC A,D         ;
  $C2C3 RR L            ;
  $C2C5 ADC A,D         ;
@@ -10203,30 +10142,30 @@ c$C298 LD A,(IY+$0D)   ;
  $C2CE ADC A,D         ;
  $C2CF RR L            ;
  $C2D1 ADC A,D         ;
- $C2D2 LD E,A          ;
-*$C2D3 LD HL,$9C6B     ;
+ $C2D2 LD E,A          ; }
+*$C2D3 LD HL,$9C6B     ; {OR the hit flag into the global hit-flag ($9C6B)
  $C2D6 LD A,C          ;
  $C2D7 OR (HL)         ;
- $C2D8 LD (HL),A       ;
- $C2D9 LD A,(IY+$12)   ;
+ $C2D8 LD (HL),A       ; }
+ $C2D9 LD A,(IY+$12)   ; {Subtract damage from health (IY+$12)
  $C2DC SUB E           ;
- $C2DD LD (IY+$12),A   ;
- $C2E0 CP $03          ;
- $C2E2 JR NC,$C2EC     ;
- $C2E4 LD (IY+$02),$E1 ;
- $C2E8 LD (IY+$03),$6B ;
-*$C2EC AND A           ;
- $C2ED JP P,$C2FC      ;
- $C2F0 LD A,$07        ;
+ $C2DD LD (IY+$12),A   ; }
+ $C2E0 CP $03          ; {Skip near-death switch unless health dropped below 3
+ $C2E2 JR NC,$C2EC     ; }
+ $C2E4 LD (IY+$02),$E1 ; {Point at the near-death animation record (IY+$02/$03)
+ $C2E8 LD (IY+$03),$6B ; }
+*$C2EC AND A           ; {Skip to lower-score award unless health went negative
+ $C2ED JP P,$C2FC      ; }
+ $C2F0 LD A,$07        ; Award the higher destruction score bonus
  $C2F2 CALL $66B5      ; Add BCD score value to current player's score
  $C2F5 LD DE,$9D18     ;
  $C2F8 CALL $C5AF      ; Start object explosion sequence
  $C2FB RET             ;
-*$C2FC LD A,$00        ;
+*$C2FC LD A,$00        ; Award the lower destruction score bonus
  $C2FE CALL $66B5      ; Add BCD score value to current player's score
-*$C301 LD A,(IY+$0E)   ;
+*$C301 LD A,(IY+$0E)   ; {Retire once past a Y boundary ($1B)
  $C304 CP $1B          ;
- $C306 JR C,$C310      ;
+ $C306 JR C,$C310      ; }
  $C308 LD HL,$9D18     ;
  $C30B INC (HL)        ;
  $C30C CALL $B79F      ; Mark formation slot done, trigger completion effect
@@ -10245,28 +10184,33 @@ c$C298 LD A,(IY+$0D)   ;
 ; IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
 ;
 ; Handler for index $31 of the #R$A000 jump table (see #R$B7F6).
-c$C31A LD A,(IY+$0D)  ;
+; .
+; Moves an enemy down; when its action flag fires, awards score and bumps a
+; per-object counter (up to a cap) before joining the shared wave-completion
+; tail. Otherwise retires it once it leaves the play area.
+c$C31A LD A,(IY+$0D)  ; {Move straight down at fixed speed ($0020/frame)
  $C31D ADD A,$20      ;
- $C31F LD (IY+$0D),A  ;
+ $C31F LD (IY+$0D),A  ; }
  $C322 JR NC,$C327    ;
  $C324 INC (IY+$0E)   ;
-*$C327 BIT 7,(IY+$14) ;
+*$C327 BIT 7,(IY+$14) ; Skip scoring unless the action flag (IY+$14 bit 7) is
+                      ; set
  $C32B JR Z,$C347     ;
- $C32D LD IX,($9C77)  ;
- $C331 LD A,(IX+$09)  ;
- $C334 CP $07         ;
+ $C32D LD IX,($9C77)  ; IX = the object that hit the player
+ $C331 LD A,(IX+$09)  ; {Skip scoring once the per-object counter (IX+$09) hits
+ $C334 CP $07         ; its cap}
  $C336 JR NC,$C34D    ;
- $C338 INC (IX+$09)   ;
- $C33B LD HL,$9C27    ;
- $C33E SET 2,(HL)     ;
- $C340 LD A,$05       ;
+ $C338 INC (IX+$09)   ; {Otherwise bump the counter and request the
+ $C33B LD HL,$9C27    ; screen-flash event
+ $C33E SET 2,(HL)     ; }
+ $C340 LD A,$05       ; Award a fixed score bonus
  $C342 CALL $66B5     ; Add BCD score value to current player's score
  $C345 JR $C34D       ;
-*$C347 LD A,(IY+$0E)  ;
- $C34A CP $1B         ;
+*$C347 LD A,(IY+$0E)  ; {Otherwise: retire once past a Y boundary ($1B)
+ $C34A CP $1B         ; }
  $C34C RET C          ;
-*$C34D LD HL,$9C3F    ;
- $C350 DEC (HL)       ;
+*$C34D LD HL,$9C3F    ; {Decrement the wave-progress counter ($9C3F)
+ $C350 DEC (HL)       ; }
  $C351 LD HL,$9D18    ;
  $C354 INC (HL)       ;
  $C355 CALL $B79F     ; Mark formation slot done, trigger completion effect
@@ -10280,20 +10224,25 @@ c$C31A LD A,(IY+$0D)  ;
 ; IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
 ;
 ; Handler for index $39 of the #R$A000 jump table (see #R$B7F6).
-c$C359 LD A,(IY+$0D)  ;
+; .
+; Moves an enemy down; when its action flag fires, bumps a field on the object
+; that hit the player and requests the screen-flash event before joining the
+; shared wave-completion tail. Otherwise retires it once it leaves the play
+; area.
+c$C359 LD A,(IY+$0D)  ; {Move straight down at fixed speed ($0020/frame)
  $C35C ADD A,$20      ;
- $C35E LD (IY+$0D),A  ;
+ $C35E LD (IY+$0D),A  ; }
  $C361 JR NC,$C366    ;
  $C363 INC (IY+$0E)   ;
-*$C366 BIT 7,(IY+$14) ;
+*$C366 BIT 7,(IY+$14) ; Skip the flag-triggered step unless IY+$14 bit 7 is set
  $C36A JR Z,$C37A     ;
- $C36C LD IX,($9C77)  ;
- $C370 INC (IX+$03)   ;
- $C373 LD HL,$9C27    ;
- $C376 SET 2,(HL)     ;
+ $C36C LD IX,($9C77)  ; IX = the object that hit the player
+ $C370 INC (IX+$03)   ; {Bump a field on it (IX+$03), request the screen-flash
+ $C373 LD HL,$9C27    ; event
+ $C376 SET 2,(HL)     ; }
  $C378 JR $C380       ;
-*$C37A LD A,(IY+$0E)  ;
- $C37D CP $1B         ;
+*$C37A LD A,(IY+$0E)  ; {Otherwise: retire once past a Y boundary ($1B)
+ $C37D CP $1B         ; }
  $C37F RET C          ;
 *$C380 LD HL,$9D18    ;
  $C383 INC (HL)       ;
@@ -10309,26 +10258,31 @@ c$C359 LD A,(IY+$0D)  ;
 ; IY object struct base (Y at IY+$0D/$0E, action flag IY+$14 bit 7)
 ;
 ; Handler for index $38 of the #R$A000 jump table (see #R$B7F6).
-c$C388 LD A,($9BA0)   ;
- $C38B AND $03        ;
+; .
+; Flickers a visual flag periodically, moves an enemy down, and when its action
+; flag fires, awards score and bumps a wave-progress counter. Otherwise
+; decrements a countdown before completing the formation slot.
+c$C388 LD A,($9BA0)   ; {Every 4th frame ($9BA0): flicker a visual flag (IY+$04
+ $C38B AND $03        ; bit 4)}
  $C38D JR NZ,$C39D    ;
  $C38F BIT 4,(IY+$04) ;
  $C393 RES 4,(IY+$04) ;
  $C397 JR NZ,$C39D    ;
  $C399 SET 4,(IY+$04) ;
-*$C39D LD A,(IY+$0D)  ;
+*$C39D LD A,(IY+$0D)  ; {Move straight down at fixed speed ($0020/frame)
  $C3A0 ADD A,$20      ;
- $C3A2 LD (IY+$0D),A  ;
+ $C3A2 LD (IY+$0D),A  ; }
  $C3A5 JR NC,$C3AA    ;
  $C3A7 INC (IY+$0E)   ;
-*$C3AA BIT 7,(IY+$14) ;
+*$C3AA BIT 7,(IY+$14) ; Skip scoring unless the action flag (IY+$14 bit 7) is
+                      ; set
  $C3AE JR Z,$C3BB     ;
- $C3B0 LD A,$08       ;
+ $C3B0 LD A,$08       ; Award a fixed score bonus
  $C3B2 CALL $66B5     ; Add BCD score value to current player's score
- $C3B5 LD HL,$9C6A    ;
- $C3B8 INC (HL)       ;
+ $C3B5 LD HL,$9C6A    ; {Bump a wave-progress counter ($9C6A)
+ $C3B8 INC (HL)       ; }
  $C3B9 JR $C3BF       ;
-*$C3BB DEC (IY+$15)   ;
+*$C3BB DEC (IY+$15)   ; Otherwise: count down before completing (IY+$15)
  $C3BE RET NZ         ;
 *$C3BF LD HL,$9D18    ;
  $C3C2 INC (HL)       ;
@@ -10345,61 +10299,58 @@ c$C388 LD A,($9BA0)   ;
 ;
 ; Handler for index $30 of the #R$A000 jump table (see #R$B7F6).
 ; .
-; Outside a central column band (IY+$0C-6 not in 0-$14), flips the
-; direction-rate sign (IY+$15) and mirrors the angle target ($20-(IY+$10),
-; masked to 0-$3F) - an edge-bounce for a zigzag/weaving movement. Advances
-; angle (IY+$10) by the direction-rate, computes velocity via #R$B8A2 and
-; applies it via #R$BA0A. If the action flag (IY+$14 bit 7) is set, scores +5,
-; conditionally bumps the wave counter $9C68 and the explosion-data pointer
-; $9C73 (13-byte stride, see #R$A612), then joins the plain down-screen-advance
-; tail shared with #R$C388/#R$C298/#R$C31A/#R$C359.
-c$C3C7 LD A,(IY+$0C)  ;
+; Steers an enemy in a zigzag weave, bouncing its heading back when it strays
+; outside a central column band. When its action flag fires, awards score and
+; advances the wave/explosion-data trackers; otherwise moves it down and
+; retires it once it leaves the play area.
+c$C3C7 LD A,(IY+$0C)  ; {Outside a central column band (IY+$0C-6 not in 0-$14)
  $C3CA SUB $06        ;
- $C3CC CP $15         ;
+ $C3CC CP $15         ; }
  $C3CE JR C,$C3E2     ;
- $C3D0 LD A,(IY+$15)  ;
+ $C3D0 LD A,(IY+$15)  ; {Flip the direction-rate sign (IY+$15), edge-bounce
  $C3D3 NEG            ;
- $C3D5 LD (IY+$15),A  ;
- $C3D8 LD A,$20       ;
+ $C3D5 LD (IY+$15),A  ; }
+ $C3D8 LD A,$20       ; {Mirror the angle target, masked to 0-$3F
  $C3DA SUB (IY+$10)   ;
- $C3DD AND $3F        ;
+ $C3DD AND $3F        ; }
  $C3DF LD (IY+$10),A  ;
-*$C3E2 LD A,(IY+$10)  ;
+*$C3E2 LD A,(IY+$10)  ; {Advance angle (IY+$10) by the direction-rate
  $C3E5 ADD A,(IY+$15) ;
  $C3E8 AND $3F        ;
- $C3EA LD (IY+$10),A  ;
- $C3ED LD B,(IY+$11)  ;
+ $C3EA LD (IY+$10),A  ; }
+ $C3ED LD B,(IY+$11)  ; B = speed (IY+$11)
  $C3F0 CALL $B8A2     ; Compute velocity vector (dx,dy) from angle and speed
  $C3F3 CALL $BA0A     ; Apply object velocity (dx,dy) to position
- $C3F6 BIT 7,(IY+$14) ;
+ $C3F6 BIT 7,(IY+$14) ; Skip scoring unless the action flag (IY+$14 bit 7) is
+                      ; set
  $C3FA JR Z,$C41D     ;
- $C3FC LD HL,$9C68    ;
- $C3FF INC (HL)       ;
- $C400 LD A,$05       ;
+ $C3FC LD HL,$9C68    ; {Bump the wave counter ($9C68)
+ $C3FF INC (HL)       ; }
+ $C400 LD A,$05       ; Award a fixed score bonus
  $C402 CALL $66B5     ; Add BCD score value to current player's score
- $C405 LD HL,$9C71    ;
- $C408 LD C,(HL)      ;
+ $C405 LD HL,$9C71    ; {Advance the explosion-data pointer once its group
+ $C408 LD C,(HL)      ; counter allows
  $C409 LD HL,$9C72    ;
  $C40C LD A,(HL)      ;
  $C40D CP C           ;
- $C40E JR NC,$C41B    ;
+ $C40E JR NC,$C41B    ; }
  $C410 INC (HL)       ;
  $C411 LD HL,($9C73)  ;
  $C414 LD DE,$000D    ;
  $C417 ADD HL,DE      ;
  $C418 LD ($9C73),HL  ;
 *$C41B JR $C434       ;
-*$C41D LD A,(IY+$0D)  ;
- $C420 ADD A,$20      ;
+*$C41D LD A,(IY+$0D)  ; {Otherwise: move straight down at fixed speed
+ $C420 ADD A,$20      ; ($0020/frame)
  $C422 LD (IY+$0D),A  ;
- $C425 LD A,(IY+$0E)  ;
+ $C425 LD A,(IY+$0E)  ; }
  $C428 JR NC,$C42E    ;
  $C42A INC A          ;
  $C42B LD (IY+$0E),A  ;
-*$C42E CP $1C         ;
+*$C42E CP $1C         ; {Retire once outside a Y band ($1C-$22)
  $C430 RET C          ;
  $C431 CP $22         ;
- $C433 RET NC         ;
+ $C433 RET NC         ; }
 *$C434 LD HL,$9D18    ;
  $C437 INC (HL)       ;
  $C438 CALL $B79F     ; Mark formation slot done, trigger completion effect
@@ -10413,13 +10364,10 @@ c$C3C7 LD A,(IY+$0C)  ;
 ; IY enemy object struct base (status IY+$04, target ref IY+$1A, heading
 ; .  IY+$1C)
 ;
-; Decrements the shared randomized-reload timer at $9C42 (reloaded from $9C43
-; on expiry - same mechanism as #R$BD99). Once expired, checks activity flags
-; (IY+4 bits 0 and 5) and a target reference (IY+1A, $FF = no target), computes
-; an aim angle via #R$B845 toward the target (IX=($9C6D)), then turns the
-; enemy's current heading (IY+1C) toward that angle by a rate-limited step
-; (clamped to +-4) rather than snapping directly to it - a homing/steering
-; behaviour.
+; Runs an enemy's shared fire-decision timer, and once it expires, steers the
+; enemy's heading toward its target one rate-limited step at a time rather than
+; snapping to it. The enemy only actually fires once its heading lines up
+; closely enough with the target and a free bullet slot is available.
 @label=enemy_fire_steer
 c$C43C LD HL,$9C42     ;
  $C43F DEC (HL)        ; {Fire timer countdown; exit until it expires
@@ -10574,13 +10522,9 @@ c$C43C LD HL,$9C42     ;
 ;
 ; .
 ;
-; Pops a free object slot from the linked list at $9D1C (pushing the previous
-; head onto a secondary stack at $9D30), then initializes its struct:
-; IX+$02/$03 (a record pointer into the shared #R$6B42 table, not executable
-; code - see #R$5B55) -> $6B42 (record 0), state flags, default position, and
-; stores the new object's address into $9C6D - the same field #R$C43C reads as
-; its aim/steering target. Looks like the enemy-bullet or enemy-spawn
-; allocator.
+; Allocates a new object from the free-list pool and sets it up with default
+; state and position. Publishes it as the current aim/steering target for enemy
+; fire-decision code.
 @label=alloc_object
 c$C559 LD ($C570),SP   ; Save caller's SP (restored at $C56F)
  $C55D LD IX,($9D1C)   ; {Pop free-list head ($9D1C) into IX
@@ -10616,12 +10560,9 @@ c$C559 LD ($C570),SP   ; Save caller's SP (restored at $C56F)
 ; IY object struct base
 ; D,E position offset for the explosion
 ;
-; Sets the object's per-frame update-routine pointer (IY+2/+3, little-endian)
-; to $6BCA and initializes state fields IY+5/IY+6, then resets two global
-; countdown/growth values at $9C35 and $9C39. Called by 7 different
-; enemy/object update routines (BDAE, BF42, C0B2, C168, C1E0, C1E8, C2D6), very
-; likely the shared "object destroyed, switch to explosion animation" entry
-; point. $6BCA itself and the exact role of $9C35/$9C39 not yet traced.
+; Switches an object into its explosion animation and resets two global
+; explosion-growth timers. The shared "object destroyed" entry point used by
+; several enemy/object update routines.
 @label=start_explosion
 c$C5AF LD (IY+$02),$CA ; {set object's IX+$02/$03 (record ptr into #R$6B42's
  $C5B3 LD (IY+$03),$6B ; table, not code) to $6BCA (record 8)}
@@ -10641,56 +10582,54 @@ c$C5AF LD (IY+$02),$CA ; {set object's IX+$02/$03 (record ptr into #R$6B42's
 ;
 ; IY object struct base
 ;
-; Called from #R$B79F on the $9C3F path. Increments $9C3F, positions the object
-; via #R$B8DB, then sets IY+$02/$03 to $6BF3 - entry 4 of the #R$6BDB
-; explosion/state descriptor table (not executable code, see #R$5B55/#R$6BDB) -
-; and inits state fields; the sibling of #R$C5AF (which uses $6BCA, record 8 of
-; #R$6B42's table). The #R$C5EE entry (from #R$C648) additionally awards score
-; (+8) and sets up a follow-up object based on the current player's state.
+; Converts an object into an explosion, the sibling of #R$C5AF. The alternate
+; #R$C5EE entry additionally awards score and sets up a follow-up object based
+; on how many bonus objects remain, either upgrading it to a bigger explosion
+; or spawning the next object in the sequence.
 @label=object_to_explosion
-c$C5D2 LD HL,$9C3F     ;
- $C5D5 INC (HL)        ;
+c$C5D2 LD HL,$9C3F     ; {Bump the shared explosion-conversion counter ($9C3F)
+ $C5D5 INC (HL)        ; }
  $C5D6 CALL $B8DB      ; Set object position from $9C01, clamp column (IY+$0C)
                        ; to 8-24
- $C5D9 RES 4,(IY+$04)  ;
- $C5DD LD (IY+$02),$F3 ;
- $C5E1 LD (IY+$03),$6B ;
- $C5E5 LD (IY+$05),$08 ;
- $C5E9 LD (IY+$06),$00 ;
+ $C5D9 RES 4,(IY+$04)  ; Clear the banking-in-progress flag
+ $C5DD LD (IY+$02),$F3 ; {Point at the explosion state-record entry ($6BF3)
+ $C5E1 LD (IY+$03),$6B ; }
+ $C5E5 LD (IY+$05),$08 ; {Init state fields (IY+$05/$06)
+ $C5E9 LD (IY+$06),$00 ; }
  $C5ED RET             ;
 ; This entry point is used by the routine at #R$C648.
 *$C5EE CALL $B8DB      ; Set object position from $9C01, clamp column (IY+$0C)
                        ; to 8-24
- $C5F1 LD A,$08        ;
+ $C5F1 LD A,$08        ; Award a fixed score bonus
  $C5F3 CALL $66B5      ; Add BCD score value to current player's score
- $C5F6 RES 4,(IY+$04)  ;
- $C5FA LD (IY+$06),$00 ;
- $C5FE LD A,($9C01)    ;
- $C601 LD (IY+$0D),A   ;
- $C604 LD (IY+$0B),$00 ;
- $C608 LD IX,($9C77)   ;
- $C60C LD A,(IX+$0B)   ;
- $C60F AND A           ;
- $C610 JR Z,$C620      ;
- $C612 LD A,($9C6A)    ;
- $C615 CP $03          ;
- $C617 JR Z,$C631      ;
+ $C5F6 RES 4,(IY+$04)  ; Clear the banking-in-progress flag
+ $C5FA LD (IY+$06),$00 ; Reset frame
+ $C5FE LD A,($9C01)    ; {Snap Y to the top ($9C01)
+ $C601 LD (IY+$0D),A   ; }
+ $C604 LD (IY+$0B),$00 ; Reset X to the left edge
+ $C608 LD IX,($9C77)   ; IX = the object that hit the player
+ $C60C LD A,(IX+$0B)   ; {Check whether it has bonus follow-up objects
+ $C60F AND A           ; remaining (IX+$0B)
+ $C610 JR Z,$C620      ; }
+ $C612 LD A,($9C6A)    ; {Skip the upgrade check once the group-clear rate cap
+ $C615 CP $03          ; is reached
+ $C617 JR Z,$C631      ; }
  $C619 CALL $B7FE      ; Pseudo-random number generator
- $C61C CP $0F          ;
- $C61E JR C,$C631      ;
-*$C620 LD (IY+$02),$ED ;
- $C624 LD (IY+$03),$6B ;
- $C628 LD (IY+$05),$0F ;
- $C62C LD (IY+$15),$33 ;
+ $C61C CP $0F          ; {Otherwise randomly decide whether to upgrade
+ $C61E JR C,$C631      ; }
+*$C620 LD (IY+$02),$ED ; {Upgrade to a bigger explosion (record $ED)
+ $C624 LD (IY+$03),$6B ; }
+ $C628 LD (IY+$05),$0F ; {Init state fields (IY+$05, growth rate IY+$15)
+ $C62C LD (IY+$15),$33 ; }
  $C630 RET             ;
-*$C631 XOR A           ;
- $C632 LD ($9C6A),A    ;
+*$C631 XOR A           ; {Otherwise: reset the group-clear rate counter
+ $C632 LD ($9C6A),A    ; }
  $C635 CALL $B8DB      ; Set object position from $9C01, clamp column (IY+$0C)
                        ; to 8-24
- $C638 DEC (IX+$0B)    ;
- $C63B LD (IY+$02),$E7 ;
- $C63F LD (IY+$03),$6B ;
- $C643 LD (IY+$05),$10 ;
+ $C638 DEC (IX+$0B)    ; Consume one bonus follow-up object (IX+$0B)
+ $C63B LD (IY+$02),$E7 ; {Spawn the next object in the sequence (record $E7)
+ $C63F LD (IY+$03),$6B ; }
+ $C643 LD (IY+$05),$10 ; Init state field (IY+$05)
  $C647 RET             ;
 
 ; Decrement wave-group counter; trigger group-clear bonus when it hits zero
@@ -10699,29 +10638,26 @@ c$C5D2 LD HL,$9C3F     ;
 ;
 ; .
 ;
-; Called from #R$B79F when a formation slot finishes. Decrements the wave-group
-; counter at $9C68; while nonzero, falls through into #R$C5EE (per-kill
-; score/bonus handling). Once it reaches zero, reloads it from $9C72 and sets
-; up a bonus-animation script on IY (pointer $6B97, duration fields), choosing
-; between two outcomes based on IY+$0C vs $12.
-c$C648 LD HL,$9C68     ;
- $C64B DEC (HL)        ;
+; Decrements the wave-group counter; once the whole group is cleared, sets up a
+; bonus-award animation, otherwise falls through to per-kill scoring.
+c$C648 LD HL,$9C68     ; {Decrement the wave-group counter ($9C68)
+ $C64B DEC (HL)        ; }
  $C64C JR NZ,$C5EE     ;
  $C64E LD A,($9C72)    ; get Wave type / group id
  $C651 LD (HL),A       ;
- $C652 LD (IY+$02),$97 ;
- $C656 LD (IY+$03),$6B ;
- $C65A LD (IY+$05),$07 ;
- $C65E LD (IY+$06),$06 ;
- $C662 LD A,(IY+$0C)   ;
- $C665 CP $12          ;
+ $C652 LD (IY+$02),$97 ; {Point at the bonus-animation record ($6B97)
+ $C656 LD (IY+$03),$6B ; }
+ $C65A LD (IY+$05),$07 ; {Init state fields (IY+$05/$06)
+ $C65E LD (IY+$06),$06 ; }
+ $C662 LD A,(IY+$0C)   ; {Pick the animation's direction based on column
+ $C665 CP $12          ; (IY+$0C vs $12)}
  $C667 JR C,$C673      ;
- $C669 LD (IY+$15),$01 ;
- $C66D LD (IY+$10),$20 ;
+ $C669 LD (IY+$15),$01 ; {Rightward outcome: set growth rate and angle
+ $C66D LD (IY+$10),$20 ; }
  $C671 JR $C67B        ;
-*$C673 LD (IY+$15),$FF ;
- $C677 LD (IY+$10),$00 ;
-*$C67B LD (IY+$11),$03 ;
+*$C673 LD (IY+$15),$FF ; {Otherwise: leftward outcome, no angle
+ $C677 LD (IY+$10),$00 ; }
+*$C67B LD (IY+$11),$03 ; Set the animation's duration (IY+$11)
  $C67F RET             ;
 
 ; Scroll background (periodic LDDR shift, gated by counter $9C2A)
@@ -10730,10 +10666,7 @@ c$C648 LD HL,$9C68     ;
 ;
 ; .
 ;
-; Called every frame from #R$A0C4. Decrements counter $9C2A; every 3rd call
-; ($9C2A reloaded to 3) it shifts two 15-byte blocks ($850E-$851D and
-; $851E-$852D) backward by one byte via LDDR - the periodic scroll-step
-; mechanism for the background graphics.
+; Shifts the background graphics one byte, but only every 3rd frame.
 @label=scroll_background
 c$C680 LD HL,$9C2A   ;
  $C683 DEC (HL)      ; {Act only every 3rd frame ($9C2A countdown)
@@ -10758,12 +10691,10 @@ c$C680 LD HL,$9C2A   ;
 ; Used by the routines at #R$6498, #R$6A88, #R$A6BB, #R$A6E5, #R$A783 and
 ; #R$A802.
 ;
-; none; uses colour from $9C59 (set by caller beforehand)
+; .
 ;
-; Diamond/cross wipe: repeatedly paints a full-height column and full-width row
-; on each side of screen centre, growing outward frame by frame, using #R$C6D3
-; (fill column) and #R$C6EB (fill row) with the attribute byte at $9C59. All
-; callers set $9C59 to the desired colour just before calling this.
+; Wipes the screen to a solid colour (from $9C59, set by the caller beforehand)
+; with a diamond/cross pattern growing outward from the centre.
 @label=screen_wipe
 c$C6A6 LD B,$12      ; wait ~18 frames before starting wipe
 *$C6A8 HALT          ; {loop: wait 18 frames
@@ -10797,16 +10728,19 @@ c$C6A6 LD B,$12      ; wait ~18 frames before starting wipe
 ; Used by the routine at #R$C6A6.
 ;
 ; A screen column (7-24 valid, else no-op)
+;
+; Fills one full-height screen column with the wipe colour, ignoring
+; out-of-range columns.
 @label=fill_attr_column
-c$C6D3 CP $07        ;
+c$C6D3 CP $07        ; {Ignore out-of-range columns (valid range 7-24)
  $C6D5 RET C         ;
  $C6D6 CP $19        ;
- $C6D8 RET NC        ;
- $C6D9 PUSH AF       ;
+ $C6D8 RET NC        ; }
+ $C6D9 PUSH AF       ; {Point at the attribute-area column start ($58xx)
  $C6DA LD L,A        ;
  $C6DB LD H,$58      ;
  $C6DD LD DE,$0020   ;
- $C6E0 LD B,$17      ;
+ $C6E0 LD B,$17      ; }
  $C6E2 LD A,($9C59)  ; get Active colour scheme
 *$C6E5 LD (HL),A     ;
  $C6E6 ADD HL,DE     ;
@@ -10819,6 +10753,8 @@ c$C6D3 CP $07        ;
 ; Used by the routine at #R$C6A6.
 ;
 ; A row/column offset (encodes screen position)
+;
+; Fills one full-width screen row with the wipe colour.
 @label=fill_attr_row
 c$C6EB PUSH AF       ;
  $C6EC RRCA          ; {Rotate position code into attribute-row high bits
@@ -10847,6 +10783,9 @@ c$C6EB PUSH AF       ;
 ; Used by the routine at #R$C72A.
 ;
 ; A attribute colour
+;
+; Fills the whole screen attribute area with a single colour, using a fast
+; PUSH-unroll fill.
 @label=fill_attr_screen
 c$C709 LD ($C727),SP ; Save caller's SP (restored at $C726)
  $C70D LD C,A        ;
@@ -10876,33 +10815,31 @@ c$C709 LD ($C727),SP ; Save caller's SP (restored at $C726)
 ;
 ; .
 ;
-; Called every interrupt from #R$A0C4. Reads the next colour byte from a
-; repeating sequence (pointer $9C45, reset via $9C44/$9C47 on terminator $FF),
-; then applies it to the active player's corner box ($58C4 or $58DA, chosen via
-; $9C76) - the same corner boxes highlighted (statically) by #R$6A88's credits
-; screen.
+; Cycles the active player's corner-box indicator through a repeating colour
+; sequence, one step per interrupt. Also drives the full-screen flash effect if
+; one is pending.
 @label=animate_player_box
-c$C72A LD HL,($9C45) ;
- $C72D LD A,(HL)     ;
+c$C72A LD HL,($9C45) ; {Read next byte of the colour sequence ($9C45)
+ $C72D LD A,(HL)     ; }
  $C72E CP $FF        ;
  $C730 JR NZ,$C740   ;
- $C732 LD HL,$9C44   ;
- $C735 LD A,(HL)     ;
+ $C732 LD HL,$9C44   ; {Sequence exhausted: check repeat count, reload if any
+ $C735 LD A,(HL)     ; remain
  $C736 AND A         ;
- $C737 LD C,$07      ;
+ $C737 LD C,$07      ; }
  $C739 JR Z,$C745    ;
- $C73B DEC (HL)      ;
+ $C73B DEC (HL)      ; {Reload the sequence pointer from its start ($9C47)
  $C73C LD HL,$9C47   ;
- $C73F LD A,(HL)     ;
-*$C740 INC HL        ;
+ $C73F LD A,(HL)     ; }
+*$C740 INC HL        ; {Advance the sequence pointer, C = colour to apply
  $C741 LD ($9C45),HL ;
- $C744 LD C,A        ;
+ $C744 LD C,A        ; }
 *$C745 LD A,($9C76)  ; get Active player
- $C748 LD HL,$58C4   ;
- $C74B DEC A         ;
- $C74C JR Z,$C750    ;
+ $C748 LD HL,$58C4   ; {Point at the active player's corner box ($58C4 or
+ $C74B DEC A         ; $58DA)
+ $C74C JR Z,$C750    ; }
  $C74E LD L,$DA      ;
-*$C750 LD (HL),C     ;
+*$C750 LD (HL),C     ; {Paint the box's 4 corner cells
  $C751 INC L         ;
  $C752 LD (HL),C     ;
  $C753 LD A,L        ;
@@ -10910,7 +10847,7 @@ c$C72A LD HL,($9C45) ;
  $C756 LD L,A        ;
  $C757 LD (HL),C     ;
  $C758 INC L         ;
- $C759 LD (HL),C     ;
+ $C759 LD (HL),C     ; }
  $C75A LD HL,($9C5B) ; read next full-screen flash colour byte (sequence $9C5B,
                      ; set by #R$6A88)
  $C75D LD A,(HL)     ;
@@ -10960,7 +10897,7 @@ c$C772 CALL $C825    ; Configure $C772 mover
  $C79E EXX           ; EXX: back to normal registers for the unrolled store
                      ; sequence
  $C79F LD D,$00      ;
- $C7A1 POP BC        ;
+ $C7A1 POP BC        ; {Store 4 pairs from HL-fed source (source 1/3)
  $C7A2 LD (HL),C     ;
  $C7A3 INC H         ;
  $C7A4 LD (HL),B     ;
@@ -10979,14 +10916,14 @@ c$C772 CALL $C825    ; Configure $C772 mover
  $C7B1 LD (HL),C     ;
  $C7B2 INC H         ;
  $C7B3 LD (HL),B     ;
- $C7B4 INC H         ;
- $C7B5 EX DE,HL      ;
+ $C7B4 INC H         ; }
+ $C7B5 EX DE,HL      ; {Switch page, advance to next source (SP=IX)
  $C7B6 LD H,A        ;
  $C7B7 INC L         ;
  $C7B8 INC E         ;
  $C7B9 LD SP,IX      ;
- $C7BB LD D,$00      ;
- $C7BD POP BC        ;
+ $C7BB LD D,$00      ; }
+ $C7BD POP BC        ; {Store 4 pairs from IX-fed source (source 2/3)
  $C7BE LD (HL),C     ;
  $C7BF INC H         ;
  $C7C0 LD (HL),B     ;
@@ -11005,14 +10942,14 @@ c$C772 CALL $C825    ; Configure $C772 mover
  $C7CD LD (HL),C     ;
  $C7CE INC H         ;
  $C7CF LD (HL),B     ;
- $C7D0 INC H         ;
- $C7D1 EX DE,HL      ;
+ $C7D0 INC H         ; }
+ $C7D1 EX DE,HL      ; {Switch page, advance to next source (SP=IY)
  $C7D2 LD H,A        ;
  $C7D3 INC L         ;
  $C7D4 INC E         ;
  $C7D5 LD SP,IY      ;
- $C7D7 LD D,$00      ;
- $C7D9 POP BC        ;
+ $C7D7 LD D,$00      ; }
+ $C7D9 POP BC        ; {Store 4 pairs from IY-fed source (source 3/3)
  $C7DA LD (HL),C     ;
  $C7DB INC H         ;
  $C7DC LD (HL),B     ;
@@ -11031,14 +10968,14 @@ c$C772 CALL $C825    ; Configure $C772 mover
  $C7E9 LD (HL),C     ;
  $C7EA INC H         ;
  $C7EB LD (HL),B     ;
- $C7EC INC H         ;
- $C7ED EX DE,HL      ;
+ $C7EC INC H         ; }
+ $C7ED EX DE,HL      ; {Switch page, reset source pointer for next pass
  $C7EE LD H,A        ;
  $C7EF INC L         ;
  $C7F0 INC E         ;
  $C7F1 LD SP,$0000   ;
- $C7F4 EXX           ;
- $C7F5 DJNZ $C794    ;
+ $C7F4 EXX           ; }
+ $C7F5 DJNZ $C794    ; Loop $C792's inner unroll count
  $C7F7 EXX           ;
  $C7F8 EX AF,AF'     ;
  $C7F9 LD L,A        ;
@@ -11073,9 +11010,8 @@ c$C772 CALL $C825    ; Configure $C772 mover
 ;
 ; .
 ;
-; Patches the IX-displacement operand at $C846 from the frame-indexed table
-; ($9C02 + $9C00 mod 8), then via the shared tail writes $EB (EX DE,HL) into
-; three opcode slots ($C7A1/$C7BD/$C7D9) in #R$C772's unrolled store body.
+; Reconfigures #R$C772's self-modifying mover for the current frame's row
+; displacement.
 c$C825 LD A,($9C00)  ;
  $C828 AND $07       ; {Frame counter $9C00 mod 8
  $C82A LD E,A        ; }
@@ -11111,12 +11047,9 @@ c$C839 LD A,$24      ; A=$24 (INC H opcode)
 ;
 ; .
 ;
-; Called every interrupt from #R$A0C4. Source is the circular scroll buffer:
-; base pointer ($9BF9)+$0024 plus a wrap count derived from the scroll offset
-; at $9BF8. Copies up to 24 bytes via LDI into #R$F6D1, and if the window runs
-; past the buffer end, continues the remaining bytes from the wrap point at
-; $FA79 (the same circular buffer filled by #R$6498). The resulting #R$F6D1 row
-; is consumed by #R$C772's fast attribute mover.
+; Copies the next window of the circular scroll buffer into #R$F6D1, wrapping
+; around to the buffer's start if the window runs past its end. The resulting
+; row is what #R$C772 draws to the screen.
 @label=build_scroll_row
 c$C84C LD HL,($9BF9) ; {HL = scroll-window source pointer, DE = dest #R$F6D1
  $C84F LD DE,$0024   ;
@@ -11129,8 +11062,8 @@ c$C84C LD HL,($9BF9) ; {HL = scroll-window source pointer, DE = dest #R$F6D1
  $C85E LD B,A        ;
  $C85F LD A,C        ;
  $C860 JR Z,$C8AE    ; }
-*$C862 LD C,$FF      ;
- $C864 LDI           ;
+*$C862 LD C,$FF      ; C=$FF: BC = byte count for the LDI runs below
+ $C864 LDI           ; {Copy up to 36 bytes into #R$F6D1, one LDI per byte
  $C866 LDI           ;
  $C868 LDI           ;
  $C86A LDI           ;
@@ -11165,7 +11098,7 @@ c$C84C LD HL,($9BF9) ; {HL = scroll-window source pointer, DE = dest #R$F6D1
  $C8A4 LDI           ;
  $C8A6 LDI           ;
  $C8A8 LDI           ;
- $C8AA LDI           ;
+ $C8AA LDI           ; }
  $C8AC DJNZ $C862    ;
 *$C8AE LD HL,$FA79   ; {Wrap: continue remaining bytes from buffer start $FA79
  $C8B1 LD B,A        ;
@@ -11180,12 +11113,9 @@ c$C84C LD HL,($9BF9) ; {HL = scroll-window source pointer, DE = dest #R$F6D1
 ;
 ; .
 ;
-; Called every frame from #R$A0C4 and #R$A4E7. Advances a mod-8 frame counter
-; at $9C00; only on the 8th frame does it request deferred event bit 3 ($9C27),
-; toggle the ping-pong column-buffer selector ($9BAE), copy the active 18-byte
-; column row into staging ($9BD4), call #R$C941 to decode the next column, and
-; convert each row cell into an attribute-code pair (>=$60 clamped to $62)
-; written to the on-screen scroll target ($9BF9).
+; Advances the background scroll one column every 8th frame: decodes the next
+; column of scenery tiles and converts it into attribute codes for the
+; on-screen scroll buffer.
 c$C8B8 LD HL,$9C00   ;
  $C8BB LD A,(HL)     ;
  $C8BC INC A         ;
@@ -11214,50 +11144,50 @@ c$C8B8 LD HL,$9C00   ;
  $C8E8 LD BC,$0012   ;
  $C8EB LDIR          ; Copy 18-byte row into staging buffer $9BD4
  $C8ED CALL Z,$C941  ; Decode next column's tile data into ping-pong buffer
- $C8F0 LD HL,$9BD4   ;
- $C8F3 LD DE,($9BF9) ;
- $C8F7 LD B,$12      ;
+ $C8F0 LD HL,$9BD4   ; {HL/DE = staging row / on-screen scroll target; B = 18
+ $C8F3 LD DE,($9BF9) ; cells
+ $C8F7 LD B,$12      ; }
  $C8F9 LD C,(HL)     ;
  $C8FA INC HL        ;
- $C8FB LD A,(IY+$00) ;
- $C8FE JR $C907      ;
+ $C8FB LD A,(IY+$00) ; {Get this cell's character code, advance the ping-pong
+ $C8FE JR $C907      ; buffer}
 *$C900 LD C,(HL)     ;
  $C901 INC HL        ;
  $C902 LD A,(IY+$00) ;
  $C905 INC IY        ;
-*$C907 CP $0C        ;
+*$C907 CP $0C        ; {Clamp tile-set index ranges to a valid attribute code
  $C909 JR C,$C916    ;
  $C90B CP $60        ;
  $C90D JR NC,$C916   ;
  $C90F LD A,C        ;
  $C910 CP $60        ;
  $C912 JR C,$C917    ;
- $C914 LD C,$62      ;
+ $C914 LD C,$62      ; }
 *$C916 LD A,C        ;
-*$C917 RLCA          ;
+*$C917 RLCA          ; {Rotate character code into position for the pair
  $C918 RLCA          ;
  $C919 RLCA          ;
- $C91A LD C,A        ;
- $C91B AND $F8       ;
- $C91D LD (DE),A     ;
+ $C91A LD C,A        ; }
+ $C91B AND $F8       ; {Write the attribute-code pair, advance the write
+ $C91D LD (DE),A     ; pointer
  $C91E INC DE        ;
  $C91F XOR C         ;
  $C920 ADD A,$80     ;
  $C922 LD (DE),A     ;
- $C923 INC DE        ;
+ $C923 INC DE        ; }
  $C924 DJNZ $C900    ;
- $C926 LD HL,($9BF9) ;
+ $C926 LD HL,($9BF9) ; {Advance the scroll target pointer, back up 36 bytes
  $C929 LD DE,$FFDC   ;
  $C92C ADD HL,DE     ;
- $C92D EX DE,HL      ;
- $C92E LD HL,$9BF8   ;
+ $C92D EX DE,HL      ; }
+ $C92E LD HL,$9BF8   ; {Level-progress counter ($9BAD); clamp at $1C
  $C931 LD A,(HL)     ;
- $C932 DEC A         ;
+ $C932 DEC A         ; }
  $C933 JP P,$C93B    ;
  $C936 LD A,$18      ;
  $C938 LD DE,$FDD9   ;
-*$C93B LD (HL),A     ;
- $C93C LD ($9BF9),DE ;
+*$C93B LD (HL),A     ; {Store the new scroll target pointer
+ $C93C LD ($9BF9),DE ; }
  $C940 RET           ;
 
 ; Decode next column's tile data into ping-pong buffer
@@ -11266,27 +11196,21 @@ c$C8B8 LD HL,$9C00   ;
 ;
 ; .
 ;
-; Called from #R$C8B8 every 8th frame. If the column-ready flag ($9BA2 bit 5)
-; is clear, first calls #R$C981 to scan/spawn enemies from the previous column.
-; Then decodes 9 map cells from the column-source pointer ($9BA9) into the
-; ping-pong buffer at $9BB0: each cell byte indexes the four 2x2 tile-block
-; tables at #R$7900-$7CFF (see #R$7900), and the four resulting character codes
-; are stored as top pair (#R$7900/$7A00 -> IX+0/IX+1, row A) and bottom pair
-; ($7B00/$7C00 -> IX+$12/IX+$13, row B). So the 9 cells expand to two 18-char
-; column rows. Advances the source pointer ($9BA9) and bumps a level-progress
-; counter ($9BAD) clamped at $1C.
+; Decodes the next 9 map cells into the ping-pong tile buffer, expanding each
+; cell into its 2x2 tile block, and advances the level-progress counter. First
+; spawns any enemies queued in the previous column.
 @label=decode_column
 c$C941 LD HL,$9BA2   ;
  $C944 BIT 5,(HL)    ; Check "column ready" flag before advancing
  $C946 CALL Z,$C981  ; Scan incoming column for spawn markers and allocate
                      ; enemy objects
- $C949 LD HL,($9BA9) ;
- $C94C LD IX,$9BB0   ;
+ $C949 LD HL,($9BA9) ; {HL = column-source pointer; IX = ping-pong buffer; C =
+ $C94C LD IX,$9BB0   ; table page
  $C950 LD C,$79      ;
- $C952 LD B,$09      ;
+ $C952 LD B,$09      ; }
 *$C954 LD E,(HL)     ; Start of 9-entry decode loop
- $C955 LD D,C        ;
- $C956 LD A,(DE)     ;
+ $C955 LD D,C        ; {Read the cell's 4 tile-block bytes, store as a 2x2 char
+ $C956 LD A,(DE)     ; block
  $C957 INC D         ;
  $C958 LD (IX+$00),A ;
  $C95B LD A,(DE)     ;
@@ -11296,17 +11220,17 @@ c$C941 LD HL,$9BA2   ;
  $C961 INC D         ;
  $C962 LD (IX+$12),A ;
  $C965 LD A,(DE)     ;
- $C966 LD (IX+$13),A ;
+ $C966 LD (IX+$13),A ; }
  $C969 INC IX        ; {Advance to next buffer entry (IX+=2)
  $C96B INC IX        ; }
- $C96D INC L         ;
+ $C96D INC L         ; {Advance source cell (L), bump table row (shadow A')
  $C96E EX AF,AF'     ;
  $C96F ADD A,$10     ;
- $C971 EX AF,AF'     ;
+ $C971 EX AF,AF'     ; }
  $C972 DJNZ $C954    ; Loop 9 times
- $C974 LD ($9BA9),HL ;
+ $C974 LD ($9BA9),HL ; {Store the advanced source pointer ($9BA9)
  $C977 LD HL,$9BAD   ;
- $C97A LD A,(HL)     ;
+ $C97A LD A,(HL)     ; }
  $C97B CP $1C        ; Clamp progress counter at $1C
  $C97D RET NC        ; Stop if counter already at max
  $C97E INC A         ;
@@ -11319,30 +11243,26 @@ c$C941 LD HL,$9BA2   ;
 ;
 ; .
 ;
-; Called from #R$C941 when the "column ready" flag ($9BA2 bit 5) is clear.
-; Scans 9 entries of the newly-decoded column buffer ($9BA9, stride $10) for
-; spawn markers $05/$55; for each match, calls #R$BA5F to spawn a group (D =
-; entry offset, used there as the enemy's row/type). #R$BA5F returns carry set
-; on success: on a successful spawn the marker byte is left unchanged, but if
-; the pool was full (carry clear) the cell is overwritten with $33 to mark it
-; consumed/blocked.
+; Scans the newly-decoded column for enemy spawn markers and allocates an
+; object for each one found, marking cells that couldn't be spawned due to a
+; full object pool.
 @label=scan_spawn_markers
 c$C981 LD HL,$9BA2   ;
  $C984 BIT 5,(HL)    ; Skip if column-ready flag already set
  $C986 RET NZ        ;
- $C987 LD HL,($9BA9) ;
- $C98A LD B,$09      ;
- $C98C LD C,$10      ;
+ $C987 LD HL,($9BA9) ; {HL = column-source pointer; B = 9 entries; C = table
+ $C98A LD B,$09      ; page
+ $C98C LD C,$10      ; }
 *$C98E LD A,(HL)     ;
  $C98F CP $05        ; Check for spawn marker $05
  $C991 JR Z,$C997    ;
  $C993 CP $55        ; {Check for spawn marker $55; skip entry if neither
  $C995 JR NZ,$C9A7   ; }
-*$C997 PUSH HL       ;
- $C998 PUSH BC       ;
+*$C997 PUSH HL       ; {D = entry offset (enemy row/type); A = 9 (formation
+ $C998 PUSH BC       ; size)
  $C999 LD D,C        ;
  $C99A LD C,$00      ;
- $C99C LD A,$09      ;
+ $C99C LD A,$09      ; }
  $C99E CALL $BA5F    ; Spawn a group of formation objects from the free-list
                      ; pool
  $C9A1 POP BC        ;
@@ -11363,12 +11283,9 @@ c$C981 LD HL,$9BA2   ;
 ;
 ; .
 ;
-; Called every frame from #R$A0C4. Every 16th tick, advances the level-progress
-; counter ($9BA4) and processes all timeline entries whose trigger byte matches
-; it: each 3-byte entry [trigger, param D, command] either dispatches a special
-; command ($FB-$FE) or, for any other value, treats it as a formation tag and
-; spawns via $C9E4/#R$BA5F. Ends the frame's processing at the first
-; non-matching or $FF entry. See docs/Level-Format.md.
+; Fires the level's due timeline entries: special commands (screen pokes, flag
+; sets) or, for anything else, spawning an enemy formation. Runs once every 16
+; frames.
 @label=enemy_timeline
 c$C9AF LD HL,$9BA3   ; POKE 51631,201 patches entry to RET, disabling this
                      ; routine (No Enemies)

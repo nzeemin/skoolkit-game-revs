@@ -322,7 +322,25 @@ N $9306 Play die sound as Bruce is defeated
 @ $9306 label=play_bruce_die_sound
 N $930C Play sound after taking a key by Bruce
 @ $930C label=play_key_collecting
-b $9312
+c $9312 Play hit-impact sound (noise burst)
+N $9312 Makes the harsh "hit" noise used when a blow lands (called from the melee code at $D3EB). It runs a short pseudo-random noise generator - an 8-bit shift register with XOR feedback whose state is kept in the self-modified byte at $9339 - toggling the speaker from each noise bit. The delay between toggles lengthens as the outer counter climbs, so the burst sweeps in pitch as it plays.
+C $9313,2 C = pitch/length counter (sweeps up to 0)
+C $9315,7 Load noise state, seed with 1 if it was zero
+C $931C,4 Shift right; XOR feedback bits if one fell out
+C $9322,3 Store new noise state
+C $9325,3 Take bit 4 as the speaker toggle
+C $9328,4 XOR the noise bit into the speaker state
+C $932C,5 Store it and output to the speaker port
+C $9331,3 Delay proportional to C (pitch)
+C $9334,3 Next step; loop until the counter wraps to 0
+b $9339
+W $933A,4,4
+W $933E,8,8
+W $9346,4,4
+W $934A,6,6
+B $9462
+B $9468
+B $946E
 c $95e2 Play music/sound-effect sequence (list of tone groups)
 R $95e2 HL address of the tone-group sequence to play
 N $95e2 Plays a complete tune or sound effect by working through a list of note groups, handing each one to #R$960A to sound on the speaker, and stops when it reaches the end-of-list marker. Interrupts are turned off while it plays so the timing of the notes stays accurate.
@@ -359,7 +377,8 @@ b $9649
 b $9800 Background tiles 8*8, tile attributes at #R$6300
 @ $9800 label=bktiles
 c $C000 Entry point, jump to start
-b $A000
+b $A000 Personage sprite bank (pixels and masks, both facings)
+N $A000 A flat array of 8-byte cells; each cell is one 8x8 pixel block (1 byte per row), addressed as base + cell_index*8. Four 2K banks: right-facing pixels ($A000), left-facing pixels ($A800), right-facing masks ($B000), left-facing masks ($B800) - so the facing offset is $800 and each cell's mask sits $1000 above its pixels. A personage pose is assembled from several cells whose indices and grid size come from an image descriptor (see #R$CD13); #R$C3CB walks the descriptor and blends each cell via #R$C44D (AND mask, then OR pixels). The cell size (8x8) is fixed here; the sprite's width and height in cells live in the descriptor, not in this bank.
 @ $A000 label=right_direction_images
 @ $A800 label=left_direction_images
 @ $B000 label=right_direction_masks
@@ -977,12 +996,21 @@ W $CB86,4,4 21 attack, melee hit
 c $CB8A Empty action handler
 N $CB8A Used for Bruce/Yamo state 15.
 b $CB8B Ninja sprite descriptions
-@ $CB8D label=ninja_images_descriptions
-B $CB8D
-B $CB95
-B $CB9D
-B $CBA5
-B $CBAB
+N $CB8B One descriptor per pose: width (cells), height (cells), then width*height cell indices into the sprite bank at #R$A000 (see #R$CD13).
+B $CB8B,2,2 empty pose (0x0), used for state 15
+@ $CB8B label=ninja_images_descriptions
+B $CB8D,2,2 pose: 2x3 cells
+B $CB8F,6,2 #HTML[<img src="images/sprites/spriteCB8D.png" />]
+B $CB95,2,2 pose: 2x3 cells
+B $CB97,6,2 #HTML[<img src="images/sprites/spriteCB95.png" />]
+B $CB9D,2,2 pose: 2x3 cells
+B $CB9F,6,2 #HTML[<img src="images/sprites/spriteCB9D.png" />]
+B $CBA5,2,2 pose: 2x2 cells
+B $CBA7,4,2 #HTML[<img src="images/sprites/spriteCBA5.png" />]
+B $CBAB,2,2 pose: 3x2 cells
+B $CBAD,6,3 #HTML[<img src="images/sprites/spriteCBAB.png" />]
+B $CBB3,2,2 pose: 3x3 cells
+B $CBB5,9,3 #HTML[<img src="images/sprites/spriteCBB3.png" />]
 b $CBBE Data on Green Yamo personage
 @ $CBBE label=sumoist_description
 B $CBBE,2,2
@@ -1035,20 +1063,35 @@ W $CC20,4,4 19 hit reaction
 W $CC24,4,4 20 recoil
 W $CC28,4,4 21 attack, melee hit
 b $CC2C Green Yamo sprite descriptions
-B $CC2C
-B $CC34
-B $CC3C
-B $CC44
-B $CC4C
-B $CC54
-B $CC5C
-B $CC64
-B $CC6C
-B $CC77
-B $CC82
-B $CC8A
-B $CC92
-B $CC9A
+N $CC2C One descriptor per pose: width (cells), height (cells), then width*height cell indices into the sprite bank at #R$A000 (see #R$CD13).
+B $CC2C,2,2 pose: 2x3 cells
+B $CC2E,6,2 #HTML[<img src="images/sprites/spriteCC2C.png" />]
+B $CC34,2,2 pose: 2x3 cells
+B $CC36,6,2 #HTML[<img src="images/sprites/spriteCC34.png" />]
+B $CC3C,2,2 pose: 2x3 cells
+B $CC3E,6,2 #HTML[<img src="images/sprites/spriteCC3C.png" />]
+B $CC44,2,2 pose: 3x2 cells
+B $CC46,6,3 #HTML[<img src="images/sprites/spriteCC44.png" />]
+B $CC4C,2,2 pose: 3x2 cells
+B $CC4E,6,3 #HTML[<img src="images/sprites/spriteCC4C.png" />]
+B $CC54,2,2 pose: 3x2 cells
+B $CC56,6,3 #HTML[<img src="images/sprites/spriteCC54.png" />]
+B $CC5C,2,2 pose: 3x2 cells
+B $CC5E,6,3 #HTML[<img src="images/sprites/spriteCC5C.png" />]
+B $CC64,2,2 pose: 2x3 cells
+B $CC66,6,2 #HTML[<img src="images/sprites/spriteCC64.png" />]
+B $CC6C,2,2 pose: 3x3 cells
+B $CC6E,9,3 #HTML[<img src="images/sprites/spriteCC6C.png" />]
+B $CC77,2,2 pose: 3x3 cells
+B $CC79,9,3 #HTML[<img src="images/sprites/spriteCC77.png" />]
+B $CC82,2,2 pose: 2x3 cells
+B $CC84,6,2 #HTML[<img src="images/sprites/spriteCC82.png" />]
+B $CC8A,2,2 pose: 2x3 cells
+B $CC8C,6,2 #HTML[<img src="images/sprites/spriteCC8A.png" />]
+B $CC92,2,2 pose: 2x3 cells
+B $CC94,6,2 #HTML[<img src="images/sprites/spriteCC92.png" />]
+B $CC9A,2,2 pose: 3x3 cells
+B $CC9C,9,3 #HTML[<img src="images/sprites/spriteCC9A.png" />]
 b $CCA5 Data on Brucee Lee personage
 @ $CCA5 label=bruce_description
 @ $CCA7 label=bruce_image_index
@@ -1100,17 +1143,40 @@ W $CD0B,4,4 20 recoil
 W $CD0F,4,4 21 attack, melee hit
 b $CD13 Bruce Lee sprite descriptions
 @ $CD13 label=bruce_image_descriptions
-B $CD13,8,8 2x3 + 6 bytes
-B $CD1B,8,8 2x3 + 6 bytes
-B $CD23,8,8 2x3 + 6 bytes
-B $CD2B,8,8 3x2 + 6 bytes
-B $CD33,8,8 3x2 + 6 bytes
-B $CD50
-B $CD58
-B $CD63
-B $CD6E
-B $CD76
-B $CD91
+N $CD13 One descriptor per Bruce pose. Each is: width (cells), height (cells), then width*height cell indices into the sprite bank at #R$A000. So a descriptor is 2 + width*height bytes. #R$C3CB reads the width/height and draws each listed cell.
+B $CD13,2,2 pose: 2x3 cells
+B $CD15,6,2 #HTML[<img src="images/sprites/spriteCD13.png" />]
+B $CD1B,2,2 pose: 2x3 cells
+B $CD1D,6,2 #HTML[<img src="images/sprites/spriteCD1B.png" />]
+B $CD23,2,2 pose: 2x3 cells
+B $CD25,6,2 #HTML[<img src="images/sprites/spriteCD23.png" />]
+B $CD2B,2,2 pose: 3x2 cells
+B $CD2D,6,3 #HTML[<img src="images/sprites/spriteCD2B.png" />]
+B $CD33,2,2 pose: 3x2 cells
+B $CD35,6,3 #HTML[<img src="images/sprites/spriteCD33.png" />]
+B $CD3B,2,2 pose: 3x2 cells
+B $CD3D,6,3 #HTML[<img src="images/sprites/spriteCD3B.png" />]
+B $CD43,2,2 pose: 3x2 cells
+B $CD45,6,3 #HTML[<img src="images/sprites/spriteCD43.png" />]
+B $CD4B,2,2 pose: 3x1 cells
+B $CD4D,3,3 #HTML[<img src="images/sprites/spriteCD4B.png" />]
+B $CD50,2,2 pose: 2x3 cells
+B $CD52,6,2 #HTML[<img src="images/sprites/spriteCD50.png" />]
+B $CD58,2,2 pose: 3x3 cells
+B $CD5A,9,3 #HTML[<img src="images/sprites/spriteCD58.png" />]
+B $CD63,2,2 pose: 3x3 cells
+B $CD65,9,3 #HTML[<img src="images/sprites/spriteCD63.png" />]
+B $CD6E,2,2 pose: 2x3 cells
+B $CD70,6,2 #HTML[<img src="images/sprites/spriteCD6E.png" />]
+B $CD76,2,2 pose: 2x3 cells
+B $CD78,6,2 #HTML[<img src="images/sprites/spriteCD76.png" />]
+B $CD7E,2,2 pose: 2x3 cells
+B $CD80,6,2 #HTML[<img src="images/sprites/spriteCD7E.png" />]
+B $CD86,2,2 pose: 3x3 cells
+B $CD88,9,3 #HTML[<img src="images/sprites/spriteCD86.png" />]
+B $CD91,2,2 pose: 2x3 cells
+B $CD93,6,2 #HTML[<img src="images/sprites/spriteCD91.png" />]
+B $CD99,2,2 trailing bytes (unused?)
 c $CD9B Personage action handler 0: idle, decode input and dispatch new state
 R $CD9B IX address of personage description
 R $CD9B O:A next state index

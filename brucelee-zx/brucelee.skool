@@ -1939,99 +1939,131 @@ c$9300 LD HL,$935C   ;
 *$930C LD HL,$9346   ;
  $930F JP $95E2      ;
 
-; Data block at 9312
+; Play hit-impact sound (noise burst)
 ;
 ; Used by the routine at #R$D375.
-b$9312 DEFB $C5,$0E,$F5,$3A,$39,$93,$A7,$20
- $931A DEFB $01,$3C,$CB,$3F,$30,$02,$EE,$A6
- $9322 DEFB $32,$39,$93,$E6,$10,$47,$3A,$0B
- $932A DEFB $60,$A8,$32,$0B,$60,$D3,$FE,$41
- $9332 DEFB $10,$FE,$0C,$20,$DE,$C1,$C9,$01
- $933A DEFB $3E,$93,$00,$00,$62,$94,$68,$94
- $9342 DEFB $6E,$94,$00,$00,$4A,$93,$00,$00
- $934A DEFB $50,$93,$56,$93,$00,$00,$8B,$96
- $9352 DEFB $0A,$00,$E8,$03,$85,$96,$0F,$00
- $935A DEFB $E8,$03,$84,$93,$84,$93,$8E,$93
- $9362 DEFB $98,$93,$8E,$93,$98,$93,$A2,$93
- $936A DEFB $A2,$93,$8E,$93,$98,$93,$8E,$93
- $9372 DEFB $98,$93,$A2,$93,$A2,$93,$B0,$93
- $937A DEFB $BE,$93,$CC,$93,$DA,$93,$EC,$93
- $9382 DEFB $00,$00,$F0,$93,$F6,$93,$FC,$93
- $938A DEFB $02,$94,$00,$00,$08,$94,$0E,$94
- $9392 DEFB $14,$94,$1A,$94,$00,$00,$08,$94
- $939A DEFB $20,$94,$14,$94,$1A,$94,$00,$00
- $93A2 DEFB $26,$94,$26,$94,$2C,$94,$2C,$94
- $93AA DEFB $32,$94,$38,$94,$00,$00,$3E,$94
- $93B2 DEFB $3E,$94,$3E,$94,$3E,$94,$44,$94
- $93BA DEFB $4A,$94,$00,$00,$50,$94,$50,$94
- $93C2 DEFB $50,$94,$50,$94,$56,$94,$5C,$94
- $93CA DEFB $00,$00,$62,$94,$62,$94,$62,$94
- $93D2 DEFB $62,$94,$68,$94,$6E,$94,$00,$00
- $93DA DEFB $74,$94,$7A,$94,$80,$94,$86,$94
- $93E2 DEFB $8C,$94,$92,$94,$8C,$94,$86,$94
- $93EA DEFB $00,$00,$98,$94,$00,$00,$49,$96
- $93F2 DEFB $14,$00,$88,$13,$5B,$96,$28,$00
- $93FA DEFB $88,$13,$4F,$96,$1E,$00,$88,$13
- $9402 DEFB $55,$96,$20,$00,$88,$13,$9E,$94
- $940A DEFB $14,$00,$88,$13,$B0,$94,$08,$00
- $9412 DEFB $88,$13,$D6,$94,$0A,$00,$88,$13
- $941A DEFB $F8,$94,$12,$00,$88,$13,$0E,$95
- $9422 DEFB $28,$00,$88,$13,$18,$95,$0D,$00
- $942A DEFB $C4,$09,$2A,$95,$1A,$00,$C4,$09
- $9432 DEFB $34,$95,$05,$00,$44,$16,$2A,$95
- $943A DEFB $35,$00,$88,$13,$7E,$95,$07,$00
- $9442 DEFB $C4,$09,$90,$95,$0D,$00,$88,$13
- $944A DEFB $7E,$95,$0F,$00,$88,$13,$A2,$95
- $9452 DEFB $0F,$00,$C4,$09,$B0,$95,$1A,$00
- $945A DEFB $88,$13,$A2,$95,$1E,$00,$88,$13
- $9462 DEFB $BE,$95,$0F,$00,$C4,$09,$D0,$95
- $946A DEFB $1A,$00,$88,$13,$BE,$95,$1E,$00
- $9472 DEFB $88,$13,$7F,$96,$76,$00,$C4,$09
- $947A DEFB $79,$96,$59,$00,$C4,$09,$73,$96
- $9482 DEFB $3B,$00,$C4,$09,$6D,$96,$2C,$00
- $948A DEFB $C4,$09,$67,$96,$1E,$00,$C4,$09
- $9492 DEFB $61,$96,$16,$00,$C4,$09,$BE,$95
- $949A DEFB $76,$00,$20,$4E,$B5,$00,$24,$00
- $94A2 DEFB $DA,$00,$6D,$00,$6D,$00,$DA,$00
- $94AA DEFB $24,$00,$B5,$00,$00,$00,$C2,$00
- $94B2 DEFB $92,$00,$30,$00,$C2,$00,$C3,$00
- $94BA DEFB $C2,$00,$33,$00,$8F,$00,$C5,$00
- $94C2 DEFB $C5,$00,$8F,$00,$33,$00,$C2,$00
- $94CA DEFB $C3,$00,$C2,$00,$30,$00,$92,$00
- $94D2 DEFB $C2,$00,$00,$00,$C6,$00,$14,$00
- $94DA DEFB $B3,$00,$C6,$00,$3C,$00,$8B,$00
- $94E2 DEFB $C6,$00,$62,$00,$62,$00,$C6,$00
- $94EA DEFB $8B,$00,$3C,$00,$C6,$00,$B3,$00
- $94F2 DEFB $14,$00,$C6,$00,$00,$00,$C4,$00
- $94FA DEFB $20,$00,$A4,$00,$C4,$00,$62,$00
- $9502 DEFB $62,$00,$C4,$00,$A4,$00,$20,$00
- $950A DEFB $C4,$00,$00,$00,$B5,$00,$5B,$00
- $9512 DEFB $5B,$00,$B5,$00,$00,$00,$87,$00
- $951A DEFB $1C,$00,$A3,$00,$52,$00,$52,$00
- $9522 DEFB $A3,$00,$1C,$00,$87,$00,$00,$00
- $952A DEFB $88,$00,$44,$00,$44,$00,$88,$00
- $9532 DEFB $00,$00,$9C,$00,$14,$00,$B3,$00
- $953A DEFB $74,$00,$3C,$00,$B3,$00,$48,$00
- $9542 DEFB $68,$00,$B3,$00,$20,$00,$90,$00
- $954A DEFB $AB,$00,$08,$00,$B0,$00,$83,$00
- $9552 DEFB $30,$00,$B0,$00,$5B,$00,$5B,$00
- $955A DEFB $B0,$00,$30,$00,$83,$00,$B0,$00
- $9562 DEFB $08,$00,$AB,$00,$90,$00,$20,$00
- $956A DEFB $B3,$00,$68,$00,$48,$00,$B3,$00
- $9572 DEFB $3C,$00,$74,$00,$B3,$00,$14,$00
- $957A DEFB $9C,$00,$00,$00,$D0,$00,$D0,$00
- $9582 DEFB $D0,$00,$68,$00,$68,$00,$D0,$00
- $958A DEFB $D0,$00,$D0,$00,$00,$00,$E9,$00
- $9592 DEFB $E9,$00,$E9,$00,$75,$00,$75,$00
- $959A DEFB $E9,$00,$E9,$00,$E9,$00,$00,$00
- $95A2 DEFB $91,$00,$92,$00,$49,$00,$49,$00
- $95AA DEFB $92,$00,$91,$00,$00,$00,$A2,$00
- $95B2 DEFB $A4,$00,$51,$00,$51,$00,$A4,$00
- $95BA DEFB $A2,$00,$00,$00,$68,$00,$68,$00
- $95C2 DEFB $68,$00,$34,$00,$34,$00,$68,$00
- $95CA DEFB $68,$00,$68,$00,$00,$00,$75,$00
- $95D2 DEFB $75,$00,$75,$00,$3B,$00,$3B,$00
- $95DA DEFB $75,$00,$75,$00,$75,$00,$00,$00
+;
+; .
+;
+; Makes the harsh "hit" noise used when a blow lands (called from the melee
+; code at $D3EB). It runs a short pseudo-random noise generator - an 8-bit
+; shift register with XOR feedback whose state is kept in the self-modified
+; byte at $9339 - toggling the speaker from each noise bit. The delay between
+; toggles lengthens as the outer counter climbs, so the burst sweeps in pitch
+; as it plays.
+c$9312 PUSH BC       ;
+ $9313 LD C,$F5      ; C = pitch/length counter (sweeps up to 0)
+*$9315 LD A,($9339)  ; {Load noise state, seed with 1 if it was zero
+ $9318 AND A         ;
+ $9319 JR NZ,$931C   ;
+ $931B INC A         ; }
+*$931C SRL A         ; {Shift right; XOR feedback bits if one fell out
+ $931E JR NC,$9322   ; }
+ $9320 XOR $A6       ;
+*$9322 LD ($9339),A  ; Store new noise state
+ $9325 AND $10       ; {Take bit 4 as the speaker toggle
+ $9327 LD B,A        ; }
+ $9328 LD A,($600B)  ; {XOR the noise bit into the speaker state
+ $932B XOR B         ; }
+ $932C LD ($600B),A  ; {Store it and output to the speaker port
+ $932F OUT ($FE),A   ; }
+ $9331 LD B,C        ; {Delay proportional to C (pitch)
+*$9332 DJNZ $9332    ; }
+ $9334 INC C         ; {Next step; loop until the counter wraps to 0
+ $9335 JR NZ,$9315   ; }
+ $9337 POP BC        ;
+ $9338 RET           ;
+
+; Data block at 9339
+b$9339 DEFB $01
+ $933A DEFW $933E,$0000
+ $933E DEFW $9462,$9468,$946E,$0000
+ $9346 DEFW $934A,$0000
+ $934A DEFW $9350,$9356,$0000
+ $9350 DEFB $8B,$96,$0A,$00,$E8,$03,$85,$96
+ $9358 DEFB $0F,$00,$E8,$03,$84,$93,$84,$93
+ $9360 DEFB $8E,$93,$98,$93,$8E,$93,$98,$93
+ $9368 DEFB $A2,$93,$A2,$93,$8E,$93,$98,$93
+ $9370 DEFB $8E,$93,$98,$93,$A2,$93,$A2,$93
+ $9378 DEFB $B0,$93,$BE,$93,$CC,$93,$DA,$93
+ $9380 DEFB $EC,$93,$00,$00,$F0,$93,$F6,$93
+ $9388 DEFB $FC,$93,$02,$94,$00,$00,$08,$94
+ $9390 DEFB $0E,$94,$14,$94,$1A,$94,$00,$00
+ $9398 DEFB $08,$94,$20,$94,$14,$94,$1A,$94
+ $93A0 DEFB $00,$00,$26,$94,$26,$94,$2C,$94
+ $93A8 DEFB $2C,$94,$32,$94,$38,$94,$00,$00
+ $93B0 DEFB $3E,$94,$3E,$94,$3E,$94,$3E,$94
+ $93B8 DEFB $44,$94,$4A,$94,$00,$00,$50,$94
+ $93C0 DEFB $50,$94,$50,$94,$50,$94,$56,$94
+ $93C8 DEFB $5C,$94,$00,$00,$62,$94,$62,$94
+ $93D0 DEFB $62,$94,$62,$94,$68,$94,$6E,$94
+ $93D8 DEFB $00,$00,$74,$94,$7A,$94,$80,$94
+ $93E0 DEFB $86,$94,$8C,$94,$92,$94,$8C,$94
+ $93E8 DEFB $86,$94,$00,$00,$98,$94,$00,$00
+ $93F0 DEFB $49,$96,$14,$00,$88,$13,$5B,$96
+ $93F8 DEFB $28,$00,$88,$13,$4F,$96,$1E,$00
+ $9400 DEFB $88,$13,$55,$96,$20,$00,$88,$13
+ $9408 DEFB $9E,$94,$14,$00,$88,$13,$B0,$94
+ $9410 DEFB $08,$00,$88,$13,$D6,$94,$0A,$00
+ $9418 DEFB $88,$13,$F8,$94,$12,$00,$88,$13
+ $9420 DEFB $0E,$95,$28,$00,$88,$13,$18,$95
+ $9428 DEFB $0D,$00,$C4,$09,$2A,$95,$1A,$00
+ $9430 DEFB $C4,$09,$34,$95,$05,$00,$44,$16
+ $9438 DEFB $2A,$95,$35,$00,$88,$13,$7E,$95
+ $9440 DEFB $07,$00,$C4,$09,$90,$95,$0D,$00
+ $9448 DEFB $88,$13,$7E,$95,$0F,$00,$88,$13
+ $9450 DEFB $A2,$95,$0F,$00,$C4,$09,$B0,$95
+ $9458 DEFB $1A,$00,$88,$13,$A2,$95,$1E,$00
+ $9460 DEFB $88,$13
+ $9462 DEFB $BE,$95,$0F,$00,$C4,$09
+ $9468 DEFB $D0,$95,$1A,$00,$88,$13
+ $946E DEFB $BE,$95,$1E,$00,$88,$13,$7F,$96
+ $9476 DEFB $76,$00,$C4,$09,$79,$96,$59,$00
+ $947E DEFB $C4,$09,$73,$96,$3B,$00,$C4,$09
+ $9486 DEFB $6D,$96,$2C,$00,$C4,$09,$67,$96
+ $948E DEFB $1E,$00,$C4,$09,$61,$96,$16,$00
+ $9496 DEFB $C4,$09,$BE,$95,$76,$00,$20,$4E
+ $949E DEFB $B5,$00,$24,$00,$DA,$00,$6D,$00
+ $94A6 DEFB $6D,$00,$DA,$00,$24,$00,$B5,$00
+ $94AE DEFB $00,$00,$C2,$00,$92,$00,$30,$00
+ $94B6 DEFB $C2,$00,$C3,$00,$C2,$00,$33,$00
+ $94BE DEFB $8F,$00,$C5,$00,$C5,$00,$8F,$00
+ $94C6 DEFB $33,$00,$C2,$00,$C3,$00,$C2,$00
+ $94CE DEFB $30,$00,$92,$00,$C2,$00,$00,$00
+ $94D6 DEFB $C6,$00,$14,$00,$B3,$00,$C6,$00
+ $94DE DEFB $3C,$00,$8B,$00,$C6,$00,$62,$00
+ $94E6 DEFB $62,$00,$C6,$00,$8B,$00,$3C,$00
+ $94EE DEFB $C6,$00,$B3,$00,$14,$00,$C6,$00
+ $94F6 DEFB $00,$00,$C4,$00,$20,$00,$A4,$00
+ $94FE DEFB $C4,$00,$62,$00,$62,$00,$C4,$00
+ $9506 DEFB $A4,$00,$20,$00,$C4,$00,$00,$00
+ $950E DEFB $B5,$00,$5B,$00,$5B,$00,$B5,$00
+ $9516 DEFB $00,$00,$87,$00,$1C,$00,$A3,$00
+ $951E DEFB $52,$00,$52,$00,$A3,$00,$1C,$00
+ $9526 DEFB $87,$00,$00,$00,$88,$00,$44,$00
+ $952E DEFB $44,$00,$88,$00,$00,$00,$9C,$00
+ $9536 DEFB $14,$00,$B3,$00,$74,$00,$3C,$00
+ $953E DEFB $B3,$00,$48,$00,$68,$00,$B3,$00
+ $9546 DEFB $20,$00,$90,$00,$AB,$00,$08,$00
+ $954E DEFB $B0,$00,$83,$00,$30,$00,$B0,$00
+ $9556 DEFB $5B,$00,$5B,$00,$B0,$00,$30,$00
+ $955E DEFB $83,$00,$B0,$00,$08,$00,$AB,$00
+ $9566 DEFB $90,$00,$20,$00,$B3,$00,$68,$00
+ $956E DEFB $48,$00,$B3,$00,$3C,$00,$74,$00
+ $9576 DEFB $B3,$00,$14,$00,$9C,$00,$00,$00
+ $957E DEFB $D0,$00,$D0,$00,$D0,$00,$68,$00
+ $9586 DEFB $68,$00,$D0,$00,$D0,$00,$D0,$00
+ $958E DEFB $00,$00,$E9,$00,$E9,$00,$E9,$00
+ $9596 DEFB $75,$00,$75,$00,$E9,$00,$E9,$00
+ $959E DEFB $E9,$00,$00,$00,$91,$00,$92,$00
+ $95A6 DEFB $49,$00,$49,$00,$92,$00,$91,$00
+ $95AE DEFB $00,$00,$A2,$00,$A4,$00,$51,$00
+ $95B6 DEFB $51,$00,$A4,$00,$A2,$00,$00,$00
+ $95BE DEFB $68,$00,$68,$00,$68,$00,$34,$00
+ $95C6 DEFB $34,$00,$68,$00,$68,$00,$68,$00
+ $95CE DEFB $00,$00,$75,$00,$75,$00,$75,$00
+ $95D6 DEFB $3B,$00,$3B,$00,$75,$00,$75,$00
+ $95DE DEFB $75,$00,$00,$00
 
 ; Play music/sound-effect sequence (list of tone groups)
 ;
@@ -2448,7 +2480,21 @@ b$9800 DEFB $00,$1C,$55,$7F,$14,$14,$14,$14
  $9FF0 DEFB $27,$1F,$80,$2F,$57,$AB,$53,$A5
  $9FF8 DEFB $FF,$FF,$00,$00,$00,$00,$00,$00
 
-; Data block at A000
+; Personage sprite bank (pixels and masks, both facings)
+;
+; .
+;
+; .
+;
+; A flat array of 8-byte cells; each cell is one 8x8 pixel block (1 byte per
+; row), addressed as base + cell_index*8. Four 2K banks: right-facing pixels
+; ($A000), left-facing pixels ($A800), right-facing masks ($B000), left-facing
+; masks ($B800) - so the facing offset is $800 and each cell's mask sits $1000
+; above its pixels. A personage pose is assembled from several cells whose
+; indices and grid size come from an image descriptor (see #R$CD13); #R$C3CB
+; walks the descriptor and blends each cell via #R$C44D (AND mask, then OR
+; pixels). The cell size (8x8) is fixed here; the sprite's width and height in
+; cells live in the descriptor, not in this bank.
 @label=right_direction_images
 b$A000 DEFB $00,$00,$00,$3E,$7F,$79,$72,$70
  $A008 DEFB $00,$00,$00,$00,$00,$00,$00,$80
@@ -5430,15 +5476,37 @@ w$CB32 DEFW $CB8D,$CD9B ; 0 idle
 c$CB8A RET           ;
 
 ; Ninja sprite descriptions
-b$CB8B DEFB $00,$00
+;
+; .
+;
+; .
+;
+; One descriptor per pose: width (cells), height (cells), then width*height
+; cell indices into the sprite bank at #R$A000 (see #R$CD13).
 @label=ninja_images_descriptions
- $CB8D DEFB $02,$03,$C0,$C1,$E0,$E1,$C2,$E2
- $CB95 DEFB $02,$03,$C6,$C7,$E6,$E7,$C8,$E8
- $CB9D DEFB $02,$03,$C3,$C4,$E3,$E4,$C5,$E5
- $CBA5 DEFB $02,$02,$CC,$CD,$EC,$ED
- $CBAB DEFB $03,$02,$CE,$CF,$D0,$EE,$EF,$F0
- $CBB3 DEFB $03,$03,$D1,$D2,$D3,$F1,$F2,$F3
- $CBBB DEFB $F4,$F5,$F6
+b$CB8B DEFB $00,$00     ; empty pose (0x0), used for state 15
+ $CB8D DEFB $02,$03     ; pose: 2x3 cells
+ $CB8F DEFB $C0,$C1     ; {#HTML[<img src="images/sprites/spriteCB8D.png" />]
+ $CB91 DEFB $E0,$E1     ;
+ $CB93 DEFB $C2,$E2     ; }
+ $CB95 DEFB $02,$03     ; pose: 2x3 cells
+ $CB97 DEFB $C6,$C7     ; {#HTML[<img src="images/sprites/spriteCB95.png" />]
+ $CB99 DEFB $E6,$E7     ;
+ $CB9B DEFB $C8,$E8     ; }
+ $CB9D DEFB $02,$03     ; pose: 2x3 cells
+ $CB9F DEFB $C3,$C4     ; {#HTML[<img src="images/sprites/spriteCB9D.png" />]
+ $CBA1 DEFB $E3,$E4     ;
+ $CBA3 DEFB $C5,$E5     ; }
+ $CBA5 DEFB $02,$02     ; pose: 2x2 cells
+ $CBA7 DEFB $CC,$CD     ; {#HTML[<img src="images/sprites/spriteCBA5.png" />]
+ $CBA9 DEFB $EC,$ED     ; }
+ $CBAB DEFB $03,$02     ; pose: 3x2 cells
+ $CBAD DEFB $CE,$CF,$D0 ; {#HTML[<img src="images/sprites/spriteCBAB.png" />]
+ $CBB0 DEFB $EE,$EF,$F0 ; }
+ $CBB3 DEFB $03,$03     ; pose: 3x3 cells
+ $CBB5 DEFB $D1,$D2,$D3 ; {#HTML[<img src="images/sprites/spriteCBB3.png" />]
+ $CBB8 DEFB $F1,$F2,$F3 ;
+ $CBBB DEFB $F4,$F5,$F6 ; }
 
 ; Data on Green Yamo personage
 @label=sumoist_description
@@ -5498,23 +5566,65 @@ w$CBD4 DEFW $CC2C,$CD9B ; 0 idle
  $CC28 DEFW $CC77,$D1D2 ; 21 attack, melee hit
 
 ; Green Yamo sprite descriptions
-b$CC2C DEFB $02,$03,$60,$61,$80,$81,$A0,$A1
- $CC34 DEFB $02,$03,$62,$63,$82,$83,$A2,$A3
- $CC3C DEFB $02,$03,$64,$65,$84,$85,$A4,$A5
- $CC44 DEFB $03,$02,$86,$87,$88,$A6,$A7,$A8
- $CC4C DEFB $03,$02,$89,$8A,$8B,$A9,$AA,$AB
- $CC54 DEFB $03,$02,$8C,$8D,$8E,$AC,$AD,$AE
- $CC5C DEFB $03,$02,$8F,$90,$91,$AF,$B0,$B1
- $CC64 DEFB $02,$03,$72,$73,$92,$93,$B2,$B3
- $CC6C DEFB $03,$03,$74,$75,$76,$94,$95,$96
- $CC74 DEFB $B4,$B5,$B6
- $CC77 DEFB $03,$03,$77,$78,$79,$97,$98,$99
- $CC7F DEFB $B7,$B8,$B9
- $CC82 DEFB $02,$03,$DA,$DB,$DC,$DD,$DE,$DF
- $CC8A DEFB $02,$03,$7C,$7D,$9C,$9D,$BC,$BD
- $CC92 DEFB $02,$03,$7E,$7F,$9E,$9F,$BE,$BF
- $CC9A DEFB $03,$03,$69,$6A,$6B,$6C,$6D,$6E
- $CCA2 DEFB $6F,$70,$71
+;
+; .
+;
+; .
+;
+; One descriptor per pose: width (cells), height (cells), then width*height
+; cell indices into the sprite bank at #R$A000 (see #R$CD13).
+b$CC2C DEFB $02,$03     ; pose: 2x3 cells
+ $CC2E DEFB $60,$61     ; {#HTML[<img src="images/sprites/spriteCC2C.png" />]
+ $CC30 DEFB $80,$81     ;
+ $CC32 DEFB $A0,$A1     ; }
+ $CC34 DEFB $02,$03     ; pose: 2x3 cells
+ $CC36 DEFB $62,$63     ; {#HTML[<img src="images/sprites/spriteCC34.png" />]
+ $CC38 DEFB $82,$83     ;
+ $CC3A DEFB $A2,$A3     ; }
+ $CC3C DEFB $02,$03     ; pose: 2x3 cells
+ $CC3E DEFB $64,$65     ; {#HTML[<img src="images/sprites/spriteCC3C.png" />]
+ $CC40 DEFB $84,$85     ;
+ $CC42 DEFB $A4,$A5     ; }
+ $CC44 DEFB $03,$02     ; pose: 3x2 cells
+ $CC46 DEFB $86,$87,$88 ; {#HTML[<img src="images/sprites/spriteCC44.png" />]
+ $CC49 DEFB $A6,$A7,$A8 ; }
+ $CC4C DEFB $03,$02     ; pose: 3x2 cells
+ $CC4E DEFB $89,$8A,$8B ; {#HTML[<img src="images/sprites/spriteCC4C.png" />]
+ $CC51 DEFB $A9,$AA,$AB ; }
+ $CC54 DEFB $03,$02     ; pose: 3x2 cells
+ $CC56 DEFB $8C,$8D,$8E ; {#HTML[<img src="images/sprites/spriteCC54.png" />]
+ $CC59 DEFB $AC,$AD,$AE ; }
+ $CC5C DEFB $03,$02     ; pose: 3x2 cells
+ $CC5E DEFB $8F,$90,$91 ; {#HTML[<img src="images/sprites/spriteCC5C.png" />]
+ $CC61 DEFB $AF,$B0,$B1 ; }
+ $CC64 DEFB $02,$03     ; pose: 2x3 cells
+ $CC66 DEFB $72,$73     ; {#HTML[<img src="images/sprites/spriteCC64.png" />]
+ $CC68 DEFB $92,$93     ;
+ $CC6A DEFB $B2,$B3     ; }
+ $CC6C DEFB $03,$03     ; pose: 3x3 cells
+ $CC6E DEFB $74,$75,$76 ; {#HTML[<img src="images/sprites/spriteCC6C.png" />]
+ $CC71 DEFB $94,$95,$96 ;
+ $CC74 DEFB $B4,$B5,$B6 ; }
+ $CC77 DEFB $03,$03     ; pose: 3x3 cells
+ $CC79 DEFB $77,$78,$79 ; {#HTML[<img src="images/sprites/spriteCC77.png" />]
+ $CC7C DEFB $97,$98,$99 ;
+ $CC7F DEFB $B7,$B8,$B9 ; }
+ $CC82 DEFB $02,$03     ; pose: 2x3 cells
+ $CC84 DEFB $DA,$DB     ; {#HTML[<img src="images/sprites/spriteCC82.png" />]
+ $CC86 DEFB $DC,$DD     ;
+ $CC88 DEFB $DE,$DF     ; }
+ $CC8A DEFB $02,$03     ; pose: 2x3 cells
+ $CC8C DEFB $7C,$7D     ; {#HTML[<img src="images/sprites/spriteCC8A.png" />]
+ $CC8E DEFB $9C,$9D     ;
+ $CC90 DEFB $BC,$BD     ; }
+ $CC92 DEFB $02,$03     ; pose: 2x3 cells
+ $CC94 DEFB $7E,$7F     ; {#HTML[<img src="images/sprites/spriteCC92.png" />]
+ $CC96 DEFB $9E,$9F     ;
+ $CC98 DEFB $BE,$BF     ; }
+ $CC9A DEFB $03,$03     ; pose: 3x3 cells
+ $CC9C DEFB $69,$6A,$6B ; {#HTML[<img src="images/sprites/spriteCC9A.png" />]
+ $CC9F DEFB $6C,$6D,$6E ;
+ $CCA2 DEFB $6F,$70,$71 ; }
 
 ; Data on Brucee Lee personage
 @label=bruce_description
@@ -5575,27 +5685,75 @@ w$CCBB DEFW $CD13,$CD9B ; 0 idle
  $CD0F DEFW $CD63,$D1D2 ; 21 attack, melee hit
 
 ; Bruce Lee sprite descriptions
+;
+; .
+;
+; .
+;
+; One descriptor per Bruce pose. Each is: width (cells), height (cells), then
+; width*height cell indices into the sprite bank at #R$A000. So a descriptor is
+; 2 + width*height bytes. #R$C3CB reads the width/height and draws each listed
+; cell.
 @label=bruce_image_descriptions
-b$CD13 DEFB $02,$03,$00,$01,$20,$21,$40,$41 ; 2x3 + 6 bytes
- $CD1B DEFB $02,$03,$02,$03,$22,$23,$42,$43 ; 2x3 + 6 bytes
- $CD23 DEFB $02,$03,$04,$05,$24,$25,$44,$45 ; 2x3 + 6 bytes
- $CD2B DEFB $03,$02,$26,$27,$28,$46,$47,$48 ; 3x2 + 6 bytes
- $CD33 DEFB $03,$02,$29,$2A,$2B,$49,$4A,$4B ; 3x2 + 6 bytes
- $CD3B DEFB $03,$02,$2C,$2D,$2E,$4C,$4D,$4E
- $CD43 DEFB $03,$02,$2F,$30,$31,$4F,$50,$51
- $CD4B DEFB $03,$01,$06,$07,$08
- $CD50 DEFB $02,$03,$12,$13,$32,$33,$52,$53
- $CD58 DEFB $03,$03,$14,$15,$16,$34,$35,$36
- $CD60 DEFB $54,$55,$56
- $CD63 DEFB $03,$03,$17,$18,$19,$37,$38,$39
- $CD6B DEFB $57,$58,$59
- $CD6E DEFB $02,$03,$1A,$1B,$3A,$3B,$5A,$5B
- $CD76 DEFB $02,$03,$1C,$1D,$3C,$3D,$5C,$5D
- $CD7E DEFB $02,$03,$1E,$1F,$3E,$3F,$5E,$5F
- $CD86 DEFB $03,$03,$09,$0A,$0B,$0C,$0D,$0E
- $CD8E DEFB $0F,$10,$11
- $CD91 DEFB $02,$03,$7A,$7B,$9A,$9B,$BA,$BB
- $CD99 DEFB $AF,$C9
+b$CD13 DEFB $02,$03     ; pose: 2x3 cells
+ $CD15 DEFB $00,$01     ; {#HTML[<img src="images/sprites/spriteCD13.png" />]
+ $CD17 DEFB $20,$21     ;
+ $CD19 DEFB $40,$41     ; }
+ $CD1B DEFB $02,$03     ; pose: 2x3 cells
+ $CD1D DEFB $02,$03     ; {#HTML[<img src="images/sprites/spriteCD1B.png" />]
+ $CD1F DEFB $22,$23     ;
+ $CD21 DEFB $42,$43     ; }
+ $CD23 DEFB $02,$03     ; pose: 2x3 cells
+ $CD25 DEFB $04,$05     ; {#HTML[<img src="images/sprites/spriteCD23.png" />]
+ $CD27 DEFB $24,$25     ;
+ $CD29 DEFB $44,$45     ; }
+ $CD2B DEFB $03,$02     ; pose: 3x2 cells
+ $CD2D DEFB $26,$27,$28 ; {#HTML[<img src="images/sprites/spriteCD2B.png" />]
+ $CD30 DEFB $46,$47,$48 ; }
+ $CD33 DEFB $03,$02     ; pose: 3x2 cells
+ $CD35 DEFB $29,$2A,$2B ; {#HTML[<img src="images/sprites/spriteCD33.png" />]
+ $CD38 DEFB $49,$4A,$4B ; }
+ $CD3B DEFB $03,$02     ; pose: 3x2 cells
+ $CD3D DEFB $2C,$2D,$2E ; {#HTML[<img src="images/sprites/spriteCD3B.png" />]
+ $CD40 DEFB $4C,$4D,$4E ; }
+ $CD43 DEFB $03,$02     ; pose: 3x2 cells
+ $CD45 DEFB $2F,$30,$31 ; {#HTML[<img src="images/sprites/spriteCD43.png" />]
+ $CD48 DEFB $4F,$50,$51 ; }
+ $CD4B DEFB $03,$01     ; pose: 3x1 cells
+ $CD4D DEFB $06,$07,$08 ; #HTML[<img src="images/sprites/spriteCD4B.png" />]
+ $CD50 DEFB $02,$03     ; pose: 2x3 cells
+ $CD52 DEFB $12,$13     ; {#HTML[<img src="images/sprites/spriteCD50.png" />]
+ $CD54 DEFB $32,$33     ;
+ $CD56 DEFB $52,$53     ; }
+ $CD58 DEFB $03,$03     ; pose: 3x3 cells
+ $CD5A DEFB $14,$15,$16 ; {#HTML[<img src="images/sprites/spriteCD58.png" />]
+ $CD5D DEFB $34,$35,$36 ;
+ $CD60 DEFB $54,$55,$56 ; }
+ $CD63 DEFB $03,$03     ; pose: 3x3 cells
+ $CD65 DEFB $17,$18,$19 ; {#HTML[<img src="images/sprites/spriteCD63.png" />]
+ $CD68 DEFB $37,$38,$39 ;
+ $CD6B DEFB $57,$58,$59 ; }
+ $CD6E DEFB $02,$03     ; pose: 2x3 cells
+ $CD70 DEFB $1A,$1B     ; {#HTML[<img src="images/sprites/spriteCD6E.png" />]
+ $CD72 DEFB $3A,$3B     ;
+ $CD74 DEFB $5A,$5B     ; }
+ $CD76 DEFB $02,$03     ; pose: 2x3 cells
+ $CD78 DEFB $1C,$1D     ; {#HTML[<img src="images/sprites/spriteCD76.png" />]
+ $CD7A DEFB $3C,$3D     ;
+ $CD7C DEFB $5C,$5D     ; }
+ $CD7E DEFB $02,$03     ; pose: 2x3 cells
+ $CD80 DEFB $1E,$1F     ; {#HTML[<img src="images/sprites/spriteCD7E.png" />]
+ $CD82 DEFB $3E,$3F     ;
+ $CD84 DEFB $5E,$5F     ; }
+ $CD86 DEFB $03,$03     ; pose: 3x3 cells
+ $CD88 DEFB $09,$0A,$0B ; {#HTML[<img src="images/sprites/spriteCD86.png" />]
+ $CD8B DEFB $0C,$0D,$0E ;
+ $CD8E DEFB $0F,$10,$11 ; }
+ $CD91 DEFB $02,$03     ; pose: 2x3 cells
+ $CD93 DEFB $7A,$7B     ; {#HTML[<img src="images/sprites/spriteCD91.png" />]
+ $CD95 DEFB $9A,$9B     ;
+ $CD97 DEFB $BA,$BB     ; }
+ $CD99 DEFB $AF,$C9     ; trailing bytes (unused?)
 
 ; Personage action handler 0: idle, decode input and dispatch new state
 ;

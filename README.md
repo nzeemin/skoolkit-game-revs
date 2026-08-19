@@ -144,7 +144,7 @@ Volume: about 6500 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/nebulus-zx/nebulus/
 
-Status: Have some progress (158K .ctl file).
+Status: Have some progress (180K .ctl file).
 Based on work done by Anatoly Vdovichev.
 
 

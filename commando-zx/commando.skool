@@ -356,7 +356,7 @@ b$6318 DEFB $D6,$8B,$0B,$FC,$43,$7B,$E1,$C9
 ; Used by the routines at #R$9132 and #R$9193.
 c$6400 JP $7A10      ; => Abort
  $6403 JP $7A5C      ; => Delay by BC HALTs
- $6406 JP $79CA      ;
+ $6406 JP $79CA      ; => System init
  $6409 JP $0000      ;
  $640C JP $7621      ; => Print HL as 4-digit hex/BCD
  $640F JP $7626      ;
@@ -1265,7 +1265,7 @@ c$69D2 EXX            ; {Save the registers
  $69D4 PUSH IY        ; }
  $69D6 EXX            ;
  $69D7 LD ($FD80),SP  ; Remember the stack pointer
- $69DB CALL $79CA     ;
+ $69DB CALL $79CA     ; System init
  $69DE SET 1,(IY+$07) ; Set the menu-mode flag
  $69E2 LD HL,$FDAB    ; Reset the print pointer
  $69E5 LD ($FDA9),HL  ;
@@ -3579,15 +3579,21 @@ c$796A LD HL,($800A)                           ;
  $79C5 RES 0,(IY+$07)                          ;
  $79C9 RET                                     ;
 
-; Routine at 79CA
+; System init: interrupt table, screen-line table, checksums
 ;
 ; Used by the routines at #R$6400 and #R$69D2.
+;
+; .
+;
+; One-time setup: builds the interrupt vector table ($FB00), the $FE00
+; even-screen-line table and the checksum reference, then initialises the
+; IY-based system variables.
 c$79CA DI              ;
  $79CB LD IY,$FD80     ;
  $79CF CALL $7A1E      ; Set up interrupt vector table at $FB00
  $79D2 CALL $7A45      ; Prepare $FE00 table - addresses for every even screen
                        ; line
- $79D5 CALL $79FB      ; Calculate checksums??
+ $79D5 CALL $79FB      ; Calculate checksums
  $79D8 LD (IY+$07),$00 ; Clear byte ($FD87)
  $79DC LD (IY+$42),$02 ; Set byte ($FDC2) = $02
  $79E0 RET             ;
@@ -3632,13 +3638,19 @@ c$79FB LD HL,$8000   ; Source page $8000
 ; Abort: restore stack and interrupts, return to frame loop
 ;
 ; Used by the routines at #R$6400 and #R$78BF.
+;
+; .
+;
+; Abort path: restores the saved stack ($FD80) and the IY/HL context off it,
+; switches back to IM 1 and re-enables interrupts before returning to the frame
+; loop.
 c$7A10 DI            ;
- $7A11 LD SP,($FD80) ;
+ $7A11 LD SP,($FD80) ; Restore saved stack pointer
  $7A15 EXX           ;
- $7A16 POP IY        ;
+ $7A16 POP IY        ; Restore IY/HL context
  $7A18 POP HL        ;
  $7A19 EXX           ;
- $7A1A IM 1          ;
+ $7A1A IM 1          ; Back to IM 1
  $7A1C EI            ;
  $7A1D RET           ;
 
@@ -6348,17 +6360,26 @@ c$903E LD A,D        ;
  $9047 LD HL,($C014) ;
  $904A JP $8AC3      ; => Sprite draw dispatch
 
-; Routine at 904D
+; Draw a cliff-edge scenery block, record edge flags
+;
+; .
+;
+; I:D Row
+; I:E Column and flags (bit 7 side, bits 5-6 edge markers)
+;
+; Draws a cliff-edge scenery block (left or right by E bit 7), recording the
+; edge column and side flags in IY+$5E/$5F/$71 from E bits 5-6, then draws its
+; upper ($15 rows) and lower ($0F rows) halves via #R$90A1.
 c$904D LD A,E         ;
  $904E AND $1F        ;
- $9050 BIT 7,E        ;
+ $9050 BIT 7,E        ; E bit 7 picks left/right edge
  $9052 JR NZ,$9070    ;
  $9054 LD HL,($C002)  ; Get sprite addr Cliff edge left
  $9057 PUSH HL        ;
  $9058 LD HL,($C048)  ; Get sprite addr ???
  $905B BIT 6,E        ;
  $905D JR Z,$908A     ;
- $905F LD (IY+$5F),D  ;
+ $905F LD (IY+$5F),D  ; Record left edge column (IY+$5F)
  $9062 RES 0,(IY+$71) ;
  $9066 BIT 5,E        ;
  $9068 JR Z,$908A     ;
@@ -6369,19 +6390,19 @@ c$904D LD A,E         ;
  $9074 LD HL,($C042)  ;
  $9077 BIT 6,E        ;
  $9079 JR Z,$908A     ;
- $907B LD (IY+$5E),D  ;
+ $907B LD (IY+$5E),D  ; Record right edge column (IY+$5E)
  $907E RES 1,(IY+$71) ;
  $9082 BIT 5,E        ;
  $9084 JR Z,$908A     ;
  $9086 SET 1,(IY+$71) ;
 *$908A LD E,A         ;
- $908B LD B,$15       ;
+ $908B LD B,$15       ; Top part height = $15
  $908D LD C,$34       ;
  $908F LD A,$EC       ;
  $9091 CALL $90A1     ; Adjust and clip sprite draw, calls $8A14
  $9094 POP HL         ;
  $9095 RET C          ;
- $9096 LD B,$0F       ;
+ $9096 LD B,$0F       ; Bottom part height = $0F
  $9098 LD C,$37       ;
  $909A LD A,$FE       ;
  $909C CALL $90A1     ; Adjust and clip sprite draw, calls $8A14
@@ -6392,10 +6413,11 @@ c$904D LD A,E         ;
 ;
 ; Used by the routine at #R$904D.
 ;
-; I:B ??
-; I:C ??
-; I:A ??
-; I:DE ??
+; I:A Row offset added to D
+; I:B Sprite height
+; I:C Attribute/colour byte
+; I:DE Screen position (D row, E column)
+; I:HL Sprite address
 c$90A1 PUSH DE       ;
  $90A2 ADD A,D       ;
  $90A3 LD D,A        ;
@@ -6405,12 +6427,22 @@ c$90A1 PUSH DE       ;
  $90AA POP DE        ;
  $90AB RET           ;
 
-; Routine at 90AC
+; Draw a cliff scenery block and colour its attributes
+;
+; .
+;
+; I:D Row
+; I:E Column and variant flag (bit 7 = left/right)
+;
+; Draws a cliff scenery block: picks the left or right sprite pair (from
+; $C040/$C046) by E bit 7, draws the top ($14 rows) and bottom ($0C rows)
+; halves via #R$834B, then colours its attribute cells from the $9124 palette
+; table.
 c$90AC LD A,D        ;
- $90AD CP $93        ;
+ $90AD CP $93        ; Reject if row off-screen
  $90AF CCF           ;
  $90B0 RET C         ;
- $90B1 BIT 7,E       ;
+ $90B1 BIT 7,E       ; E bit 7 picks left/right variant
  $90B3 RES 7,E       ;
  $90B5 LD A,E        ;
  $90B6 JR NZ,$90C1   ;
@@ -6447,7 +6479,7 @@ c$90AC LD A,D        ;
  $90EE ADD A,$01     ;
  $90F0 SRL A         ;
  $90F2 SRL A         ;
- $90F4 LD HL,$9124   ;
+ $90F4 LD HL,$9124   ; Colour palette table $9124
  $90F7 CALL $98D3    ; HL = HL + A
  $90FA EX DE,HL      ;
  $90FB POP HL        ;
@@ -6456,7 +6488,7 @@ c$90AC LD A,D        ;
  $90FE RRCA          ;
  $90FF RRCA          ;
  $9100 AND $03       ;
- $9102 OR $58        ;
+ $9102 OR $58        ; Attribute area base ($58xx)
  $9104 LD H,A        ;
  $9105 LD BC,$001B   ;
  $9108 EXX           ;
@@ -6465,7 +6497,7 @@ c$90AC LD A,D        ;
  $910C SRL A         ;
  $910E INC A         ;
  $910F LD B,A        ;
-*$9110 EXX           ;
+*$9110 EXX           ; Fill attribute row from palette
  $9111 LD A,(DE)     ;
  $9112 INC DE        ;
  $9113 LD (HL),A     ;
@@ -6603,12 +6635,21 @@ c$9193 BIT 4,(IY+$15) ;
 *$91DD LD BC,$0004    ;
  $91E0 JP $6400       ; => Abort
 
-; Routine at 91E3
-c$91E3 JR NC,$91FC   ;
+; Link record entry into the $FF00 buffer chain, continue
+;
+; .
+;
+; I:F Carry selects the exit path
+; I:L Buffer entry offset
+;
+; Return point after a level-record handler: on one flag path it links the
+; entry into the sorted $FF00 buffer chain via #R$921F and processes the next
+; record, otherwise it just advances the buffer offset ($FD88).
+c$91E3 JR NC,$91FC   ; Carry path: check buffer offset only
  $91E5 POP HL        ;
  $91E6 LD A,($FD88)  ; Get Offset in $FF00 buffer
  $91E9 CP L          ;
- $91EA JR Z,$91F6    ;
+ $91EA JR Z,$91F6    ; Already at head? update offset
  $91EC LD A,L        ;
  $91ED LD L,(HL)     ;
  $91EE PUSH HL       ;
@@ -7692,7 +7733,7 @@ c$9922 SET 5,(IX+$0B) ; Mark record draw-active (+$0B bit 5)
  $9936 LD A,E         ;
  $9937 ADD A,$02      ;
  $9939 CP $22         ;
- $993B JP NC,$9FDE    ;
+ $993B JP NC,$9FDE    ; => Finish sprite off-screen
 *$993E LD B,(IX+$05)  ; {Check object bounds against clip window (IX+8/9 vs
  $9941 LD C,(IX+$01)  ; B/C)
  $9944 LD A,(IX+$08)  ;
@@ -7705,7 +7746,7 @@ c$9922 SET 5,(IX+$0B) ; Mark record draw-active (+$0B bit 5)
  $9955 CP B           ;
  $9956 JP P,$995D     ;
  $9959 CP C           ;
- $995A JP M,$9FDE     ;
+ $995A JP M,$9FDE     ; => Finish sprite off-screen
 *$995D EXX            ; {Frame index (IX+$02) * 2 into A
  $995E LD A,(IX+$02)  ;
  $9961 ADD A,A        ; }
@@ -7777,7 +7818,7 @@ c$9922 SET 5,(IX+$0B) ; Mark record draw-active (+$0B bit 5)
  $99D3 LD SP,HL       ;
  $99D4 LD A,(IX+$01)  ;
  $99D7 LD C,$00       ; }
- $99D9 JP C,$9AE6     ;
+ $99D9 JP C,$9AE6     ; => Clip wide sprite edge, dispatch to masked blit
  $99DC JP NZ,$9A6E    ; => Clip sprite edge, dispatch to masked blit
  $99DF SUB (IX+$05)   ;
  $99E2 JR Z,$99F3     ;
@@ -7859,7 +7900,7 @@ c$9922 SET 5,(IX+$0B) ; Mark record draw-active (+$0B bit 5)
  $9A3D LD D,A         ;
 *$9A3E EXX            ;
  $9A3F DEC E          ;
- $9A40 JP Z,$9FF5     ;
+ $9A40 JP Z,$9FF5     ; => Blit finish
  $9A43 DJNZ $99FB     ;
  $9A45 JP (HL)        ;
 
@@ -8005,14 +8046,23 @@ c$9A6E SUB (IX+$05)  ; {Compare sprite width to clip limit
  $9ADD LD D,A        ;
 *$9ADE EXX           ;
  $9ADF DEC E         ;
- $9AE0 JP Z,$9FF5    ;
+ $9AE0 JP Z,$9FF5    ; => Blit finish
  $9AE3 DJNZ $9A95    ;
  $9AE5 JP (HL)       ;
 
-; Routine at 9AE6
+; Clip wide sprite edge, dispatch to masked blit
 ;
 ; Used by the routine at #R$9922.
-c$9AE6 SUB (IX+$05)  ;
+;
+; I:IX Address of the 20-byte object record
+; I:A Remaining sprite width
+; I:DE Screen address
+;
+; Handles horizontal clipping for the wide masked blit: compares the remaining
+; sprite width against the clip limit (IX+$05) and dispatches an on-screen
+; segment to the unmasked blit or an off-left overhang to the masked path
+; (#R$9E98), continuing into #R$9B05.
+c$9AE6 SUB (IX+$05)  ; Compare width to clip limit
  $9AE9 JR Z,$9B08    ;
  $9AEB LD HL,$9B08   ;
  $9AEE LD B,A        ;
@@ -8022,7 +8072,7 @@ c$9AE6 SUB (IX+$05)  ;
  $9AF2 EX AF,AF'     ;
  $9AF3 JP NC,$9EDF   ; => Unmasked-OR blit, draws opaque sprite row across
                      ; screen thirds
- $9AF6 NEG           ;
+ $9AF6 NEG           ; Negate off-left overhang
  $9AF8 LD B,A        ;
  $9AF9 LD C,A        ;
  $9AFA EXX           ;
@@ -8030,7 +8080,7 @@ c$9AE6 SUB (IX+$05)  ;
  $9AFC EXX           ;
  $9AFD OR A          ;
  $9AFE EX AF,AF'     ;
- $9AFF LD HL,$9B05   ;
+ $9AFF LD HL,$9B05   ; Off-left: masked path
  $9B02 JP $9E98      ; => Masked-OR blit variant, draws sprite row across
                      ; screen thirds
 
@@ -8125,7 +8175,7 @@ c$9B05 EXX           ; {Adjust column, dispatch entry
  $9B58 LD D,A        ;
 *$9B59 EXX           ;
  $9B5A DEC E         ;
- $9B5B JP Z,$9FF5    ;
+ $9B5B JP Z,$9FF5    ; => Blit finish
  $9B5E DJNZ $9B10    ; Loop the rows
  $9B60 JP (HL)       ;
 
@@ -8954,7 +9004,7 @@ c$9EDF EXX           ; {OR sprite byte, first third
  $9F0C LD D,A        ;
 *$9F0D EXX           ;
  $9F0E DEC E         ;
- $9F0F JP Z,$9FF5    ;
+ $9F0F JP Z,$9FF5    ; => Blit finish
  $9F12 DJNZ $9EDF    ;
  $9F14 JP (HL)       ;
 *$9F15 AND $18       ;
@@ -9088,26 +9138,37 @@ c$9F1D PUSH HL        ; {Check width against clip limit
 *$9FD8 LD SP,($FD82)  ;
  $9FDC JR $9FE8       ;
 
-; Routine at 9FDE
+; Finish sprite off-screen: commit pending fields
 ;
 ; Used by the routine at #R$9922.
-c$9FDE RES 5,(IX+$0B) ;
+;
+; I:IX Address of the 20-byte object record
+;
+; Finishes an off-screen or clipped sprite without drawing: clears the
+; draw-active flag (+$0B bit 5) and commits the pending frame/page and Y fields
+; (+$06/+$07/+$05) into the current ones (+$02/+$01).
+c$9FDE RES 5,(IX+$0B) ; Clear draw-active flag
 ; This entry point is used by the routine at #R$9922.
-*$9FE2 LD A,(IX+$06)  ;
- $9FE5 LD (IX+$02),A  ;
+*$9FE2 LD A,(IX+$06)  ; {Promote next frame into current
+ $9FE5 LD (IX+$02),A  ; }
 ; This entry point is used by the routine at #R$9F1D.
 *$9FE8 LD A,(IX+$07)  ;
  $9FEB LD (IX+$07),A  ;
- $9FEE LD A,(IX+$05)  ;
- $9FF1 LD (IX+$01),A  ;
+ $9FEE LD A,(IX+$05)  ; {Promote next Y into current
+ $9FF1 LD (IX+$01),A  ; }
  $9FF4 RET            ;
 
-; Routine at 9FF5
+; Blit finish: commit Y position, restore SP
 ;
 ; Used by the routines at #R$9922, #R$9A6E, #R$9B05, #R$9E98 and #R$9EDF.
-c$9FF5 LD A,(IX+$05) ;
- $9FF8 LD (IX+$01),A ;
- $9FFB LD SP,($FD82) ;
+;
+; I:IX Address of the 20-byte object record
+;
+; Blit finish: commits the pending Y position (+$05 into +$01) and restores the
+; real SP saved in $FD82.
+c$9FF5 LD A,(IX+$05) ; {Commit pending Y position
+ $9FF8 LD (IX+$01),A ; }
+ $9FFB LD SP,($FD82) ; Restore SP
  $9FFF RET           ;
 
 ; Sprites of Player and troopers; width 3 height 21
@@ -10646,16 +10707,21 @@ c$DC8F JP $DDBE      ;
 c$DC92 JP $DF33      ; => Entry E=2, dispatch bullet/collision handler via
                      ; $DF39
 
-; Routine at DC95
+; Scroll level and shift all objects down
 ;
 ; Used by the routine at #R$DE91.
+;
+; .
+;
+; Advances the level scroll one step, then shifts every object in the $5B11
+; table down by one row (+$05) until the $90 end marker.
 c$DC95 CALL $8003    ; Advance level scroll
  $DC98 LD IX,$5B11   ;
-*$DC9C INC (IX+$05)  ;
+*$DC9C INC (IX+$05)  ; Scroll object down one row
  $DC9F LD DE,$0014   ;
  $DCA2 ADD IX,DE     ;
- $DCA4 LD A,(IX+$00) ;
- $DCA7 SUB $90       ;
+ $DCA4 LD A,(IX+$00) ; {Stop at $90 end marker
+ $DCA7 SUB $90       ; }
  $DCA9 JR NZ,$DC9C   ;
  $DCAB LD ($FDEE),A  ;
  $DCAE RET           ;
@@ -10924,7 +10990,7 @@ c$DE91 BIT 0,(IY+$62) ; Is Player alive??
  $DEBD INC (IY+$6E)   ;
 *$DEC0 BIT 5,(IY+$15) ;
  $DEC4 JR Z,$DECB     ;
- $DEC6 CALL $DC95     ;
+ $DEC6 CALL $DC95     ; Scroll level and shift all objects down
  $DEC9 JR $DECE       ;
 *$DECB CALL $8006     ; Reset R register (random seed), inside $9193
 *$DECE CALL $DD71     ; Process object records at $5B11
@@ -11330,19 +11396,24 @@ c$E1AC CALL $DC83    ; Get random byte??
  $E1B3 DEC A         ;
  $E1B4 RET           ;
 
-; Routine at E1B5
+; Service the two bomb/explosion slots
 ;
 ; Used by the routine at #R$E2EA.
+;
+; .
+;
+; Services the two active bomb/explosion slots ($FDC3 and $FDC5), calling
+; #R$E1D1 on each to check for enemy hits and advance the effect.
 c$E1B5 LD HL,$FDF2   ;
  $E1B8 LD DE,$FDC3   ;
- $E1BB LD A,(DE)     ;
- $E1BC INC A         ;
+ $E1BB LD A,(DE)     ; {First slot active?
+ $E1BC INC A         ; }
  $E1BD JR Z,$E1C2    ;
  $E1BF CALL $E1D1    ; Check pickup/collision near object, award score
 *$E1C2 LD HL,$FDF3   ;
  $E1C5 LD DE,$FDC5   ;
- $E1C8 LD A,(DE)     ;
- $E1C9 INC A         ;
+ $E1C8 LD A,(DE)     ; {Second slot active?
+ $E1C9 INC A         ; }
  $E1CA JR Z,$E224    ;
  $E1CC CALL $E1D1    ; Check pickup/collision near object, award score
  $E1CF JR $E224      ;
@@ -12325,7 +12396,7 @@ c$E794 BIT 4,(IX+$0C)  ; {Check sub-state flag and AI state $09
  $E849 LD (IX+$11),$12 ;
  $E84D LD A,(IX+$12)   ;
  $E850 CP $08          ;
- $E852 JP Z,$EB7B      ;
+ $E852 JP Z,$EB7B      ; => Enemy patrol AI
  $E855 CP $04          ;
  $E857 JR NZ,$E862     ;
  $E859 CALL $EBE1      ; Compute direction bits toward player position
@@ -12335,24 +12406,38 @@ c$E794 BIT 4,(IX+$0C)  ; {Check sub-state flag and AI state $09
  $E865 LD (IX+$0C),A   ;
  $E868 JP $E9B9        ;
 
-; Routine at E86B
+; Enemy AI pause: reload short action timer
 ;
 ; Used by the routines at #R$E881 and #R$EB7B.
+;
+; I:IX Address of the 20-byte object record
+;
+; Enemy AI pause state: reloads the action timer (+$11) to $02, or to $04 with
+; sub-state $11 when the object has no queued sprite frame (+$06 = 0), then
+; continues at #R$E9B9.
 c$E86B LD A,$02        ;
- $E86D LD E,(IX+$06)   ;
+ $E86D LD E,(IX+$06)   ; Read queued sprite frame (+$06)
  $E870 INC E           ;
  $E871 DEC E           ;
  $E872 JR Z,$E876      ;
  $E874 JR $E87B        ;
-*$E876 LD (IX+$0C),$11 ;
+*$E876 LD (IX+$0C),$11 ; No frame: force sub-state $11
  $E87A ADD A,A         ;
-*$E87B LD (IX+$11),A   ;
+*$E87B LD (IX+$11),A   ; Store pause timer
  $E87E JP $E9B9        ;
 
-; Routine at E881
+; Enemy AI: re-aim at player, random fire
+;
+; .
+;
+; I:IX Address of the 20-byte object record
+;
+; Enemy AI state that re-aims toward the player, then on a random chance fires
+; (#R$EC1B) unless in state $09, before reloading the action timer and
+; returning to the mover at #R$E992.
 c$E881 CALL $EBE1      ; Compute direction bits toward player position
- $E884 LD (IX+$0C),A   ;
- $E887 CALL $DC83      ; Get random byte??
+ $E884 LD (IX+$0C),A   ; Aim heading at player
+ $E887 CALL $DC83      ; Get random byte
  $E88A RRA             ;
  $E88B JR C,$E86B      ;
  $E88D AND $0C         ;
@@ -12360,7 +12445,7 @@ c$E881 CALL $EBE1      ; Compute direction bits toward player position
  $E891 LD A,(IX+$12)   ;
  $E894 CP $09          ;
  $E896 CALL NZ,$EC1B   ; Check enemy position on-screen, trigger action
-*$E899 LD (IX+$11),$0E ;
+*$E899 LD (IX+$11),$0E ; Reload action timer $0E
  $E89D JP $E992        ;
 
 ; Enemy wandering AI: timed re-aim, random fire and step
@@ -12639,25 +12724,38 @@ c$EB13 LD B,$10      ;
  $EB62 LD (IX+$0C),A ;
  $EB65 JP $E992      ;
 
-; Routine at EB68
-c$EB68 LD (IX+$12),$01 ;
+; Enter enemy AI state $01 with heading $08
+;
+; .
+;
+; I:IX Address of the 20-byte object record
+;
+; Puts an enemy into AI state $01 with heading $08 (current and next) and a
+; $20-tick action timer, then moves via #R$E9B6.
+c$EB68 LD (IX+$12),$01 ; Enter AI state $01
  $EB6C LD D,$08        ;
- $EB6E LD (IX+$0C),D   ;
+ $EB6E LD (IX+$0C),D   ; Set heading $08 (current and next)
  $EB71 LD (IX+$13),D   ;
- $EB74 LD (IX+$11),$20 ;
+ $EB74 LD (IX+$11),$20 ; Set action timer $20
  $EB78 JP $E9B6        ;
 
-; Routine at EB7B
+; Enemy patrol AI: walk N steps then reverse
 ;
 ; Used by the routine at #R$E794.
-c$EB7B INC (IX+$0D)    ;
+;
+; I:IX Address of the 20-byte object record
+;
+; Enemy patrol AI: advances a step counter (+$0D) and keeps walking until it
+; reaches 5, then reverses the heading (XOR $08), reloads the timer and moves
+; via #R$E9B6.
+c$EB7B INC (IX+$0D)    ; Advance step counter
  $EB7E LD A,(IX+$0D)   ;
- $EB81 CP $05          ;
- $EB83 JP C,$E86B      ;
+ $EB81 CP $05          ; Still walking?
+ $EB83 JP C,$E86B      ; => Enemy AI pause
  $EB86 LD A,(IX+$13)   ;
- $EB89 XOR $08         ;
+ $EB89 XOR $08         ; Reverse heading 180 degrees
  $EB8B LD (IX+$0C),A   ;
- $EB8E LD (IX+$11),$40 ;
+ $EB8E LD (IX+$11),$40 ; Reload timer $40
  $EB92 LD D,A          ;
  $EB93 JP $E9B6        ;
 

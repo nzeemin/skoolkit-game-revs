@@ -1715,7 +1715,7 @@ Used by the routines at <a href="asm.html#37170">9132</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="25606"></span>6406</td>
 <td class="instruction">JP <a href="#31178">$79CA</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; System init</td>
 </tr>
 <tr>
 <td class="address-1"><span id="25609"></span>6409</td>
@@ -5658,7 +5658,7 @@ Used by the routine at <a href="asm.html#25600">6400</a>.
 <tr>
 <td class="address-1"><span id="27099"></span>69DB</td>
 <td class="instruction">CALL <a href="#31178">$79CA</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">System init</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27102"></span>69DE</td>
@@ -16512,13 +16512,23 @@ Used by the routines at <a href="asm.html#25600">6400</a> and <a href="asm.html#
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="31178" class="description">79CA: Routine at 79CA</div>
+<div id="31178" class="description">79CA: System init: interrupt table, screen-line table, checksums</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routines at <a href="asm.html#25600">6400</a> and <a href="asm.html#27090">69D2</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="31178"></span>
+<div class="comments">
+<div class="paragraph">
+One-time setup: builds the interrupt vector table ($FB00), the $FE00 even-screen-line table and the checksum reference, then initialises the IY-based system variables.
 </div>
 </div>
 </td>
@@ -16546,7 +16556,7 @@ Used by the routines at <a href="asm.html#25600">6400</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="31189"></span>79D5</td>
 <td class="instruction">CALL <a href="#31227">$79FB</a></td>
-<td class="comment-1" rowspan="1">Calculate checksums??</td>
+<td class="comment-1" rowspan="1">Calculate checksums</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31192"></span>79D8</td>
@@ -16737,49 +16747,59 @@ Used by the routines at <a href="asm.html#25600">6400</a> and <a href="asm.html#
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="31248"></span>
+<div class="comments">
+<div class="paragraph">
+Abort path: restores the saved stack ($FD80) and the IY/HL context off it, switches back to IM 1 and re-enables interrupts before returning to the frame loop.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="31248"></span>7A10</td>
 <td class="instruction">DI</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31249"></span>7A11</td>
 <td class="instruction">LD SP,($FD80)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restore saved stack pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31253"></span>7A15</td>
 <td class="instruction">EXX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31254"></span>7A16</td>
 <td class="instruction">POP IY</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restore IY/HL context</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31256"></span>7A18</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31257"></span>7A19</td>
 <td class="instruction">EXX</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31258"></span>7A1A</td>
 <td class="instruction">IM 1</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Back to IM 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31260"></span>7A1C</td>
 <td class="instruction">EI</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31261"></span>7A1D</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="31262" class="description">7A1E: Set up interrupt vector table at $FB00 (unconfirmed)</div>
@@ -29394,11 +29414,34 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <td class="comment-1" rowspan="1">=&gt; Sprite draw dispatch</td>
 </tr>
 </table>
-<div id="36941" class="description">904D: Routine at 904D</div>
+<div id="36941" class="description">904D: Draw a cliff-edge scenery block, record edge flags</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">D</td>
+<td class="register-desc">Row</td>
+</tr>
+<tr>
+<td class="register">E</td>
+<td class="register-desc">Column and flags (bit 7 side, bits 5-6 edge markers)</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="36941"></span>
+<div class="comments">
+<div class="paragraph">
+Draws a cliff-edge scenery block (left or right by E bit 7), recording the edge column and side flags in IY+$5E/$5F/$71 from E bits 5-6, then draws its upper ($15 rows) and lower ($0F rows) halves via <a href="asm.html#37025">90A1</a>.
+</div>
 </div>
 </td>
 </tr>
@@ -29415,7 +29458,7 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <tr>
 <td class="address-1"><span id="36944"></span>9050</td>
 <td class="instruction">BIT 7,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">E bit 7 picks left/right edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36946"></span>9052</td>
@@ -29450,7 +29493,7 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <tr>
 <td class="address-1"><span id="36959"></span>905F</td>
 <td class="instruction">LD (IY+$5F),D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Record left edge column (IY+$5F)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36962"></span>9062</td>
@@ -29505,7 +29548,7 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <tr>
 <td class="address-1"><span id="36987"></span>907B</td>
 <td class="instruction">LD (IY+$5E),D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Record right edge column (IY+$5E)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36990"></span>907E</td>
@@ -29535,7 +29578,7 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <tr>
 <td class="address-1"><span id="37003"></span>908B</td>
 <td class="instruction">LD B,$15</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Top part height = $15</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37005"></span>908D</td>
@@ -29565,7 +29608,7 @@ This entry point is used by the routine at <a href="asm.html#36533">8EB5</a>.
 <tr>
 <td class="address-1"><span id="37014"></span>9096</td>
 <td class="instruction">LD B,$0F</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Bottom part height = $0F</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37016"></span>9098</td>
@@ -29607,20 +29650,24 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <th colspan="2">Input</th>
 </tr>
 <tr>
+<td class="register">A</td>
+<td class="register-desc">Row offset added to D</td>
+</tr>
+<tr>
 <td class="register">B</td>
-<td class="register-desc">??</td>
+<td class="register-desc">Sprite height</td>
 </tr>
 <tr>
 <td class="register">C</td>
-<td class="register-desc">??</td>
-</tr>
-<tr>
-<td class="register">A</td>
-<td class="register-desc">??</td>
+<td class="register-desc">Attribute/colour byte</td>
 </tr>
 <tr>
 <td class="register">DE</td>
-<td class="register-desc">??</td>
+<td class="register-desc">Screen position (D row, E column)</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">Sprite address</td>
 </tr>
 </table>
 </td>
@@ -29666,11 +29713,34 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="37036" class="description">90AC: Routine at 90AC</div>
+<div id="37036" class="description">90AC: Draw a cliff scenery block and colour its attributes</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">D</td>
+<td class="register-desc">Row</td>
+</tr>
+<tr>
+<td class="register">E</td>
+<td class="register-desc">Column and variant flag (bit 7 = left/right)</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="37036"></span>
+<div class="comments">
+<div class="paragraph">
+Draws a cliff scenery block: picks the left or right sprite pair (from $C040/$C046) by E bit 7, draws the top ($14 rows) and bottom ($0C rows) halves via <a href="asm.html#33611">834B</a>, then colours its attribute cells from the $9124 palette table.
+</div>
 </div>
 </td>
 </tr>
@@ -29682,7 +29752,7 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <tr>
 <td class="address-1"><span id="37037"></span>90AD</td>
 <td class="instruction">CP $93</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Reject if row off-screen</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37039"></span>90AF</td>
@@ -29697,7 +29767,7 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <tr>
 <td class="address-1"><span id="37041"></span>90B1</td>
 <td class="instruction">BIT 7,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">E bit 7 picks left/right variant</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37043"></span>90B3</td>
@@ -29882,7 +29952,7 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <tr>
 <td class="address-1"><span id="37108"></span>90F4</td>
 <td class="instruction">LD HL,$9124</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Colour palette table $9124</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37111"></span>90F7</td>
@@ -29927,7 +29997,7 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <tr>
 <td class="address-1"><span id="37122"></span>9102</td>
 <td class="instruction">OR $58</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Attribute area base ($58xx)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37124"></span>9104</td>
@@ -29972,7 +30042,7 @@ Used by the routine at <a href="asm.html#36941">904D</a>.
 <tr>
 <td class="address-2"><span id="37136"></span>9110</td>
 <td class="instruction">EXX</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Fill attribute row from palette</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37137"></span>9111</td>
@@ -30634,18 +30704,41 @@ This entry point is used by the routine at <a href="asm.html#37347">91E3</a>.
 <td class="comment-1" rowspan="1">=&gt; Abort</td>
 </tr>
 </table>
-<div id="37347" class="description">91E3: Routine at 91E3</div>
+<div id="37347" class="description">91E3: Link record entry into the $FF00 buffer chain, continue</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">F</td>
+<td class="register-desc">Carry selects the exit path</td>
+</tr>
+<tr>
+<td class="register">L</td>
+<td class="register-desc">Buffer entry offset</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="37347"></span>
+<div class="comments">
+<div class="paragraph">
+Return point after a level-record handler: on one flag path it links the entry into the sorted $FF00 buffer chain via <a href="asm.html#37407">921F</a> and processes the next record, otherwise it just advances the buffer offset ($FD88).
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="37347"></span>91E3</td>
 <td class="instruction">JR NC,$91FC</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Carry path: check buffer offset only</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37349"></span>91E5</td>
@@ -30665,7 +30758,7 @@ This entry point is used by the routine at <a href="asm.html#37347">91E3</a>.
 <tr>
 <td class="address-1"><span id="37354"></span>91EA</td>
 <td class="instruction">JR Z,$91F6</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Already at head? update offset</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37356"></span>91EC</td>
@@ -35856,7 +35949,7 @@ Prepares and draws an object's sprite. Marks the record draw-active (+$0B bit 5)
 <tr>
 <td class="address-1"><span id="39227"></span>993B</td>
 <td class="instruction">JP NC,<a href="#40926">$9FDE</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Finish sprite off-screen</td>
 </tr>
 <tr>
 <td class="address-2"><span id="39230"></span>993E</td>
@@ -35914,7 +36007,7 @@ Prepares and draws an object's sprite. Marks the record draw-active (+$0B bit 5)
 <tr>
 <td class="address-1"><span id="39258"></span>995A</td>
 <td class="instruction">JP M,<a href="#40926">$9FDE</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Finish sprite off-screen</td>
 </tr>
 <tr>
 <td class="address-2"><span id="39261"></span>995D</td>
@@ -36254,7 +36347,7 @@ Prepares and draws an object's sprite. Marks the record draw-active (+$0B bit 5)
 <tr>
 <td class="address-1"><span id="39385"></span>99D9</td>
 <td class="instruction">JP C,<a href="#39654">$9AE6</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Clip wide sprite edge, dispatch to masked blit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39388"></span>99DC</td>
@@ -36652,7 +36745,7 @@ Prepares and draws an object's sprite. Marks the record draw-active (+$0B bit 5)
 <tr>
 <td class="address-1"><span id="39488"></span>9A40</td>
 <td class="instruction">JP Z,<a href="#40949">$9FF5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Blit finish</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39491"></span>9A43</td>
@@ -37291,7 +37384,7 @@ Handles horizontal clipping at a screen-third boundary before the masked blit. C
 <tr>
 <td class="address-1"><span id="39648"></span>9AE0</td>
 <td class="instruction">JP Z,<a href="#40949">$9FF5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Blit finish</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39651"></span>9AE3</td>
@@ -37304,7 +37397,7 @@ Handles horizontal clipping at a screen-third boundary before the masked blit. C
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="39654" class="description">9AE6: Routine at 9AE6</div>
+<div id="39654" class="description">9AE6: Clip wide sprite edge, dispatch to masked blit</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -37313,12 +37406,39 @@ Handles horizontal clipping at a screen-third boundary before the masked blit. C
 Used by the routine at <a href="asm.html#39202">9922</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">Remaining sprite width</td>
+</tr>
+<tr>
+<td class="register">DE</td>
+<td class="register-desc">Screen address</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="39654"></span>
+<div class="comments">
+<div class="paragraph">
+Handles horizontal clipping for the wide masked blit: compares the remaining sprite width against the clip limit (IX+$05) and dispatches an on-screen segment to the unmasked blit or an off-left overhang to the masked path (<a href="asm.html#40600">9E98</a>), continuing into <a href="asm.html#39685">9B05</a>.
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="39654"></span>9AE6</td>
 <td class="instruction">SUB (IX+$05)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Compare width to clip limit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39657"></span>9AE9</td>
@@ -37363,7 +37483,7 @@ Used by the routine at <a href="asm.html#39202">9922</a>.
 <tr>
 <td class="address-1"><span id="39670"></span>9AF6</td>
 <td class="instruction">NEG</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Negate off-left overhang</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39672"></span>9AF8</td>
@@ -37403,7 +37523,7 @@ Used by the routine at <a href="asm.html#39202">9922</a>.
 <tr>
 <td class="address-1"><span id="39679"></span>9AFF</td>
 <td class="instruction">LD HL,$9B05</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Off-left: masked path</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39682"></span>9B02</td>
@@ -37829,7 +37949,7 @@ This entry point is used by the routine at <a href="asm.html#39654">9AE6</a>.
 <tr>
 <td class="address-1"><span id="39771"></span>9B5B</td>
 <td class="instruction">JP Z,<a href="#40949">$9FF5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Blit finish</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39774"></span>9B5E</td>
@@ -41516,7 +41636,7 @@ Used by the routines at <a href="asm.html#39202">9922</a>, <a href="asm.html#394
 <tr>
 <td class="address-1"><span id="40719"></span>9F0F</td>
 <td class="instruction">JP Z,<a href="#40949">$9FF5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Blit finish</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40722"></span>9F12</td>
@@ -42127,7 +42247,7 @@ Draws a sprite running off the left or right edge: clips its width, skips the hi
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="40926" class="description">9FDE: Routine at 9FDE</div>
+<div id="40926" class="description">9FDE: Finish sprite off-screen: commit pending fields</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -42136,12 +42256,31 @@ Draws a sprite running off the left or right edge: clips its width, skips the hi
 Used by the routine at <a href="asm.html#39202">9922</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="40926"></span>
+<div class="comments">
+<div class="paragraph">
+Finishes an off-screen or clipped sprite without drawing: clears the draw-active flag (+$0B bit 5) and commits the pending frame/page and Y fields (+$06/+$07/+$05) into the current ones (+$02/+$01).
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="40926"></span>9FDE</td>
 <td class="instruction">RES 5,(IX+$0B)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Clear draw-active flag</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -42156,12 +42295,11 @@ This entry point is used by the routine at <a href="asm.html#39202">9922</a>.
 <tr>
 <td class="address-2"><span id="40930"></span>9FE2</td>
 <td class="instruction">LD A,(IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Promote next frame into current</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40933"></span>9FE5</td>
 <td class="instruction">LD (IX+$02),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -42176,30 +42314,29 @@ This entry point is used by the routine at <a href="asm.html#40733">9F1D</a>.
 <tr>
 <td class="address-2"><span id="40936"></span>9FE8</td>
 <td class="instruction">LD A,(IX+$07)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40939"></span>9FEB</td>
 <td class="instruction">LD (IX+$07),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40942"></span>9FEE</td>
 <td class="instruction">LD A,(IX+$05)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Promote next Y into current</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40945"></span>9FF1</td>
 <td class="instruction">LD (IX+$01),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40948"></span>9FF4</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="40949" class="description">9FF5: Routine at 9FF5</div>
+<div id="40949" class="description">9FF5: Blit finish: commit Y position, restore SP</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -42208,27 +42345,45 @@ This entry point is used by the routine at <a href="asm.html#40733">9F1D</a>.
 Used by the routines at <a href="asm.html#39202">9922</a>, <a href="asm.html#39534">9A6E</a>, <a href="asm.html#39685">9B05</a>, <a href="asm.html#40600">9E98</a> and <a href="asm.html#40671">9EDF</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="40949"></span>
+<div class="comments">
+<div class="paragraph">
+Blit finish: commits the pending Y position (+$05 into +$01) and restores the real SP saved in $FD82.
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="40949"></span>9FF5</td>
 <td class="instruction">LD A,(IX+$05)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Commit pending Y position</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40952"></span>9FF8</td>
 <td class="instruction">LD (IX+$01),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="40955"></span>9FFB</td>
 <td class="instruction">LD SP,($FD82)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restore SP</td>
 </tr>
 <tr>
 <td class="address-1"><span id="40959"></span>9FFF</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="40960" class="description">A000: Sprites of Player and troopers; width 3 height 21</div>
@@ -49209,13 +49364,23 @@ Used by the routine at <a href="asm.html#58090">E2EA</a>.
 <td class="comment-1" rowspan="1">=&gt; Entry E=2, dispatch bullet/collision handler via $DF39</td>
 </tr>
 </table>
-<div id="56469" class="description">DC95: Routine at DC95</div>
+<div id="56469" class="description">DC95: Scroll level and shift all objects down</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#56977">DE91</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="56469"></span>
+<div class="comments">
+<div class="paragraph">
+Advances the level scroll one step, then shifts every object in the $5B11 table down by one row (+$05) until the $90 end marker.
 </div>
 </div>
 </td>
@@ -49233,7 +49398,7 @@ Used by the routine at <a href="asm.html#56977">DE91</a>.
 <tr>
 <td class="address-2"><span id="56476"></span>DC9C</td>
 <td class="instruction">INC (IX+$05)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Scroll object down one row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56479"></span>DC9F</td>
@@ -49248,12 +49413,11 @@ Used by the routine at <a href="asm.html#56977">DE91</a>.
 <tr>
 <td class="address-1"><span id="56484"></span>DCA4</td>
 <td class="instruction">LD A,(IX+$00)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Stop at $90 end marker</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56487"></span>DCA7</td>
 <td class="instruction">SUB $90</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56489"></span>DCA9</td>
@@ -50505,7 +50669,7 @@ Used by the routines at <a href="asm.html#56543">DCDF</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="57030"></span>DEC6</td>
 <td class="instruction">CALL <a href="#56469">$DC95</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Scroll level and shift all objects down</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57033"></span>DEC9</td>
@@ -52272,13 +52436,23 @@ Used by the routines at <a href="asm.html#57618">E112</a>, <a href="asm.html#580
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="57781" class="description">E1B5: Routine at E1B5</div>
+<div id="57781" class="description">E1B5: Service the two bomb/explosion slots</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
 <div class="paragraph">
 Used by the routine at <a href="asm.html#58090">E2EA</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="57781"></span>
+<div class="comments">
+<div class="paragraph">
+Services the two active bomb/explosion slots ($FDC3 and $FDC5), calling <a href="asm.html#57809">E1D1</a> on each to check for enemy hits and advance the effect.
 </div>
 </div>
 </td>
@@ -52296,12 +52470,11 @@ Used by the routine at <a href="asm.html#58090">E2EA</a>.
 <tr>
 <td class="address-1"><span id="57787"></span>E1BB</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">First slot active?</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57788"></span>E1BC</td>
 <td class="instruction">INC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57789"></span>E1BD</td>
@@ -52326,12 +52499,11 @@ Used by the routine at <a href="asm.html#58090">E2EA</a>.
 <tr>
 <td class="address-1"><span id="57800"></span>E1C8</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Second slot active?</td>
 </tr>
 <tr>
 <td class="address-1"><span id="57801"></span>E1C9</td>
 <td class="instruction">INC A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="57802"></span>E1CA</td>
@@ -56900,7 +57072,7 @@ Runs one frame of an enemy soldier. First it tests whether the player has walked
 <tr>
 <td class="address-1"><span id="59474"></span>E852</td>
 <td class="instruction">JP Z,<a href="#60283">$EB7B</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Enemy patrol AI</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59477"></span>E855</td>
@@ -56943,7 +57115,7 @@ Runs one frame of an enemy soldier. First it tests whether the player has walked
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="59499" class="description">E86B: Routine at E86B</div>
+<div id="59499" class="description">E86B: Enemy AI pause: reload short action timer</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -56952,64 +57124,102 @@ Runs one frame of an enemy soldier. First it tests whether the player has walked
 Used by the routines at <a href="asm.html#59521">E881</a> and <a href="asm.html#60283">EB7B</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="59499"></span>
+<div class="comments">
+<div class="paragraph">
+Enemy AI pause state: reloads the action timer (+$11) to $02, or to $04 with sub-state $11 when the object has no queued sprite frame (+$06 = 0), then continues at <a href="asm.html#59833">E9B9</a>.
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="59499"></span>E86B</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="59501"></span>E86D</td>
 <td class="instruction">LD E,(IX+$06)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Read queued sprite frame (+$06)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59504"></span>E870</td>
 <td class="instruction">INC E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="59505"></span>E871</td>
 <td class="instruction">DEC E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="59506"></span>E872</td>
 <td class="instruction">JR Z,$E876</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="59508"></span>E874</td>
 <td class="instruction">JR $E87B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="59510"></span>E876</td>
 <td class="instruction">LD (IX+$0C),$11</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">No frame: force sub-state $11</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59514"></span>E87A</td>
 <td class="instruction">ADD A,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="59515"></span>E87B</td>
 <td class="instruction">LD (IX+$11),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Store pause timer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59518"></span>E87E</td>
 <td class="instruction">JP <a href="#59833">$E9B9</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="59521" class="description">E881: Routine at E881</div>
+<div id="59521" class="description">E881: Enemy AI: re-aim at player, random fire</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="59521"></span>
+<div class="comments">
+<div class="paragraph">
+Enemy AI state that re-aims toward the player, then on a random chance fires (<a href="asm.html#60443">EC1B</a>) unless in state $09, before reloading the action timer and returning to the mover at <a href="asm.html#59794">E992</a>.
+</div>
 </div>
 </td>
 </tr>
@@ -57021,12 +57231,12 @@ Used by the routines at <a href="asm.html#59521">E881</a> and <a href="asm.html#
 <tr>
 <td class="address-1"><span id="59524"></span>E884</td>
 <td class="instruction">LD (IX+$0C),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Aim heading at player</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59527"></span>E887</td>
 <td class="instruction">CALL <a href="#56451">$DC83</a></td>
-<td class="comment-1" rowspan="1">Get random byte??</td>
+<td class="comment-1" rowspan="1">Get random byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59530"></span>E88A</td>
@@ -57066,7 +57276,7 @@ Used by the routines at <a href="asm.html#59521">E881</a> and <a href="asm.html#
 <tr>
 <td class="address-2"><span id="59545"></span>E899</td>
 <td class="instruction">LD (IX+$11),$0E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Reload action timer $0E</td>
 </tr>
 <tr>
 <td class="address-1"><span id="59549"></span>E89D</td>
@@ -58350,46 +58560,65 @@ Enemy AI state that reloads the action timer by area, then on a coin-flip either
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="60264" class="description">EB68: Routine at EB68</div>
+<div id="60264" class="description">EB68: Enter enemy AI state $01 with heading $08</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="60264"></span>
+<div class="comments">
+<div class="paragraph">
+Puts an enemy into AI state $01 with heading $08 (current and next) and a $20-tick action timer, then moves via <a href="asm.html#59830">E9B6</a>.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="60264"></span>EB68</td>
 <td class="instruction">LD (IX+$12),$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Enter AI state $01</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60268"></span>EB6C</td>
 <td class="instruction">LD D,$08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60270"></span>EB6E</td>
 <td class="instruction">LD (IX+$0C),D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set heading $08 (current and next)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60273"></span>EB71</td>
 <td class="instruction">LD (IX+$13),D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60276"></span>EB74</td>
 <td class="instruction">LD (IX+$11),$20</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Set action timer $20</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60280"></span>EB78</td>
 <td class="instruction">JP <a href="#59830">$E9B6</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="60283" class="description">EB7B: Routine at EB7B</div>
+<div id="60283" class="description">EB7B: Enemy patrol AI: walk N steps then reverse</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -58398,57 +58627,76 @@ Enemy AI state that reloads the action timer by area, then on a coin-flip either
 Used by the routine at <a href="asm.html#59284">E794</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Address of the 20-byte object record</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="60283"></span>
+<div class="comments">
+<div class="paragraph">
+Enemy patrol AI: advances a step counter (+$0D) and keeps walking until it reaches 5, then reverses the heading (XOR $08), reloads the timer and moves via <a href="asm.html#59830">E9B6</a>.
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="60283"></span>EB7B</td>
 <td class="instruction">INC (IX+$0D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Advance step counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60286"></span>EB7E</td>
 <td class="instruction">LD A,(IX+$0D)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60289"></span>EB81</td>
 <td class="instruction">CP $05</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Still walking?</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60291"></span>EB83</td>
 <td class="instruction">JP C,<a href="#59499">$E86B</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Enemy AI pause</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60294"></span>EB86</td>
 <td class="instruction">LD A,(IX+$13)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60297"></span>EB89</td>
 <td class="instruction">XOR $08</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Reverse heading 180 degrees</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60299"></span>EB8B</td>
 <td class="instruction">LD (IX+$0C),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60302"></span>EB8E</td>
 <td class="instruction">LD (IX+$11),$40</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Reload timer $40</td>
 </tr>
 <tr>
 <td class="address-1"><span id="60306"></span>EB92</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="60307"></span>EB93</td>
 <td class="instruction">JP <a href="#59830">$E9B6</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="60310" class="description">EB96: Enemy AI: wander or chase player by aggressive flag</div>

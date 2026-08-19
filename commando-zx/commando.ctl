@@ -33,6 +33,7 @@ b $6318
 c $6400 Block of redirects
 C $6400,3 => Abort
 C $6403,3 => Delay by BC HALTs
+C $6406,3 => System init
 C $640C,3 => Print HL as 4-digit hex/BCD
 C $6412,3 => Fill screen rectangle with byte
 C $6415,3 => Update Score
@@ -256,6 +257,7 @@ C $69C6,3 Multiply HL by 10, add DE
 c $69D2 Set up attract/menu mode, then fall into the main menu
 C $69D2,4 Save the registers
 C $69D7,4 Remember the stack pointer
+C $69DB,3 System init
 C $69DE,4 Set the menu-mode flag
 C $69E2,3 Reset the print pointer
 C $69EC,3 Clear the last key
@@ -928,10 +930,11 @@ B $799E,2 char $11: set $FDA0 bits 3-5 = $02
 B $79A0,2 char $10: set $FDA0 bits 0-2 = $07
 T $79A2,32
 B $79C2,1 char $1F: end of string
-c $79CA
+c $79CA System init: interrupt table, screen-line table, checksums
+N $79CA One-time setup: builds the interrupt vector table ($FB00), the $FE00 even-screen-line table and the checksum reference, then initialises the IY-based system variables.
 C $79CF,3 Set up interrupt vector table at $FB00
 C $79D2,3 Prepare $FE00 table - addresses for every even screen line
-C $79D5,3 Calculate checksums??
+C $79D5,3 Calculate checksums
 C $79D8,4 Clear byte ($FD87)
 C $79DC,4 Set byte ($FDC2) = $02
 c $79E1 Init $FF00 buffer entries (32 slots, unconfirmed)
@@ -947,6 +950,10 @@ C $7A04,2 XOR the next row
 C $7A08,2 Store the column checksum
 C $7A0A,3 Move to the next column
 c $7A10 Abort: restore stack and interrupts, return to frame loop
+N $7A10 Abort path: restores the saved stack ($FD80) and the IY/HL context off it, switches back to IM 1 and re-enables interrupts before returning to the frame loop.
+C $7A11,4 Restore saved stack pointer
+C $7A16,2 Restore IY/HL context
+C $7A1A,2 Back to IM 1
 c $7A1E Set up interrupt vector table at $FB00 (unconfirmed)
 C $7A1E,6 Copy IM2 vector byte, fill $FB00 table
 C $7A2E,5 Terminate table, copy 3 more bytes
@@ -1443,19 +1450,33 @@ C $9034,3 Load the bottom sprite ($C01C)
 C $903B,3 => Sprite draw dispatch
 c $903E
 C $904A,3 => Sprite draw dispatch
-c $904D
+c $904D Draw a cliff-edge scenery block, record edge flags
+N $904D Draws a cliff-edge scenery block (left or right by E bit 7), recording the edge column and side flags in IY+$5E/$5F/$71 from E bits 5-6, then draws its upper ($15 rows) and lower ($0F rows) halves via #R$90A1.
+R $904D I:D Row
+R $904D I:E Column and flags (bit 7 side, bits 5-6 edge markers)
+C $9050,2 E bit 7 picks left/right edge
 C $9054,3 Get sprite addr Cliff edge left
 C $9058,3 Get sprite addr ???
+C $905F,3 Record left edge column (IY+$5F)
 C $9070,3 Get sprite addr Cliff edge right
+C $907B,3 Record right edge column (IY+$5E)
+C $908B,2 Top part height = $15
 C $9091,3 Adjust and clip sprite draw, calls $8A14
+C $9096,2 Bottom part height = $0F
 C $909C,3 Adjust and clip sprite draw, calls $8A14
 c $90A1 Adjust and clip sprite draw, calls $8A14 (unconfirmed)
-R $90A1 I:B ??
-R $90A1 I:C ??
-R $90A1 I:A ??
-R $90A1 I:DE ??
+R $90A1 I:A Row offset added to D
+R $90A1 I:B Sprite height
+R $90A1 I:C Attribute/colour byte
+R $90A1 I:DE Screen position (D row, E column)
+R $90A1 I:HL Sprite address
 C $90A7,3 Sprite draw dispatch variant, C=4
-c $90AC
+c $90AC Draw a cliff scenery block and colour its attributes
+N $90AC Draws a cliff scenery block: picks the left or right sprite pair (from $C040/$C046) by E bit 7, draws the top ($14 rows) and bottom ($0C rows) halves via #R$834B, then colours its attribute cells from the $9124 palette table.
+R $90AC I:D Row
+R $90AC I:E Column and variant flag (bit 7 = left/right)
+C $90AD,2 Reject if row off-screen
+C $90B1,2 E bit 7 picks left/right variant
 C $90B8,3 Get sprite addr Cliff top right; width 6
 C $90BC,3 Get sprite addr Cliff bottom right; width 6
 C $90C1,3 Get sprite addr Cliff top left; width 6
@@ -1465,7 +1486,10 @@ C $90CD,3 Draw sprite HL
 C $90D2,2 Sprite height = 12
 C $90DD,3 Draw sprite HL
 C $90E8,3 Clip sprite rectangle against screen edge
+C $90F4,3 Colour palette table $9124
 C $90F7,3 HL = HL + A
+C $9102,2 Attribute area base ($58xx)
+C $9110,1 Fill attribute row from palette
 b $9124
 c $9132 Decrement Land space or process next record in the sequence
 C $9132,3 Get Land space size
@@ -1501,8 +1525,13 @@ C $91B3,3 ?? Smth about Jeep
 C $91B6,3 Get Offset in $FF00 buffer
 C $919C,3 Decrement Land space or process next record in the sequence
 C $91E0,3 => Abort
-c $91E3
+c $91E3 Link record entry into the $FF00 buffer chain, continue
+N $91E3 Return point after a level-record handler: on one flag path it links the entry into the sorted $FF00 buffer chain via #R$921F and processes the next record, otherwise it just advances the buffer offset ($FD88).
+R $91E3 I:F Carry selects the exit path
+R $91E3 I:L Buffer entry offset
+C $91E3,2 Carry path: check buffer offset only
 C $91E6,3 Get Offset in $FF00 buffer
+C $91EA,2 Already at head? update offset
 C $91F0,3 Insert entry into $FF00 buffer chain
 C $91F8,3 Update Offset in $FF00 buffer
 C $91FD,3 Get Offset in $FF00 buffer
@@ -2413,7 +2442,9 @@ N $9922 Prepares and draws an object's sprite. Marks the record draw-active (+$0
 R $9922 I:IX Address of the 20-byte object record
 C $9922,4 Mark record draw-active (+$0B bit 5)
 C $9930,4 Reject object past right/bottom edge
+C $993B,3 => Finish sprite off-screen
 C $993E,20 Check object bounds against clip window (IX+8/9 vs B/C)
+C $995A,3 => Finish sprite off-screen
 C $995D,5 Frame index (IX+$02) * 2 into A
 C $9962,2 lo byte of $98E2
 C $9964,11 Add 1 if flipped, look up sprite lo byte ($98E2)
@@ -2430,12 +2461,14 @@ C $99A4,3 => Off-screen sprite draw
 C $99A8,3 => Off-screen sprite draw
 C $99C0,2 $FE00 - table of even screen lines addresses
 C $99CF,10 Compute screen draw address, dispatch to blit routine
+C $99D9,3 => Clip wide sprite edge, dispatch to masked blit
 C $99DC,3 => Clip sprite edge, dispatch to masked blit
 C $99E9,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
 C $99F0,3 => Masked-OR blit variant, draws sprite row across screen thirds
 C $99F3,4 Row loop: height = (IX+$0A) - C
 C $99FB,1 Blit masked row (AND mask, OR graphic) across thirds
 C $9A2F,3 Advance to next pixel line, handle third wrap
+C $9A40,3 => Blit finish
 c $9A46 Blit continuation: draw remaining sprite width
 N $9A46 Advances the screen line, then draws the remaining sprite-width segment (IX+$05 - IX+$01) through the unmasked or masked blit before committing the width and restoring SP.
 R $9A46 I:IX Address of the 20-byte object record
@@ -2461,8 +2494,16 @@ C $9A8D,4 Row byte count from the sprite width
 C $9A95,5 Masked byte: clear under the mask, OR the sprite
 C $9ACF,3 Cross into the next screen third
 C $9AD4,4 Advance to the next screen row
-c $9AE6
+C $9AE0,3 => Blit finish
+c $9AE6 Clip wide sprite edge, dispatch to masked blit
+N $9AE6 Handles horizontal clipping for the wide masked blit: compares the remaining sprite width against the clip limit (IX+$05) and dispatches an on-screen segment to the unmasked blit or an off-left overhang to the masked path (#R$9E98), continuing into #R$9B05.
+R $9AE6 I:IX Address of the 20-byte object record
+R $9AE6 I:A Remaining sprite width
+R $9AE6 I:DE Screen address
+C $9AE6,3 Compare width to clip limit
 C $9AF3,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
+C $9AF6,2 Negate off-left overhang
+C $9AFF,3 Off-left: masked path
 C $9B02,3 => Masked-OR blit variant, draws sprite row across screen thirds
 c $9B05 Masked-OR blit variant, draws sprite row across screen thirds
 N $9B05 Masked-OR blit for a wide sprite row: AND-masks then ORs each popped word into the screen bytes across the three screen thirds. The row byte count comes from IX+$0A minus the left-clip offset C, and the loop advances the screen line for each of B rows before returning through the continuation address in HL.
@@ -2476,6 +2517,7 @@ C $9B17,5 AND-mask then OR sprite byte, second third
 C $9B27,4 AND-mask then OR sprite byte, third third
 C $9B49,4 Advance column, check wrap point
 C $9B4F,3 Wrap to next screen third if needed
+C $9B5B,3 => Blit finish
 C $9B5E,2 Loop the rows
 c $9B61 Set up sprite erase, dispatch to erase-blit variant
 N $9B61 Sets up erasing a sprite: clips the row range against the object's bounds (IX+$08-$0A), computes the screen address via #R$9C23, then dispatches to the erase-blit variant matching how many screen thirds the sprite spans, with #R$9B97 queued as the continuation.
@@ -2651,6 +2693,7 @@ C $9EE5,4 OR sprite byte, second third
 C $9EEF,4 OR sprite byte, third third
 C $9EFE,3 Advance row, check wrap point
 C $9F03,7 Wrap to next screen third if needed
+C $9F0F,3 => Blit finish
 c $9F1D Off-screen sprite draw: clip, compute address, dispatch blit
 N $9F1D Draws a sprite running off the left or right edge: clips its width, skips the hidden columns in the sprite data, computes the screen address of the visible part, then hands it to the row blitter.
 C $9F1D,7 Check width against clip limit
@@ -2665,8 +2708,17 @@ C $9F74,3 Other edge: recompute the width
 C $9F71,3 => Masked-OR blit variant, draws sprite row across screen thirds
 C $9FA3,2 $FE00 - table of even screen lines addresses
 C $9FD5,3 => Unmasked-OR blit, draws opaque sprite row across screen thirds
-c $9FDE
-c $9FF5
+c $9FDE Finish sprite off-screen: commit pending fields
+N $9FDE Finishes an off-screen or clipped sprite without drawing: clears the draw-active flag (+$0B bit 5) and commits the pending frame/page and Y fields (+$06/+$07/+$05) into the current ones (+$02/+$01).
+R $9FDE I:IX Address of the 20-byte object record
+C $9FDE,4 Clear draw-active flag
+C $9FE2,6 Promote next frame into current
+C $9FEE,6 Promote next Y into current
+c $9FF5 Blit finish: commit Y position, restore SP
+N $9FF5 Blit finish: commits the pending Y position (+$05 into +$01) and restores the real SP saved in $FD82.
+R $9FF5 I:IX Address of the 20-byte object record
+C $9FF5,6 Commit pending Y position
+C $9FFB,4 Restore SP
 b $A000 Sprites of Player and troopers; width 3 height 21
 D $A000 The sprites have no mask; even row bytes go left to right, odd row bytes right to left.
 B $A000,64,16 #HTML[<img src="images/spriteA000.png" />]
@@ -2920,8 +2972,11 @@ C $DC8C,3 => Check IX flag and column bound, dispatch
 c $DC8F Check screen brightness threshold, inside $DD8D (redirect)
 c $DC92 Entry E=2, dispatch bullet/collision handler via $DF39 (redirect)
 C $DC92,3 => Entry E=2, dispatch bullet/collision handler via $DF39
-c $DC95
+c $DC95 Scroll level and shift all objects down
+N $DC95 Advances the level scroll one step, then shifts every object in the $5B11 table down by one row (+$05) until the $90 end marker.
 C $DC95,3 Advance level scroll
+C $DC9C,3 Scroll object down one row
+C $DCA4,5 Stop at $90 end marker
 c $DCAF Periodically spawn a new enemy from the edge
 N $DCAF Periodically spawns a new enemy: on a countdown (IY+$7D) it draws a random value to pick a spawn edge and column, then claims a free slot in the $5B11 enemy table (#R$E10F) and initialises the enemy there.
 C $DCAF,3 Spawning enabled ($FDFB)?
@@ -2985,6 +3040,7 @@ C $DE8E,3 => Mark map cells for object IX, direction-aware
 c $DE91 Game's main loop, Part 1
 C $DE91,4 Is Player alive??
 C $DEA9,3 Trigger sound effect A into free slot at $6433
+C $DEC6,3 Scroll level and shift all objects down
 C $DECB,3 Reset R register (random seed), inside $9193
 C $DECE,3 Process object records at $5B11
 C $DED5,4 Check bit 6 (??) of Last joystick/keyboard bits ($FD85)
@@ -3072,8 +3128,11 @@ C $E112,3 => Common enemy-object init helper
 b $E115
 c $E1AC Common enemy-object init helper (unconfirmed)
 C $E1AC,3 Get random byte??
-c $E1B5
+c $E1B5 Service the two bomb/explosion slots
+N $E1B5 Services the two active bomb/explosion slots ($FDC3 and $FDC5), calling #R$E1D1 on each to check for enemy hits and advance the effect.
+C $E1BB,2 First slot active?
 C $E1BF,3 Check pickup/collision near object, award score
+C $E1C8,2 Second slot active?
 C $E1CC,3 Check pickup/collision near object, award score
 c $E1D1 Check pickup/collision near object, award score
 N $E1D1 Checks whether an active bomb/explosion overlaps any enemy in the $F8EA list; a hit marks the enemy and scores 750. With no hit it counts down the explosion's own timer and, when that lapses, spawns a fresh object at a computed position.
@@ -3278,12 +3337,22 @@ C $E7CA,3 => Dispatch enemy AI by state
 C $E7E4,3 Count down the state timer
 C $E7EE,3 Compute direction bits toward player position
 C $E83B,3 Check position bounds, set flags
+C $E852,3 => Enemy patrol AI
 C $E859,3 Compute direction bits toward player position
-c $E86B
-c $E881
+c $E86B Enemy AI pause: reload short action timer
+N $E86B Enemy AI pause state: reloads the action timer (+$11) to $02, or to $04 with sub-state $11 when the object has no queued sprite frame (+$06 = 0), then continues at #R$E9B9.
+R $E86B I:IX Address of the 20-byte object record
+C $E86D,3 Read queued sprite frame (+$06)
+C $E876,4 No frame: force sub-state $11
+C $E87B,3 Store pause timer
+c $E881 Enemy AI: re-aim at player, random fire
+N $E881 Enemy AI state that re-aims toward the player, then on a random chance fires (#R$EC1B) unless in state $09, before reloading the action timer and returning to the mover at #R$E992.
+R $E881 I:IX Address of the 20-byte object record
 C $E881,3 Compute direction bits toward player position
-C $E887,3 Get random byte??
+C $E884,3 Aim heading at player
+C $E887,3 Get random byte
 C $E896,3 Check enemy position on-screen, trigger action
+C $E899,4 Reload action timer $0E
 c $E8A0 Enemy wandering AI: timed re-aim, random fire and step
 N $E8A0 Runs the enemy's wandering AI on a countdown: while the timer at +$11 ticks it just returns, and when it expires it cycles a phase counter (+$13) that re-aims toward the player, sometimes fires (#R$EC1B), then picks a new random step and reloads the move timer.
 R $E8A0 I:IX Address of the 20-byte object record
@@ -3342,8 +3411,20 @@ C $EB55,3 Get random byte
 C $EB58,1 Random chance to fire
 C $EB59,3 Check enemy position on-screen, trigger action
 C $EB5F,3 Hold stored heading (IX+$13)
-c $EB68
-c $EB7B
+c $EB68 Enter enemy AI state $01 with heading $08
+N $EB68 Puts an enemy into AI state $01 with heading $08 (current and next) and a $20-tick action timer, then moves via #R$E9B6.
+R $EB68 I:IX Address of the 20-byte object record
+C $EB68,4 Enter AI state $01
+C $EB6E,3 Set heading $08 (current and next)
+C $EB74,4 Set action timer $20
+c $EB7B Enemy patrol AI: walk N steps then reverse
+N $EB7B Enemy patrol AI: advances a step counter (+$0D) and keeps walking until it reaches 5, then reverses the heading (XOR $08), reloads the timer and moves via #R$E9B6.
+R $EB7B I:IX Address of the 20-byte object record
+C $EB7B,3 Advance step counter
+C $EB81,2 Still walking?
+C $EB83,3 => Enemy AI pause
+C $EB89,2 Reverse heading 180 degrees
+C $EB8E,4 Reload timer $40
 c $EB96 Enemy AI: wander or chase player by aggressive flag
 N $EB96 Enemy AI state that either wanders on a random heading and timer or, when the aggressive flag (+$0B bit 7) is set, homes toward the player and fires (#R$EC1B), counting up (+$0F) until it drops the aggressive flag.
 R $EB96 I:IX Address of the 20-byte object record

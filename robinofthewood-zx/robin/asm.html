@@ -12275,12 +12275,12 @@ Used by the routine at <a href="asm.html#52588">CD6C</a>.
 <tr>
 <td class="address-2"><span id="35449"></span>8A79</td>
 <td class="instruction">LD HL,$8B82</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35452"></span>8A7C</td>
 <td class="instruction">JR <a href="#35462">$8A86</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Wait for the player to select a menu item from the list at</td>
 </tr>
 </table>
 <div id="35454" class="description">8A7E: Play the victory-screen melody ($8C3E), called from <a href="asm.html#49237">C055</a></div>
@@ -12297,12 +12297,12 @@ Used by the routine at <a href="asm.html#49237">C055</a>.
 <tr>
 <td class="address-2"><span id="35454"></span>8A7E</td>
 <td class="instruction">LD HL,$8C3E</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35457"></span>8A81</td>
 <td class="instruction">JR <a href="#35462">$8A86</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Wait for the player to select a menu item from the list at</td>
 </tr>
 </table>
 <div id="35459" class="description">8A83: Play the death/edge-of-map melody ($8C74), called from <a href="asm.html#49024">BF80</a></div>
@@ -13572,6 +13572,15 @@ Replays the laugh bitstream at $8CD4 (via <a href="asm.html#36010">8CAA</a>) aro
 Used by the routines at <a href="asm.html#35981">8C8D</a> and <a href="asm.html#52588">CD6C</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">-&gt; a 2-byte bit count, followed by the bitstream itself</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -13630,72 +13639,63 @@ Called from <a href="asm.html#52588">CD6C</a> ("Sound of evil laughter" is one s
 <tr>
 <td class="address-1"><span id="36025"></span>8CB9</td>
 <td class="instruction">JP NC,$8CC1</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Bit set: A stays $18, C = 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36028"></span>8CBC</td>
 <td class="instruction">LD C,$00</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36030"></span>8CBE</td>
 <td class="instruction">JP $8CC6</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="36033"></span>8CC1</td>
 <td class="instruction">AND $07</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Bit clear: A = the low 3 bits of the delay counter</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36035"></span>8CC3</td>
 <td class="instruction">JP $8CC6</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="36038"></span>8CC6</td>
 <td class="instruction">OUT ($FE),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Output the border colour; loop for the next bit</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36040"></span>8CC8</td>
 <td class="instruction">DJNZ $8CB0</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36042"></span>8CCA</td>
 <td class="instruction">NOP</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Advance HL/DE (IX is stepped but otherwise unused here)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36043"></span>8CCB</td>
 <td class="instruction">INC IX</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36045"></span>8CCD</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36046"></span>8CCE</td>
 <td class="instruction">DEC DE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36047"></span>8CCF</td>
 <td class="instruction">LD A,D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Loop until DE (the bit count) reaches 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="36048"></span>8CD0</td>
 <td class="instruction">OR E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36049"></span>8CD1</td>
 <td class="instruction">JR NZ,$8CAE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="36051"></span>8CD3</td>
@@ -13802,11 +13802,21 @@ The "ha-ha-ha-ha" bitstream played by <a href="asm.html#36010">8CAA</a> (heard o
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="36224" class="description">8D80: Data block at 8D80</div>
+<div id="36224" class="description">8D80: Robin's sprite-frame pointer table, indexed by frame number via <a href="asm.html#50902">C6D6</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="36224"></span>
+<div class="comments">
+<div class="paragraph">
+Set as the frame base at $C6D8 by <a href="asm.html#50850">C6A2</a>/<a href="asm.html#54203">D3BB</a> (i.e. for Robin's own object record at $CC7C); each word is a frame data address, selected by doubling the animation frame number ($CC7E).
+</div>
 </div>
 </td>
 </tr>
@@ -25234,7 +25244,7 @@ This entry point is used by the routine at <a href="asm.html#48393">BD09</a>.
 <tr>
 <td class="address-2"><span id="48386"></span>BD02</td>
 <td class="instruction">JR <a href="#48393">$BD09</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Clear the arrow at screen edges, else mark a mid-flight collision bit</td>
 </tr>
 </table>
 <div id="48388" class="description">BD04: Clear the arrow's cell without a mid-flight collision check, then continue</div>
@@ -25421,7 +25431,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-2"><span id="48426"></span>BD2A</td>
 <td class="instruction">PUSH AF</td>
-<td class="comment-1" rowspan="7">Toggle the arrow's collision byte at (HL)</td>
+<td class="comment-1" rowspan="4">Save AF/BC/DE/HL</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48427"></span>BD2B</td>
@@ -25438,6 +25448,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48430"></span>BD2E</td>
 <td class="instruction">LD A,$FF</td>
+<td class="comment-1" rowspan="3">Toggle (HL) via XOR $FF</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48432"></span>BD30</td>
@@ -25450,7 +25461,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48434"></span>BD32</td>
 <td class="instruction">XOR A</td>
-<td class="comment-1" rowspan="7">Pack 3 row bits from B into A</td>
+<td class="comment-1" rowspan="3">A = 0; fold row bit 0 from B</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48435"></span>BD33</td>
@@ -25463,6 +25474,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48438"></span>BD36</td>
 <td class="instruction">RR B</td>
+<td class="comment-1" rowspan="2">Fold row bit 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48440"></span>BD38</td>
@@ -25471,6 +25483,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48441"></span>BD39</td>
 <td class="instruction">RR B</td>
+<td class="comment-1" rowspan="2">Fold row bit 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48443"></span>BD3B</td>
@@ -25479,7 +25492,7 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48444"></span>BD3C</td>
 <td class="instruction">OR C</td>
-<td class="comment-1" rowspan="5">HL -&gt; $E500 buffer offset; write glyph $46</td>
+<td class="comment-1" rowspan="2">Merge the folded bits into C</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48445"></span>BD3D</td>
@@ -25488,10 +25501,12 @@ Called from <a href="asm.html#48322">BCC2</a>'s arrow-step loop and <a href="asm
 <tr>
 <td class="address-1"><span id="48446"></span>BD3E</td>
 <td class="instruction">LD HL,$E500</td>
+<td class="comment-1" rowspan="1">HL = the $E500 base</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48449"></span>BD41</td>
 <td class="instruction">ADD HL,BC</td>
+<td class="comment-1" rowspan="2">HL += the offset; write glyph $46</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48450"></span>BD42</td>
@@ -25795,7 +25810,7 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-2"><span id="48547"></span>BDA3</td>
 <td class="instruction">LD A,($CC7B)</td>
-<td class="comment-1" rowspan="6">Only run while Robin is idle ($CC7B = 0); B = 3 entries, DE = Robin's position</td>
+<td class="comment-1" rowspan="3">Only run while Robin is idle ($CC7B = 0)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48550"></span>BDA6</td>
@@ -25808,6 +25823,7 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-1"><span id="48552"></span>BDA8</td>
 <td class="instruction">LD B,$03</td>
+<td class="comment-1" rowspan="3">B = 3 entries; HL -&gt; table $BF69; DE = Robin's position ($CC85/$CC86)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48554"></span>BDAA</td>
@@ -25837,22 +25853,19 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-1"><span id="48566"></span>BDB6</td>
 <td class="instruction">ADD A,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">A = (entry+2) x4; skip if that's greater than Robin's X</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48568"></span>BDB8</td>
 <td class="instruction">SLA A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48570"></span>BDBA</td>
 <td class="instruction">SLA A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48572"></span>BDBC</td>
 <td class="instruction">SUB E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48573"></span>BDBD</td>
@@ -25862,32 +25875,28 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-1"><span id="48575"></span>BDBF</td>
 <td class="instruction">CP $08</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Skip unless X is within the 8-pixel band</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48577"></span>BDC1</td>
 <td class="instruction">JR NC,$BDDC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48579"></span>BDC3</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">A = entry's second byte x8; skip if greater than Robin's Y</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48580"></span>BDC4</td>
 <td class="instruction">SLA A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48582"></span>BDC6</td>
 <td class="instruction">SLA A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48584"></span>BDC8</td>
 <td class="instruction">SLA A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48586"></span>BDCA</td>
@@ -25902,17 +25911,16 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-1"><span id="48589"></span>BDCD</td>
 <td class="instruction">CP $18</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Skip unless Y is within the 24-pixel band</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48591"></span>BDCF</td>
 <td class="instruction">JR NC,$BDDC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48593"></span>BDD1</td>
 <td class="instruction">SET 6,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Hit: mark this entry (bit 6)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48595"></span>BDD3</td>
@@ -25922,7 +25930,7 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-1"><span id="48598"></span>BDD6</td>
 <td class="instruction">LD B,$00</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">B = 0 (sound length)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48600"></span>BDD8</td>
@@ -25937,12 +25945,11 @@ Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69 (row 
 <tr>
 <td class="address-2"><span id="48604"></span>BDDC</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Next entry, loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48605"></span>BDDD</td>
 <td class="instruction">DJNZ $BDB1</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="48607"></span>BDDF</td>
@@ -26606,6 +26613,44 @@ Only acts if bit 0 of $BC5D is set and bit 7 of $BC67 is clear (the special obje
 Used by the routines at <a href="asm.html#48608">BDE0</a>, <a href="asm.html#48707">BE43</a> and <a href="asm.html#48817">BEB1</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">First position's row</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">First position's column</td>
+</tr>
+<tr>
+<td class="register">B'</td>
+<td class="register-desc">Second position's row (shadow register set)</td>
+</tr>
+<tr>
+<td class="register">C'</td>
+<td class="register-desc">Second position's column (shadow register set)</td>
+</tr>
+<tr>
+<td class="register">D</td>
+<td class="register-desc">Row overlap tolerance</td>
+</tr>
+<tr>
+<td class="register">E</td>
+<td class="register-desc">Column overlap tolerance</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">Set if the boxes overlap on both axes, clear otherwise</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -26840,7 +26885,7 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48926"></span>BF1E</td>
 <td class="instruction">NEG</td>
-<td class="comment-1" rowspan="11">Compute an index into the guard table at ($C54C) from A</td>
+<td class="comment-1" rowspan="2">A = 5 - the hit guard's slot number</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48928"></span>BF20</td>
@@ -26849,6 +26894,7 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48930"></span>BF22</td>
 <td class="instruction">LD L,A</td>
+<td class="comment-1" rowspan="2">HL = that value</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48931"></span>BF23</td>
@@ -26857,6 +26903,7 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48933"></span>BF25</td>
 <td class="instruction">PUSH HL</td>
+<td class="comment-1" rowspan="2">HL x2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48934"></span>BF26</td>
@@ -26865,6 +26912,7 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48935"></span>BF27</td>
 <td class="instruction">POP DE</td>
+<td class="comment-1" rowspan="2">HL = index x3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48936"></span>BF28</td>
@@ -26873,6 +26921,7 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48937"></span>BF29</td>
 <td class="instruction">INC HL</td>
+<td class="comment-1" rowspan="2">+2 (byte offset within the entry)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48938"></span>BF2A</td>
@@ -26881,21 +26930,21 @@ Called from <a href="asm.html#48457">BD49</a>/<a href="asm.html#48707">BE43</a> 
 <tr>
 <td class="address-1"><span id="48939"></span>BF2B</td>
 <td class="instruction">LD DE,($C54C)</td>
+<td class="comment-1" rowspan="1">DE = the guard-table base</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48943"></span>BF2F</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">HL -&gt; the entry; set bit 5 (hit)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48944"></span>BF30</td>
 <td class="instruction">SET 5,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="48946"></span>BF32</td>
 <td class="instruction">SET 5,(IX+$04)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Also set bit 5 on this record's own flags</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48950"></span>BF36</td>
@@ -28024,6 +28073,19 @@ This entry point is used by the routine at <a href="asm.html#49502">C15E</a>.
 Used by the routine at <a href="asm.html#49327">C0AF</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">Block number (bit 7 = horizontal-mirror flag)</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">Packed screen coordinate byte (see <a href="asm.html#31225">79F9</a> token format)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -28031,7 +28093,7 @@ Used by the routine at <a href="asm.html#49327">C0AF</a>.
 <span id="49361"></span>
 <div class="comments">
 <div class="paragraph">
-A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate byte (see <a href="asm.html#31225">79F9</a> token format). Looks up the block's data address (see <a href="asm.html#23464">5BA8</a> for its header-byte format) in the table at <a href="asm.html#23296">5B00</a>, draws (header AND $1F) x 8 pixel rows (4 bytes/row) into <a href="asm.html#60160">EB00</a>, then (header AND $7) attribute rows (4 bytes/row, or a single byte reused if the header's flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along the way.
+Looks up the block's data address (see <a href="asm.html#23464">5BA8</a> for its header-byte format) in the table at <a href="asm.html#23296">5B00</a>, draws (header AND $1F) x 8 pixel rows (4 bytes/row) into <a href="asm.html#60160">EB00</a>, then (header AND $7) attribute rows (4 bytes/row, or a single byte reused if the header's flat-attribute flag is set) into $E800, adjusting X for mirrored blocks along the way.
 </div>
 </div>
 </td>
@@ -28039,7 +28101,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49361"></span>C0D1</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-1" rowspan="6">Save BC x2; L = block number masked to 0-127</td>
+<td class="comment-1" rowspan="2">Save BC x2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49362"></span>C0D2</td>
@@ -28048,6 +28110,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49363"></span>C0D3</td>
 <td class="instruction">LD L,A</td>
+<td class="comment-1" rowspan="3">L = block number masked to 0-127; H = 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49364"></span>C0D4</td>
@@ -28060,11 +28123,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49368"></span>C0D8</td>
 <td class="instruction">EX AF,AF'</td>
+<td class="comment-1" rowspan="1">Stash the coordinate byte (A')</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49369"></span>C0D9</td>
 <td class="instruction">ADD HL,HL</td>
-<td class="comment-1" rowspan="6">DE -&gt; block data address, from the table at $5B00</td>
+<td class="comment-1" rowspan="3">HL = index x2 + the table base $5B00</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49370"></span>C0DA</td>
@@ -28077,6 +28141,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49374"></span>C0DE</td>
 <td class="instruction">LD E,(HL)</td>
+<td class="comment-1" rowspan="3">DE = the block data address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49375"></span>C0DF</td>
@@ -28089,7 +28154,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49377"></span>C0E1</td>
 <td class="instruction">EX AF,AF'</td>
-<td class="comment-1" rowspan="6">XOR the block's own mirror bit with the header byte</td>
+<td class="comment-1" rowspan="2">Restore the coordinate byte; L = it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49378"></span>C0E2</td>
@@ -28098,6 +28163,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49379"></span>C0E3</td>
 <td class="instruction">LD A,(DE)</td>
+<td class="comment-1" rowspan="2">A = the header byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49380"></span>C0E4</td>
@@ -28106,6 +28172,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49381"></span>C0E5</td>
 <td class="instruction">LD A,(DE)</td>
+<td class="comment-1" rowspan="2">XOR it with the mirror-adjust patch; L = the result</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49382"></span>C0E6</td>
@@ -28119,7 +28186,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49385"></span>C0E9</td>
 <td class="instruction">AND $80</td>
-<td class="comment-1" rowspan="3">Mirror flag set: call <a href="asm.html#49622">C1D6</a> to flip the block's pixel/attribute data</td>
+<td class="comment-1" rowspan="3">Mirror flag set: call <a href="asm.html#49622">C1D6</a> to flip the block's rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49387"></span>C0EB</td>
@@ -28142,12 +28209,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49394"></span>C0F2</td>
 <td class="instruction">POP BC</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Restore BC</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49395"></span>C0F3</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="4">Header byte AND $07 = attribute row count, patched into <a href="asm.html#49485">C14D</a>'s operand</td>
+<td class="comment-1" rowspan="2">A = the header byte AND $07 (attribute row count)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49396"></span>C0F4</td>
@@ -28156,6 +28223,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49398"></span>C0F6</td>
 <td class="instruction">LD ($C14C),A</td>
+<td class="comment-1" rowspan="2">Patch it into <a href="asm.html#49485">C14D</a>'s operand; save DE</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49401"></span>C0F9</td>
@@ -28164,11 +28232,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49402"></span>C0FA</td>
 <td class="instruction">LD HL,$EB00</td>
-<td class="comment-1" rowspan="8">HL = pixel address in <a href="asm.html#60160">EB00</a> from the coordinate byte in C</td>
+<td class="comment-1" rowspan="1">HL = $EB00 (shadow pixel base)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49405"></span>C0FD</td>
 <td class="instruction">LD A,C</td>
+<td class="comment-1" rowspan="3">A = column x4 (from bits 0-2 of C)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49406"></span>C0FE</td>
@@ -28181,6 +28250,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49410"></span>C102</td>
 <td class="instruction">XOR $00</td>
+<td class="comment-1" rowspan="4">Apply the mirror-adjust patch; C = the result</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49412"></span>C104</td>
@@ -28197,11 +28267,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49415"></span>C107</td>
 <td class="instruction">LD DE,$0020</td>
-<td class="comment-1" rowspan="4">DE = row stride ($0020); HL/DE = pixel dest/source (via EXX+stack)</td>
+<td class="comment-1" rowspan="1">DE = row stride $0020</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49418"></span>C10A</td>
 <td class="instruction">EXX</td>
+<td class="comment-1" rowspan="3">EXX; pop the pixel dest/source into the shadow set</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49419"></span>C10B</td>
@@ -28214,7 +28285,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49421"></span>C10D</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="7">Header AND $1F, x8 (via RLCA x3/AND $F8) = pixel row count in C</td>
+<td class="comment-1" rowspan="2">A = the header byte; advance DE</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49422"></span>C10E</td>
@@ -28223,6 +28294,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49423"></span>C10F</td>
 <td class="instruction">RLCA</td>
+<td class="comment-1" rowspan="5">C = pixel row count (header AND $1F, x8 via RLCA x3)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49424"></span>C110</td>
@@ -28243,11 +28315,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49429"></span>C115</td>
 <td class="instruction">LD B,$04</td>
-<td class="comment-1" rowspan="6">Copy 4 bytes (one row), B=4</td>
+<td class="comment-1" rowspan="1">B = 4 bytes/row</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49431"></span>C117</td>
 <td class="instruction">LD A,(DE)</td>
+<td class="comment-1" rowspan="5">Copy one byte, loop 4 times (one pixel row)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49432"></span>C118</td>
@@ -28268,7 +28341,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49437"></span>C11D</td>
 <td class="instruction">EXX</td>
-<td class="comment-1" rowspan="7">Step to the next row (via shadow DE), loop C rows</td>
+<td class="comment-1" rowspan="4">EXX; step the shadow HL by the row stride</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49438"></span>C11E</td>
@@ -28285,6 +28358,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49441"></span>C121</td>
 <td class="instruction">POP HL</td>
+<td class="comment-1" rowspan="3">Pop the real HL; loop C rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49442"></span>C122</td>
@@ -28297,7 +28371,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49445"></span>C125</td>
 <td class="instruction">EX AF,AF'</td>
-<td class="comment-1" rowspan="6">Header bit 6 set -&gt; flat-attribute flag (A=$00), else A=$13</td>
+<td class="comment-1" rowspan="3">Save the header byte (B); A = 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49446"></span>C126</td>
@@ -28310,6 +28384,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49448"></span>C128</td>
 <td class="instruction">BIT 6,B</td>
+<td class="comment-1" rowspan="3">Header bit 6 (flat-attribute) clear: A = $13</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49450"></span>C12A</td>
@@ -28322,16 +28397,17 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49454"></span>C12E</td>
 <td class="instruction">LD ($C151),A</td>
-<td class="comment-1" rowspan="1">Patch the attribute loop's INC DE with A (enables/disables advance)</td>
+<td class="comment-1" rowspan="1">Patch the attribute-row INC DE with A ($13 or NOP $00)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49457"></span>C131</td>
 <td class="instruction">POP HL</td>
-<td class="comment-1" rowspan="3">HL = pixel address x4 (column bits)</td>
+<td class="comment-1" rowspan="1">Pop the pixel address</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49458"></span>C132</td>
 <td class="instruction">SLA L</td>
+<td class="comment-1" rowspan="2">L x4 (column bits)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49460"></span>C134</td>
@@ -28340,11 +28416,12 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49462"></span>C136</td>
 <td class="instruction">XOR A</td>
-<td class="comment-1" rowspan="7">Shift the row/column bits right 3 (row-to-attribute scale)</td>
+<td class="comment-1" rowspan="1">A = 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49463"></span>C137</td>
 <td class="instruction">RR H</td>
+<td class="comment-1" rowspan="2">Shift row/column bits right, pass 1 of 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49465"></span>C139</td>
@@ -28353,6 +28430,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49467"></span>C13B</td>
 <td class="instruction">RR H</td>
+<td class="comment-1" rowspan="2">Shift row/column bits right, pass 2 of 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49469"></span>C13D</td>
@@ -28361,6 +28439,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49471"></span>C13F</td>
 <td class="instruction">RR H</td>
+<td class="comment-1" rowspan="2">Shift row/column bits right, pass 3 of 3</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49473"></span>C141</td>
@@ -28369,7 +28448,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49475"></span>C143</td>
 <td class="instruction">OR L</td>
-<td class="comment-1" rowspan="3">Combine, apply the mirror-adjust patch</td>
+<td class="comment-1" rowspan="2">Combine with L; apply the mirror-adjust patch</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49476"></span>C144</td>
@@ -28378,6 +28457,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49478"></span>C146</td>
 <td class="instruction">LD L,A</td>
+<td class="comment-1" rowspan="1">L = the result</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49479"></span>C147</td>
@@ -28387,16 +28467,17 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49482"></span>C14A</td>
 <td class="instruction">ADD HL,BC</td>
-<td class="comment-1" rowspan="2">HL += $E800 (attribute base); A = flat-attribute patch value</td>
+<td class="comment-1" rowspan="1">HL += $E800 (attribute base)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49483"></span>C14B</td>
 <td class="instruction">LD A,$00</td>
+<td class="comment-1" rowspan="1">A = 0 (attribute-row loop counter seed)</td>
 </tr>
 <tr>
 <td class="address-2"><span id="49485"></span>C14D</td>
 <td class="instruction">LD C,A</td>
-<td class="comment-1" rowspan="2">C = patched advance value; B = 4 bytes/row</td>
+<td class="comment-1" rowspan="2">C = A; B = 4 bytes/row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49486"></span>C14E</td>
@@ -28405,7 +28486,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-2"><span id="49488"></span>C150</td>
 <td class="instruction">LD A,(DE)</td>
-<td class="comment-1" rowspan="5">Copy one attribute byte (DE-advance is self-modified, see $C12E)</td>
+<td class="comment-1" rowspan="2">A = the attribute byte (DE-advance is self-modified, see $C12E)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49489"></span>C151</td>
@@ -28414,6 +28495,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49490"></span>C152</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="3">Store it; loop 4 bytes (one row)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49491"></span>C153</td>
@@ -28426,7 +28508,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49494"></span>C156</td>
 <td class="instruction">LD A,C</td>
-<td class="comment-1" rowspan="5">Step to the next row, loop for the row count</td>
+<td class="comment-1" rowspan="2">A = C; C = $1C (attribute row stride)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49495"></span>C157</td>
@@ -28435,6 +28517,7 @@ A = block number (bit 7 = horizontal-mirror flag), C = packed screen coordinate 
 <tr>
 <td class="address-1"><span id="49497"></span>C159</td>
 <td class="instruction">ADD HL,BC</td>
+<td class="comment-1" rowspan="3">HL += the stride; loop for the row count</td>
 </tr>
 <tr>
 <td class="address-1"><span id="49498"></span>C15A</td>
@@ -32220,6 +32303,15 @@ Called once per frame from <a href="asm.html#49024">BF80</a>. Runs every other f
 Used by the routine at <a href="asm.html#51447">C8F7</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">Frame number (pointer table base is a self-modified operand, patched by the caller)</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32622,6 +32714,24 @@ A = frame number, doubled to index a pointer table (base patched into the LD HL,
 Used by the routine at <a href="asm.html#50902">C6D6</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">D:C:B</td>
+<td class="register-desc">32-bit value to shift (E highest byte, B lowest)</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">E:D:C:B</td>
+<td class="register-desc">The value shifted right by 8 bits</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32795,6 +32905,23 @@ Called once per row from <a href="asm.html#50902">C6D6</a>'s plot loop with EDCB
 Used by the routine at <a href="asm.html#50902">C6D6</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">Frame data pointer (width/height nibbles + flag byte)</td>
+</tr>
+<tr>
+<td class="register">B</td>
+<td class="register-desc">Row</td>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">Column</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -32830,7 +32957,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51092"></span>C794</td>
 <td class="instruction">LD A,C</td>
-<td class="comment-1" rowspan="6">C = column, clamped to a minimum of $10 then reduced by 8</td>
+<td class="comment-1" rowspan="3">A = column, floored at $10</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51093"></span>C795</td>
@@ -32843,6 +32970,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51097"></span>C799</td>
 <td class="instruction">LD A,$10</td>
+<td class="comment-1" rowspan="3">Reduce by 8; C = the result</td>
 </tr>
 <tr>
 <td class="address-2"><span id="51099"></span>C79B</td>
@@ -32855,7 +32983,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51102"></span>C79E</td>
 <td class="instruction">LD E,$04</td>
-<td class="comment-1" rowspan="7">E = 4 (rows); HL -&gt; the frame's width/height byte</td>
+<td class="comment-1" rowspan="2">E = 4 rows; HL -&gt; the width/height byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51104"></span>C7A0</td>
@@ -32864,6 +32992,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51105"></span>C7A1</td>
 <td class="instruction">LD A,(HL)</td>
+<td class="comment-1" rowspan="5">A = width class (bits 4-6 of the byte)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51106"></span>C7A2</td>
@@ -32884,11 +33013,12 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51111"></span>C7A7</td>
 <td class="instruction">JR Z,$C801</td>
-<td class="comment-1" rowspan="6">Bail out if width class is 0; else D = width, +1 if column is off-grid</td>
+<td class="comment-1" rowspan="1">Bail out if the width class is 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51113"></span>C7A9</td>
 <td class="instruction">LD D,A</td>
+<td class="comment-1" rowspan="3">D = width; A = row (B) masked to sub-cell bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51114"></span>C7AA</td>
@@ -32901,6 +33031,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51117"></span>C7AD</td>
 <td class="instruction">JR Z,$C7B0</td>
+<td class="comment-1" rowspan="2">Row off-grid: D += 1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51119"></span>C7AF</td>
@@ -32909,7 +33040,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-2"><span id="51120"></span>C7B0</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="7">HL -&gt; the frame's flag byte; L = its low 7 bits (flag/skip index)</td>
+<td class="comment-1" rowspan="3">HL -&gt; the flag byte; L = its value</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51121"></span>C7B1</td>
@@ -32922,6 +33053,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51123"></span>C7B3</td>
 <td class="instruction">XOR A</td>
+<td class="comment-1" rowspan="4">A = 0, or 3 if bit 7 of L (mirror flag) is set</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51124"></span>C7B4</td>
@@ -32938,11 +33070,12 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-2"><span id="51130"></span>C7BA</td>
 <td class="instruction">LD ($C7F0),A</td>
-<td class="comment-1" rowspan="6">Bit 7 of the flag -&gt; a skip value patched into $C7F0</td>
+<td class="comment-1" rowspan="1">Patch the pixel-row skip value ($C7F0)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51133"></span>C7BD</td>
 <td class="instruction">XOR A</td>
+<td class="comment-1" rowspan="4">A = 0, or 3 if bit 6 of L is set</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51134"></span>C7BE</td>
@@ -32959,11 +33092,12 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-2"><span id="51140"></span>C7C4</td>
 <td class="instruction">LD ($C7FB),A</td>
+<td class="comment-1" rowspan="1">Patch the attribute-row skip value ($C7FB)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51143"></span>C7C7</td>
 <td class="instruction">PUSH BC</td>
-<td class="comment-1" rowspan="10">HL -&gt; screen-block pointer entry in the table at $8E12</td>
+<td class="comment-1" rowspan="6">HL = table index ($8E12 + flag&lt;&lt;1, bit 7 masked)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51144"></span>C7C8</td>
@@ -32988,6 +33122,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51154"></span>C7D2</td>
 <td class="instruction">LD A,(HL)</td>
+<td class="comment-1" rowspan="4">Read the screen-block pointer into HL</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51155"></span>C7D3</td>
@@ -33004,12 +33139,11 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51158"></span>C7D6</td>
 <td class="instruction">EX (SP),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Swap the block pointer onto the stack; A = row (H)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51159"></span>C7D7</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-1" rowspan="15">Combine row/column into an $E500-relative buffer offset</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51160"></span>C7D8</td>
@@ -33022,6 +33156,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51163"></span>C7DB</td>
 <td class="instruction">LD L,A</td>
+<td class="comment-1" rowspan="4">L = row masked to $F8; HL = row x4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51164"></span>C7DC</td>
@@ -33038,6 +33173,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51168"></span>C7E0</td>
 <td class="instruction">SRL C</td>
+<td class="comment-1" rowspan="2">C = column &gt;&gt; 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51170"></span>C7E2</td>
@@ -33046,6 +33182,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51172"></span>C7E4</td>
 <td class="instruction">LD A,C</td>
+<td class="comment-1" rowspan="3">Combine row/column into L</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51173"></span>C7E5</td>
@@ -33058,6 +33195,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51175"></span>C7E7</td>
 <td class="instruction">LD BC,$E500</td>
+<td class="comment-1" rowspan="3">HL += $E500; pop the block pointer</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51178"></span>C7EA</td>
@@ -33070,7 +33208,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-2"><span id="51180"></span>C7EC</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="8">Copy one row (E bytes) from (BC) to the buffer</td>
+<td class="comment-1" rowspan="2">Save DE/HL for the row loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51181"></span>C7ED</td>
@@ -33079,6 +33217,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-2"><span id="51182"></span>C7EE</td>
 <td class="instruction">LD A,(BC)</td>
+<td class="comment-1" rowspan="6">Copy one byte from (BC) to (HL), loop E times</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51183"></span>C7EF</td>
@@ -33103,7 +33242,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51190"></span>C7F6</td>
 <td class="instruction">POP HL</td>
-<td class="comment-1" rowspan="7">Step the buffer by 32, loop for D rows</td>
+<td class="comment-1" rowspan="3">Step the buffer down one row ($0020)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51191"></span>C7F7</td>
@@ -33116,6 +33255,7 @@ Called from <a href="asm.html#50902">C6D6</a> while setting up a sprite frame. (
 <tr>
 <td class="address-1"><span id="51195"></span>C7FB</td>
 <td class="instruction">INC BC</td>
+<td class="comment-1" rowspan="4">Advance past this row's skip byte, loop D rows</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51196"></span>C7FC</td>
@@ -33179,15 +33319,17 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-2"><span id="51206"></span>C806</td>
 <td class="instruction">LD HL,$EAFE</td>
-<td class="comment-1" rowspan="3">HL/IX = destination/source-pointer-table bases; BC = row/byte counter</td>
+<td class="comment-1" rowspan="1">HL = destination base $EAFE</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51209"></span>C809</td>
 <td class="instruction">LD IX,$FE00</td>
+<td class="comment-1" rowspan="1">IX = source pointer-table base $FE00</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51213"></span>C80D</td>
 <td class="instruction">LD BC,$0FC0</td>
+<td class="comment-1" rowspan="1">BC = row/byte counter ($0FC0)</td>
 </tr>
 <tr>
 <td class="address-2"><span id="51216"></span>C810</td>
@@ -33209,7 +33351,7 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-1"><span id="51220"></span>C814</td>
 <td class="instruction">LD E,(IX+$00)</td>
-<td class="comment-1" rowspan="6">DE = row source address (from the pointer table, +2); copy 32 bytes</td>
+<td class="comment-1" rowspan="2">DE = the row's source address, from the pointer table</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51223"></span>C817</td>
@@ -33218,6 +33360,7 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-1"><span id="51226"></span>C81A</td>
 <td class="instruction">INC E</td>
+<td class="comment-1" rowspan="2">DE += 2 (skip the table entry's own header)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51227"></span>C81B</td>
@@ -33226,6 +33369,7 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-1"><span id="51228"></span>C81C</td>
 <td class="instruction">INC IX</td>
+<td class="comment-1" rowspan="2">Advance IX to the next pointer-table entry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51230"></span>C81E</td>
@@ -33234,7 +33378,7 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-1"><span id="51232"></span>C820</td>
 <td class="instruction">LDI</td>
-<td class="comment-1" rowspan="30">32 LDI copies (one row); loop via BC's parity until all rows are done</td>
+<td class="comment-1" rowspan="28">Copy one row: 28 unrolled LDI (32 bytes)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51234"></span>C822</td>
@@ -33347,10 +33491,12 @@ IX walks the row-pointer table at $FE00 (also used by <a href="asm.html#52865">C
 <tr>
 <td class="address-1"><span id="51288"></span>C858</td>
 <td class="instruction">JP PE,$C810</td>
+<td class="comment-1" rowspan="1">Loop via BC's parity until all rows are done</td>
 </tr>
 <tr>
 <td class="address-1"><span id="51291"></span>C85B</td>
 <td class="instruction">RET</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="51292" class="description">C85C: Flush changed character cells from the $E500 buffer to the real screen</div>
@@ -33867,6 +34013,15 @@ Called from <a href="asm.html#50902">C6D6</a> after the width/height header is r
 Used by the routines at <a href="asm.html#43569">AA31</a>, <a href="asm.html#47207">B867</a>, <a href="asm.html#47749">BA85</a>, <a href="asm.html#48065">BBC1</a>, <a href="asm.html#49782">C276</a>, <a href="asm.html#50850">C6A2</a> and <a href="asm.html#56312">DBF8</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">IX</td>
+<td class="register-desc">Object record</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -34848,6 +35003,28 @@ Called from <a href="asm.html#51687">C9E7</a>/<a href="asm.html#52001">CB21</a> 
 Used by the routines at <a href="asm.html#51687">C9E7</a> and <a href="asm.html#52001">CB21</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">C</td>
+<td class="register-desc">Carry: facing bit (0/1); only via the <a href="asm.html#51794">CA52</a> entry, entered from <a href="asm.html#51780">CA44</a></td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">A</td>
+<td class="register-desc">Small type code (2-5) for the picked frame table</td>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">The picked frame table address</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -35940,42 +36117,42 @@ Decrements the animation timer at $CC7B; while non-zero, just returns (popping t
 <tr>
 <td class="address-2"><span id="52167"></span>CBC7</td>
 <td class="instruction">LD HL,$CC7B</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52170"></span>CBCA</td>
 <td class="instruction">DEC (HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52171"></span>CBCB</td>
 <td class="instruction">JR Z,$CBCF</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52173"></span>CBCD</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52174"></span>CBCE</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="52175"></span>CBCF</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52177"></span>CBD1</td>
 <td class="instruction">LD HL,$CD22</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="52180"></span>CBD4</td>
 <td class="instruction">JR <a href="#52195">$CBE3</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Refill Robin's energy to maximum and redraw the bar</td>
 </tr>
 </table>
 <div id="52182" class="description">CBD6: Data block at CBD6</div>
@@ -38000,17 +38177,15 @@ Copies the $E800..$EA3F attribute area into $E500, skipping zero bytes so old da
 <tr>
 <td class="address-2"><span id="53069"></span>CF4D</td>
 <td class="instruction">LD BC,$0240</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">BC = $0240 bytes; HL/DE = attribute source/dest ($E800/$E500)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53072"></span>CF50</td>
 <td class="instruction">LD HL,$E800</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53075"></span>CF53</td>
 <td class="instruction">LD DE,$E500</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53078"></span>CF56</td>
@@ -38033,32 +38208,28 @@ Copies the $E800..$EA3F attribute area into $E500, skipping zero bytes so old da
 <tr>
 <td class="address-2"><span id="53083"></span>CF5B</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="5">Step both pointers, loop for all $0240 bytes</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53084"></span>CF5C</td>
 <td class="instruction">INC DE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53085"></span>CF5D</td>
 <td class="instruction">DEC BC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53086"></span>CF5E</td>
 <td class="instruction">BIT 7,B</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53088"></span>CF60</td>
 <td class="instruction">JR Z,$CF56</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53090"></span>CF62</td>
 <td class="instruction">LD A,$ED</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">A = $ED (the LDIR/LDDR opcode byte)</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38797,29 +38968,37 @@ Used by the routines at <a href="asm.html#44163">AC83</a>, <a href="asm.html#472
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="53311"></span>
+<div class="comments">
+<div class="paragraph">
+Two back-to-back LDIR fills, same pattern as the real-screen clears at <a href="asm.html#53284">D024</a>/<a href="asm.html#53298">D032</a>: fills the shadow attribute area $E800-$EAFF with A, then the shadow pixel area $EB00-$FCFF with $00.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="53311"></span>D03F</td>
 <td class="instruction">LD BC,$023F</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Fill the shadow attribute area $E800-$EAFF with A</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53314"></span>D042</td>
 <td class="instruction">LD HL,$E800</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53317"></span>D045</td>
 <td class="instruction">LD DE,$E801</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53320"></span>D048</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53321"></span>D049</td>
 <td class="instruction">LDIR</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -38834,32 +39013,28 @@ Clear shadow screen pixels
 <tr>
 <td class="address-1"><span id="53323"></span>D04B</td>
 <td class="instruction">LD HL,$EB00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="5">Fill the shadow pixel area $EB00-$FCFF with $00</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53326"></span>D04E</td>
 <td class="instruction">LD DE,$EB01</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53329"></span>D051</td>
 <td class="instruction">LD BC,$11FF</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53332"></span>D054</td>
 <td class="instruction">LD (HL),$00</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53334"></span>D056</td>
 <td class="instruction">LDIR</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53336"></span>D058</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53337" class="description">D059: Clear E500 area</div>
@@ -39506,7 +39681,7 @@ Retries <a href="asm.html#53590">D156</a> until it reports exactly one key down 
 <tr>
 <td class="address-1"><span id="53571"></span>D143</td>
 <td class="instruction">JR NZ,$D140</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Wait until exactly one key is pressed, return its code in A</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53573"></span>D145</td>
@@ -39516,7 +39691,7 @@ Retries <a href="asm.html#53590">D156</a> until it reports exactly one key down 
 <tr>
 <td class="address-1"><span id="53574"></span>D146</td>
 <td class="instruction">JR Z,$D140</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Wait until exactly one key is pressed, return its code in A</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53576"></span>D148</td>
@@ -39567,7 +39742,7 @@ Used by the routine at <a href="asm.html#53503">D0FF</a>.
 <tr>
 <td class="address-1"><span id="53587"></span>D153</td>
 <td class="instruction">JR NZ,$D14B</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Wait for all keys to be released</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53589"></span>D155</td>
@@ -39802,7 +39977,7 @@ A is a key code in the same row/column scheme decoded by <a href="asm.html#53590
 <span id="53649"></span>
 <div class="comments">
 <div class="paragraph">
-Reached via <a href="asm.html#53737">D1E9</a>'s dispatch when the "user-defined keys" scheme is active. Tests each of the 8 key codes stored at $D277 (by <a href="asm.html#53503">D0FF</a>) via <a href="asm.html#53622">D176</a>, building an 8-bit direction/action mask E one bit at a time via the carry.
+Reached via <a href="asm.html#53737">D1E9</a>'s dispatch when the "user-defined keys" scheme is active. Tests each of the 5 key codes stored at $D277 (by <a href="asm.html#53503">D0FF</a>) via <a href="asm.html#53622">D176</a>, building a 5-bit action mask E one bit at a time via the carry (E=$08 as the shift-marker exits after exactly 5 rotations, not 8 - confirmed by simulation).
 </div>
 </div>
 </td>
@@ -39810,7 +39985,7 @@ Reached via <a href="asm.html#53737">D1E9</a>'s dispatch when the "user-defined 
 <tr>
 <td class="address-2"><span id="53649"></span>D191</td>
 <td class="instruction">LD HL,$D277</td>
-<td class="comment-1" rowspan="2">HL -&gt; the 8 stored key codes at $D277; E = 8 bits to build</td>
+<td class="comment-1" rowspan="2">HL -&gt; the 5 stored key codes at $D277; E = $08 (shift-marker for a 5-pass loop)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53652"></span>D194</td>
@@ -39819,7 +39994,7 @@ Reached via <a href="asm.html#53737">D1E9</a>'s dispatch when the "user-defined 
 <tr>
 <td class="address-2"><span id="53654"></span>D196</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="5">Test this key; shift its state into E</td>
+<td class="comment-1" rowspan="2">A = this key's code; advance HL</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53655"></span>D197</td>
@@ -39828,6 +40003,7 @@ Reached via <a href="asm.html#53737">D1E9</a>'s dispatch when the "user-defined 
 <tr>
 <td class="address-1"><span id="53656"></span>D198</td>
 <td class="instruction">CALL <a href="#53622">$D176</a></td>
+<td class="comment-1" rowspan="3">Test it via <a href="asm.html#53622">D176</a>; shift the result into E</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53659"></span>D19B</td>
@@ -39931,7 +40107,7 @@ Called first from <a href="asm.html#51546">C95A</a> each frame. Pushes $D1F1 as 
 <tr>
 <td class="address-2"><span id="53737"></span>D1E9</td>
 <td class="instruction">LD HL,$D1F1</td>
-<td class="comment-1" rowspan="3">Push a return address; jump to the handler at ($D275)</td>
+<td class="comment-1" rowspan="2">HL = the return address $D1F1; push it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53740"></span>D1EC</td>
@@ -39940,6 +40116,7 @@ Called first from <a href="asm.html#51546">C95A</a> each frame. Pushes $D1F1 as 
 <tr>
 <td class="address-1"><span id="53741"></span>D1ED</td>
 <td class="instruction">LD HL,($D275)</td>
+<td class="comment-1" rowspan="1">Jump to the handler pointer at ($D275)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53744"></span>D1F0</td>
@@ -39968,7 +40145,7 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-2"><span id="53745"></span>D1F1</td>
 <td class="instruction">NOP</td>
-<td class="comment-1" rowspan="6">If both left and right bits are set, clear them both</td>
+<td class="comment-1" rowspan="2">Padding (2 NOPs)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53746"></span>D1F2</td>
@@ -39977,6 +40154,7 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-1"><span id="53747"></span>D1F3</td>
 <td class="instruction">LD A,E</td>
+<td class="comment-1" rowspan="2">A = E masked to the left+right bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53748"></span>D1F4</td>
@@ -39985,6 +40163,7 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-1"><span id="53750"></span>D1F6</td>
 <td class="instruction">CP $03</td>
+<td class="comment-1" rowspan="2">Both set: fall through to clear them</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53752"></span>D1F8</td>
@@ -39993,17 +40172,16 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-1"><span id="53754"></span>D1FA</td>
 <td class="instruction">RES 0,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Clear the left+right bits in E</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53756"></span>D1FC</td>
 <td class="instruction">RES 1,E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53758"></span>D1FE</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="4">Same for up and down (bits 2/3)</td>
+<td class="comment-1" rowspan="2">A = E masked to the up+down bits</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53759"></span>D1FF</td>
@@ -40012,6 +40190,7 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-1"><span id="53761"></span>D201</td>
 <td class="instruction">CP $0C</td>
+<td class="comment-1" rowspan="2">Both set: fall through to clear them</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53763"></span>D203</td>
@@ -40020,22 +40199,20 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <tr>
 <td class="address-1"><span id="53765"></span>D205</td>
 <td class="instruction">RES 2,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Clear the up+down bits in E</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53767"></span>D207</td>
 <td class="instruction">RES 3,E</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="53769"></span>D209</td>
 <td class="instruction">LD A,E</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">A = the cleaned bitmask; return</td>
 </tr>
 <tr>
 <td class="address-1"><span id="53770"></span>D20A</td>
 <td class="instruction">RET</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="53771" class="description">D20B: Messages to redefine keyboard keys</div>
@@ -40152,25 +40329,40 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 </tr>
 <tr>
 <td class="address-1"><span id="53876"></span>D274</td>
-<td class="instruction">DEFB $00,$91,$D1</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53877"></span>D275</td>
+<td class="instruction">DEFW <a href="#53649">$D191</a></td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53879" class="description">D277: Message at D277</div>
+<div id="53879" class="description">D277: User-defined key codes, one byte per remappable action (set by <a href="asm.html#53503">D0FF</a>)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="53879"></span>
+<div class="comments">
+<div class="paragraph">
+Raw keyboard scan codes in <a href="asm.html#53590">D156</a>'s row/column scheme, decoded per-bit by <a href="asm.html#53622">D176</a>. 5 bytes, confirmed by simulating <a href="asm.html#53649">D191</a>'s shift-loop - not 8, as older notes here claimed.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="53879"></span>D277</td>
-<td class="instruction">DEFM "$%&amp;"</td>
+<td class="instruction">DEFB $24,$25,$26,$08,$10</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53882" class="description">D27A: Data block at D27A</div>
+<div id="53884" class="description">D27C: Key-code to display-character lookup table (40 keys)</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -40179,26 +40371,22 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="53882"></span>D27A</td>
-<td class="instruction">DEFB $08,$10</td>
-<td class="comment-0" rowspan="1"></td>
-</tr>
-</table>
-<div id="53884" class="description">D27C: Message at D27C</div>
-<table class="disassembly">
-<tr>
 <td class="routine-comment" colspan="5">
-<div class="details">
+<span id="53884"></span>
+<div class="comments">
+<div class="paragraph">
+Indexed directly by a raw key code from <a href="asm.html#53590">D156</a> (BC = $D27C + A, no multiplier): <a href="asm.html#53503">D0FF</a> adds A to reach the matching byte, the single ASCII character shown as that key's label on the redefinition screen. 40 entries - one per key on the ZX keyboard.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="53884"></span>D27C</td>
-<td class="instruction">DEFM "BHY65TGVNJU74RFCMKI83EDX"</td>
+<td class="instruction">DEFM "BHY65TGVNJU74RFCMKI83EDX@LO92WSZ&lt;$P01QA&gt;"</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="53908" class="description">D294: Data block at D294</div>
+<div id="53924" class="description">D2A4: Unused?</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -40207,51 +40395,93 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="53908"></span>D294</td>
-<td class="instruction">DEFB $40</td>
+<td class="address-2"><span id="53924"></span>D2A4</td>
+<td class="instruction">PUSH BC</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="53909" class="description">D295: Message at D295</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
-</tr>
-<tr>
-<td class="address-1"><span id="53909"></span>D295</td>
-<td class="instruction">DEFM "LO92WSZ&lt;$P01QA&gt;"</td>
+<td class="address-1"><span id="53925"></span>D2A5</td>
+<td class="instruction">PUSH AF</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
-</table>
-<div id="53924" class="description">D2A4: Data block at D2A4</div>
-<table class="disassembly">
 <tr>
-<td class="routine-comment" colspan="5">
-<div class="details">
-</div>
-</td>
+<td class="address-2"><span id="53926"></span>D2A6</td>
+<td class="instruction">LD BC,$00FE</td>
+<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="53924"></span>D2A4</td>
-<td class="instruction">DEFB $C5,$F5,$01,$FE,$00,$ED,$78,$2F</td>
+<td class="address-1"><span id="53929"></span>D2A9</td>
+<td class="instruction">IN A,(C)</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53931"></span>D2AB</td>
+<td class="instruction">CPL</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53932"></span>D2AC</td>
-<td class="instruction">DEFB $E6,$1F,$20,$F6,$01,$FE,$00,$ED</td>
+<td class="instruction">AND $1F</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="53940"></span>D2B4</td>
-<td class="instruction">DEFB $78,$2F,$E6,$1F,$20,$06,$ED,$5F</td>
+<td class="address-1"><span id="53934"></span>D2AE</td>
+<td class="instruction">JR NZ,$D2A6</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-2"><span id="53936"></span>D2B0</td>
+<td class="instruction">LD BC,$00FE</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53939"></span>D2B3</td>
+<td class="instruction">IN A,(C)</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53941"></span>D2B5</td>
+<td class="instruction">CPL</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53942"></span>D2B6</td>
+<td class="instruction">AND $1F</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53944"></span>D2B8</td>
+<td class="instruction">JR NZ,$D2C0</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53946"></span>D2BA</td>
+<td class="instruction">LD A,R</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="53948"></span>D2BC</td>
-<td class="instruction">DEFB $D3,$FE,$18,$F0,$F1,$C1,$C9</td>
+<td class="instruction">OUT ($FE),A</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53950"></span>D2BE</td>
+<td class="instruction">JR $D2B0</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-2"><span id="53952"></span>D2C0</td>
+<td class="instruction">POP AF</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53953"></span>D2C1</td>
+<td class="instruction">POP BC</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="53954"></span>D2C2</td>
+<td class="instruction">RET</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
@@ -40451,7 +40681,7 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54157" class="description">D38D: Data block at D38D</div>
+<div id="54157" class="description">D38D: Pseudorandom seed byte, stirred by <a href="asm.html#52845">CE6D</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -40465,21 +40695,91 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54158" class="description">D38E: Message at D38E</div>
+<div id="54158" class="description">D38E: Random starting-scenario room tables, rolled by <a href="asm.html#53105">CF71</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
 <div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="54158"></span>
+<div class="comments">
+<div class="paragraph">
+One of 4 possible low bytes for the game's first random starting room.
+</div>
 </div>
 </td>
 </tr>
 <tr>
 <td class="address-1"><span id="54158"></span>D38E</td>
-<td class="instruction">DEFM " &amp;c"</td>
+<td class="instruction">DEFB $20,$26,$63,$9E</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="54162"></span>
+<div class="comments">
+<div class="paragraph">
+One of 4 possible room numbers for the game's second random starting room.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54162"></span>D392</td>
+<td class="instruction">DEFB $17,$00</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54164"></span>D394</td>
+<td class="instruction">DEFB $2C,$00</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54166"></span>D396</td>
+<td class="instruction">DEFB $32,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54168"></span>D398</td>
+<td class="instruction">DEFB $32,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="54170"></span>
+<div class="comments">
+<div class="paragraph">
+One of 4 possible room numbers for the game's third random starting room.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54170"></span>D39A</td>
+<td class="instruction">DEFB $D2,$00</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54172"></span>D39C</td>
+<td class="instruction">DEFB $01,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54174"></span>D39E</td>
+<td class="instruction">DEFB $1B,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54176"></span>D3A0</td>
+<td class="instruction">DEFB $9C,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
-<div id="54161" class="description">D391: Data block at D391</div>
+<div id="54178" class="description">D3A2: Ambush/capture room table, rolled by <a href="asm.html#53171">CFB3</a></div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -40488,34 +40788,88 @@ The return address pushed by <a href="asm.html#53737">D1E9</a>: every control-sc
 </td>
 </tr>
 <tr>
-<td class="address-1"><span id="54161"></span>D391</td>
-<td class="instruction">DEFB $9E,$17,$00,$2C,$00,$32,$01,$32</td>
+<td class="routine-comment" colspan="5">
+<span id="54178"></span>
+<div class="comments">
+<div class="paragraph">
+One of 8 possible rooms for the scripted ambush/capture scene, rolled by <a href="asm.html#53171">CFB3</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54178"></span>D3A2</td>
+<td class="instruction">DEFB $0B,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="54169"></span>D399</td>
-<td class="instruction">DEFB $01,$D2,$00,$01,$01,$1B,$01,$9C</td>
+<td class="address-1"><span id="54180"></span>D3A4</td>
+<td class="instruction">DEFB $43,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="54177"></span>D3A1</td>
-<td class="instruction">DEFB $00,$0B,$00,$43,$00,$D9,$00,$EC</td>
+<td class="address-1"><span id="54182"></span>D3A6</td>
+<td class="instruction">DEFB $D9,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="54185"></span>D3A9</td>
-<td class="instruction">DEFB $00,$0C,$01,$21,$01,$24,$01,$0B</td>
+<td class="address-1"><span id="54184"></span>D3A8</td>
+<td class="instruction">DEFB $EC,$00</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="54193"></span>D3B1</td>
-<td class="instruction">DEFB $00,$00,$00,$00,$00,$00,$00,$00</td>
+<td class="address-1"><span id="54186"></span>D3AA</td>
+<td class="instruction">DEFB $0C,$01</td>
 <td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
-<td class="address-1"><span id="54201"></span>D3B9</td>
-<td class="instruction">DEFB $00,$00</td>
+<td class="address-1"><span id="54188"></span>D3AC</td>
+<td class="instruction">DEFB $21,$01</td>
 <td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54190"></span>D3AE</td>
+<td class="instruction">DEFB $24,$01</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+<tr>
+<td class="address-1"><span id="54192"></span>D3B0</td>
+<td class="instruction">DEFB $0B,$00</td>
+<td class="comment-0" rowspan="1"></td>
+</tr>
+</table>
+<div id="54194" class="description">D3B2: The 3 random scenario rooms and the ambush target room, set at game start</div>
+<table class="disassembly">
+<tr>
+<td class="routine-comment" colspan="5">
+<div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54194"></span>D3B2</td>
+<td class="instruction">DEFW $0000</td>
+<td class="comment-1" rowspan="1">First random scenario room (set by <a href="asm.html#53105">CF71</a> from <a href="asm.html#54158">D38E</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54196"></span>D3B4</td>
+<td class="instruction">DEFW $0000</td>
+<td class="comment-1" rowspan="1">Second random scenario room (set by <a href="asm.html#53105">CF71</a> from <a href="asm.html#54162">D392</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54198"></span>D3B6</td>
+<td class="instruction">DEFW $0000</td>
+<td class="comment-1" rowspan="1">Third random scenario room (set by <a href="asm.html#53105">CF71</a> from <a href="asm.html#54170">D39A</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54200"></span>D3B8</td>
+<td class="instruction">DEFW $0000</td>
+<td class="comment-1" rowspan="1">Ambush/capture target room (set by <a href="asm.html#53171">CFB3</a> from <a href="asm.html#54178">D3A2</a>)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="54202"></span>D3BA</td>
+<td class="instruction">DEFB $00</td>
+<td class="comment-1" rowspan="1"><a href="asm.html#47207">B867</a>'s frame divider (decremented every call, acts every 4th) then reused as an "ambush armed" flag/countdown</td>
 </tr>
 </table>
 <div id="54203" class="description">D3BB: New-game state init: clear tables, spawn the initial extra guards</div>
@@ -40939,12 +41293,11 @@ This entry point is used by the routine at <a href="asm.html#54203">D3BB</a>.
 <tr>
 <td class="address-2"><span id="54339"></span>D443</td>
 <td class="instruction">CP B</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Loop: find a slot, write event type $07, bump the counter, repeat</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54340"></span>D444</td>
 <td class="instruction">RET NC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54341"></span>D445</td>
@@ -41006,157 +41359,145 @@ Writes two fixed 5-byte entries (matching the format scanned by <a href="asm.htm
 <tr>
 <td class="address-2"><span id="54356"></span>D454</td>
 <td class="instruction">LD DE,$D543</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">DE -&gt; the table at $D543</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54359"></span>D457</td>
 <td class="instruction">LD A,$3D</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 1 byte 1: $3D</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54361"></span>D459</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54362"></span>D45A</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54363"></span>D45B</td>
 <td class="instruction">XOR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Entry 1 byte 2: $00</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54364"></span>D45C</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54365"></span>D45D</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54366"></span>D45E</td>
 <td class="instruction">LD A,$30</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 1 byte 3: $30</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54368"></span>D460</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54369"></span>D461</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54370"></span>D462</td>
 <td class="instruction">LD A,$60</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 1 byte 4: $60</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54372"></span>D464</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54373"></span>D465</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54374"></span>D466</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 1 byte 5: $06</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54376"></span>D468</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54377"></span>D469</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54378"></span>D46A</td>
 <td class="instruction">LD A,$BB</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 2 byte 1: $BB</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54380"></span>D46C</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54381"></span>D46D</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54382"></span>D46E</td>
 <td class="instruction">XOR A</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Entry 2 byte 2: $00</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54383"></span>D46F</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54384"></span>D470</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54385"></span>D471</td>
 <td class="instruction">LD A,$58</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 2 byte 3: $58</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54387"></span>D473</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54388"></span>D474</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54389"></span>D475</td>
 <td class="instruction">LD A,$58</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 2 byte 4: $58</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54391"></span>D477</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54392"></span>D478</td>
 <td class="instruction">INC DE</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54393"></span>D479</td>
 <td class="instruction">LD A,$06</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Entry 2 byte 5: $06</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54395"></span>D47B</td>
 <td class="instruction">LD (DE),A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="54396"></span>D47C</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="54397" class="description">D47D: Find a free (zero) slot in the 30-entry, 5-byte-stride table at $D4B1</div>
@@ -41183,15 +41524,17 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-2"><span id="54397"></span>D47D</td>
 <td class="instruction">LD A,R</td>
-<td class="comment-1" rowspan="6">Roll a start index 0-29 from the R register</td>
+<td class="comment-1" rowspan="1">A = R register</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54399"></span>D47F</td>
 <td class="instruction">AND $1F</td>
+<td class="comment-1" rowspan="1">Mask to 0-31</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54401"></span>D481</td>
 <td class="instruction">CP $1E</td>
+<td class="comment-1" rowspan="2">Clamp: &gt;= 30 wraps toward 0</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54403"></span>D483</td>
@@ -41200,6 +41543,7 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-1"><span id="54405"></span>D485</td>
 <td class="instruction">DEC A</td>
+<td class="comment-1" rowspan="2">Decrement and retry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54406"></span>D486</td>
@@ -41208,11 +41552,12 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-2"><span id="54408"></span>D488</td>
 <td class="instruction">LD DE,$D4B1</td>
-<td class="comment-1" rowspan="8">DE -&gt; the entry at that index in the table at $D4B1</td>
+<td class="comment-1" rowspan="1">DE = the table base $D4B1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54411"></span>D48B</td>
 <td class="instruction">LD C,A</td>
+<td class="comment-1" rowspan="3">C = the index; A = index x4</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54412"></span>D48C</td>
@@ -41225,6 +41570,7 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-1"><span id="54414"></span>D48E</td>
 <td class="instruction">ADD A,C</td>
+<td class="comment-1" rowspan="2">A += C, += E (index x5 + table low byte)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54415"></span>D48F</td>
@@ -41233,6 +41579,7 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-1"><span id="54416"></span>D490</td>
 <td class="instruction">LD E,A</td>
+<td class="comment-1" rowspan="2">E = the result; carry -&gt; bump D</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54417"></span>D491</td>
@@ -41241,7 +41588,7 @@ Used by <a href="asm.html#54274">D402</a>/<a href="asm.html#54259">D3F3</a> to f
 <tr>
 <td class="address-1"><span id="54419"></span>D493</td>
 <td class="instruction">INC D</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">D += 1 on carry</td>
 </tr>
 <tr>
 <td class="address-2"><span id="54420"></span>D494</td>
@@ -44008,7 +44355,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55632"></span>D950</td>
 <td class="instruction">LD HL,$D59B</td>
-<td class="comment-1" rowspan="5">Save the byte at $D59C before the shift below</td>
+<td class="comment-1" rowspan="2">HL/DE -&gt; $D59B/$D59C (the queue's ends)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55635"></span>D953</td>
@@ -44017,10 +44364,12 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55638"></span>D956</td>
 <td class="instruction">LD A,(DE)</td>
+<td class="comment-1" rowspan="1">A = the byte at $D59C</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55639"></span>D957</td>
 <td class="instruction">PUSH AF</td>
+<td class="comment-1" rowspan="2">Save it; B = 7 (shift count)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55640"></span>D958</td>
@@ -44097,7 +44446,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55666"></span>D972</td>
 <td class="instruction">EXX</td>
-<td class="comment-1" rowspan="10">Found: EXX back; DE = the queue's stored message-address pair</td>
+<td class="comment-1" rowspan="5">Found: EXX back; DE = the message-address pair from the queue</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55667"></span>D973</td>
@@ -44118,6 +44467,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55671"></span>D977</td>
 <td class="instruction">PUSH HL</td>
+<td class="comment-1" rowspan="2">Save HL; HL = the default message $B548</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55672"></span>D978</td>
@@ -44126,6 +44476,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55675"></span>D97B</td>
 <td class="instruction">CP $05</td>
+<td class="comment-1" rowspan="2">Type $05: keep it; else fall through</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55677"></span>D97D</td>
@@ -44134,11 +44485,12 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55679"></span>D97F</td>
 <td class="instruction">LD HL,$B512</td>
+<td class="comment-1" rowspan="1">Otherwise: HL = message $B512</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55682"></span>D982</td>
 <td class="instruction">LD A,$60</td>
-<td class="comment-1" rowspan="8">Print the message, using an alternate text if the type was $05</td>
+<td class="comment-1" rowspan="3">A = $60; set the text/attribute params ($D7F1/$D7F2)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55684"></span>D984</td>
@@ -44151,6 +44503,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55690"></span>D98A</td>
 <td class="instruction">PUSH BC</td>
+<td class="comment-1" rowspan="2">Print the message</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55691"></span>D98B</td>
@@ -44159,6 +44512,7 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-1"><span id="55694"></span>D98E</td>
 <td class="instruction">POP BC</td>
+<td class="comment-1" rowspan="3">Restore registers, loop for the next table entry</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55695"></span>D98F</td>
@@ -44176,17 +44530,15 @@ Plays a short sound (<a href="asm.html#55785">D9E9</a>), then shifts 7 bytes dow
 <tr>
 <td class="address-2"><span id="55699"></span>D993</td>
 <td class="instruction">POP AF</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Restore the saved byte; fall into <a href="asm.html#55703">D997</a> only if it was $02</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55700"></span>D994</td>
 <td class="instruction">CP $02</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55702"></span>D996</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -44201,7 +44553,7 @@ This entry point is used by the routine at <a href="asm.html#47385">B919</a>.
 <tr>
 <td class="address-2"><span id="55703"></span>D997</td>
 <td class="instruction">LD B,$0B</td>
-<td class="comment-1" rowspan="3">Search 11 entries (5 bytes each) at $D543 for an $FF,$FF terminator pair</td>
+<td class="comment-1" rowspan="2">B = 11 entries; HL -&gt; the table at $D543</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55705"></span>D999</td>
@@ -44210,56 +44562,50 @@ This entry point is used by the routine at <a href="asm.html#47385">B919</a>.
 <tr>
 <td class="address-1"><span id="55708"></span>D99C</td>
 <td class="instruction">LD DE,$0005</td>
+<td class="comment-1" rowspan="1">DE = 5 (entry stride)</td>
 </tr>
 <tr>
 <td class="address-2"><span id="55711"></span>D99F</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Check for $FF (first byte of an empty terminator)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55712"></span>D9A0</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55714"></span>D9A2</td>
 <td class="instruction">JR NZ,$D9AB</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55716"></span>D9A4</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="5">Check the second byte too; both $FF -&gt; found the free slot</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55717"></span>D9A5</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55718"></span>D9A6</td>
 <td class="instruction">CP $FF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55720"></span>D9A8</td>
 <td class="instruction">DEC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55721"></span>D9A9</td>
 <td class="instruction">JR Z,$D9AF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="55723"></span>D9AB</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Next entry, loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55724"></span>D9AC</td>
 <td class="instruction">DJNZ $D99F</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55726"></span>D9AE</td>
@@ -44298,122 +44644,105 @@ This entry point is used by the routine at <a href="asm.html#47385">B919</a>.
 <tr>
 <td class="address-1"><span id="55740"></span>D9BC</td>
 <td class="instruction">LD A,($CC85)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">A = Robin's X, clamped to a minimum of $10</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55743"></span>D9BF</td>
 <td class="instruction">SUB $10</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55745"></span>D9C1</td>
 <td class="instruction">JR NC,$D9C5</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55747"></span>D9C3</td>
 <td class="instruction">LD A,$10</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="55749"></span>D9C5</td>
 <td class="instruction">LD D,A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Save it (D and the log entry)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55750"></span>D9C6</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55751"></span>D9C7</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55752"></span>D9C8</td>
 <td class="instruction">LD A,($CC86)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">A = Robin's Y, floored to 8 and +$10; E = the result</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55755"></span>D9CB</td>
 <td class="instruction">AND $F8</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55757"></span>D9CD</td>
 <td class="instruction">ADD A,$10</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55759"></span>D9CF</td>
 <td class="instruction">LD E,A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55760"></span>D9D0</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Save it; entry type = $02 (position marker)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55761"></span>D9D1</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55762"></span>D9D2</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55764"></span>D9D4</td>
 <td class="instruction">LD (HL),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55765"></span>D9D5</td>
 <td class="instruction">LD HL,($D9B3)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">BC = the tracked target room (via the $D9B3 pointer)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55768"></span>D9D8</td>
 <td class="instruction">LD C,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55769"></span>D9D9</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55770"></span>D9DA</td>
 <td class="instruction">LD B,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55771"></span>D9DB</td>
 <td class="instruction">LD HL,($C548)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Compare it to the current room; return unless it matches</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55774"></span>D9DE</td>
 <td class="instruction">OR A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55775"></span>D9DF</td>
 <td class="instruction">SBC HL,BC</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55777"></span>D9E1</td>
 <td class="instruction">RET NZ</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="55778"></span>D9E2</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">A = message 2</td>
 </tr>
 <tr>
 <td class="address-1"><span id="55780"></span>D9E4</td>
@@ -44423,7 +44752,7 @@ This entry point is used by the routine at <a href="asm.html#47385">B919</a>.
 <tr>
 <td class="address-1"><span id="55783"></span>D9E7</td>
 <td class="instruction">LD B,$32</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">B = $32 (sound length)</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -45075,7 +45404,7 @@ Scans the 9-entry room-address table at $DBCD for the current room ($C548/$C549)
 <tr>
 <td class="address-1"><span id="56065"></span>DB01</td>
 <td class="instruction">JR NZ,<a href="#56088">$DB18</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Resolve completed special-room events</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56067"></span>DB03</td>
@@ -45177,107 +45506,95 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-1"><span id="56097"></span>DB21</td>
 <td class="instruction">LD HL,$D595</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">HL -&gt; the event-status array $D595</td>
 </tr>
 <tr>
 <td class="address-2"><span id="56100"></span>DB24</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">This entry != $05: skip the removal</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56101"></span>DB25</td>
 <td class="instruction">CP $05</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56103"></span>DB27</td>
 <td class="instruction">JR NZ,$DB32</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56105"></span>DB29</td>
 <td class="instruction">INC C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Count this entry; remove the slot</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56106"></span>DB2A</td>
 <td class="instruction">CALL <a href="#56194">$DB82</a></td>
-<td class="comment-1" rowspan="1">Remove the current event slot, shifting the remaining ones down</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56109"></span>DB2D</td>
 <td class="instruction">LD A,C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">3 occurrences found: stop the scan</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56110"></span>DB2E</td>
 <td class="instruction">CP $03</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56112"></span>DB30</td>
 <td class="instruction">JR Z,$DB3F</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56114"></span>DB32</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Next entry, loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56115"></span>DB33</td>
 <td class="instruction">DJNZ $DB24</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56117"></span>DB35</td>
 <td class="instruction">LD A,C</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">None found: try the "single trigger" scan</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56118"></span>DB36</td>
 <td class="instruction">OR A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56119"></span>DB37</td>
 <td class="instruction">JR Z,$DB50</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56121"></span>DB39</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">1 found: type $05 (print the count message)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56122"></span>DB3A</td>
 <td class="instruction">JR Z,$DB6B</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56124"></span>DB3C</td>
 <td class="instruction">DEC A</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">2 found: type $0F (refill energy)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56125"></span>DB3D</td>
 <td class="instruction">JR Z,$DB46</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56127"></span>DB3F</td>
 <td class="instruction">LD A,$02</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Otherwise: set $DBEA=2 (generic trigger frame)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56129"></span>DB41</td>
 <td class="instruction">LD ($DBEA),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56132"></span>DB44</td>
 <td class="instruction">JR $DB6B</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56134"></span>DB46</td>
@@ -45301,27 +45618,24 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-2"><span id="56144"></span>DB50</td>
 <td class="instruction">LD B,$08</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">BC = 8 entries again; HL -&gt; $D595</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56146"></span>DB52</td>
 <td class="instruction">LD HL,$D595</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56149"></span>DB55</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">This entry != $02: skip the removal</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56150"></span>DB56</td>
 <td class="instruction">CP $02</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56152"></span>DB58</td>
 <td class="instruction">JR NZ,$DB63</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56154"></span>DB5A</td>
@@ -45331,12 +45645,11 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-1"><span id="56157"></span>DB5D</td>
 <td class="instruction">LD HL,$D5A5</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Decrement the arrow-hit counter $D5A5</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56160"></span>DB60</td>
 <td class="instruction">DEC (HL)</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56161"></span>DB61</td>
@@ -45346,22 +45659,20 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-2"><span id="56163"></span>DB63</td>
 <td class="instruction">INC HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Next entry, loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56164"></span>DB64</td>
 <td class="instruction">DJNZ $DB55</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56166"></span>DB66</td>
 <td class="instruction">LD A,$01</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">None found: set $DBEA=1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56168"></span>DB68</td>
 <td class="instruction">LD ($DBEA),A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56171"></span>DB6B</td>
@@ -45371,17 +45682,15 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-1"><span id="56174"></span>DB6E</td>
 <td class="instruction">LD A,($DBEA)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">A = the $DBEA flag; HL = 0 by default</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56177"></span>DB71</td>
 <td class="instruction">OR A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56178"></span>DB72</td>
 <td class="instruction">LD HL,$0000</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56181"></span>DB75</td>
@@ -45391,22 +45700,19 @@ Resets the ($C4D3) callback to the no-op at <a href="asm.html#56087">DB17</a>, t
 <tr>
 <td class="address-1"><span id="56183"></span>DB77</td>
 <td class="instruction">LD HL,($DBED)</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="4">Otherwise: HL = $DBED, mirrored (XOR bit 0 of H)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56186"></span>DB7A</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56187"></span>DB7B</td>
 <td class="instruction">XOR $03</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56189"></span>DB7D</td>
 <td class="instruction">LD H,A</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56190"></span>DB7E</td>
@@ -46507,7 +46813,7 @@ Only checks at cell boundaries (L bits 0-1 clear); converts HL to an attribute a
 <tr>
 <td class="address-1"><span id="56702"></span>DD7E</td>
 <td class="instruction">JR <a href="#56753">$DDB1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Check 2 vertically-stepped attribute cells for a blocking tile</td>
 </tr>
 </table>
 <div id="56704" class="description">DD80: Collision check: can Robin move right?</div>
@@ -46583,7 +46889,7 @@ Same as <a href="asm.html#56687">DD6F</a> but steps to the row above-right inste
 <tr>
 <td class="address-1"><span id="56721"></span>DD91</td>
 <td class="instruction">JR <a href="#56753">$DDB1</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Check 2 vertically-stepped attribute cells for a blocking tile</td>
 </tr>
 </table>
 <div id="56723" class="description">DD93: Collision check: can Robin move up?</div>
@@ -46610,17 +46916,15 @@ Only checks at cell boundaries (H bits 0-2 clear); converts HL to an attribute a
 <tr>
 <td class="address-2"><span id="56723"></span>DD93</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Only test at cell boundaries (H bits 0-2 clear)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56724"></span>DD94</td>
 <td class="instruction">AND $07</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56726"></span>DD96</td>
 <td class="instruction">JR NZ,<a href="#56751">$DDAF</a></td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56728"></span>DD98</td>
@@ -46640,7 +46944,7 @@ Only checks at cell boundaries (H bits 0-2 clear); converts HL to an attribute a
 <tr>
 <td class="address-1"><span id="56733"></span>DD9D</td>
 <td class="instruction">JR <a href="#56773">$DDC5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Check 3 horizontally-stepped attribute cells for a blocking tile</td>
 </tr>
 </table>
 <div id="56735" class="description">DD9F: Collision check: can Robin move down?</div>
@@ -46667,17 +46971,15 @@ Same as <a href="asm.html#56723">DD93</a> but steps down 3 rows first, testing v
 <tr>
 <td class="address-2"><span id="56735"></span>DD9F</td>
 <td class="instruction">LD A,H</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Only test at cell boundaries (H bits 0-2 clear)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56736"></span>DDA0</td>
 <td class="instruction">AND $07</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56738"></span>DDA2</td>
 <td class="instruction">JR NZ,$DDAF</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56740"></span>DDA4</td>
@@ -46697,17 +46999,16 @@ Same as <a href="asm.html#56723">DD93</a> but steps down 3 rows first, testing v
 <tr>
 <td class="address-1"><span id="56745"></span>DDA9</td>
 <td class="instruction">LD DE,$0060</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Step down 3 rows ($0060) before testing</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56748"></span>DDAC</td>
 <td class="instruction">ADD HL,DE</td>
-<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56749"></span>DDAD</td>
 <td class="instruction">JR <a href="#56773">$DDC5</a></td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">=&gt; Check 3 horizontally-stepped attribute cells for a blocking tile</td>
 </tr>
 <tr>
 <td class="routine-comment" colspan="5">
@@ -47250,52 +47551,76 @@ IX -&gt; the 4-entry guard table at ($C54C) (set up by <a href="asm.html#49782">
 Used by the routine at <a href="asm.html#56816">DDF0</a>.
 </div>
 </div>
+<table class="input">
+<tr class="asm-input-header">
+<th colspan="2">Input</th>
+</tr>
+<tr>
+<td class="register">HL</td>
+<td class="register-desc">-&gt; the first of 3 bytes to test</td>
+</tr>
+</table>
+<table class="output">
+<tr class="asm-output-header">
+<th colspan="2">Output</th>
+</tr>
+<tr>
+<td class="register">Z</td>
+<td class="register-desc">Set if all 3 bytes are zero, clear if any is non-zero</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="56913"></span>
+<div class="comments">
+<div class="paragraph">
+Called from <a href="asm.html#56816">DDF0</a> twice: once directly on the picked flag byte, once in a loop advancing HL to scan further bytes for where the route re-opens. Returns with Z set if all 3 bytes at (HL) are zero.
+</div>
+</div>
 </td>
 </tr>
 <tr>
 <td class="address-2"><span id="56913"></span>DE51</td>
 <td class="instruction">PUSH HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">B = 3 bytes to check</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56914"></span>DE52</td>
 <td class="instruction">LD B,$03</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56916"></span>DE54</td>
 <td class="instruction">LD A,(HL)</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="3">Non-zero byte found: stop (Z clear)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56917"></span>DE55</td>
 <td class="instruction">OR A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56918"></span>DE56</td>
 <td class="instruction">JR NZ,$DE5B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56920"></span>DE58</td>
 <td class="instruction">INC HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="2">Next byte, loop</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56921"></span>DE59</td>
 <td class="instruction">DJNZ $DE54</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="56923"></span>DE5B</td>
 <td class="instruction">POP HL</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56924"></span>DE5C</td>
 <td class="instruction">RET</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="56925" class="description">DE5D: Copy the $001C-byte block at $E982 to $DECB</div>

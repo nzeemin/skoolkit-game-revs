@@ -131,17 +131,31 @@ def main():
     print(f"Total instructions:      {total_instr}")
     print(f"Avg instructions/routine:{total_instr/len(c_starts):.1f}")
 
-    # Heuristic completion estimate: title coverage + C-line comment density,
-    # weighted and calibrated so saboteur1-zx lands ~98-99% and joeblade-zx
-    # ~95% (the two most mature projects in this repo). Not exact science -
-    # a rough single-number signal for "how done is this disasm."
+    # Heuristic completion estimate: title coverage + C-line comment density +
+    # N-line coverage + R-line coverage, weighted and calibrated so
+    # saboteur1-zx lands ~98-99% and joeblade-zx ~95% (the two most mature
+    # projects in this repo). Not exact science - a rough single-number
+    # signal for "how done is this disasm."
+    #   42% - routine titles (full credit at 100% titled)
+    #   40% - C-line density (full credit at 1 C-line per 3.3 instructions)
+    #   12% - N-line coverage (full credit at 100% of routines having one)
+    #    6% - R-line coverage (full credit at 33% of routines having one -
+    #         only call-heavy routines need a documented calling convention)
     title_frac = titled / len(c_starts) if c_starts else 0
     density_ratio = total_instr / len(c_line_addrs) if c_line_addrs else float('inf')
-    density_term = 5 / density_ratio if density_ratio else 0
-    completion = max(0.0, min(1.0, 0.62 * title_frac + 0.21 * density_term)) * 100
+    density_term = 3.3 / density_ratio if density_ratio else 0
+    nline_frac = nlined / len(c_starts) if c_starts else 0
+    rline_frac = len(r_line_addrs) / len(c_starts) if c_starts else 0
+    rline_target = 0.33
+    rline_term = min(1.0, rline_frac / rline_target)
+    completion = max(0.0, min(1.0,
+        0.42 * title_frac + 0.40 * density_term
+        + 0.12 * nline_frac + 0.06 * rline_term)) * 100
     print(f"Est. completion:         {completion:.1f}%"
-          f"  (title coverage {title_frac*100:.0f}%, "
-          f"1 C-line per {density_ratio:.1f} instructions)")
+          f"  (title {title_frac*100:.0f}%, "
+          f"1 C-line per {density_ratio:.1f} instructions, "
+          f"N-line {nline_frac*100:.0f}%, "
+          f"R-line {rline_frac*100:.0f}% of {rline_target*100:.0f}% target)")
 
 
 if __name__ == '__main__':

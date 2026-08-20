@@ -177,14 +177,18 @@ boss-defeat code ($B9FA, targeting entry 20 at $B9D9 directly by address
 rather than through the scan). Whether the bit means "armed"/"consumed" or
 something else isn't confirmed - both places *clear* it, so it can't yet
 be read as a simple armed/consumed toggle. Byte1 holds the type ID in its
-low 5 bits (top 3 bits unconfirmed). Byte2 is a packed field decoded by
-$B95F into a slot choice (bit0: $5C0E or $5C13), a skip flag (bit1), and an
-X/Y sub-position (remaining bits, via a small rotate sequence).
+low 5 bits (top 3 bits unconfirmed). Byte2 is decoded by $B95F into an X/Y
+sub-position (via a small rotate sequence) - it does **not** hold the slot
+choice, despite an earlier pass through this doc saying so.
 
 $B93F ($9880/$B5DD/$B9FA all call it on room entry) linearly scans all 31
 entries, comparing byte0 against the current room, and spawns each match
-into $5C0E or $5C13 via $B95F - so unlike the $C152 hazards, only up to 2
-of these can be active at once, chosen dynamically rather than by fixed
+into $5C0E or $5C13 via $B95F. The slot choice and the "stop after 2" skip
+aren't stored in the table at all: $B93F carries a running counter (in C)
+across the whole scan, which $B95F reads on entry - the counter's bit0
+picks the slot and its bit1 (set once both slots have been filled) skips
+any further matches. So unlike the $C152 hazards, only up to 2 of these
+can be active at once, chosen dynamically rather than by fixed
 slot number. $BB5D is what then checks these two slots each frame for hero
 proximity/pickup. Whether this table's "creatures" are actually collectible
 items, one-off scripted encounters, or a second hazard type is not

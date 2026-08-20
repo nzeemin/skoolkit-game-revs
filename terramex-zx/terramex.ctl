@@ -307,6 +307,7 @@ b $90E1
 b $90E7
 b $910C
 c $9140 Classify object type ((IX+2)) into a size/category flag (C)
+N $9140 Checks whether two objects (the hero and a creature/item, typically) are close enough to interact - the shared proximity test behind pickups, hits, and hazard triggers throughout the game.
 R $9140 IX first object (position at +0/+1, type at +2)
 R $9140 IY second object (position at +0/+1)
 R $9140 O:Cf set if both X and Y are within threshold
@@ -320,6 +321,7 @@ b $916A
 c $917C Init $5B0A/$5B0E/$5B12/$5B16 to $007F
 s $918C
 c $918D Swap music data buffers, toggling the music flag ($918C)
+N $918D Toggles whether music is playing by swapping two pre-baked copies of the music-buffer data into place - a cheap way to switch tracks without recomputing anything.
 C $918D,13 save flag; HL/DE = swap region 1 ($FA00/$F400, 1024 bytes)
 C $919A,14 swap loop (byte-by-byte)
 C $91A8,8 HL/DE = swap region 2 ($C580/$DF80, 128 bytes)
@@ -362,6 +364,7 @@ c $92BD Draw sparkle/effect list at $9AE5, music-on variant, via #R$92D6
 C $92CD,3 Convert HL to screen bitmap address
 C $92D1,3 Convert HL to screen bitmap address
 c $92D6 Convert HL to screen bitmap address
+N $92D6 Copies one 8-pixel-tall strip of the menu border graphic into place - part of the frame-drawing sequence run when the main menu screen is built.
 R $92D6 HL source address (in $E0xx buffer)
 R $92D6 O:HL/DE restored (preserved via stack)
 C $92D6,2 save DE/HL
@@ -371,12 +374,14 @@ C $92E4,3 E=L; B=8 (rows)
 C $92E7,6 copy byte HL->DE, both +=$100 (next line); loop
 C $92ED,3 restore DE/HL; RET
 c $92F0 Convert HL to attribute address (variant)
+N $92F0 Turns a screen pixel address into the matching color-attribute address - a different bit-twiddling method from #R$A293, used by the sparkle-effect drawing code.
 R $92F0 HL screen address
 R $92F0 O:HL attribute address (same third)
 C $92F0,7 H=(H AND 3)<<3 (row bits)
 C $92F7,6 H=(H<<3) (finish row shift); RET
 b $92FD
 c $935D Countdown timer ($5BFD/$5BFC/$5BFB); expiry warps to room $28, triggers hazard
+N $935D Ticks down the asteroid-collision countdown shown on the telescope screen; once it hits zero, forces the hero into room $28 and starts the game-over sequence.
 C $935D,7 HL=$5BFD; DEC minutes; expired?
 C $9364,7 reset minutes=$3B; DEC hours; expired?
 C $936B,7 reset hours=$17; DEC days; expired?
@@ -431,6 +436,7 @@ N $94B0 Copies 32 bytes per row for 8 rows, advancing both HL and DE down one pi
 R $94B0 HL source address
 R $94B0 DE destination address
 c $94C2 Draw left/right piece at HL/DE, then advance to next screen third
+N $94C2 Draws one row of the menu's left and right border pieces and steps both positions down to the next row - called repeatedly to build the whole frame.
 R $94C2 HL left-piece screen address
 R $94C2 DE right-piece screen address
 R $94C2 O:HL/DE advanced to next screen third
@@ -440,6 +446,7 @@ C $94D1,6 draw again at row-end via #R$94E4
 C $94D8,6 E=(E AND $E0)+$20 (next-third column, carry if wrapped)
 C $94DF,4 no wrap: RET; else D+=8 (next third row)
 c $94E4 Blit 1x8 byte column (menu border piece)
+N $94E4 Copies one 8-pixel-tall column of graphic data - the smallest building block of the menu border-drawing code.
 R $94E4 HL source address
 R $94E4 DE destination address
 R $94E4 O:HL/DE +8 (next third down)
@@ -447,6 +454,7 @@ c $94EF Print string "1 : KEYBOARD"
 C $94EF,3 string: "1 : KEYBOARD" (#R$9540)
 C $94F2,3 position: row 1, col 8
 c $94F9 Print string from DE at screen HL, attr in AF'
+N $94F9 A generic text printer: draws a null-terminated string at a screen position in a given color, character by character.
 R $94F9 DE string address (null-terminated, $0D=newline)
 R $94F9 HL screen address
 R $94F9 AF' attribute byte
@@ -459,6 +467,7 @@ C $9516,3 newline: reload HL
 C $951A,3 next char row
 b $9525
 c $9526 Fill C bytes with A (used for the menu box frame)
+N $9526 A generic rectangle-fill helper: paints a solid block of one byte value, used to draw the menu's box frame.
 R $9526 A fill byte
 R $9526 HL start address
 R $9526 B row count
@@ -575,6 +584,7 @@ C $99F7,9 IX+=DE; store $5BA2; DE=4
 C $9A00,4 HL+=DE; store $5BA4
 C $9A04,5 restore DE/IX/HL, RET
 c $9A09 Gated call to #R$9A2F, room/hazard-timer dependent
+N $9A09 Redraws a room's dual-buffered animation only when the room and hazard timer are in the right state - avoids redrawing it every frame unnecessarily.
 C $9A09,4 Proximity check
 C $9A0D,7 room ($5C06)=2?
 C $9A14,3 else room ($5C06) must be 3
@@ -588,9 +598,11 @@ C $9A3B,4 save BC/HL; B=4 (inner cols)
 C $9A3F,5 inner loop x4 via #R$9A62
 C $9A44,8 restore HL, +=$20 (next row); restore BC; outer loop x2
 c $9A4D Write A to (HL), DE=HL, fall into #R$9A62 dual-write loop
+N $9A4D A small draw primitive: writes one byte to the screen and mirrors it through the shared dual-buffer/attribute write path.
 R $9A4D A byte to write (attribute or pixel value)
 R $9A4D HL screen/attribute address
 c $9A52 Write A to (HL)+$6000 (secondary buffer), then #R$9A62 dual-write loop
+N $9A52 A small draw primitive: writes one byte to both the visible screen and its off-screen secondary copy, used wherever the game needs to place a single tile/icon on screen and keep the two buffers in sync.
 R $9A52 A byte to write
 R $9A52 HL screen address (primary buffer; +$6000 = secondary)
 C $9A52,14 DE=HL; write A to (HL); HL+=$6000 (secondary buffer); C=$40 (page); CALL #R$9A64
@@ -604,6 +616,7 @@ C $9A62,2 C=$E0 (alt attribute page)
 C $9A67,8 H = attribute-style address (AND $03, rotate, OR C)
 C $9A70,7 HL = tile index * 8 (bitmap offset)
 c $9A8C Find all tile-map ($F800) positions matching A, store coords list at DE
+N $9A8C Scans the whole room for every tile of a given type and builds a list of where they are - used to find all copies of a specific animated tile so they can be redrawn together.
 R $9A8C A tile index to search for
 R $9A8C DE destination coords-list address
 R $9A8C O:DE past the last coord pair written
@@ -611,6 +624,7 @@ C $9A8C,9 BC=$01FF (search count); HL=$F800; CPIR (find match); RET PO if none
 C $9A95,8 save A; store coords (L,H) at DE, advance DE twice
 C $9A9D,4 HL++; restore A; loop CPIR
 c $9AA1 Snapshot current room/position into respawn staging ($5C2B-$5C32)
+N $9AA1 Records where the hero currently is - room, status, position - so that if they die shortly after, #R$9090 can respawn them back in the same spot rather than restarting the room.
 C $9AA1,6 room ($5C01) -> $5C2D
 C $9AA7,9 status/hazard-counter pair ($5C06/$5C07) -> $5C2B/$5C2C
 C $9AB3,6 player X/Y ($5B04) -> $5C2E
@@ -659,6 +673,7 @@ C $9C64,1 restore BC
 C $9C65,4 loop 5 slots
 C $9C69,1 RET
 c $9C6A Reset alt BC, run init chain (#R$9C72/$9C75/$9C78/$9C7E)
+N $9C6A Reads a packed command from a data stream and jumps to the matching drawing handler - a small interpreter used to play back the sparkle/effect animation lists elsewhere in the code.
 R $9C6A DE packed data pointer
 R $9C6A IY dispatch address (JP (IY) tail-call)
 R $9C6A O:DE advanced by 2
@@ -679,6 +694,7 @@ C $9CD7,4 char-row wrap (alt branch)
 C $9CDB,12 next screen-third row; clamp at bottom (B=$E0)
 c $9CE7 Write A to (BC), fall into #R$9CC2 char-row fixup
 c $9CEE Compute screen address (BC) + pick plot routine (IY) for pixel HL
+N $9CEE Works out where a given pixel lands on screen and which of the sub-pixel-aligned plot routines to use to draw it - the shared setup step before any sprite/mask drawing.
 R $9CEE HL pixel position (X in L, Y in H)
 R $9CEE O:BC screen byte address for that pixel
 R $9CEE O:IY plot-routine address for the pixel's sub-column
@@ -735,19 +751,23 @@ C $9E42,5 duplicate write to attribute byte
 C $9E47,4 advance to next screen third
 C $9E50,3 DOWN DE, char-row fixup
 c $9E5D Populate the $5BD6 object-slot table (via #R$9FBA/#R$9F86)
+N $9E5D Redraws the fixed UI status-bar icons in the $5BD6 slot table: a sound icon, a blank row, the currently-held item's icon (or blank if none held), and another blank row - the on-screen inventory bar, refreshed whenever the held item changes.
 C $9E64,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 C $9E80,3 Compute HL = A*24-ish, entry point for #R$9FBA
 C $9E87,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 c $9E96 Draw lives-count icons ($5B97) into $5BD6 slots
+N $9E96 Draws the row of life icons in the status bar, one per remaining life.
 C $9EA9,3 Compute HL = A*24-ish, entry point for #R$9FBA
 C $9EB3,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 C $9EBA,3 => Redraw $5BD6 slot at $5081
 c $9EBD Init $5BD6 object slots from $5C23 (calls #R$9EE3)
+N $9EBD Refreshes the inventory-bar icons in the $5BD6 slot table starting from a given position in the pickup log ($5C23) - used whenever the held/available items on screen need updating, e.g. after a pickup or when cycling items.
 C $9EBD,3 Fill $5BD6 slots with item icons from inventory log
 C $9ED0,3 Compute HL = A*24-ish, entry point for #R$9FBA
 C $9ED3,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 C $9EE0,3 => Redraw $5BD6 slot at $5096
 c $9EE3 Fill $5BD6 slots with item icons from inventory log ($5B7C)
+N $9EE3 Draws the row of collected-item icons in the status bar, reading straight from the inventory pickup log.
 C $9EE3,11 B=4 slots; A=index ($5C23); IY=$5BD6; L=C=A
 C $9EEE,9 IX = inventory log ($5B7C) + index
 C $9EF7,7 log entry==$FF (empty)? skip lookup
@@ -760,6 +780,7 @@ C $9F06,3 Compute HL = A*24-ish, entry point for #R$9FBA
 C $9F09,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 c $9F1E Redraw $5BD6 slot at $5081 (tail of #R$9E96)
 c $9F27 Draw main-menu UI icons/highlight bar into $5BD6 slots
+N $9F27 Draws the main menu's option icons and the highlight bar over the currently-selected input device.
 C $9F33,3 Compute HL = A*24-ish, entry point for #R$9FBA
 C $9F36,3 Store HL into an IY-indexed table entry, advance IY/HL by stride
 C $9F5A,3 Compute HL = A*24-ish, entry point for #R$9FBA
@@ -776,6 +797,7 @@ R $9F86 B slot count
 C $9FA0,9 next slot
 C $9F9A,3 DOWN HL, char-row fixup
 c $9FAA Compute HL = A*24-ish, entry point for #R$9FBA
+N $9FAA Turns a small index into the address of the matching sprite/icon graphic - a shared lookup used whenever the game needs to find where an item or icon's picture data lives.
 R $9FAA A index value
 R $9FAA O:HL A*72 + caller's DE
 C $9FAA,4 save caller's DE; HL=A (zero-extended)
@@ -783,6 +805,7 @@ C $9FAE,3 HL*=8
 C $9FB1,6 save A*8; HL*=8 (A*64)
 C $9FB7,3 HL += A*8 (=A*72); restore caller's DE, HL+=DE; RET
 c $9FBA Store HL into an IY-indexed table entry, advance IY/HL by stride
+N $9FBA Fills 3 consecutive $5BD6 status-bar slots with the same graphic address, spaced by the slot table's row stride - used to draw a repeated icon (e.g. a row of blank tiles) in one call.
 R $9FBA HL value to store
 R $9FBA IY table entry address
 R $9FBA O:IY advanced past 3 entries
@@ -795,69 +818,81 @@ C $9FD3,10 store entry 2; advance IY by 2; RET
 b $9FDE
 t $9FE7
 b $9FEA
-t $A0BD
 b $A0C2
 c $A102 Clear a 4-byte record at $A0FE
-N $A102 Clears a 4-byte scratch record at $A0FE, then - unless the hero is already flagged (bit7 of that record) or music is playing - samples the two tiles just below and to the right of the hero's feet (#R$A176) for a "walked off a ledge" style collision; a match on tile $A5 in either sample triggers status $1A. Separately checks the tile position ahead of the hero's movement direction (#R$A1F4) and, unless the flag/music-on gate is set, the tile directly under the hero: standing on a "sticky" hazard tile ($BC/$BD) for 50 frames (a per-tile counter at $5C29) forces status $11. Finally re-checks the tile column below the feet against the solid-tile lists (#R$A2AC/#R$A2FA) to (re)compute the record's flag byte for next frame. This is the hero's main per-frame ground/hazard-tile sensor, called every frame from #R$A3E1.
+N $A102 Per-frame ground/hazard-tile sensor for the hero, called every frame from #R$A3E1. Samples nearby tiles for a ledge-edge trigger, checks the tile under the hero for a sticky-hazard timeout, and refreshes a solid-ground flag for next frame - all gated off while a status is already active or music is playing.
 R $A102 DE preserved (pushed/popped, not used)
-C $A102,18 IY=$A0FE; save DE; clear 4-byte record
-C $A114,6 skip check if $5C06 set or music playing
-C $A11A,6 music-on flag check, skip if set
-C $A120,13 Sample two nearby tiles (below/right of object) for collision
-C $A12D,5 trigger $1A via #R$AE85
+C $A108,3 clear 4-byte record ($A0FE)
+C $A117,3 skip if status active or music on
+C $A120,3 Sample two nearby tiles (below/right of object) for collision
+C $A124,4 tile==$A5 (either sample)? trigger $1A
 C $A132,3 Check object position against screen bounds, sample tile ahead
-C $A135,4 clear tile flag ($5C28)
-C $A139,12 skip if flag/music set; else check tile under object
-C $A145,9 tile under object is $BC/$BD?
-C $A14E,19 store tile flag; hazard counter ($5C29)++; >=$32 -> room-state=$11; else check
-C $A161,4 else: clear hazard counter ($5C29)
-C $A165,15 Scan tile column below feet against solid-tile list ($A24B/$A271), flag
+C $A146,4 tile under feet == $BC? branch
+C $A156,4 hazard counter >=50 frames? sets status $11
+C $A165,3 Scan tile column below feet against solid-tile list ($A24B/$A271), flag (IY+0)
+C $A168,3 Scan tile column right of object (X+23) via #R$A2B2
+C $A174,1 restore DE
 C $A174,2 restore DE; RET
 c $A176 Sample two nearby tiles (below/right of object) for collision
+N $A176 Reads the tile-index map at two points near the object: one below its feet, one to its right - the two spots #R$A102 checks for a "walked off a ledge" style hazard.
+R $A176 IX object (position at +0/+1)
+R $A176 O:C tile index below feet
+R $A176 O:B tile index right of object
+C $A17D,3 Y+=$17 (sample point below feet)
 C $A185,3 Convert pixel position (HL) to character-cell coordinates
+C $A188,1 C=tile below
+C $A18B,3 X+=$10 (sample point right of object)
 C $A18E,3 Convert pixel position (HL) to character-cell coordinates
+C $A191,1 B=tile right
 c $A193 Check tile below-left of feet (X+12,Y+23) against special-tile lists
+N $A193 Checks the tile just below-left of the object's feet against one of two special-tile lists, chosen by whether the current room is $0C; falls back to a second pair of lists if music is on. Used as a ground/edge sensor, similar to #R$A1F4 but sampling one tile position over.
 R $A193 IX object (position at +0/+1)
-R $A193 O:Zf set if tile matches ($98 or $99)
-C $A193,13 L=X+12 (check off-screen overflow); H=Y+23
-C $A1A0,7 H=Y; music-on flag check
+R $A193 O:Zf set if tile matches
+C $A196,4 X+12 off-screen? -> blocked
+C $A1A4,3 music on? use alt list
 C $A1A7,3 get Current room number
-C $A1AA,3 room==$0C?
+C $A1AA,3 room==$0C? (stash for after tile lookup)
 C $A1AD,3 Convert pixel position (HL) to character-cell coordinates
-C $A1B0,15 restore AF; check tile against list ($92/$95/$98/$99)
-C $A1BF,1 RET
-C $A1C0,3 off-screen: A=1 (blocked); RET
+C $A1B2,2 room==$0C? check $92/$95 too
+C $A1C0,2 off-screen: A=1 (blocked)
 C $A1C3,3 Convert pixel position (HL) to character-cell coordinates
-C $A1C6,13 check tile against list ($C6/$C7/$CE/$CF); RET
 c $A1D3 Blocked-check wrapper (Y-1) via #R$A208, save/restore (IY+3)
-C $A1D3,5 save BC; save (IY+3)
-C $A1D8,4 clear (IY+3)=0
-C $A1DC,6 L=X+12
-C $A1E2,7 A=Y-1; CALL #R$A208
+N $A1D3 Checks whether the tile one row above the object's current position is blocked, without disturbing the object's own blocked-flag record - used by the movement code to test a move before committing to it.
+R $A1D3 IX object (position at +0/+1)
+R $A1D3 IY object's tile-flag record (shared with #R$A102/#R$A1F4)
+R $A1D3 O:Zf set if blocked
+C $A1D8,4 clear (IY+3)=0 (result init)
+C $A1E6,3 BC = (X+12, Y+24)
 C $A1E9,3 C=(IY+3) result
-C $A1EC,8 restore (IY+3), A; A=C; restore BC; OR A; RET
 c $A1F4 Check object position against screen bounds, sample tile ahead
-C $A1F4,6 L = X+12
-C $A1FA,9 Y+24, check for off-screen wrap
-C $A203,5 off-screen: set (IY+3)=5
+N $A1F4 Scans upward from the tile just ahead of the object (X+12, Y+24) against a special-tile list ($A234, or $A264 when music is on), counting rows climbed in (IY+3) until a match is found or the scan runs off the top of the screen.
+R $A1F4 IX object (position at +0/+1)
+R $A1F4 IY object's tile-flag record (shared with #R$A102/#R$A1D3)
+R $A1F4 O:(IY+3) rows climbed before match/off-screen (5 = off-screen)
+R $A1F4 O:Zf set on tile match
+C $A1FF,4 Y+24 off-screen ($7F)?
+C $A203,5 off-screen: (IY+3)=5; RET
 C $A208,3 BC = (X+12, Y+24)
-C $A20F,9 HL = special-tile list ($A234, or $A264 if music on)
-C $A21B,10 scan list for a match
 C $A20B,3 Convert pixel position (HL) to character-cell coordinates
+C $A215,3 music on? use alt list ($A264)
+C $A21C,2 tile matches? RET
+C $A21F,3 row empty (list end)? stop scanning
+C $A22B,4 reached bottom? off-screen
+C $A22F,3 else: next row up
 b $A234
-t $A244
 b $A24B
-t $A26A
+b $A264
 b $A271
 c $A293 Convert pixel position (HL) to character-cell coordinates
+N $A293 Converts a pixel position (HL) into the address of that pixel's entry in the 32x16 tile-index map at $F800 - the shared coordinate-to-tile-map lookup used throughout the tile-scanning and collision routines.
 R $A293 HL pixel position (X in L, Y in H)
 R $A293 O:HL tile-index map address ($F800+offset)
 R $A293 DE preserved
-C $A293,7 save DE; L>>=3 (pixel column -> char column)
-C $A29A,8 H=(H<<2 AND $E0) OR L (row bits + column)
-C $A2A2,4 H=(H AND 1) (row bit8)
-C $A2A6,6 HL += $F800 (tile-index map base); restore DE, RET
+C $A294,2 X>>=3 (pixel -> char column)
+C $A29B,2 H<<=2 (row bits into position)
+C $A2A6,4 HL += $F800 (tile-index map base)
 c $A2AC Scan tile column below feet against solid-tile list ($A24B/$A271), flag (IY+0)
+N $A2AC Checks the ground under an object across several tile rows and flags whether it's standing on solid/special ground - the shared "is this object on the ground" test used by both the hero and creatures.
 R $A2AC IX object (position at +0/+1)
 R $A2AC IY flag record (result byte at +0)
 R $A2AC O:(IY+0) 0 or 1 (solid-tile match)
@@ -876,10 +911,12 @@ C $A2F7,3 loop 3/4 rows; RET
 C $A2C0,3 Convert pixel position (HL) to character-cell coordinates
 C $A2CF,3 get Current room number
 c $A2FA Scan tile column right of object (X+23) via #R$A2B2
+N $A2FA Checks the tiles just to the right of an object for solid ground - the sideways counterpart to #R$A2AC's below-feet check.
 R $A2FA IX object (position at +0/+1)
 R $A2FA IY flag record (result byte at +0)
 c $A30B Scan tile below-right of feet (X+12,Y+24) via #R$A328
 c $A31F Scan tile at (X+12) against special-tile list ($A242/$A268), flag (IY+0)
+N $A31F Checks the tile just ahead of an object against a list of special tiles (ladders, water, etc.) rather than plain solid ground - feeds the movement code's "is this tile special" checks.
 C $A31F,9 HL = (X+12, Y)
 C $A328,4 clear flag (IY+0)=0
 C $A32F,9 DE=$A242 (list); music-on -> $A268 instead
@@ -889,7 +926,9 @@ C $A344,6 no match: skip; match: set flag (IY+0)=1
 C $A34A,1 RET
 C $A32C,3 Convert pixel position (HL) to character-cell coordinates
 c $A34B Apply joystick input to object position, trigger room edge at $A640
-N $A34B Resets status/hazard state ($5C06/$5C07 via #R$AE84), reads the resolved input bitmask (#R$B894/#R$B87D) into a direction bitmask (E) and a velocity pair (BC, persisted at $5C34 between frames rather than recomputed from scratch each time). Before committing a Y move, checks #R$A1D3 to see whether the destination tile is blocked and flips the velocity's sign if so (a bounce/reject rather than a hard stop). Updates the hero's direction flag ((IX+3) bit7) from the resulting velocity's sign, applies the X/Y deltas to the position, and - only when X crosses 4 - hands off to the room-edge handler at #R$A640. This is the routine that actually moves the hero object; #R$A3E1 is the outer per-frame driver that calls it.
+N $A34B Moves the hero for one frame based on the current joystick/keyboard input: turns the input into a direction and speed, checks the tile ahead isn't blocked before committing to it, and updates the hero's position and facing direction accordingly. Also hands off to the room-edge handler once the hero walks far enough to leave the room. Called every frame by #R$A3E1, which is the outer driver.
+R $A34B IX=$5B04 (hero, implicit - always the same object)
+C $A34C,3 Reset room state=0 and hazard counter ($5C07)
 C $A356,3 Resolve conflicting L/R, U/D input via #R$B894
 C $A359,5 E=direction bitmask, BC=velocity ($5C34)
 C $A3A8,21 resolve Y-velocity sign (blocked check via #R$A1D3)
@@ -899,7 +938,8 @@ C $A3CD,14 Y+=B (IX+1), X+=C (IX+0)
 C $A3DB,6 if X>=4, jump to room-edge handler #R$A640
 C $A353,3 Clear a 4-byte record at $A0FE
 c $A3E1 Main per-frame player update: input, movement, room-state/hazard dispatch
-N $A3E1 Called once per frame for the hero object (IX=$5B04). Runs, in order: per-room init dispatch (once per room load), a scripted-zone list step (triggers tied to fixed room+position combinations, e.g. $B073's table), the resolved-input read (#R$B894/#R$B87D) feeding into #R$A34B for movement and room-edge crossing (right/left/up/down handlers), a room-state dispatch indexed by $5C06 (#R$A6CC), the ENTER-key confirm check (port $FBFE, sets $5C06=$0A), and the sound-effect dispatcher. The large tail (roughly $A457-$A640) is a long chain of hardcoded room+tile+position checks that force specific $5C06 values - see Actors.md's status-code table for what's known about each. This is the busiest routine in the disassembly (264 instructions) and the natural place to look first for any hero-behavior question not already answered elsewhere.
+N $A3E1 The hero's main per-frame update, called once every frame. Moves the hero (#R$A34B), checks for scripted room events and status changes, and reacts to a long list of specific room/position combinations that trigger scripted moments (cutscenes, hazards, sound effects). This is the busiest routine in the disassembly, and the natural place to look first for any hero-behavior question not already answered elsewhere - see Actors.md's status-code table for what's known about the values it sets.
+R $A3E1 IX=$5B04 (hero, implicit - always the same object)
 C $A3E1,3 Per-room init dispatch
 C $A3F1,3 => Scripted-zone list step
 C $A3F4,3 Resolve conflicting L/R, U/D input via #R$B894
@@ -907,8 +947,55 @@ C $A3FC,3 Scripted zone trigger
 C $A40C,3 Room-state dispatch
 C $A40F,3 Scripted zone trigger by room+position table
 C $A416,3 Check ENTER key (port $FBFE), trigger state $0A via #R$AE85
+C $A41C,4 room-category ($5B98)==$0A?
 C $A420,3 get Current room number
+C $A423,4 room==$14 or $08?
+C $A42B,5 status=4
+C $A430,5 frame=$1D
+C $A438,3 Y-8; underflow -> keep Y
+C $A447,4 bit4 of E set?
 C $A457,3 get Current room number
+C $A45A,4 room==$1A?
+C $A474,5 status=2
+C $A47E,4 store direction bits ($5C08)
+C $A487,4 right pressed?
+C $A495,5 X>=$E8? cross room right
+C $A49D,4 left pressed?
+C $A4AE,2 X<4? cross room left
+C $A4B3,4 down pressed?
+C $A4C7,5 Y>=$67? move down a level
+C $A4D1,4 up pressed?
+C $A4DD,4 Y-2 off-screen (top)?
+C $A4F4,2 room==$18?
+C $A500,4 Y=$60 (top row)
+C $A504,4 clear direction ($5C08)
+C $A508,5 status=3 via #R$AE85
+C $A513,4 right pressed?
+C $A51A,4 left pressed?
+C $A521,3 either direction pressed?
+C $A52B,2 mask to down/up bits
+C $A534,4 already triggered? (IY+3)
+C $A53A,4 hazard timer <5?
+C $A53E,5 room-category ($5B98)==5?
+C $A552,4 counter <3? (masked)
+C $A559,3 counter reached 3?
+C $A55E,4 store direction ($5C08)
+C $A562,5 status=1
+C $A588,4 room>=$35?
+C $A58C,6 flag bit7 set? (IX+0)
+C $A592,4 room==$10?
+C $A596,4 room==$1C?
+C $A59A,5 room-category ($5B98)==5?
+C $A5A1,4 bump respawn-skip counter ($5C05)
+C $A5AF,5 Y>=$68? move down a level
+C $A5CE,4 tile flag ($5C28) set?
+C $A5D6,4 tile==$BC? pick offset
+C $A5EA,3 any direction pressed (masked)?
+C $A5F4,4 frame odd? advance animation
+C $A601,4 sound-effect flag set?
+C $A611,5 room-category ($5B98)==$0C?
+C $A623,4 any movement this frame?
+C $A628,5 room-category ($5B98)==5?
 C $A484,3 => Sound-effect dispatcher wrapper
 C $A49A,3 => Move right
 C $A4B0,3 => Move left
@@ -926,6 +1013,7 @@ C $A585,3 get Current room number
 C $A5B4,3 => Move down a level
 C $A5F1,3 get Frame counter
 c $A640 Move left: next room = same row, col-1 (wraps), or reverse portal lookup if leaving room $29
+N $A640 Handles the hero walking off the left edge of a room: works out the room to the west (with a special-case for the portal rooms) and switches into it.
 C $A640,3 get Current room number
 C $A643,15 room=$29: room = portal table[($5B70)] (reverse lookup)
 C $A652,3 set Current room number
@@ -988,6 +1076,8 @@ b $A8DF
 t $A8E0
 b $A8E4
 c $A8EA Room-dependent creature init: hazard-timer/room checks, sets $5B9E/$5B9F, room-transition via table $B073
+N $A8EA A scripted trap tied to specific rooms rather than a roaming creature: on first activation it seeds a couple of staging variables, then depending on the room either forces a fixed hero status or advances a shared hazard counter until it fires, which teleports the hero to a destination room looked up from a small per-room table ($B073).
+R $A8EA IX creature/trap object (position written at the end)
 C $A8EA,16 hazard-timer($5C07)!=0? skip; set $5B9E=$1F, $5B9F=$50
 C $A8FA,3 get Current room number
 C $A8FD,6 C=$BD; room==$30? branch $A910
@@ -1006,14 +1096,17 @@ C $A940,13 copy 2-byte destination from table; save to $B072
 C $A94E,3 => Set up the current room
 C $A951,3 store trigger code (IX+2)
 C $A954,1 RET
-t $A955
-s $A959
-t $A95A
+b $A955
+b $A959
+b $A95A
 b $A95E
 c $A95F Init creature position from $5B14, state=$2D
 b $A96B
 c $A99A Latch current room into $5B9E
 c $A9A1 Set creature Y (+8 to $5B9F); check room against table $A9E6, trigger #R$AE84
+N $A9A1 Sets a creature's Y position and a lookahead value 8 pixels below it, then checks whether the current room is one of a fixed 4-room list and the lookahead lines up with that room's target row - if so, triggers a status reset. The shared entry point at $A9A9 skips the Y-set step and is reused directly by #R$A9C4.
+R $A9A1 IX creature object (Y stored at +1)
+R $A9A1 A new Y position
 C $A9AE,3 get Current room number
 C $A9C1,3 => Reset room state=0 and hazard counter ($5C07)
 c $A9C4 Creature Y-advance dispatcher: room $43 special case, else #R$A9A1 or #R$A6AE
@@ -1022,19 +1115,24 @@ C $A9D9,3 Move down a level
 b $A9E6
 t $A9E7
 c $A9EE Hazard timer expiry: lose a life
-N $A9EE Increments a per-room hazard counter ($5C07); once it reaches 50 ($32), sets the respawn-pending flag ($5C2A, handled by #R$9090) and decrements lives ($5B97). Zero lives -> game-over sequence (#R$9372). Otherwise continues via #R$9E96. The infamous "Infinite Lives" POKE (43517,182) overwrites the DEC (HL) at $A9FD with a no-op-equivalent OR (HL), skipping the life loss.
+N $A9EE Ticks the per-room hazard counter and, once it runs out, costs the hero a life and queues a respawn (or ends the game if that was the last life). This is where the "Infinite Lives" POKE (43517,182) patches out the life loss.
 C $A9EF,8 counter++ ($5C07), stop if < 50
 C $A9F7,3 hazard threshold hit: mark room-switch pending
 C $A9FA,7 lives--; 0 -> game over
 C $AA01,3 => Draw lives-count icons ($5B97) into $5BD6 slots
 b $AA04
 c $AA3C Creature update: gate on direction bit, then hazard-timer room trigger
+N $AA3C A scripted trap: bails out early if the creature is moving one particular direction, otherwise counts frames until a threshold is hit, then fires one of three trigger codes chosen by which room the creature is in.
+R $AA3C IX creature/trap object
+R $AA3C E direction bitmask
 C $AA3C,9 discard return; (IX+2)=$17, clear direction flag
 C $AA45,5 direction bit set: go to #R$AE84
 C $AA4A,10 else: hazard counter ($5C07) reaches 5?
 C $AA54,17 room match ($5B98): pick trigger code, fire via #R$AE85
 C $AA6C,3 => Sound-effect dispatcher wrapper
 c $AA6F Creature Y-movement by hazard-counter lookup table ($AAFA)
+N $AA6F Moves a creature upward frame by frame along a pre-authored curve (a lookup table indexed by the hazard counter) and advances its animation frame, until the hazard counter reaches its limit and the trap resets.
+R $AA6F IX creature object
 C $AA6F,4 discard return; DE=table ($AAFA)
 C $AA73,9 hazard counter ($5C07) reaches $54? JP Z #R$AE84
 C $AA7C,18 Y -= table[counter]
@@ -1044,11 +1142,14 @@ b $AAFA
 c $ABC3 Store trigger code into creature state (IX+2)
 b $ABC7
 c $ABDE Increment hazard counter ($5C07), index a table by half its value
+N $ABDE Ticks the hazard timer and looks up a per-trap value keyed to it - the shared "advance the clock and check what happens now" step used by the scripted trap routines.
 R $ABDE DE lookup table base
 R $ABDE O:A table[($5C07)/2] (pre-increment value)
 b $ABEB
 c $AC35 Creature trap-entry: clamp position per direction bits (E), dispatch by room state ($5B98)
-N $AC35 A "trap" entry point (discards its own return address, POP HL at start - called via a tail-jump pattern rather than a normal CALL/RET, matching the other $AAxx/$ACxx/$ADxx trap-entry routines in this area). Latches the current room into a per-trap staging byte ($5C27) and forces the object's frame ($7F). If a room-state flag ((IY+3)) is set, clamps the object's X position against fixed bounds per direction bit (E bit0=right, bit1=left), stopping it at screen edges rather than letting it wrap. Then dispatches by the room-category variable ($5B98): rooms $06/$07 push the object toward a level change (up via #R$A69B or down via #R$A6AE, depending on Y), anything else just clamps Y and stores it. Reads as generic "obstacle stays on its track, but a set-piece exit takes it to the next level" logic shared by several similarly-shaped trap routines rather than one specific creature.
+N $AC35 A scripted trap: keeps a creature moving along its track and bouncing off the screen edges, and in a couple of specific rooms pushes it into a level change instead - generic "obstacle on a track" logic shared by several similar trap routines.
+R $AC35 IX creature/trap object
+R $AC35 E direction bitmask
 C $AC35,1 discard return
 C $AC36,3 get Current room number
 C $AC39,9 store scripted room ($5C27); (IX+2)=$7F; save DE
@@ -1124,12 +1225,14 @@ C $ADF6,3 Clear a 4-byte record at $A0FE
 C $AE13,3 Move left
 C $AE27,3 Clear a 4-byte record at $A0FE
 c $AE37 Creature Y-bound check via #R$AF09/table $AE9E, move up via #R$A69B or clamp
+N $AE37 Keeps a creature within its allowed vertical range, either nudging it up a level or clamping it at a per-room boundary.
 C $AE37,3 Type-$10 gate
 C $AE4C,3 Move up a level
 C $AE5B,3 Clear a 4-byte record at $A0FE
 b $AE69
 c $AE76 Look up a table by hazard counter ($5C07), store into (IX+2)
 c $AE84 Reset room state=0 and hazard counter ($5C07) ($AE85 entry: state=A)
+N $AE84 The single choke point for changing the hero's status: every scripted trigger, hazard, and reset in the game passes through here to set the new status and restart the hazard clock.
 R $AE85 A new room-state code ($5C06)
 b $AE8D
 c $AEAF Store scripted-zone list pointer ($AEED) from HL
@@ -1149,12 +1252,14 @@ c $AF09 Type-$10 gate: proximity check via #R$AF22, move down a level if room-st
 C $AF0D,3 Proximity check
 C $AF1D,3 => Move down a level
 c $AF22 Proximity check: player X vs pointer ($5BA2) column
+N $AF22 Checks whether the hero is horizontally close to a specific tracked position - a lighter-weight proximity test than #R$9140, used for a single X-only check.
 C $AF22,7 HL=pointer ($5BA2); SCF; RET Z if null (carry = no target)
 C $AF29,7 L=(L AND $1F)*8 (column*8)
 C $AF30,4 A=player X ($5B04); A-=L; RET C if beyond
 C $AF34,5 within 8 columns? CCF; RET
 s $AF39
 c $AF3B Scripted zone trigger: set special-encounter flag ($5C06)
+N $AF3B Checks whether the hero has just entered a room with a scripted encounter and, if so, kicks off the associated status trigger.
 C $AF3B,8 room $1D: jump to alt check
 C $AF43,5 check room ($5C27) matches current
 C $AF48,22 check player near a fixed spot
@@ -1163,6 +1268,7 @@ C $AF64,3 alt: skip unless left pressed
 C $AF67,15 check player at Y=$48, X in $1C-$20
 C $AF76,11 snap X=$1E, set $5C06=$0D
 c $AF81 Room-entry trigger: check position/input for a special zone
+N $AF81 Watches for the hero standing in one particular spot in one particular room and pressing up or down, firing a scripted event when they do - one of several small "stand here and press a key" puzzle triggers.
 C $AF81,11 A=$24 (frame); store $5B14; A=($5B9F); store $5B15
 C $AF8C,7 check player X within a fixed range
 C $AF93,11 player X in [$12,$38)? else skip
@@ -1175,6 +1281,7 @@ C $AFC8,4 up pressed? else skip
 C $AFCC,5 trigger $13 via #R$AE85
 C $AFD1,6 A=$9F; store $5B16; RET
 c $AFD7 Init a room-specific decorative object ($5B10-$5B17) by room category
+N $AFD7 Sets up a decorative object whose look depends on which room the hero is in - only runs for the one room it's scripted for.
 C $AFD7,8 gate: only for scripted room ($5C27==current $5C01)
 C $AFDF,9 skip for rooms $12/$1A
 C $AFE8,20 copy decorative base X/Y ($5C25/$5C26-16) to $5B10/$5B11/$5B14/$5B15
@@ -1186,6 +1293,7 @@ C $B020,10 default: A=$9A (sprite id); store $5B12; C -> $5B16; RET
 C $B02A,4 category 9: A=$7F, JR back to store
 c $B02E Check ENTER key (port $FBFE), trigger state $0A via #R$AE85
 c $B03B Scripted zone trigger by room+position table ($B073)
+N $B03B Checks the hero's position against a small table of room+position hotspots and fires a one-shot scripted event when they step into one.
 C $B03B,5 B=3 entries; HL=table
 C $B043,8 scan for room match
 C $B04B,5 no match: clear one-shot flag ($B072), return
@@ -1200,13 +1308,22 @@ b $B098
 t $B099
 s $B0B5
 c $B0B6 Multi-stage animation sequence, dispatched by stage counter ($5C41)
-N $B0B6 A scripted, one-shot multi-part sequence dispatched by a shared stage counter ($5C41, same counter used by #R$B4E2/#R$B562's staged-init pattern elsewhere) for an object record at $5B08. Stage 0 initializes several fields of that record and, only if a completion flag ($5BFE) is set, arms a fourth sub-part. Stages 1-3 each animate one field by a fixed step per frame until it reaches a target value, then advance to the next stage and fire a sound effect via #R$C4B2. Reads as a scripted "reward/fanfare" animation (likely the room-$28 warp fanfare set up by #R$B6EE, which sets $5BFE before this runs) rather than gameplay logic - the object being animated is separate from the 5-slot world-object array at $5B04.
-C $B0BA,7 read stage counter, branch by stage
+N $B0B6 A scripted, one-shot fanfare animation for a fixed object, played out over several stages as fields of it step toward target values, with a sound effect at each stage change. Most likely the room-$28 warp fanfare set up by #R$B6EE, not everyday gameplay logic.
+C $B0B6,4 IY=object ($5B08)
+C $B0BA,3 HL=stage counter ($5C41)
+C $B0BE,3 stage counter==0?
+C $B0C1,1 counter++ (advance to stage 1)
+C $B0EE,4 completion flag ($5BFE) set? else RET
 C $B104,3 stage 1 check
+C $B112,3 target $54 reached?
+C $B116,4 completion flag set? pick branch
 C $B122,3 => Sound-effect dispatcher wrapper
 C $B12E,3 stage 2 check
+C $B131,5 field reached target $77?
 C $B140,3 => Sound-effect dispatcher wrapper
 C $B143,3 stage 3 check
+C $B151,3 target <4 reached?
+C $B15D,2 advance sub-stage; RET unless done
 C $B161,3 set Game-over flag
 c $B165 Read/test flag ($5C00)
 b $B16A
@@ -1267,6 +1384,7 @@ C $B4D0,4 store X; RET
 b $B4D4
 c $B4D5 Left-bounce clamp for #R$B4B0: X>=$7B -> RET, else X-=2
 c $B4E2 Staged animation: init object ($5B10), scripted trigger via #R$AE85
+N $B4E2 Drives a small scripted sequence for a set-piece object: sets it up, waits for the hero to approach, then plays out an animation and fires a status trigger.
 C $B4E2,7 IY=object; HL=stage counter ($5C41)
 C $B4FA,3 HL=$5C45 (sub-stage)
 C $B505,5 check player Y >= $48
@@ -1276,33 +1394,43 @@ C $B53B,3 Save all registers
 C $B548,3 get Frame counter
 c $B55A Init 2 objects ($5B0C) variant, falls into #R$B57C
 c $B562 Init 3 objects ($5B0C) from template; animate frame, room-specific variant
-C $B562,7 IY=object; HL=stage counter ($5C41)
-C $B56D,10 stage 0: copy 12-byte template from $B5D1
+N $B562 Sets up and animates a group of 3 decorative objects from a shared template, with the exact appearance varying by room - the multi-object sibling of #R$B4E2's single-object staged animation.
+C $B562,4 IY=object ($5B0C)
+C $B566,3 HL=stage counter ($5C41)
+C $B56A,3 stage==0? else skip init
+C $B577,2 copy template (12 bytes)
 C $B57A,2 B=3 objects
-C $B587,17 advance frame ((IY+2)), wrap at $55
+C $B57C,5 frame==$7F (inactive)? skip
+C $B583,4 frame==$55 (trigger)? branch
 C $B587,3 get Frame counter
+C $B591,4 wrapped? reset to $51
 C $B598,3 get Current room number
+C $B5A9,4 room-category==$0C?
+C $B5B0,5 object aligned with player (masked)?
+C $B5CC,5 trigger $19 via #R$AE85
 b $B5D1
 c $B5DD Boss/miniboss state machine: proximity check, phase transitions ($5C3C-$5C3E), animation
-N $B5DD Gated on #R$9140's proximity check between the object (IY=$5B14) and the hero, and on the room matching a locked value ($5C3C). On first trigger in a room, scans the shared creature table ($B99D) for that room via #R$B93F, populates display slots, and awards a fixed event/score (#R$BCF2, event id $96), then advances a phase counter ($5C3D); reaching phase 6 forces a warp to room $28 with a fanfare (#R$B6EE) - reads as a fixed encounter that always ends by moving the player to a specific room, i.e. a boss or set-piece rather than a roaming creature. Outside the initial-trigger path, drives a scripted step sequence (index at $B6ED, data at $B6C1) that looks up a per-step hazard code from a small table ($B6BB) and a bounded left-right patrol with edge-column wrapping ($B676 onward). Not confirmed against a specific named boss/room live - likely the "Prof" encounter mentioned in the room-format world-map notes, but that hasn't been checked.
-C $B5DD,4 IY=object
-C $B5E4,11 RET NC if not eligible; room ($5B98) == boss room ($5C3C)? else skip
-C $B5EF,9 save IX/IY; mark room handled ((HL)=$FF); save $5C3E
-C $B5FE,3 DE=$96 (event id)
-C $B604,4 restore IX/IY
-C $B608,7 phase counter ($5C3D)++; ==6 -> #R$B6EE
-C $B612,12 first-time flag ($5BA1): if unset, init sequence
-C $B61E,14 set start position/frame; store $30 to $5B11; RET
-C $B62C,12 mask flag; ==1? branch $B676; else step lookup ($B6ED/$B6C1) via #R$ABE1
-C $B638,17 flag ($5BA1); step==$FF? decrement flag, frame=$7F, RET
-C $B649,14 already-armed? step==$4D? branch; else store frame (IY+2)
-C $B657,7 step==$4D and prev==$4D? RET
-C $B65E,10 phase ($5C3D) -> lookup table $B6BB (hazard code)
-C $B668,14 store code $5C3C; +=$80 -> frame $5B12; clear $5B13; RET
-C $B676,19 direction/edge flag handling; C=+/-2 step
-C $B689,18 advance position ($5B10); compute column check (AND $1F)
-C $B69B,13 reset script step; column bounds check ($C0/$22)
-C $B6A8,6 bound RET; clear flag
+N $B5DD A fixed encounter tied to one room: once the hero gets close enough, it plays through a sequence of phases and eventually warps the hero to room $28 with a fanfare, rather than acting like a roaming creature. Between phases it also runs a small scripted patrol, pacing back and forth and reacting when the hero reaches either edge.
+C $B5E4,2 not eligible? skip
+C $B5E9,4 room == locked boss room ($5C3C)?
+C $B5F3,2 mark room handled
+C $B5F5,3 save type ($5C3E)
+C $B60B,1 phase++
+C $B60C,3 phase==6?
+C $B616,3 flag set? skip init
+C $B626,5 store room $30
+C $B62C,2 mask flag
+C $B62E,4 flag==1? branch to patrol
+C $B63E,4 step==$FF (list end)?
+C $B649,2 already armed?
+C $B64D,4 step==$4D? re-arm
+C $B657,3 step==$4D?
+C $B65E,4 phase -> table index
+C $B668,4 store hazard code ($5C3C)
+C $B67F,4 edge flag set? reverse direction
+C $B693,3 column = (pos-4)>>2
+C $B6A1,4 column>=$C0? right edge
+C $B6A8,3 column<$22? left edge
 C $B6AE,13 frame-cycle animation via frame counter
 C $B5E1,3 Classify object type ((IX+2)) into a size/category flag
 C $B5F8,3 Reset object slots ($5C0E), scan $B99D table for current room
@@ -1324,6 +1452,7 @@ C $B719,5 status ($5C06)==0 (idle/normal)?
 C $B71E,5 trigger $1B via #R$AE85
 c $B723 Init object Y=8, falls into #R$B735
 c $B72D Init object Y=$DC (variant); animation frame + type-gated deactivate
+N $B72D Sets up an object at the bottom of the screen and drives its animation, retiring it once its type indicates it's no longer needed.
 C $B72D,8 IY=$5B14; (IY+0)=$DC (variant Y init)
 C $B735,12 frame=$12; C=$56 (+1 if flag $5C43 set)
 C $B741,12 store frame; if C!=0 skip to $B75C; else room==$10?
@@ -1358,6 +1487,7 @@ c $B7DD Per-room init dispatch: table $B7EC indexed by room, jump via #R$A6DD
 b $B7EC
 B $B87C,1 Input bits: 000FUDLR
 c $B87D Resolve conflicting L/R, U/D input via #R$B894 (cancel to 0)
+N $B87D Reads the current input and cancels out impossible presses (both left and right, or both up and down at once) before the movement code sees it.
 C $B87D,4 read input via #R$B894; E=result
 C $B881,8 L+R both pressed? cancel to 0
 C $B889,9 U+D both pressed? cancel to 0
@@ -1376,16 +1506,26 @@ b $B8D4
 c $B930 Return normalized input bitmask ($B87C)
 c $B932 Clear active flag (bit7) across all $B99D creature-table entries
 c $B93F Reset object slots ($5C0E), scan $B99D table for current room
+N $B93F Clears the two dynamic encounter slots and repopulates them from the room-tagged encounter table for whatever room the hero is now in - run on every room entry (see Actors.md for the $B99D table itself).
 C $B94E,3 get Current room number
 C $B956,3 Spawn a creature/hazard into slot $5C0E/$5C13 from a room-data entry
 c $B95F Spawn a creature/hazard into slot $5C0E/$5C13 from a room-data entry (HL)
-C $B95F,3 skip if bit1 of C set
-C $B962,12 pick slot: bit0 of C chooses $5C0E or $5C13
-C $B972,6 store room-data record pointer (IX+3/4)
-C $B97D,5 type = record byte0 AND $1F
-C $B986,12 decode X sub-position from C
-C $B992,7 decode Y sub-position from C
-N $B99D Room-tagged creature/encounter table, separate from the per-room $C152 table (see Actors.md). 31 entries, 3 bytes each: byte0=room number this entry belongs to (bit7 double-purposed as a flag - toggled in bulk at init by #R$B932 and individually by #R$B9FA's boss-entry check at $B9D9, entry 20; exact armed-vs-consumed sense of the bit not confirmed), byte1=type ID (low 5 bits, top 3 bits unconfirmed), byte2=packed slot-choice/skip-flag/X-Y-sub-position, decoded by #R$B95F. Scanned linearly by #R$B93F on room entry; matches spawn into object slots $5C0E/$5C13 (only 2 at a time, unlike $C152's fixed 3 slots). Entry 20 ($B9D9, room $30) is the one #R$B9FA treats as "the boss" - it's the only entry individually addressed by room-specific code rather than only via the linear scan.
+N $B95F Spawns one creature/hazard from a $B99D table entry. A running spawn counter (C, carried over from #R$B93F's scan) picks which of the two dynamic slots it goes into and skips the entry entirely once both slots are already filled; the entry's own data then supplies the type and X/Y position.
+R $B95F HL room-data entry ($B99D format)
+R $B95F C running spawn counter (persisted across #R$B93F's scan, incremented here)
+R $B95F O:IX chosen slot ($5C0E or $5C13)
+C $B95F,3 skip if both slots already filled (bit1 of counter)
+C $B966,4 counter bit0 picks slot ($5C0E/$5C13)
+C $B96E,1 counter++ (mark this slot used)
+C $B972,6 store own address (IX+3/4)
+C $B978,2 HL -> type byte
+C $B97A,2 HL -> position byte; C=byte2
+C $B97D,5 type = entry byte1 AND $1F
+C $B983,3 X = entry byte2 high bits
+C $B989,3 rotate X bits into place
+C $B992,4 Y = entry byte2 AND $FC
+b $B99D Room-tagged creature/encounter table
+N $B99D Room-tagged creature/encounter table, separate from the per-room $C152 table (see Actors.md). 31 entries, 3 bytes each: byte0=room number this entry belongs to (bit7 double-purposed as a flag - toggled in bulk at init by #R$B932 and individually by #R$B9FA's boss-entry check at $B9D9, entry 20; exact armed-vs-consumed sense of the bit not confirmed), byte1=type ID (low 5 bits, top 3 bits unconfirmed), byte2=X/Y sub-position, decoded by #R$B95F. Scanned linearly by #R$B93F on room entry, which also carries a running counter across the scan (not part of the table) that #R$B95F uses to pick which of the two dynamic object slots ($5C0E/$5C13) a match goes into, and to skip any further matches once both are filled. Entry 20 ($B9D9, room $30) is the one #R$B9FA treats as "the boss" - it's the only entry individually addressed by room-specific code rather than only via the linear scan.
 B $B99D,93,3 room-tagged encounter entries (see note)
 c $B9FA Per-frame item dispatcher: room $30 boss-defeat check, else swap held item (SPACE)
 N $B9FA In room $30 specifically, checks whether the hero is standing in a fixed doorway-sized box and clears bit7 of the $B99D table's room-$30 entry ($B9D9, see note there), forces a permanent "boss defeated" state ($5B98/$5C44=$FF), rescans the $B99D table for the room, and awards score via #R$BCF2. In every other room, falls through to #R$BB5D's pickup/hint check, then #R$BC1F which handles cycling the held item via the number-row keys (port $F7FE) with an animated scroll. The room-$30 special-case strongly suggests this is the specific boss-defeat trigger room, separate from the more generic #R$B5DD boss state machine.
@@ -1440,29 +1580,35 @@ C $BBEC,3 Save all registers
 C $BC0A,3 Populate the $5BD6 object-slot table
 C $BC1C,3 => Init $5BD6 object slots from $5C23
 c $BC1F Cycle inventory selection via keys (port $F7FE), animate scroll ($5C21/$5C22)
+C $BC1F,2 no key pressed? skip to scroll dispatch
+C $BC26,4 keys 1/2 both pressed? RET
+C $BC2B,4 key 1 pressed?
+C $BC2F,5 arm scroll: dir=1, speed=4
+C $BC3C,1 selection index--
+C $BC3D,3 wrapped below 0? snap to $1A
+C $BC43,4 key 2: clear scroll state
+C $BC4A,4 scrolling? skip re-init
+C $BC57,3 scroll-speed counter==4?
+C $BC61,3 selection index reached $1B (wrap)?
+N $BC1F Handles the player cycling through carried items with the number keys, driving the little scroll animation as the selection changes and updating which item is actually held.
 C $BC50,3 Init $5BD6 object slots from $5C23
 C $BC64,3 => Init $5BD6 object slots from $5C23
 C $BC69,3 => Init $5BD6 object slots from $5C23
 C $BC70,3 => Init $5BD6 object slots from $5C23
 c $BC73 Room $5B98=$0C seesaw trigger: position gate, toggle Y $46/$48, room-state trigger
-N $BC73 Gated on room-category $5B98=$0C and the hero standing at Y=$46 or $48, X in a fixed range. Every other frame (frame counter bit0), flips the hero's Y between $46 and $48 - a two-frame teeter/seesaw motion - and arms the hero's direction flag. Once fully settled at X in [$28,$34), on a 4-frame cadence sets room-state to 6 (#R$BCB4) and increments a counter at (HL); reaching $0C fires #R$AE84 (reset). Between $06 and $0C it instead computes an index into a sound-effect table ($F928) and plays it via #R$9A52's write-and-dual-buffer path. Reads as a seesaw/rocking-platform puzzle piece: stand at the sweet spot, it rocks you for a few frames, plays an escalating sound cue, then resolves.
-C $BC73,7 gate: flag ($5C24)!=$0D
-C $BC7A,6 room ($5B98)==$0C?
-C $BC80,10 player Y==$48 or $46?
-C $BC8A,10 player X in [$28,$34)?
-C $BC94,4 arm flag (IX+3) bit7
-C $BC98,3 get Frame counter
+N $BC73 A rocking-platform puzzle piece: once the hero stands at the right spot in the right room, it rocks them between two Y positions for a few frames, then plays an escalating sound cue and resolves.
+R $BC73 IX=$5B04 (hero, implicit - always the same object)
+C $BC76,3 flag==$0D? skip
+C $BC7A,5 room==$0C?
+C $BC83,4 Y==$48?
+C $BC8E,3 X<$34? else RET
 C $BC9B,4 frame bit0: toggle Y=$46/$48
-C $BC9F,4 store Y=$46
-C $BCA3,9 restore Y=$48 unless already there
-C $BCAC,3 get Frame counter
-C $BCAF,5 frame&3!=0? RET; else A=6
-C $BCB4,5 store room-state=6; read/inc counter (HL)
+C $BCAF,3 frame&3!=0? RET
+C $BCB4,3 store room-state=6
 C $BCB9,2 counter==$0C?
 C $BCBB,3 => Reset room state=0 and hazard counter ($5C07)
-C $BCBE,8 counter-6; RET C if negative; C=A; compute 6-C
-C $BCC6,7 HL=(6-C)*32 (table row offset)
-C $BCCD,7 HL += $F928 (sound-effect table); save HL; A=$98
+C $BCBE,2 counter-6
+C $BCCD,3 DE=$F928 (sound-effect table)
 C $BCD4,3 Write A to (HL)+$6000 (secondary buffer), then #R$9A62 dual-write loop
 C $BCD7,4 restore HL, HL++; A=$99
 C $BCDB,3 => Write A to (HL)+$6000 (secondary buffer), then #R$9A62 dual-write loop
@@ -1471,6 +1617,7 @@ C $BCDE,12 negate 3 bytes (CPL each), HL-- between (unrolled)
 C $BCEA,3 negate last byte (CPL), no HL--
 C $BCED,5 DE=1; JR into #R$BD15 (add path)
 c $BCF2 Save all registers (context-save wrapper)
+N $BCF2 Awards a score/timer delta and redraws its display, preserving every register around the call so it can be dropped into any piece of game logic without disturbing what that code was doing.
 R $BCF2 DE score delta to add (passed through to #R$BD11)
 C $BCF2,7 push main regs (IX,IY,HL,BC,AF)
 C $BCF9,5 EXX; push alt regs (HL',BC',DE')
@@ -1491,6 +1638,7 @@ C $BD5B,7 compare digit-by-digit (candidate vs stored), high digit first
 C $BD62,5 next digit (both pointers-- ); loop
 C $BD67,14 new record: copy 4 bytes $5C18 to $5B78, #R$BD3B
 c $BD75 Print current score at screen $5029, falls into #R$BD78
+N $BD75 Draws the current score as digits on screen, blanking leading zeros - the shared digit-printer also reused by the high-score display.
 C $BD75,4 HL=$5029; save HL
 C $BD79,4 B=4 (digit count); A=$20 (space, clear digits)
 C $BD80,3 loop 4 spaces; restore HL
@@ -1514,6 +1662,7 @@ C $BD9D,3 Negate 4-byte value ($5C18) via CPL chain, falls into #R$BD15
 C $BDBA,3 Repeated-subtraction division
 C $BDCD,3 Draw character bitmap
 c $BDDF Repeated-subtraction division: subtract DE from 32-bit (IX+0..3), C=count
+N $BDDF Divides a 32-bit value by repeatedly subtracting a divisor and counting how many times it fit - used by the score/digit-printing code to peel off one decimal digit at a time.
 C $BDDF,7 HL = (IX+0)/(IX+1) (low word)
 C $BDE6,9 subtract DE from HL, store back
 C $BDEF,8 subtract borrow from (IX+2)
@@ -1533,6 +1682,7 @@ C $BE96,2 restore A, return
 N $BE42 A = current room number (from $5C01, still live in A when #R$9855 falls through into this). HL = $C152 + A*12 - the room data table, one 12-byte record per room (0-based, matching the level*12+col numbering). Clears a 29-byte scratch buffer at $BE24, then decodes the record as 3 sub-records of 4 raw bytes each: byte0 low nibble (creature type ID, written twice - see #R$C152), byte0 bit7 (flag), byte0 bits4-6 (3-bit field), byte1 and byte2 (raw copy), byte3 low 7 bits and byte3 bit7 (separately). 3 creature/hazard slots per room; all-zero sub-record = empty slot. Meaning of byte1-3 within a filled slot (position? behavior?) not yet confirmed. Returns A unchanged (original value restored via the outer PUSH/POP AF).
 R $BE42 A room number
 c $BE98 Dispatch per-creature-type init (jump table $BECA) for the 3 hazard slots
+N $BE98 Spawns the room's creatures/hazards: for each of the 3 slots decoded from the room data table, jumps to the matching type's own setup routine.
 C $BE98,11 B=3 slots; DE=decoded record ($BE24); IX=$5B08 object base
 C $BEA5,5 HL = creature type * 2
 C $BEAA,4 HL = jump table entry ($BECA + type*2)
@@ -1567,11 +1717,12 @@ C $BF8E,3 Wrapper
 C $BF97,3 => Advance animation frame
 C $BF9D,3 => Advance animation frame
 c $BFA0 Countdown timer (IY+8): init via #R$9390 if zero, else decrement
+N $BFA0 A shared per-object countdown, reseeded with a random-ish value each time it runs out - used to stagger creature behavior changes so objects don't all act in lockstep.
 R $BFA0 C low bit merged into new random timer value
 R $BFA0 IY object (timer at +8)
 R $BFA0 O:Zf set when timer reaches 0
 C $BFA0,6 flag!=0? skip init
-C $BFA6,3 CALL #R$C135 (gate/init helper)
+C $BFA6,3 gate/init via #R$C135
 C $BFAC,9 mask random to 7-bit, OR type flag C; store; reload
 C $BFB5,6 decrement; RET Z; store; RET
 C $BFA9,3 Pseudo-random byte
@@ -1581,6 +1732,7 @@ C $BFE4,3 Wrapper
 C $BFED,3 => Advance animation frame
 C $BFF3,3 => Advance animation frame
 c $BFF6 Animate object Y-position; falls into #R$C000 (paged-bank helper, called by #R$8F47/#R$9491)
+N $BFF6 Moves an object vertically, timed by its shared countdown, then falls through into the paged-bank music/system entry point.
 C $BFF8,3 Countdown timer
 C $C012,12 store new Y; check paged flag ($C132)
 C $C01E,14 advance animation frame counter ((IY+7))
@@ -1589,12 +1741,13 @@ C $C051,3 => Sound-effect dispatcher wrapper
 c $C054 Idle-frame check ($55/$7F), else #R$C0AC advance animation
 C $C066,3 => Advance animation frame
 c $C069 Advance animation frame counter (IY+7), compute sprite frame (IX+2)
-C $C069,6 CALL #R$BFA0 gate check
+C $C069,6 gate check via #R$BFA0
 C $C06F,9 increment frame counter; check bit4 (cycle end)
 C $C078,13 cycle end: reset counter and (IY+8)
 C $C085,13 else: decode frame index from counter bits
 C $C092,7 frame = decoded index + (IY+4), store to (IX+2)
 c $C0AC Advance animation frame; check player collision, trigger effect via #R$AE85
+N $C0AC The shared "tick a creature" finisher: advances its animation to the next frame and, on the right frame, checks whether the hero is close enough to be hit, firing a status trigger if so.
 C $C0AC,9 advance frame counter (IY+7)
 C $C0B5,9 compute frame index -> (IX+2)
 C $C0C4,5 skip unless (IY+2) high bit set
@@ -1692,6 +1845,7 @@ B $C476,12,4 room $43 data
 B $C482,12,4 room $44 data
 B $C48E,12,4 room $45 data
 c $C4B2 Sound-effect dispatcher wrapper: save regs, call #R$C4BC
+N $C4B2 Plays a sound effect by number without disturbing any registers - the generic "make this sound" entry point called from all over the game.
 R $C4B2 A sound-effect index (0-6)
 C $C4B5,3 Sound-effect table lookup
 c $C4BC Sound-effect table lookup ($C55B): push handler address, E=$10, tail-call
@@ -1706,6 +1860,7 @@ C $C4D5,6 toggle beeper port, delay; loop duty; then bits
 C $C4DB,5 flip bit value; restore BC; loop bits
 C $C4E0,9 H>>=2; repeat sweep until H=0
 c $C4E9 Play sound effect (raw OUT $FE beeper timing loop)
+N $C4E9 A beeper sound-effect player: plays back a sample, then a tone sweep, entirely through timed port writes rather than an interrupt-driven player.
 C $C4E9,6 HL=0 (sample pointer); BC=$2328 (sample count)
 C $C4EF,7 per-sample delay calc (A=$23-B)
 C $C4F6,3 busy-wait delay; restore BC

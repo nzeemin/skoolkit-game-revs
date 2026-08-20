@@ -2429,6 +2429,10 @@ b$910C DEFB $06,$01,$BE,$20,$09,$04,$23,$BE
 ;   IX first object (position at +0/+1, type at +2)
 ;   IY second object (position at +0/+1)
 ; O:Cf set if both X and Y are within threshold
+;
+; Checks whether two objects (the hero and a creature/item, typically) are
+; close enough to interact - the shared proximity test behind pickups, hits,
+; and hazard triggers throughout the game.
 c$9140 PUSH BC       ; {default threshold C=$10
  $9141 LD A,(IX+$02) ;
  $9144 LD C,$10      ; }
@@ -2472,6 +2476,12 @@ s$918C DEFS $01
 ; Swap music data buffers, toggling the music flag ($918C)
 ;
 ; Used by the routines at #R$8F47 and #R$9880.
+;
+; .
+;
+; Toggles whether music is playing by swapping two pre-baked copies of the
+; music-buffer data into place - a cheap way to switch tracks without
+; recomputing anything.
 c$918D LD A,($918C)  ; {save flag; HL/DE = swap region 1 ($FA00/$F400, 1024
  $9190 PUSH AF       ; bytes)
  $9191 LD HL,$FA00   ;
@@ -2714,6 +2724,9 @@ c$92BD LD A,($918C)  ;
 ;
 ;   HL source address (in $E0xx buffer)
 ; O:HL/DE restored (preserved via stack)
+;
+; Copies one 8-pixel-tall strip of the menu border graphic into place - part of
+; the frame-drawing sequence run when the main menu screen is built.
 c$92D6 PUSH DE       ; {save DE/HL
  $92D7 PUSH HL       ; }
  $92D8 LD A,H        ; {D = (H AND 3)<<3 OR $40 (dest third)
@@ -2742,6 +2755,10 @@ c$92D6 PUSH DE       ; {save DE/HL
 ;
 ;   HL screen address
 ; O:HL attribute address (same third)
+;
+; Turns a screen pixel address into the matching color-attribute address - a
+; different bit-twiddling method from #R$A293, used by the sparkle-effect
+; drawing code.
 c$92F0 LD A,H        ; {H=(H AND 3)<<3 (row bits)
  $92F1 AND $03       ;
  $92F3 LD H,A        ;
@@ -2773,6 +2790,12 @@ b$92FD DEFB $7D,$EF,$BF,$FF,$FF,$FF,$7F,$80
 ; hazard
 ;
 ; Used by the routine at #R$8F47.
+;
+; .
+;
+; Ticks down the asteroid-collision countdown shown on the telescope screen;
+; once it hits zero, forces the hero into room $28 and starts the game-over
+; sequence.
 c$935D LD HL,$5BFD   ; {HL=$5BFD; DEC minutes; expired?
  $9360 DEC (HL)      ;
  $9361 BIT 7,(HL)    ;
@@ -3011,6 +3034,9 @@ c$94B0 LD B,$08      ; {B=8 rows; save BC/HL/DE
 ;   HL left-piece screen address
 ;   DE right-piece screen address
 ; O:HL/DE advanced to next screen third
+;
+; Draws one row of the menu's left and right border pieces and steps both
+; positions down to the next row - called repeatedly to build the whole frame.
 c$94C2 PUSH DE       ; {draw at HL via #R$94E4
  $94C3 PUSH HL       ;
  $94C4 CALL $94E4    ; }
@@ -3044,6 +3070,9 @@ c$94C2 PUSH DE       ; {draw at HL via #R$94E4
 ;   HL source address
 ;   DE destination address
 ; O:HL/DE +8 (next third down)
+;
+; Copies one 8-pixel-tall column of graphic data - the smallest building block
+; of the menu border-drawing code.
 c$94E4 PUSH BC       ;
  $94E5 LD B,$08      ;
 *$94E7 LD A,(HL)     ;
@@ -3070,6 +3099,9 @@ c$94EF LD DE,$9540   ; string: "1 : KEYBOARD" (#R$9540)
 ; DE string address (null-terminated, $0D=newline)
 ; HL screen address
 ; AF' attribute byte
+;
+; A generic text printer: draws a null-terminated string at a screen position
+; in a given color, character by character.
 c$94F9 LD ($9517),HL ;
 *$94FC LD A,(DE)     ; {read char, stop at 0
  $94FD INC DE        ;
@@ -3111,6 +3143,9 @@ b$9525 DEFB $C9
 ; HL start address
 ; B row count
 ; C bytes per row
+;
+; A generic rectangle-fill helper: paints a solid block of one byte value, used
+; to draw the menu's box frame.
 c$9526 PUSH BC       ; {save BC/HL
  $9527 PUSH HL       ; }
 *$9528 LD (HL),A     ; {fill loop: write A, HL++, loop C bytes
@@ -3623,6 +3658,11 @@ c$99F0 PUSH HL       ; {save HL/IX/DE; DE=$6020
 ; Gated call to #R$9A2F, room/hazard-timer dependent
 ;
 ; Used by the routine at #R$9B22.
+;
+; .
+;
+; Redraws a room's dual-buffered animation only when the room and hazard timer
+; are in the right state - avoids redrawing it every frame unnecessarily.
 c$9A09 CALL $AF22    ; {Proximity check
  $9A0C RET C         ; }
  $9A0D LD A,($5C06)  ; {room ($5C06)=2?
@@ -3673,6 +3713,9 @@ c$9A2F LD HL,($5BA2) ; {HL=pointer ($5BA2); RET Z if null
 ;
 ; A byte to write (attribute or pixel value)
 ; HL screen/attribute address
+;
+; A small draw primitive: writes one byte to the screen and mirrors it through
+; the shared dual-buffer/attribute write path.
 c$9A4D PUSH HL       ;
  $9A4E POP DE        ;
  $9A4F LD (HL),A     ;
@@ -3684,6 +3727,10 @@ c$9A4D PUSH HL       ;
 ;
 ; A byte to write
 ; HL screen address (primary buffer; +$6000 = secondary)
+;
+; A small draw primitive: writes one byte to both the visible screen and its
+; off-screen secondary copy, used wherever the game needs to place a single
+; tile/icon on screen and keep the two buffers in sync.
 c$9A52 PUSH HL       ; {DE=HL; write A to (HL); HL+=$6000 (secondary buffer);
  $9A53 POP DE        ; C=$40 (page); CALL #R$9A64
  $9A54 LD (HL),A     ;
@@ -3738,6 +3785,10 @@ c$9A52 PUSH HL       ; {DE=HL; write A to (HL); HL+=$6000 (secondary buffer);
 ;   A tile index to search for
 ;   DE destination coords-list address
 ; O:DE past the last coord pair written
+;
+; Scans the whole room for every tile of a given type and builds a list of
+; where they are - used to find all copies of a specific animated tile so they
+; can be redrawn together.
 c$9A8C LD BC,$01FF   ; {BC=$01FF (search count); HL=$F800; CPIR (find match);
  $9A8F LD HL,$F800   ; RET PO if none
 *$9A92 CPIR          ;
@@ -3757,6 +3808,12 @@ c$9A8C LD BC,$01FF   ; {BC=$01FF (search count); HL=$F800; CPIR (find match);
 ; Snapshot current room/position into respawn staging ($5C2B-$5C32)
 ;
 ; Used by the routines at #R$8F47 and #R$9855.
+;
+; .
+;
+; Records where the hero currently is - room, status, position - so that if
+; they die shortly after, #R$9090 can respawn them back in the same spot rather
+; than restarting the room.
 c$9AA1 LD A,($5C01)  ; {room ($5C01) -> $5C2D
  $9AA4 LD ($5C2D),A  ; }
  $9AA7 LD A,($5C06)  ; {status/hazard-counter pair ($5C06/$5C07) -> $5C2B/$5C2C
@@ -4020,6 +4077,10 @@ c$9BEB LD B,$05      ; B=5 slots
 ;   DE packed data pointer
 ;   IY dispatch address (JP (IY) tail-call)
 ; O:DE advanced by 2
+;
+; Reads a packed command from a data stream and jumps to the matching drawing
+; handler - a small interpreter used to play back the sparkle/effect animation
+; lists elsewhere in the code.
 c$9C6A EXX           ; {EXX; BC'=0 (alt registers)
  $9C6B LD BC,$0000   ;
  $9C6E EXX           ; }
@@ -4146,6 +4207,10 @@ c$9CE7 LD A,(BC)     ;
 ;   HL pixel position (X in L, Y in H)
 ; O:BC screen byte address for that pixel
 ; O:IY plot-routine address for the pixel's sub-column
+;
+; Works out where a given pixel lands on screen and which of the
+; sub-pixel-aligned plot routines to use to draw it - the shared setup step
+; before any sprite/mask drawing.
 c$9CEE LD A,L        ; {C = pixel row bits (sub-char)
  $9CEF PUSH AF       ;
  $9CF0 RRCA          ;
@@ -4449,6 +4514,13 @@ c$9DE3 LD IX,$5C0E   ;
 ;
 ; Used by the routines at #R$8F47, #R$A851, #R$B370, #R$B5DD, #R$B72D, #R$B9FA
 ; and #R$BB5D.
+;
+; .
+;
+; Redraws the fixed UI status-bar icons in the $5BD6 slot table: a sound icon,
+; a blank row, the currently-held item's icon (or blank if none held), and
+; another blank row - the on-screen inventory bar, refreshed whenever the held
+; item changes.
 c$9E5D LD HL,$6288   ;
  $9E60 LD IY,$5BD6   ;
  $9E64 CALL $9FBA    ; Store HL into an IY-indexed table entry, advance IY/HL
@@ -4474,6 +4546,10 @@ c$9E5D LD HL,$6288   ;
 ; Draw lives-count icons ($5B97) into $5BD6 slots
 ;
 ; Used by the routines at #R$8F47 and #R$A9EE.
+;
+; .
+;
+; Draws the row of life icons in the status bar, one per remaining life.
 c$9E96 LD A,($5B97)  ;
  $9E99 OR A          ;
  $9E9A RET Z         ;
@@ -4498,6 +4574,12 @@ c$9E96 LD A,($5B97)  ;
 ; Init $5BD6 object slots from $5C23 (calls #R$9EE3)
 ;
 ; Used by the routines at #R$8F47, #R$B9FA, #R$BB5D and #R$BC1F.
+;
+; .
+;
+; Refreshes the inventory-bar icons in the $5BD6 slot table starting from a
+; given position in the pickup log ($5C23) - used whenever the held/available
+; items on screen need updating, e.g. after a pickup or when cycling items.
 c$9EBD CALL $9EE3    ; Fill $5BD6 slots with item icons from inventory log
  $9EC0 LD B,$04      ;
  $9EC2 LD IY,$5BD6   ;
@@ -4521,6 +4603,11 @@ c$9EBD CALL $9EE3    ; Fill $5BD6 slots with item icons from inventory log
 ; Fill $5BD6 slots with item icons from inventory log ($5B7C)
 ;
 ; Used by the routine at #R$9EBD.
+;
+; .
+;
+; Draws the row of collected-item icons in the status bar, reading straight
+; from the inventory pickup log.
 c$9EE3 LD B,$04      ; {B=4 slots; A=index ($5C23); IY=$5BD6; L=C=A
  $9EE5 LD A,($5C23)  ;
  $9EE8 LD IY,$5BD6   ;
@@ -4560,6 +4647,11 @@ c$9F1E LD IY,$5BD6   ;
 ; Draw main-menu UI icons/highlight bar into $5BD6 slots
 ;
 ; Used by the routine at #R$93AF.
+;
+; .
+;
+; Draws the main menu's option icons and the highlight bar over the
+; currently-selected input device.
 c$9F27 LD IY,$5BD6   ;
  $9F2B LD B,$04      ;
  $9F2D LD A,$71      ;
@@ -4641,6 +4733,10 @@ c$9F70 LD HL,$5036   ;
 ;
 ;   A index value
 ; O:HL A*72 + caller's DE
+;
+; Turns a small index into the address of the matching sprite/icon graphic - a
+; shared lookup used whenever the game needs to find where an item or icon's
+; picture data lives.
 c$9FAA PUSH DE       ; {save caller's DE; HL=A (zero-extended)
  $9FAB LD L,A        ;
  $9FAC LD H,$00      ; }
@@ -4665,6 +4761,10 @@ c$9FAA PUSH DE       ; {save caller's DE; HL=A (zero-extended)
 ;   IY table entry address
 ; O:IY advanced past 3 entries
 ; O:HL value + 3*stride
+;
+; Fills 3 consecutive $5BD6 status-bar slots with the same graphic address,
+; spaced by the slot table's row stride - used to draw a repeated icon (e.g. a
+; row of blank tiles) in one call.
 c$9FBA LD (IY+$00),L ; {store entry 0; advance IY by 2
  $9FBD LD (IY+$01),H ;
  $9FC0 INC IY        ;
@@ -4716,10 +4816,7 @@ b$9FEA DEFB $0D,$1E,$1F,$16,$17,$0B,$00,$01
  $A0A2 DEFB $80,$C0,$C0,$C0,$D4,$CA,$85,$43
  $A0AA DEFB $87,$A1,$B1,$B9,$1D,$0B,$06,$00
  $A0B2 DEFB $00,$00,$00,$00,$00,$00,$03,$03
- $A0BA DEFB $05,$0A,$1B
-
-; Message at A0BD
-t$A0BD DEFM "7gGg3"
+ $A0BA DEFB $05,$0A,$1B,$37,$67,$47,$67,$33
 
 ; Data block at A0C2
 b$A0C2 DEFB $19,$02,$07,$0F,$0A,$05,$00,$01
@@ -4738,96 +4835,100 @@ b$A0C2 DEFB $19,$02,$07,$0F,$0A,$05,$00,$01
 ;
 ; DE preserved (pushed/popped, not used)
 ;
-; Clears a 4-byte scratch record at $A0FE, then - unless the hero is already
-; flagged (bit7 of that record) or music is playing - samples the two tiles
-; just below and to the right of the hero's feet (#R$A176) for a "walked off a
-; ledge" style collision; a match on tile $A5 in either sample triggers status
-; $1A. Separately checks the tile position ahead of the hero's movement
-; direction (#R$A1F4) and, unless the flag/music-on gate is set, the tile
-; directly under the hero: standing on a "sticky" hazard tile ($BC/$BD) for 50
-; frames (a per-tile counter at $5C29) forces status $11. Finally re-checks the
-; tile column below the feet against the solid-tile lists (#R$A2AC/#R$A2FA) to
-; (re)compute the record's flag byte for next frame. This is the hero's main
-; per-frame ground/hazard-tile sensor, called every frame from #R$A3E1.
-c$A102 LD IY,$A0FE   ; {IY=$A0FE; save DE; clear 4-byte record
+; Per-frame ground/hazard-tile sensor for the hero, called every frame from
+; #R$A3E1. Samples nearby tiles for a ledge-edge trigger, checks the tile under
+; the hero for a sticky-hazard timeout, and refreshes a solid-ground flag for
+; next frame - all gated off while a status is already active or music is
+; playing.
+c$A102 LD IY,$A0FE   ;
  $A106 PUSH DE       ;
  $A107 XOR A         ;
- $A108 LD (IY+$00),A ;
+ $A108 LD (IY+$00),A ; clear 4-byte record ($A0FE)
  $A10B LD (IY+$01),A ;
  $A10E LD (IY+$02),A ;
- $A111 LD (IY+$03),A ; }
- $A114 LD A,($5C06)  ; {skip check if $5C06 set or music playing
- $A117 OR A          ;
+ $A111 LD (IY+$03),A ;
+ $A114 LD A,($5C06)  ;
+ $A117 OR A          ; {skip if status active or music on
  $A118 JR NZ,$A132   ; }
- $A11A LD A,($918C)  ; {music-on flag check, skip if set
+ $A11A LD A,($918C)  ;
  $A11D OR A          ;
- $A11E JR NZ,$A132   ; }
- $A120 CALL $A176    ; {Sample two nearby tiles (below/right of object) for
- $A123 LD A,B        ; collision
- $A124 CP $A5        ;
- $A126 JR Z,$A12D    ;
+ $A11E JR NZ,$A132   ;
+ $A120 CALL $A176    ; Sample two nearby tiles (below/right of object) for
+                     ; collision
+ $A123 LD A,B        ;
+ $A124 CP $A5        ; {tile==$A5 (either sample)? trigger $1A
+ $A126 JR Z,$A12D    ; }
  $A128 LD A,C        ;
  $A129 CP $A5        ;
- $A12B JR NZ,$A132   ; }
-*$A12D LD A,$1A      ; {trigger $1A via #R$AE85
- $A12F CALL $AE85    ; }
+ $A12B JR NZ,$A132   ;
+*$A12D LD A,$1A      ;
+ $A12F CALL $AE85    ;
 *$A132 CALL $A1F4    ; Check object position against screen bounds, sample tile
                      ; ahead
- $A135 XOR A         ; {clear tile flag ($5C28)
- $A136 LD ($5C28),A  ; }
- $A139 LD A,(IY+$03) ; {skip if flag/music set; else check tile under object
+ $A135 XOR A         ;
+ $A136 LD ($5C28),A  ;
+ $A139 LD A,(IY+$03) ;
  $A13C OR A          ;
  $A13D JR NZ,$A161   ;
  $A13F LD A,($918C)  ;
  $A142 OR A          ;
- $A143 JR NZ,$A161   ; }
- $A145 LD A,(HL)     ; {tile under object is $BC/$BD?
- $A146 CP $BC        ;
- $A148 JR Z,$A14E    ;
+ $A143 JR NZ,$A161   ;
+ $A145 LD A,(HL)     ;
+ $A146 CP $BC        ; {tile under feet == $BC? branch
+ $A148 JR Z,$A14E    ; }
  $A14A CP $BD        ;
- $A14C JR NZ,$A161   ; }
-*$A14E LD ($5C28),A  ; {store tile flag; hazard counter ($5C29)++; >=$32 ->
- $A151 LD HL,$5C29   ; room-state=$11; else check
+ $A14C JR NZ,$A161   ;
+*$A14E LD ($5C28),A  ;
+ $A151 LD HL,$5C29   ;
  $A154 INC (HL)      ;
  $A155 LD A,(HL)     ;
- $A156 CP $32        ;
- $A158 JR C,$A165    ;
+ $A156 CP $32        ; {hazard counter >=50 frames? sets status $11
+ $A158 JR C,$A165    ; }
  $A15A LD A,$11      ;
  $A15C LD ($5C06),A  ;
- $A15F JR $A165      ; }
-*$A161 XOR A         ; {else: clear hazard counter ($5C29)
- $A162 LD ($5C29),A  ; }
-*$A165 CALL $A2AC    ; {Scan tile column below feet against solid-tile list
- $A168 CALL $A2FA    ; ($A24B/$A271), flag
+ $A15F JR $A165      ;
+*$A161 XOR A         ;
+ $A162 LD ($5C29),A  ;
+*$A165 CALL $A2AC    ; Scan tile column below feet against solid-tile list
+                     ; ($A24B/$A271), flag (IY+0)
+ $A168 CALL $A2FA    ; Scan tile column right of object (X+23) via #R$A2B2
  $A16B LD A,($5BA0)  ;
  $A16E OR A          ;
  $A16F JR NZ,$A174   ;
- $A171 LD (IY+$03),A ; }
-*$A174 POP DE        ; {restore DE; RET
- $A175 RET           ; }
+ $A171 LD (IY+$03),A ;
+*$A174 POP DE        ; restore DE; RET
+ $A175 RET           ;
 
 ; Sample two nearby tiles (below/right of object) for collision
 ;
 ; Used by the routine at #R$A102.
+;
+;   IX object (position at +0/+1)
+; O:C tile index below feet
+; O:B tile index right of object
+;
+; Reads the tile-index map at two points near the object: one below its feet,
+; one to its right - the two spots #R$A102 checks for a "walked off a ledge"
+; style hazard.
 c$A176 LD L,(IX+$00) ;
  $A179 LD H,(IX+$01) ;
  $A17C LD A,H        ;
- $A17D ADD A,$17     ;
- $A17F LD H,A        ;
+ $A17D ADD A,$17     ; {Y+=$17 (sample point below feet)
+ $A17F LD H,A        ; }
  $A180 PUSH HL       ;
  $A181 LD A,L        ;
  $A182 ADD A,$08     ;
  $A184 LD L,A        ;
  $A185 CALL $A293    ; Convert pixel position (HL) to character-cell
                      ; coordinates
- $A188 LD C,(HL)     ;
+ $A188 LD C,(HL)     ; C=tile below
  $A189 POP HL        ;
  $A18A LD A,L        ;
- $A18B ADD A,$10     ;
- $A18D LD L,A        ;
+ $A18B ADD A,$10     ; {X+=$10 (sample point right of object)
+ $A18D LD L,A        ; }
  $A18E CALL $A293    ; Convert pixel position (HL) to character-cell
                      ; coordinates
- $A191 LD B,(HL)     ;
+ $A191 LD B,(HL)     ; B=tile right
  $A192 RET           ;
 
 ; Check tile below-left of feet (X+12,Y+23) against special-tile lists
@@ -4835,39 +4936,44 @@ c$A176 LD L,(IX+$00) ;
 ; Used by the routine at #R$A3E1.
 ;
 ;   IX object (position at +0/+1)
-; O:Zf set if tile matches ($98 or $99)
-c$A193 LD A,(IX+$00) ; {L=X+12 (check off-screen overflow); H=Y+23
- $A196 ADD A,$0C     ;
- $A198 JR C,$A1C0    ;
+; O:Zf set if tile matches
+;
+; Checks the tile just below-left of the object's feet against one of two
+; special-tile lists, chosen by whether the current room is $0C; falls back to
+; a second pair of lists if music is on. Used as a ground/edge sensor, similar
+; to #R$A1F4 but sampling one tile position over.
+c$A193 LD A,(IX+$00) ;
+ $A196 ADD A,$0C     ; {X+12 off-screen? -> blocked
+ $A198 JR C,$A1C0    ; }
  $A19A LD L,A        ;
  $A19B LD A,(IX+$01) ;
- $A19E ADD A,$17     ; }
- $A1A0 LD H,A        ; {H=Y; music-on flag check
+ $A19E ADD A,$17     ;
+ $A1A0 LD H,A        ;
  $A1A1 LD A,($918C)  ;
- $A1A4 OR A          ;
+ $A1A4 OR A          ; {music on? use alt list
  $A1A5 JR NZ,$A1C3   ; }
  $A1A7 LD A,($5C01)  ; get Current room number
- $A1AA CP $0C        ; {room==$0C?
+ $A1AA CP $0C        ; {room==$0C? (stash for after tile lookup)
  $A1AC PUSH AF       ; }
  $A1AD CALL $A293    ; Convert pixel position (HL) to character-cell
                      ; coordinates
- $A1B0 POP AF        ; {restore AF; check tile against list ($92/$95/$98/$99)
+ $A1B0 POP AF        ;
  $A1B1 LD A,(HL)     ;
- $A1B2 JR NC,$A1BA   ;
+ $A1B2 JR NC,$A1BA   ; room==$0C? check $92/$95 too
  $A1B4 CP $92        ;
  $A1B6 RET Z         ;
  $A1B7 CP $95        ;
  $A1B9 RET Z         ;
 *$A1BA CP $98        ;
  $A1BC RET Z         ;
- $A1BD CP $99        ; }
- $A1BF RET           ; RET
-*$A1C0 XOR A         ; {off-screen: A=1 (blocked); RET
- $A1C1 INC A         ;
- $A1C2 RET           ; }
+ $A1BD CP $99        ;
+ $A1BF RET           ;
+*$A1C0 XOR A         ; {off-screen: A=1 (blocked)
+ $A1C1 INC A         ; }
+ $A1C2 RET           ;
 *$A1C3 CALL $A293    ; Convert pixel position (HL) to character-cell
                      ; coordinates
- $A1C6 LD A,(HL)     ; {check tile against list ($C6/$C7/$CE/$CF); RET
+ $A1C6 LD A,(HL)     ;
  $A1C7 CP $C6        ;
  $A1C9 RET Z         ;
  $A1CA CP $C7        ;
@@ -4875,40 +4981,57 @@ c$A193 LD A,(IX+$00) ; {L=X+12 (check off-screen overflow); H=Y+23
  $A1CD CP $CE        ;
  $A1CF RET Z         ;
  $A1D0 CP $CF        ;
- $A1D2 RET           ; }
+ $A1D2 RET           ;
 
 ; Blocked-check wrapper (Y-1) via #R$A208, save/restore (IY+3)
 ;
 ; Used by the routine at #R$A34B.
-c$A1D3 PUSH BC         ; {save BC; save (IY+3)
+;
+;   IX object (position at +0/+1)
+;   IY object's tile-flag record (shared with #R$A102/#R$A1F4)
+; O:Zf set if blocked
+;
+; Checks whether the tile one row above the object's current position is
+; blocked, without disturbing the object's own blocked-flag record - used by
+; the movement code to test a move before committing to it.
+c$A1D3 PUSH BC         ;
  $A1D4 LD A,(IY+$03)   ;
- $A1D7 PUSH AF         ; }
- $A1D8 LD (IY+$03),$00 ; clear (IY+3)=0
- $A1DC LD A,(IX+$00)   ; {L=X+12
+ $A1D7 PUSH AF         ;
+ $A1D8 LD (IY+$03),$00 ; clear (IY+3)=0 (result init)
+ $A1DC LD A,(IX+$00)   ;
  $A1DF ADD A,$0C       ;
- $A1E1 LD L,A          ; }
- $A1E2 LD A,(IX+$01)   ; {A=Y-1; CALL #R$A208
+ $A1E1 LD L,A          ;
+ $A1E2 LD A,(IX+$01)   ;
  $A1E5 DEC A           ;
- $A1E6 CALL $A208      ; }
+ $A1E6 CALL $A208      ; BC = (X+12, Y+24)
  $A1E9 LD C,(IY+$03)   ; C=(IY+3) result
- $A1EC POP AF          ; {restore (IY+3), A; A=C; restore BC; OR A; RET
+ $A1EC POP AF          ;
  $A1ED LD (IY+$03),A   ;
  $A1F0 LD A,C          ;
  $A1F1 POP BC          ;
  $A1F2 OR A            ;
- $A1F3 RET             ; }
+ $A1F3 RET             ;
 
 ; Check object position against screen bounds, sample tile ahead
 ;
 ; Used by the routine at #R$A102.
-c$A1F4 LD A,(IX+$00)   ; {L = X+12
+;
+;   IX object (position at +0/+1)
+;   IY object's tile-flag record (shared with #R$A102/#R$A1D3)
+; O:(IY+3) rows climbed before match/off-screen (5 = off-screen)
+; O:Zf set on tile match
+;
+; Scans upward from the tile just ahead of the object (X+12, Y+24) against a
+; special-tile list ($A234, or $A264 when music is on), counting rows climbed
+; in (IY+3) until a match is found or the scan runs off the top of the screen.
+c$A1F4 LD A,(IX+$00)   ;
  $A1F7 ADD A,$0C       ;
- $A1F9 LD L,A          ; }
- $A1FA LD A,(IX+$01)   ; {Y+24, check for off-screen wrap
+ $A1F9 LD L,A          ;
+ $A1FA LD A,(IX+$01)   ;
  $A1FD ADD A,$18       ;
- $A1FF CP $7F          ;
+ $A1FF CP $7F          ; {Y+24 off-screen ($7F)?
  $A201 JR C,$A208      ; }
-*$A203 LD (IY+$03),$05 ; {off-screen: set (IY+3)=5
+*$A203 LD (IY+$03),$05 ; {off-screen: (IY+3)=5; RET
  $A207 RET             ; }
 ; This entry point is used by the routine at #R$A1D3.
 *$A208 LD H,A          ; {BC = (X+12, Y+24)
@@ -4917,44 +5040,43 @@ c$A1F4 LD A,(IX+$00)   ; {L = X+12
 *$A20B CALL $A293      ; Convert pixel position (HL) to character-cell
                        ; coordinates
  $A20E EX DE,HL        ;
- $A20F LD HL,$A234     ; {HL = special-tile list ($A234, or $A264 if music on)
+ $A20F LD HL,$A234     ;
  $A212 LD A,($918C)    ;
- $A215 OR A            ;
+ $A215 OR A            ; {music on? use alt list ($A264)
  $A216 JR Z,$A21B      ; }
  $A218 LD HL,$A264     ;
-*$A21B LD A,(DE)       ; {scan list for a match
- $A21C CP (HL)         ;
- $A21D RET Z           ;
+*$A21B LD A,(DE)       ;
+ $A21C CP (HL)         ; {tile matches? RET
+ $A21D RET Z           ; }
  $A21E LD A,(HL)       ;
- $A21F OR A            ;
- $A220 JR Z,$A225      ;
+ $A21F OR A            ; {row empty (list end)? stop scanning
+ $A220 JR Z,$A225      ; }
  $A222 INC HL          ;
- $A223 JR $A21B        ; }
+ $A223 JR $A21B        ;
 *$A225 LD A,B          ;
  $A226 LD L,C          ;
  $A227 ADD A,$08       ;
  $A229 LD H,A          ;
  $A22A LD B,A          ;
- $A22B CP $80          ;
- $A22D JR NC,$A203     ;
- $A22F INC (IY+$03)    ;
+ $A22B CP $80          ; {reached bottom? off-screen
+ $A22D JR NC,$A203     ; }
+ $A22F INC (IY+$03)    ; else: next row up
  $A232 JR $A20B        ;
 
 ; Data block at A234
 b$A234 DEFB $95,$AC,$AD,$AE,$AF,$B0,$CF,$BC
  $A23C DEFB $BD,$C0,$C1,$C8,$C9,$CA,$1E,$1F
-
-; Message at A244
-t$A244 DEFM "123<=>?"
+ $A244 DEFB $31,$32,$33,$3C,$3D,$3E,$3F
 
 ; Data block at A24B
 b$A24B DEFB $07,$08,$09,$0A,$0B,$0D,$0E,$0F
  $A253 DEFB $10,$12,$13,$14,$16,$18,$59,$86
  $A25B DEFB $87,$88,$89,$8A,$8B,$8F,$90,$D2
- $A263 DEFB $00,$C6,$C7,$BF,$C0,$1E,$1F
+ $A263 DEFB $00
 
-; Message at A26A
-t$A26A DEFM "123<=>?"
+; Data block at A264
+b$A264 DEFB $C6,$C7,$BF,$C0,$1E,$1F,$31,$32
+ $A26C DEFB $33,$3C,$3D,$3E,$3F
 
 ; Data block at A271
 b$A271 DEFB $07,$08,$09,$0A,$0B,$0D,$0E,$0F
@@ -4970,24 +5092,28 @@ b$A271 DEFB $07,$08,$09,$0A,$0B,$0D,$0E,$0F
 ;   HL pixel position (X in L, Y in H)
 ; O:HL tile-index map address ($F800+offset)
 ;   DE preserved
-c$A293 PUSH DE       ; {save DE; L>>=3 (pixel column -> char column)
- $A294 SRL L         ;
+;
+; Converts a pixel position (HL) into the address of that pixel's entry in the
+; 32x16 tile-index map at $F800 - the shared coordinate-to-tile-map lookup used
+; throughout the tile-scanning and collision routines.
+c$A293 PUSH DE       ;
+ $A294 SRL L         ; X>>=3 (pixel -> char column)
  $A296 SRL L         ;
- $A298 SRL L         ; }
- $A29A LD A,H        ; {H=(H<<2 AND $E0) OR L (row bits + column)
- $A29B RLCA          ;
- $A29C RLCA          ;
+ $A298 SRL L         ;
+ $A29A LD A,H        ;
+ $A29B RLCA          ; {H<<=2 (row bits into position)
+ $A29C RLCA          ; }
  $A29D LD H,A        ;
  $A29E AND $E0       ;
  $A2A0 OR L          ;
- $A2A1 LD L,A        ; }
- $A2A2 LD A,H        ; {H=(H AND 1) (row bit8)
+ $A2A1 LD L,A        ;
+ $A2A2 LD A,H        ;
  $A2A3 AND $01       ;
- $A2A5 LD H,A        ; }
- $A2A6 LD DE,$F800   ; {HL += $F800 (tile-index map base); restore DE, RET
- $A2A9 ADD HL,DE     ;
+ $A2A5 LD H,A        ;
+ $A2A6 LD DE,$F800   ; {HL += $F800 (tile-index map base)
+ $A2A9 ADD HL,DE     ; }
  $A2AA POP DE        ;
- $A2AB RET           ; }
+ $A2AB RET           ;
 
 ; Scan tile column below feet against solid-tile list ($A24B/$A271), flag
 ; (IY+0)
@@ -4997,6 +5123,10 @@ c$A293 PUSH DE       ; {save DE; L>>=3 (pixel column -> char column)
 ;   IX object (position at +0/+1)
 ;   IY flag record (result byte at +0)
 ; O:(IY+0) 0 or 1 (solid-tile match)
+;
+; Checks the ground under an object across several tile rows and flags whether
+; it's standing on solid/special ground - the shared "is this object on the
+; ground" test used by both the hero and creatures.
 c$A2AC LD L,(IX+$00)   ; {HL=(X,Y); clear flag; B=3 rows
  $A2AF LD H,(IX+$01)   ;
 ; This entry point is used by the routine at #R$A2FA.
@@ -5046,6 +5176,9 @@ c$A2AC LD L,(IX+$00)   ; {HL=(X,Y); clear flag; B=3 rows
 ;
 ; IX object (position at +0/+1)
 ; IY flag record (result byte at +0)
+;
+; Checks the tiles just to the right of an object for solid ground - the
+; sideways counterpart to #R$A2AC's below-feet check.
 c$A2FA LD A,(IX+$00) ;
  $A2FD ADD A,$17     ;
  $A2FF LD L,A        ;
@@ -5072,6 +5205,12 @@ c$A30B LD A,(IX+$00) ;
 ; Scan tile at (X+12) against special-tile list ($A242/$A268), flag (IY+0)
 ;
 ; Used by the routine at #R$C115.
+;
+; .
+;
+; Checks the tile just ahead of an object against a list of special tiles
+; (ladders, water, etc.) rather than plain solid ground - feeds the movement
+; code's "is this tile special" checks.
 c$A31F LD A,(IX+$00)   ; {HL = (X+12, Y)
  $A322 ADD A,$0C       ;
  $A324 LD L,A          ;
@@ -5100,20 +5239,16 @@ c$A31F LD A,(IX+$00)   ; {HL = (X+12, Y)
 ;
 ; .
 ;
-; .
+; IX=$5B04 (hero, implicit - always the same object)
 ;
-; Resets status/hazard state ($5C06/$5C07 via #R$AE84), reads the resolved
-; input bitmask (#R$B894/#R$B87D) into a direction bitmask (E) and a velocity
-; pair (BC, persisted at $5C34 between frames rather than recomputed from
-; scratch each time). Before committing a Y move, checks #R$A1D3 to see whether
-; the destination tile is blocked and flips the velocity's sign if so (a
-; bounce/reject rather than a hard stop). Updates the hero's direction flag
-; ((IX+3) bit7) from the resulting velocity's sign, applies the X/Y deltas to
-; the position, and - only when X crosses 4 - hands off to the room-edge
-; handler at #R$A640. This is the routine that actually moves the hero object;
-; #R$A3E1 is the outer per-frame driver that calls it.
+; Moves the hero for one frame based on the current joystick/keyboard input:
+; turns the input into a direction and speed, checks the tile ahead isn't
+; blocked before committing to it, and updates the hero's position and facing
+; direction accordingly. Also hands off to the room-edge handler once the hero
+; walks far enough to leave the room. Called every frame by #R$A3E1, which is
+; the outer driver.
 c$A34B POP AF          ;
- $A34C CALL $AE84      ;
+ $A34C CALL $AE84      ; Reset room state=0 and hazard counter ($5C07)
  $A34F LD (IX+$02),$1A ;
  $A353 CALL $A102      ; Clear a 4-byte record at $A0FE
  $A356 CALL $B87D      ; Resolve conflicting L/R, U/D input via #R$B894
@@ -5193,20 +5328,15 @@ c$A34B POP AF          ;
 ;
 ; Used by the routine at #R$8F47.
 ;
-; .
+; IX=$5B04 (hero, implicit - always the same object)
 ;
-; Called once per frame for the hero object (IX=$5B04). Runs, in order:
-; per-room init dispatch (once per room load), a scripted-zone list step
-; (triggers tied to fixed room+position combinations, e.g. $B073's table), the
-; resolved-input read (#R$B894/#R$B87D) feeding into #R$A34B for movement and
-; room-edge crossing (right/left/up/down handlers), a room-state dispatch
-; indexed by $5C06 (#R$A6CC), the ENTER-key confirm check (port $FBFE, sets
-; $5C06=$0A), and the sound-effect dispatcher. The large tail (roughly
-; $A457-$A640) is a long chain of hardcoded room+tile+position checks that
-; force specific $5C06 values - see Actors.md's status-code table for what's
-; known about each. This is the busiest routine in the disassembly (264
-; instructions) and the natural place to look first for any hero-behavior
-; question not already answered elsewhere.
+; The hero's main per-frame update, called once every frame. Moves the hero
+; (#R$A34B), checks for scripted room events and status changes, and reacts to
+; a long list of specific room/position combinations that trigger scripted
+; moments (cutscenes, hazards, sound effects). This is the busiest routine in
+; the disassembly, and the natural place to look first for any hero-behavior
+; question not already answered elsewhere - see Actors.md's status-code table
+; for what's known about the values it sets.
 c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A3E4 LD IY,$A0FE     ;
  $A3E8 LD ($AF39),SP   ;
@@ -5230,28 +5360,28 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A416 CALL Z,$B02E    ; Check ENTER key (port $FBFE), trigger state $0A via
                        ; #R$AE85
  $A419 LD A,($5B98)    ;
- $A41C CP $0A          ;
- $A41E JR NZ,$A43F     ;
+ $A41C CP $0A          ; {room-category ($5B98)==$0A?
+ $A41E JR NZ,$A43F     ; }
  $A420 LD A,($5C01)    ; get Current room number
- $A423 CP $14          ;
- $A425 JR Z,$A42B      ;
+ $A423 CP $14          ; {room==$14 or $08?
+ $A425 JR Z,$A42B      ; }
  $A427 CP $08          ;
  $A429 JR NZ,$A43F     ;
-*$A42B LD A,$04        ;
- $A42D LD ($5C06),A    ;
- $A430 LD A,$1D        ;
- $A432 LD (IX+$02),A   ;
+*$A42B LD A,$04        ; {status=4
+ $A42D LD ($5C06),A    ; }
+ $A430 LD A,$1D        ; {frame=$1D
+ $A432 LD (IX+$02),A   ; }
  $A435 LD A,(IX+$01)   ;
- $A438 SUB $08         ;
- $A43A RET C           ;
+ $A438 SUB $08         ; {Y-8; underflow -> keep Y
+ $A43A RET C           ; }
  $A43B LD (IX+$01),A   ;
  $A43E RET             ;
 *$A43F LD A,($5C04)    ;
  $A442 OR A            ;
  $A443 JR Z,$A447      ;
  $A445 LD E,$00        ;
-*$A447 BIT 4,E         ;
- $A449 JR Z,$A487      ;
+*$A447 BIT 4,E         ; {bit4 of E set?
+ $A449 JR Z,$A487      ; }
  $A44B LD A,($5BA0)    ;
  $A44E OR A            ;
  $A44F JR Z,$A487      ;
@@ -5259,8 +5389,8 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A454 OR A            ;
  $A455 JR NZ,$A487     ;
  $A457 LD A,($5C01)    ; get Current room number
- $A45A CP $1A          ;
- $A45C JR NZ,$A465     ;
+ $A45A CP $1A          ; {room==$1A?
+ $A45C JR NZ,$A465     ; }
  $A45E LD A,(IX+$01)   ;
  $A461 CP $3A          ;
  $A463 JR C,$A487      ;
@@ -5270,32 +5400,32 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A46E LD A,(IY+$03)   ;
  $A471 OR A            ;
  $A472 JR NZ,$A487     ;
- $A474 LD A,$02        ;
- $A476 LD ($5C06),A    ;
+ $A474 LD A,$02        ; {status=2
+ $A476 LD ($5C06),A    ; }
  $A479 LD A,$82        ;
  $A47B LD ($5C03),A    ;
- $A47E LD A,E          ;
- $A47F LD ($5C08),A    ;
+ $A47E LD A,E          ; {store direction bits ($5C08)
+ $A47F LD ($5C08),A    ; }
  $A482 LD A,$06        ;
  $A484 JP $C4B2        ; => Sound-effect dispatcher wrapper
-*$A487 BIT 0,E         ;
- $A489 JR Z,$A49D      ;
+*$A487 BIT 0,E         ; {right pressed?
+ $A489 JR Z,$A49D      ; }
  $A48B SET 7,(IX+$03)  ;
  $A48F INC (IX+$00)    ;
  $A492 INC (IX+$00)    ;
- $A495 LD A,(IX+$00)   ;
- $A498 CP $E8          ;
+ $A495 LD A,(IX+$00)   ; {X>=$E8? cross room right
+ $A498 CP $E8          ; }
  $A49A JP NC,$A671     ; => Move right
-*$A49D BIT 1,E         ;
- $A49F JR Z,$A4B3      ;
+*$A49D BIT 1,E         ; {left pressed?
+ $A49F JR Z,$A4B3      ; }
  $A4A1 RES 7,(IX+$03)  ;
  $A4A5 DEC (IX+$00)    ;
  $A4A8 DEC (IX+$00)    ;
  $A4AB LD A,(IX+$00)   ;
- $A4AE CP $04          ;
+ $A4AE CP $04          ; X<4? cross room left
  $A4B0 JP C,$A640      ; => Move left
-*$A4B3 BIT 2,E         ;
- $A4B5 JR Z,$A4D1      ;
+*$A4B3 BIT 2,E         ; {down pressed?
+ $A4B5 JR Z,$A4D1      ; }
  $A4B7 INC (IX+$01)    ;
  $A4BA CALL $A193      ; Check tile below-left of feet (X+12,Y+23) against
                        ; special-tile lists
@@ -5303,18 +5433,18 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A4BF DEC (IX+$01)    ;
  $A4C2 JR $A4D1        ;
 *$A4C4 INC (IX+$01)    ;
- $A4C7 LD A,(IX+$01)   ;
- $A4CA CP $67          ;
+ $A4C7 LD A,(IX+$01)   ; {Y>=$67? move down a level
+ $A4CA CP $67          ; }
  $A4CC JP NC,$A6AE     ; => Move down a level
  $A4CF JR $A4E8        ;
-*$A4D1 BIT 3,E         ;
- $A4D3 JR Z,$A50D      ;
+*$A4D1 BIT 3,E         ; {up pressed?
+ $A4D3 JR Z,$A50D      ; }
  $A4D5 CALL $A193      ; Check tile below-left of feet (X+12,Y+23) against
                        ; special-tile lists
  $A4D8 JR NZ,$A50D     ;
  $A4DA LD A,(IX+$01)   ;
- $A4DD DEC A           ;
- $A4DE JP M,$A4F1      ;
+ $A4DD DEC A           ; {Y-2 off-screen (top)?
+ $A4DE JP M,$A4F1      ; }
  $A4E1 DEC A           ;
  $A4E2 JP M,$A4F1      ;
  $A4E5 LD (IX+$01),A   ;
@@ -5324,60 +5454,60 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A4ED LD (IX+$02),A   ;
  $A4F0 RET             ;
 *$A4F1 LD A,($5C01)    ; get Current room number
- $A4F4 CP $18          ;
+ $A4F4 CP $18          ; room==$18?
  $A4F6 JP NZ,$A69B     ; => Move up a level
  $A4F9 PUSH IX         ;
  $A4FB CALL $A69B      ; Move up a level
  $A4FE POP IX          ;
- $A500 LD (IX+$01),$60 ;
- $A504 XOR A           ;
- $A505 LD ($5C08),A    ;
- $A508 LD A,$03        ;
- $A50A JP $AE85        ;
+ $A500 LD (IX+$01),$60 ; Y=$60 (top row)
+ $A504 XOR A           ; {clear direction ($5C08)
+ $A505 LD ($5C08),A    ; }
+ $A508 LD A,$03        ; {status=3 via #R$AE85
+ $A50A JP $AE85        ; }
 *$A50D PUSH DE         ;
  $A50E CALL $A102      ; Clear a 4-byte record at $A0FE
  $A511 POP DE          ;
  $A512 XOR A           ;
- $A513 BIT 0,E         ;
- $A515 JR Z,$A51A      ;
+ $A513 BIT 0,E         ; {right pressed?
+ $A515 JR Z,$A51A      ; }
  $A517 LD A,(IY+$01)   ;
-*$A51A BIT 1,E         ;
- $A51C JR Z,$A521      ;
+*$A51A BIT 1,E         ; {left pressed?
+ $A51C JR Z,$A521      ; }
  $A51E LD A,(IY+$00)   ;
-*$A521 OR A            ;
- $A522 JR Z,$A52E      ;
+*$A521 OR A            ; {either direction pressed?
+ $A522 JR Z,$A52E      ; }
  $A524 LD HL,($5C09)   ;
  $A527 LD (IX+$00),L   ;
  $A52A LD A,E          ;
- $A52B AND $0C         ;
+ $A52B AND $0C         ; mask to down/up bits
  $A52D LD E,A          ;
 *$A52E CALL $A193      ; Check tile below-left of feet (X+12,Y+23) against
                        ; special-tile lists
  $A531 JP Z,$A5E3      ;
- $A534 LD A,(IY+$03)   ;
- $A537 OR A            ;
+ $A534 LD A,(IY+$03)   ; {already triggered? (IY+3)
+ $A537 OR A            ; }
  $A538 JR Z,$A5B9      ;
- $A53A CP $05          ;
- $A53C JR C,$A56D      ;
- $A53E LD A,($5B98)    ;
- $A541 CP $05          ;
+ $A53A CP $05          ; {hazard timer <5?
+ $A53C JR C,$A56D      ; }
+ $A53E LD A,($5B98)    ; {room-category ($5B98)==5?
+ $A541 CP $05          ; }
  $A543 JR Z,$A56D      ;
  $A545 LD HL,($5C09)   ;
  $A548 LD (IX+$00),L   ;
  $A54B LD (IX+$01),H   ;
  $A54E LD HL,$5C03     ;
  $A551 LD A,(HL)       ;
- $A552 AND $7F         ;
- $A554 CP $03          ;
+ $A552 AND $7F         ; {counter <3? (masked)
+ $A554 CP $03          ; }
  $A556 JR Z,$A570      ;
  $A558 INC (HL)        ;
- $A559 LD A,(HL)       ;
- $A55A CP $03          ;
+ $A559 LD A,(HL)       ; {counter reached 3?
+ $A55A CP $03          ; }
  $A55C JR NZ,$A567     ;
- $A55E LD A,E          ;
- $A55F LD ($5C08),A    ;
- $A562 LD A,$01        ;
- $A564 LD ($5C06),A    ;
+ $A55E LD A,E          ; {store direction ($5C08)
+ $A55F LD ($5C08),A    ; }
+ $A562 LD A,$01        ; {status=1
+ $A564 LD ($5C06),A    ; }
 *$A567 LD HL,$AECD     ;
  $A56A JP $AEAF        ; => Store scripted-zone list pointer ($AEED) from HL
 *$A56D OR A            ;
@@ -5391,26 +5521,26 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A57F INC (IX+$01)    ;
  $A582 INC (IX+$01)    ;
  $A585 LD A,($5C01)    ; get Current room number
- $A588 CP $35          ;
- $A58A JR NC,$A5A1     ;
- $A58C BIT 7,(IX+$00)  ;
- $A590 JR NZ,$A59A     ;
- $A592 CP $10          ;
- $A594 JR Z,$A5A1      ;
- $A596 CP $1C          ;
- $A598 JR Z,$A5A1      ;
-*$A59A LD A,($5B98)    ;
- $A59D CP $05          ;
+ $A588 CP $35          ; {room>=$35?
+ $A58A JR NC,$A5A1     ; }
+ $A58C BIT 7,(IX+$00)  ; {flag bit7 set? (IX+0)
+ $A590 JR NZ,$A59A     ; }
+ $A592 CP $10          ; {room==$10?
+ $A594 JR Z,$A5A1      ; }
+ $A596 CP $1C          ; {room==$1C?
+ $A598 JR Z,$A5A1      ; }
+*$A59A LD A,($5B98)    ; {room-category ($5B98)==5?
+ $A59D CP $05          ; }
  $A59F JR Z,$A5A8      ;
-*$A5A1 LD HL,$5C05     ;
- $A5A4 INC (HL)        ;
+*$A5A1 LD HL,$5C05     ; {bump respawn-skip counter ($5C05)
+ $A5A4 INC (HL)        ; }
  $A5A5 JR NZ,$A5A8     ;
  $A5A7 DEC (HL)        ;
 *$A5A8 LD E,$00        ;
  $A5AA LD A,$01        ;
  $A5AC LD ($5C04),A    ;
- $A5AF LD A,(IX+$01)   ;
- $A5B2 CP $68          ;
+ $A5AF LD A,(IX+$01)   ; {Y>=$68? move down a level
+ $A5B2 CP $68          ; }
  $A5B4 JP NC,$A6AE     ; => Move down a level
  $A5B7 JR $A5EA        ;
 *$A5B9 LD HL,$5C05     ;
@@ -5422,12 +5552,12 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
  $A5C6 LD A,(IX+$01)   ;
  $A5C9 AND $F8         ;
  $A5CB LD (IX+$01),A   ;
- $A5CE LD A,($5C28)    ;
- $A5D1 OR A            ;
+ $A5CE LD A,($5C28)    ; {tile flag ($5C28) set?
+ $A5D1 OR A            ; }
  $A5D2 JR Z,$A5E3      ;
  $A5D4 LD C,$02        ;
- $A5D6 CP $BC          ;
- $A5D8 JR Z,$A5DC      ;
+ $A5D6 CP $BC          ; {tile==$BC? pick offset
+ $A5D8 JR Z,$A5DC      ; }
  $A5DA LD C,$04        ;
 *$A5DC LD A,(IX+$01)   ;
  $A5DF OR C            ;
@@ -5435,37 +5565,37 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
 *$A5E3 XOR A           ;
  $A5E4 LD ($5C03),A    ;
  $A5E7 LD ($5C04),A    ;
-*$A5EA LD A,E          ;
- $A5EB AND $0F         ;
+*$A5EA LD A,E          ; {any direction pressed (masked)?
+ $A5EB AND $0F         ; }
  $A5ED JR Z,$A639      ;
  $A5EF PUSH AF         ;
  $A5F0 POP AF          ;
  $A5F1 LD A,($5C02)    ; get Frame counter
- $A5F4 AND $01         ;
- $A5F6 JR Z,$A601      ;
+ $A5F4 AND $01         ; {frame odd? advance animation
+ $A5F6 JR Z,$A601      ; }
  $A5F8 LD A,(IX+$02)   ;
  $A5FB INC A           ;
  $A5FC AND $03         ;
  $A5FE LD (IX+$02),A   ;
-*$A601 LD A,($5BFA)    ;
- $A604 OR A            ;
+*$A601 LD A,($5BFA)    ; {sound-effect flag set?
+ $A604 OR A            ; }
  $A605 JR Z,$A611      ;
  $A607 LD A,(IX+$02)   ;
  $A60A AND $03         ;
  $A60C ADD A,$3C       ;
  $A60E LD (IX+$02),A   ;
-*$A611 LD A,($5B98)    ;
- $A614 CP $0C          ;
+*$A611 LD A,($5B98)    ; {room-category ($5B98)==$0C?
+ $A614 CP $0C          ; }
  $A616 JR NZ,$A623     ;
  $A618 LD A,(IX+$02)   ;
  $A61B CP $04          ;
  $A61D JR NC,$A623     ;
  $A61F SET 4,(IX+$02)  ;
-*$A623 LD A,($5C04)    ;
- $A626 OR A            ;
+*$A623 LD A,($5C04)    ; {any movement this frame?
+ $A626 OR A            ; }
  $A627 RET Z           ;
- $A628 LD A,($5B98)    ;
- $A62B CP $05          ;
+ $A628 LD A,($5B98)    ; {room-category ($5B98)==5?
+ $A62B CP $05          ; }
  $A62D RET NZ          ;
  $A62E LD A,(IY+$03)   ;
  $A631 CP $04          ;
@@ -5480,6 +5610,11 @@ c$A3E1 CALL $B7DD      ; Per-room init dispatch
 ; leaving room $29
 ;
 ; Used by the routines at #R$A34B, #R$A3E1 and #R$ADAC.
+;
+; .
+;
+; Handles the hero walking off the left edge of a room: works out the room to
+; the west (with a special-case for the portal rooms) and switches into it.
 c$A640 LD A,($5C01)    ; get Current room number
  $A643 CP $29          ; {room=$29: room = portal table[($5B70)] (reverse
  $A645 JR NZ,$A657     ; lookup)
@@ -5747,6 +5882,16 @@ b$A8E4 DEFB $7F,$FF,$14,$15,$16,$FF
 
 ; Room-dependent creature init: hazard-timer/room checks, sets $5B9E/$5B9F,
 ; room-transition via table $B073
+;
+; .
+;
+; IX creature/trap object (position written at the end)
+;
+; A scripted trap tied to specific rooms rather than a roaming creature: on
+; first activation it seeds a couple of staging variables, then depending on
+; the room either forces a fixed hero status or advances a shared hazard
+; counter until it fires, which teleports the hero to a destination room looked
+; up from a small per-room table ($B073).
 c$A8EA LD A,($5C07)  ; {hazard-timer($5C07)!=0? skip; set $5B9E=$1F, $5B9F=$50
  $A8ED OR A          ;
  $A8EE JR NZ,$A919   ;
@@ -5803,14 +5948,14 @@ c$A8EA LD A,($5C07)  ; {hazard-timer($5C07)!=0? skip; set $5B9E=$1F, $5B9F=$50
 *$A951 LD (IX+$02),A ; store trigger code (IX+2)
  $A954 RET           ; RET
 
-; Message at A955
-t$A955 DEFM "%&'("
+; Data block at A955
+b$A955 DEFB $25,$26,$27,$28
 
-; Unused
-s$A959 DEFS $01
+; Data block at A959
+b$A959 DEFB $00
 
-; Message at A95A
-t$A95A DEFM "(&'("
+; Data block at A95A
+b$A95A DEFB $28,$26,$27,$28
 
 ; Data block at A95E
 b$A95E DEFB $FF
@@ -5840,6 +5985,15 @@ c$A99A LD A,($5C01)  ;
 ; Set creature Y (+8 to $5B9F); check room against table $A9E6, trigger #R$AE84
 ;
 ; Used by the routine at #R$A9C4.
+;
+; IX creature object (Y stored at +1)
+; A new Y position
+;
+; Sets a creature's Y position and a lookahead value 8 pixels below it, then
+; checks whether the current room is one of a fixed 4-room list and the
+; lookahead lines up with that room's target row - if so, triggers a status
+; reset. The shared entry point at $A9A9 skips the Y-set step and is reused
+; directly by #R$A9C4.
 c$A9A1 LD (IX+$01),A ;
  $A9A4 ADD A,$08     ;
  $A9A6 LD ($5B9F),A  ;
@@ -5890,11 +6044,9 @@ t$A9E7 DEFM "P+07PCh"
 ;
 ; .
 ;
-; Increments a per-room hazard counter ($5C07); once it reaches 50 ($32), sets
-; the respawn-pending flag ($5C2A, handled by #R$9090) and decrements lives
-; ($5B97). Zero lives -> game-over sequence (#R$9372). Otherwise continues via
-; #R$9E96. The infamous "Infinite Lives" POKE (43517,182) overwrites the DEC
-; (HL) at $A9FD with a no-op-equivalent OR (HL), skipping the life loss.
+; Ticks the per-room hazard counter and, once it runs out, costs the hero a
+; life and queues a respawn (or ends the game if that was the last life). This
+; is where the "Infinite Lives" POKE (43517,182) patches out the life loss.
 c$A9EE POP HL        ;
  $A9EF LD HL,$5C07   ; {counter++ ($5C07), stop if < 50
  $A9F2 INC (HL)      ;
@@ -5917,6 +6069,15 @@ b$AA04 DEFB $E1,$11,$22,$AA,$CD,$DE,$AB,$FE
  $AA34 DEFB $05,$05,$05,$05,$05,$05,$05,$FF
 
 ; Creature update: gate on direction bit, then hazard-timer room trigger
+;
+; .
+;
+; IX creature/trap object
+; E direction bitmask
+;
+; A scripted trap: bails out early if the creature is moving one particular
+; direction, otherwise counts frames until a threshold is hit, then fires one
+; of three trigger codes chosen by which room the creature is in.
 c$AA3C POP HL          ; {discard return; (IX+2)=$17, clear direction flag
  $AA3D LD (IX+$02),$17 ;
  $AA41 RES 7,(IX+$03)  ; }
@@ -5944,6 +6105,14 @@ c$AA3C POP HL          ; {discard return; (IX+2)=$17, clear direction flag
  $AA6C JP $C4B2        ; => Sound-effect dispatcher wrapper
 
 ; Creature Y-movement by hazard-counter lookup table ($AAFA)
+;
+; .
+;
+; IX creature object
+;
+; Moves a creature upward frame by frame along a pre-authored curve (a lookup
+; table indexed by the hazard counter) and advances its animation frame, until
+; the hazard counter reaches its limit and the trap resets.
 c$AA6F POP HL          ; {discard return; DE=table ($AAFA)
  $AA70 LD DE,$AAFA     ; }
  $AA73 LD HL,$5C07     ; {hazard counter ($5C07) reaches $54? JP Z #R$AE84
@@ -6037,6 +6206,10 @@ b$ABC7 DEFB $11,$F4,$AB,$E1,$CD,$DE,$AB,$FE
 ;
 ;   DE lookup table base
 ; O:A table[($5C07)/2] (pre-increment value)
+;
+; Ticks the hazard timer and looks up a per-trap value keyed to it - the shared
+; "advance the clock and check what happens now" step used by the scripted trap
+; routines.
 c$ABDE LD HL,$5C07   ;
 ; This entry point is used by the routine at #R$B5DD.
 *$ABE1 LD A,(HL)     ;
@@ -6065,20 +6238,13 @@ b$ABEB DEFB $09,$0A,$09,$0A,$09,$0A,$09,$0A
 ;
 ; .
 ;
-; .
+; IX creature/trap object
+; E direction bitmask
 ;
-; A "trap" entry point (discards its own return address, POP HL at start -
-; called via a tail-jump pattern rather than a normal CALL/RET, matching the
-; other $AAxx/$ACxx/$ADxx trap-entry routines in this area). Latches the
-; current room into a per-trap staging byte ($5C27) and forces the object's
-; frame ($7F). If a room-state flag ((IY+3)) is set, clamps the object's X
-; position against fixed bounds per direction bit (E bit0=right, bit1=left),
-; stopping it at screen edges rather than letting it wrap. Then dispatches by
-; the room-category variable ($5B98): rooms $06/$07 push the object toward a
-; level change (up via #R$A69B or down via #R$A6AE, depending on Y), anything
-; else just clamps Y and stores it. Reads as generic "obstacle stays on its
-; track, but a set-piece exit takes it to the next level" logic shared by
-; several similarly-shaped trap routines rather than one specific creature.
+; A scripted trap: keeps a creature moving along its track and bouncing off the
+; screen edges, and in a couple of specific rooms pushes it into a level change
+; instead - generic "obstacle on a track" logic shared by several similar trap
+; routines.
 c$AC35 POP HL         ; discard return
  $AC36 LD A,($5C01)   ; get Current room number
  $AC39 LD ($5C27),A   ; {store scripted room ($5C27); (IX+2)=$7F; save DE
@@ -6360,6 +6526,11 @@ c$ADAC POP HL        ;
 ; Creature Y-bound check via #R$AF09/table $AE9E, move up via #R$A69B or clamp
 ;
 ; Used by the routine at #R$ADAC.
+;
+; .
+;
+; Keeps a creature within its allowed vertical range, either nudging it up a
+; level or clamping it at a per-room boundary.
 c$AE37 CALL $AF09      ; Type-$10 gate
  $AE3A LD L,A          ;
  $AE3B LD H,$00        ;
@@ -6405,6 +6576,12 @@ c$AE76 LD A,($5C07)  ;
 ;
 ; Used by the routines at #R$A34B, #R$A851, #R$A8EA, #R$A9A1, #R$AA3C, #R$AA6F,
 ; #R$AC35, #R$AD32, #R$ADAC, #R$AE37, #R$B370, #R$B409 and #R$BC73.
+;
+; .
+;
+; The single choke point for changing the hero's status: every scripted
+; trigger, hazard, and reset in the game passes through here to set the new
+; status and restart the hazard clock.
 c$AE84 XOR A         ;
 ; This entry point is used by the routines at #R$91C0, #R$935D, #R$A102,
 ; #R$A3E1, #R$AA3C, #R$AD17, #R$AF81, #R$B02E, #R$B03B, #R$B370, #R$B4E2,
@@ -6506,6 +6683,12 @@ c$AF09 CP $10        ;
 ; Proximity check: player X vs pointer ($5BA2) column
 ;
 ; Used by the routines at #R$9A09 and #R$AF09.
+;
+; .
+;
+; Checks whether the hero is horizontally close to a specific tracked position
+; - a lighter-weight proximity test than #R$9140, used for a single X-only
+; check.
 c$AF22 LD HL,($5BA2) ; {HL=pointer ($5BA2); SCF; RET Z if null (carry = no
  $AF25 LD A,H        ; target)
  $AF26 OR L          ;
@@ -6530,6 +6713,11 @@ s$AF39 DEFS $02
 ; Scripted zone trigger: set special-encounter flag ($5C06)
 ;
 ; Used by the routine at #R$A3E1.
+;
+; .
+;
+; Checks whether the hero has just entered a room with a scripted encounter
+; and, if so, kicks off the associated status trigger.
 c$AF3B LD HL,$5C01   ; {room $1D: jump to alt check
  $AF3E LD A,(HL)     ;
  $AF3F CP $1D        ;
@@ -6569,6 +6757,12 @@ c$AF3B LD HL,$5C01   ; {room $1D: jump to alt check
 ; Room-entry trigger: check position/input for a special zone
 ;
 ; Used by the routine at #R$8F47.
+;
+; .
+;
+; Watches for the hero standing in one particular spot in one particular room
+; and pressing up or down, firing a scripted event when they do - one of
+; several small "stand here and press a key" puzzle triggers.
 c$AF81 LD A,$24      ; {A=$24 (frame); store $5B14; A=($5B9F); store $5B15
  $AF83 LD ($5B14),A  ;
  $AF86 LD A,($5B9F)  ;
@@ -6611,6 +6805,13 @@ c$AF81 LD A,$24      ; {A=$24 (frame); store $5B14; A=($5B9F); store $5B15
  $AFD6 RET           ; }
 
 ; Init a room-specific decorative object ($5B10-$5B17) by room category
+;
+; .
+;
+; .
+;
+; Sets up a decorative object whose look depends on which room the hero is in -
+; only runs for the one room it's scripted for.
 c$AFD7 LD HL,$5C01   ; {gate: only for scripted room ($5C27==current $5C01)
  $AFDA LD A,($5C27)  ;
  $AFDD CP (HL)       ;
@@ -6665,6 +6866,11 @@ c$B02E LD BC,$FBFE   ;
 ; Scripted zone trigger by room+position table ($B073)
 ;
 ; Used by the routine at #R$A3E1.
+;
+; .
+;
+; Checks the hero's position against a small table of room+position hotspots
+; and fires a one-shot scripted event when they step into one.
 c$B03B LD B,$03      ; {B=3 entries; HL=table
  $B03D LD HL,$B073   ; }
  $B040 LD A,($5C01)  ; get Current room number
@@ -6721,22 +6927,16 @@ s$B0B5 DEFS $01
 ;
 ; .
 ;
-; A scripted, one-shot multi-part sequence dispatched by a shared stage counter
-; ($5C41, same counter used by #R$B4E2/#R$B562's staged-init pattern elsewhere)
-; for an object record at $5B08. Stage 0 initializes several fields of that
-; record and, only if a completion flag ($5BFE) is set, arms a fourth sub-part.
-; Stages 1-3 each animate one field by a fixed step per frame until it reaches
-; a target value, then advance to the next stage and fire a sound effect via
-; #R$C4B2. Reads as a scripted "reward/fanfare" animation (likely the room-$28
-; warp fanfare set up by #R$B6EE, which sets $5BFE before this runs) rather
-; than gameplay logic - the object being animated is separate from the 5-slot
-; world-object array at $5B04.
-c$B0B6 LD IY,$5B08     ;
- $B0BA LD HL,$5C41     ; {read stage counter, branch by stage
+; A scripted, one-shot fanfare animation for a fixed object, played out over
+; several stages as fields of it step toward target values, with a sound effect
+; at each stage change. Most likely the room-$28 warp fanfare set up by
+; #R$B6EE, not everyday gameplay logic.
+c$B0B6 LD IY,$5B08     ; IY=object ($5B08)
+ $B0BA LD HL,$5C41     ; HL=stage counter ($5C41)
  $B0BD LD A,(HL)       ;
- $B0BE OR A            ;
+ $B0BE OR A            ; {stage counter==0?
  $B0BF JR NZ,$B104     ; }
- $B0C1 INC (HL)        ;
+ $B0C1 INC (HL)        ; counter++ (advance to stage 1)
  $B0C2 LD (IY+$00),$A2 ;
  $B0C6 LD (IY+$01),$04 ;
  $B0CA LD (IY+$02),$75 ;
@@ -6748,8 +6948,8 @@ c$B0B6 LD IY,$5B08     ;
  $B0E2 LD (IY+$09),$68 ;
  $B0E6 LD (IY+$0A),$71 ;
  $B0EA LD (IY+$0B),$00 ;
- $B0EE LD A,($5BFE)    ;
- $B0F1 OR A            ;
+ $B0EE LD A,($5BFE)    ; {completion flag ($5BFE) set? else RET
+ $B0F1 OR A            ; }
  $B0F2 RET Z           ;
  $B0F3 LD (IY+$0C),$89 ;
  $B0F7 LD (IY+$0D),$5C ;
@@ -6762,11 +6962,11 @@ c$B0B6 LD IY,$5B08     ;
  $B10A LD A,(IY+$01)   ;
  $B10D ADD A,$04       ;
  $B10F LD (IY+$01),A   ;
- $B112 CP $54          ;
- $B114 RET NZ          ;
+ $B112 CP $54          ; {target $54 reached?
+ $B114 RET NZ          ; }
  $B115 INC (HL)        ;
- $B116 LD A,($5BFE)    ;
- $B119 OR A            ;
+ $B116 LD A,($5BFE)    ; {completion flag set? pick branch
+ $B119 OR A            ; }
  $B11A JR Z,$B125      ;
  $B11C INC (HL)        ;
  $B11D INC (IY+$0E)    ;
@@ -6777,8 +6977,8 @@ c$B0B6 LD IY,$5B08     ;
  $B12D RET             ;
 *$B12E DEC A           ; {stage 2 check
  $B12F JR NZ,$B143     ; }
- $B131 LD A,(IY+$06)   ;
- $B134 CP $77          ;
+ $B131 LD A,(IY+$06)   ; {field reached target $77?
+ $B134 CP $77          ; }
  $B136 JR Z,$B13C      ;
  $B138 INC (IY+$06)    ;
  $B13B RET             ;
@@ -6792,14 +6992,14 @@ c$B0B6 LD IY,$5B08     ;
  $B149 LD A,(IY+$00)   ;
  $B14C SUB $04         ;
  $B14E LD (IY+$00),A   ;
- $B151 CP $04          ;
- $B153 RET NC          ;
+ $B151 CP $04          ; {target <4 reached?
+ $B153 RET NC          ; }
  $B154 LD (IY+$02),$7F ;
  $B158 DEC (IY+$0E)    ;
  $B15B INC (HL)        ;
  $B15C RET             ;
-*$B15D INC (HL)        ;
- $B15E RET P           ;
+*$B15D INC (HL)        ; {advance sub-stage; RET unless done
+ $B15E RET P           ; }
  $B15F LD A,$01        ;
  $B161 LD ($5BFF),A    ; set Game-over flag
  $B164 RET             ;
@@ -7159,6 +7359,14 @@ c$B4D5 CP $7B        ;
  $B4E1 RET           ;
 
 ; Staged animation: init object ($5B10), scripted trigger via #R$AE85
+;
+; .
+;
+; .
+;
+; Drives a small scripted sequence for a set-piece object: sets it up, waits
+; for the hero to approach, then plays out an animation and fires a status
+; trigger.
 c$B4E2 LD IY,$5B10     ; {IY=object; HL=stage counter ($5C41)
  $B4E6 LD HL,$5C41     ; }
  $B4E9 LD A,(HL)       ;
@@ -7217,30 +7425,38 @@ c$B55A LD IY,$5B0C   ;
  $B560 JR $B57C      ;
 
 ; Init 3 objects ($5B0C) from template; animate frame, room-specific variant
-c$B562 LD IY,$5B0C     ; {IY=object; HL=stage counter ($5C41)
- $B566 LD HL,$5C41     ; }
+;
+; .
+;
+; .
+;
+; Sets up and animates a group of 3 decorative objects from a shared template,
+; with the exact appearance varying by room - the multi-object sibling of
+; #R$B4E2's single-object staged animation.
+c$B562 LD IY,$5B0C     ; IY=object ($5B0C)
+ $B566 LD HL,$5C41     ; HL=stage counter ($5C41)
  $B569 LD A,(HL)       ;
- $B56A OR A            ;
- $B56B JR NZ,$B57A     ;
- $B56D INC (HL)        ; {stage 0: copy 12-byte template from $B5D1
+ $B56A OR A            ; {stage==0? else skip init
+ $B56B JR NZ,$B57A     ; }
+ $B56D INC (HL)        ;
  $B56E LD HL,$B5D1     ;
  $B571 LD DE,$5B0C     ;
- $B574 LD BC,$000C     ; }
- $B577 LDIR            ;
+ $B574 LD BC,$000C     ;
+ $B577 LDIR            ; copy template (12 bytes)
  $B579 RET             ;
 *$B57A LD B,$03        ; B=3 objects
 ; This entry point is used by the routine at #R$B55A.
-*$B57C LD A,(IY+$02)   ;
- $B57F CP $7F          ;
+*$B57C LD A,(IY+$02)   ; {frame==$7F (inactive)? skip
+ $B57F CP $7F          ; }
  $B581 JR Z,$B5B7      ;
- $B583 CP $55          ;
- $B585 JR Z,$B5C8      ;
+ $B583 CP $55          ; {frame==$55 (trigger)? branch
+ $B585 JR Z,$B5C8      ; }
  $B587 LD A,($5C02)    ; get Frame counter
  $B58A AND $01         ;
  $B58C ADD A,(IY+$02)  ;
  $B58F CP $55          ;
- $B591 JR NZ,$B595     ;
- $B593 LD A,$51        ;
+ $B591 JR NZ,$B595     ; {wrapped? reset to $51
+ $B593 LD A,$51        ; }
 *$B595 LD (IY+$02),A   ;
  $B598 LD A,($5C01)    ; get Current room number
  $B59B CP $17          ;
@@ -7249,11 +7465,11 @@ c$B562 LD IY,$5B0C     ; {IY=object; HL=stage counter ($5C41)
  $B5A2 CP $3A          ;
  $B5A4 JR NC,$B5AD     ;
 *$B5A6 LD A,($5B98)    ;
- $B5A9 CP $0C          ;
- $B5AB JR Z,$B5B7      ;
+ $B5A9 CP $0C          ; {room-category==$0C?
+ $B5AB JR Z,$B5B7      ; }
 *$B5AD LD A,(IX+$00)   ;
- $B5B0 AND $FC         ;
- $B5B2 CP (IY+$00)     ;
+ $B5B0 AND $FC         ; {object aligned with player (masked)?
+ $B5B2 CP (IY+$00)     ; }
  $B5B5 JR Z,$B5C2      ;
 *$B5B7 INC IY          ;
  $B5B9 INC IY          ;
@@ -7265,8 +7481,8 @@ c$B562 LD IY,$5B0C     ; {IY=object; HL=stage counter ($5C41)
  $B5C4 LD (IY+$02),A   ;
  $B5C7 RET             ;
 *$B5C8 LD (IY+$02),$7F ;
- $B5CC LD A,$19        ;
- $B5CE JP $AE85        ;
+ $B5CC LD A,$19        ; {trigger $19 via #R$AE85
+ $B5CE JP $AE85        ; }
 
 ; Data block at B5D1
 b$B5D1 DEFB $44,$60,$51,$00,$70,$60,$52,$80
@@ -7279,120 +7495,112 @@ b$B5D1 DEFB $44,$60,$51,$00,$70,$60,$52,$80
 ;
 ; .
 ;
-; Gated on #R$9140's proximity check between the object (IY=$5B14) and the
-; hero, and on the room matching a locked value ($5C3C). On first trigger in a
-; room, scans the shared creature table ($B99D) for that room via #R$B93F,
-; populates display slots, and awards a fixed event/score (#R$BCF2, event id
-; $96), then advances a phase counter ($5C3D); reaching phase 6 forces a warp
-; to room $28 with a fanfare (#R$B6EE) - reads as a fixed encounter that always
-; ends by moving the player to a specific room, i.e. a boss or set-piece rather
-; than a roaming creature. Outside the initial-trigger path, drives a scripted
-; step sequence (index at $B6ED, data at $B6C1) that looks up a per-step hazard
-; code from a small table ($B6BB) and a bounded left-right patrol with
-; edge-column wrapping ($B676 onward). Not confirmed against a specific named
-; boss/room live - likely the "Prof" encounter mentioned in the room-format
-; world-map notes, but that hasn't been checked.
-c$B5DD LD IY,$5B14     ; IY=object
+; A fixed encounter tied to one room: once the hero gets close enough, it plays
+; through a sequence of phases and eventually warps the hero to room $28 with a
+; fanfare, rather than acting like a roaming creature. Between phases it also
+; runs a small scripted patrol, pacing back and forth and reacting when the
+; hero reaches either edge.
+c$B5DD LD IY,$5B14     ;
  $B5E1 CALL $9140      ; Classify object type ((IX+2)) into a size/category
                        ; flag
- $B5E4 JR NC,$B612     ; {RET NC if not eligible; room ($5B98) == boss room
- $B5E6 LD HL,$5B98     ; ($5C3C)? else skip
- $B5E9 LD A,($5C3C)    ;
- $B5EC CP (HL)         ;
- $B5ED JR NZ,$B612     ; }
- $B5EF PUSH IY         ; {save IX/IY; mark room handled ((HL)=$FF); save $5C3E
+ $B5E4 JR NC,$B612     ; not eligible? skip
+ $B5E6 LD HL,$5B98     ;
+ $B5E9 LD A,($5C3C)    ; {room == locked boss room ($5C3C)?
+ $B5EC CP (HL)         ; }
+ $B5ED JR NZ,$B612     ;
+ $B5EF PUSH IY         ;
  $B5F1 PUSH IX         ;
- $B5F3 LD (HL),$FF     ;
- $B5F5 LD ($5C3E),A    ; }
+ $B5F3 LD (HL),$FF     ; mark room handled
+ $B5F5 LD ($5C3E),A    ; save type ($5C3E)
  $B5F8 CALL $B93F      ; Reset object slots ($5C0E), scan $B99D table for
                        ; current room
  $B5FB CALL $9E5D      ; Populate the $5BD6 object-slot table
- $B5FE LD DE,$0096     ; DE=$96 (event id)
+ $B5FE LD DE,$0096     ;
  $B601 CALL $BCF2      ; Save all registers
- $B604 POP IX          ; {restore IX/IY
- $B606 POP IY          ; }
- $B608 LD HL,$5C3D     ; {phase counter ($5C3D)++; ==6 -> #R$B6EE
- $B60B INC (HL)        ;
- $B60C LD A,(HL)       ;
+ $B604 POP IX          ;
+ $B606 POP IY          ;
+ $B608 LD HL,$5C3D     ;
+ $B60B INC (HL)        ; phase++
+ $B60C LD A,(HL)       ; {phase==6?
  $B60D CP $06          ; }
  $B60F JP Z,$B6EE      ; => Force room $28, set $5BFE flag, trigger event via
                        ; #R$AE85
-*$B612 LD HL,$5BA1     ; {first-time flag ($5BA1): if unset, init sequence
+*$B612 LD HL,$5BA1     ;
  $B615 LD A,(HL)       ;
- $B616 OR A            ;
- $B617 JR NZ,$B62C     ;
+ $B616 OR A            ; {flag set? skip init
+ $B617 JR NZ,$B62C     ; }
  $B619 INC (HL)        ;
  $B61A XOR A           ;
- $B61B LD ($B6ED),A    ; }
- $B61E LD (IY+$01),$48 ; {set start position/frame; store $30 to $5B11; RET
+ $B61B LD ($B6ED),A    ;
+ $B61E LD (IY+$01),$48 ;
  $B622 LD (IY+$00),$1A ;
- $B626 LD A,$30        ;
- $B628 LD ($5B11),A    ;
- $B62B RET             ; }
-*$B62C AND $7F         ; {mask flag; ==1? branch $B676; else step lookup
- $B62E CP $01          ; ($B6ED/$B6C1) via #R$ABE1
- $B630 JR Z,$B676      ;
+ $B626 LD A,$30        ; {store room $30
+ $B628 LD ($5B11),A    ; }
+ $B62B RET             ;
+*$B62C AND $7F         ; mask flag
+ $B62E CP $01          ; {flag==1? branch to patrol
+ $B630 JR Z,$B676      ; }
  $B632 LD HL,$B6ED     ;
- $B635 LD DE,$B6C1     ; }
- $B638 CALL $ABE1      ; {flag ($5BA1); step==$FF? decrement flag, frame=$7F,
- $B63B LD HL,$5BA1     ; RET
- $B63E CP $FF          ;
- $B640 JR NZ,$B649     ;
+ $B635 LD DE,$B6C1     ;
+ $B638 CALL $ABE1      ;
+ $B63B LD HL,$5BA1     ;
+ $B63E CP $FF          ; {step==$FF (list end)?
+ $B640 JR NZ,$B649     ; }
 *$B642 LD A,$7F        ;
  $B644 LD ($5B12),A    ;
  $B647 DEC (HL)        ;
- $B648 RET             ; }
-*$B649 BIT 7,(HL)      ; {already-armed? step==$4D? branch; else store frame
- $B64B JR NZ,$B651     ; (IY+2)
- $B64D CP $4D          ;
- $B64F JR Z,$B642      ;
+ $B648 RET             ;
+*$B649 BIT 7,(HL)      ; already armed?
+ $B64B JR NZ,$B651     ;
+ $B64D CP $4D          ; {step==$4D? re-arm
+ $B64F JR Z,$B642      ; }
 *$B651 LD C,(IY+$02)   ;
- $B654 LD (IY+$02),A   ; }
- $B657 CP $4D          ; {step==$4D and prev==$4D? RET
- $B659 RET NZ          ;
+ $B654 LD (IY+$02),A   ;
+ $B657 CP $4D          ; {step==$4D?
+ $B659 RET NZ          ; }
  $B65A LD A,C          ;
  $B65B CP $4D          ;
- $B65D RET Z           ; }
- $B65E LD A,($5C3D)    ; {phase ($5C3D) -> lookup table $B6BB (hazard code)
- $B661 LD L,A          ;
+ $B65D RET Z           ;
+ $B65E LD A,($5C3D)    ; {phase -> table index
+ $B661 LD L,A          ; }
  $B662 LD H,$00        ;
  $B664 LD DE,$B6BB     ;
- $B667 ADD HL,DE       ; }
- $B668 LD A,(HL)       ; {store code $5C3C; +=$80 -> frame $5B12; clear $5B13;
- $B669 LD ($5C3C),A    ; RET
+ $B667 ADD HL,DE       ;
+ $B668 LD A,(HL)       ; {store hazard code ($5C3C)
+ $B669 LD ($5C3C),A    ; }
  $B66C ADD A,$80       ;
  $B66E LD ($5B12),A    ;
  $B671 XOR A           ;
  $B672 LD ($5B13),A    ;
- $B675 RET             ; }
-*$B676 LD A,(IY+$00)   ; {direction/edge flag handling; C=+/-2 step
+ $B675 RET             ;
+*$B676 LD A,(IY+$00)   ;
  $B679 SET 7,(IY+$03)  ;
  $B67D LD C,$02        ;
- $B67F BIT 7,(HL)      ;
- $B681 JR Z,$B689      ;
+ $B67F BIT 7,(HL)      ; {edge flag set? reverse direction
+ $B681 JR Z,$B689      ; }
  $B683 RES 7,(IY+$03)  ;
- $B687 LD C,$FE        ; }
-*$B689 LD A,(IY+$00)   ; {advance position ($5B10); compute column check (AND
- $B68C ADD A,C         ; $1F)
+ $B687 LD C,$FE        ;
+*$B689 LD A,(IY+$00)   ;
+ $B68C ADD A,C         ;
  $B68D LD (IY+$00),A   ;
  $B690 LD ($5B10),A    ;
- $B693 SUB $04         ;
- $B695 LD C,A          ;
+ $B693 SUB $04         ; {column = (pos-4)>>2
+ $B695 LD C,A          ; }
  $B696 AND $1F         ;
  $B698 OR A            ;
- $B699 JR NZ,$B6AE     ; }
- $B69B INC (HL)        ; {reset script step; column bounds check ($C0/$22)
+ $B699 JR NZ,$B6AE     ;
+ $B69B INC (HL)        ;
  $B69C XOR A           ;
  $B69D LD ($B6ED),A    ;
  $B6A0 LD A,C          ;
- $B6A1 CP $C0          ;
- $B6A3 JR C,$B6A8      ;
+ $B6A1 CP $C0          ; {column>=$C0? right edge
+ $B6A3 JR C,$B6A8      ; }
  $B6A5 SET 7,(HL)      ;
- $B6A7 RET             ; }
-*$B6A8 CP $22          ; {bound RET; clear flag
- $B6AA RET NC          ;
+ $B6A7 RET             ;
+*$B6A8 CP $22          ; {column<$22? left edge
+ $B6AA RET NC          ; }
  $B6AB RES 7,(HL)      ;
- $B6AD RET             ; }
+ $B6AD RET             ;
 *$B6AE LD A,($5C02)    ; get Frame counter
  $B6B1 SRL A           ;
  $B6B3 AND $03         ;
@@ -7446,6 +7654,13 @@ c$B723 LD IY,$5B14     ;
  $B72B JR $B735        ;
 
 ; Init object Y=$DC (variant); animation frame + type-gated deactivate
+;
+; .
+;
+; .
+;
+; Sets up an object at the bottom of the screen and drives its animation,
+; retiring it once its type indicates it's no longer needed.
 c$B72D LD IY,$5B14     ; {IY=$5B14; (IY+0)=$DC (variant Y init)
  $B731 LD (IY+$00),$DC ; }
 ; This entry point is used by the routine at #R$B723.
@@ -7581,6 +7796,11 @@ b$B7EC DEFB $00,$00,$00,$00,$00,$00,$D7,$AF
 ; Resolve conflicting L/R, U/D input via #R$B894 (cancel to 0)
 ;
 ; Used by the routines at #R$A34B, #R$A3E1 and #R$AF81.
+;
+; .
+;
+; Reads the current input and cancels out impossible presses (both left and
+; right, or both up and down at once) before the movement code sees it.
 c$B87D CALL $B894    ; Read joystick/keyboard, normalize to Kempston-style
                      ; bitmask
  $B880 LD E,A        ;
@@ -7673,6 +7893,12 @@ c$B932 LD B,$1F      ;
 ; Reset object slots ($5C0E), scan $B99D table for current room
 ;
 ; Used by the routines at #R$9880, #R$B5DD and #R$B9FA.
+;
+; .
+;
+; Clears the two dynamic encounter slots and repopulates them from the
+; room-tagged encounter table for whatever room the hero is now in - run on
+; every room entry (see Actors.md for the $B99D table itself).
 c$B93F LD IX,$5C0E     ;
  $B943 LD (IX+$02),$FF ;
  $B947 LD (IX+$07),$FF ;
@@ -7692,55 +7918,72 @@ c$B93F LD IX,$5C0E     ;
 ; Spawn a creature/hazard into slot $5C0E/$5C13 from a room-data entry (HL)
 ;
 ; Used by the routine at #R$B93F.
-c$B95F BIT 1,C          ; {skip if bit1 of C set
- $B961 RET NZ           ; }
- $B962 LD IX,$5C0E      ; {pick slot: bit0 of C chooses $5C0E or $5C13
- $B966 BIT 0,C          ;
- $B968 JR Z,$B96E       ;
- $B96A LD IX,$5C13      ; }
-*$B96E INC C            ;
- $B96F PUSH HL          ;
- $B970 PUSH AF          ;
- $B971 PUSH BC          ;
- $B972 LD (IX+$03),L    ; {store room-data record pointer (IX+3/4)
- $B975 LD (IX+$04),H    ; }
- $B978 INC HL           ;
- $B979 LD A,(HL)        ;
- $B97A INC HL           ;
- $B97B LD C,(HL)        ;
- $B97C PUSH AF          ;
- $B97D AND $1F          ; {type = record byte0 AND $1F
- $B97F LD (IX+$02),A    ; }
- $B982 POP AF           ;
- $B983 AND $E0          ;
- $B985 LD L,A           ;
- $B986 LD A,C           ; {decode X sub-position from C
- $B987 AND $03          ;
- $B989 RRA              ;
- $B98A RR L             ;
- $B98C RRA              ;
- $B98D RR L             ;
- $B98F LD (IX+$00),L    ; }
- $B992 LD A,C           ; {decode Y sub-position from C
- $B993 AND $FC          ;
- $B995 ADD A,A          ;
- $B996 LD (IX+$01),A    ; }
- $B999 POP BC           ;
- $B99A POP AF           ;
- $B99B POP HL           ;
- $B99C RET              ;
+;
+;   HL room-data entry ($B99D format)
+;   C running spawn counter (persisted across #R$B93F's scan, incremented here)
+; O:IX chosen slot ($5C0E or $5C13)
+;
+; Spawns one creature/hazard from a $B99D table entry. A running spawn counter
+; (C, carried over from #R$B93F's scan) picks which of the two dynamic slots it
+; goes into and skips the entry entirely once both slots are already filled;
+; the entry's own data then supplies the type and X/Y position.
+c$B95F BIT 1,C       ; {skip if both slots already filled (bit1 of counter)
+ $B961 RET NZ        ; }
+ $B962 LD IX,$5C0E   ;
+ $B966 BIT 0,C       ; {counter bit0 picks slot ($5C0E/$5C13)
+ $B968 JR Z,$B96E    ; }
+ $B96A LD IX,$5C13   ;
+*$B96E INC C         ; counter++ (mark this slot used)
+ $B96F PUSH HL       ;
+ $B970 PUSH AF       ;
+ $B971 PUSH BC       ;
+ $B972 LD (IX+$03),L ; {store own address (IX+3/4)
+ $B975 LD (IX+$04),H ; }
+ $B978 INC HL        ; {HL -> type byte
+ $B979 LD A,(HL)     ; }
+ $B97A INC HL        ; {HL -> position byte; C=byte2
+ $B97B LD C,(HL)     ; }
+ $B97C PUSH AF       ;
+ $B97D AND $1F       ; {type = entry byte1 AND $1F
+ $B97F LD (IX+$02),A ; }
+ $B982 POP AF        ;
+ $B983 AND $E0       ; {X = entry byte2 high bits
+ $B985 LD L,A        ; }
+ $B986 LD A,C        ;
+ $B987 AND $03       ;
+ $B989 RRA           ; {rotate X bits into place
+ $B98A RR L          ; }
+ $B98C RRA           ;
+ $B98D RR L          ;
+ $B98F LD (IX+$00),L ;
+ $B992 LD A,C        ; {Y = entry byte2 AND $FC
+ $B993 AND $FC       ;
+ $B995 ADD A,A       ; }
+ $B996 LD (IX+$01),A ;
+ $B999 POP BC        ;
+ $B99A POP AF        ;
+ $B99B POP HL        ;
+ $B99C RET           ;
+
+; Room-tagged creature/encounter table
+;
+; .
+;
+; .
+;
 ; Room-tagged creature/encounter table, separate from the per-room $C152 table
 ; (see Actors.md). 31 entries, 3 bytes each: byte0=room number this entry
 ; belongs to (bit7 double-purposed as a flag - toggled in bulk at init by
 ; #R$B932 and individually by #R$B9FA's boss-entry check at $B9D9, entry 20;
 ; exact armed-vs-consumed sense of the bit not confirmed), byte1=type ID (low 5
-; bits, top 3 bits unconfirmed), byte2=packed
-; slot-choice/skip-flag/X-Y-sub-position, decoded by #R$B95F. Scanned linearly
-; by #R$B93F on room entry; matches spawn into object slots $5C0E/$5C13 (only 2
-; at a time, unlike $C152's fixed 3 slots). Entry 20 ($B9D9, room $30) is the
-; one #R$B9FA treats as "the boss" - it's the only entry individually addressed
-; by room-specific code rather than only via the linear scan.
- $B99D DEFB $00,$85,$06 ; {room-tagged encounter entries (see note)
+; bits, top 3 bits unconfirmed), byte2=X/Y sub-position, decoded by #R$B95F.
+; Scanned linearly by #R$B93F on room entry, which also carries a running
+; counter across the scan (not part of the table) that #R$B95F uses to pick
+; which of the two dynamic object slots ($5C0E/$5C13) a match goes into, and to
+; skip any further matches once both are filled. Entry 20 ($B9D9, room $30) is
+; the one #R$B9FA treats as "the boss" - it's the only entry individually
+; addressed by room-specific code rather than only via the linear scan.
+b$B99D DEFB $00,$85,$06 ; {room-tagged encounter entries (see note)
  $B9A0 DEFB $07,$09,$22 ;
  $B9A3 DEFB $08,$8B,$06 ;
  $B9A6 DEFB $04,$36,$19 ;
@@ -8114,41 +8357,47 @@ c$BB5D LD IX,$5B04     ; {IX=$5B04 (player); run for slot $5C0E then $5C13
 ; Cycle inventory selection via keys (port $F7FE), animate scroll ($5C21/$5C22)
 ;
 ; Used by the routine at #R$B9FA.
-c$BC1F JR NZ,$BC4A   ;
+;
+; .
+;
+; Handles the player cycling through carried items with the number keys,
+; driving the little scroll animation as the selection changes and updating
+; which item is actually held.
+c$BC1F JR NZ,$BC4A   ; no key pressed? skip to scroll dispatch
  $BC21 LD BC,$F7FE   ;
  $BC24 IN A,(C)      ;
- $BC26 AND $03       ;
- $BC28 CP $03        ;
+ $BC26 AND $03       ; {keys 1/2 both pressed? RET
+ $BC28 CP $03        ; }
  $BC2A RET Z         ;
- $BC2B AND $01       ;
- $BC2D JR NZ,$BC43   ;
- $BC2F LD A,$01      ;
- $BC31 LD ($5C21),A  ;
+ $BC2B AND $01       ; {key 1 pressed?
+ $BC2D JR NZ,$BC43   ; }
+ $BC2F LD A,$01      ; {arm scroll: dir=1, speed=4
+ $BC31 LD ($5C21),A  ; }
  $BC34 LD A,$04      ;
  $BC36 LD ($5C22),A  ;
  $BC39 LD HL,$5C23   ;
- $BC3C DEC (HL)      ;
- $BC3D BIT 7,(HL)    ;
- $BC3F RET Z         ;
+ $BC3C DEC (HL)      ; selection index--
+ $BC3D BIT 7,(HL)    ; {wrapped below 0? snap to $1A
+ $BC3F RET Z         ; }
  $BC40 LD (HL),$1A   ;
  $BC42 RET           ;
-*$BC43 XOR A         ;
- $BC44 LD ($5C21),A  ;
+*$BC43 XOR A         ; {key 2: clear scroll state
+ $BC44 LD ($5C21),A  ; }
  $BC47 LD ($5C22),A  ;
-*$BC4A LD A,($5C21)  ;
- $BC4D OR A          ;
+*$BC4A LD A,($5C21)  ; {scrolling? skip re-init
+ $BC4D OR A          ; }
  $BC4E JR NZ,$BC6C   ;
  $BC50 CALL $9EBD    ; Init $5BD6 object slots from $5C23
  $BC53 LD HL,$5C22   ;
  $BC56 INC (HL)      ;
- $BC57 LD A,(HL)     ;
- $BC58 CP $04        ;
+ $BC57 LD A,(HL)     ; {scroll-speed counter==4?
+ $BC58 CP $04        ; }
  $BC5A RET NZ        ;
  $BC5B LD (HL),$00   ;
  $BC5D LD HL,$5C23   ;
  $BC60 INC (HL)      ;
- $BC61 LD A,(HL)     ;
- $BC62 CP $1B        ;
+ $BC61 LD A,(HL)     ; {selection index reached $1B (wrap)?
+ $BC62 CP $1B        ; }
  $BC64 JP NZ,$9EBD   ; => Init $5BD6 object slots from $5C23
  $BC67 LD (HL),$00   ;
  $BC69 JP $9EBD      ; => Init $5BD6 object slots from $5C23
@@ -8161,70 +8410,63 @@ c$BC1F JR NZ,$BC4A   ;
 ;
 ; Used by the routine at #R$B9FA.
 ;
-; .
+; IX=$5B04 (hero, implicit - always the same object)
 ;
-; Gated on room-category $5B98=$0C and the hero standing at Y=$46 or $48, X in
-; a fixed range. Every other frame (frame counter bit0), flips the hero's Y
-; between $46 and $48 - a two-frame teeter/seesaw motion - and arms the hero's
-; direction flag. Once fully settled at X in [$28,$34), on a 4-frame cadence
-; sets room-state to 6 (#R$BCB4) and increments a counter at (HL); reaching $0C
-; fires #R$AE84 (reset). Between $06 and $0C it instead computes an index into
-; a sound-effect table ($F928) and plays it via #R$9A52's write-and-dual-buffer
-; path. Reads as a seesaw/rocking-platform puzzle piece: stand at the sweet
-; spot, it rocks you for a few frames, plays an escalating sound cue, then
-; resolves.
-c$BC73 LD HL,$5C24     ; {gate: flag ($5C24)!=$0D
- $BC76 LD A,(HL)       ;
- $BC77 CP $0D          ;
- $BC79 RET Z           ; }
- $BC7A LD A,($5B98)    ; {room ($5B98)==$0C?
- $BC7D CP $0C          ;
- $BC7F RET NZ          ; }
- $BC80 LD A,(IX+$01)   ; {player Y==$48 or $46?
- $BC83 CP $48          ;
- $BC85 JR Z,$BC8A      ;
+; A rocking-platform puzzle piece: once the hero stands at the right spot in
+; the right room, it rocks them between two Y positions for a few frames, then
+; plays an escalating sound cue and resolves.
+c$BC73 LD HL,$5C24     ;
+ $BC76 LD A,(HL)       ; {flag==$0D? skip
+ $BC77 CP $0D          ; }
+ $BC79 RET Z           ;
+ $BC7A LD A,($5B98)    ; {room==$0C?
+ $BC7D CP $0C          ; }
+ $BC7F RET NZ          ;
+ $BC80 LD A,(IX+$01)   ;
+ $BC83 CP $48          ; {Y==$48?
+ $BC85 JR Z,$BC8A      ; }
  $BC87 CP $46          ;
- $BC89 RET NZ          ; }
-*$BC8A LD E,A          ; {player X in [$28,$34)?
+ $BC89 RET NZ          ;
+*$BC8A LD E,A          ;
  $BC8B LD A,(IX+$00)   ;
- $BC8E CP $34          ;
- $BC90 RET NC          ;
+ $BC8E CP $34          ; {X<$34? else RET
+ $BC90 RET NC          ; }
  $BC91 CP $28          ;
- $BC93 RET C           ; }
- $BC94 SET 7,(IX+$03)  ; arm flag (IX+3) bit7
- $BC98 LD A,($5C02)    ; get Frame counter
+ $BC93 RET C           ;
+ $BC94 SET 7,(IX+$03)  ;
+ $BC98 LD A,($5C02)    ;
  $BC9B AND $01         ; {frame bit0: toggle Y=$46/$48
  $BC9D JR NZ,$BCAC     ; }
- $BC9F LD (IX+$01),$46 ; store Y=$46
- $BCA3 LD A,E          ; {restore Y=$48 unless already there
+ $BC9F LD (IX+$01),$46 ;
+ $BCA3 LD A,E          ;
  $BCA4 CP $48          ;
  $BCA6 JR Z,$BCAC      ;
- $BCA8 LD (IX+$01),$48 ; }
-*$BCAC LD A,($5C02)    ; get Frame counter
- $BCAF AND $03         ; {frame&3!=0? RET; else A=6
- $BCB1 RET NZ          ;
- $BCB2 LD A,$06        ; }
- $BCB4 LD ($5C06),A    ; {store room-state=6; read/inc counter (HL)
+ $BCA8 LD (IX+$01),$48 ;
+*$BCAC LD A,($5C02)    ;
+ $BCAF AND $03         ; {frame&3!=0? RET
+ $BCB1 RET NZ          ; }
+ $BCB2 LD A,$06        ;
+ $BCB4 LD ($5C06),A    ; store room-state=6
  $BCB7 LD A,(HL)       ;
- $BCB8 INC (HL)        ; }
+ $BCB8 INC (HL)        ;
  $BCB9 CP $0C          ; counter==$0C?
  $BCBB JP Z,$AE84      ; => Reset room state=0 and hazard counter ($5C07)
- $BCBE SUB $06         ; {counter-6; RET C if negative; C=A; compute 6-C
+ $BCBE SUB $06         ; counter-6
  $BCC0 RET C           ;
  $BCC1 LD C,A          ;
  $BCC2 LD A,$06        ;
  $BCC4 SUB C           ;
- $BCC5 LD L,A          ; }
- $BCC6 LD H,$00        ; {HL=(6-C)*32 (table row offset)
+ $BCC5 LD L,A          ;
+ $BCC6 LD H,$00        ;
  $BCC8 ADD HL,HL       ;
  $BCC9 ADD HL,HL       ;
  $BCCA ADD HL,HL       ;
  $BCCB ADD HL,HL       ;
- $BCCC ADD HL,HL       ; }
- $BCCD LD DE,$F928     ; {HL += $F928 (sound-effect table); save HL; A=$98
+ $BCCC ADD HL,HL       ;
+ $BCCD LD DE,$F928     ; DE=$F928 (sound-effect table)
  $BCD0 ADD HL,DE       ;
  $BCD1 PUSH HL         ;
- $BCD2 LD A,$98        ; }
+ $BCD2 LD A,$98        ;
  $BCD4 CALL $9A52      ; Write A to (HL)+$6000 (secondary buffer), then #R$9A62
                        ; dual-write loop
  $BCD7 POP HL          ; {restore HL, HL++; A=$99
@@ -8260,6 +8502,10 @@ c$BCDE LD A,(HL)     ; {negate 3 bytes (CPL each), HL-- between (unrolled)
 ; #R$BB5D.
 ;
 ; DE score delta to add (passed through to #R$BD11)
+;
+; Awards a score/timer delta and redraws its display, preserving every register
+; around the call so it can be dropped into any piece of game logic without
+; disturbing what that code was doing.
 c$BCF2 PUSH IX       ; {push main regs (IX,IY,HL,BC,AF)
  $BCF4 PUSH IY       ;
  $BCF6 PUSH HL       ;
@@ -8344,6 +8590,11 @@ c$BD50 LD HL,$5C1B   ; {HL=candidate ($5C1B); already flagged (bit7) -> skip
 ; Print current score at screen $5029, falls into #R$BD78
 ;
 ; Used by the routine at #R$BCF2.
+;
+; .
+;
+; Draws the current score as digits on screen, blanking leading zeros - the
+; shared digit-printer also reused by the high-score display.
 c$BD75 LD HL,$5029   ; {HL=$5029; save HL
 ; This entry point is used by the routine at #R$BD3B.
 *$BD78 PUSH HL       ; }
@@ -8403,6 +8654,12 @@ c$BD75 LD HL,$5029   ; {HL=$5029; save HL
 ; Repeated-subtraction division: subtract DE from 32-bit (IX+0..3), C=count
 ;
 ; Used by the routine at #R$BD75.
+;
+; .
+;
+; Divides a 32-bit value by repeatedly subtracting a divisor and counting how
+; many times it fit - used by the score/digit-printing code to peel off one
+; decimal digit at a time.
 c$BDDF LD L,(IX+$00) ; {HL = (IX+0)/(IX+1) (low word)
  $BDE2 LD H,(IX+$01) ;
  $BDE5 PUSH HL       ; }
@@ -8525,6 +8782,11 @@ c$BE42 PUSH AF       ; save A (room number)
 ; Dispatch per-creature-type init (jump table $BECA) for the 3 hazard slots
 ;
 ; Used by the routine at #R$8F47.
+;
+; .
+;
+; Spawns the room's creatures/hazards: for each of the 3 slots decoded from the
+; room data table, jumps to the matching type's own setup routine.
 c$BE98 LD B,$03      ; {B=3 slots; DE=decoded record ($BE24); IX=$5B08 object
  $BE9A LD DE,$BE24   ; base
  $BE9D PUSH IX       ;
@@ -8657,10 +8919,14 @@ c$BF67 LD C,$01        ;
 ;   C low bit merged into new random timer value
 ;   IY object (timer at +8)
 ; O:Zf set when timer reaches 0
+;
+; A shared per-object countdown, reseeded with a random-ish value each time it
+; runs out - used to stagger creature behavior changes so objects don't all act
+; in lockstep.
 c$BFA0 LD A,(IY+$08) ; {flag!=0? skip init
  $BFA3 OR A          ;
  $BFA4 JR NZ,$BFB2   ; }
- $BFA6 CALL $C135    ; CALL #R$C135 (gate/init helper)
+ $BFA6 CALL $C135    ; gate/init via #R$C135
  $BFA9 CALL $9390    ; Pseudo-random byte
  $BFAC AND $7F       ; {mask random to 7-bit, OR type flag C; store; reload
  $BFAE OR C          ;
@@ -8698,6 +8964,13 @@ c$BFBB LD C,$01        ;
 
 ; Animate object Y-position; falls into #R$C000 (paged-bank helper, called by
 ; #R$8F47/#R$9491)
+;
+; .
+;
+; .
+;
+; Moves an object vertically, timed by its shared countdown, then falls through
+; into the paged-bank music/system entry point.
 c$BFF6 LD C,$01        ;
  $BFF8 CALL $BFA0      ; Countdown timer
  $BFFB LD (IX+$02),$7F ;
@@ -8751,7 +9024,7 @@ c$C054 BIT 0,(IY+$08) ;
  $C066 JP $C0AC       ; => Advance animation frame
 
 ; Advance animation frame counter (IY+7), compute sprite frame (IX+2)
-c$C069 LD C,$11       ; {CALL #R$BFA0 gate check
+c$C069 LD C,$11       ; {gate check via #R$BFA0
  $C06B CALL $BFA0     ;
  $C06E RET NZ         ; }
  $C06F INC (IY+$07)   ; {increment frame counter; check bit4 (cycle end)
@@ -8786,6 +9059,12 @@ c$C069 LD C,$11       ; {CALL #R$BFA0 gate check
 ; Advance animation frame; check player collision, trigger effect via #R$AE85
 ;
 ; Used by the routines at #R$BEDD, #R$BF22, #R$BF67, #R$BFBB and #R$C054.
+;
+; .
+;
+; The shared "tick a creature" finisher: advances its animation to the next
+; frame and, on the right frame, checks whether the hero is close enough to be
+; hit, firing a status trigger if so.
 c$C0AC LD A,(IY+$07)  ; {advance frame counter (IY+7)
  $C0AF INC A          ;
  $C0B0 AND $87        ;
@@ -9120,6 +9399,9 @@ b$C152 DEFB $C1,$60,$14,$06                 ; {room $00 data
 ; #R$BFF6.
 ;
 ; A sound-effect index (0-6)
+;
+; Plays a sound effect by number without disturbing any registers - the generic
+; "make this sound" entry point called from all over the game.
 c$C4B2 PUSH HL       ;
  $C4B3 PUSH DE       ;
  $C4B4 PUSH BC       ;
@@ -9167,6 +9449,13 @@ c$C4CE LD H,$7F      ; {H=$7F (sweep count); A=0; B=$0A (bit count)
  $C4E8 RET           ; }
 
 ; Play sound effect (raw OUT $FE beeper timing loop)
+;
+; .
+;
+; .
+;
+; A beeper sound-effect player: plays back a sample, then a tone sweep,
+; entirely through timed port writes rather than an interrupt-driven player.
 c$C4E9 LD HL,$0000   ; {HL=0 (sample pointer); BC=$2328 (sample count)
  $C4EC LD BC,$2328   ; }
 *$C4EF LD A,$23      ; {per-sample delay calc (A=$23-B)

@@ -67,8 +67,6 @@ mechanism and the "last slot = held item" rule.
 
 ## Open questions
 
-- What items #21 and #31 actually are (sprites drawn but not yet seen in-game with
-  a name attached).
 - Whether there's a fourth barrel size not yet found (Small/Medium/Big/Beer Barrel
   confirmed so far).
 - Whether the log has a fixed capacity of 26 (matching $5B7C's 26-byte size) or

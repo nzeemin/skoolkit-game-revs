@@ -170,7 +170,7 @@ Volume: about 4800 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/terramex-zx/terramex/
 
-Status: Work in progress (109K .ctl file).
+Status: Work in progress (119K .ctl file).
 
 
 ## Flying Shark (ZX Spectrum)

@@ -2714,7 +2714,7 @@ c$8A86 DI            ; {Disable interrupts; B = this entry's header byte, or 0
 ;
 ; Used by the routine at #R$8A86.
 ;
-; .
+; HL -> a length-prefixed playlist
 ;
 ; (HL) on entry points at a length-prefixed playlist (see #R$8B82); HL is
 ; advanced past it. Loops B times (repeat count from the entry's header, from
@@ -3103,15 +3103,22 @@ w$8D80 DEFW $8E24,$8E87,$8EEA,$8F4D
  $8E08 DEFW $A7D9,$A965,$A998,$A9CB
  $8E10 DEFW $A9FE
 
-; Data block at 8E12
+; Source-run pointers for the sprite background save, indexed by #R$C790
+;
+; .
+;
+; .
+;
+; 5 entries, indexed by the frame's flag byte (doubled, bit 7 masked, at
+; $C7C7). All point into the single byte run at #R$8E1C at successively later
+; offsets, so one shared run supplies five different-length sources (8, 7, 3, 2
+; and 1 bytes).
 w$8E12 DEFW $8E1C
  $8E14 DEFW $8E1D
  $8E16 DEFW $8E21
  $8E18 DEFW $8E22
  $8E1A DEFW $8E23
-
-; Data block at 8E1C
-b$8E1C DEFB $44,$45,$07,$45,$05,$47,$43,$42
+ $8E1C DEFB $44,$45,$07,$45,$05,$47,$43,$42
 
 ; Robin sprites
 b$8E24 DEFB $03,$20,$00
@@ -3925,9 +3932,20 @@ b$A2E7 DEFB $00,$00,$00,$00,$04,$00,$00,$02 ; {#HTML[#UDGARRAY3,,3,3,,($A2E7-$A3
  $A43F DEFB $00,$14,$5F,$30,$7C,$99,$48,$D8 ;
  $A447 DEFB $00,$48,$ED,$80,$36,$04,$CC,$D9 ; }
 
-; Data block at A44F
-b$A44F DEFB $46,$46,$46,$44,$46,$44,$44,$44
- $A457 DEFB $44,$44,$44,$44,$44,$44,$44
+; Attribute pattern for the special-room effect, 5 rows of 3 cells
+;
+; .
+;
+; .
+;
+; Copied into the attribute area at $588D by #R$DA0F when Robin enters a
+; special-event room (shifted 3 cells right if the room is mirrored). The
+; values $46/$44 set the colours the #R$DA9E callback then flickers over.
+b$A44F DEFB $46,$46,$46
+ $A452 DEFB $44,$46,$44
+ $A455 DEFB $44,$44,$44
+ $A458 DEFB $44,$44,$44
+ $A45B DEFB $44,$44,$44
 
 ; Druid sprites
 b$A45E DEFB $03,$20,$02
@@ -4136,7 +4154,7 @@ b$A965 DEFB $03,$10,$04
 ;
 ; Used by the routines at #R$BF80 and #R$C276.
 ;
-; .
+; IX Object record (same layout as #R$C8F7)
 ;
 ; IX -> object record (same layout as #R$C8F7). Runs its main logic once every
 ; 4 calls (divider counter at $AA32). Picks a new animation-frame-list pointer
@@ -4412,21 +4430,34 @@ c$AA31 LD A,$04       ; {Divide call rate by 4 using the counter at $AA32
  $AC0F LD (IX+$03),D  ;
 *$AC12 RET            ;
 
-; Data block at AC13
-b$AC13 DEFB $00,$00,$51,$AC,$00,$00,$00,$00
- $AC1B DEFB $00,$00,$50,$00,$00,$51,$AC,$00
- $AC23 DEFB $00,$00,$00,$00,$00,$50,$00,$00
- $AC2B DEFB $51,$AC,$00,$00,$00,$00,$00,$00
- $AC33 DEFB $50,$00,$00,$51,$AC,$00,$00,$00
- $AC3B DEFB $00,$00,$00,$50,$00,$01,$51,$AC
- $AC43 DEFB $00,$00,$00,$00,$00,$00,$50,$00
- $AC4B DEFB $00,$00,$00,$00,$00,$00,$0B,$0A
- $AC53 DEFB $09,$08,$0B,$0A,$09,$08,$FF,$51
- $AC5B DEFB $AC,$00,$01,$02,$03,$04,$05,$06
- $AC63 DEFB $07,$FF,$5C,$AC,$0C,$FF,$5C,$AC
- $AC6B DEFB $0C,$FF,$51,$AC,$0D,$0D,$0D,$FF
- $AC73 DEFB $5C,$AC,$0E,$0E,$0E,$FF,$51,$AC
- $AC7B DEFB $0C,$0C,$10,$11,$12,$FF,$7F,$AC
+; Guard object table, 5 entries of 11 bytes
+;
+; .
+;
+; .
+;
+; Rebuilt on every room change by #R$C276 from the room's block flags, then
+; stepped each frame by #R$AA31. Scanned for hits by #R$BD49 (arrows) and
+; #R$BE43 (sword); (IX+4) bit 0 marks an entry active, bit 5 marks it already
+; hit, and (IX+9)/(IX+0A) hold its position.
+b$AC13 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
+ $AC1E DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
+ $AC29 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
+ $AC34 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
+ $AC3F DEFB $00,$01,$51,$AC,$00,$00,$00,$00,$00,$00,$50
+
+; Data block at AC4A
+b$AC4A DEFB $00
+ $AC4B DEFW $0000
+ $AC4D DEFW $0000
+ $AC4F DEFW $0000
+ $AC51 DEFB $0B,$0A,$09,$08,$0B,$0A,$09,$08
+ $AC59 DEFB $FF,$51,$AC,$00,$01,$02,$03,$04
+ $AC61 DEFB $05,$06,$07,$FF,$5C,$AC,$0C,$FF
+ $AC69 DEFB $5C,$AC,$0C,$FF,$51,$AC,$0D,$0D
+ $AC71 DEFB $0D,$FF,$5C,$AC,$0E,$0E,$0E,$FF
+ $AC79 DEFB $51,$AC,$0C,$0C,$10,$11,$12,$FF
+ $AC81 DEFB $7F,$AC
 
 ; Draw the main menu items
 ;
@@ -4834,26 +4865,47 @@ b$B4E4 DEFB $00,$06,$45,$45,$04,$45,$45,$45
 ; Data block at B4ED
 b$B4ED DEFB $06,$FF,$06,$06,$06,$04,$04,$04
  $B4F5 DEFB $06,$06,$06,$FF,$06,$06,$06,$45
- $B4FD DEFB $45,$04,$05,$06,$06,$00,$00,$00
- $B505 DEFB $BB,$BC,$BD,$BE,$BF,$00,$46,$46
- $B50D DEFB $44,$46,$46,$00,$00,$00,$8F,$90
- $B515 DEFB $01,$91,$92,$00,$06,$46,$FF,$06
- $B51D DEFB $46,$00,$1C,$B0,$93,$94,$01,$95
- $B525 DEFB $96,$00,$44,$44,$FF,$44,$44,$00
- $B52D DEFB $20,$A0,$97,$98,$00,$06,$46,$00
- $B535 DEFB $00
+ $B4FD DEFB $45,$04,$05,$06,$06,$00,$00
+
+; Data block at B504
+b$B504 DEFB $00,$BB,$BC,$BD,$BE,$BF,$00,$46
+ $B50C DEFB $46,$44,$46,$46,$00,$00
+
+; Fixed status message (custom font encoding), for event status $02
+;
+; .
+;
+; .
+;
+; Printed by #R$DB98 when a special-event status byte is $02. Custom font
+; codes, not ASCII - the text itself is still unread.
+b$B512 DEFB $00,$8F,$90,$01,$91,$92,$00,$06
+ $B51A DEFB $46,$FF,$06,$46,$00,$1C,$B0,$93
+ $B522 DEFB $94,$01,$95,$96,$00,$44,$44,$FF
+ $B52A DEFB $44,$44,$00,$20,$A0,$97,$98,$00
+ $B532 DEFB $06,$46,$00,$00
 
 ; Data block at B536
 b$B536 DEFB $00,$9D,$9E,$9F,$01,$A0,$A1,$A2
  $B53E DEFB $00,$46,$06,$46,$FF,$46,$06,$46
- $B546 DEFB $00,$00,$00,$A3,$A4,$01,$A5,$A6
- $B54E DEFB $00,$45,$47,$FF,$44,$46,$00,$00
- $B556 DEFB $00,$C6,$01,$C7,$01,$C7,$01,$C8
- $B55E DEFB $00,$42,$FF,$44,$FF,$44,$FF,$46
- $B566 DEFB $00,$14,$A8,$C0,$C1,$01,$C2,$C3
- $B56E DEFB $01,$C4,$C5,$00,$46,$46,$FF,$44
- $B576 DEFB $44,$FF,$44,$44,$00,$00,$00,$AB
- $B57E DEFB $AC,$AD,$AE,$00
+ $B546 DEFB $00,$00
+
+; Fixed status message (custom font encoding), for event status $05
+;
+; .
+;
+; .
+;
+; Printed by #R$DB98 when a special-event status byte is $05. Same custom font
+; encoding as #R$B512.
+b$B548 DEFB $00,$A3,$A4,$01,$A5,$A6,$00,$45
+ $B550 DEFB $47,$FF,$44,$46,$00,$00,$00,$C6
+ $B558 DEFB $01,$C7,$01,$C7,$01,$C8,$00,$42
+ $B560 DEFB $FF,$44,$FF,$44,$FF,$46,$00,$14
+ $B568 DEFB $A8,$C0,$C1,$01,$C2,$C3,$01,$C4
+ $B570 DEFB $C5,$00,$46,$46,$FF,$44,$44,$FF
+ $B578 DEFB $44,$44,$00,$00,$00,$AB,$AC,$AD
+ $B580 DEFB $AE,$00
 
 ; Message at B582
 t$B582 DEFM "DDDF"
@@ -5163,11 +5215,26 @@ c$B867 LD HL,($C548)  ; {Only run in the target room ($D3B8); once every 4
  $B8F7 POP HL         ;
  $B8F8 JP $BF81       ;
 
-; Data block at B8FB
-b$B8FB DEFB $00,$01,$06,$B9,$00,$00,$00,$00
- $B903 DEFB $00,$40,$50,$01,$02,$FF,$07,$B9
- $B90B DEFB $81,$82,$FF,$0C,$B9,$80,$FF,$10
- $B913 DEFB $B9,$00,$FF,$14,$B9,$00
+; Ambush object record and its animation frame lists
+;
+; .
+;
+; .
+;
+; Same 11-byte entry layout as #R$AC13. Set up on every room change by #R$C276
+; and advanced by #R$B867 as the scripted capture/ambush plays out. Each frame
+; list is a run of frame numbers ended by $FF, followed by a 2-byte pointer
+; back to its own loop point; #R$B867 picks between $B906 and $B90B via
+; (IX+2/3).
+b$B8FB DEFB $00,$01,$06,$B9,$00,$00,$00,$00 ; {Object record (see #R$AC13);
+ $B903 DEFB $00,$40,$50                     ; (IX+9)/(IX+0A) = position $40/$50
+                                            ; }
+ $B906 DEFB $01,$02,$FF,$07,$B9             ; Frame list: 01, 02, loop
+ $B90B DEFB $81,$82,$FF,$0C,$B9             ; Frame list: 81, 82, loop
+                                            ; (mirrored pair of #R$B906)
+ $B910 DEFB $80,$FF,$10,$B9                 ; Frame list: 80, loop
+ $B914 DEFB $00,$FF,$14,$B9                 ; Frame list: 00, loop
+ $B918 DEFB $00                             ; Terminator/flag read by #R$B867
 
 ; Update a special enemy: pick a target room, then patrol toward it
 ;
@@ -5341,7 +5408,7 @@ c$B919 LD A,($BB9F)   ;
 ;
 ; Used by the routine at #R$B919.
 ;
-; .
+; IX Object record
 ;
 ; IX -> its object record. (IX+10/11) holds the enemy's current world-map
 ; position, packed as two nibbles (X in bits 0-3, Y in bits 4-7 of the low byte
@@ -5562,7 +5629,15 @@ c$BBC1 LD A,$00       ; {Divide the call rate by 4 using the counter at $BBC2
  $BC54 RES 0,(IX+$04) ;
  $BC58 RET            ;
 
-; Data block at BC59
+; The roaming object's record and step tables
+;
+; .
+;
+; .
+;
+; Standard object-record layout (see #R$AC13). #R$BBC1 steps (IX+9) toward or
+; away from Robin's room, alternating between the two direction/frame tables
+; that follow.
 b$BC59 DEFB $00,$01,$00,$00,$00,$00,$00,$50
  $BC61 DEFB $00,$00,$50,$00,$00,$00,$00,$00
  $BC69 DEFB $0E,$06,$07,$08,$09,$0A,$0B,$0C
@@ -6181,7 +6256,7 @@ c$BF37 LD A,($BF6F)  ; get Energy level
 ;
 ; Used by the routines at #R$BC81, #R$BDA3 and #R$BDE0.
 ;
-; .
+; B Starting inner-loop delay length (grows every outer pass)
 ;
 ; Same border-toggle technique as #R$D9E9/#R$BD84, but the inner busy-wait
 ; length is B itself, which increments every outer pass (until bit 7 sets, i.e.
@@ -6201,11 +6276,32 @@ c$BF54 PUSH AF       ; {A = 0; save AF/BC
  $BF65 POP AF        ;
  $BF66 RET           ;
 
-; Data block at BF67
-b$BF67 DEFB $00,$AA,$00,$00,$00,$00,$00,$00
- $BF6F DEFB $0F                             ; Energy level
+; Arrow object, room hotspots and Robin's energy level
+;
+; .
+;
+; .
+;
+; Cleared on every room change by #R$C276. The arrow is launched by #R$BC81,
+; stepped each frame by #R$BCC2 and tested against guards by #R$BD49.
+b$BF67 DEFB $00                     ; Arrow screen position (bit 7 = "arrow
+                                    ; gone" flag)
+ $BF68 DEFB $AA                     ; Arrow direction (bits 6-7) and animation
+                                    ; frame (bits 0-6); $0A-$0D = in flight
+ $BF69 DEFB $00,$00,$00,$00,$00,$00 ; 3 room hotspots, 2 bytes each: row byte
+                                    ; ($FF = unused, bit 6 = triggered), then a
+                                    ; second byte (see #R$BDA3)
+ $BF6F DEFB $0F                     ; Energy level
 
 ; START point after game loading
+;
+; .
+;
+; .
+;
+; Where control lands once the game has finished loading. Sets up the stack,
+; then runs the menu (#R$CD6C) and falls into the main game loop (#R$BF80) once
+; a game starts.
 c$BF70 DI            ;
  $BF71 LD SP,$FFF4   ; set initial stack pointer
  $BF74 CALL $CD6C    ; Menu procedure, return on game start
@@ -6370,30 +6466,35 @@ c$C055 LD A,($D5A4)  ; {Bail out unless the "game complete" flag (bit 7 of
 ; Draw current room on the shadow screen
 ;
 ; Used by the routines at #R$B867, #R$BF80, #R$C4D2 and #R$CD6C.
+;
+; .
+;
+; Draws the current room's base type via #R$C0AF, then its additional elements
+; the same way, on top.
 c$C072 LD HL,$7B39   ;
- $C075 LD ($C54A),HL ; Set room types block base address
+ $C075 LD ($C54A),HL ; HL -> the room-type descriptor table at $7B39
  $C078 LD HL,($C548) ;
- $C07B LD DE,$79F9   ; World map address
+ $C07B LD DE,$79F9   ; HL -> the world-map byte for the current room ($79F9)
  $C07E ADD HL,DE     ;
- $C07F LD A,(HL)     ; get room byte
- $C080 LD ($C0E8),A  ;
+ $C07F LD A,(HL)     ; {A = the map byte; bit 7 -> $C0E8, the rest -> the
+ $C080 LD ($C0E8),A  ; room-type index at $C547
  $C083 BIT 7,A       ;
  $C085 RES 7,A       ;
- $C087 LD ($C547),A  ;
- $C08A LD A,$1C      ;
- $C08C JR NZ,$C090   ;
+ $C087 LD ($C547),A  ; }
+ $C08A LD A,$1C      ; {Low nibble of the room byte picks a patch value ($1C or
+ $C08C JR NZ,$C090   ; $00), used later while drawing
  $C08E LD A,$00      ;
 *$C090 LD ($C103),A  ;
- $C093 LD ($C145),A  ;
+ $C093 LD ($C145),A  ; }
  $C096 CALL $C0AF    ; Draw given room type on the shadow screen
- $C099 LD DE,($C548) ;
+ $C099 LD DE,($C548) ; {Room number < 256: also draw its additional elements
  $C09D LD A,D        ;
  $C09E OR A          ;
- $C09F LD A,E        ;
+ $C09F LD A,E        ; }
  $C0A0 RET NZ        ;
- $C0A1 LD HL,$8511   ;
- $C0A4 LD ($C547),A  ;
- $C0A7 LD ($C54A),HL ;
+ $C0A1 LD HL,$8511   ; {Repoint $C54A/$C547 at the additional-elements table
+ $C0A4 LD ($C547),A  ; ($8511)
+ $C0A7 LD ($C54A),HL ; }
  $C0AA CALL $C0AF    ; Draw given room type on the shadow screen
  $C0AD XOR A         ;
  $C0AE RET           ;
@@ -6401,6 +6502,13 @@ c$C072 LD HL,$7B39   ;
 ; Draw given room type on the shadow screen
 ;
 ; Used by the routine at #R$C072.
+;
+; .
+;
+; Walks a token list - a count byte followed by that many (coordinate, block
+; number) pairs - and draws each block via #R$C0D1. #R$C072 calls this once for
+; the room's base type and, separately, once for its additional elements,
+; reusing the same code for both passes.
 c$C0AF CALL $C1C1    ; Skip forward to the ($C547)-th descriptor in the table
                      ; at
 ; This entry point is used by the routine at #R$C15E.
@@ -6637,7 +6745,7 @@ c$C1C1 LD HL,($C54A) ; {HL -> the descriptor table; bail out if the index
 ;
 ; Used by the routine at #R$C0D1.
 ;
-; .
+; DE -> the block's data (header byte first)
 ;
 ; Called by #R$C0D1 when a block's mirror flag is set. Bit-reverses each pixel
 ; byte via a table lookup at $FD00 (self-modifying the low address byte of "LD
@@ -6714,7 +6822,7 @@ b$C228 DEFB $32,$2C,$C2,$3A,$00,$FD,$C9
 ;
 ; Used by the routine at #R$BF80.
 ;
-; .
+; E Direction bits (bit 0/1 right/left, bit 2/3 down/up)
 ;
 ; E bit 0/1 = step right/left (column, wrapping within 0-15 via the AND $0F on
 ; the nibble), bit 2/3 = step down/up (row H, clamped/wrapped within 0-19 to
@@ -6964,25 +7072,26 @@ c$C276 PUSH AF         ;
 ;
 ; Used by the routine at #R$C276.
 ;
-; .
+;   A Index in bits 4-5
+; O:HL -> the matching 12-byte entry in the table at $8A39
 ;
 ; Extracts bits 4-5 of A (0-3) and returns HL = that index x 12 + $8A39. Called
 ; from #R$C276 while setting up the score/room-indicator digit blink.
-c$C3FA RRA           ; {A bits 4-5 -> HL (0-3)
+c$C3FA RRA           ; {Shift bits 4-5 down
  $C3FB RRA           ;
  $C3FC RRA           ;
- $C3FD RRA           ;
- $C3FE AND $03       ; }
- $C400 LD L,A        ;
- $C401 LD H,$00      ;
- $C403 PUSH HL       ; {HL = index x 12
+ $C3FD RRA           ; }
+ $C3FE AND $03       ; Mask to 0-3
+ $C400 LD L,A        ; {HL = the index
+ $C401 LD H,$00      ; }
+ $C403 PUSH HL       ; {Save it; HL x2
  $C404 ADD HL,HL     ;
- $C405 POP DE        ;
- $C406 ADD HL,DE     ;
- $C407 ADD HL,HL     ;
- $C408 ADD HL,HL     ;
- $C409 LD DE,$8A39   ; }
- $C40C ADD HL,DE     ;
+ $C405 POP DE        ; }
+ $C406 ADD HL,DE     ; HL = index x3
+ $C407 ADD HL,HL     ; {HL = index x12
+ $C408 ADD HL,HL     ; }
+ $C409 LD DE,$8A39   ; {Add the table base $8A39
+ $C40C ADD HL,DE     ; }
  $C40D RET           ;
 
 ; Look up current room number in the $C550 table
@@ -7216,11 +7325,10 @@ c$C517 LD DE,$001F   ; {DE = row stride ($1F); A = starting column (0)
 ;
 ; .
 ;
-; Called from #R$BF80 once per frame; #R$BF80 resets to the menu (#R$BF79) when
-; this returns with carry clear. Reads row $7FFE (Space/M/N/B/Sym) first,
-; returning immediately (carry set) if its bit 0 (Space) is pressed; otherwise
-; reads row $FEFE (Caps Shift/Z/X/C/V) and returns its bit 0 in carry. Which
-; specific key combination triggers the menu reset is not fully confirmed.
+; Called from #R$BF80 once per frame; carry clear sends it back to the menu
+; (#R$BF79). Returns early with carry set if Space is down, otherwise reports
+; Caps Shift's state instead. Which combination is actually meant to trigger
+; the reset is not confirmed.
 c$C53B LD A,$7F      ; {Read the Space row ($7FFE); return early if Space is
  $C53D IN A,($FE)    ; pressed
  $C53F RRA           ;
@@ -7240,37 +7348,54 @@ b$C547 DEFB $70             ; Descriptor index: room type $00..$26 when $C54A
                             ; types) or #R$8511 (additional elements)
  $C54C DEFB $40,$40,$40,$80
 
-; Message at C550
-t$C550 DEFM "<=JKLMZ["
+; Rooms that get the special attribute recolour (26 entries, scanned by
+; #R$C40E)
+;
+; .
+;
+; .
+;
+; Flat list of room low bytes, linearly scanned - a membership set, not
+; indexed. The values are contiguous column pairs walking down rows $3-$A, i.e.
+; a rectangular region of the map.
+b$C550 DEFB $3C,$3D,$4A,$4B,$4C,$4D,$5A,$5B
+ $C558 DEFB $5C,$5D,$6A,$6B,$6C,$6D,$7A,$7B
+ $C560 DEFB $7C,$7D,$8A,$8B,$8C,$8D,$9C,$9D
+ $C568 DEFB $AC,$AD
 
-; Data block at C558
-b$C558 DEFB $5C
-
-; Message at C559
-t$C559 DEFM "]jklmz"
-
-; Data block at C55F
-b$C55F DEFB $7B,$7C,$7D,$8A,$8B,$8C,$8D,$9C
- $C567 DEFB $9D,$AC,$AD,$04,$0A,$1C,$0B,$1D
- $C56F DEFB $2A,$1E,$2B,$1F,$04,$0A,$24,$0B
-
-; Message at C577
-t$C577 DEFM "%*&+'"
-
-; Data block at C57C
-b$C57C DEFB $04,$0B,$20,$0C
-
-; Message at C580
-t$C580 DEFM "!+\","
-
-; Data block at C584
-b$C584 DEFB $23
+; Scenario token lists for the 3 random opening rooms, drawn by #R$C15E
+;
+; .
+;
+; .
+;
+; Tokens for the first scenario room (#R$D3B2), in #R$C0B2's format: a count
+; byte followed by that many 2-byte tokens (see #R$7B39).
+b$C56A DEFB $04
+ $C56B DEFB $0A,$1C
+ $C56D DEFB $0B,$1D
+ $C56F DEFB $2A,$1E
+ $C571 DEFB $2B,$1F
+; Tokens for the second scenario room (#R$D3B4).
+ $C573 DEFB $04
+ $C574 DEFB $0A,$24
+ $C576 DEFB $0B,$25
+ $C578 DEFB $2A,$26
+ $C57A DEFB $2B,$27
+; Tokens for the third scenario room (#R$D3B6).
+ $C57C DEFB $04
+ $C57D DEFB $0B,$20
+ $C57F DEFB $0C,$21
+ $C581 DEFB $2B,$22
+ $C583 DEFB $2C,$23
 
 ; Set up a glyph draw: pick branch targets, compute screen row/column
 ;
 ; Used by the routine at #R$C6D6.
 ;
-; .
+; HL Width/height nibble byte and mirror flag (bit 7)
+; B Row
+; C Column
 ;
 ; Called from #R$C6D6 while drawing a sprite frame's glyph/mask. (HL) gives a
 ; width-class nibble (compared against $04) that selects which pair of
@@ -7473,11 +7598,21 @@ c$C648 LD C,A        ; {BC = A (attribute index)
  $C680 POP HL        ;
  $C681 RET           ;
 
-; Data block at C682
-b$C682 DEFB $05,$04,$03,$02,$01,$00,$0B,$0A
- $C68A DEFB $09,$08,$07,$06,$11,$10,$0F,$0E
- $C692 DEFB $0D,$0C,$17,$16,$15,$14,$13,$12
- $C69A DEFB $1D,$1C,$1B,$1A,$19,$18,$00,$00
+; Horizontal-mirror index remap for 6-cell glyph rows
+;
+; .
+;
+; .
+;
+; Indexed directly (base + A by #R$C5E4, base + BC by #R$C648, no multiplier).
+; Five groups of 6, each reversed in place, so index i in row r maps to 6r + (5
+; - i mod 6) - the mirrored cell in the same row.
+b$C682 DEFB $05,$04,$03,$02,$01,$00 ; Row 0: indices 0-5, reversed
+ $C688 DEFB $0B,$0A,$09,$08,$07,$06 ; Row 1: indices 6-11, reversed
+ $C68E DEFB $11,$10,$0F,$0E,$0D,$0C ; Row 2: indices 12-17, reversed
+ $C694 DEFB $17,$16,$15,$14,$13,$12 ; Row 3: indices 18-23, reversed
+ $C69A DEFB $1D,$1C,$1B,$1A,$19,$18 ; Row 4: indices 24-29, reversed
+ $C6A0 DEFB $00,$00                 ; Padding
 
 ; Update Robin: move, pick action, advance animation
 ;
@@ -7819,11 +7954,11 @@ c$C806 LD HL,$EAFE   ; HL = destination base $EAFE
 ;
 ; .
 ;
-; Scans the $0300-byte flag area at $E502 (28 flag bytes per row x 18 rows, IXl
-; counts rows) for a non-zero "changed" marker. For each one found, computes
-; the real Spectrum screen pixel address ($4000-region) from the cell's
-; row/column and copies its 8-byte glyph from the shadow buffer at $EB00+$8D00
-; onto the screen, then clears the flag and continues scanning.
+; Scans the flag area at #R$E500 (28 flag bytes per row x 18 rows, IXl counts
+; rows) for a non-zero "changed" marker. For each one found, computes the real
+; Spectrum screen pixel address ($4000-region) from the cell's row/column and
+; copies its 8-byte glyph from the shadow buffer at $EB00+$8D00 onto the
+; screen, then clears the flag and continues scanning.
 c$C85C LD HL,$E502   ; {HL -> flag area at $E502; IXl = 18 rows to scan
  $C85F LD IXl,$12    ; }
  $C862 XOR A         ;
@@ -8476,7 +8611,7 @@ c$CB9D XOR A         ;
  $CBC2 LD A,$0E      ;
 *$CBC4 JP $CBF7      ; => Store Robin's facing (A) and frame-table pointer
 
-; Countdown to a pickup completion: refill energy when it reaches 0
+; Countdown to a pickup completion, facing $01: refill energy when it reaches 0
 ;
 ; .
 ;
@@ -8485,18 +8620,31 @@ c$CB9D XOR A         ;
 ; Decrements the animation timer at $CC7B; while non-zero, just returns
 ; (popping the caller). At 0, picks frame table $CD22 and falls into #R$CBE3 to
 ; refill Robin's energy.
-c$CBC7 LD HL,$CC7B   ;
- $CBCA DEC (HL)      ;
- $CBCB JR Z,$CBCF    ;
- $CBCD POP HL        ;
- $CBCE RET           ;
-*$CBCF LD A,$01      ;
- $CBD1 LD HL,$CD22   ;
+c$CBC7 LD HL,$CC7B   ; {Decrement the animation timer at $CC7B
+ $CBCA DEC (HL)      ; }
+ $CBCB JR Z,$CBCF    ; Reached 0: fall through to finish the pickup
+ $CBCD POP HL        ; {Still counting: pop the caller and return
+ $CBCE RET           ; }
+*$CBCF LD A,$01      ; {A = facing $01; HL = frame table $CD22
+ $CBD1 LD HL,$CD22   ; }
  $CBD4 JR $CBE3      ; => Refill Robin's energy to maximum and redraw the bar
 
-; Data block at CBD6
-b$CBD6 DEFB $21,$7B,$CC,$35,$28,$02,$E1,$C9
- $CBDE DEFB $3E,$00,$21,$0D,$CD
+; Countdown to a pickup completion, facing $00: refill energy when it reaches 0
+;
+; .
+;
+; .
+;
+; Same as #R$CBC7 but for the opposite facing - picks frame table $CD0D with
+; facing code $00, then falls straight into #R$CBE3. Both are reached from the
+; #R$CD42 handler table (entries E and F).
+c$CBD6 LD HL,$CC7B   ; {Decrement the animation timer at $CC7B
+ $CBD9 DEC (HL)      ; }
+ $CBDA JR Z,$CBDE    ; Reached 0: fall through to finish the pickup
+ $CBDC POP HL        ; {Still counting: pop the caller and return
+ $CBDD RET           ; }
+*$CBDE LD A,$00      ; {A = facing $00; HL = frame table $CD0D
+ $CBE0 LD HL,$CD0D   ; }
 
 ; Refill Robin's energy to maximum and redraw the bar
 ;
@@ -8632,7 +8780,16 @@ c$CC52 AND $0F       ; {Low nibble 0: fall to #R$CC73
  $CC76 LD HL,($CC89) ; }
  $CC79 RET           ;
 
-; Data block at CC7A
+; Robin's animation timers, object record and facing byte
+;
+; .
+;
+; .
+;
+; $CC7A/$CC7B are the animation timers tested by #R$CB21 and #R$C9E7. $CC7C is
+; Robin's own object record (standard layout, see #R$AC13). $CC87 right after
+; it is the facing/state byte indexing #R$CD42; $CC88/$CC89 cache a frame
+; pointer read back by #R$CC73.
 b$CC7A DEFB $00,$00,$00,$01,$0D,$CD,$00,$00
  $CC82 DEFB $00,$00,$00,$40,$50,$00,$00,$0D
  $CC8A DEFB $CD,$00,$00,$00,$01,$0D,$CD,$00
@@ -8666,26 +8823,39 @@ b$CC7A DEFB $00,$00,$00,$01,$0D,$CD,$00,$00
 ; .
 ;
 ; 16 word entries, indexed by Robin's facing/state byte ($CC87, doubled).
-; #R$C9E7 jumps to the selected handler with E = the movement bitmask. Entries
-; 0-5 are the walking/turning handlers
-; (#R$CB6B/#R$CBFE/#R$CC1F/#R$CC47/#R$CC52), 6-D the generated call/RET stubs
-; at #R$CAFB..#R$CB1D, and E/F the frame-refill handlers #R$CBD6/#R$CBC7.
-b$CD42 DEFW $CB6B
- $CD44 DEFW $CB6B
- $CD46 DEFW $CBFE
- $CD48 DEFW $CC1F
- $CD4A DEFW $CC47
- $CD4C DEFW $CC52
- $CD4E DEFW $CAFB
- $CD50 DEFW $CAFF
- $CD52 DEFW $CB03
- $CD54 DEFW $CB0A
- $CD56 DEFW $CB11
- $CD58 DEFW $CB15
- $CD5A DEFW $CB19
- $CD5C DEFW $CB1D
- $CD5E DEFW $CBD6
- $CD60 DEFW $CBC7
+; #R$C9E7 jumps to the selected handler with E = the movement bitmask.
+b$CD42 DEFW $CB6B    ; $00 - Pick a walking-frame table by movement bit (low
+                     ; nibble of A)
+ $CD44 DEFW $CB6B    ; $01 - Pick a walking-frame table by movement bit (low
+                     ; nibble of A)
+ $CD46 DEFW $CBFE    ; $02 - Direction dispatcher: pick a frame table or hand
+                     ; off, by low nibble of A
+ $CD48 DEFW $CC1F    ; $03 - Direction dispatcher: pick a walking frame or hand
+                     ; off by movement bits
+ $CD4A DEFW $CC47    ; $04 - Direction dispatcher: pick a diagonal frame table
+                     ; or hand off
+ $CD4C DEFW $CC52    ; $05 - Direction dispatcher: pick a diagonal frame table
+                     ; or hand off
+ $CD4E DEFW $CAFB    ; $06 - Facing/state $06 handler: run the per-direction
+                     ; handler #R$CB21
+ $CD50 DEFW $CAFF    ; $07 - Facing/state $07 handler: run the per-direction
+                     ; handler #R$CB21
+ $CD52 DEFW $CB03    ; $08 - Facing/state $08 handler: launch an arrow
+                     ; (#R$BC81), then #R$CB21
+ $CD54 DEFW $CB0A    ; $09 - Facing/state $09 handler: launch an arrow
+                     ; (#R$BC81), then #R$CB21
+ $CD56 DEFW $CB11    ; $0A - Facing/state $0A handler: run the per-direction
+                     ; handler #R$CB21
+ $CD58 DEFW $CB15    ; $0B - Facing/state $0B handler: run the per-direction
+                     ; handler #R$CB21
+ $CD5A DEFW $CB19    ; $0C - Facing/state $0C handler: run the per-direction
+                     ; handler #R$CB21
+ $CD5C DEFW $CB1D    ; $0D - Facing/state $0D handler: run the per-direction
+                     ; handler #R$CB21
+ $CD5E DEFW $CBD6    ; $0E - Countdown to a pickup completion, facing $00:
+                     ; refill energy when it reaches 0
+ $CD60 DEFW $CBC7    ; $0F - Countdown to a pickup completion, facing $01:
+                     ; refill energy when it reaches 0
 
 ; Data block at CD62
 b$CD62 DEFB $00,$06,$0C,$12,$18,$03,$09,$0F
@@ -9103,7 +9273,10 @@ c$CFC7 LD HL,($D3B4) ; {HL = target room ($D3B4); save to $BC64
 ;
 ; Used by the routines at #R$CD6C and #R$D0FF.
 ;
-; I:HL ??
+; HL -> the string to print
+;
+; A small wrapper around #R$D619 with the attribute param fixed to $60,
+; preserving HL/DE across the call for callers that still need them afterwards.
 c$CFE1 PUSH DE       ;
  $CFE2 PUSH HL       ;
  $CFE3 LD A,$60      ;
@@ -9411,7 +9584,8 @@ c$D14B LD BC,$00FE   ; {Read the "any key" port ($00FE); loop while any bit is
 ;
 ; Used by the routine at #R$D140.
 ;
-; .
+; O:D Key code, if exactly one key is down (see the C-lines below for the flag
+; .   conditions on failure)
 ;
 ; Reads all 8 keyboard half-rows in turn (BC rotated via RLC B starting at
 ; $FEFE), counting pressed keys into D; if more than one key is down, fails
@@ -9444,7 +9618,8 @@ c$D156 LD DE,$FF2F   ; {DE = row countdown seed; BC = first keyboard row
 ;
 ; Used by the routine at #R$D191.
 ;
-; .
+;   A Key code (#R$D156's row/column scheme)
+; O:C The key's pressed/released state, in carry
 ;
 ; A is a key code in the same row/column scheme decoded by #R$D156 (as stored
 ; by #R$D0FF into $D277 for the user-defined-keys control scheme). Rotates the
@@ -9592,6 +9767,14 @@ b$D277 DEFB $24,$25,$26,$08,$10
 t$D27C DEFM "BHY65TGVNJU74RFCMKI83EDX@LO92WSZ<$P01QA>"
 
 ; Unused?
+;
+; .
+;
+; .
+;
+; Not called from anywhere in the disassembly. If it were reached, it would
+; wait for all keys to be released, then flash the border with a random colour
+; (from the R register) on every pass until a key is pressed.
 c$D2A4 PUSH BC       ;
  $D2A5 PUSH AF       ;
 *$D2A6 LD BC,$00FE   ;
@@ -9907,39 +10090,119 @@ c$D47D LD A,R        ; A = R register
  $D4A9 LD C,$00      ;
  $D4AB JR $D494      ;
 
-; Data block at D4AD
-b$D4AD DEFB $DB,$00,$50,$58,$00,$03,$00,$30
- $D4B5 DEFB $60,$00,$04,$00,$5C,$60,$00,$06
- $D4BD DEFB $00,$5C,$60,$00,$0E,$00,$08,$58
- $D4C5 DEFB $00,$14,$00,$08,$58,$00,$21,$00
- $D4CD DEFB $08,$58,$00,$23,$00,$5C,$60,$00
- $D4D5 DEFB $25,$00,$5C,$60,$00,$2E,$00,$58
- $D4DD DEFB $58,$00,$3F,$00,$50,$58,$00,$51
- $D4E5 DEFB $00,$50,$58,$00,$7E,$00,$18,$60
- $D4ED DEFB $00,$80,$00,$5C,$60,$00,$9F,$00
- $D4F5 DEFB $28,$60,$00,$A5,$00,$48,$60,$00
- $D4FD DEFB $AE,$00,$48,$60,$00,$B1,$00,$5C
- $D505 DEFB $60,$00,$B6,$00,$5C,$60,$00,$B9
- $D50D DEFB $00,$48,$60,$00,$CA,$00,$30,$60
- $D515 DEFB $00,$DA,$00,$50,$58,$00,$DF,$00
- $D51D DEFB $5C,$58,$00,$E9,$00,$2C,$60,$00
- $D525 DEFB $F2,$00,$50,$58,$00,$F5,$00,$48
- $D52D DEFB $60,$00,$F8,$00,$18,$58,$00,$FC
- $D535 DEFB $00,$48,$60,$00,$12,$01,$50,$58
- $D53D DEFB $00,$1E,$01,$50,$58,$00,$00,$00
- $D545 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D54D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D555 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D55D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D565 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D56D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D575 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D57D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D585 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D58D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D595 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D59D DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $D5A5 DEFB $00,$00
+; Per-room message table, 30 entries of 5 bytes
+;
+; .
+;
+; .
+;
+; Scanned by #R$D5A7 on entering a room: on a room match with a non-zero
+; message number, the entry's screen position goes into DE and #R$D631 prints
+; it. Same 5-byte layout as the room-position log at $D543 (room lo, room hi,
+; position D, position E, message number), which #R$D5A7 scans straight
+; afterwards.
+b$D4AD DEFB $DB,$00,$50,$58,$00
+ $D4B2 DEFB $03,$00,$30,$60,$00
+ $D4B7 DEFB $04,$00,$5C,$60,$00
+ $D4BC DEFB $06,$00,$5C,$60,$00
+ $D4C1 DEFB $0E,$00,$08,$58,$00
+ $D4C6 DEFB $14,$00,$08,$58,$00
+ $D4CB DEFB $21,$00,$08,$58,$00
+ $D4D0 DEFB $23,$00,$5C,$60,$00
+ $D4D5 DEFB $25,$00,$5C,$60,$00
+ $D4DA DEFB $2E,$00,$58,$58,$00
+ $D4DF DEFB $3F,$00,$50,$58,$00
+ $D4E4 DEFB $51,$00,$50,$58,$00
+ $D4E9 DEFB $7E,$00,$18,$60,$00
+ $D4EE DEFB $80,$00,$5C,$60,$00
+ $D4F3 DEFB $9F,$00,$28,$60,$00
+ $D4F8 DEFB $A5,$00,$48,$60,$00
+ $D4FD DEFB $AE,$00,$48,$60,$00
+ $D502 DEFB $B1,$00,$5C,$60,$00
+ $D507 DEFB $B6,$00,$5C,$60,$00
+ $D50C DEFB $B9,$00,$48,$60,$00
+ $D511 DEFB $CA,$00,$30,$60,$00
+ $D516 DEFB $DA,$00,$50,$58,$00
+ $D51B DEFB $DF,$00,$5C,$58,$00
+ $D520 DEFB $E9,$00,$2C,$60,$00
+ $D525 DEFB $F2,$00,$50,$58,$00
+ $D52A DEFB $F5,$00,$48,$60,$00
+ $D52F DEFB $F8,$00,$18,$58,$00
+ $D534 DEFB $FC,$00,$48,$60,$00
+ $D539 DEFB $12,$01,$50,$58,$00
+ $D53E DEFB $1E,$01,$50,$58,$00
+
+; Room-position log, 11 entries of 5 bytes
+;
+; .
+;
+; .
+;
+; Same layout as #R$D4AD (room lo, room hi, position D, position E, message
+; number), but filled at runtime rather than fixed: #R$D997 logs Robin's room
+; and position into the first free slot, #R$D5A7 scans it for the current room.
+; Emptied to $FF by #R$D3BB, then re-seeded with two permanent entries by
+; #R$D454.
+b$D543 DEFB $00,$00,$00,$00,$00
+ $D548 DEFB $00,$00,$00,$00,$00
+ $D54D DEFB $00,$00,$00,$00,$00
+ $D552 DEFB $00,$00,$00,$00,$00
+ $D557 DEFB $00,$00,$00,$00,$00
+ $D55C DEFB $00,$00,$00,$00,$00
+ $D561 DEFB $00,$00,$00,$00,$00
+ $D566 DEFB $00,$00,$00,$00,$00
+ $D56B DEFB $00,$00,$00,$00,$00
+ $D570 DEFB $00,$00,$00,$00,$00
+ $D575 DEFB $00,$00,$00,$00,$00
+
+; Message/sound trigger table, 9 entries of 3 bytes
+;
+; .
+;
+; .
+;
+; Filled by the text printer (#R$D735) when a string contains a control
+; character: it takes the first slot whose first byte is $FF and stores the
+; mode byte plus the glyph's screen address. #R$D7F3 then scans it every frame,
+; treating those two address bytes as X/Y references that bracket Robin's
+; position. Emptied to $FF on every room change by #R$D5A7.
+b$D57A DEFB $00,$00,$00
+ $D57D DEFB $00,$00,$00
+ $D580 DEFB $00,$00,$00
+ $D583 DEFB $00,$00,$00
+ $D586 DEFB $00,$00,$00
+ $D589 DEFB $00,$00,$00
+ $D58C DEFB $00,$00,$00
+ $D58F DEFB $00,$00,$00
+ $D592 DEFB $00,$00,$00
+
+; Event-status array and the quest progress variables
+;
+; .
+;
+; .
+;
+; The 8 status bytes are indexed in step with the special-event room table at
+; #R$DBCD. #R$DB18 and #R$DF03 scan them for particular values to decide which
+; stage of the quest has completed, and #R$DB82 removes a slot by shifting the
+; rest down. All of it is zeroed at game start by #R$D3BB.
+b$D595 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; Event-status array, one byte per
+                                            ; special-event room
+ $D59D DEFB $00                             ; Sword flag
+ $D59E DEFB $00                             ; Arrow flag
+ $D59F DEFB $00                             ; Re-seed flag for the
+                                            ; room-position log (see #R$C4B6)
+ $D5A0 DEFB $00                             ; Arrow-hit countdown
+ $D5A1 DEFB $00                             ; Quest stage counter (stops at 3)
+ $D5A2 DEFB $00                             ; Running count of spawned type-5
+                                            ; guards
+ $D5A3 DEFB $00                             ; Running count of spawned type-7
+                                            ; guards
+ $D5A4 DEFB $00                             ; Kill count; bit 7 = game complete
+                                            ; (see #R$C055)
+ $D5A5 DEFB $00                             ; Arrow-hit stage counter
+ $D5A6 DEFB $00                             ; Which half of #R$D402 runs ($05 =
+                                            ; the first)
 
 ; Room entry: spawn guards, reset triggers, print room-specific messages
 ;
@@ -10029,16 +10292,22 @@ s$D617 DEFS $02
 ;
 ; Used by the routines at #R$C055, #R$C4B6, #R$CA4C, #R$CFE1, #R$D7F3, #R$D91A
 ; and #R$DF03.
+;
+; .
+;
+; Companion to #R$D631's print-by-message-number entry, used where the caller
+; already has a direct pointer to the string instead of a message index. Resets
+; the print state and falls into the same core at #R$D661.
 c$D619 LD ($D7F1),A  ; A = attribute/mode param
  $D61C LD D,(HL)     ; {DE = string pointer taken from (HL)
  $D61D INC HL        ;
  $D61E LD E,(HL)     ; }
 ; This entry point is used by the routines at #R$D94B, #R$DB98 and #R$DF03.
-*$D61F PUSH HL       ; {Reset text-print state, then fall into the print core
- $D620 XOR A         ; at #R$D661
- $D621 LD ($D74C),A  ;
- $D624 LD ($D78A),A  ;
- $D627 LD A,$58      ;
+*$D61F PUSH HL       ; {Save HL; A = 0
+ $D620 XOR A         ; }
+ $D621 LD ($D74C),A  ; {Reset $D74C and $D78A to 0
+ $D624 LD ($D78A),A  ; }
+ $D627 LD A,$58      ; {Reset $D75A to $58
  $D629 LD ($D75A),A  ; }
  $D62C POP BC        ;
  $D62D PUSH DE       ;
@@ -10309,7 +10578,14 @@ c$D631 LD ($D7F1),A  ; {A = message number; HL -> its entry in the table at
  $D7CA POP HL        ;
  $D7CB JP $D76E      ; }
 
-; Data block at D7CE
+; Message address table, indexed by message number via #R$D631
+;
+; .
+;
+; .
+;
+; 16 entries, indexed by bits 0-4 of the message number in A. #R$D631 doubles
+; the index to reach the string address, then prints it via #R$D661.
 w$D7CE DEFW $B4B8    ; $00 - sword in Menu
  $D7D0 DEFW $B536
  $D7D2 DEFW $B512
@@ -10328,8 +10604,11 @@ w$D7CE DEFW $B4B8    ; $00 - sword in Menu
  $D7EC DEFW $B434
  $D7EE DEFW $B6AC
 
-; Data block at D7F0
-b$D7F0 DEFB $00,$00,$00
+; Text-printer state bytes
+b$D7F0 DEFB $00      ; Fixed-pattern flag (set by control code $01/$02, cleared
+                     ; by $03; see #R$D6AB)
+ $D7F1 DEFB $00      ; Attribute/mode param (set by #R$D619/#R$D631)
+ $D7F2 DEFB $00      ; "In message" flag (see #R$D715)
 
 ; Scan the message/sound trigger table at $D57A for Robin's position
 ;
@@ -10648,8 +10927,8 @@ c$D94B LD B,$64      ; {B = $64 (sound length); play the short border-flash
  $D9E4 CALL $D631    ; Print message number A, positioned from the $D7CE table
  $D9E7 LD B,$32      ; B = $32 (sound length)
 ; This entry point is used by the routines at #R$D7F3 and #R$D944.
-*$D9E9 XOR A         ; {Short border-flash sound: B outer loops x C inner
-*$D9EA LD C,B        ; busy-wait
+*$D9E9 XOR A         ; {Short border-flash sound: B (outer loop count = sound
+*$D9EA LD C,B        ; length) x C inner busy-wait
 *$D9EB DEC C         ;
  $D9EC JR NZ,$D9EB   ;
  $D9EE XOR $18       ;
@@ -10959,13 +11238,43 @@ c$DB98 LD DE,$D594   ; {DE = event-status array at $D594 (0-indexed via
  $DBCB EXX           ;
  $DBCC RET           ;
 
-; Data block at DBCD
-b$DBCD DEFB $02,$00,$0D,$00,$44,$00,$4E,$00
- $DBD5 DEFB $64,$00,$74,$00,$8E,$00,$95,$00
- $DBDD DEFB $C1,$00,$C4,$00,$CB,$00,$F7,$00
- $DBE5 DEFB $27,$01,$00,$00,$00,$00,$00,$00
- $DBED DEFB $00,$00,$00,$00,$20,$20,$01,$20
- $DBF5 DEFB $20,$00,$00
+; Special-event room table and the effect's state variables
+;
+; .
+;
+; .
+;
+; #R$DA0F scans the room list for the current room and, on a match, arms the
+; extra-frame callback whose state lives in the bytes below. The list holds 13
+; room numbers but only the first 9 are ever scanned (B=$09 at $DA1A) - the
+; last 4 are unreachable.
+b$DBCD DEFB $02,$00                         ; {Special-event rooms, scanned by
+ $DBCF DEFB $0D,$00                         ; #R$DA0F
+ $DBD1 DEFB $44,$00                         ;
+ $DBD3 DEFB $4E,$00                         ;
+ $DBD5 DEFB $64,$00                         ;
+ $DBD7 DEFB $74,$00                         ;
+ $DBD9 DEFB $8E,$00                         ;
+ $DBDB DEFB $95,$00                         ;
+ $DBDD DEFB $C1,$00                         ; }
+ $DBDF DEFB $C4,$00                         ; {4 further room numbers, never
+ $DBE1 DEFB $CB,$00                         ; scanned
+ $DBE3 DEFB $F7,$00                         ;
+ $DBE5 DEFB $27,$01                         ; }
+ $DBE7 DEFB $00                             ; Effect-frame counter (armed by
+                                            ; #R$DA0F, counted down in the
+                                            ; callback)
+ $DBE8 DEFB $00                             ; World-map byte for the matched
+                                            ; room (bit 7 = mirror)
+ $DBE9 DEFB $00                             ; Random value gated through the
+                                            ; mask pattern
+ $DBEA DEFB $00                             ; Which extra frame #R$C4D2 draws
+                                            ; (0 = none)
+ $DBEB DEFW $0000                           ; Room number of the matched entry
+ $DBED DEFW $0000                           ; Frame/duration pair, also copied
+                                            ; to $D1F1
+ $DBEF DEFB $00,$00,$20,$20,$01,$20,$20,$00
+ $DBF7 DEFB $00
 
 ; Cycle through and step one door/exit guard object per call
 ;
@@ -11128,27 +11437,44 @@ c$DBF8 LD A,$04       ; {Every 4th call, pick one entry from the guard-door
  $DD01 LD (IX+$03),D  ; }
 *$DD04 RET            ;
 
-; Data block at DD05
-b$DD05 DEFB $00,$00,$31,$DD,$00,$00,$00,$00
- $DD0D DEFB $00,$00,$60,$00,$00,$31,$DD,$00
- $DD15 DEFB $00,$00,$00,$00,$00,$60,$00,$00
- $DD1D DEFB $31,$DD,$00,$00,$00,$00,$00,$00
- $DD25 DEFB $60,$00,$00,$31,$DD,$00,$00,$00
- $DD2D DEFB $00,$00,$00,$60,$10,$11,$12,$13
- $DD35 DEFB $FF,$31,$DD,$90,$91,$92,$93,$FF
- $DD3D DEFB $38,$DD,$00,$40,$00,$05,$40,$00
- $DD45 DEFB $0A,$40,$00,$0A,$40,$80,$00,$40
- $DD4D DEFB $80,$05,$40,$00,$0A,$40,$00,$0A
- $DD55 DEFB $40,$80,$00,$40,$00,$0A,$40,$00
- $DD5D DEFB $05,$40,$80,$0A,$40,$80,$0A,$40
- $DD65 DEFB $00,$00,$40,$80,$05,$40,$00,$0A
- $DD6D DEFB $40,$80
+; Door-guard object table, 4 entries of 11 bytes
+;
+; .
+;
+; .
+;
+; Same entry layout as #R$AC13, rebuilt on every room change by #R$C276 from
+; the door data at $DD3F. Stepped one entry per call by #R$DBF8 and tested
+; against Robin's position by #R$BDE0.
+b$DD05 DEFB $00,$00,$31,$DD,$00,$00,$00,$00,$00,$00,$60
+ $DD10 DEFB $00,$00,$31,$DD,$00,$00,$00,$00,$00,$00,$60
+ $DD1B DEFB $00,$00,$31,$DD,$00,$00,$00,$00,$00,$00,$60
+ $DD26 DEFB $00,$00,$31,$DD,$00,$00,$00,$00,$00,$00,$60
+
+; Door-guard frame lists and door data
+;
+; .
+;
+; .
+;
+; $DD31/$DD38 are the two frame lists #R$DBF8 picks between (standard
+; $FF-terminated format, see Actors.md); $DD3F is the per-room door data
+; #R$C276 scans to build the door-guard table at #R$DD05.
+b$DD31 DEFB $10,$11,$12,$13,$FF,$31,$DD
+ $DD38 DEFB $90,$91,$92,$93,$FF,$38,$DD
+ $DD3F DEFB $00,$40,$00,$05,$40,$00,$0A,$40
+ $DD47 DEFB $00,$0A,$40,$80,$00,$40,$80,$05
+ $DD4F DEFB $40,$00,$0A,$40,$00,$0A,$40,$80
+ $DD57 DEFB $00,$40,$00,$0A,$40,$00,$05,$40
+ $DD5F DEFB $80,$0A,$40,$80,$0A,$40,$00,$00
+ $DD67 DEFB $40,$80,$05,$40,$00,$0A,$40,$80
 
 ; Collision check: can Robin move left?
 ;
 ; Used by the routine at #R$C95A.
 ;
-; .
+;   HL Pixel position to test
+; O:Z Set if the move is clear, clear if blocked
 ;
 ; Only checks at cell boundaries (L bits 0-1 clear); converts HL to an
 ; attribute address via #R$DDD6, steps to the row above-left, and tests via
@@ -11170,7 +11496,8 @@ c$DD6F LD A,L        ; {Only test at cell boundaries (L bits 0-1 clear)
 ;
 ; Used by the routine at #R$C95A.
 ;
-; .
+;   HL Pixel position to test
+; O:Z Set if the move is clear, clear if blocked
 ;
 ; Same as #R$DD6F but steps to the row above-right instead, testing via
 ; #R$DDB1.
@@ -11193,7 +11520,8 @@ c$DD80 LD A,L        ; {Only test at cell boundaries (L bits 0-1 clear)
 ;
 ; Used by the routine at #R$C95A.
 ;
-; .
+;   HL Pixel position to test
+; O:Z Set if the move is clear, clear if blocked
 ;
 ; Only checks at cell boundaries (H bits 0-2 clear); converts HL to an
 ; attribute address via #R$DDD6 and tests the row above via #R$DDC5.
@@ -11211,7 +11539,8 @@ c$DD93 LD A,H        ; {Only test at cell boundaries (H bits 0-2 clear)
 ;
 ; Used by the routine at #R$C95A.
 ;
-; .
+;   HL Pixel position to test
+; O:Z Set if the move is clear, clear if blocked
 ;
 ; Same as #R$DD93 but steps down 3 rows first, testing via #R$DDC5.
 c$DD9F LD A,H        ; {Only test at cell boundaries (H bits 0-2 clear)
@@ -11233,7 +11562,8 @@ c$DD9F LD A,H        ; {Only test at cell boundaries (H bits 0-2 clear)
 ;
 ; Used by the routines at #R$DD6F and #R$DD80.
 ;
-; .
+;   HL -> a shadow attribute address (from #R$DDD6)
+; O:Z Set if both cells are clear, clear otherwise
 ;
 ; (HL) -> a shadow attribute address (from #R$DDD6). Checks 2 cells, one screen
 ; row apart ($0020 stride), each testing bit 7 (solid) or a non-zero attribute
@@ -11278,7 +11608,8 @@ c$DDC5 LD B,$03      ; B = 3 cells
 ;
 ; Used by the routines at #R$DD6F, #R$DD80, #R$DD93 and #R$DD9F.
 ;
-; .
+;   HL Pixel coordinates
+; O:HL -> the matching shadow attribute address
 ;
 ; Combines bits from H and L into an offset added to the shadow attribute area
 ; base at $E800.
@@ -11305,7 +11636,7 @@ c$DDD6 SRL L         ; {Column component: L >>= 2, stashed in A'
 ;
 ; Used by the routine at #R$C276.
 ;
-; .
+; IX -> the 4-entry guard table at ($C54C)
 ;
 ; IX -> the 4-entry guard table at ($C54C) (set up by #R$C276). For each guard,
 ; finds the entry in the 28-byte-stride table at $DEAB matching the guard's
@@ -11389,6 +11720,12 @@ c$DE51 PUSH HL       ; {B = 3 bytes to check
 ; Copy the $001C-byte block at $E982 to $DECB
 ;
 ; Used by the routines at #R$D631, #R$DE8D, #R$DE97 and #R$DEA1.
+;
+; .
+;
+; Refreshes the guard-route working copy at $DECB from a live source at $E982,
+; after #R$DE8D/#R$DE97/#R$DEA1 have set up which of the two templates that
+; source should reflect.
 c$DE5D LD HL,$E982   ;
  $DE60 LD DE,$DECB   ;
  $DE63 LD BC,$001C   ;
@@ -11474,7 +11811,17 @@ c$DEA1 CALL $DE6E    ; Copy a 28-byte template ($DEAF or, via #R$DE69, $DEE7)
  $DEA7 CALL $DE5D    ; Copy the $001C-byte block at $E982 to $DECB
  $DEAA RET           ;
 
-; Data block at DEAB
+; Guard route/state region, 28-byte stride
+;
+; .
+;
+; .
+;
+; Scanned by #R$DDF0 as 28-byte entries keyed by a guard's home room nibble,
+; and used by #R$DE8D/#R$DE97/#R$DEA1 as two templates ($DEAF/$DEE7) copied
+; around a working copy at $DECB. Those two readings overlap, so the exact
+; entry boundaries are unconfirmed; #R$AA31 also reads a column reference at
+; $DEC7.
 b$DEAB DEFB $00,$00,$00,$00,$59,$D0,$CD,$EE
  $DEB3 DEFB $CF,$CD,$04,$D0,$CD,$95,$D0,$CD
  $DEBB DEFB $67,$D0,$21,$C3,$D2,$CD,$E1,$CF
@@ -11619,6 +11966,16 @@ c$DF03 LD HL,($D3B2) ; {Bail out unless Robin is in the designated scenario
 s$DFE6 DEFS $01
 
 ; Interrupt-safe wrapper around the border flash routine at #R$DFF4
+;
+; .
+;
+; .
+;
+; The actual interrupt handler, pointed at by the IM 2 vector table #R$D095
+; sets up. Saves every register the game code might be using, plays one
+; border-flash step via #R$DFF4, then restores everything before returning - so
+; any routine's flash sound keeps ticking every 1/50s frame without the
+; interrupt disturbing whatever it interrupted.
 c$DFE7 PUSH AF       ;
  $DFE8 PUSH BC       ;
  $DFE9 PUSH DE       ;
@@ -11634,6 +11991,13 @@ c$DFE7 PUSH AF       ;
 ; Flash the border colour (self-modified colour/count)
 ;
 ; Used by the routine at #R$DFE7.
+;
+; .
+;
+; The generic border-flash "beep" used throughout the game. Callers don't pass
+; arguments in registers - they patch this routine's own colour and delay-count
+; operands directly before calling it, so each caller effectively gets its own
+; pitch and length. Does nothing if the patched colour is 0.
 c$DFF4 LD A,$00      ; Colour operand patched in by the caller before CALL
  $DFF6 OR A          ;
  $DFF7 JR Z,$E00C    ;
@@ -11819,79 +12183,35 @@ b$E016 DEFB $01,$FE,$00,$ED,$78,$2F,$E6,$1F
  $E4F6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $E4FE DEFB $00,$00
 
-; Data block at E500
-b$E500 DEFB $0F,$42,$F1,$98,$15,$31,$8C,$C0
- $E508 DEFB $38,$10,$FC,$06,$58,$63,$08,$73
- $E510 DEFB $31,$8C,$CF,$21,$01,$8E,$47,$19
- $E518 DEFB $88,$E1,$9E,$C6,$38,$D4,$27,$20
- $E520 DEFB $72,$0D,$FF,$F7,$F0,$00,$00,$38
- $E528 DEFB $C0,$8F,$F8,$03,$FC,$01,$E0,$1E
- $E530 DEFB $01,$F8,$0F,$F8,$1F,$C1,$9C,$01
- $E538 DEFB $F8,$03,$F0,$00,$1F,$F8,$0F,$E0
- $E540 DEFB $0F,$C0,$1F,$C0,$3F,$C0,$00,$3F
- $E548 DEFB $F0,$1F,$E0,$0F,$E0,$3F,$80,$F8
- $E550 DEFB $06,$0F,$F8,$0F,$E0,$07,$C0,$3F
- $E558 DEFB $80,$7C,$01,$C0,$FF,$80,$7F,$00
- $E560 DEFB $1F,$C0,$7F,$00,$FC,$00,$F0,$3F
- $E568 DEFB $C0,$7F,$00,$7C,$01,$F0,$0F,$80
- $E570 DEFB $1F,$03,$FE,$07,$F8,$03,$E0,$0F
- $E578 DEFB $C0,$3F,$00,$3F,$80,$FF,$80,$FF
- $E580 DEFB $00,$3C,$00,$F8,$07,$F0,$07,$F0
- $E588 DEFB $37,$E0,$7F,$80,$1E,$00,$FF,$83
- $E590 DEFB $F8,$07,$F8,$0D,$F8,$1B,$E0,$03
- $E598 DEFB $C6,$0F,$F8,$3F,$C0,$07,$80,$6F
- $E5A0 DEFB $C1,$4F,$80,$1C,$10,$7F,$C1,$FE
- $E5A8 DEFB $00,$18,$03,$7E,$34,$78,$60,$C1
- $E5B0 DEFB $87,$FE,$3F,$E0,$01,$80,$3F,$F9
- $E5B8 DEFB $91,$C1,$80,$00,$0F,$FF,$7F,$80
- $E5C0 DEFB $00,$00,$1F,$FD,$BF,$C8,$20,$80
- $E5C8 DEFB $2D,$DF,$FF,$30,$00,$40,$43,$FF
- $E5D0 DEFB $FF,$69,$00,$00,$03,$FF,$FF,$E0
- $E5D8 DEFB $00,$00,$0F,$FF,$FE,$DB,$20,$00
- $E5E0 DEFB $00,$7F,$FF,$E0,$00,$00,$0F,$FF
- $E5E8 DEFB $FD,$92,$40,$00,$06,$FF,$FF,$B0
- $E5F0 DEFB $00,$00,$0F,$FF,$FD,$B6,$00,$00
- $E5F8 DEFB $03,$7F,$FF,$FC,$00,$00,$01,$FF
- $E600 DEFB $FF,$DB,$60,$00,$00,$0F,$FF,$FF
- $E608 DEFB $00,$00,$00,$7F,$FF,$FE,$90,$00
- $E610 DEFB $00,$1F,$FF,$FF,$00,$00,$00,$0F
- $E618 DEFB $FF,$FF,$FF,$00,$00,$00,$1F,$FF
- $E620 DEFB $F8,$00,$00,$00,$FF,$FF,$FD,$80
- $E628 DEFB $00,$00,$1F,$FF,$FE,$00,$00,$00
- $E630 DEFB $1F,$FF,$FF,$F8,$00,$00,$01,$FF
- $E638 DEFB $FF,$FC,$00,$00,$00,$FF,$FF,$FF
- $E640 DEFB $80,$00,$00,$3F,$FF,$FC,$00,$00
- $E648 DEFB $00,$7F,$FF,$FF,$F0,$00,$00,$01
- $E650 DEFB $FF,$FF,$F0,$00,$00,$19,$FF,$FF
- $E658 DEFB $FB,$00,$00,$00,$7F,$FF,$FC,$00
- $E660 DEFB $00,$00,$DF,$FF,$FF,$30,$00,$00
- $E668 DEFB $0F,$FF,$FF,$00,$00,$00,$1D,$FF
- $E670 DEFB $FF,$FA,$00,$00,$00,$7F,$FF,$FF
- $E678 DEFB $80,$00,$00,$37,$FF,$FF,$E8,$00
- $E680 DEFB $00,$03,$FF,$FF,$F8,$00,$00,$06
- $E688 DEFB $FF,$FF,$FD,$80,$00,$00,$7F,$FF
- $E690 DEFB $FF,$00,$00,$00,$67,$FF,$FF,$EC
- $E698 DEFB $00,$00,$01,$FF,$FF,$D8,$00,$00
- $E6A0 DEFB $22,$6D,$FF,$FE,$C0,$00,$00,$3F
- $E6A8 DEFB $FF,$FF,$00,$00,$04,$CD,$BB,$7E
- $E6B0 DEFB $CC,$00,$00,$01,$3F,$FF,$FC,$00
- $E6B8 DEFB $00,$11,$37,$6C,$DB,$32,$00,$00
- $E6C0 DEFB $1F,$FF,$FF,$00,$01,$02,$64,$DD
- $E6C8 DEFB $B7,$6C,$C0,$00,$00,$3F,$FF,$F0
- $E6D0 DEFB $00,$00,$C4,$D9,$BB,$76,$CC,$88
- $E6D8 DEFB $00,$00,$7F,$D9,$BE,$00,$08,$89
- $E6E0 DEFB $37,$EC,$D9,$80,$00,$00,$07,$FF
- $E6E8 DEFB $F7,$08,$84,$60,$DD,$BB,$36,$60
- $E6F0 DEFB $00,$00,$00,$3F,$FF,$FF,$C1,$99
- $E6F8 DEFB $33,$76,$EC,$99,$00,$00,$00,$9F
- $E700 DEFB $FF,$60,$01,$99,$33,$66,$CD,$98
- $E708 DEFB $00,$00,$47,$FD,$FF,$F8,$06,$22
- $E710 DEFB $66,$EC,$CD,$98,$00,$00,$07,$FE
- $E718 DEFB $7F,$D6,$02,$32,$66,$EC,$DB,$30
- $E720 DEFB $00,$00,$4F,$FF,$FC,$00,$04,$44
- $E728 DEFB $DD,$BB,$36,$60,$00,$00,$1F,$FF
- $E730 DEFB $E0,$00,$18,$99,$B9,$B3,$32,$00
- $E738 DEFB $00,$01,$FF,$FD,$80,$00,$23,$36
+; Changed-cell flag area, 18 rows of 32
+;
+; .
+;
+; .
+;
+; One byte per character cell (28 used per row, 4 skipped). Drawing routines
+; set a byte to mark that cell dirty; #R$C85C scans from $E502 and copies each
+; marked cell to the real screen. The same 576 bytes are reused as scratch
+; elsewhere - #R$C790 saves sprite backgrounds here, and #R$CD6C plays the
+; startup speech bitstream from $E500 before the game proper begins.
+b$E500 DEFB $0F,$42,$F1,$98,$15,$31,$8C,$C0,$38,$10,$FC,$06,$58,$63,$08,$73,$31,$8C,$CF,$21,$01,$8E,$47,$19,$88,$E1,$9E,$C6,$38,$D4,$27,$20
+ $E520 DEFB $72,$0D,$FF,$F7,$F0,$00,$00,$38,$C0,$8F,$F8,$03,$FC,$01,$E0,$1E,$01,$F8,$0F,$F8,$1F,$C1,$9C,$01,$F8,$03,$F0,$00,$1F,$F8,$0F,$E0
+ $E540 DEFB $0F,$C0,$1F,$C0,$3F,$C0,$00,$3F,$F0,$1F,$E0,$0F,$E0,$3F,$80,$F8,$06,$0F,$F8,$0F,$E0,$07,$C0,$3F,$80,$7C,$01,$C0,$FF,$80,$7F,$00
+ $E560 DEFB $1F,$C0,$7F,$00,$FC,$00,$F0,$3F,$C0,$7F,$00,$7C,$01,$F0,$0F,$80,$1F,$03,$FE,$07,$F8,$03,$E0,$0F,$C0,$3F,$00,$3F,$80,$FF,$80,$FF
+ $E580 DEFB $00,$3C,$00,$F8,$07,$F0,$07,$F0,$37,$E0,$7F,$80,$1E,$00,$FF,$83,$F8,$07,$F8,$0D,$F8,$1B,$E0,$03,$C6,$0F,$F8,$3F,$C0,$07,$80,$6F
+ $E5A0 DEFB $C1,$4F,$80,$1C,$10,$7F,$C1,$FE,$00,$18,$03,$7E,$34,$78,$60,$C1,$87,$FE,$3F,$E0,$01,$80,$3F,$F9,$91,$C1,$80,$00,$0F,$FF,$7F,$80
+ $E5C0 DEFB $00,$00,$1F,$FD,$BF,$C8,$20,$80,$2D,$DF,$FF,$30,$00,$40,$43,$FF,$FF,$69,$00,$00,$03,$FF,$FF,$E0,$00,$00,$0F,$FF,$FE,$DB,$20,$00
+ $E5E0 DEFB $00,$7F,$FF,$E0,$00,$00,$0F,$FF,$FD,$92,$40,$00,$06,$FF,$FF,$B0,$00,$00,$0F,$FF,$FD,$B6,$00,$00,$03,$7F,$FF,$FC,$00,$00,$01,$FF
+ $E600 DEFB $FF,$DB,$60,$00,$00,$0F,$FF,$FF,$00,$00,$00,$7F,$FF,$FE,$90,$00,$00,$1F,$FF,$FF,$00,$00,$00,$0F,$FF,$FF,$FF,$00,$00,$00,$1F,$FF
+ $E620 DEFB $F8,$00,$00,$00,$FF,$FF,$FD,$80,$00,$00,$1F,$FF,$FE,$00,$00,$00,$1F,$FF,$FF,$F8,$00,$00,$01,$FF,$FF,$FC,$00,$00,$00,$FF,$FF,$FF
+ $E640 DEFB $80,$00,$00,$3F,$FF,$FC,$00,$00,$00,$7F,$FF,$FF,$F0,$00,$00,$01,$FF,$FF,$F0,$00,$00,$19,$FF,$FF,$FB,$00,$00,$00,$7F,$FF,$FC,$00
+ $E660 DEFB $00,$00,$DF,$FF,$FF,$30,$00,$00,$0F,$FF,$FF,$00,$00,$00,$1D,$FF,$FF,$FA,$00,$00,$00,$7F,$FF,$FF,$80,$00,$00,$37,$FF,$FF,$E8,$00
+ $E680 DEFB $00,$03,$FF,$FF,$F8,$00,$00,$06,$FF,$FF,$FD,$80,$00,$00,$7F,$FF,$FF,$00,$00,$00,$67,$FF,$FF,$EC,$00,$00,$01,$FF,$FF,$D8,$00,$00
+ $E6A0 DEFB $22,$6D,$FF,$FE,$C0,$00,$00,$3F,$FF,$FF,$00,$00,$04,$CD,$BB,$7E,$CC,$00,$00,$01,$3F,$FF,$FC,$00,$00,$11,$37,$6C,$DB,$32,$00,$00
+ $E6C0 DEFB $1F,$FF,$FF,$00,$01,$02,$64,$DD,$B7,$6C,$C0,$00,$00,$3F,$FF,$F0,$00,$00,$C4,$D9,$BB,$76,$CC,$88,$00,$00,$7F,$D9,$BE,$00,$08,$89
+ $E6E0 DEFB $37,$EC,$D9,$80,$00,$00,$07,$FF,$F7,$08,$84,$60,$DD,$BB,$36,$60,$00,$00,$00,$3F,$FF,$FF,$C1,$99,$33,$76,$EC,$99,$00,$00,$00,$9F
+ $E700 DEFB $FF,$60,$01,$99,$33,$66,$CD,$98,$00,$00,$47,$FD,$FF,$F8,$06,$22,$66,$EC,$CD,$98,$00,$00,$07,$FE,$7F,$D6,$02,$32,$66,$EC,$DB,$30
+ $E720 DEFB $00,$00,$4F,$FF,$FC,$00,$04,$44,$DD,$BB,$36,$60,$00,$00,$1F,$FF,$E0,$00,$18,$99,$B9,$B3,$32,$00,$00,$01,$FF,$FD,$80,$00,$23,$36
 
 ; Data block at E740
 b$E740 DEFB $66,$CC,$F1,$00,$00,$8F,$FF,$FC
@@ -12091,7 +12411,16 @@ b$EB00 DEFB $E0,$7E,$01,$FE,$00,$80,$3F,$F0,$0F,$C1,$FE,$00,$7F,$E0,$F8,$03,$FC,
  $FCC0 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
  $FCE0 DEFB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
-; Data block at FD00
+; Bit-reverse lookup table, 256 bytes
+;
+; .
+;
+; .
+;
+; Built at startup by #R$CFEE: entry N holds N with its bits reversed. Every
+; horizontal mirror goes through it (#R$C1D6, #R$C5E4, #R$C8B7), each time by
+; self-modifying the low byte of a "LD A,($FD00)" operand with the value to
+; reverse.
 b$FD00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FD08 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FD10 DEFB $00,$00,$00,$00,$00,$00,$00,$00
@@ -12124,106 +12453,95 @@ b$FD00 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $FDE8 DEFB $F3,$ED,$73,$60,$FE,$31,$7C,$FE
  $FDF0 DEFB $22,$5E,$FE,$FD,$22,$5C,$FE,$DD
  $FDF8 DEFB $21,$72,$FF,$DD,$36,$02,$00,$CD
- $FE00 DEFB $CC,$FE,$01,$00,$00,$C5,$CD,$7D
- $FE08 DEFB $FE,$77,$23,$E3,$4F,$06,$00,$09
- $FE10 DEFB $E3,$DD,$35,$02,$20,$13,$C1,$CD
- $FE18 DEFB $7D,$FE,$B9,$C2,$09,$FF,$CD,$7D
- $FE20 DEFB $FE,$B8,$C2,$09,$FF,$01,$00,$00
- $FE28 DEFB $C5,$7D,$BB,$20,$D9,$7C,$BA,$20
- $FE30 DEFB $D5,$C1,$CD,$7D,$FE,$B9,$C2,$09
- $FE38 DEFB $FF,$CD,$7D,$FE,$B8,$C2,$09,$FF
- $FE40 DEFB $2A,$6F,$FF,$E5,$3A,$71,$FF,$FE
- $FE48 DEFB $02,$D8,$E1,$28,$AA,$ED,$7B,$60
- $FE50 DEFB $FE,$FD,$2A,$5C,$FE,$2A,$5E,$FE
- $FE58 DEFB $ED,$56,$FB,$C9,$3A,$5C,$2B,$2D
- $FE60 DEFB $E8,$5F,$00,$00,$00,$00,$00,$00
- $FE68 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $FE70 DEFB $00,$00,$A1,$E0,$01,$04,$0D,$18
- $FE78 DEFB $75,$18,$16,$E0,$00,$C5,$01,$DD
- $FE80 DEFB $00,$ED,$78,$CB,$7F,$20,$20,$01
- $FE88 DEFB $FE,$FD,$ED,$78,$1F,$D2,$F7,$FD
- $FE90 DEFB $DD,$35,$00,$20,$E9,$DD,$35,$01
- $FE98 DEFB $20,$E4,$DD,$36,$01,$64,$08,$E6
- $FEA0 DEFB $03,$3C,$D3,$FE,$08,$18,$D7,$01
- $FEA8 DEFB $FD,$00,$ED,$78,$F5,$08,$3C,$E6
- $FEB0 DEFB $03,$D3,$FE,$08,$F1,$C1,$C9,$E5
- $FEB8 DEFB $C5,$D5,$87,$26,$0F
 
-; Message at FEBD
-t$FEBD DEFM "o))"
+; Screen row-address table, 192 entries of 2 bytes
+;
+; .
+;
+; .
+;
+; Built at startup by #R$D004: entry N is the pixel address of screen line N,
+; so the ZX screen's non-linear third/row/scanline layout only has to be worked
+; out once. #R$C806, #R$C85C and #R$CE81 index it (via IX or IY) instead of
+; recomputing an address per row. The bytes in the snapshot are tape-loader
+; leftovers from before #R$D004 ran, not table data - hence the stray text
+; visible in them.
+b$FE00 DEFW $FECC,$0001,$C500,$7DCD
+ $FE08 DEFW $77FE,$E323,$064F,$0900
+ $FE10 DEFW $DDE3,$0235,$1320,$CDC1
+ $FE18 DEFW $FE7D,$C2B9,$FF09,$7DCD
+ $FE20 DEFW $B8FE,$09C2,$01FF,$0000
+ $FE28 DEFW $7DC5,$20BB,$7CD9,$20BA
+ $FE30 DEFW $C1D5,$7DCD,$B9FE,$09C2
+ $FE38 DEFW $CDFF,$FE7D,$C2B8,$FF09
+ $FE40 DEFW $6F2A,$E5FF,$713A,$FEFF
+ $FE48 DEFW $D802,$28E1,$EDAA,$607B
+ $FE50 DEFW $FDFE,$5C2A,$2AFE,$FE5E
+ $FE58 DEFW $56ED,$C9FB,$5C3A,$2D2B
+ $FE60 DEFW $5FE8,$0000,$0000,$0000
+ $FE68 DEFW $0000,$0000,$0000,$0000
+ $FE70 DEFW $0000,$E0A1,$0401,$180D
+ $FE78 DEFW $1875,$E016,$C500,$DD01
+ $FE80 DEFW $ED00,$CB78,$207F,$0120
+ $FE88 DEFW $FDFE,$78ED,$D21F,$FDF7
+ $FE90 DEFW $35DD,$2000,$DDE9,$0135
+ $FE98 DEFW $E420,$36DD,$6401,$E608
+ $FEA0 DEFW $3C03,$FED3,$1808,$01D7
+ $FEA8 DEFW $00FD,$78ED,$08F5,$E63C
+ $FEB0 DEFW $D303,$08FE,$C1F1,$E5C9
+ $FEB8 DEFW $D5C5,$2687,$6F0F,$2929
+ $FEC0 DEFW $0806,$127E,$1423,$FA10
+ $FEC8 DEFW $C1D1,$C9E1,$0406,$0021
+ $FED0 DEFW $2B00,$0000,$B57C,$F920
+ $FED8 DEFW $F710,$37CD,$DDFF,$0036
+ $FEE0 DEFW $DD00,$0136,$CD0C,$FE7D
+ $FEE8 DEFW $CD6F,$FE7D,$E567,$7DCD
+ $FEF0 DEFW $6FFE,$7DCD,$67FE,$6F22
+ $FEF8 DEFW $E1FF,$7DCD,$5FFE,$7DCD
+ $FF00 DEFW $57FE,$7DCD,$32FE,$FF71
+ $FF08 DEFW $21C9,$4000,$0111,$0140
+ $FF10 DEFW $1B00,$5536,$B0ED,$6221
+ $FF18 DEFW $11FF,$48E0,$2DCD,$21FF
+ $FF20 DEFW $FF46,$0011,$CD50,$FF2D
+ $FF28 DEFW $7DCD,$18FE,$7EFB,$C8B7
+ $FF30 DEFW $B7CD,$13FE,$1823,$CDF6
+ $FF38 DEFW $FE7D,$55FE,$F920,$7DCD
+ $FF40 DEFW $FEFE,$20AA,$C9F5,$7250
+ $FF48 DEFW $7365,$2073,$2041,$6F74
+ $FF50 DEFW $7220,$7365,$6174,$7472
+ $FF58 DEFW $7420,$6172,$736E,$6566
+ $FF60 DEFW $0072,$6142,$2064,$7274
+ $FF68 DEFW $6E61,$6673,$7265,$1600
+ $FF70 DEFW $01E0,$2FDE,$00CE,$0078
+ $FF78 DEFW $7E00,$7C40,$4040,$007E
 
-; Data block at FEC0
-b$FEC0 DEFB $06,$08,$7E,$12,$23,$14,$10,$FA
- $FEC8 DEFB $D1,$C1,$E1,$C9,$06,$04,$21,$00
- $FED0 DEFB $00,$2B,$00,$00,$7C,$B5,$20,$F9
- $FED8 DEFB $10,$F7,$CD,$37,$FF,$DD,$36,$00
- $FEE0 DEFB $00,$DD,$36,$01,$0C,$CD,$7D,$FE
- $FEE8 DEFB $6F,$CD,$7D,$FE,$67,$E5,$CD,$7D
- $FEF0 DEFB $FE,$6F,$CD,$7D,$FE
+; Data block at FF80
+b$FF80 DEFB $00,$7E,$40,$7C,$40,$40,$40,$00
+ $FF88 DEFB $00,$3C,$42,$40,$4E,$42,$3C,$00
+ $FF90 DEFB $00,$42,$42,$7E,$42,$42,$42,$00
+ $FF98 DEFB $00,$3E,$08,$08,$08,$08,$3E,$00
+ $FFA0 DEFB $00,$02,$02,$02,$42,$42,$3C,$00
+ $FFA8 DEFB $00,$44,$48,$70,$48,$44,$42,$00
+ $FFB0 DEFB $00,$5F,$4C,$9F,$99,$33,$30,$D4
+ $FFB8 DEFB $35,$86,$65,$63,$7E,$B0,$5F,$6D
+ $FFC0 DEFB $C4,$9A,$4B,$7D,$44,$1C,$2E,$BC
+ $FFC8 DEFB $73,$BD,$9C,$E9,$A2,$D3,$50,$0B
+ $FFD0 DEFB $69,$19,$8C,$88,$39,$A9,$9C,$0B
+ $FFD8 DEFB $09,$26,$60,$05,$C0,$04,$29,$80
+ $FFE0 DEFB $28,$80,$00,$00,$00,$00,$00,$00
+ $FFE8 DEFB $00,$3C,$40,$3C,$02,$42,$3C,$00
+ $FFF0 DEFB $00,$FE,$10,$10
 
-; Message at FEF5
-t$FEF5 DEFM "g\"o"
-
-; Data block at FEF8
-b$FEF8 DEFB $FF,$E1,$CD,$7D,$FE,$5F,$CD,$7D
- $FF00 DEFB $FE,$57,$CD,$7D,$FE,$32,$71,$FF
- $FF08 DEFB $C9,$21,$00,$40,$11,$01,$40,$01
- $FF10 DEFB $00,$1B,$36,$55,$ED,$B0,$21,$62
- $FF18 DEFB $FF,$11,$E0,$48,$CD,$2D,$FF,$21
- $FF20 DEFB $46,$FF,$11,$00,$50,$CD,$2D,$FF
- $FF28 DEFB $CD,$7D,$FE,$18,$FB,$7E,$B7,$C8
- $FF30 DEFB $CD,$B7,$FE,$13,$23,$18,$F6,$CD
- $FF38 DEFB $7D,$FE,$FE,$55,$20,$F9,$CD,$7D
- $FF40 DEFB $FE,$FE,$AA,$20,$F5,$C9
-
-; Message at FF46
-t$FF46 DEFM "Press A to restart transfer"
-
-; Unused
-s$FF61 DEFS $01
-
-; Message at FF62
-t$FF62 DEFM "Bad transfer"
-
-; Data block at FF6E
-b$FF6E DEFB $00,$16,$E0,$01,$DE,$2F,$CE,$00
- $FF76 DEFB $78,$00,$00,$7E,$40,$7C,$40,$40
- $FF7E DEFB $7E,$00,$00,$7E,$40,$7C,$40,$40
- $FF86 DEFB $40,$00,$00,$3C,$42,$40
-
-; Message at FF8C
-t$FF8C DEFM "NB<"
-
-; Data block at FF8F
-b$FF8F DEFB $00,$00,$42,$42,$7E
-
-; Message at FF94
-t$FF94 DEFM "BBB"
-
-; Data block at FF97
-b$FF97 DEFB $00,$00,$3E,$08,$08,$08,$08,$3E
- $FF9F DEFB $00,$00,$02,$02,$02
-
-; Message at FFA4
-t$FFA4 DEFM "BB<"
-
-; Unused
-s$FFA7 DEFS $02
-
-; Message at FFA9
-t$FFA9 DEFM "DHpHDB"
-
-; Data block at FFAF
-b$FFAF DEFB $00,$00,$5F,$4C,$9F,$99,$33,$30
- $FFB7 DEFB $D4,$35,$86,$65,$63,$7E,$B0,$5F
- $FFBF DEFB $6D,$C4,$9A,$4B,$7D,$44,$1C,$2E
- $FFC7 DEFB $BC,$73,$BD,$9C,$E9,$A2,$D3,$50
- $FFCF DEFB $0B,$69,$19,$8C,$88,$39,$A9,$9C
- $FFD7 DEFB $0B,$09,$26,$60,$05,$C0,$04,$29
- $FFDF DEFB $80,$28,$80,$00,$00,$00,$00,$00
- $FFE7 DEFB $00,$00,$3C,$40,$3C,$02,$42,$3C
- $FFEF DEFB $00,$00,$FE,$10,$10
-
-; Data block at FFF4
-b$FFF4 DEFB $10,$10,$10,$00,$00,$42,$E6,$05
- $FFFC DEFB $CD,$05,$70,$BF
+; IM 2 interrupt vector landing point
+;
+; .
+;
+; .
+;
+; #R$D095 patches a JP #R$DFE7 in here at startup, so this is where every
+; interrupt lands once IM 2 is set with I=$39. It also writes $18 to $FFFF. The
+; bytes in the snapshot are whatever was here before that patch ran - the stack
+; grows down from $FFF4, so they are not meaningful data.
+b$FFF4 DEFB $10,$10,$10                     ; JP #R$DFE7, written by #R$D095
+ $FFF7 DEFB $00,$00,$42,$E6,$05,$CD,$05,$70
+ $FFFF DEFB $BF                             ; $18, written by #R$D095

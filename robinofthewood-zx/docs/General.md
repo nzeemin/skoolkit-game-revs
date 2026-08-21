@@ -1,6 +1,6 @@
 # Robin of the Wood — General Internals
 
-Reverse-engineering notes on the game's architecture, gathered from `robin.ctl`. Room/screen data format (world map, room types, additional elements, blocks) is covered separately — see `Room-Format.md`.
+Reverse-engineering notes on the game's architecture, gathered from `robin.ctl`. Room/screen data format (world map, room types, additional elements, blocks) is covered separately — see `Room-Format.md`; the actors and the object system that drives them, in `Actors.md`.
 
 ## Screens and world map
 
@@ -22,34 +22,47 @@ Room drawing (`$C072`) fills `$EB00`/`$E800` from the room type + additional ele
 
 ## Sprite / object system
 
-Game entities (Robin, guards, the arrow, the special enemy) are represented as fixed-size **object records** — the common layout, used throughout, has at least:
+Game entities are fixed-size **object records** advanced by the shared routine `$C8F7`,
+which draws and erases frames through `$C6D6` by XORing pixel data into the shadow
+screen (glyph rows are (position, length, source) tuples, drawn by `$C723`). Frame
+mirroring uses the same `$FD00` bit-reverse trick as room blocks.
 
-- an animation/countdown byte and status flags at offset +4 (bit 0 = "animated", bit 1 = "erase current frame", bit 2 = "advance to next frame")
-- a frame-table pointer at offset +2/+3
-- a position byte at offset +9 (values 0-`$6F`, wrapping — used for map-relative or animation-phase stepping)
-- entries used by the guard table (`$AC13`) are 11 bytes each; other object tables use different strides depending on what they track
+The record layout, the frame-list format, and each individual actor — Robin, room
+guards, door guards, the arrow, the special enemy, the ambush figure — are documented
+in `Actors.md`.
 
-The `$AC13` guard entry, confirmed live: `[0]` home-room low nibble, `[1]` route-availability flag (tested by `$DDF0`), `[2:3]` frame-table pointer, `[4]` status flags, `[5:7]` and `[8:10]` two 3-byte triples. Live-traced an active guard through several update ticks: offset `[9]` (the position byte) genuinely advances during movement (observed `$63`→`$72` while animating), confirming the wrapping-position mechanic applies to regular patrol guards, not just the special enemy. Unexpectedly, `[5:7]` exactly mirrors `[8:10]` in every sample taken — idle or moving, across all 4 entries — never diverging; whatever writes one writes both. Not a "target vs current" split as first guessed; the reason for the duplicate copy is unconfirmed.
+## Input
 
-`$C8F7` is the shared per-object "advance and redraw" routine: decrements the countdown, unlinks the object from a linked list when it expires, and calls `$C6D6` to draw/erase the current animation frame by XORing pixel data into the shadow screen (glyph rows are (position, length, source) tuples, drawn by `$C723`). Frame mirroring uses the same `$FD00` bit-reverse trick as room blocks.
+`$C95A` calls `$D1E9`, which dispatches through a pointer at `$D275` to the active
+control scheme's handler: joystick ports, keyboard, or user-defined keys via `$D191`,
+which tests the 5 stored key codes at `$D277` using `$D176`. The handler returns a
+direction bitmask through `$D1F1`, which cancels opposite bit pairs (both left+right,
+or both up+down).
 
-Guards patrol using per-guard tables built when a room is entered (`$C276`): the `$AC13` guard-object table (4 entries) and a parallel door/exit-guard table at `$DD05` (from door data at `$DD3F`), both stepped one map-cell at a time toward a target (`$BA85` for guards, `$DBF8` for door guards), with direction-table selection driven by the room's block flag bits.
-
-## Robin's control and animation
-
-Per frame (`$C6A2`, called from the main loop, throttled to every other frame unless an animation is in progress):
-
-1. **Input**: `$C95A` calls `$D1E9`, which dispatches through a pointer at `$D275` to the active control scheme's handler (joystick ports, keyboard, or user-defined keys via `$D191`, which tests 8 stored key codes from `$D277` using `$D176`). The handler's result returns through `$D1F1`, which cancels opposite bit pairs (both left+right, or both up+down). `$C95A` further cancels bits against the previous frame's state and runs collision tests (`$DD6F`/`$DD80`/`$DD93`/`$DD9F`, each converting a pixel position to a shadow-attribute address via `$DDD6` and testing 2-3 cells for a solid/occupied tile via `$DDB1`/`$DDC5`) before updating Robin's position.
-2. **Action dispatch**: `$C9E7` picks between sword attack, arrow shot, walking, or idle animations based on movement bits and facing, via a per-direction jump table (`$CD42`) built from a family of small dispatcher routines (`$CB21`, `$CB6B`, `$CC1F`, `$CC52`, `$CBFE`, `$CC47`, ...). Sword/arrow frame selection additionally checks the guard table for a nearby target (`$CA4C`).
-3. **Redraw**: Robin's own object record (base `$CC7C`) is flagged and advanced via `$C8F7`.
+`$C95A` then cancels bits against the previous frame's state and runs collision tests
+(`$DD6F`/`$DD80`/`$DD93`/`$DD9F`, each converting a pixel position to a shadow-attribute
+address via `$DDD6` and testing 2-3 cells for a solid/occupied tile via
+`$DDB1`/`$DDC5`) before committing Robin's move.
 
 ## Combat and hazards
 
-- **Sword swing**: `$BE43` builds a hit-rectangle from Robin's position and facing, and tests it against up to 5 guards via the shared bounding-box overlap test `$BEE3` (`|dx|<D and |dy|<E`); on a hit, `$BF1A` marks the guard and `$BD84` plays a border-flash "hit" sound. Confirmed live: `$BF1A` sets bit 5 (`$20`) of the guard's `$AC13` status byte and switches its frame-table pointer to a hit-reaction table; the guard then takes a knockback step (its position byte wrapped via the `$70` boundary, e.g. observed `$25`→`$12`) and, within roughly a second, its table entry stops updating entirely - consistent with `$C8F7` unlinking it from the active object list once its countdown expires, leaving a static "corpse". Notably, a regular guard's sword-kill did **not** increment the kill counter at `$D5A4` in this test - that counter appears reserved for arrow kills (`$D91A`) and/or the special enemy, not ordinary sword kills; the scoring model for regular guards is still unclear.
-- **Arrow**: `$BCC2` steps the arrow one pixel along its diagonal flight each frame (self-modified branch logic selects the direction), drawing it via `$BD2A`/`$BD09` (which also detects screen-edge exit). `$BD49` tests the arrow against guards the same way as the sword.
-- **Guard/hazard contact with Robin**: `$BDA3` checks Robin against up to 3 room "hotspots" (e.g. ladders); `$BDE0` checks Robin against the door-guard table for a bump. Either can call `$BE25`, which decrements Robin's energy and redraws the energy bar (`$BF37`, `$BF6F` holds the energy value 0-`$0F`) - or, if energy is already critical (`$02`), sets animation code `$6E` instead. `$C9E7` dispatches that code to `$CB9D`: a short border-flash (not the "evil laughter"), a kill-counter penalty, and a timed recovery - a stagger, not a game-over; Robin keeps playing. The energy display itself is a fixed pair of branching antlers, drawn as static pixel art from custom font glyphs (`$AF0B` upper half / `$AF83` lower half, 15 static glyphs each — the shape never changes); `$BF37` doesn't draw them, it recolours a 63-byte attribute strip over the artwork so the antlers' colour, not shape, reflects the current energy value.
-- **Special enemy** (a unique object at `$BC59`, set up by `$BBC1`/`$CFC7`/`$B919`): patrols toward a randomly-picked target room (`$BBA1` table), and on contact with Robin (`$BEB1`, via the shared overlap test) is defeated: the whole screen flashes (`$BEF7`, 16 ink-colour cycles), Robin's energy refills to max, and a kill-count message prints (`$D91A`, counter at `$D5A4`).
-- Killing a guard with the sword completes via `$CB9D`, which nets a -1 adjustment against `$D91A`'s own +1 (their combined effect on `$D5A4` is intentional but not fully pinned down), arms a short recovery timer, and costs Robin a fixed amount of energy depending on facing.
+Which routine hits what, and how each actor reacts, is in `Actors.md`. The parts that
+are game-wide rather than per-actor:
+
+- **Overlap test**: `$BEE3` is shared by every contact check — `|dx| < D and |dy| < E`
+  against a box supplied by the caller.
+- **Energy**: `$BE25` decrements the energy value at `$BF6F` (0-`$0F`) and redraws the
+  bar via `$BF37`. At critical energy (`$02`) it instead sets animation code `$6E`,
+  which `$C9E7` routes to `$CB9D` — a short border-flash, a kill-counter penalty and a
+  timed recovery. That is a stagger, not a game-over; Robin keeps playing.
+- **Energy display**: a fixed pair of branching antlers, static pixel art from the font
+  glyphs at `$AF0B` (upper half) and `$AF83` (lower half), 15 glyphs each. The shape
+  never changes — `$BF37` recolours a 63-byte attribute strip over the artwork, so the
+  antlers' colour reflects the energy value.
+- **Kill counter** (`$D5A4`): incremented by `$D91A`. A regular guard killed with the
+  sword did **not** increment it in testing, so it appears reserved for arrow kills
+  and/or the special enemy. `$CB9D` applies a -1 that nets against `$D91A`'s +1. The
+  scoring model for ordinary guards is still unclear.
 
 ## Rooms, events and messages
 
@@ -57,7 +70,7 @@ Per frame (`$C6A2`, called from the main loop, throttled to every other frame un
 - **Room-entry / message triggers**: `$D57A` holds up to 9 (position, type) trigger zones written by the print routine when it encounters certain control codes; `$D7F3` scans this table each frame against Robin's position and prints/queues associated messages or sounds. One trigger type calls `$D944`, which plays a short border-flash beep (`$D9E9`) and increments the entry's counter - confirmed to match the short beep heard on picking up a key/item. A related table at `$D543` (11 slots) logs recently-visited room/position pairs (`$D997`) and is scanned by `$D5A7` on room entry to print position-specific messages; `$D454` seeds its first two entries at game start.
 - **Special-event rooms**: a 9-entry table at `$DBCD` lists rooms with scripted one-off effects (`$0002`, `$000D`, `$0044`, `$004E`, `$0064`, `$0074`, `$008E`, `$0095`, `$00C1`); `$DA0F` checks it on room entry and, on a match, arms an "extra frame" callback (`$C4D3`, normally a no-op via `$DB17`) consumed by `$C4D2` when redrawing the room. An 8-slot event-status array at `$D595` tracks progress through these; `$DB18`/`$DB98`/`$DB82`/`$DF03` resolve completed events (arrow-hit countdowns, energy refills, printing status messages from a shared pointer table at `$D9F9`) and remove/shift finished slots. Confirmed live: each of these rooms is otherwise an ordinary forest room, distinguished only by a magenta attribute overlay near the door (the `$C4D3` extra-frame drawing) — not a unique landmark, just a uniform "special encounter active here" marker.
 - **Extra guard spawning**: `$D402` (called from `$D5A7` on room entry) randomly spawns additional guards of two types into a 30-entry slot table at `$D4B1` (free slots located by `$D47D`); the initial 6 guards (1 special + 5 normal) are seeded once at game start by `$D3F3`.
-- **Scripted ambush / capture**: the room randomly chosen at game start by `$CFB3` (from a table at `$D3A2`, distinct from `$CF71`'s opening-scenario picks) is where `$B867` arms a boss-style ambush (object at `$B8FB`) once Robin walks into the room's centre band, playing the "evil laughter" (`$8C8D`) and warping Robin to a fixed room (`$9C`, the barred dungeon gate - see landmark rooms above). Confirmed against play: this is the only place besides the intro (`$CE62`) that "evil laughter" plays, and it's what the player experiences as Robin's capture/death - there is no separate energy-zero game-over found; a critical-energy hit instead stagger-recovers via `$CB9D` (see Combat and hazards) rather than ending the game.
+- **Scripted ambush / capture**: one room per game, rolled by `$CFB3` from the table at `$D3A2` (distinct from `$CF71`'s opening-scenario picks), triggers the ambush described in `Actors.md`, which warps Robin to room `$9C` — the barred dungeon gate listed under landmark rooms below. Confirmed against play: this and the intro (`$CE62`) are the only places "evil laughter" plays, and it is what the player experiences as Robin's capture/death. No separate energy-zero game-over has been found; a critical-energy hit stagger-recovers via `$CB9D` instead of ending the game.
 - **Hardcoded landmark rooms**, confirmed live (teleporting Robin via `$C548` at the `$C22F` room-transition point):
   - `$65`/`$6E` (message group `$4E`, checked by `$C462`) — a matched pair of forest doors. `$65` also has a small gold chest and a purple hooded figure.
   - `$79`/`$BB` (message group `$4D`, checked by `$C462`) — a gate-and-key pair: `$79` is a barrel cellar behind a closed gate, `$BB` holds the key (visible as an item sprite in the bushes) that opens it.
@@ -85,8 +98,7 @@ There is no real PRNG; code repeatedly reads the Z80 `R` register (`LD A,R`) as 
 
 ## Open questions
 
-- `$AC13`'s `[1]` route-flag and the reason `[5:7]` duplicates `[8:10]` (see above) — confirmed to exist, purpose not pinned down. (Bit 5 of `[4]`, the "hit" flag, is now confirmed live - see Combat and hazards.)
 - What actually rewards the player for a regular sword kill, if anything (`$D5A4` doesn't move) - the scoring/objective model for ordinary guards is still unclear.
-- `$DD05` (door guards) checked live in 4 rooms (including a `$C549 != 0` room, confirming that gate is for room numbers `$0100`+, and one where Robin was walked right up against the door): the layout matches `$AC13`, and room-entry correctly picks the entry's frame-table pointer (`$DD31` vs `$DD38`) from the door's block flag. `$DBF8` is confirmed live to actively cycle through each entry's fields every frame (watched IX move across an entry's bytes), but no entry was ever observed setting its flags or stepping its position — stayed at the `00 00 00 / 00 00 $60` default throughout, even at point-blank range. Most likely explanation: none of the doors sampled had an actual guard assigned (the block's door-flag only picks a default frame-table constant at room-setup, it doesn't guarantee a live patrol) — real door-guards may only exist on specific story doors not yet found.
+- Per-actor open questions (guard flag bits, the duplicated `$AC13` triples, whether door guards are ever actually populated) are listed in `Actors.md`.
 - The exact text of the in-game messages (custom font, doesn't decode as ASCII) — landmark rooms are now visually identified (see above), but the printed hint text itself is still unread. Also unconfirmed: whether opening `$79`'s gate with `$BB`'s key is actually implemented gameplay, or the key/gate pairing is coincidental to what's visible.
 - Exact interaction between `$CB9D`'s counter adjustment and `$D91A`'s increment on `$D5A4` (net effect understood, intent less so).

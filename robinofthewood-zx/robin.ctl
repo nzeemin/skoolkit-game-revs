@@ -1140,68 +1140,68 @@ w $8E12 Source-run pointers for the sprite background save, indexed by #R$C790
 N $8E12 5 entries, indexed by the frame's flag byte (doubled, bit 7 masked, at $C7C7). All point into the single byte run at #R$8E1C at successively later offsets, so one shared run supplies five different-length sources (8, 7, 3, 2 and 1 bytes).
 B $8E1C
 b $8E24 Robin sprites
-B $8E27,96,8 #HTML[#UDGARRAY3,4,3,3,,($8E27-$8E86-1-24)(robin0)] Robin 0
+B $8E27,96,8 #HTML[#UDGARRAY3,4,3,3,,($8E27-$8E86-1-24)(robin0)] Robin run 0
 B $8E87,3
-B $8E8A,96,8 #HTML[#UDGARRAY3,4,3,3,,($8E8A-$8EE9-1-24)(robin1)] Robin 1
+B $8E8A,96,8 #HTML[#UDGARRAY3,4,3,3,,($8E8A-$8EE9-1-24)(robin1)] Robin run 1
 B $8EEA,3
-B $8EED,96,8 #HTML[#UDGARRAY3,4,3,3,,($8EED-$8F4C-1-24)(robin2)] Robin 2
+B $8EED,96,8 #HTML[#UDGARRAY3,4,3,3,,($8EED-$8F4C-1-24)(robin2)] Robin run 2
 B $8F4D,3
-B $8F50,96,8 #HTML[#UDGARRAY3,4,3,3,,($8F50-$8FAF-1-24)(robin3)] Robin 3
+B $8F50,96,8 #HTML[#UDGARRAY3,4,3,3,,($8F50-$8FAF-1-24)(robin3)] Robin run 3
 B $8FB0,3
-B $8FB3,96,8 #HTML[#UDGARRAY3,4,3,3,,($8FB3-$9012-1-24)(robin4)] Robin 4
+B $8FB3,96,8 #HTML[#UDGARRAY3,4,3,3,,($8FB3-$9012-1-24)(robin4)] Robin run 4
 B $9013,3
-B $9016,96,8 #HTML[#UDGARRAY3,4,3,3,,($9016-$9075-1-24)(robin5)] Robin 5
+B $9016,96,8 #HTML[#UDGARRAY3,4,3,3,,($9016-$9075-1-24)(robin5)] Robin run 5
 B $9076,3
-B $9079,96,8 #HTML[#UDGARRAY3,4,3,3,,($9079-$90D8-1-24)(robin6)] Robin 6
+B $9079,96,8 #HTML[#UDGARRAY3,4,3,3,,($9079-$90D8-1-24)(robin6)] Robin run 6
 B $90D9,3
-B $90DC,96,8 #HTML[#UDGARRAY3,4,3,3,,($90DC-$913B-1-24)(robin7)] Robin 7
+B $90DC,96,8 #HTML[#UDGARRAY3,4,3,3,,($90DC-$913B-1-24)(robin7)] Robin run 7
 B $913C,3
-B $913F,96,8 #HTML[#UDGARRAY3,4,3,3,,($913F-$919E-1-24)(robin8)] Robin 8
+B $913F,96,8 #HTML[#UDGARRAY3,4,3,3,,($913F-$919E-1-24)(robin8)] Robin run 8
 B $919F,3
-B $91A2,96,8 #HTML[#UDGARRAY3,4,3,3,,($91A2-$9201-1-24)(robin9)] Robin 9
+B $91A2,96,8 #HTML[#UDGARRAY3,4,3,3,,($91A2-$9201-1-24)(robin9)] Robin run 9
 B $9202,3
-B $9205,96,8 #HTML[#UDGARRAY3,4,3,3,,($9205-$9264-1-24)(robinA)] Robin A
+B $9205,96,8 #HTML[#UDGARRAY3,4,3,3,,($9205-$9264-1-24)(robinA)] Robin run A
 B $9265,3
-B $9268,96,8 #HTML[#UDGARRAY3,4,3,3,,($9268-$92C7-1-24)(robinB)] Robin B
+B $9268,96,8 #HTML[#UDGARRAY3,4,3,3,,($9268-$92C7-1-24)(robinB)] Robin sit
 B $92C8,3
-B $92CB,96,8 #HTML[#UDGARRAY3,4,3,3,,($92CB-$932A-1-24)(robinC)] Robin C
+B $92CB,96,8 #HTML[#UDGARRAY3,4,3,3,,($92CB-$932A-1-24)(robinC)] Robin front 0
 B $932B,3
-B $932E,96,8 #HTML[#UDGARRAY3,4,3,3,,($932E-$938D-1-24)(robinD)] Robin D
+B $932E,96,8 #HTML[#UDGARRAY3,4,3,3,,($932E-$938D-1-24)(robinD)] Robin front 1
 B $938E,3
-B $9391,96,8 #HTML[#UDGARRAY3,4,3,3,,($9391-$93F0-1-24)(robinE)] Robin E
+B $9391,96,8 #HTML[#UDGARRAY3,4,3,3,,($9391-$93F0-1-24)(robinE)] Robin back 0
 B $93F1,3
-B $93F4,96,8 #HTML[#UDGARRAY3,4,3,3,,($93F4-$9453-1-24)(robinF)] Robin F
+B $93F4,96,8 #HTML[#UDGARRAY3,4,3,3,,($93F4-$9453-1-24)(robinF)] Robin back 1
 b $9454 Guard sprites
 B $9454,3
-B $9457,96,8 #HTML[#UDGARRAY3,,3,3,,($9457-$94B6-1-24)(guard0)] Guard 0
+B $9457,96,8 #HTML[#UDGARRAY3,,3,3,,($9457-$94B6-1-24)(guard0)] Guard right 0
 B $94B7,3
-B $94BA,96,8 #HTML[#UDGARRAY3,,3,3,,($94BA-$9519-1-24)(guard1)] Guard 1
+B $94BA,96,8 #HTML[#UDGARRAY3,,3,3,,($94BA-$9519-1-24)(guard1)] Guard right 1
 B $951A,3
-B $951D,96,8 #HTML[#UDGARRAY3,,3,3,,($951D-$957C-1-24)(guard2)] Guard 2
+B $951D,96,8 #HTML[#UDGARRAY3,,3,3,,($951D-$957C-1-24)(guard2)] Guard right 2
 B $957D,3
-B $9580,96,8 #HTML[#UDGARRAY3,,3,3,,($9580-$95DF-1-24)(guard3)] Guard 3
+B $9580,96,8 #HTML[#UDGARRAY3,,3,3,,($9580-$95DF-1-24)(guard3)] Guard right 3
 B $95E0,3
-B $95E3,96,8 #HTML[#UDGARRAY3,,3,3,,($95E3-$9642-1-24)(guard4)] Guard 4
+B $95E3,96,8 #HTML[#UDGARRAY3,,3,3,,($95E3-$9642-1-24)(guard4)] Guard right 4
 B $9643,3
-B $9646,96,8 #HTML[#UDGARRAY3,,3,3,,($9646-$96A5-1-24)(guard5)] Guard 5
+B $9646,96,8 #HTML[#UDGARRAY3,,3,3,,($9646-$96A5-1-24)(guard5)] Guard right 5
 B $96A6,3
-B $96A9,96,8 #HTML[#UDGARRAY3,,3,3,,($96A9-$9708-1-24)(guard6)] Guard 6
+B $96A9,96,8 #HTML[#UDGARRAY3,,3,3,,($96A9-$9708-1-24)(guard6)] Guard right 6
 B $9709,3
-B $970C,96,8 #HTML[#UDGARRAY3,,3,3,,($970C-$976B-1-24)(guard7)] Guard 7
+B $970C,96,8 #HTML[#UDGARRAY3,,3,3,,($970C-$976B-1-24)(guard7)] Guard right 7
 B $976C,3
-B $976F,96,8 #HTML[#UDGARRAY3,,3,3,,($976F-$97CE-1-24)(guard7)] Guard 7
+B $976F,96,8 #HTML[#UDGARRAY3,,3,3,,($976F-$97CE-1-24)(guard8)] Guard left 0
 B $97CF,3
-B $97D2,96,8 #HTML[#UDGARRAY3,,3,3,,($97D2-$9831-1-24)(guard8)] Guard 8
+B $97D2,96,8 #HTML[#UDGARRAY3,,3,3,,($97D2-$9831-1-24)(guard9)] Guard left 1
 B $9832,3
-B $9835,96,8 #HTML[#UDGARRAY3,,3,3,,($9835-$9894-1-24)(guard9)] Guard 9
+B $9835,96,8 #HTML[#UDGARRAY3,,3,3,,($9835-$9894-1-24)(guardA)] Guard left 2
 B $9895,3
-B $9898,96,8 #HTML[#UDGARRAY3,,3,3,,($9898-$98F7-1-24)(guardA)] Guard A
+B $9898,96,8 #HTML[#UDGARRAY3,,3,3,,($9898-$98F7-1-24)(guardB)] Guard left 3
 B $98F8,3
-B $98FB,96,8 #HTML[#UDGARRAY3,,3,3,,($98FB-$995A-1-24)(guardB)] Guard B
+B $98FB,96,8 #HTML[#UDGARRAY3,,3,3,,($98FB-$995A-1-24)(guardC)] Guard front
 B $995B,3
-B $995E,96,8 #HTML[#UDGARRAY3,,3,3,,($995E-$99BD-1-24)(guardC)] Guard C
+B $995E,96,8 #HTML[#UDGARRAY3,,3,3,,($995E-$99BD-1-24)(guardD)] Guard right fire
 B $99BE,3
-B $99C1,96,8 #HTML[#UDGARRAY3,,3,3,,($99C1-$9A20-1-24)(guardD)] Guard D
+B $99C1,96,8 #HTML[#UDGARRAY3,,3,3,,($99C1-$9A20-1-24)(guardE)] Guard left fire
 B $9A21
 b $9A36
 B $9A56
@@ -2093,10 +2093,12 @@ c $C53B Check the Space and Caps-Shift keyboard rows, return the state in carry
 N $C53B Called from #R$BF80 once per frame; carry clear sends it back to the menu (#R$BF79). Returns early with carry set if Space is down, otherwise reports Caps Shift's state instead. Which combination is actually meant to trigger the reset is not confirmed.
 C $C53B,6 Read the Space row ($7FFE); return early if Space is pressed
 C $C541,5 Read the Caps-Shift row ($FEFE); return its bit 0 in carry
-b $C547
+b $C547 Current room number and the drawing/guard-table pointers derived from it
 B $C547,1 Descriptor index: room type $00..$26 when $C54A points at #R$7B39, room number $00..$FF when it points at #R$8511
 W $C548,2 Current room number, $0000..$013D (index into the world map at #R$79F9)
 W $C54A,2 Descriptor table base address: #R$7B39 (room types) or #R$8511 (additional elements)
+W $C54C,2 Reused scratch pointer: the room's guard table (#R$AC13/#R$DDF0/#R$BF1A) in most contexts, but repointed elsewhere within #R$C276/#R$AA31 for other 3/12-byte-stride lookups - not a single fixed target
+W $C54E,2 -> the room's door-guard table at #R$DD05 (set by #R$C276)
 b $C550 Rooms that get the special attribute recolour (26 entries, scanned by #R$C40E)
 N $C550 Flat list of room low bytes, linearly scanned - a membership set, not indexed. The values are contiguous column pairs walking down rows $3-$A, i.e. a rectangular region of the map.
 B $C550,26,8
@@ -2295,11 +2297,12 @@ C $C9C7,3 Collision check
 C $C9D1,3 Collision check
 C $C9DC,3 Collision check
 c $C9E7 Robin's action dispatcher: pick sword/arrow frames, then jump by facing
-N $C9E7 If Robin's animation code ($CC7B) is non-zero, waits for it to finish (or, for code $6E, calls #R$CB9D). Otherwise, if idle ($CC7A=0) and standing still and centred in a cell, picks between a sword attack (#R$CA44) or an arrow shot (#R$CA4C) based on the movement bits at $CC8B. Finally looks up a per-facing handler in the table at $CD42 (indexed by $CC87) and jumps to it with E = the movement bitmask ($CC8B).
+N $C9E7 If Robin's animation code ($CC7B) is non-zero, waits for it to finish (or, for code $6E, calls #R$CB9D). Otherwise, if idle ($CC7A=0), fire pressed (bit 4 of $CC8B) and standing still and centred in a cell, picks between a sword attack (#R$CA44) or an arrow shot (#R$CA4C) based on the movement bits at $CC8B. Finally looks up a per-facing handler in the table at $CD42 (indexed by $CC87) and jumps to it with E = the FUDLR bitmask from $CC8B (the same layout #R$D1E9's handlers return: bit 0 right, 1 left, 2 down, 3 up, 4 fire).
 C $C9E7,3 BC = default return address (pushed for the handler to RET to)
 C $C9F3,3 Robin's critical-hit stagger
 C $C9EB,4 Animation code ($CC7B) active: wait it out / handle $6E
 C $C9F9,3 Skip action selection unless idle ($CC7A = 0)
+C $C9FF,5 Skip action selection unless the FIRE bit (bit 4) of $CC8B is set
 C $CA06,14 Only act when standing on a cell boundary ($CC85/$CC86 aligned)
 C $CA14,5 And no down/up movement pending
 C $CA19,5 Left/right bits pending: arrow shot ($CA2D)
@@ -2318,6 +2321,7 @@ R $CA4C O:A Small type code (2-5) for the picked frame table
 R $CA4C O:HL The picked frame table address
 C $CA4C,6 Push the default return frame; E = 0 (arrow variant)
 C $CA52,6 D = facing bit (1 or 0) from the carry
+C $CA5A,3 set Sword/arrow/pickup action timer
 C $CA69,7 IX = guard object table at $AC13; BC = Robin's position
 C $CA76,12 Skip inactive or already-hit guards (flag bits 0/5)
 C $CA82,12 Distance from Robin's column; too far ($32+) means no block
@@ -2364,28 +2368,46 @@ C $CB59,7 Standing still: call #R$CC13 or #R$CC34 by facing
 C $CB68,3 Timer still running: discard the caller's return address, return
 c $CB6B Pick a walking-frame table by movement bit (low nibble of A)
 N $CB6B Part of the facing-direction dispatch chain from #R$C9E7/#R$CB21. Tests bits 0-3 of A (right/left/down/up) in turn and returns A = a small type code (2-5) with HL -> the matching frame table ($CCFC/$CD11/$CD26/$CD2D); returns with the stack popped and no result if no bit is set.
+R $CB6B A FUDLR bitmask (bit 0 right, 1 left, 2 down, 3 up, 4 fire)
+R $CB6B O:A Small type code (2-5), if a frame table is picked
+R $CB6B O:HL The picked frame table address, if a frame table is picked
+C $CB6B,2 A = movement bits (fire bit masked off)
+C $CB6D,2 None set: return with the stack popped, no result
+C $CB6F,5 RIGHT?
+C $CB74,5 LEFT?
+C $CB79,5 DOWN?
+C $CB7E,5 UP?
 C $CB85,5 Bit 0 (right): A=2, HL=$CCFC
 C $CB8B,5 Bit 1 (left): A=3, HL=$CD11
 C $CB91,5 Bit 2 (down): A=4, HL=$CD26
 C $CB97,5 Bit 3 (up): A=5, HL=$CD2D
 c $CB9D Robin's critical-hit stagger: penalise the counter, recover after a timer
-N $CB9D Called from #R$C9E7's action code $6E - set by #R$BE25 when a hazard/guard hits Robin while his energy is already critical. Clears the animation timer and plays a short border-flash (not "evil laughter" - confirmed live/by ear that the laugh is reserved for the capture/ambush sequence at #R$B867, not this), penalises the kill counter at $D5A4 (2 decrements, offsetting #R$D91A's own increment to a net -1), arms a $001E recovery timer, and picks a facing-dependent recovery frame table/energy-cost pair ($CD34/$0F or $CD3B/$0E) before falling into #R$CBF7 to store it. Robin keeps playing afterwards - this is a stagger/penalty, not a game-over.
+N $CB9D Called from #R$C9E7's action code $6E, set by #R$BE25 when a hazard/guard hits Robin while his energy is already critical. Plays a short border-flash (not "evil laughter" - that's reserved for #R$B867), penalises the kill counter, and sets Robin's state ($CC87) to $0E or $0F depending on facing - the stagger/lay-down state handled by #R$CBD6/#R$CBC7, which recovers his energy once its timer runs out. A stagger/penalty, not a game-over - Robin keeps playing.
+C $CB9D,1 A = 0
+C $CB9E,3 Clear the action timer $CC7A
+C $CBA1,1 A = $FF
 C $CBA2,3 Set the border-flash colour/count operands without flashing
+C $CBA5,5 Penalise the kill counter at $D5A4 by 2 (offsets #R$D91A's own +1)
 C $CBAA,3 Print a kill-count message, increment the counter and its displayed digit
+C $CBAD,7 Arm a $001E recovery timer at $D1F1
+C $CBB4,3 A = Robin's facing ($CC87)
+C $CBB7,6 Facing bit 0 (via RRA): frame table $CD34, new state $0F
+C $CBBD,2 Bit set: skip the other branch
+C $CBBF,5 Otherwise: frame table $CD3B, new state $0E
 C $CBC4,3 => Store Robin's facing (A) and frame-table pointer
-c $CBC7 Countdown to a pickup completion, facing $01: refill energy when it reaches 0
-N $CBC7 Decrements the animation timer at $CC7B; while non-zero, just returns (popping the caller). At 0, picks frame table $CD22 and falls into #R$CBE3 to refill Robin's energy.
+c $CBC7 Stagger recovery, facing $01: lay down, then refill energy
+N $CBC7 State $0F, entered only from #R$CB9D's critical-hit stagger. Decrements the animation timer at $CC7B; while non-zero, just returns (popping the caller) - Robin lies staggered. At 0, picks frame table $CD22 and falls into #R$CBE3 to refill Robin's energy, ending the stagger.
 C $CBC7,4 Decrement the animation timer at $CC7B
 C $CBCB,2 Reached 0: fall through to finish the pickup
 C $CBCD,2 Still counting: pop the caller and return
-C $CBCF,5 A = facing $01; HL = frame table $CD22
+C $CBCF,5 A = state SIT LEFT; HL = frame table $CD22
 C $CBD4,2 => Refill Robin's energy to maximum and redraw the bar
-c $CBD6 Countdown to a pickup completion, facing $00: refill energy when it reaches 0
-N $CBD6 Same as #R$CBC7 but for the opposite facing - picks frame table $CD0D with facing code $00, then falls straight into #R$CBE3. Both are reached from the #R$CD42 handler table (entries E and F).
+c $CBD6 Stagger recovery, facing $00: lay down, then refill energy
+N $CBD6 State $0E, same as #R$CBC7 but for the opposite facing - picks frame table $CD0D, then falls straight into #R$CBE3. Both are reached only from #R$CB9D via the #R$CD42 handler table (entries E and F).
 C $CBD6,4 Decrement the animation timer at $CC7B
 C $CBDA,2 Reached 0: fall through to finish the pickup
 C $CBDC,2 Still counting: pop the caller and return
-C $CBDE,5 A = facing $00; HL = frame table $CD0D
+C $CBDE,5 A = state SIT RIGHT; HL = frame table $CD0D
 c $CBE3 Refill Robin's energy to maximum and redraw the bar
 N $CBE3 Clears the $D1F1 timer, then (using the shadow AF'/register set) refills the energy byte at $BF6F to $0F and calls #R$BF37 to redraw the bar.
 C $CBEC,3 Energy level address
@@ -2393,10 +2415,23 @@ C $CBF1,3 Draw the energy bar
 c $CBF7 Store Robin's facing (A) and frame-table pointer (HL)
 c $CBFE Direction dispatcher: pick a frame table or hand off, by low nibble of A
 N $CBFE Another member of the facing-direction dispatch family (#R$CB6B/#R$CC1F/#R$CC52). Low nibble 0 falls to #R$CC13; else low 2 bits select frame table $CCF4 (A=3), a bare return, or fall to #R$CC3B.
+R $CBFE A FUDLR bitmask (same value as E, see #R$CA3F)
+R $CBFE E FUDLR bitmask (used by the #R$CC3B tail it falls into)
+R $CBFE O:A Small type code, if a frame table is picked
+R $CBFE O:HL The picked frame table address, if a frame table is picked
+C $CBFE,2 A = low nibble of the facing/state byte
+C $CC00,3 Zero: jump to #R$CC13
+C $CC03,4 No movement (low 2 bits 0): fall to #R$CC3B
+C $CC07,4 Left/right only: pop and return, else fall through
 C $CC0B,5 A=3, HL=$CCF4
 C $CC13,5 A=0, HL=$CD0B
+C $CC18,6 Cache the result (A, HL) at $CC88/$CC89
 c $CC1F Direction dispatcher: pick a walking frame or hand off by movement bits
 N $CC1F Part of the facing-direction chain from #R$C9E7/#R$CB21. Low nibble of A: 0 falls to #R$CC34 (frame table $CD20); else low 2 bits select a fixed frame table $CCF8 (A=2), a bare return (A=2, popping the caller), or fall to #R$CC3B which re-tests E's bits 2/3 to hand off to #R$CB97/#R$CB91.
+R $CC1F A FUDLR bitmask (same value as E, see #R$CA3F)
+R $CC1F E FUDLR bitmask
+R $CC1F O:A Small type code, if a frame table is picked
+R $CC1F O:HL The picked frame table address, if a frame table is picked
 C $CC1F,5 Low nibble 0: fall to #R$CC34
 C $CC24,4 Low 2 bits == 0: fall to #R$CC3B
 C $CC28,4 Low 2 bits == 2: return to the caller's caller (pop and RET)
@@ -2405,8 +2440,14 @@ C $CC3B,5 Bit 2 of E set: hand off to #R$CB97
 C $CC40,5 Bit 3 of E set: hand off to #R$CB91; else return to the caller's caller
 c $CC47 Direction dispatcher: pick a diagonal frame table or hand off
 N $CC47 Another member of the facing-direction dispatch family. Low nibble 0 falls to #R$CC73; else bit 2 of E hands off to #R$CB97, otherwise falls to #R$CC5B.
+R $CC47 A FUDLR bitmask (same value as E, see #R$CA3F)
+R $CC47 E FUDLR bitmask
 c $CC52 Direction dispatcher: pick a diagonal frame table or hand off
 N $CC52 Part of the facing-direction chain from #R$C9E7 (reached via #R$CC47). Low nibble of A = 0 falls to #R$CC73 (a cached frame at $CC88/$CC89); else bit 3 of E hands off to #R$CB91. Otherwise tests E's bits 0/1 to pick between frame tables $CCFE (A=2) and $CD13 (A=3), or returns with no result if neither is set.
+R $CC52 A FUDLR bitmask (same value as E, see #R$CA3F)
+R $CC52 E FUDLR bitmask
+R $CC52 O:A Small type code, if a frame table is picked
+R $CC52 O:HL The picked frame table address, if a frame table is picked
 C $CC52,4 Low nibble 0: fall to #R$CC73
 C $CC56,5 Bit 3 of E set: hand off to #R$CB91
 C $CC5B,5 Bit 0 of E set: hand off to #R$CC67
@@ -2416,24 +2457,98 @@ C $CC6D,5 Type 3, frame table $CD13
 C $CC73,6 Return the cached frame from $CC88/$CC89
 b $CC7A Robin's animation timers, object record and facing byte
 N $CC7A $CC7A/$CC7B are the animation timers tested by #R$CB21 and #R$C9E7. $CC7C is Robin's own object record (standard layout, see #R$AC13). $CC87 right after it is the facing/state byte indexing #R$CD42; $CC88/$CC89 cache a frame pointer read back by #R$CC73.
+B $CC7A,1,1 Sword/arrow/pickup action timer (see #R$CB21/#R$BC81)
+B $CC7B,1,1 Idle flag (0 = idle; gates #R$BDA3/#R$BDE0/#R$C9E7)
+B $CC7C Robin's object record (standard layout, see #R$AC13)
+B $CC87 Facing/state byte, indexes #R$CD42
+B $CC88,1,1 Cached frame type, read back by #R$CC73
+W $CC89,2,2 Cached frame table pointer, read back by #R$CC73
+B $CC8B,1,1 Filtered movement/action bitmask (see #R$C95A)
+b $CC9D Frame tables for Robin's sword/arrow/walk animations (see #R$CA4C)
+N $CC9D Frame table for SWORD ATTACK (MOVING) RIGHT, used by #R$CA4C when the sword flag is set and a movement bit is held.
+B $CC9D,8
+W $CCA5,2 then loop back to $CCA3
+B $CCA7,1
+N $CCA8 Frame table for SWORD ATTACK (MOVING) LEFT, mirror of #R$CC9D.
+B $CCA8,8
+W $CCB0,2 then loop back to $CCAE
+B $CCB2,1
+N $CCB3 Frame table for SWORD ATTACK (STANDING) RIGHT, used by #R$CA4C when the sword flag is set and no movement bit is held.
+B $CCB3,8
+W $CCBB,2 then loop back to $CCB9
+B $CCBD,1
+N $CCBE Frame table for SWORD ATTACK (STANDING) LEFT, mirror of #R$CCB3.
+B $CCBE,8
+W $CCC6,2 then loop back to $CCC4
+B $CCC8,1
+N $CCC9 Frame table for ARROW SHOT RIGHT, used by #R$CA4C while an arrow is in flight.
+B $CCC9,8
+W $CCD1,2 then loop back to $CCCF
+B $CCD3,1
+N $CCD4 Frame table for ARROW SHOT LEFT, mirror of #R$CCC9.
+B $CCD4,8
+W $CCDC,2 then loop back to $CCDA
+B $CCDE,1
+N $CCDF Frame table for WALK RIGHT, used by #R$CA4C when the sword flag is clear.
+B $CCDF,8
+W $CCE7,2 then loop back to $CCE5
+B $CCE9,1
+N $CCEA Frame table for WALK LEFT, mirror of #R$CCDF.
+B $CCEA,8
+W $CCF2,2 then loop back to $CCF0
+N $CCF4 Frame table for #R$CBFE's A=3 case. Loops into #R$CD11's own "RUN LEFT" list mid-way (at $CD13), reusing its tail rather than holding separate frames.
+B $CCF4,2
+W $CCF6,2 -> $CD13 (see #R$CD11)
+N $CCF8 Frame table for #R$CC1F's A=2 case. Loops into #R$CCFC's "RUN RIGHT" list mid-way (at $CCFE), reusing its tail.
+B $CCF8,2
+W $CCFA,2 -> $CCFE (see #R$CCFC)
+N $CCFC Frame table for RUN RIGHT state (#R$CB6B's A=2 case). #R$CC52/#R$CC47/#R$CC1F's own targets ($CCFE) enter this same list mid-way, skipping the $0C/$0B lead-in frames, rather than holding a separate table.
+B $CCFC,13
+W $CD09,2 then loop back to $CCFE
+N $CD0B Frame table for #R$CBFE's A=0 case. Just a 2-frame lead-in ($0B,$0C); shares #R$CD0D's own $FF terminator and loop pointer as its tail, rather than holding separate ones.
+B $CD0B,2
+N $CD0D Frame table for DEAD RIGHT state
+B $CD0D,2,2
+W $CD0F,2,2 then loop back to $CD0D
+N $CD11 Frame table for RUN LEFT state
+B $CD11,2,2
+B $CD13
+W $CD1E,2,2 then loop back to $CD13
+N $CD20 Frame table for SIT LEFT state
+B $CD20
+N $CD22 Frame table for DEAD LEFT state
+B $CD22,2,2
+W $CD24,2,2 then loop back to $CD22
+N $CD26 Frame table for RUN UP state
+B $CD26,5,5
+W $CD2B,2,2
+N $CD2D Frame table for RUN DOWN state
+B $CD2D,5,5
+W $CD32,2,2
+N $CD34 Frame table for stagger-recovery state $0F (facing bit 0 set), used by #R$CB9D.
+B $CD34,5
+W $CD39,2 then loop back to $CD37
+N $CD3B Frame table for stagger-recovery state $0E (facing bit 0 clear), used by #R$CB9D.
+B $CD3B,5
+W $CD40,2 then loop back to $CD3E
 b $CD42 Per-facing/state handler jump table, indexed by #R$C9E7 via $CC87
-N $CD42 16 word entries, indexed by Robin's facing/state byte ($CC87, doubled). #R$C9E7 jumps to the selected handler with E = the movement bitmask.
-W $CD42,2 $00 - Pick a walking-frame table by movement bit (low nibble of A)
-W $CD44,2 $01 - Pick a walking-frame table by movement bit (low nibble of A)
-W $CD46,2 $02 - Direction dispatcher: pick a frame table or hand off, by low nibble of A
-W $CD48,2 $03 - Direction dispatcher: pick a walking frame or hand off by movement bits
-W $CD4A,2 $04 - Direction dispatcher: pick a diagonal frame table or hand off
-W $CD4C,2 $05 - Direction dispatcher: pick a diagonal frame table or hand off
-W $CD4E,2 $06 - Facing/state $06 handler: run the per-direction handler #R$CB21
-W $CD50,2 $07 - Facing/state $07 handler: run the per-direction handler #R$CB21
-W $CD52,2 $08 - Facing/state $08 handler: launch an arrow (#R$BC81), then #R$CB21
-W $CD54,2 $09 - Facing/state $09 handler: launch an arrow (#R$BC81), then #R$CB21
+N $CD42 16 word entries, indexed by Robin's facing/state byte ($CC87, doubled) - Robin's animation state machine. #R$C9E7 jumps to the selected handler with A = E = the FUDLR bitmask (bit 0 right, 1 left, 2 down, 3 up, 4 fire) - the same layout every #R$D1E9 input handler returns. States: $00/$01 sit right/left, $02/$03 run right/left, $04 run up, $05 run down, $06/$07 sword swing right/left (probable), $08/$09 arrow right/left, $0A-$0D per-direction handlers (see #R$CB21), $0E/$0F stagger recovery (lay down, then refill energy - entered only from #R$CB9D).
+W $CD42,2 $00 - SIT RIGHT - Pick a walking-frame table by movement bit (low nibble of A)
+W $CD44,2 $01 - SIT LEFT - Pick a walking-frame table by movement bit (low nibble of A)
+W $CD46,2 $02 - RUN RIGHT - Direction dispatcher: pick a frame table or hand off, by low nibble of A
+W $CD48,2 $03 - RUN LEFT - Direction dispatcher: pick a walking frame or hand off by movement bits
+W $CD4A,2 $04 - RUN UP - Direction dispatcher: pick a diagonal frame table or hand off
+W $CD4C,2 $05 - RUN DOWN - Direction dispatcher: pick a diagonal frame table or hand off
+W $CD4E,2 $06 - SWORD RIGHT (probable, not fully confirmed): run the per-direction handler #R$CB21
+W $CD50,2 $07 - SWORD LEFT (probable, not fully confirmed): run the per-direction handler #R$CB21
+W $CD52,2 $08 - ARROW RIGHT: launch an arrow (#R$BC81), then #R$CB21
+W $CD54,2 $09 - ARROW LEFT: launch an arrow (#R$BC81), then #R$CB21
 W $CD56,2 $0A - Facing/state $0A handler: run the per-direction handler #R$CB21
 W $CD58,2 $0B - Facing/state $0B handler: run the per-direction handler #R$CB21
 W $CD5A,2 $0C - Facing/state $0C handler: run the per-direction handler #R$CB21
 W $CD5C,2 $0D - Facing/state $0D handler: run the per-direction handler #R$CB21
-W $CD5E,2 $0E - Countdown to a pickup completion, facing $00: refill energy when it reaches 0
-W $CD60,2 $0F - Countdown to a pickup completion, facing $01: refill energy when it reaches 0
+W $CD5E,2 $0E - Stagger recovery, facing $00: lay down, then refill energy
+W $CD60,2 $0F - Stagger recovery, facing $01: lay down, then refill energy
 b $CD62
 c $CD6C Menu procedure, return on game start
 N $CD6C First plays the digitized "Will you help Robin..." speech via #R$8CAA, reading a bitstream at $E500 (confirmed live: genuine non-zero data during playback, 2-byte bit-count $1644 = 5700 bits followed by ~712 bytes of bitstream, $E500-$E7CE) - before the screen is cleared and the title/menu is drawn. The looping click heard continuously while the menu waits for a key is not a separate tune; it comes from #R$8AAF's key-decode loop, re-invoked every pass of the idle wait.
@@ -2456,6 +2571,8 @@ C $CDA7,3 Ornament at the right side of the game screen
 C $CDAA,3 Print string
 C $CDAD,3 "(C) 1985  ODIN COMPUTER GRAPHICS"
 C $CDB0,3 Print string
+C $CDB6,3 set Idle flag
+C $CDB9,3 set Sword/arrow/pickup action timer
 C $CDBC,3 Set the border-flash colour/count operands without flashing
 C $CDC0,3 Draw the main menu items
 C $CDC3,3 Play the main menu melody ($8B82), called from #R$CD6C
@@ -2565,13 +2682,13 @@ C $D095,5 DI; IM 2; A = $39
 C $D09C,10 Patch $FFFF/$FFF4 with the JP opcode for the interrupt vector
 C $D0A6,6 Point the interrupt vector's target at #R$DFE7
 b $D0AD
-c $D0CB Read keys 1-4 to pick a menu option (control scheme?)
-N $D0CB Called from #R$CD6C. Reads keyboard row $F7FE (keys 1-5) and, via successive RRA/JR C tests, picks which of keys 1-4 is held (returning with no change if none is), setting A to the option index (0-3) and HL to a corresponding text address, then calls #R$D0FF and saves both to $AD32/$D275.
+c $D0CB Read keys 1-4 to pick a control scheme
+N $D0CB Called from #R$CD6C. Reads keyboard row $F7FE (keys 1-5) and, via successive RRA/JR C tests, picks which of keys 1-4 is held (returning with no change if none is), setting A to the option index (0-3) and HL to the matching input handler's address, then saves both to $AD32/$D275 (key 1 also calls #R$D0FF first, to let the player redefine the keys #R$D191 will test).
 C $D0CB,5 BC = keyboard row $F7FE (keys 1-5); read it into A
-C $D0D3,8 Redefine keyboard keys
-C $D0DD,8 Key 2: option 1, text at $D1A2
-C $D0E7,8 Key 3: option 2, text at $D1AB
-C $D0F1,7 Key 4: option 3, text at $D1C4; else no key pressed, return
+C $D0D3,8 Key 1: redefine keyboard keys, then use the #R$D191 handler
+C $D0DD,8 Key 2: option 1, handler #R$D1A2
+C $D0E7,8 Key 3: option 2, handler #R$D1AB
+C $D0F1,7 Key 4: option 3, handler #R$D1C4; else no key pressed, return
 c $D0FF Redefine keyboard keys: prompt for and store 5 key choices
 N $D0FF Draws the key-redefinition screen, then for each of 5 actions: prints a prompt, waits for a single keypress (#R$D140), stores the key code into the table at $D277 (used by the "user-defined keys" control scheme), looks up its display name via the table at $D27C, and prints it.
 C $D0FF,2 A = $45 (screen number?)
@@ -2611,13 +2728,36 @@ C $D181,6 C = 5 - column position; A = $FE (row selector)
 C $D187,5 Rotate the row selector B times; read that keyboard row
 C $D18C,2 Rotate the result C times to bring the key's bit into carry
 c $D191 User-defined-keys control scheme: build the movement bitmask
-N $D191 Reached via #R$D1E9's dispatch when the "user-defined keys" scheme is active. Tests each of the 5 key codes stored at $D277 (by #R$D0FF) via #R$D176, building a 5-bit action mask E one bit at a time via the carry (E=$08 as the shift-marker exits after exactly 5 rotations, not 8 - confirmed by simulation).
+N $D191 Reached via #R$D1E9's dispatch when the "user-defined keys" scheme is active. Tests each of the 5 key codes stored at $D277 (by #R$D0FF, in fire/up/down/left/right order) via #R$D176, building the bitmask in E one bit at a time via the carry (E=$08 as the shift-marker exits after exactly 5 rotations, not 8 - confirmed by simulation). The rotate-left construction lands the first-tested key (fire) in the highest bit and the last (right) in bit 0, producing the same FUDLR layout as #R$D1A2.
+R $D191 O:E FUDLR bitmask, active high (bit 0 right, 1 left, 2 down, 3 up, 4 fire) - matches #R$D1A2's Kempston layout
 C $D191,5 HL -> the 5 stored key codes at $D277; E = $08 (shift-marker for a 5-pass loop)
 C $D196,2 A = this key's code; advance HL
 C $D198,6 Test it via #R$D176; shift the result into E
-b $D1A2
+c $D1A2 Kempston joystick handler
+N $D1A2 Reads the standard Kempston joystick port ($1F) and masks to its 5 bits. Was mislabeled as a text/data block in earlier notes - the bytes are code, not a message: #R$D0CB stores this address into $D275 as the input handler for control-scheme option 1, in the same slot #R$D1E9 later jumps through.
+R $D1A2 O:E FUDLR bitmask, active high (bit 0 right, 1 left, 2 down, 3 up, 4 fire) - the standard Kempston layout
+C $D1A2,3 BC = Kempston port $1F
+C $D1A5,2 Read it
+C $D1A7,3 Mask to bits 0-4; E = the result
+
+c $D1AB Sinclair joystick handler: keyboard row $EFFE (keys 6-0)
+N $D1AB Reads keyboard half-row $EFFE - the standard Sinclair joystick keys (6=left, 7=right, 8=down, 9=up, 0=fire) - and reorders its bits via CPL/RRA/RL E into a Kempston-compatible mask in E. Control-scheme option 2 from #R$D0CB. The Sinclair key mapping is standard/confirmed; the exact resulting bit-to-direction correspondence in E has not been fully traced (one RRA's carry appears to be recovered via a later RLA rather than a straightforward per-key RL E, and hand-tracing that chain wasn't conclusive).
+R $D1AB O:E Kempston-format direction/fire bitmask (exact bit assignment unconfirmed, see N-line)
+C $D1AB,5 BC = keyboard row $EFFE; read and invert it (active keys -> set bits)
+C $D1B0,20 Reorder 5 bits from A into E via RRA/RL E
+
+c $D1C4 Joystick handler: keyboard rows $EFFE and $F7FE combined (keys 1-0)
+N $D1C4 Reads keyboard half-row $EFFE (keys 6-0) into part of E, then also reads $F7FE (keys 1-5) and folds those bits in via D. Control-scheme option 3 from #R$D0CB. Exact key-to-direction mapping not traced live.
+R $D1C4 O:E Kempston-format direction/fire bitmask
+C $D1C4,5 BC = keyboard row $EFFE; read and invert it
+C $D1C9,15 Reorder bits from the first row into E
+C $D1D8,3 D = the row's result; B = second row port $F7
+C $D1DB,2 Read it
+C $D1DD,12 Fold bits from the second row into E, combined with D
+
 c $D1E9 Dispatch to the active control scheme's input handler
 N $D1E9 Called first from #R$C95A each frame. Pushes $D1F1 as the return address and jumps to the handler pointer at $D275 (set by #R$D0CB's control-scheme menu), which reads the player's chosen input device/keys and returns with a direction bitmask.
+R $D1E9 O:E Cleaned direction/fire bitmask (opposite pairs cancelled by #R$D1F1)
 C $D1E9,4 HL = the return address $D1F1; push it
 C $D1ED,3 Jump to the handler pointer at ($D275)
 c $D1F1 Cancel opposite movement bit pairs in E, return the result in A
@@ -2646,7 +2786,9 @@ T $D25B
 B $D265,1
 T $D267
 B $D273,1
-b $D274
+b $D274 Padding byte and the active control-scheme's input-handler pointer
+B $D274,1 Unused - no code reads this byte
+W $D275,2 -> the current input handler (#R$D1A2/#R$D1AB/#R$D1C4/#R$D191), set by #R$D0CB and called by #R$D1E9
 W $D275,2,2
 b $D277 User-defined key codes, one byte per remappable action (set by #R$D0FF)
 N $D277 Raw keyboard scan codes in #R$D156's row/column scheme, decoded per-bit by #R$D176. 5 bytes, confirmed by simulating #R$D191's shift-loop - not 8, as older notes here claimed.

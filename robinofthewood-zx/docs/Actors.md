@@ -110,8 +110,15 @@ leaving a static "corpse".
 
 - **State**: `$BB9x`/`$AC4x` variables rather than a shared record — the one actor that
   does not use the object table.
-- **Update**: `$B919`. Every 4th call it may roll a new target room from `$BBA1`, then
-  calls `$BA85` to take one step toward it across the world map.
+- **Update**: `$B919`. Every 4th call it may roll a new patrol route from the 8-entry
+  (start room, end room) table at `$BBA1` (R-register roll, reroll on a repeat), then
+  calls `$BA85` to take one step toward the current endpoint, reversing at each end.
+  Every entry's two rooms share the same row (`room = row*16+column`), so each route is
+  a straight horizontal patrol across part of one row — confirmed against a player-made
+  map that independently plots these same 8 spans, e.g. row 6 columns 0-7, row 19
+  columns 6-9. The full list (row, column range): row 1 cols 13-2, row 3 cols 1-3, row 6
+  cols 0-7, row 7 cols 15-1, row 12 cols 15-1, row 14 cols 13-0, row 15 cols 15-0, row 19
+  cols 6-9.
 - **Defeated**: `$BEB1` — on contact it flashes the screen, refills Robin's energy to
   maximum, prints a kill message and marks the enemy done.
 
@@ -159,8 +166,20 @@ rate-divided, so a single guard actually moves once every ~16 frames.
   patrol. Real door guards may exist only on specific story doors not yet found.
 - The `$DEAB` region has two conflicting readings: `$DDF0` walks it as 28-byte entries
   from `$DEAB`, while `$DE8D`/`$DE97`/`$DEA1` treat `$DEAF`/`$DEE7` as templates around
-  a working copy at `$DECB`. Those bases differ by 4 and cannot both be right.
-- Exact meaning of the guard flag bits beyond bit 0 (active) and bit 5 (hit).
+  a working copy at `$DECB`. Those bases differ by 4 and cannot both be right. Live-read
+  confirms the conflict is real: with no guarded room loaded, `$DEAB` (the 28-byte-stride
+  table) reads all zero, while `$DECB` holds live non-zero data (`46 46 04 04 04 04`).
+  `$DECB` sits at `$DEAB+32`, not a multiple of 28, so it cannot be entry 0/1/2... of the
+  28-byte table — the two schemes address genuinely different structures, not just an
+  off-by-4 in one description. Checked again with an active room guard on screen: `$DEAB`
+  still reads all zero, and `$DECB` had gone back to all zero too (its earlier `46 46 04
+  04 04 04` was read at the title/intro state, not during gameplay) — so that data was
+  likely leftover from init/the title sequence, not a live per-room route table populated
+  by ordinary room guards. Door-guard routing may be what actually populates this region;
+  not yet checked with a confirmed live door guard.
+- Exact meaning of the guard flag bits beyond bit 0 (active) and bit 5 (hit). Live-read of
+  `$AC13` with a room guard present: entry 4 (`$AC34`) had flags `$03` (bits 0 and 1 both
+  set) — bit 1 not yet explained by the existing bit 0/bit 5 model.
 - `$B919`'s trigger logic — which bits of `$BB9F` gate what.
 - Whether a true game-over path exists distinct from the `$B867` capture; `$CB9D` is
   only a stagger, and nothing found so far ends the game on energy loss.

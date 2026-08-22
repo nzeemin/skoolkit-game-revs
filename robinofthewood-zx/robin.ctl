@@ -256,8 +256,8 @@ b $79B0 Block $53
 B $79B0,1,1
 B $79B1,64,8 #HTML[<img src="images/blocks/block53.png" />]
 b $79F9 World map
-N $79F9 Every byte here is a room, describing a room type.
-B $79F9,,16
+N $79F9 One byte per room, indexed by the packed room number at $C548 (#R$C22F's row/column wrapping gives a 16x20 grid, matching the #R$C1C1-scanned descriptor tables). Bits 0-6 are a descriptor index: #R$C072 uses it into the room-type table #R$7B39 for every room, and additionally into the additional-elements table #R$8511 for rooms $00-$FF (see #R$8511's note - rooms $0100+ get base type only). Bit 7 is read twice for two different purposes: #R$C072 stashes it at $C0E8 (use not yet documented), and #R$C2FA reads the same bit directly as a "special room" flag.
+B $79F9,,16 #HTML[<img src="images/minimap.png" />]
 b $7B39 Room type descriptors
 N $7B39 Room type $00
 B $7B39,1,1
@@ -1595,7 +1595,7 @@ B $B910,4 Frame list: 80, loop
 B $B914,4 Frame list: 00, loop
 B $B918,1 Terminator/flag read by #R$B867
 c $B919 Update a special enemy: pick a target room, then patrol toward it
-N $B919 Tracks its own state in $BB9x/$AC4x variables rather than a shared object-record table. Every 4th call ($BBA0 counter) it may pick a new target room from the table at $BBA1 (keyed by a random R-register roll) and reset movement/timer state; it also decides between two direction-table pairs ($AC67/$AC6B vs $AC7B) and calls #R$BA85 to take one step. The condition/trigger logic (bits of $BB9F) is not fully confirmed.
+N $B919 Tracks its own state in $BB9x/$AC4x variables rather than a shared object-record table. Every 4th call ($BBA0 counter) it may pick a new patrol route from the 8-entry (start room, end room) table at $BBA1 (keyed by a random R-register roll, rerolling on a repeat) and reset movement/timer state; it also decides between two direction-table pairs ($AC67/$AC6B vs $AC7B) and calls #R$BA85 to take one step toward whichever endpoint is currently the target, reversing at each end - a back-and-forth horizontal patrol along the route's row. The condition/trigger logic (bits of $BB9F) is not fully confirmed.
 C $B926,15 R register -> pick a target room from the table at $BBA1
 C $B935,14 If the picked room equals the last one, reroll (JR Z back to $B926)
 C $B943,12 Save the target room to several tracking variables
@@ -1609,6 +1609,17 @@ C $B9D0,6 (IX+4) bit 5 clear -> take the "already at column" branch
 C $B9D6,5 Set movement flag bit 2, save it to $BB9F
 C $B9DB,20 Point $D9B3/$D9B8/$D9BD/$D9C9 at $BB9D/$BB96 (purpose unconfirmed)
 C $B9EF,10 Log the current room/position via #R$D997, advance the arrow-hit stage
+
+b $BBA1 Special enemy's 8 patrol routes, rolled by #R$B919
+N $BBA1 8 entries of 2 room numbers each (start, end) - live-decoded from the raw snapshot bytes, since skool2asm can't show them as data while they sit inside #R$B919's own code block. Every entry's two rooms share the same row (room = row*16+column, see #R$79F9), so each route is a straight horizontal line across part of one row - confirmed against a player-made map that independently plots these same 8 spans (e.g. row 6 columns 0-7, row 19 columns 6-9). #R$B919 rolls one of the 8 with the R register and patrols the enemy back and forth along it via #R$BA85.
+W $BBA1,4 $001D..$0012 (row 1, columns 13-2)
+W $BBA5,4 $0031..$0033 (row 3, columns 1-3)
+W $BBA9,4 $0060..$0067 (row 6, columns 0-7)
+W $BBAD,4 $007F..$0071 (row 7, columns 15-1)
+W $BBB1,4 $00CF..$00C1 (row 12, columns 15-1)
+W $BBB5,4 $00ED..$00E0 (row 14, columns 13-0)
+W $BBB9,4 $00FF..$00F0 (row 15, columns 15-0)
+W $BBBD,4 $0136..$0139 (row 19, columns 6-9)
 C $BA11,20 Room reached: set up variables, force a step via #R$BA85
 C $BA25,5 Set the state flag at $B992
 C $BA2A,6 Point the frame handler ($BA91) at $BAEC
@@ -2068,7 +2079,7 @@ C $C4BF,5 Clear the flag
 C $C4C4,3 Hard-code the first two entries of the room-position log at $D543
 C $C4CC,3 Print the string at the address pointed to by
 c $C4D2 Redraw the room when a special-event extra frame is armed
-N $C4D2 Calls the extra-frame callback at ($C4D3) (a no-op by default, from #R$DB17, or armed by #R$DA0F for special-event rooms). If it reports one of two extra-frame states, patches a different starting room offset into $C548 and fully redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806), redraws the score digit (#R$C276), and clears the $E500 buffer.
+N $C4D2 Calls the extra-frame callback at ($C4D3) (a no-op by default, from #R$DB17, or armed by #R$DA0F for special-event rooms). If $DBEA is non-zero, teleports Robin: state $01 warps to room $9C (the dungeon-gate/ambush room, see #R$B867), any other non-zero state warps to room $CC instead - then fully redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806), redraws the score digit (#R$C276), and clears the $E500 buffer.
 C $C4D2,3 No-op default for the extra room-draw callback at
 C $C4ED,3 Clear the shadow screen
 C $C4F0,3 Draw current room on the shadow screen
@@ -2900,7 +2911,7 @@ B $D5A0,1 Arrow-hit countdown
 B $D5A1,1 Quest stage counter (stops at 3)
 B $D5A2,1 Running count of spawned type-5 guards
 B $D5A3,1 Running count of spawned type-7 guards
-B $D5A4,1 Kill count; bit 7 = game complete (see #R$C055)
+B $D5A4,1 Kill/pickup count (also incremented by wreath pickup, see #R$D91A); bit 7 = game complete (see #R$C055)
 B $D5A5,1 Arrow-hit stage counter
 B $D5A6,1 Which half of #R$D402 runs ($05 = the first)
 c $D5A7 Room entry: spawn guards, reset triggers, print room-specific messages
@@ -3020,7 +3031,7 @@ C $D8FE,9 HL -> $D59D; type 0: follow up via #R$D944
 C $D907,10 Type 3/6: follow up via #R$D944 (HL stepped)
 C $D911,6 Type 1: border-flash cue; else fall to #R$D94B
 c $D91A Print a kill-count message, increment the counter and its displayed digit
-N $D91A Called from #R$BEB1/#R$CB9D on a guard kill. Unless the counter at $D5A4 is already at 9, prints a fixed message, increments the counter, converts it to an ASCII digit written into the text at $DA0B, and prints a second message containing it.
+N $D91A Called from #R$BEB1/#R$CB9D on a guard kill; also live-confirmed to run on a wreath pickup, though no wreath-side CALL to this address is visible in the static disassembly (reached indirectly, e.g. via a jump table). Unless the counter at $D5A4 is already at 9, prints a fixed message, increments the counter, converts it to an ASCII digit written into the text at $DA0B, and prints a second message containing it.
 C $D91A,10 Bail out once the counter at $D5A4 reaches 9
 C $D924,8 Set up the first message and its attribute
 C $D92F,10 Increment the counter; convert it to an ASCII digit at $DA0B
@@ -3065,7 +3076,7 @@ C $D9E7,2 B = $32 (sound length)
 C $D9E9,11 Short border-flash sound: B (outer loop count = sound length) x C inner busy-wait
 b $D9F5
 c $DA0F Check for a special-event room, set up its trigger if entered
-N $DA0F Scans the 9-entry room-address table at $DBCD for the current room ($C548/$C549); does nothing if not found or if $D595 is already $FF. On a match, copies a 15-byte pattern from $A44F into the attribute area near $588D (mirrored for the room's flip flag) and points the "extra frame" callback at $C4D3 (called from #R$C4D2) at $DA9E, arming a one-off special-room animation/effect. Exact meaning of the copied pattern and several flag bytes ($DBE7/$DBE8/$DBEA/$DBED) is not fully confirmed.
+N $DA0F Scans the 9-entry room-address table at $DBCD for the current room ($C548/$C549); does nothing if not found or if $D595 is already $FF. On a match, copies a 15-byte pattern from $A44F into the attribute area near $588D (mirrored for the room's flip flag) and points the "extra frame" callback at $C4D3 (called from #R$C4D2) at $DA9E, arming a one-off special-room animation/effect. $DBEA (set non-zero somewhere in this animation's own logic, not by #R$DA0F itself) is #R$C4D2's teleport-state trigger: $01 warps to room $9C, any other non-zero value warps to room $CC. Exact meaning of the copied pattern and the remaining flag bytes ($DBE7/$DBE8/$DBED) is not fully confirmed.
 C $DA0F,11 Clear $DBEA; bail out if the "special events done" flag at $D595 is $FF
 C $DA1A,5 B = 9 entries to scan in the table at $DBCD
 C $DA1F,7 DE = this entry's room number; save it and compare to the current room
@@ -3134,7 +3145,7 @@ B $DBDF,8,2 4 further room numbers, never scanned
 B $DBE7,1 Effect-frame counter (armed by #R$DA0F, counted down in the callback)
 B $DBE8,1 World-map byte for the matched room (bit 7 = mirror)
 B $DBE9,1 Random value gated through the mask pattern
-B $DBEA,1 Which extra frame #R$C4D2 draws (0 = none)
+B $DBEA,1 #R$C4D2's teleport trigger (0 = none, $01 = warp to $9C, other = warp to $CC)
 W $DBEB,2 Room number of the matched entry
 W $DBED,2 Frame/duration pair, also copied to $D1F1
 c $DBF8 Cycle through and step one door/exit guard object per call

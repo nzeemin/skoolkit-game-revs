@@ -107,7 +107,7 @@ Volume: about 5000 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/robinofthewood-zx/robin/
 
-Status: Have pretty good progress (183K .ctl file).
+Status: Have pretty good progress (185K .ctl file).
 
 
 ## Joe Blade (ZX Spectrum)

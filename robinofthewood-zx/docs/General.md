@@ -59,10 +59,17 @@ are game-wide rather than per-actor:
   glyphs at `$AF0B` (upper half) and `$AF83` (lower half), 15 glyphs each. The shape
   never changes — `$BF37` recolours a 63-byte attribute strip over the artwork, so the
   antlers' colour reflects the energy value.
-- **Kill counter** (`$D5A4`): incremented by `$D91A`. A regular guard killed with the
-  sword did **not** increment it in testing, so it appears reserved for arrow kills
-  and/or the special enemy. `$CB9D` applies a -1 that nets against `$D91A`'s +1. The
-  scoring model for ordinary guards is still unclear.
+- **Kill counter** (`$D5A4`): incremented by `$D91A`, called only from `$BEDA` (special
+  enemy defeat) and `$CBAA` (critical-hit stagger, netting against its own -1 via
+  `$CBA8`) in the static disassembly. A regular guard killed with the sword did **not**
+  increment it in testing, so it appears reserved for arrow kills and/or the special
+  enemy. It also displays as the green-figure HUD digit at the bottom of the screen.
+  Live-tested: picking up a "+1 life" wreath (`$B11B`/`$B133` glyphs) increments this
+  same counter by 1, confirmed with a clean test (no guard contact, energy unchanged at
+  `$0F`, counter `$00`->`$01` matching the HUD digit) — but no wreath-pickup call site to
+  `$D91A` is visible in the static disassembly, so it must be reached indirectly (e.g. via
+  a jump table), not by a literal `CALL $D91A`. The scoring model for ordinary guards is
+  still unclear.
 
 ## Rooms, events and messages
 
@@ -71,6 +78,7 @@ are game-wide rather than per-actor:
 - **Special-event rooms**: a 9-entry table at `$DBCD` lists rooms with scripted one-off effects (`$0002`, `$000D`, `$0044`, `$004E`, `$0064`, `$0074`, `$008E`, `$0095`, `$00C1`); `$DA0F` checks it on room entry and, on a match, arms an "extra frame" callback (`$C4D3`, normally a no-op via `$DB17`) consumed by `$C4D2` when redrawing the room. An 8-slot event-status array at `$D595` tracks progress through these; `$DB18`/`$DB98`/`$DB82`/`$DF03` resolve completed events (arrow-hit countdowns, energy refills, printing status messages from a shared pointer table at `$D9F9`) and remove/shift finished slots. Confirmed live: each of these rooms is otherwise an ordinary forest room, distinguished only by a magenta attribute overlay near the door (the `$C4D3` extra-frame drawing) — not a unique landmark, just a uniform "special encounter active here" marker.
 - **Extra guard spawning**: `$D402` (called from `$D5A7` on room entry) randomly spawns additional guards of two types into a 30-entry slot table at `$D4B1` (free slots located by `$D47D`); the initial 6 guards (1 special + 5 normal) are seeded once at game start by `$D3F3`.
 - **Scripted ambush / capture**: one room per game, rolled by `$CFB3` from the table at `$D3A2` (distinct from `$CF71`'s opening-scenario picks), triggers the ambush described in `Actors.md`, which warps Robin to room `$9C` — the barred dungeon gate listed under landmark rooms below. Confirmed against play: this and the intro (`$CE62`) are the only places "evil laughter" plays, and it is what the player experiences as Robin's capture/death. No separate energy-zero game-over has been found; a critical-energy hit stagger-recovers via `$CB9D` instead of ending the game.
+- **Second teleport destination, room `$CC`**: `$C4D2`'s teleport logic (triggered by the `$DBEA` state byte armed via `$DA0F`'s special-event mechanism above) isn't only the `$9C` ambush warp — state `$01` warps to `$9C`, but any *other* non-zero `$DBEA` value warps to room `$CC` instead. `$CC` isn't in the hardcoded-landmark list below or the `$DBCD`/`$D3A2` tables, so what specifically sets `$DBEA` to a non-`$01` value (and what's notable about room `$CC` itself) isn't yet traced — flagged here since a player-made map independently labels `$CC` a "teleport room".
 - **Hardcoded landmark rooms**, confirmed live (teleporting Robin via `$C548` at the `$C22F` room-transition point):
   - `$65`/`$6E` (message group `$4E`, checked by `$C462`) — a matched pair of forest doors. `$65` also has a small gold chest and a purple hooded figure.
   - `$79`/`$BB` (message group `$4D`, checked by `$C462`) — a gate-and-key pair: `$79` is a barrel cellar behind a closed gate, `$BB` holds the key (visible as an item sprite in the bushes) that opens it.

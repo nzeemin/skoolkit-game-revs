@@ -1292,27 +1292,34 @@ b$79B0 DEFB $02
 ;
 ; .
 ;
-; Every byte here is a room, describing a room type.
-b$79F9 DEFB $02,$81,$03,$05,$85,$03,$0D,$02,$0A,$8D,$0A,$00,$91,$83,$01,$11
- $7A09 DEFB $01,$0F,$02,$0C,$03,$0B,$06,$04,$8B,$09,$02,$8D,$0A,$83,$0F,$12
- $7A19 DEFB $04,$86,$81,$07,$8B,$06,$84,$01,$08,$82,$81,$0A,$84,$02,$11,$13
- $7A29 DEFB $0B,$00,$0D,$01,$87,$81,$22,$9F,$21,$9F,$22,$A0,$21,$22,$05,$8A
- $7A39 DEFB $89,$0D,$05,$00,$03,$0C,$21,$A3,$A5,$A3,$A1,$A1,$26,$1F,$03,$0B
- $7A49 DEFB $01,$88,$0E,$01,$83,$05,$A5,$1F,$25,$FF,$A6,$23,$A6,$25,$82,$05
- $7A59 DEFB $01,$02,$86,$04,$03,$81,$A4,$23,$26,$FF,$A5,$20,$26,$A5,$83,$10
- $7A69 DEFB $0D,$00,$02,$16,$03,$8F,$21,$A1,$23,$1D,$23,$9F,$23,$25,$82,$08
- $7A79 DEFB $89,$01,$8E,$18,$02,$06,$A5,$A4,$20,$26,$22,$24,$9F,$26,$03,$0C
- $7A89 DEFB $01,$8B,$89,$0B,$02,$03,$A4,$1F,$21,$25,$20,$22,$24,$A6,$04,$8A
- $7A99 DEFB $8B,$0A,$8B,$07,$90,$02,$22,$23,$24,$A3,$22,$1F,$20,$24,$02,$0D
- $7AA9 DEFB $94,$01,$08,$8E,$05,$8F,$99,$1B,$9A,$1C,$99,$1A,$19,$9A,$16,$12
- $7AB9 DEFB $93,$83,$00,$91,$03,$14,$12,$18,$8D,$0A,$88,$03,$87,$0D,$98,$13
- $7AC9 DEFB $09,$01,$15,$86,$0F,$13,$94,$0F,$85,$00,$01,$0C,$82,$05,$90,$8A
- $7AD9 DEFB $0B,$03,$18,$0D,$92,$91,$93,$08,$01,$90,$0E,$05,$00,$0C,$07,$8C
- $7AE9 DEFB $12,$96,$82,$8A,$12,$0A,$11,$03,$0C,$89,$13,$02,$03,$07,$0D,$86
- $7AF9 DEFB $92,$17,$0C,$8F,$94,$02,$12,$90,$8A,$16,$14,$16,$00,$8E,$89,$90
- $7B09 DEFB $8A,$00,$12,$06,$88,$03,$92,$07,$8E,$18,$0A,$17,$90,$8A,$0B,$14
- $7B19 DEFB $0E,$00,$86,$8C,$80,$81,$14,$03,$8A,$0D,$0C,$0B,$06,$83,$12,$13
- $7B29 DEFB $85,$00,$04,$11,$8D,$83,$86,$00,$0E,$05,$91,$8A,$0D,$80,$0A,$14
+; One byte per room, indexed by the packed room number at $C548 (#R$C22F's
+; row/column wrapping gives a 16x20 grid, matching the #R$C1C1-scanned
+; descriptor tables). Bits 0-6 are a descriptor index: #R$C072 uses it into the
+; room-type table #R$7B39 for every room, and additionally into the
+; additional-elements table #R$8511 for rooms $00-$FF (see #R$8511's note -
+; rooms $0100+ get base type only). Bit 7 is read twice for two different
+; purposes: #R$C072 stashes it at $C0E8 (use not yet documented), and #R$C2FA
+; reads the same bit directly as a "special room" flag.
+b$79F9 DEFB $02,$81,$03,$05,$85,$03,$0D,$02,$0A,$8D,$0A,$00,$91,$83,$01,$11 ; {#HTML[<img
+ $7A09 DEFB $01,$0F,$02,$0C,$03,$0B,$06,$04,$8B,$09,$02,$8D,$0A,$83,$0F,$12 ; src="images/minimap.png"
+ $7A19 DEFB $04,$86,$81,$07,$8B,$06,$84,$01,$08,$82,$81,$0A,$84,$02,$11,$13 ; />]
+ $7A29 DEFB $0B,$00,$0D,$01,$87,$81,$22,$9F,$21,$9F,$22,$A0,$21,$22,$05,$8A ;
+ $7A39 DEFB $89,$0D,$05,$00,$03,$0C,$21,$A3,$A5,$A3,$A1,$A1,$26,$1F,$03,$0B ;
+ $7A49 DEFB $01,$88,$0E,$01,$83,$05,$A5,$1F,$25,$FF,$A6,$23,$A6,$25,$82,$05 ;
+ $7A59 DEFB $01,$02,$86,$04,$03,$81,$A4,$23,$26,$FF,$A5,$20,$26,$A5,$83,$10 ;
+ $7A69 DEFB $0D,$00,$02,$16,$03,$8F,$21,$A1,$23,$1D,$23,$9F,$23,$25,$82,$08 ;
+ $7A79 DEFB $89,$01,$8E,$18,$02,$06,$A5,$A4,$20,$26,$22,$24,$9F,$26,$03,$0C ;
+ $7A89 DEFB $01,$8B,$89,$0B,$02,$03,$A4,$1F,$21,$25,$20,$22,$24,$A6,$04,$8A ;
+ $7A99 DEFB $8B,$0A,$8B,$07,$90,$02,$22,$23,$24,$A3,$22,$1F,$20,$24,$02,$0D ;
+ $7AA9 DEFB $94,$01,$08,$8E,$05,$8F,$99,$1B,$9A,$1C,$99,$1A,$19,$9A,$16,$12 ;
+ $7AB9 DEFB $93,$83,$00,$91,$03,$14,$12,$18,$8D,$0A,$88,$03,$87,$0D,$98,$13 ;
+ $7AC9 DEFB $09,$01,$15,$86,$0F,$13,$94,$0F,$85,$00,$01,$0C,$82,$05,$90,$8A ;
+ $7AD9 DEFB $0B,$03,$18,$0D,$92,$91,$93,$08,$01,$90,$0E,$05,$00,$0C,$07,$8C ;
+ $7AE9 DEFB $12,$96,$82,$8A,$12,$0A,$11,$03,$0C,$89,$13,$02,$03,$07,$0D,$86 ;
+ $7AF9 DEFB $92,$17,$0C,$8F,$94,$02,$12,$90,$8A,$16,$14,$16,$00,$8E,$89,$90 ;
+ $7B09 DEFB $8A,$00,$12,$06,$88,$03,$92,$07,$8E,$18,$0A,$17,$90,$8A,$0B,$14 ;
+ $7B19 DEFB $0E,$00,$86,$8C,$80,$81,$14,$03,$8A,$0D,$0C,$0B,$06,$83,$12,$13 ;
+ $7B29 DEFB $85,$00,$04,$11,$8D,$83,$86,$00,$0E,$05,$91,$8A,$0D,$80,$0A,$14 ; }
 
 ; Room type descriptors
 ;
@@ -5243,11 +5250,14 @@ b$B8FB DEFB $00,$01,$06,$B9,$00,$00,$00,$00 ; {Object record (see #R$AC13);
 ; .
 ;
 ; Tracks its own state in $BB9x/$AC4x variables rather than a shared
-; object-record table. Every 4th call ($BBA0 counter) it may pick a new target
-; room from the table at $BBA1 (keyed by a random R-register roll) and reset
-; movement/timer state; it also decides between two direction-table pairs
-; ($AC67/$AC6B vs $AC7B) and calls #R$BA85 to take one step. The
-; condition/trigger logic (bits of $BB9F) is not fully confirmed.
+; object-record table. Every 4th call ($BBA0 counter) it may pick a new patrol
+; route from the 8-entry (start room, end room) table at $BBA1 (keyed by a
+; random R-register roll, rerolling on a repeat) and reset movement/timer
+; state; it also decides between two direction-table pairs ($AC67/$AC6B vs
+; $AC7B) and calls #R$BA85 to take one step toward whichever endpoint is
+; currently the target, reversing at each end - a back-and-forth horizontal
+; patrol along the route's row. The condition/trigger logic (bits of $BB9F) is
+; not fully confirmed.
 c$B919 LD A,($BB9F)   ;
  $B91C AND $03        ;
  $B91E JR NZ,$B98D    ;
@@ -5542,11 +5552,38 @@ b$BB7F DEFB $03,$04,$05,$04,$FF,$7F,$BB,$83
  $BB87 DEFB $84,$85,$84,$FF,$86,$BB,$00,$02
  $BB8F DEFB $00,$00,$00,$00,$00,$50,$00,$00
  $BB97 DEFB $50,$00,$00,$00,$00,$00,$00,$00
- $BB9F DEFB $00,$00,$1D,$00,$12,$00,$31,$00
- $BBA7 DEFB $33,$00,$60,$00,$67,$00,$7F,$00
- $BBAF DEFB $71,$00,$CF,$00,$C1,$00,$ED,$00
- $BBB7 DEFB $E0,$00,$FF,$00,$F0,$00,$36,$01
- $BBBF DEFB $39,$01
+ $BB9F DEFB $00,$00
+
+; Special enemy's 8 patrol routes, rolled by #R$B919
+;
+; .
+;
+; .
+;
+; 8 entries of 2 room numbers each (start, end) - live-decoded from the raw
+; snapshot bytes, since skool2asm can't show them as data while they sit inside
+; #R$B919's own code block. Every entry's two rooms share the same row (room =
+; row*16+column, see #R$79F9), so each route is a straight horizontal line
+; across part of one row - confirmed against a player-made map that
+; independently plots these same 8 spans (e.g. row 6 columns 0-7, row 19
+; columns 6-9). #R$B919 rolls one of the 8 with the R register and patrols the
+; enemy back and forth along it via #R$BA85.
+b$BBA1 DEFW $001D    ; {$001D..$0012 (row 1, columns 13-2)
+ $BBA3 DEFW $0012    ; }
+ $BBA5 DEFW $0031    ; {$0031..$0033 (row 3, columns 1-3)
+ $BBA7 DEFW $0033    ; }
+ $BBA9 DEFW $0060    ; {$0060..$0067 (row 6, columns 0-7)
+ $BBAB DEFW $0067    ; }
+ $BBAD DEFW $007F    ; {$007F..$0071 (row 7, columns 15-1)
+ $BBAF DEFW $0071    ; }
+ $BBB1 DEFW $00CF    ; {$00CF..$00C1 (row 12, columns 15-1)
+ $BBB3 DEFW $00C1    ; }
+ $BBB5 DEFW $00ED    ; {$00ED..$00E0 (row 14, columns 13-0)
+ $BBB7 DEFW $00E0    ; }
+ $BBB9 DEFW $00FF    ; {$00FF..$00F0 (row 15, columns 15-0)
+ $BBBB DEFW $00F0    ; }
+ $BBBD DEFW $0136    ; {$0136..$0139 (row 19, columns 6-9)
+ $BBBF DEFW $0139    ; }
 
 ; Update the object at $BC59: step its room-distance counter, animate
 ;
@@ -7248,10 +7285,11 @@ c$C4B6 EX AF,AF'     ; {HL -> the trigger flag at $D59F; skip if it's already
 ; .
 ;
 ; Calls the extra-frame callback at ($C4D3) (a no-op by default, from #R$DB17,
-; or armed by #R$DA0F for special-event rooms). If it reports one of two
-; extra-frame states, patches a different starting room offset into $C548 and
-; fully redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806),
-; redraws the score digit (#R$C276), and clears the $E500 buffer.
+; or armed by #R$DA0F for special-event rooms). If $DBEA is non-zero, teleports
+; Robin: state $01 warps to room $9C (the dungeon-gate/ambush room, see
+; #R$B867), any other non-zero state warps to room $CC instead - then fully
+; redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806), redraws
+; the score digit (#R$C276), and clears the $E500 buffer.
 c$C4D2 CALL $DB17    ; No-op default for the extra room-draw callback at
  $C4D5 LD A,($DBEA)  ;
  $C4D8 OR A          ;
@@ -10375,7 +10413,9 @@ b$D595 DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; Event-status array, one byte per
                                             ; guards
  $D5A3 DEFB $00                             ; Running count of spawned type-7
                                             ; guards
- $D5A4 DEFB $00                             ; Kill count; bit 7 = game complete
+ $D5A4 DEFB $00                             ; Kill/pickup count (also
+                                            ; incremented by wreath pickup, see
+                                            ; #R$D91A); bit 7 = game complete
                                             ; (see #R$C055)
  $D5A5 DEFB $00                             ; Arrow-hit stage counter
  $D5A6 DEFB $00                             ; Which half of #R$D402 runs ($05 =
@@ -10961,10 +11001,12 @@ c$D7F3 LD B,$09      ; {B = 9 entries to scan; HL = table at $D57A
 ;
 ; .
 ;
-; Called from #R$BEB1/#R$CB9D on a guard kill. Unless the counter at $D5A4 is
-; already at 9, prints a fixed message, increments the counter, converts it to
-; an ASCII digit written into the text at $DA0B, and prints a second message
-; containing it.
+; Called from #R$BEB1/#R$CB9D on a guard kill; also live-confirmed to run on a
+; wreath pickup, though no wreath-side CALL to this address is visible in the
+; static disassembly (reached indirectly, e.g. via a jump table). Unless the
+; counter at $D5A4 is already at 9, prints a fixed message, increments the
+; counter, converts it to an ASCII digit written into the text at $DA0B, and
+; prints a second message containing it.
 c$D91A LD A,($D5A4)  ; {Bail out once the counter at $D5A4 reaches 9
  $D91D CP $FF        ;
  $D91F JR Z,$D924    ;
@@ -11130,8 +11172,11 @@ b$D9F5 DEFB $00,$00,$00,$00,$30,$A0,$38,$A0
 ; match, copies a 15-byte pattern from $A44F into the attribute area near $588D
 ; (mirrored for the room's flip flag) and points the "extra frame" callback at
 ; $C4D3 (called from #R$C4D2) at $DA9E, arming a one-off special-room
-; animation/effect. Exact meaning of the copied pattern and several flag bytes
-; ($DBE7/$DBE8/$DBEA/$DBED) is not fully confirmed.
+; animation/effect. $DBEA (set non-zero somewhere in this animation's own
+; logic, not by #R$DA0F itself) is #R$C4D2's teleport-state trigger: $01 warps
+; to room $9C, any other non-zero value warps to room $CC. Exact meaning of the
+; copied pattern and the remaining flag bytes ($DBE7/$DBE8/$DBED) is not fully
+; confirmed.
 c$DA0F XOR A         ; {Clear $DBEA; bail out if the "special events done" flag
  $DA10 LD ($DBEA),A  ; at $D595 is $FF
  $DA13 LD HL,$D595   ;
@@ -11445,8 +11490,9 @@ b$DBCD DEFB $02,$00                         ; {Special-event rooms, scanned by
                                             ; room (bit 7 = mirror)
  $DBE9 DEFB $00                             ; Random value gated through the
                                             ; mask pattern
- $DBEA DEFB $00                             ; Which extra frame #R$C4D2 draws
-                                            ; (0 = none)
+ $DBEA DEFB $00                             ; #R$C4D2's teleport trigger (0 =
+                                            ; none, $01 = warp to $9C, other =
+                                            ; warp to $CC)
  $DBEB DEFW $0000                           ; Room number of the matched entry
  $DBED DEFW $0000                           ; Frame/duration pair, also copied
                                             ; to $D1F1

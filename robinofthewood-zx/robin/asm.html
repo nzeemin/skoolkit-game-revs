@@ -5518,7 +5518,7 @@ Block header byte, decoded by <a href="asm.html#49361">C0D1</a>: bit 7 = natural
 <span id="31225"></span>
 <div class="comments">
 <div class="paragraph">
-Every byte here is a room, describing a room type.
+One byte per room, indexed by the packed room number at $C548 (<a href="asm.html#49711">C22F</a>'s row/column wrapping gives a 16x20 grid, matching the <a href="asm.html#49601">C1C1</a>-scanned descriptor tables). Bits 0-6 are a descriptor index: <a href="asm.html#49266">C072</a> uses it into the room-type table <a href="asm.html#31545">7B39</a> for every room, and additionally into the additional-elements table <a href="asm.html#34065">8511</a> for rooms $00-$FF (see <a href="asm.html#34065">8511</a>'s note - rooms $0100+ get base type only). Bit 7 is read twice for two different purposes: <a href="asm.html#49266">C072</a> stashes it at $C0E8 (use not yet documented), and <a href="asm.html#49914">C2FA</a> reads the same bit directly as a "special room" flag.
 </div>
 </div>
 </td>
@@ -5526,102 +5526,83 @@ Every byte here is a room, describing a room type.
 <tr>
 <td class="address-1"><span id="31225"></span>79F9</td>
 <td class="instruction">DEFB $02,$81,$03,$05,$85,$03,$0D,$02,$0A,$8D,$0A,$00,$91,$83,$01,$11</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="20"><img src="images/minimap.png" /></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31241"></span>7A09</td>
 <td class="instruction">DEFB $01,$0F,$02,$0C,$03,$0B,$06,$04,$8B,$09,$02,$8D,$0A,$83,$0F,$12</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31257"></span>7A19</td>
 <td class="instruction">DEFB $04,$86,$81,$07,$8B,$06,$84,$01,$08,$82,$81,$0A,$84,$02,$11,$13</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31273"></span>7A29</td>
 <td class="instruction">DEFB $0B,$00,$0D,$01,$87,$81,$22,$9F,$21,$9F,$22,$A0,$21,$22,$05,$8A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31289"></span>7A39</td>
 <td class="instruction">DEFB $89,$0D,$05,$00,$03,$0C,$21,$A3,$A5,$A3,$A1,$A1,$26,$1F,$03,$0B</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31305"></span>7A49</td>
 <td class="instruction">DEFB $01,$88,$0E,$01,$83,$05,$A5,$1F,$25,$FF,$A6,$23,$A6,$25,$82,$05</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31321"></span>7A59</td>
 <td class="instruction">DEFB $01,$02,$86,$04,$03,$81,$A4,$23,$26,$FF,$A5,$20,$26,$A5,$83,$10</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31337"></span>7A69</td>
 <td class="instruction">DEFB $0D,$00,$02,$16,$03,$8F,$21,$A1,$23,$1D,$23,$9F,$23,$25,$82,$08</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31353"></span>7A79</td>
 <td class="instruction">DEFB $89,$01,$8E,$18,$02,$06,$A5,$A4,$20,$26,$22,$24,$9F,$26,$03,$0C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31369"></span>7A89</td>
 <td class="instruction">DEFB $01,$8B,$89,$0B,$02,$03,$A4,$1F,$21,$25,$20,$22,$24,$A6,$04,$8A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31385"></span>7A99</td>
 <td class="instruction">DEFB $8B,$0A,$8B,$07,$90,$02,$22,$23,$24,$A3,$22,$1F,$20,$24,$02,$0D</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31401"></span>7AA9</td>
 <td class="instruction">DEFB $94,$01,$08,$8E,$05,$8F,$99,$1B,$9A,$1C,$99,$1A,$19,$9A,$16,$12</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31417"></span>7AB9</td>
 <td class="instruction">DEFB $93,$83,$00,$91,$03,$14,$12,$18,$8D,$0A,$88,$03,$87,$0D,$98,$13</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31433"></span>7AC9</td>
 <td class="instruction">DEFB $09,$01,$15,$86,$0F,$13,$94,$0F,$85,$00,$01,$0C,$82,$05,$90,$8A</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31449"></span>7AD9</td>
 <td class="instruction">DEFB $0B,$03,$18,$0D,$92,$91,$93,$08,$01,$90,$0E,$05,$00,$0C,$07,$8C</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31465"></span>7AE9</td>
 <td class="instruction">DEFB $12,$96,$82,$8A,$12,$0A,$11,$03,$0C,$89,$13,$02,$03,$07,$0D,$86</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31481"></span>7AF9</td>
 <td class="instruction">DEFB $92,$17,$0C,$8F,$94,$02,$12,$90,$8A,$16,$14,$16,$00,$8E,$89,$90</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31497"></span>7B09</td>
 <td class="instruction">DEFB $8A,$00,$12,$06,$88,$03,$92,$07,$8E,$18,$0A,$17,$90,$8A,$0B,$14</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31513"></span>7B19</td>
 <td class="instruction">DEFB $0E,$00,$86,$8C,$80,$81,$14,$03,$8A,$0D,$0C,$0B,$06,$83,$12,$13</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="31529"></span>7B29</td>
 <td class="instruction">DEFB $85,$00,$04,$11,$8D,$83,$86,$00,$0E,$05,$91,$8A,$0D,$80,$0A,$14</td>
-<td class="comment-0" rowspan="1"></td>
 </tr>
 </table>
 <div id="31545" class="description">7B39: Room type descriptors</div>
@@ -23374,7 +23355,7 @@ Used by the routine at <a href="asm.html#49024">BF80</a>.
 <span id="47385"></span>
 <div class="comments">
 <div class="paragraph">
-Tracks its own state in $BB9x/$AC4x variables rather than a shared object-record table. Every 4th call ($BBA0 counter) it may pick a new target room from the table at $BBA1 (keyed by a random R-register roll) and reset movement/timer state; it also decides between two direction-table pairs ($AC67/$AC6B vs $AC7B) and calls <a href="asm.html#47749">BA85</a> to take one step. The condition/trigger logic (bits of $BB9F) is not fully confirmed.
+Tracks its own state in $BB9x/$AC4x variables rather than a shared object-record table. Every 4th call ($BBA0 counter) it may pick a new patrol route from the 8-entry (start room, end room) table at $BBA1 (keyed by a random R-register roll, rerolling on a repeat) and reset movement/timer state; it also decides between two direction-table pairs ($AC67/$AC6B vs $AC7B) and calls <a href="asm.html#47749">BA85</a> to take one step toward whichever endpoint is currently the target, reversing at each end - a back-and-forth horizontal patrol along the route's row. The condition/trigger logic (bits of $BB9F) is not fully confirmed.
 </div>
 </div>
 </td>
@@ -24620,28 +24601,99 @@ IX -&gt; its object record. (IX+10/11) holds the enemy's current world-map posit
 </tr>
 <tr>
 <td class="address-1"><span id="48031"></span>BB9F</td>
-<td class="instruction">DEFB $00,$00,$1D,$00,$12,$00,$31,$00</td>
+<td class="instruction">DEFB $00,$00</td>
 <td class="comment-0" rowspan="1"></td>
+</tr>
+</table>
+<div id="48033" class="description">BBA1: Special enemy's 8 patrol routes, rolled by <a href="asm.html#47385">B919</a></div>
+<table class="disassembly">
+<tr>
+<td class="routine-comment" colspan="5">
+<div class="details">
+</div>
+</td>
+</tr>
+<tr>
+<td class="routine-comment" colspan="5">
+<span id="48033"></span>
+<div class="comments">
+<div class="paragraph">
+8 entries of 2 room numbers each (start, end) - live-decoded from the raw snapshot bytes, since skool2asm can't show them as data while they sit inside <a href="asm.html#47385">B919</a>'s own code block. Every entry's two rooms share the same row (room = row*16+column, see <a href="asm.html#31225">79F9</a>), so each route is a straight horizontal line across part of one row - confirmed against a player-made map that independently plots these same 8 spans (e.g. row 6 columns 0-7, row 19 columns 6-9). <a href="asm.html#47385">B919</a> rolls one of the 8 with the R register and patrols the enemy back and forth along it via <a href="asm.html#47749">BA85</a>.
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48033"></span>BBA1</td>
+<td class="instruction">DEFW $001D</td>
+<td class="comment-1" rowspan="2">$001D..$0012 (row 1, columns 13-2)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48035"></span>BBA3</td>
+<td class="instruction">DEFW $0012</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48037"></span>BBA5</td>
+<td class="instruction">DEFW $0031</td>
+<td class="comment-1" rowspan="2">$0031..$0033 (row 3, columns 1-3)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48039"></span>BBA7</td>
-<td class="instruction">DEFB $33,$00,$60,$00,$67,$00,$7F,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFW $0033</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48041"></span>BBA9</td>
+<td class="instruction">DEFW $0060</td>
+<td class="comment-1" rowspan="2">$0060..$0067 (row 6, columns 0-7)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48043"></span>BBAB</td>
+<td class="instruction">DEFW $0067</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48045"></span>BBAD</td>
+<td class="instruction">DEFW $007F</td>
+<td class="comment-1" rowspan="2">$007F..$0071 (row 7, columns 15-1)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48047"></span>BBAF</td>
-<td class="instruction">DEFB $71,$00,$CF,$00,$C1,$00,$ED,$00</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFW $0071</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48049"></span>BBB1</td>
+<td class="instruction">DEFW $00CF</td>
+<td class="comment-1" rowspan="2">$00CF..$00C1 (row 12, columns 15-1)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48051"></span>BBB3</td>
+<td class="instruction">DEFW $00C1</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48053"></span>BBB5</td>
+<td class="instruction">DEFW $00ED</td>
+<td class="comment-1" rowspan="2">$00ED..$00E0 (row 14, columns 13-0)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48055"></span>BBB7</td>
-<td class="instruction">DEFB $E0,$00,$FF,$00,$F0,$00,$36,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFW $00E0</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48057"></span>BBB9</td>
+<td class="instruction">DEFW $00FF</td>
+<td class="comment-1" rowspan="2">$00FF..$00F0 (row 15, columns 15-0)</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48059"></span>BBBB</td>
+<td class="instruction">DEFW $00F0</td>
+</tr>
+<tr>
+<td class="address-1"><span id="48061"></span>BBBD</td>
+<td class="instruction">DEFW $0136</td>
+<td class="comment-1" rowspan="2">$0136..$0139 (row 19, columns 6-9)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="48063"></span>BBBF</td>
-<td class="instruction">DEFB $39,$01</td>
-<td class="comment-0" rowspan="1"></td>
+<td class="instruction">DEFW $0139</td>
 </tr>
 </table>
 <div id="48065" class="description">BBC1: Update the object at $BC59: step its room-distance counter, animate</div>
@@ -31086,7 +31138,7 @@ Used by the routine at <a href="asm.html#49024">BF80</a>.
 <span id="50386"></span>
 <div class="comments">
 <div class="paragraph">
-Calls the extra-frame callback at ($C4D3) (a no-op by default, from <a href="asm.html#56087">DB17</a>, or armed by <a href="asm.html#55823">DA0F</a> for special-event rooms). If it reports one of two extra-frame states, patches a different starting room offset into $C548 and fully redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806), redraws the score digit (<a href="asm.html#49782">C276</a>), and clears the $E500 buffer.
+Calls the extra-frame callback at ($C4D3) (a no-op by default, from <a href="asm.html#56087">DB17</a>, or armed by <a href="asm.html#55823">DA0F</a> for special-event rooms). If $DBEA is non-zero, teleports Robin: state $01 warps to room $9C (the dungeon-gate/ambush room, see <a href="asm.html#47207">B867</a>), any other non-zero state warps to room $CC instead - then fully redraws the room ($D03F/$C072/$C15E/$C40E/$C517/$D5A7/$C18E/$C806), redraws the score digit (<a href="asm.html#49782">C276</a>), and clears the $E500 buffer.
 </div>
 </div>
 </td>
@@ -43159,7 +43211,7 @@ The 8 status bytes are indexed in step with the special-event room table at <a h
 <tr>
 <td class="address-1"><span id="54692"></span>D5A4</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1">Kill count; bit 7 = game complete (see <a href="asm.html#49237">C055</a>)</td>
+<td class="comment-1" rowspan="1">Kill/pickup count (also incremented by wreath pickup, see <a href="asm.html#55578">D91A</a>); bit 7 = game complete (see <a href="asm.html#49237">C055</a>)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="54693"></span>D5A5</td>
@@ -45570,7 +45622,7 @@ Used by the routines at <a href="asm.html#48817">BEB1</a> and <a href="asm.html#
 <span id="55578"></span>
 <div class="comments">
 <div class="paragraph">
-Called from <a href="asm.html#48817">BEB1</a>/<a href="asm.html#52125">CB9D</a> on a guard kill. Unless the counter at $D5A4 is already at 9, prints a fixed message, increments the counter, converts it to an ASCII digit written into the text at $DA0B, and prints a second message containing it.
+Called from <a href="asm.html#48817">BEB1</a>/<a href="asm.html#52125">CB9D</a> on a guard kill; also live-confirmed to run on a wreath pickup, though no wreath-side CALL to this address is visible in the static disassembly (reached indirectly, e.g. via a jump table). Unless the counter at $D5A4 is already at 9, prints a fixed message, increments the counter, converts it to an ASCII digit written into the text at $DA0B, and prints a second message containing it.
 </div>
 </div>
 </td>
@@ -46219,7 +46271,7 @@ Used by the routine at <a href="asm.html#49024">BF80</a>.
 <span id="55823"></span>
 <div class="comments">
 <div class="paragraph">
-Scans the 9-entry room-address table at $DBCD for the current room ($C548/$C549); does nothing if not found or if $D595 is already $FF. On a match, copies a 15-byte pattern from $A44F into the attribute area near $588D (mirrored for the room's flip flag) and points the "extra frame" callback at $C4D3 (called from <a href="asm.html#50386">C4D2</a>) at $DA9E, arming a one-off special-room animation/effect. Exact meaning of the copied pattern and several flag bytes ($DBE7/$DBE8/$DBEA/$DBED) is not fully confirmed.
+Scans the 9-entry room-address table at $DBCD for the current room ($C548/$C549); does nothing if not found or if $D595 is already $FF. On a match, copies a 15-byte pattern from $A44F into the attribute area near $588D (mirrored for the room's flip flag) and points the "extra frame" callback at $C4D3 (called from <a href="asm.html#50386">C4D2</a>) at $DA9E, arming a one-off special-room animation/effect. $DBEA (set non-zero somewhere in this animation's own logic, not by <a href="asm.html#55823">DA0F</a> itself) is <a href="asm.html#50386">C4D2</a>'s teleport-state trigger: $01 warps to room $9C, any other non-zero value warps to room $CC. Exact meaning of the copied pattern and the remaining flag bytes ($DBE7/$DBE8/$DBED) is not fully confirmed.
 </div>
 </div>
 </td>
@@ -47448,7 +47500,7 @@ For each of the 8 status bytes at $D595 (walked via DE from $D594), reads the ma
 <tr>
 <td class="address-1"><span id="56298"></span>DBEA</td>
 <td class="instruction">DEFB $00</td>
-<td class="comment-1" rowspan="1">Which extra frame <a href="asm.html#50386">C4D2</a> draws (0 = none)</td>
+<td class="comment-1" rowspan="1"><a href="asm.html#50386">C4D2</a>'s teleport trigger (0 = none, $01 = warp to $9C, other = warp to $CC)</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56299"></span>DBEB</td>

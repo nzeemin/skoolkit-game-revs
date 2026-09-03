@@ -78,15 +78,34 @@ C $61E3,4 clear rust timer #R$6502
 C $61E7,3 clear oil-used flag #R$6199
 C $61EA,5 oil cans = 42 (BCD) #R$6198
 C $61EF,6 DE = item table base #R$788A, A = master item count from $7C82
-C $61F5,15 loop: copy each 4-byte master item record into the live item table
+C $61F5,1 *loop: save the record count
+C $61F6,4 HL = the live record, 4 bytes on from the master
+C $61FA,5 copy the 4-byte master item record over it
+C $61FF,2 advance to the next pair, restore the count
+C $6201,3 loop for each record
 C $6204,3 DE = spawner table base #R$75B5
-C $6207,18 loop: skip terminator ($01) records, else mark not-yet-triggered and step to the next record by its length byte
+C $6207,3 *loop: A = this record's length byte
+C $620A,2 $01 marks the table end
+C $620C,4 HL = the record's flag byte (offset 1)
+C $6210,2 mark it not-yet-triggered
+C $6212,4 HL = this record's length, widened
+C $6216,3 step to the next record, loop
 C $6219,11 zero the score and end-game counters ($611B-$6124) via LDIR from a fixed all-zero block at $5C92
 C $6224,3 DE = room description table #R$6CCF
-C $6227,18 per-room flag reset: clear high nibble of byte1, clear bit 7 of byte3
-C $6239,9 advance to the next room's record by its byte0 length
+C $6227,4 per-room flag reset: HL = this room's byte1
+C $622B,5 rotate its high nibble down
+C $6230,3 build a mask that clears the door bits
+C $6233,2 apply it to byte1
+C $6235,4 advance to byte3, clear its "visited" bit 7
+C $6239,4 A = this record's length byte, widened into HL
+C $623D,2 advance DE past the record
+C $623F,3 read the next record's length byte
 C $6242,2 loop until the table terminator
-C $6244,15 clear all 6 levels' Plug Room delivery-progress state bytes (#R$7287 family, stride from #R$72AB) to 0
+C $6244,3 HL = the first level's Plug Room state byte ($7288)
+C $6247,4 B = the level count ($72AB)
+C $624B,3 DE = 6, the per-level stride
+C $624E,2 *loop: clear this level's state byte
+C $6250,3 step to the next level, loop
 C $6224,3 Room descriptions start address
 c $6254 Set object position (IX+5/+6) from grid index A (cell centre: row*8+4, col*8+4)
 N $6254 A -= 1 first, then column = (A AND $F8) + 4 becomes X (+5); the original A AND $07 rotated left 3 (*8) + 4 becomes Y (+6). Converts a raw 0-63 grid index into the screen-position centre of that cell.
@@ -104,10 +123,28 @@ C $626D,3 Room descriptions start address
 C $6275,1 get offset to the next room description
 C $6279,3 Store room description address
 C $6295,13 Clear room grid - 64 bytes at 612C
-C $62A2,25 place the room-type template ($612A indexes the #R$72B1 pointer table) into the grid via #R$62C8
-C $62BB,13 place this room's own extra (index,value) pairs (if its description is longer than 4 bytes) into the grid via #R$62C8
-C $62C8,14 grid-entry writer: E=(HL)=index, IX=$612B+E=target address, A=(HL+1)=value, store A at (IX+0)
-C $62D6,30 dispatch: check A against each special value ($66/$67/$68/$69/$6A/$6B), CALL the matching spawn routine
+C $62A2,5 HL = the room-type index ($612A), widened
+C $62A7,4 doubled, DE = the #R$72B1 pointer table
+C $62AB,1 HL = this room type's table slot
+C $62AC,4 read the template's address from it
+C $62B0,1 B = the template's (index,value) pair count
+C $62B1,6 empty or negative: nothing to stamp in
+C $62B7,1 advance past the count byte
+C $62BB,4 HL = the room description, A = its length
+C $62BF,4 exactly 4 bytes: no extra (index,value) pairs
+C $62C3,4 skip the 4-byte header
+C $62C7,1 B = the extra-pair count
+C $62C8,3 grid-entry writer: DE = this pair's grid index
+C $62CB,4 IX = the grid base $612B
+C $62CF,2 plus the index: the target cell
+C $62D1,2 A = the pair's value
+C $62D3,3 store it into the cell, store A at (IX+0)
+C $62D6,5 dispatch on the special value: $66 -> bubble source
+C $62DB,5 $6A -> bubble source (full strength)
+C $62E0,5 $67 -> plant/coral
+C $62E5,5 $69 -> #R$8F1E
+C $62EA,5 $6B -> #R$8F4C
+C $62EF,5 $68 -> rearing snake
 C $62F4,4 advance to the next pair, loop B times (a special-value spawn routine can decrement B as a side effect, see #R$8EA7)
 c $62F9 Test whether the current room is this level's Plug Room
 N $62F9 Via the per-level table at $7287; returns Z if so, with HL pointing at the entry's state byte.
@@ -145,13 +182,17 @@ C $6340,4 Restore HL, DE, BC and return
 c $6344 Draw single-piece doors, for $612B bits 0 and 3
 N $6344 Tests bit 0 of $612B (North), drawing one door-graphic piece via #R$8128 at a fixed screen position if set; then bit 3 (West), drawing a different fixed-position piece if set.
 C $6344,6 BC = mask/colour $C7C7, A = the door bitfield $612B
-C $634A,4 Test bit 0 (North); if set, skip to the alternate mask below
-C $634E,7 Otherwise BC = $BBBB, test bit 4; if clear, skip drawing entirely
+C $634A,2 Test bit 0 (North)
+C $634C,2 if set, skip to the alternate mask below
+C $634E,5 Otherwise BC = $BBBB, test bit 4
+C $6353,2 if clear, skip drawing entirely
 C $6355,6 A = sprite $83, D/E = the fixed screen position for the North door piece
 C $635B,3 Draw sprite C with its mask at screen position DE
 C $635E,6 BC = mask/colour $C7C7 again, A = the door bitfield
-C $6364,4 Test bit 3 (West); if set, skip to the alternate mask below
-C $6368,6 Otherwise BC = $BBBB, test bit 7; if clear, return without drawing
+C $6364,2 Test bit 3 (West)
+C $6366,2 if set, skip to the alternate mask below
+C $6368,5 Otherwise BC = $BBBB, test bit 7
+C $636D,1 if clear, return without drawing
 C $636E,6 A = sprite $03, D/E = the fixed screen position for the West door piece
 C $6374,3 => Draw sprite C with its mask at screen position DE
 c $6377 Draw three-piece doors, for $612B bits 1 and 2
@@ -186,16 +227,31 @@ N $6470 Called by #R$9745 (occlusion redraw) and #R$9341 (Plug Room item deliver
 C $6470,8 save row (B) to $649A, C = column
 C $6478,5 HL = grid cell address, read its content
 C $647D,10 bail out if solid wall ($7F) or already-redrawn (masked $7F)
-C $6487,26 compute the screen address from the grid column
+C $6487,3 A = the grid column's low 3 bits
+C $648A,4 x8 into D, the sub-cell row
+C $648E,4 x16 + $80: E, the screen low byte
+C $6492,3 A = the column, aligned down
+C $6495,3 plus the sub-cell row and the $88 screen base
+C $6498,1 D = the screen high byte
+C $6499,2 !!MUT-ARG!! clamp the row to a multiple of $18
+C $649B,6 undo the clamp test, round up if it underflowed
 C $64A1,3 store the computed screen row byte
-C $64A4,8 compute the screen column offset
+C $64A4,4 A = the grid column, aligned and doubled
+C $64A8,2 negated
+C $64AA,2 added to the screen low byte
 C $64AC,4 HL = grid content value * 2
-C $64B0,11 look up the #R$7556 shape table, extract count (C) and target (B), fall into #R$64BB's draw loop
+C $64B0,4 HL = this value's slot in the #R$7556 shape table
+C $64B4,4 read the shape record's address from it
+C $64B8,1 B = its piece count
+C $64B9,2 fall into #R$64BB's draw loop
 c $64BB Draw loop shared with #R$6470: resolve a grid/terrain value to a sprite via the #R$74CE/#R$750B tables and draw it
 N $64BB For a grid cell whose terrain value (A) resolves via #R$9AAB/$750B to a sprite/column entry, computes a screen sub-position threshold against $D0 to pick between adjacent sprite variants, then draws it via #R$8128 with colour 0, adjusting the returned D (screen row-delta) via a small per-entry table before looping across the row, count B, called by #R$6470 for each terrain cell.
 C $64BB,3 save BC/HL, A = grid value
-C $64C1,9 index the #R$750B table by the lookup result
-C $64CA,5 C = column index, compare against a $D0 threshold
+C $64C1,3 BC = the lookup result
+C $64C4,3 HL = the #R$750B table
+C $64C7,3 plus BC * 3, its entry size
+C $64CA,3 C = column index, A = the screen row minus the shape-table byte
+C $64CD,2 !!MUT-ARG!! compare against a $D0 threshold
 C $64CF,7 branch on the threshold result
 C $64D6,4 D -= next table byte
 C $64DA,2 A = 0 (colour parameter)
@@ -219,6 +275,7 @@ N $6503 Does nothing if a game-over flag ($617A) is set, or in rooms 1/2 (ending
 C $6507,1 POKE 201 (RET) here for infinite Oil
 C $6508,3 get room number
 C $6515,3 => Tick the rust/oil gauge
+C $6530,2 => Draw one rust-gauge segment
 C $6536,3 set player behaviour-handler pointer
 b $653F
 c $6543 Draw one rust-gauge segment: compute its screen column from A and its sprite from table $653F, then draw via #R$8128
@@ -248,12 +305,14 @@ C $659B,3 Draw sprite C with its mask at screen position DE
 C $659E,8 DE = the top-edge start position $C408, B = C = sprite $C3, H = 8, the tile count
 C $65A6,2 A = 2, the colour parameter
 C $65A8,3 Draw sprite C with its mask at screen position DE
-C $65AB,8 Advance the screen position: +8 rows, +16 columns
+C $65AB,4 advance the screen row by 8
+C $65AF,4 advance the screen column by 16
 C $65B3,3 Decrement the tile count, loop for the top edge
 C $65B6,8 DE = the bottom-edge start position $C4F8, B = C = sprite $C4, H = 8
 C $65BE,2 A = 2, the colour parameter
 C $65C0,3 Draw sprite C with its mask at screen position DE
-C $65C3,8 Advance the screen position: +8 rows, -16 columns
+C $65C3,4 advance the screen row by 8
+C $65C7,4 step the screen column back by 16
 C $65CB,3 Decrement the tile count, loop for the bottom edge
 b $65CF
 B $65D3
@@ -299,8 +358,11 @@ c $6692 Insert a record pointer (DE) into the draw queue (#R$60EC), sorted by th
 N $6692 Insertion-sorts DE into the queue, keeping it ordered by each record's offset+2 byte (normally the "owning room" field elsewhere -- its role as a sort key here isn't confirmed). Shifts later entries down to make room; consumed by #R$9900.
 C $6692,11 save BC/HL, DE = the new record pointer, IX = queue base $60EC, A = queue count
 C $669D,2 branch to the append path if the queue is empty
-C $669F,10 *loop: save the count, HL = this queue entry's record pointer, advance both pointers to offset+2
-C $66A9,7 compare the fields, restore the pointers to record base
+C $669F,1 *loop: save the count
+C $66A0,6 HL = this queue entry's record pointer
+C $66A6,3 advance both pointers to the records' offset+2
+C $66A9,3 compare the two records' sort fields
+C $66AC,4 restore both pointers to their record bases
 C $66B0,9 skip the shift if not before this entry, else shift this entry's pointer up one slot
 C $66B9,4 advance to the next queue slot
 C $66BD,4 restore the count, loop
@@ -344,7 +406,9 @@ C $674D,2 mark the room as visited (set bit 7)
 C $674F,7 draw the room title (first-visit variant) via #R$88D7
 C $6756,4 HL = the BCD bonus counter $6120
 C $675A,4 add 5, store
-C $675E,7 propagate the carry into the counter's high byte, return
+C $675E,2 A = the counter's high byte
+C $6760,3 add the carry in, BCD-adjust
+C $6763,1 store it back
 C $6765,4 already-visited path: IY = title data $7C9A
 C $6769,3 Subtract a BCD value from the score, value from a circular queue via #R$88B9
 c $676D Draw current room
@@ -423,12 +487,17 @@ C $69AC,8 build the border attribute byte (room colour OR $40), store to $6175, 
 C $69B4,3 HL = frame counter $5C78 (system variable)
 C $69B7,4 wait for the next frame interrupt
 C $69BB,5 save IX, A = room colour
-C $69C0,8 index the per-colour table $6994 by room colour * 3
+C $69C0,2 A = room colour
+C $69C3,3 multiply it by 3, the per-colour table's entry size
+C $69C6,5 BC = the offset, HL = the per-colour table $6994
 C $69CB,2 test the table entry
 C $69CD,2 branch to $69DF if empty
-C $69CF,13 branch on room number: room 1 -> ending screen prep, room 2 -> menu screen prep, else fall through
+C $69CF,3 get room number
+C $69D2,5 room 1: ending-screen attribute prep
+C $69D7,5 room 2: menu-screen attribute prep
 C $69DF,3 HL = $6175 (fallback path, no per-colour table entry)
-C $69E2,9 DE = $6176, copy the 3-byte room-colour record via LDI
+C $69E2,3 DE = $6176
+C $69E5,6 copy the 3-byte room-colour record
 C $69EB,4 IX = wall-piece table $68DE
 C $69EF,6 read this entry's screen address (IX+0/1)
 C $69F5,4 stop the loop at the table terminator
@@ -436,20 +505,40 @@ C $69F9,3 B = row count (IX+4)
 C $69FC,3 DE = $6174
 C $69FF,3 advance DE by B, read a colour byte from the table row
 C $6A02,4 read and store the row colour for the fill below
-C $6A06,7 A = column count (IX+3) minus 1, store it, then negate and add $20 for the row stride
+C $6A06,4 A = column count (IX+3) minus 1
+C $6A0A,3 store it as the LDIR count below
+C $6A0D,4 negate and add $20: the row stride
 C $6A14,5 A = paint count (IX+2), B = 0
-C $6A19,2 *loop: poke attribute pattern $40 into the current cell
-C $6A1B,5 DE = HL+1, C = 1
+C $6A19,2 !!MUT-ARG!! *loop: poke attribute pattern $40 into the current cell
+C $6A1B,3 DE = HL+1
+C $6A1E,2 !!MUT-ARG!! C = 1
 C $6A20,2 copy the row's pattern via LDIR
-C $6A22,6 advance HL by the row stride ($1F), loop A times
+C $6A22,6 !!MUT-ARG!! advance HL by the row stride ($1F), loop A times
 C $6A28,5 advance IX to the next table entry (5 bytes), loop back
 C $6A2F,2 restore IX, return
 C $6A32,6 room 1: fill the top attribute rows with a striped pattern
-C $6A38,16 fill an 8-byte block, then the room-colour block, then a further striped block via LDIR
+C $6A38,5 fill an 8-byte striped block
+C $6A3D,2 spread it via LDIR
+C $6A3F,4 A = room colour, seed the next cell with it
+C $6A43,3 BC = 4
+C $6A46,2 spread it
+C $6A48,5 fill a further $13-cell striped block
+C $6A4D,2 spread it
 C $6A4F,8 copy that pattern across the whole screen attribute area
-C $6A5D,25 room 1: fill the $5920 block (message-window area) with room colour and striped patterns via LDIR
-C $6A7E,13 room 2: fill the whole screen attribute area with the room colour via LDIR
-C $6A8D,16 room 2: fill two further attribute blocks ($5800, $5954) with a fixed pattern ($45) via LDIR
+C $6A5D,4 fill the message-window block with room colour
+C $6A61,2 spread it
+C $6A63,5 fill the following block with the striped pattern
+C $6A68,2 spread it
+C $6A6A,6 copy the whole $40-byte pattern block forward
+C $6A70,2 spread it
+C $6A72,4 HL = DE, advance DE past it
+C $6A7E,6 room 2: HL/DE = the screen attribute area $5800
+C $6A84,3 BC = the whole area
+C $6A87,4 A = room colour, seed the first cell
+C $6A8D,6 HL/DE = $5800 again
+C $6A93,5 fill $11F cells with the fixed pattern $45
+C $6A98,2 spread it
+C $6A9A,3 HL = the second block $5954
 C $69CF,3 get room number
 R $69AC A Room color
 C $6A32,3 Screen attribute area start address
@@ -476,11 +565,10 @@ C $6AF5,3 => Idle loop
 C $6AF2,3 Per-frame sound-effect player
 c $6AF8 Jump to new-game initialization
 N $6AF8 Trampoline: jumps to #R$6B05 to start a new game.
-C $6AF8,3 => New-game initialization
-C $6AF8,3 => New-game initialization
+C $6AF8,3 !!MUT-ARG!! => New-game initialization
 c $6AFB Self-modified per-frame hook, called by the ISR #R$6AAA (currently a RET stub, patched by #R$6AFC)
 N $6AFB Currently a bare RET, self-modified in by #R$6AFC; called every frame by the ISR #R$6AAA as the main per-frame game-logic hook.
-C $6AFB,1 Do nothing, until self-modified
+C $6AFB,1 !!MUT-CMD!! Do nothing, until self-modified
 c $6AFC Patch #R$6AFB to RET (disabling the hook), then jump to new-game initialization
 N $6AFC Writes the RET opcode ($C9) into #R$6AFB, disabling it, then re-enables interrupts and jumps to #R$6AF8 to start a new game.
 C $6AFC,2 A = $C9, the RET opcode
@@ -517,7 +605,9 @@ C $6BB0,3 => New-game initialization
 C $6BB3,9 Read the CAPS-SHIFT/Z/X/C/V row ($7FFE), loop back to the top if Z, pause, is pressed
 C $6BBC,7 Read the SPACE/SYM row ($F7FE), test bit 0, SPACE
 C $6BC3,3 => New-game initialization
-C $6BC6,8 Read another row ($EFFE), test bit 0 via RRCA; if pressed, BREAK, handle it below
+C $6BC6,5 Read another row ($EFFE)
+C $6BCB,1 test bit 0 via RRCA
+C $6BCC,2 BREAK pressed: handle it below
 C $6BCE,1 Disable interrupts
 C $6BCF,5 Wait for the key to release
 C $6BD4,6 A = flag $61A0, skip forcing the border colour below if set
@@ -1160,6 +1250,7 @@ C $7D1A,7 advance print cursor (#R$7CEA) to the next character column
 C $7D26,7 control code $14: switch mode to #R$7D32 (set inverse/highlight flag)
 c $7D32 Print engine mode: set inverse video flag
 N $7D32 Self-modifies the LD A at #R$7D12 to CPL/NOP for subsequent chars.
+C $7D12,1 !!MUT-CMD!! patched by #R$7D37
 R $7D32 A flag: zero sets inverse video (CPL), non-zero sets normal video (NOP)
 c $7D3F Print engine mode: dispatch control code $16
 N $7D3F Control code $16 switches mode to #R$7D48 (set cursor row); else return.
@@ -1201,22 +1292,43 @@ b $7DB7
 B $7DBF
 c $7DC7 Print engine: plot one character glyph into the shadow-screen font buffer, then blit it
 N $7DC7 Looks up the character (searched in a small table at $7DBF) as an index into a font/glyph table at $A7DC (8 bytes/char), unpacks it into a working buffer at $7DB7 (nibble-swapped if the destination column is odd -- BIT 0,C), then merges it into the shadow screen at ($7D63): if the column-parity flag $7D65 is 0, ORs the low nibble in (right half of a byte pair); if 1, uses RLD to swap in the high nibble instead (left half) -- this is how two 4px-wide half-character columns share one screen byte. Advances $7D63 by one column/row afterward. Underlies the digit/score printing (#R$854F/#R$8523) and the general text print engine (#R$7CEC).
-C $7DC7,12 search the character table $7DBF, get its index
-C $7DD3,8 normalize to a glyph value (subtract $30, adjust for the letter range)
-C $7DDB,9 C = value, halve it for the row-pair index
-C $7DE4,10 HL = font base $A7DC + index*8
-C $7DEE,9 *loop: read a glyph byte, test the destination column parity (bit 0 of C)
-C $7DF7,6 mask the nibble, write it to the work buffer $7DB7, advance
+C $7DC8,6 HL = the character table $7DBF, BC = 8
+C $7DCE,2 search it for the character in A
+C $7DD2,1 found: A = the table's paired value
+C $7DD3,2 normalize to a glyph index (subtract $30)
+C $7DD5,4 letters sit $07 further down the table
+C $7DDB,3 C = the index, halved for the row-pair lookup
+C $7DDE,3 widen it to a word
+C $7DE1,3 multiply by 8, one glyph is 8 rows
+C $7DE4,4 add the font base ($A7DC)
+C $7DE9,5 B = 8 rows, DE = the work buffer $7DB7
+C $7DEE,3 *loop: read a glyph row, test the destination column parity (bit 0 of C)
+C $7DF3,4 odd column: rotate the nibble into the high half
+C $7DF7,3 mask to the high nibble
+C $7DFA,3 write it to the work buffer, advance both pointers
 C $7DFD,2 loop 8 times (one glyph row per iteration)
-C $7DFF,8 branch on the column-parity flag $7D65
-C $7E07,9 B = 8, DE = screen row pointer $7D63, HL = work buffer
-C $7E10,13 *loop: OR the low nibble into the screen byte (right half-character)
+C $7DFF,5 test the column-parity flag $7D65
+C $7E04,3 already half-filled: take the RLD merge path instead
+C $7E07,2 B = 8 rows
+C $7E09,7 DE = the screen row pointer $7D63, HL = the work buffer
+C $7E10,1 *loop: save the row counter
+C $7E11,3 A = the screen byte, keep its low nibble
+C $7E14,2 OR in the glyph's half-character
+C $7E16,1 advance the work-buffer pointer
+C $7E17,6 advance the screen pointer by one row ($20 bytes)
 C $7E1D,3 loop 8 times
-C $7E20,7 mark the parity flag done, restore HL, return
-C $7E27,9 alternate path (parity flag set): B = 8, DE, HL setup
-C $7E30,13 *loop: RLD the high nibble into the screen byte (left half-character)
-C $7E3D,6 clear the parity flag, advance $7D63 by one row
-C $7E43,9 HL = ($7D63)+1, store it, restore HL, return
+C $7E20,5 mark the parity flag as half-filled
+C $7E25,2 restore HL and return
+C $7E27,2 alternate path (parity flag set): B = 8 rows
+C $7E29,7 DE = the screen row pointer, HL = the work buffer
+C $7E31,3 A = the screen byte, RLD the glyph nibble into it
+C $7E34,2 store it back, advance the work buffer
+C $7E36,6 advance the screen pointer by one row ($20 bytes)
+C $7E3C,3 loop 8 times
+C $7E3F,4 clear the parity flag
+C $7E43,4 advance $7D63 to the next character cell
+C $7E47,3 store it back
+C $7E4A,2 restore HL and return
 b $7E4C Variables to use in routine 7E4F
 W $7E4C,2
 B $7E4E,1
@@ -1230,7 +1342,8 @@ C $7E6C,4 halve the width, rounding up
 C $7E73,2 outer loop: once per 8px-row group (height)
 C $7E75,1 inner loop: 8 pixel rows per group
 C $7E80,1 innermost loop: ceil(width/2) byte pairs per row
-C $7E83,25 Flip the byte
+C $7E83,24 rotate all 8 bits out of A and back into C in reverse order (unrolled x8)
+C $7E9B,1 the final shifted-out bit
 c $7EA9 Scan all 6 keyboard half-rows into the row-snapshot buffer at $6184 down to $617F, used by #R$7EBE's input reader
 N $7EA9 Reads 6 keyboard half-row ports in sequence, starting $7FFE, port high byte advanced by E each iteration, storing each row's byte into the buffer starting at $6184 and decrementing down through $617F. E starts at $80 and is rotated right each iteration, both selecting the next port's high-byte increment and terminating the scan, Z, once it has rotated out.
 C $7EA9,8 HL = the row buffer $6184, E = $80, the rotation seed, BC = the first port $7FFE
@@ -1239,32 +1352,41 @@ C $7EB7,1 All rows done: return
 C $7EB8,6 Otherwise advance HL, add E into B, the next port's high byte, loop
 c $7EBE Read input: normalize the active control method into the 5-bit mask at #R$6186
 N $7EBE Dispatches on the device selector $617B: keyboard (scans 6 half-rows into $6186's bits, some duplicated -- e.g. both $617D and $6184 set bit 4/fire), Kempston (port $001F, used as the mask directly), Sinclair (port $EFFE, bit-rotated into the mask), or Cursor keys (ports $EFFE/$F7FE). Result is masked against the previous frame's value at $6188 and stored to $6186; also accumulates a held-key counter at $617C. See #R$6186 for the bit layout.
-C $7EBE,7 check the device selector $617B, branch away if not keyboard
-C $7EC5,6 check $6185, branch to the Sinclair/Cursor path if set
-C $7ECB,5 Scan all 6 keyboard half-rows into the row-snapshot buffer at $6184 down to $617F, used by #R$7EBE's input reader
-C $7ED0,11 test keyboard row $6182, set bit 3 (Up) if pressed
-C $7EDB,11 test keyboard row $617E, set bit 2 (Down) if pressed
-C $7EE6,11 test keyboard row $6183, set bit 0 (Right) if pressed
-C $7EF1,11 test keyboard row $617F, set bit 1 (Left) if pressed
-C $7EFC,11 test keyboard row $617D, set bit 4 (Fire) if pressed
-C $7F07,11 test keyboard row $6184, set bit 4 (Fire) if pressed
-C $7F12,2 *shared exit: B = the resolved mask
+C $7EBE,3 A = the device selector $617B
+C $7EC2,3 not keyboard: branch to the joystick/cursor paths
+C $7EC5,3 $6185 selects the alternate device path
+C $7ECB,3 Scan all 6 keyboard half-rows into the row-snapshot buffer at $6184 down to $617F, used by #R$7EBE's input reader
+C $7ECE,2 B = 0, the mask accumulator
+C $7ED0,3 row $6182 -> Up (bit 3)
+C $7EDB,3 row $617E -> Down (bit 2)
+C $7EE6,3 row $6183 -> Right (bit 0)
+C $7EF1,3 row $617F -> Left (bit 1)
+C $7EFC,3 row $617D -> Fire (bit 4)
+C $7F07,3 row $6184 -> Fire (bit 4, second key group)
+C $7F12,2 *shared exit: A = the resolved mask
 C $7F14,4 mask against the previous frame's value ($6188)
-C $7F1B,5 update $6188 to the raw new mask
-C $7F20,8 accumulate the held-key counter $617C
-C $7F28,11 Kempston (device 1): read port $001F directly as the mask
-C $7F33,17 Sinclair (device 2): read port $EFFE, complement, test bit 0, set bit 4 (Fire) if pressed
-C $7F44,10 test bit 1, set bit 3 (Up) if pressed
-C $7F4E,10 test bits 2/3/4, set bits 2/0/1 (Down/Right/Left) if pressed
-C $7F5A,11 Cursor keys: read ports $EFFE and $F7FE, complement
-C $7F65,6 test the fire key, set bit 1 of A if pressed
-C $7F6B,7 B = 0, test bit 0, set bit 4 (Fire) if pressed
-C $7F72,5 test bit 1, set bit 1 (Left) if pressed
-C $7F77,5 test bit 2, set bit 0 (Right) if pressed
-C $7F7C,5 test bit 3, set bit 3 (Up) if pressed
-C $7F81,9 test bit 4, set bit 2 (Down) if pressed
-C $7F8A,4 device 0 fallback: store A directly as the mask, return
 C $7F18,3 set Resolved input mask
+C $7F1C,3 complement and force the unused bits, store as next frame's baseline
+C $7F20,4 add the mask into the held-key counter $617C
+C $7F28,2 device 1: Kempston
+C $7F2C,5 read port $001F, used as the mask verbatim
+C $7F33,2 device 2: Sinclair
+C $7F37,5 read port $EFFE
+C $7F3C,1 complement: a pressed key reads as 1
+C $7F3F,3 bit 0 -> Fire (bit 4)
+C $7F44,3 bit 1 -> Up (bit 3)
+C $7F49,3 bit 2 -> Down (bit 2)
+C $7F4E,3 bit 3 -> Right (bit 0)
+C $7F53,3 bit 4 -> Left (bit 1)
+C $7F5A,5 Cursor keys: read port $EFFE
+C $7F60,5 also read port $F7FE into C
+C $7F65,2 test the fire key (bit 4 of the $F7FE row)
+C $7F6B,2 B = 0, the mask accumulator
+C $7F6D,3 bit 0 -> Fire (bit 4)
+C $7F72,3 bit 1 -> Left (bit 1)
+C $7F77,3 bit 2 -> Right (bit 0)
+C $7F7C,3 bit 3 -> Up (bit 3)
+C $7F81,4 bit 4 -> Down (bit 2)
 C $7F8A,3 set Resolved input mask
 c $7F8E Reset the redraw bounding-box trackers ($6194-$6197) to empty
 N $7F8E Sets the min tracker ($6194/$6195) to $0000 and the max tracker ($6196/$6197) to $FFB9, sentinel values that any real screen rectangle will widen via #R$7F9B.
@@ -1298,31 +1420,80 @@ C $800B,3 DE = $610A
 C $800E,3 => Fold a screen rectangle (DE = top/left, HL = bottom/right pair) into the running redraw bounding box $6194-$6197
 c $8011 Sprite draw: clip the current sprite against the screen window ($610A-$610D), adjusting its data pointer and dimensions
 N $8011 Compares the sprite's screen position/size (via $7FBE/$7FBF, #R$618F/#R$6190) against the clip rectangle $610A(top)/$610B(left)/$610C(bottom)/$610D(right): shrinks the effective height/width and advances the sprite data pointers (#R$618D, #R$A5D8) when the top/left edges are off-window, and just shrinks the count when the bottom/right edges are off-window. Returns with Carry set if the sprite is fully off-window (nothing to draw), NC and A=0 otherwise. Called by #R$8128 before blitting.
-C $8011,10 compare sprite top ($7FBF) against clip top ($610A), skip ahead if not clipped
-C $801B,14 top-clipped: shrink height by the clipped amount (fully off-window if it underflows)
+C $8011,6 HL = clip top ($610A), A = sprite top ($7FBF)
+C $8018,3 not clipped at the top: skip ahead
+C $801B,4 top-clipped: clamp the sprite top to the clip edge
+C $801F,2 B = the clipped-away row count
+C $8021,4 subtract it from the height ($618F)
+C $8025,4 underflowed or exactly zero: fully off-window
 C $8029,3 store the shrunk height
 C $802C,8 DE = sprite width * rows-clipped (row byte count to skip)
 C $8034,3 *loop: HL += DE, DJNZ (multiply row-count by width)
-C $8037,15 advance the sprite data pointer and mask pointer past the clipped top rows
-C $8046,26 compare sprite bottom against clip bottom ($610C), shrink height if it overhangs
-C $8060,16 compare sprite left against clip left ($610B, via $7FBE), skip ahead if not clipped
-C $8070,13 compute the left-clip pixel shift into $8124
-C $807D,12 compare sprite right against clip right ($610D), branch away if not clipped
-C $8089,11 compute the right-clip pixel shift into $8125
+C $8037,4 DE = the byte count to skip, HL = the sprite data pointer
+C $803B,4 advance it past the clipped rows
+C $803F,4 same for the mask pointer ($A5D8)
+C $8043,3 store it back
+C $8046,6 A = sprite top, HL = the height field $618F
+C $804C,2 A = the sprite's bottom edge
+C $804E,4 subtract the clip bottom ($610C)
+C $8052,2 no overhang: skip ahead
+C $8054,4 B = the overhang, A = the height
+C $8058,1 shrink it
+C $8059,4 underflowed or exactly zero: fully off-window
+C $805D,3 store the shrunk height
+C $8060,5 A = the sprite width in bytes (*4)
+C $8065,4 B = it, A = the sprite's screen X ($7FBE)
+C $8069,3 A = the left edge, aligned down
+C $806C,4 compare against the clip left ($610B)
+C $8070,2 not clipped: skip ahead
+C $8072,3 C = the sprite left, A = the clip left
+C $8075,5 the difference divided by 8: the left-clip column shift
+C $807A,3 store it at $8124
+C $807D,4 A = the sprite's screen X plus its width
+C $8081,4 round up to a byte boundary
+C $8085,4 compare against the clip right ($610D)
+C $8089,2 not clipped: skip ahead
+C $808B,1 A = the overhang past the clip right
+C $808C,5 divided by 8: the right-clip column shift
+C $8091,3 store it at $8125
 C $8094,2 fully visible: return NC
 C $8096,4 top/left clip underflowed: return Carry (fully off-window)
 C $809A,3 bottom/right clip underflowed: return Carry (fully off-window)
 c $809D Sprite draw: build the per-row blit queue for the shadow screen, from the clipped sprite
 N $809D Only proceeds for kind $01 (masked via $7FBD AND $7F -- the other kind uses a different path in #R$8128). Computes the shadow-screen row addresses (via a *8 multiply into a $DA10-based table, i.e. the standard row-address lookup) and column byte offset, then walks two loops (left part / right part of the queue, split at the sprite's row boundary) writing (dest_row_address, count) queue entries into the HUD/shadow blit-queue area at $5E24, one entry every 32 bytes -- consumed by #R$8107.
-C $809D,8 only proceed for kind $01 (masked blit)
-C $80A5,15 compute this row's shadow-screen address via *8 into the $DA10 row-address table
-C $80B4,8 add the left-clip column offset
-C $80BC,11 A = visible width in bytes (clip right - clip left + 1)
-C $80C7,13 write the first blit-queue entry (dest address, count) at $5E24
-C $80D4,12 *loop: advance dest by one screen row (32 bytes), count times
-C $80E0,18 compute the second queue entry's row count from the clip-bottom/top range
-C $80F2,9 write the second blit-queue entry
-C $80FB,11 *loop: advance dest by one screen row, count times
+C $809D,5 A = the draw-kind flags ($7FBD), masked
+C $80A2,3 only proceed for kind $01 (masked blit)
+C $80A5,4 HL = the clip window's top/left, A = the left column
+C $80A9,2 keep just the row
+C $80AB,5 multiply it by 32, the screen row stride
+C $80B0,4 add the shadow-screen row-address base $DA10
+C $80B4,4 A = the left column divided by 8
+C $80B8,3 widen it to a word
+C $80BB,1 add it to the destination address
+C $80BC,1 save the destination address
+C $80BD,7 A = clip bottom ($610C) minus clip left
+C $80C5,2 +1: the visible width in bytes
+C $80C7,3 DE = the blit queue $5E24
+C $80CA,3 back the destination up two bytes, swap into HL
+C $80CD,4 write the destination address into the queue entry
+C $80D1,3 write the row count after it
+C $80D4,1 save the count
+C $80D5,3 *loop: BC = 32, one screen row
+C $80D8,4 copy 2 bytes of this row's data
+C $80DC,1 advance the destination by a row
+C $80DD,3 loop count times
+C $80E0,7 A = clip right ($610D) minus clip top
+C $80E7,3 +1: the second entry's span
+C $80EA,3 divide by 8 -> its row count
+C $80ED,3 BC = it
+C $80F0,2 restore the saved count and destination
+C $80F2,2 advance the destination past the first entry's rows
+C $80F4,4 write the second entry's destination address
+C $80F8,3 write its row count after it
+C $80FB,3 *loop: BC = 32, one screen row
+C $80FE,4 copy 2 bytes of this row's data
+C $8102,1 advance the destination by a row
+C $8103,3 loop count times
 c $8107 Sprite draw: execute the blit queue built by #R$809D, copying 2 planes (pixels+attributes?) per queued row
 N $8107 Reads (address,count) entries from the queue at $5E24 (32 bytes apart), and for each does `count` LDI pairs from the current source into that row's destination -- the actual pixel-data copy into the shadow screen for the row-clipped sprite draw path.
 C $8107,3 HL = pointer into the blit queue built by #R$809D
@@ -1406,21 +1577,43 @@ C $8217,5 HL = $823A minus the doubled width, another per-row stride variant
 C $821C,3 Store into the queue template at $8224
 C $821F,3 Store the same value into the queue template at $8240
 C $8222,1 Restore HL, the sprite data pointer
-C $8223,3 Jump into the blit-queue-building code at $8232
+C $8223,3 !!MUT-ARG!! Jump into the blit-queue-building code at $8232
 b $8226
 c $8230 Sprite draw: masked blit (AND mask, OR sprite data) into the shadow screen -- full-width and partial-width paths
 N $8230 $8230/$8232: unmasked/opaque row copy, 5 LDI's per iteration, advancing by the $1C (28) byte screen-row stride -- used when the sprite is a plain full-byte-width blit. $8246 onward: masked blit -- if the sprite's screen X is byte-aligned ($7FBE AND $07 == 0), does a straightforward per-byte `(dest AND NOT mask) OR sprite` merge loop at $8260. Otherwise ($8278-$82B7) handles a non-byte-aligned (shifted) mask/sprite pair: computes a jump offset from the sprite width into a self-modified entry point at $829C (a classic unrolled-loop/"duff's device" trick, jump target poked at $829D/$82CE) so the leftover partial column is merged with the right number of LDI's, then #R$82A6 does the AND/OR merge for the remaining full columns.
-C $8230,10 unrolled 5-LDI copy of one row (opaque blit)
-C $823A,8 advance by the row stride ($1C), loop A times
-C $8242,4 terminate the row with two zero bytes, restore HL
+C $8230,10 unrolled 5-LDI copy of one row, opaque blit
+C $823A,3 !!MUT-ARG!! row stride ($1C)
+C $823D,2 advance by it, decrement the row count
+C $823F,3 !!MUT-ARG!! loop while rows remain
+C $8242,3 terminate the row with two zero bytes
+C $8245,1 restore HL
 C $8246,8 test the sprite's screen-X alignment (bits 0-2 of $7FBE), branch
-C $824E,18 byte-aligned masked path: BC/DE/IX setup, compute the loop trip counts
+C $824E,4 byte-aligned masked path: BC = the sprite height/width
+C $8252,4 DE = the mask data pointer
+C $8256,4 IX = the sprite data pointer
+C $825A,3 A = $20 minus the byte width
+C $825D,3 store it as the row stride at $826F
 C $8260,1 *outer row loop: push BC
-C $8261,13 *inner loop: AND the mask, OR the sprite byte, store, advance, DJNZ
-C $826E,7 advance HL by the row stride, loop the outer count (C) times
+C $8261,2 *inner loop: A = the mask byte, complemented
+C $8263,1 AND it with the screen byte
+C $8264,3 OR in the sprite byte
+C $8267,1 store the merged byte
+C $8268,4 advance all three pointers
+C $826C,2 loop the row width
+C $826E,7 !!MUT-ARG!! advance HL by the row stride, loop the outer count (C) times
 C $8275,3 jump to the shared exit $830E
-C $8278,29 non-aligned path: compute a self-modified jump offset from the sprite width (duff's-device setup)
-C $8295,7 *shared entry (also used by #R$82A6): push AF, B = height, C = $FF
+C $8278,1 non-aligned path: save HL
+C $8279,3 A = the sprite width ($6190)
+C $827C,4 8 minus it: the unrolled-loop skip count
+C $8280,2 B = it, doubled into A
+C $8282,3 store it as the jump offset at $829D
+C $8285,4 x3 for the other loop, stored at $82CE
+C $8289,5 A = 2, DE = the nibble-merge buffer $5EAC
+C $828E,3 HL = the sprite data pointer
+C $8291,4 point the sprite data at the merge buffer instead
+C $8295,1 *shared entry (also used by #R$82A6): save AF
+C $8296,6 B = height, C = $FF
+C $829C,2 !!MUT-ARG!! self-modified jump target for the duff's-device partial-column merge
 b $829E
 c $82A6 Non-aligned sprite blit: copy the nibble-merged buffer (built by #R$82DB) to the destination, row by row
 N $82A6 Copies the nibble-merged row buffer, built by #R$82DB via a 4-LDI unrolled copy, to the destination, terminating each row with a zero byte, looping row-width (C) times per row and row-count (A, from height) times overall, advancing the mask-data pointer $A5D8 between rows. On the last row, falls into the setup for the next sprite's nibble-merge pass at #R$82DB.
@@ -1431,11 +1624,11 @@ C $82B4,3 test for the last row
 C $82B7,9 advance the mask-data pointer $A5D8 by DE, loop back to #R$8295
 C $82C0,7 last row done: advance the sprite width field, HL = sprite data pointer
 C $82C7,6 B = height*2, A = 0 (setup for the nibble-merge pass at #R$82DB)
-C $82CD,2 self-modified jump target (part of the duff's-device trick)
+C $82CD,2 !!MUT-ARG!! self-modified jump target (part of the duff's-device trick)
 b $82CF
 c $82DB Sprite draw: RRD nibble-shift tail for 5 planes, non-byte-aligned blit variant
 N $82DB Continuation of the nibble-merge pass, falls in from #R$82CD's self-modified jump: RRD-shifts 5 consecutive bytes to merge sprite/mask nibbles into the row buffer, one INC HL between each, then loops via #R$82CD for the next row before popping HL and returning to the shared dispatch at #R$824E.
-C $82DB,15 RRD-shift 5 bytes to merge sprite/mask nibbles, advancing HL between each
+C $82DB,15 RRD-shift 5 bytes to merge sprite/mask nibbles, advancing HL between each (unrolled x5)
 C $82EA,2 Loop for the next row
 C $82EC,4 Restore HL, return to the shared dispatch
 c $82F0 Sprite draw: full-width unmasked row copy (no mask needed, direct LDIR per row)
@@ -1454,12 +1647,21 @@ N $8315 Sets up the sprite-draw clip window ($610A-$610D) for the piece, then dr
 N $8315 Reads a (index,height/width) record from (HL), converts the index to a screen row/column via a *8 lookup into $1C70 to get the clip window's top/left ($610A/$610B), derives bottom/right ($610D/$610C) from the record's height/width fields, then draws the piece with a self-modified LDIR row-copy and finishes by calling #R$7F9B to fold the drawn area into a running screen-bounding-box (min/max) used for redraw invalidation.
 C $8315,4 DE = record word from (HL), advance HL past it, save HL
 C $8319,8 HL = $1C70 + DE, *8 (screen row-address lookup)
-C $8321,12 store the computed top/left ($610A/$610B), keep copies in B/C
-C $832D,10 restore HL, compute the clip bottom ($610D) from the height field
+C $8321,3 A = the row plus the $4C play-field origin
+C $8324,4 store as the clip top ($610A), keep a copy in C
+C $8328,4 store the column as the clip left ($610B)
+C $832C,1 keep a copy in B
+C $832D,2 restore HL, A = the piece's height
+C $832F,3 multiply it by 8
+C $8332,2 plus the clip top, minus 1
+C $8334,3 store as the clip bottom ($610D)
 C $8337,10 compute the self-modified LDIR row width, save the source byte and count
 C $8341,7 compute the clip right ($610C) from the width field
 C $8348,4 B = 0, read the source count/pointer
-C $834C,9 *loop: LDIR one row (self-modified count), advance dest by the row stride
+C $834C,2 !!MUT-ARG!! *loop: row byte count (self-modified)
+C $834E,2 LDIR one row
+C $8350,2 !!MUT-ARG!! row byte count again (self-modified)
+C $8352,3 advance dest by the row stride
 C $8355,3 loop A times
 C $8358,3 DE = $610A, fold the drawn area into the redraw bounding box via #R$7F9B
 C $835B,3 => Fold a screen rectangle (DE = top/left, HL = bottom/right pair) into the running redraw bounding box $6194-$6197
@@ -1469,7 +1671,9 @@ C $835E,6 reset the bounding-box min tracker $6194
 C $8364,6 reset the bounding-box max tracker $6196
 C $836A,5 HL = redraw-request list $9D3C, C = 0 (entry count)
 C $836F,5 *loop: test the node's marker word, exit if zero (list end)
-C $8374,8 save the node pointer, read its count (B) and stride (E)
+C $8374,2 save the node pointer, advance past its header
+C $8376,2 B = its piece count
+C $8378,4 DE = its stride, widened
 C $837C,3 *inner loop: advance HL by the stride, B times
 C $837F,3 count this entry, loop to the next node
 C $8382,4 A = entry count, test for zero
@@ -1483,10 +1687,15 @@ c $8445 Per-frame sound-effect player: step the currently-playing effect's tone 
 N $8445 Reads the current effect ID from $61A3 (1-based; 0 = none playing), indexes a pointer table at $842F, then walks a list of command words via IX, extracting a 2-bit pitch/octave selector from each and calling the ROM tone routine at $03B6. On reaching a zero terminator word, clears $61A3 and immediately checks for a newly-queued effect (loops back to re-test).
 C $8445,5 check the sound-enable flag $61A0, return if off
 C $844A,5 check the currently-playing effect ID $61A3, return if none
-C $844F,12 index the sound-effect pointer table $842F by (id-1)*2
-C $845B,4 IX = the effect's command-word data
+C $844F,2 A = (effect id - 1) * 2
+C $8451,3 widen it into HL
+C $8454,4 add the sound-effect pointer table $842F
+C $8458,3 store the entry address at $845D
+C $845B,4 !!MUT-ARG!! IX = the effect's command-word data
 C $845F,10 *loop: read the next command word, done if zero (table end)
-C $8469,11 bit-shuffle the word into a 2-bit octave/pitch selector
+C $8469,4 shift the command word right, low bit into A
+C $846E,4 shift it again, second bit into A
+C $8472,2 rotate the two collected bits into place
 C $8474,4 mask to 0-3, add 1, E = result
 C $8478,7 call the ROM tone routine ($03B6) with the pitch/duration
 C $847F,8 advance IX to the next command word, loop back
@@ -1528,6 +1737,7 @@ R $8501 HL Address of the string to print (bytes are printed one at a time via #
 C $8503,2 terminator check: $5E
 C $8506,2 terminator check: $2B
 C $8509,3 Print engine entry point
+C $850C,2 => Print string at HL until terminator byte $5E or $2B
 c $850E Print an inline string embedded right after the caller's CALL instruction
 N $850E Pops the return address off the stack into HL -- since the caller used CALL $850E, this is the address of the string bytes immediately following that CALL. Calls #R$8501 to print the string (advancing HL past it), then JP (HL) to resume execution right after the embedded string, i.e. normal code flow continues past the inline text.
 C $850F,3 Print string at HL until terminator byte $5E or $2B
@@ -1553,7 +1763,7 @@ C $8545,3 Print one digit
 C $8548,3 Advance HL, loop for the next byte pair
 c $854C Print one digit (JP target self-modified by #R$8523)
 N $854C Self-modified JP target: #R$8523 patches the operand here before calling, so this resolves to whichever routine (usually #R$7CEC, the print engine entry point) should print the current digit.
-C $854C,3 => Print engine entry point
+C $854C,3 !!MUT-ARG!! => Print engine entry point
 c $854F Print BCD byte A as two digits, high digit blanked to a space if zero
 N $854F Rotates A's high nibble down, prints it via #R$7CEC as a digit, or a space ($F0 sentinel) if it's zero, then prints the low nibble as a digit unconditionally.
 C $855C,3 Print engine entry point
@@ -1649,10 +1859,16 @@ c $8879 Add a 5-digit BCD value at #R$8874 to the score (#R$611B)
 N $8879 Saves the bonus value (HL) to scratch $8874, then adds it byte-by-byte, 5 bytes BCD via DAA, to the score at $611B-$611F, working from the low byte (DE=$611F) upward while HL walks the bonus bytes forward.
 C $8879,3 Save the bonus value to scratch $8874
 C $887C,8 HL = the bonus bytes, DE = the score's low byte, B = 5
-C $8885,8 Add corresponding bytes in BCD, carry propagates, loop
+C $8885,2 *loop: A = the score byte plus the bonus byte
+C $8887,2 BCD-adjust and store it back
+C $8889,2 step both pointers
+C $888B,2 loop over all 5 bytes
 C $8894,3 Save the subtrahend to scratch $8874
 C $8897,9 HL = the subtrahend bytes, DE = the score's low byte, B = 5
-C $88A0,8 Subtract corresponding bytes in BCD, borrow propagates, loop
+C $88A0,2 *loop: A = the score byte minus the subtrahend byte
+C $88A2,2 BCD-adjust and store it back
+C $88A4,2 step both pointers
+C $88A6,2 loop over all 5 bytes
 C $88AB,9 Score underflowed: HL = the fixed reset block $5C92, DE = the score $611B, BC = 5
 C $88B4,2 Copy the reset block over the score
 c $888E Add a bonus (HL, 5-digit BCD) to the score, then redraw the score display
@@ -1866,12 +2082,14 @@ C $8EA5,2 Clear A, return
 c $8EA7 Special grid-value spawn routine (values $66/$6A) -- bubble source ($6A full-strength, $66 weak; see #R$9602)
 N $8EA7 Called from #R$62C8 with A=the special value ($66 or $6A) and HL pointing just past it in the template/extras stream. Self-modifies its own #R$8EC3 operand with A (so the spawned object's initial "kind" byte matches whichever of $66/$6A triggered it). Clears the grid cell to 0 (so the special value never appears in the finished grid -- see #R$612C). Reads 2 more bytes from the template beyond the normal (index,value) pair -- these are NOT accounted for by the outer #R$62C8 loop's own HL advancement; instead the routine forces two extra DEC B's (at $8EE8/$8EE9), ending that loop one iteration early to compensate (see #R$6CCF). Sets up IX=$610E (the active-object list head) as the insertion point, then CALLs #R$84AE to allocate an object record -- its handler address (#R$8EB9) is #R$957C. Populates further record fields (offset $07=$18, $0A=$06, $09=triggering value, $0B and $0E=first extra byte, $14=second extra byte), then CALLs #R$9A60 to finalize. The two extra bytes' exact meaning (screen position? direction?) is not yet confirmed. Offset $09 (the triggering value) reads back as $00 afterward, suggesting it's consumed during finalization.
 C $8EA7,3 Self-modify #R$8EC3's operand with the triggering value ($66 or $6A)
+C $8EC3,4 !!MUT-ARG!! patched by #R$8EA7 with the triggering value ($66 or $6A)
 C $8EAA,4 Clear the new record's own +0x00 field (defensive init)
-C $8EAE,4 Save HL, BC; back up one byte to clear the grid cell
+C $8EAE,2 Save HL, BC
+C $8EB0,2 back up one byte to clear the grid cell
 C $8EB2,4 IX = the active-object list head $610E, the insertion point
 C $8EB6,3 Dynamic object allocator
 W $8EB9,2 Dynamic object handler address (#R$957C)
-C $8EBB,12 Set height (+0x07=$18), kind (+0x0A=$06), and the triggering value (+0x09)
+C $8EBB,8 Set height (+0x07=$18) and kind (+0x0A=$06)
 C $8EC7,2 Restore HL, A = the grid index
 C $8EC9,3 Set object position (IX+5/+6) from grid index A
 C $8ECC,3 Advance past the index and value bytes to the first extra byte
@@ -1879,7 +2097,8 @@ C $8ECF,6 Read it and store into both the linked-record index (+0x0E) and facing
 C $8ED5,1 Advance to the second extra byte
 C $8ED6,4 Read it and store into +0x14
 C $8EDA,3 Dynamic object finalizer
-C $8EDD,3 Restore BC, HL; advance HL past the two extra bytes
+C $8EDD,2 Restore BC, HL
+C $8EDF,1 advance HL past the two extra bytes
 C $8EE0,5 A = the triggering value stored in the record, compare against $6A
 C $8EE5,2 If it's the full-strength variant ($6A), take the branch below
 C $8EE7,5 Weak variant: force two extra DEC B's to compensate #R$62C8's loop count, then clear A and return
@@ -1909,18 +2128,25 @@ c $8F82 Spawn room-membership-gated decoration pairs
 N $8F82 Re-initializes the two fixed object records, then spawns pairs from the #R$75B5 spawner table.
 N $8F82 After resetting the $8DCF/$8DEF state blocks, walks the spawner table at $75B6 looking for a record whose embedded room-list contains the current room. On a match, spawns a PAIR of objects (handler #R$9021), chained to each other via +0x18/+0x19, sharing fields copied from the record (position/type) plus a couple of pseudo-randomized flag bytes derived from the Z80 R register. Table format matches #R$75B5's (len, marker, handler_word, Y, X, type, flags, room-list...) records.
 C $8F82,11 copy the 19-byte default state block into $8DD1 (second fixed record)
-C $8F8D,11 copy the same block into $8DF1 (third fixed record)
+C $8F8D,6 HL = the default state block, DE = $8DF1 (third fixed record)
+C $8F93,5 copy it over
 C $8F98,5 set the spawn-pair counter $8F81 = 2
 C $8F9D,4 IX = the creature insertion point $8DCF, HL = spawner table $75B6
-C $8FA1,7 *loop: read the record's room-list length, done if it underflows (table end)
+C $8FA1,3 HL = the spawner table $75B6
+C $8FA4,3 *loop: A = this record's length minus its 8-byte header
+C $8FA7,1 underflowed: end of table
 C $8FA8,3 C = room-list length, B = 0
-C $8FAB,7 DE = record pointer, skip ahead if this record has no room-list
+C $8FAB,1 DE = the record pointer
+C $8FAC,3 A = the record's active flag (offset 1)
+C $8FAF,3 inactive: skip this record
 C $8FB2,4 HL = the room-list start (record + 8)
 C $8FB9,4 search the room-list for the current room, branch to spawn if found
-C $8FBD,7 not found: advance to the next record via its length, loop back
+C $8FBD,4 not found: E = this record's total length
+C $8FC1,3 advance past it, loop back
 C $8FC4,7 found: store this object's own pointer into +0x18/+0x19 (pair self-link)
 C $8FCB,2 advance HL, write A back to this position
-C $8FCD,5 DE = IX + 2 (destination for the field copy)
+C $8FCD,3 DE = the new object record
+C $8FD0,2 skip its first two fields
 C $8FD2,5 BC = 5, copy 5 bytes from the record (position/type fields)
 C $8FD7,4 store the record's next byte into +0x0A (kind)
 C $8FDB,5 store the following byte into +0x1A
@@ -1932,9 +2158,9 @@ C $8FF6,4 phase (+0x0F) = 1
 C $8FFA,4 set bit 7 of +0x0D
 C $8FFE,3 HL = handler address $9021
 C $9001,6 store the handler into +0x03/+0x04
-C $9007,3 finalize via #R$9A60
 C $900A,5 decrement the spawn-pair counter, done if it reaches zero
-C $900F,12 load the paired object's own pointer (+0x18/+0x19), switch IX to it
+C $900F,6 DE = the spawner record pointer (+0x18/+0x19)
+C $9015,6 HL = the paired object's own address
 C $901E,3 loop back to spawn the second paired object
 C $8FB6,3 get room number
 C $9007,3 Dynamic object finalizer
@@ -1943,7 +2169,8 @@ N $9021 Searches the table pointed by (IX+$18/$19) for a matching entry ($619A),
 C $9021,6 HL = the linked spawner-record pointer (+0x18/+0x19)
 C $9027,4 A = the record's kind byte minus 8, the waypoint-search length, C = it
 C $902B,6 B = 0, DE = 8, HL = the room-list start (record+8)
-C $9031,7 A = the target sprite $619A, search the room-list for it; not found, skip to the idle branch
+C $9031,5 A = the target sprite $619A, search the room-list for it
+C $9036,2 not found: skip to the idle branch
 C $9038,7 Found: clear the search-target $619A, HL = the target position $619B
 C $903F,6 Store it as the object's position (+0x05/+0x06)
 C $9045,10 A = the target facing $619D, store it (+0x0B), set the move counter (+0x09=10)
@@ -1986,6 +2213,10 @@ C $917C,3 Dynamic object finalizer
 C $9183,3 Save continuation
 C $9186,3 Creature pause/transform step
 C $9189,3 Direction-indexed sprite-animation stepper
+C $918C,4 Decrement the pause timer (+0x1C), return unless it just expired
+C $9190,4 Reset the pause timer to $32
+C $9194,3 !!MUT-ARG!! patched by #R$90BC and #R$9110 with the resume address
+C $9197,3 Jump to the continuation there
 b $919A
 c $91A6 Creature pause/transform step
 N $91A6 On the wander timer expiring, clears its list-cell state, rebuilds the door bitfield (#R$6329), plays a sound, and runs a transform animation via #R$99D5/$919A.
@@ -2193,7 +2424,8 @@ C $9649,1 None found: return
 C $964A,6 Compare the found object's address against the player $8DB6
 C $9650,2 Not the player: skip straight to the pop sequence
 C $9652,2 B = 2, the default height refill
-C $9654,9 A = facing, compare against $6A; if matched, B = 4 instead
+C $9654,5 A = facing, compare against $6A
+C $9659,4 if matched, B = 4 instead
 C $965D,7 HL = the found object's height field (+7), add B to it
 C $9664,6 HL = the found object's flags field (+0x0D), set bit 4
 C $966B,13 Pop sequence: set the object's own handler to resume at $9678, reset the phase counter
@@ -2213,9 +2445,27 @@ C $968A,4 decrement countdown and return
 C $968E,6 test phase counter, fall through to the rise seed if nonzero
 C $9694,8 phase 0: init position to 0, advance to phase 1, return
 C $969C,15 phase 1: seed rise start position ($FE/$FC), advance phase
-C $96AB,53 shared step: jump position +8, run collision/draw (also the phase-2 loop-back target)
-C $96E0,23 phase 2: increment sprite until fully reared ($26), then set a long pause and advance phase
-C $96F7,27 phase 3+ (default): retract -- decrement sprite and position by 8 each call until back to $23
+C $96AB,8 shared step: bump the Z offset (+0x17) by 8
+C $96B3,8 bump the position offset (+0x16) by 8
+C $96BB,4 clear bit 7 of the flags (+0x0D)
+C $96BF,3 HL = the active-object list head $610E
+C $96C5,1 nothing nearby: return
+C $96C6,6 A = this object's height plus its position offset
+C $96CC,3 switch IX to the object that was found
+C $96D1,3 write the combined height into it (+0x07)
+C $96D4,4 flag it as touched (+0x0D bit 1)
+C $96DB,3 restore IX, drop the saved pointer
+C $96DE,2 keep scanning for more nearby objects
+C $96E0,4 phase 2?
+C $96E4,3 step the sprite (+0x08) one frame further up
+C $96E7,5 not yet fully reared ($26): keep rising
+C $96EE,4 fully reared: set the long pause countdown (+0x0E = $24)
+C $96F2,5 advance to the next phase
+C $96F7,5 phase 3+: A = the current sprite (+0x08)
+C $96FC,2 back at $23: fully retracted
+C $96FE,3 otherwise step the sprite back one frame
+C $9701,8 retract the Z offset (+0x17) by 8
+C $9709,8 retract the position offset (+0x16) by 8
 C $9712,17 fully retracted: reset position, restart the cycle at phase 1
 N $9684 Handler for #R$8E3F's objects (its handler-address bytes at #R$8E50 -- see #R$84AE), called from #R$983C's dispatcher.
 N $9684 Sprite starts at $23 (set by #R$8EA1 on spawn) and cycles through $23,$24,$25,$26 -- the "Snake, rearing phase" sprites at #R$B56E/#R$B57E/#R$B59E/#R$B5CE, with increasing sprite height (16x8 -> 16x16 -> 16x24 -> 16x32) as it rises, i.e. more of the snake's body becomes visible each frame. Full cycle: phase 0 = idle countdown at (IX+$0E) (decrements while nonzero); phase 1 = seed position (IX+$16)/(IX+$17) at $FC/$FE then jump +8; phase 2 = each call, INC sprite number (IX+$08) and jump position +8 again, repeating until sprite reaches $26 (fully reared), then sets a long countdown ($24) and advances to phase 3+; phase 3+ (default case) = each call, if sprite isn't back down to $23 yet, DEC sprite and retract position by -8; once back at $23, reset position to 0, set bit 7 of (IX+$0D) (purpose not traced), set another countdown, and restart the cycle at phase 1. A full rise-pause-retract-pause loop.
@@ -2223,20 +2473,40 @@ b $9723
 c $9745 Mark and redraw the static terrain cells behind an object's sprite, so moving objects don't leave trails
 N $9745 Called by #R$97BA before drawing an object's sprite. Uses the #R$9723 table (row-band -> grid-row-start/count) to flag every grid cell (bit 7) within the sprite's vertical extent, skipping empty ($00) and solid-wall ($7F) cells; then does a second pass over the whole 64-cell grid, redrawing (via #R$6470) any flagged cell that also falls within the sprite's horizontal extent.
 C $9745,4 save the object's Z/height (+0x07)
-C $9749,9 compute the row-band index from the clip-window top ($610B >> 3)
+C $9749,4 A = the clip-window top ($610B) divided by 8
+C $974F,3 widen it to a word: the row-band index
 C $9752,4 HL = #R$9723 + row-band index
-C $9756,11 compute how many row-bands the clip-window height spans, +1
-C $9761,8 loop head: read this band's (grid-row-start, count) pair from #R$9723
+C $9756,5 A = the clip-window bottom ($610D), rounded up
+C $975B,3 divided by 8
+C $975E,1 minus the top band index
+C $975F,2 halve it, +1: the band count
+C $9761,1 *loop: save the band count
+C $9762,4 E = this band's grid-row start
+C $9766,2 B = its cell count
+C $9768,1 save the table cursor
 C $9769,4 HL = grid base #R$612C + row-start
 C $976D,3 DE = 9 (row stride)
-C $9770,10 mark this cell (bit 7) unless it's empty ($00) or solid wall ($7F)
+C $9770,4 *loop: skip empty cells ($00)
+C $9774,4 skip solid wall cells ($7F)
+C $9778,2 otherwise mark it (bit 7)
 C $977A,3 advance to next cell, loop count times
-C $977D,5 advance to the next row-band, loop bands times
-C $9782,19 compute the sprite's left/right grid-column range from its bounding box (+0x10/+0x11)
+C $977D,2 restore the table cursor and band count
+C $977F,3 loop for the next row-band
+C $9782,5 A = the sprite's left edge (+0x10), aligned down
+C $9787,4 L = it, A = the top edge (+0x11)
+C $978B,5 aligned down and divided by 8
+C $9790,2 C = the combined start cell index
+C $9792,3 B = it plus 7: the end cell index
 C $9795,3 HL = grid base #R$612C
 C $9798,1 A = cell index (0)
-C $9799,12 scan the grid: skip cells not marked, or outside the column range
-C $97A5,10 in range: redraw this cell's terrain piece via #R$6470
+C $9799,4 *scan: test and clear this cell's mark (bit 7)
+C $979D,2 unmarked: skip it
+C $979F,3 before the sprite's column range: skip it
+C $97A2,3 past the end of the range: skip it
+C $97A5,2 in range: save the range and cursor
+C $97A7,3 B = the object's height (+0x07)
+C $97AA,3 Redraw one terrain grid cell (index in BC), used to restore terrain hidden behind an object's sprite
+C $97AD,2 restore them
 C $97AF,2 advance to next cell
 C $97B1,4 loop until all 64 cells checked
 C $97B5,5 restore Z/height, return
@@ -2250,7 +2520,7 @@ C $97CB,7 A = $80 minus twice the column, plus twice the row, E = the screen col
 C $97D2,7 A = the sprite number, isolate the mirror-flag bit, force bit 0
 C $97D9,3 Save that flag byte for #R$8128's own flip test at $97E2
 C $97DC,5 C = the sprite number with the mirror flag masked off
-C $97E1,2 A = 1, the colour parameter
+C $97E1,2 !!MUT-ARG!! A = 1, the colour parameter
 C $97E3,3 Draw sprite C with its mask at screen position DE
 C $97E6,8 Test and clear the "just entered water" flag (IX+0x0D bit 4)
 C $97EE,2 If clear, skip straight to the redraw-behind step
@@ -2284,23 +2554,38 @@ C $986C,9 compare the record's room to the current room, skip ahead if different
 C $9875,6 HL = the object's handler pointer (+3/+4)
 C $987E,8 call the handler, then re-check the room (the handler may have moved/removed the object)
 C $9886,6 skip the sort-key update if bit 7 of +0x0D is set
-C $988C,11 compute the draw sort-key = $5E + left edge (+0x10) + top edge (+0x11), store to +0x0C
-C $9897,9 HL = draw queue $60EC, A = queue count, done (append) if empty
+C $988C,5 A = $5E + the left edge (+0x10)
+C $9891,3 plus the top edge (+0x11)
+C $9894,3 store as the draw sort key (+0x0C)
+C $9897,3 HL = the draw queue $60EC
+C $989A,4 A = the queue count
+C $989E,2 empty queue: append instead
 C $98A0,4 B = queue count, A = this object's sort key
-C $98A4,4 *loop: DE = this queue entry's record pointer
-C $98A8,10 compare this object's right edge (+0x12) against the queued entry's left, insert-before if less
-C $98B2,7 compare bottom (+0x13) against the queued entry's top, insert-before if less
-C $98B9,7 compare left (+0x10) against the queued entry's right, insert-before if less
-C $98C0,7 compare top (+0x11) against the queued entry's bottom, insert-before if less
-C $98C7,5 boxes overlap on both axes: HL = the queued entry's sort key (+0x07)
-C $98CC,6 restore HL, compare sort keys, decide insert position
+C $98A4,3 *loop: DE = this queue entry's record pointer
+C $98A7,1 save the queue cursor
+C $98A8,4 HL = the queued entry's left edge (+0x10)
+C $98AC,4 compare this object's right edge (+0x12) against it
+C $98B0,2 insert-before if less
+C $98B2,4 compare bottom (+0x13) against the queued entry's top
+C $98B7,2 insert-before if less
+C $98B9,5 compare left (+0x10) against the queued entry's right
+C $98BE,2 insert-before if less
+C $98C0,5 compare top (+0x11) against the queued entry's bottom
+C $98C5,2 insert-before if less
+C $98C7,4 boxes overlap on both axes: HL = the queued entry's depth (+0x07)
+C $98CB,1 A = it
+C $98CC,4 restore the cursor, compare against this object's own depth
+C $98D0,2 insert-before if this object is nearer
 C $98D2,2 fall through to keep scanning
-C $98D4,8 boxes don't overlap: HL = the queued entry's alternate sort key (+0x0C), compare against this object's
-C $98DC,3 restore HL, insert-before if less
+C $98D4,4 boxes don't overlap: HL = the queued entry's sort key (+0x0C)
+C $98D8,4 compare against this object's sort key
+C $98DC,3 restore the cursor, insert-before if less
 C $98DF,3 keep scanning: advance HL, loop
 C $98E2,2 queue exhausted without a match: append instead
-C $98E4,7 found the insert point: compute the shift distance
-C $98EB,6 DE = HL+1, copy the shifted block backward via LDDR
+C $98E4,1 found the insert point
+C $98E5,6 compute the shift distance (queue count * 2)
+C $98EB,4 DE = HL+1, the shifted-up destination
+C $98EF,2 shift the tail of the queue up one slot
 C $98F1,1 advance HL back to the insert slot
 C $98F2,6 DE = this object's own record address (IX)
 C $98F8,4 increment the queue count
@@ -2349,11 +2634,13 @@ C $99BD,1 "NOP" instruction code
 C $99BE,3 set instruction
 c $99D1 NEG / not NEG
 N $99D1 A 1-byte self-modified stub, patched by #R$99A1/#R$99D5 to either NEG ($44) or RET ($C9). #R$9A01/#R$9A15 CALL it to conditionally negate a signed delta before adding it to the object's position, letting the same animation-table byte-code represent movement in either direction depending on facing.
+C $99D1,1 !!MUT-CMD!! patched by #R$99A9, #R$99B4, #R$99BE and #R$99D7
 c $99D5 Sprite-animation stepper: read next entry from a per-object sprite-number table, advancing a phase counter
 N $99D5 Called with HL = a small table of raw sprite numbers (see #R$9526/#R$9577/#R$94E9 for examples). Indexes the table by (IX+$0F) (a per-object phase counter), reads the byte there into A, then INCs (IX+$0F) for next time. $FF in the table means "wrap to start" (resets (IX+$0F) to 0 and re-reads from the table's first byte); $FD is a second special marker (purpose not yet traced past #R$9A01). Otherwise A is the next sprite number to display for this object -- this is how #R$957C/#R$952D/#R$94EE (and others) drive their objects' animation frames.
 C $99D5 "RET" instruction code
 C $99D7,3 set instruction
-C $99DA,6 Clear the wrap-flag scratch $991A; save the table base (HL) into BC
+C $99DA,4 Clear the wrap-flag scratch $991A
+C $99DE,2 save the table base (HL) into BC
 C $99E0,6 HL = the table base plus the phase counter (IX+0x0F)
 C $99E6,7 A = the next table byte, advance the pointer and the phase counter, test for the wrap marker $FF
 C $99ED,2 If not the wrap marker, use this byte as-is
@@ -2431,7 +2718,10 @@ N $9AFD Walks a #R$7556 shape record, deciding a partial collision against the o
 N $9AFD Called from #R$9ABC's grid collision test for non-wall, non-empty terrain codes. Walks the shape record's bytes as (key,threshold) style entries: each key is looked up in #R$74CE then #R$750B to get a threshold delta, accumulated and compared against the object's in-cell position (D). Depending on where the accumulated threshold lands relative to D, and whether the resulting shape value is found in a small buffer at $75AE, either returns "no block" (NC) or "blocked" (Carry set), and may SET bit 0 or bit 1 of the object's (IX+$0D) along the way -- exact in-game meaning of those bits (ledge? climbable edge?) not confirmed.
 C $9AFD,4 test loop position against threshold C, skip ahead if before it
 C $9B01,3 save HL/BC, A = this shape-record byte
-C $9B0A,9 index the #R$750B table (3 bytes/entry), read its first byte
+C $9B0A,3 HL = the #R$750B table
+C $9B0D,3 plus the index * 3, its entry size
+C $9B10,1 A = the entry's first byte
+C $9B11,2 restore BC and HL
 C $9B13,5 accumulate the running threshold (A += C), compare against D
 C $9B18,8 branch on the comparison, storing the shape value on an exact match, then advance
 C $9B20,4 test for a nonzero shape value, branch further away if set
@@ -2455,12 +2745,23 @@ C $9B69,7 HL = candidate + 2 (room field)
 C $9B70,3 A = caller's room
 C $9B73,4 compare against candidate's room, skip if different
 C $9B77,9 skip if candidate's bit 7 of +0x0D is set (inactive)
-C $9B80,18 AABB test: candidate's box vs caller's +0x10/+0x11
-C $9B92,13 AABB test: candidate's box vs caller's +0x12/+0x13
+C $9B80,4 HL = the candidate's bottom edge (+0x13)
+C $9B84,4 compare against the caller's top (+0x11)
+C $9B88,2 above it: no overlap
+C $9B8A,5 compare the candidate's right against the caller's left (+0x10)
+C $9B8F,2 left of it: no overlap
+C $9B92,4 compare the caller's bottom (+0x13) against the candidate's top
+C $9B96,2 above it: no overlap
+C $9B98,4 compare the caller's right (+0x12) against the candidate's left
+C $9B9D,2 left of it: no overlap
 C $9B9F,10 compute candidate depth (+0x16 + terrain byte at the +0x07 offset)
 C $9BA9,7 compare against caller's depth (+0x07), hand off to #R$9BD4 on an exact tie
 C $9BB0,11 depth check continued: skip if candidate is at or below the caller's height
-C $9BBB,20 if candidate's bit 3 of +0x0D is set and it isn't the player, SET bit 0 of the caller's +0x0D
+C $9BBB,4 HL = the candidate's flags (+0x0D)
+C $9BBF,4 bit 3 clear: nothing more to flag
+C $9BC3,6 compare the candidate against the player ($8DB6)
+C $9BC9,2 it is the player: skip the flag
+C $9BCB,4 otherwise set bit 0 of the caller's own flags (+0x0D)
 C $9BCF,3 match found: return with Carry set
 b $9BD2
 c $9BD4 Depth-tie resolver
@@ -2487,26 +2788,70 @@ b $9C32
 c $9C35 End-of-frame screen flip
 N $9C35 Copies the shadow screen to the real ZX screen over the dirty bounding box ($6194-$6196), then redraws the room background.
 N $9C35 Only copies the rectangle actually touched this frame (tracked by #R$7F9B/#R$835E's min/max bounds), using an unrolled 32-LDI row copy. Finishes with a one-shot sound cue and jumps to #R$69AC to redraw the room background.
-C $9C35,21 restore a saved 3-byte clip value if flagged ($61A6), BC = bounding-box min tracker $6194
-C $9C4A,25 compute the shadow-screen row/attribute address from the bounding-box top row, aligned to a cell boundary
+C $9C35,3 HL = the saved-clip flag $61A6
+C $9C38,3 read it and clear it
+C $9C3B,3 not set: skip the restore
+C $9C3E,6 HL = the saved 3-byte clip value $9C32, DE = $6195
+C $9C44,6 restore it over the bounding box
+C $9C4A,3 BC = the bounding-box min tracker $6194
+C $9C4D,3 A = the top row, aligned down to a cell boundary
+C $9C50,2 D = it, write the aligned value back
+C $9C52,5 isolate the row-within-third, *4 into E
+C $9C57,4 A = the aligned row again, keep its low 3 bits
+C $9C5B,3 A = the screen-third bits
+C $9C5E,3 rotate them down into place
+C $9C61,2 D = the combined address high byte
 C $9C63,4 HL = shadow screen base $4000 + the computed row offset
-C $9C67,12 read the bounding-box min column, compute the byte-column offset, add it to HL, save the destination address at $9CBB
-C $9C73,14 DE = the column byte-width, compute the shadow-screen row offset (*32)
-C $9C85,15 compute the copy height from the bounding-box row range (max-min, rounded), abort if empty
+C $9C67,2 read the bounding-box min column
+C $9C69,3 align it down to a byte boundary, write it back
+C $9C6C,3 divide by 8 -> the byte-column offset
+C $9C6F,3 widen it to a word
+C $9C72,1 add it to the destination address
+C $9C73,3 save the destination address at $9CBB
+C $9C76,2 A = the aligned min row again
+C $9C78,3 widen it to a word
+C $9C7B,5 multiply by 32, the shadow-screen row stride
+C $9C80,1 add the column offset
+C $9C85,3 save the source address at $9CBE
+C $9C88,6 HL = the bounding box, BC = the max tracker $6196
+C $9C8E,3 A = the max row, rounded up to a cell boundary
+C $9C92,2 minus the min row: abort if the box is empty
 C $9C94,3 divide the height by 8, save the row-group count at $9CC1
-C $9C97,32 compute the copy width and per-row stride adjustments from the bounding-box column range, saving self-modified constants at $9D14/$9D0A
-C $9CBA,3 DE = real screen base $4000
-C $9CC0,8 A = row-group count, save it, jump into the unrolled copy with a self-modified byte count
+C $9C97,3 save the row-group count at $9CC1
+C $9C9A,2 A = the bounding-box max column
+C $9C9C,3 round it up, subtract the min column
+C $9C9F,2 round the difference up
+C $9CA1,2 divide by 4 -> the copy width in LDI pairs
+C $9CA3,3 widen it to a word
+C $9CA6,3 HL = the unrolled loop's own tail address $9D08
+C $9CA9,3 subtract the width: a self-modified jump into the unrolled copy
+C $9CAC,3 save it at $9D14
+C $9CAF,2 halve the width again
+C $9CB1,3 HL = $0100
+C $9CB4,3 minus it: the per-row source stride
+C $9CB7,3 save it at $9D0A
+C $9CBA,3 !!MUT-ARG!! DE = real screen base $4000
+C $9CC0,2 !!MUT-ARG!! A = the row-group count
+C $9CC2,1 *outer loop: save it
+C $9CC3,5 jump into the unrolled copy at its self-modified entry point
 C $9CC8,64 unrolled 32-LDI row copy (self-modified entry point handles partial widths)
-C $9D08,7 advance the destination by the row stride
-C $9D0F,7 BC = 32 (reset the LDI count), loop the row group
-C $9D16,12 advance the shadow-screen source to the next row-group (screen-third wraparound)
+C $9D08,1 advance the destination by the row stride
+C $9D09,3 !!MUT-ARG!! self-modified stride (compensates the copy width)
+C $9D0C,3 fold the stride into the destination pointer
+C $9D0F,4 BC = 32 (reset the LDI count), decrement the row-group count
+C $9D13,3 !!MUT-ARG!! loop the row group
+C $9D17,4 advance the shadow-screen source to the next row-group
+C $9D1B,3 round the high byte up to the next screen-third boundary
+C $9D1E,4 mask to the boundary and store it back
 C $9D22,5 loop the outer row-group count
-C $9D27,12 one-shot: skip the sound/flag if $6193 is already set, else flag it and request sound effect $04
+C $9D27,4 one-shot: test the already-done flag $6193
+C $9D2B,1 already set: return
+C $9D2C,5 flag it
+C $9D31,2 A = sound effect $04
 C $9D36,3 A = room colour
 C $9C81,3 Shadow screen address
 N $9CBA Copy shadow screen to ZX screen
-C $9CBD,3 Shadow screen address
+C $9CBD,3 !!MUT-ARG!! Shadow screen address
 C $9D33,3 Request sound effect A
 C $9D39,3 => Draw the room's background
 b $9D3C
@@ -3308,8 +3653,15 @@ C $FBDA,3 Melody-index table reader/advancer, used by #R$FBD7
 C $FBE3,3 Melody-index table reader/advancer, used by #R$FBD7
 C $FBEC,3 Melody-index to period lookup, used by #R$FBD7
 C $FBF8,3 Melody-index to period lookup, used by #R$FBD7
-C $FC04,17 setup: C=note duration count (from $FBB3), B=0, load key-state twice into both AF register banks, D=$10 (initial half-period)
+C $FC02,2 => Plain delay loop
+C $FC04,4 C = the note duration count ($FBB3)
+C $FC08,2 B = 0
+C $FC0A,3 load the key state into AF
+C $FC0D,4 and into the shadow AF bank
+C $FC11,2 IXh = the previous half-period
+C $FC13,2 D = $10, the initial half-period
 C $FC19,2 toggle speaker/border bit 4 -- produces the audible tone
+C $FC1B,2 => Tone generator loop
 C $FC25,2 toggle speaker/border bit 4 -- produces the audible tone
 C $FC34,2 Self-modified: JR Z to itself, replaced with NOPs when idle
 C $FC36,2 Swap in the shadow AF, decrement L, the pitch/period counter

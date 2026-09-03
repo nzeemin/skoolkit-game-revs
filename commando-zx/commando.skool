@@ -782,12 +782,12 @@ c$6600 EX AF,AF'     ; {Scan for slot marked $80 (free)
  $6610 DJNZ $660C    ;
  $6612 POP HL        ;
  $6613 RET           ;
-*$6614 POP DE        ; {Fill slot: address, active flag
- $6615 LD (HL),E     ;
+*$6614 POP DE        ; Take the caller address off the stack
+ $6615 LD (HL),E     ; Store its low byte
  $6616 INC HL        ;
- $6617 LD (HL),D     ;
+ $6617 LD (HL),D     ; ...and its high byte
  $6618 INC HL        ;
- $6619 LD (HL),$00   ; }
+ $6619 LD (HL),$00   ; Clear the field after it
  $661B INC HL        ;
  $661C EX AF,AF'     ; {Store derived attribute value
  $661D SRL A         ;
@@ -1479,7 +1479,7 @@ c$6AE1 LD HL,$5805    ;
  $6AED XOR A          ;
  $6AEE LD ($FDBB),A   ; Reset the scroll counter
  $6AF1 LD HL,$6975    ;
- $6AF4 LD ($7392),HL  ; Set the scroll handler
+ $6AF4 LD ($7392),HL  ; Point the $7391 call at the status-bar fill
  $6AF7 SET 2,(IY+$07) ;
  $6AFB LD HL,$4686    ; Set up the graphic copy (5 rows)
  $6AFE LD C,$05       ;
@@ -2599,7 +2599,8 @@ c$71B6 CALL $725D                              ; Print immediate string
  $71E9 LD A,$40                                ;
  $71EB LD ($FDBC),A                            ; Arm the screen-wipe counter
  $71EE LD HL,$68CA                             ; Set the wipe handler
- $71F1 LD ($7392),HL                           ;
+ $71F1 LD ($7392),HL                           ; Point the $7391 call at the
+                                               ; screen wipe instead
  $71F4 SET 2,(IY+$07)                          ;
  $71F8 CALL $725D                              ; Print immediate string
                                                ; checking menu keys
@@ -2717,7 +2718,8 @@ t$72B2 DEFM "KEITH... 060000"
 c$7357 LD ($FD8F),HL  ;
  $735A LD HL,$0000    ;
  $735D EX (SP),HL     ;
- $735E LD ($FD92),HL  ;
+ $735E LD ($FD92),HL  ; Patch the $FD91 trampoline to return to the interrupted
+                      ; code
  $7361 LD ($FD8D),SP  ;
  $7365 LD SP,$FD80    ;
  $7368 PUSH AF        ;
@@ -2737,7 +2739,8 @@ c$7357 LD ($FD8F),HL  ;
  $7386 SET 0,(IY+$07) ;
  $738A CALL $6474     ; Sound-effect dispatcher, 7 channels
 *$738D BIT 2,(IY+$07) ;
- $7391 CALL NZ,$6975  ; Fill status-bar columns down, calling $699A per column
+ $7391 CALL NZ,$6975  ; !!MUT-ARG!! target byte patched: $6975 (status-bar
+                      ; fill) by $6AF4, or $68CA (screen wipe) by $71F1
  $7394 POP DE         ;
  $7395 POP BC         ;
  $7396 POP AF         ;
@@ -2766,12 +2769,12 @@ c$7357 LD ($FD8F),HL  ;
 c$73B7 LD BC,$FEFE        ;
  $73BA LD HL,$73DC        ;
  $73BD LD DE,$0005        ;
-*$73C0 IN A,(C)           ; {Scan half-row, invert bits, loop to next row if no
- $73C2 OR $E0             ; key down
- $73C4 CPL                ;
+*$73C0 IN A,(C)           ; Read the half-row
+ $73C2 OR $E0             ; {Keep the five key bits, active high
+ $73C4 CPL                ; }
  $73C5 OR A               ;
- $73C6 JR NZ,$73D1        ;
- $73C8 ADD HL,DE          ; }
+ $73C6 JR NZ,$73D1        ; Any key down? go and identify it
+ $73C8 ADD HL,DE          ; Otherwise step to the next row
  $73C9 RLC B              ;
  $73CB JR C,$73C0         ;
  $73CD XOR A              ;
@@ -3049,12 +3052,12 @@ c$7405 LD DE,($FD8D) ; {Skip check if pointer outside $8000-$EFFF
  $7502 EX AF,AF'     ;
  $7503 LD A,($FDF4)  ; }
  $7506 CALL $7511    ; XOR AF and AF' with every byte in $F900-F9FF
- $7509 LD HL,($FD8D) ; {Store both checksum halves to ($FD8D) and ($FD8E)
- $750C LD (HL),A     ;
- $750D EX AF,AF'     ;
- $750E INC L         ;
- $750F LD (HL),A     ;
- $7510 RET           ; }
+ $7509 LD HL,($FD8D) ; {Point at the stored checksum
+ $750C LD (HL),A     ; }
+ $750D EX AF,AF'     ; {Take the other half
+ $750E INC L         ; }
+ $750F LD (HL),A     ; Store it alongside
+ $7510 RET           ;
 
 ; XOR AF and AF' with every byte in $F900-F9FF
 ;
@@ -4144,8 +4147,8 @@ c$7A10 DI            ;
 ;
 ; Builds the interrupt vector table so every entry points at the one handler,
 ; then switches the Z80 into mode 2.
-c$7A1E LD A,($7A42)  ; {Copy IM2 vector byte, fill $FB00 table
- $7A21 LD ($FD91),A  ; }
+c$7A1E LD A,($7A42)  ; Copy IM2 vector byte, fill $FB00 table
+ $7A21 LD ($FD91),A  ; Install the JP opcode byte at $FD91
  $7A24 LD HL,$FB00   ;
  $7A27 LD B,$00      ;
 *$7A29 LD (HL),$FC   ;
@@ -5887,9 +5890,9 @@ c$872F LD A,D        ; {Skip if the row is off the bottom
  $8746 LD D,$38      ; Fill colour = $38
  $8748 LD E,D        ;
  $8749 LD ($FD82),SP ; Save SP
-*$874D LD SP,HL      ; {#0-15: sixteen pushes fill the 32-byte attribute row
- $874E INC SP        ;
- $874F PUSH DE       ;
+*$874D LD SP,HL      ; {Point SP at the end of the attribute row
+ $874E INC SP        ; }
+ $874F PUSH DE       ; Sixteen pushes fill it
  $8750 PUSH DE       ;
  $8751 PUSH DE       ;
  $8752 PUSH DE       ;
@@ -5904,7 +5907,7 @@ c$872F LD A,D        ; {Skip if the row is off the bottom
  $875B PUSH DE       ;
  $875C PUSH DE       ;
  $875D PUSH DE       ;
- $875E PUSH DE       ; }
+ $875E PUSH DE       ;
  $875F LD A,L        ; {Step up one attribute row
  $8760 SUB $20       ; }
  $8762 LD L,A        ;
@@ -6049,7 +6052,7 @@ c$87F1 PUSH DE       ;
  $880B LD ($FD82),SP ;
  $880F LD SP,HL      ;
  $8810 INC SP        ;
- $8811 PUSH DE       ; {#0-15: sixteen pushes fill the attribute row
+ $8811 PUSH DE       ; Sixteen pushes fill the attribute row
  $8812 PUSH DE       ;
  $8813 PUSH DE       ;
  $8814 PUSH DE       ;
@@ -6064,7 +6067,7 @@ c$87F1 PUSH DE       ;
  $881D PUSH DE       ;
  $881E PUSH DE       ;
  $881F PUSH DE       ;
- $8820 PUSH DE       ; }
+ $8820 PUSH DE       ;
  $8821 JR $8857      ;
 *$8823 CALL $896D    ; Get attributes address for the screen line
  $8826 LD D,$30      ; Attribute byte
@@ -6072,7 +6075,7 @@ c$87F1 PUSH DE       ;
  $8829 LD ($FD82),SP ;
  $882D LD SP,HL      ;
  $882E INC SP        ;
- $882F PUSH DE       ; {#0-15: sixteen pushes fill the attribute row
+ $882F PUSH DE       ; Sixteen pushes fill the attribute row
  $8830 PUSH DE       ;
  $8831 PUSH DE       ;
  $8832 PUSH DE       ;
@@ -6087,13 +6090,13 @@ c$87F1 PUSH DE       ;
  $883B PUSH DE       ;
  $883C PUSH DE       ;
  $883D PUSH DE       ;
- $883E PUSH DE       ; }
+ $883E PUSH DE       ;
  $883F LD A,C        ;
  $8840 CP $04        ;
  $8842 JR Z,$8857    ;
  $8844 LD D,$31      ; Attribute byte
  $8846 LD E,D        ;
- $8847 PUSH DE       ; {#0-15: sixteen pushes fill the attribute row
+ $8847 PUSH DE       ; Sixteen pushes fill the attribute row
  $8848 PUSH DE       ;
  $8849 PUSH DE       ;
  $884A PUSH DE       ;
@@ -6108,7 +6111,7 @@ c$87F1 PUSH DE       ;
  $8853 PUSH DE       ;
  $8854 PUSH DE       ;
  $8855 PUSH DE       ;
- $8856 PUSH DE       ; }
+ $8856 PUSH DE       ;
 *$8857 LD SP,($FD82) ;
 *$885B POP DE        ;
  $885C CP $69        ; {Reject if row off bottom edge
@@ -6157,7 +6160,7 @@ c$87F1 PUSH DE       ;
  $8899 INC HL        ;
  $889A LD D,(HL)     ;
  $889B INC HL        ; }
- $889C PUSH DE       ; {#0-15: sixteen pushes fill the attribute row
+ $889C PUSH DE       ; Sixteen pushes fill the attribute row
  $889D PUSH DE       ;
  $889E PUSH DE       ;
  $889F PUSH DE       ;
@@ -6172,7 +6175,7 @@ c$87F1 PUSH DE       ;
  $88A8 PUSH DE       ;
  $88A9 PUSH DE       ;
  $88AA PUSH DE       ;
- $88AB PUSH DE       ; }
+ $88AB PUSH DE       ;
  $88AC EXX           ;
  $88AD INC H         ; Next screen line
  $88AE LD SP,HL      ;
@@ -6182,7 +6185,7 @@ c$87F1 PUSH DE       ;
  $88B2 INC HL        ;
  $88B3 LD D,(HL)     ;
  $88B4 INC HL        ; }
- $88B5 PUSH DE       ; {#0-15: sixteen pushes fill the attribute row
+ $88B5 PUSH DE       ; Sixteen pushes fill the attribute row
  $88B6 PUSH DE       ;
  $88B7 PUSH DE       ;
  $88B8 PUSH DE       ;
@@ -6197,7 +6200,7 @@ c$87F1 PUSH DE       ;
  $88C1 PUSH DE       ;
  $88C2 PUSH DE       ;
  $88C3 PUSH DE       ;
- $88C4 PUSH DE       ; }
+ $88C4 PUSH DE       ;
  $88C5 EXX           ; {Step down a pixel line
  $88C6 INC H         ; }
  $88C7 LD A,H        ; {Check screen third boundary
@@ -6286,7 +6289,7 @@ c$8914 LD A,D        ; {Reject if the row is off-screen
  $893C LD ($FD82),SP ;
  $8940 LD SP,HL      ;
  $8941 INC SP        ; Switch SP to HL for map fill
- $8942 PUSH DE       ; {#0-15: sixteen pushes fill the first 32 map bytes
+ $8942 PUSH DE       ; Sixteen pushes fill the first 32 map bytes
  $8943 PUSH DE       ;
  $8944 PUSH DE       ;
  $8945 PUSH DE       ;
@@ -6301,11 +6304,11 @@ c$8914 LD A,D        ; {Reject if the row is off-screen
  $894E PUSH DE       ;
  $894F PUSH DE       ;
  $8950 PUSH DE       ;
- $8951 PUSH DE       ; }
+ $8951 PUSH DE       ;
  $8952 LD A,H        ; {Check width: 15 or 30 columns
  $8953 CP $5A        ;
  $8955 JR C,$8967    ; }
- $8957 PUSH DE       ; {#16-31: sixteen more for the wide variant
+ $8957 PUSH DE       ; Sixteen more pushes for the wide variant
  $8958 PUSH DE       ;
  $8959 PUSH DE       ;
  $895A PUSH DE       ;
@@ -6320,7 +6323,7 @@ c$8914 LD A,D        ; {Reject if the row is off-screen
  $8963 PUSH DE       ;
  $8964 PUSH DE       ;
  $8965 PUSH DE       ;
- $8966 PUSH DE       ; }
+ $8966 PUSH DE       ;
 *$8967 LD SP,($FD82) ;
  $896B OR A          ;
  $896C RET           ;
@@ -8297,13 +8300,13 @@ c$9204 LD B,A        ;
 ;
 ; Links a new entry into the scenery buffer chain, walking it until the right
 ; place is found so the list stays in order.
-c$921F LD D,L        ; {Swap chain link with new entry
- $9220 LD A,(HL)     ;
- $9221 INC L         ;
+c$921F LD D,L        ; {Remember the entry being linked
+ $9220 LD A,(HL)     ; }
+ $9221 INC L         ; {Follow the chain to the next slot
  $9222 LD L,(HL)     ;
- $9223 LD E,L        ;
- $9224 LD (HL),A     ;
- $9225 LD L,A        ;
+ $9223 LD E,L        ; }
+ $9224 LD (HL),A     ; Write this entry into it
+ $9225 LD L,A        ; {Step on to the link field
  $9226 INC L         ; }
  $9227 LD (HL),E     ;
  $9228 LD A,($FD88)  ; Get Offset in $FF00 buffer
@@ -9351,13 +9354,13 @@ c$9922 SET 5,(IX+$0B) ; Mark record draw-active (+$0B bit 5)
  $9937 ADD A,$02      ;
  $9939 CP $22         ;
  $993B JP NC,$9FDE    ; => Finish sprite off-screen
-*$993E LD B,(IX+$05)  ; {Check object bounds against clip window (IX+8/9 vs
- $9941 LD C,(IX+$01)  ; B/C)
- $9944 LD A,(IX+$08)  ;
- $9947 SUB (IX+$0A)   ;
- $994A CP B           ;
- $994B JP M,$9952     ;
- $994E CP C           ;
+*$993E LD B,(IX+$05)  ; {Take the object height and row
+ $9941 LD C,(IX+$01)  ; }
+ $9944 LD A,(IX+$08)  ; {Clip window top, less the height
+ $9947 SUB (IX+$0A)   ; }
+ $994A CP B           ; {Above the window? try the lower edge
+ $994B JP M,$9952     ; }
+ $994E CP C           ; {Below it? nothing to draw
  $994F JP P,$9FE2     ; }
 *$9952 LD A,(IX+$09)  ;
  $9955 CP B           ;
@@ -12381,17 +12384,17 @@ c$DCDF LD HL,$5B11     ;
  $DD0F LD (HL),$30     ;
  $DD11 INC HL          ; HL = $5BE6
  $DD12 CALL $F221      ; Clear the projectile/vehicle/explosion tables at $F73C
- $DD15 LD HL,$FD9B     ; {Initialize values for random byte calculation
- $DD18 LD A,R          ;
- $DD1A LD (HL),A       ;
+ $DD15 LD HL,$FD9B     ; Point at the random state
+ $DD18 LD A,R          ; {Seed the first byte from the refresh register
+ $DD1A LD (HL),A       ; }
  $DD1B INC L           ;
- $DD1C XOR $AA         ;
+ $DD1C XOR $AA         ; Second byte is the first flipped
  $DD1E LD (HL),A       ;
  $DD1F INC L           ;
- $DD20 RRCA            ;
+ $DD20 RRCA            ; Third is that rotated
  $DD21 LD (HL),A       ;
- $DD22 XOR $AA         ;
- $DD24 LD (HL),A       ; }
+ $DD22 XOR $AA         ; Fourth flips it again
+ $DD24 LD (HL),A       ;
  $DD25 LD A,$90        ;
  $DD27 LD ($FD97),A    ;
  $DD2A LD ($FDDE),A    ;
@@ -16675,13 +16678,13 @@ c$F6C2 LD HL,$F856   ; {Load table pointer, check end marker
  $F6D1 LD BC,$0003   ;
  $F6D4 ADD HL,BC     ;
  $F6D5 JR $F6C5      ;
-*$F6D7 PUSH DE       ; {Free slot found: rewind to record start
- $F6D8 LD (HL),$07   ;
- $F6DA XOR A         ;
- $F6DB SBC HL,BC     ;
- $F6DD LD A,E        ;
- $F6DE SUB $03       ;
- $F6E0 LD E,A        ; }
+*$F6D7 PUSH DE       ;
+ $F6D8 LD (HL),$07   ; Claim the slot with a delay of $07
+ $F6DA XOR A         ; {Rewind to the record start
+ $F6DB SBC HL,BC     ; }
+ $F6DD LD A,E        ; {Step the column back three
+ $F6DE SUB $03       ; }
+ $F6E0 LD E,A        ;
  $F6E1 AND $03       ;
  $F6E3 LD B,A        ;
  $F6E4 LD A,E        ;
@@ -16984,10 +16987,21 @@ b$FD80 DEFW $61FC    ; ?? see $7A11
  $FD8D DEFW $61E8    ; Saved SP
  $FD8F DEFW $6439
 
-; Delay by BC-1 HALTs (redirect)
+; Interrupt return trampoline, built in RAM
 ;
 ; Used by the routine at #R$7357.
-c$FD91 JP $7A5D      ;
+;
+; .
+;
+; A three-byte JP built in RAM and used as the interrupt handler's way back.
+; The opcode byte is installed at startup from $7A42 and the target is
+; rewritten on every interrupt by $735E with the address that was interrupted,
+; so #R$7357 finishes by jumping through here. These bytes are dual-use: they
+; sit in the variable area yet are executed as code.
+c$FD91 JP $7A5D      ; !!MUT-CMD!! opcode byte installed from $7A42 by $7A21;
+                     ; the target is rewritten every interrupt by $735E, so the
+                     ; address shown here is only what the snapshot happened to
+                     ; hold
 
 ; (IY+xx) variables continued
 b$FD94 DEFB $00

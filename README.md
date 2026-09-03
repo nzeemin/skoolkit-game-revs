@@ -49,7 +49,7 @@ Volume: about 8300 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/commando-zx/commando/
 
-Status: Not finished yet, have a good progress (219K .ctl file).
+Status: Not finished yet, have a good progress (220K .ctl file).
 
 
 ## Hydrofool (ZX Spectrum)
@@ -61,7 +61,7 @@ Volume: about 4600 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/hydrofool-zx/hydrofool/
 
-Status: Have pretty good progress (210K .ctl file).
+Status: Have pretty good progress (220K .ctl file).
 
 
 ## Scuba Dive (ZX Spectrum)

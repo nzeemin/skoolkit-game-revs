@@ -3410,27 +3410,32 @@ Walks the five fixed-size slots looking for one marked free, and if it finds one
 <tr>
 <td class="address-2"><span id="26132"></span>6614</td>
 <td class="instruction">POP DE</td>
-<td class="comment-1" rowspan="6">Fill slot: address, active flag</td>
+<td class="comment-1" rowspan="1">Take the caller address off the stack</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26133"></span>6615</td>
 <td class="instruction">LD (HL),E</td>
+<td class="comment-1" rowspan="1">Store its low byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26134"></span>6616</td>
 <td class="instruction">INC HL</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="26135"></span>6617</td>
 <td class="instruction">LD (HL),D</td>
+<td class="comment-1" rowspan="1">...and its high byte</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26136"></span>6618</td>
 <td class="instruction">INC HL</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="26137"></span>6619</td>
 <td class="instruction">LD (HL),$00</td>
+<td class="comment-1" rowspan="1">Clear the field after it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="26139"></span>661B</td>
@@ -6389,7 +6394,7 @@ Prepares the status bar: fills its area, points the interrupt's scroll handler a
 <tr>
 <td class="address-1"><span id="27380"></span>6AF4</td>
 <td class="instruction">LD ($7392),HL</td>
-<td class="comment-1" rowspan="1">Set the scroll handler</td>
+<td class="comment-1" rowspan="1">Point the $7391 call at the status-bar fill</td>
 </tr>
 <tr>
 <td class="address-1"><span id="27383"></span>6AF7</td>
@@ -11257,7 +11262,7 @@ Prints the credits screen, copying the publisher text directly into screen memor
 <tr>
 <td class="address-1"><span id="29169"></span>71F1</td>
 <td class="instruction">LD ($7392),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Point the $7391 call at the screen wipe instead</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29172"></span>71F4</td>
@@ -11731,7 +11736,7 @@ The interrupt handler, and the spine of the frame. It switches to its own stack,
 <tr>
 <td class="address-1"><span id="29534"></span>735E</td>
 <td class="instruction">LD ($FD92),HL</td>
-<td class="comment-1" rowspan="1"></td>
+<td class="comment-1" rowspan="1">Patch the $FD91 trampoline to return to the interrupted code</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29537"></span>7361</td>
@@ -11831,7 +11836,7 @@ The interrupt handler, and the spine of the frame. It switches to its own stack,
 <tr>
 <td class="address-1"><span id="29585"></span>7391</td>
 <td class="instruction">CALL NZ,<a href="#26997">$6975</a></td>
-<td class="comment-1" rowspan="1">Fill status-bar columns down, calling $699A per column</td>
+<td class="comment-1" rowspan="1">!!MUT-ARG!! target byte patched: $6975 (status-bar fill) by $6AF4, or $68CA (screen wipe) by $71F1</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29588"></span>7394</td>
@@ -11948,11 +11953,12 @@ Reads the keyboard, scanning the half-rows in turn until it finds one with a key
 <tr>
 <td class="address-2"><span id="29632"></span>73C0</td>
 <td class="instruction">IN A,(C)</td>
-<td class="comment-1" rowspan="6">Scan half-row, invert bits, loop to next row if no key down</td>
+<td class="comment-1" rowspan="1">Read the half-row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29634"></span>73C2</td>
 <td class="instruction">OR $E0</td>
+<td class="comment-1" rowspan="2">Keep the five key bits, active high</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29636"></span>73C4</td>
@@ -11961,14 +11967,17 @@ Reads the keyboard, scanning the half-rows in turn until it finds one with a key
 <tr>
 <td class="address-1"><span id="29637"></span>73C5</td>
 <td class="instruction">OR A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="29638"></span>73C6</td>
 <td class="instruction">JR NZ,$73D1</td>
+<td class="comment-1" rowspan="1">Any key down? go and identify it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29640"></span>73C8</td>
 <td class="instruction">ADD HL,DE</td>
+<td class="comment-1" rowspan="1">Otherwise step to the next row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29641"></span>73C9</td>
@@ -13319,7 +13328,7 @@ Anti-tamper check. Each call folds one byte from every code page into a single v
 <tr>
 <td class="address-1"><span id="29961"></span>7509</td>
 <td class="instruction">LD HL,($FD8D)</td>
-<td class="comment-1" rowspan="6">Store both checksum halves to ($FD8D) and ($FD8E)</td>
+<td class="comment-1" rowspan="2">Point at the stored checksum</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29964"></span>750C</td>
@@ -13328,6 +13337,7 @@ Anti-tamper check. Each call folds one byte from every code page into a single v
 <tr>
 <td class="address-1"><span id="29965"></span>750D</td>
 <td class="instruction">EX AF,AF'</td>
+<td class="comment-1" rowspan="2">Take the other half</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29966"></span>750E</td>
@@ -13336,10 +13346,12 @@ Anti-tamper check. Each call folds one byte from every code page into a single v
 <tr>
 <td class="address-1"><span id="29967"></span>750F</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="1">Store it alongside</td>
 </tr>
 <tr>
 <td class="address-1"><span id="29968"></span>7510</td>
 <td class="instruction">RET</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
 <div id="29969" class="description">7511: XOR AF and AF' with every byte in $F900-F9FF</div>
@@ -17583,11 +17595,12 @@ Builds the interrupt vector table so every entry points at the one handler, then
 <tr>
 <td class="address-2"><span id="31262"></span>7A1E</td>
 <td class="instruction">LD A,($7A42)</td>
-<td class="comment-1" rowspan="2">Copy IM2 vector byte, fill $FB00 table</td>
+<td class="comment-1" rowspan="1">Copy IM2 vector byte, fill $FB00 table</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31265"></span>7A21</td>
 <td class="instruction">LD ($FD91),A</td>
+<td class="comment-1" rowspan="1">Install the JP opcode byte at $FD91</td>
 </tr>
 <tr>
 <td class="address-1"><span id="31268"></span>7A24</td>
@@ -25139,7 +25152,7 @@ Paints the road surface across a bridge, filling each row of attribute cells thr
 <tr>
 <td class="address-2"><span id="34637"></span>874D</td>
 <td class="instruction">LD SP,HL</td>
-<td class="comment-1" rowspan="18">#0-15: sixteen pushes fill the 32-byte attribute row</td>
+<td class="comment-1" rowspan="2">Point SP at the end of the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34638"></span>874E</td>
@@ -25148,66 +25161,82 @@ Paints the road surface across a bridge, filling each row of attribute cells thr
 <tr>
 <td class="address-1"><span id="34639"></span>874F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34640"></span>8750</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34641"></span>8751</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34642"></span>8752</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34643"></span>8753</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34644"></span>8754</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34645"></span>8755</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34646"></span>8756</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34647"></span>8757</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34648"></span>8758</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34649"></span>8759</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34650"></span>875A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34651"></span>875B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34652"></span>875C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34653"></span>875D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34654"></span>875E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34655"></span>875F</td>
@@ -25865,67 +25894,82 @@ Draws a bridge section, colouring its two-tone attribute band a row at a time th
 <tr>
 <td class="address-1"><span id="34833"></span>8811</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the attribute row</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34834"></span>8812</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34835"></span>8813</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34836"></span>8814</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34837"></span>8815</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34838"></span>8816</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34839"></span>8817</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34840"></span>8818</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34841"></span>8819</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34842"></span>881A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34843"></span>881B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34844"></span>881C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34845"></span>881D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34846"></span>881E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34847"></span>881F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34848"></span>8820</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34849"></span>8821</td>
@@ -25965,67 +26009,82 @@ Draws a bridge section, colouring its two-tone attribute band a row at a time th
 <tr>
 <td class="address-1"><span id="34863"></span>882F</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the attribute row</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34864"></span>8830</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34865"></span>8831</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34866"></span>8832</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34867"></span>8833</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34868"></span>8834</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34869"></span>8835</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34870"></span>8836</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34871"></span>8837</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34872"></span>8838</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34873"></span>8839</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34874"></span>883A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34875"></span>883B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34876"></span>883C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34877"></span>883D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34878"></span>883E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34879"></span>883F</td>
@@ -26055,67 +26114,82 @@ Draws a bridge section, colouring its two-tone attribute band a row at a time th
 <tr>
 <td class="address-1"><span id="34887"></span>8847</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the attribute row</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34888"></span>8848</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34889"></span>8849</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34890"></span>884A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34891"></span>884B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34892"></span>884C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34893"></span>884D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34894"></span>884E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34895"></span>884F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34896"></span>8850</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34897"></span>8851</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34898"></span>8852</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34899"></span>8853</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34900"></span>8854</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34901"></span>8855</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34902"></span>8856</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="34903"></span>8857</td>
@@ -26352,67 +26426,82 @@ Draws a bridge section, colouring its two-tone attribute band a row at a time th
 <tr>
 <td class="address-1"><span id="34972"></span>889C</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the attribute row</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34973"></span>889D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34974"></span>889E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34975"></span>889F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34976"></span>88A0</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34977"></span>88A1</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34978"></span>88A2</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34979"></span>88A3</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34980"></span>88A4</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34981"></span>88A5</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34982"></span>88A6</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34983"></span>88A7</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34984"></span>88A8</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34985"></span>88A9</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34986"></span>88AA</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34987"></span>88AB</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34988"></span>88AC</td>
@@ -26459,67 +26548,82 @@ Draws a bridge section, colouring its two-tone attribute band a row at a time th
 <tr>
 <td class="address-1"><span id="34997"></span>88B5</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the attribute row</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the attribute row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="34998"></span>88B6</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="34999"></span>88B7</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35000"></span>88B8</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35001"></span>88B9</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35002"></span>88BA</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35003"></span>88BB</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35004"></span>88BC</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35005"></span>88BD</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35006"></span>88BE</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35007"></span>88BF</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35008"></span>88C0</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35009"></span>88C1</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35010"></span>88C2</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35011"></span>88C3</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35012"></span>88C4</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35013"></span>88C5</td>
@@ -26894,67 +26998,82 @@ Draws a tunnel and then marks the ground it covers on the collision map, so noth
 <tr>
 <td class="address-1"><span id="35138"></span>8942</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#0-15: sixteen pushes fill the first 32 map bytes</td>
+<td class="comment-1" rowspan="1">Sixteen pushes fill the first 32 map bytes</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35139"></span>8943</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35140"></span>8944</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35141"></span>8945</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35142"></span>8946</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35143"></span>8947</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35144"></span>8948</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35145"></span>8949</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35146"></span>894A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35147"></span>894B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35148"></span>894C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35149"></span>894D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35150"></span>894E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35151"></span>894F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35152"></span>8950</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35153"></span>8951</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35154"></span>8952</td>
@@ -26972,67 +27091,82 @@ Draws a tunnel and then marks the ground it covers on the collision map, so noth
 <tr>
 <td class="address-1"><span id="35159"></span>8957</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="16">#16-31: sixteen more for the wide variant</td>
+<td class="comment-1" rowspan="1">Sixteen more pushes for the wide variant</td>
 </tr>
 <tr>
 <td class="address-1"><span id="35160"></span>8958</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35161"></span>8959</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35162"></span>895A</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35163"></span>895B</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35164"></span>895C</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35165"></span>895D</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35166"></span>895E</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35167"></span>895F</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35168"></span>8960</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35169"></span>8961</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35170"></span>8962</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35171"></span>8963</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35172"></span>8964</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35173"></span>8965</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="35174"></span>8966</td>
 <td class="instruction">PUSH DE</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-2"><span id="35175"></span>8967</td>
@@ -35460,7 +35594,7 @@ Links a new entry into the scenery buffer chain, walking it until the right plac
 <tr>
 <td class="address-2"><span id="37407"></span>921F</td>
 <td class="instruction">LD D,L</td>
-<td class="comment-1" rowspan="8">Swap chain link with new entry</td>
+<td class="comment-1" rowspan="2">Remember the entry being linked</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37408"></span>9220</td>
@@ -35469,6 +35603,7 @@ Links a new entry into the scenery buffer chain, walking it until the right plac
 <tr>
 <td class="address-1"><span id="37409"></span>9221</td>
 <td class="instruction">INC L</td>
+<td class="comment-1" rowspan="3">Follow the chain to the next slot</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37410"></span>9222</td>
@@ -35481,10 +35616,12 @@ Links a new entry into the scenery buffer chain, walking it until the right plac
 <tr>
 <td class="address-1"><span id="37412"></span>9224</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="1">Write this entry into it</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37413"></span>9225</td>
 <td class="instruction">LD L,A</td>
+<td class="comment-1" rowspan="2">Step on to the link field</td>
 </tr>
 <tr>
 <td class="address-1"><span id="37414"></span>9226</td>
@@ -40485,7 +40622,7 @@ Prepares and draws an object's sprite. It marks the object active, takes its pen
 <tr>
 <td class="address-2"><span id="39230"></span>993E</td>
 <td class="instruction">LD B,(IX+$05)</td>
-<td class="comment-1" rowspan="8">Check object bounds against clip window (IX+8/9 vs B/C)</td>
+<td class="comment-1" rowspan="2">Take the object height and row</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39233"></span>9941</td>
@@ -40494,6 +40631,7 @@ Prepares and draws an object's sprite. It marks the object active, takes its pen
 <tr>
 <td class="address-1"><span id="39236"></span>9944</td>
 <td class="instruction">LD A,(IX+$08)</td>
+<td class="comment-1" rowspan="2">Clip window top, less the height</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39239"></span>9947</td>
@@ -40502,6 +40640,7 @@ Prepares and draws an object's sprite. It marks the object active, takes its pen
 <tr>
 <td class="address-1"><span id="39242"></span>994A</td>
 <td class="instruction">CP B</td>
+<td class="comment-1" rowspan="2">Above the window? try the lower edge</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39243"></span>994B</td>
@@ -40510,6 +40649,7 @@ Prepares and draws an object's sprite. It marks the object active, takes its pen
 <tr>
 <td class="address-1"><span id="39246"></span>994E</td>
 <td class="instruction">CP C</td>
+<td class="comment-1" rowspan="2">Below it? nothing to draw</td>
 </tr>
 <tr>
 <td class="address-1"><span id="39247"></span>994F</td>
@@ -54072,11 +54212,12 @@ Sets up a fresh game: clears the object table, places the player at the starting
 <tr>
 <td class="address-1"><span id="56597"></span>DD15</td>
 <td class="instruction">LD HL,$FD9B</td>
-<td class="comment-1" rowspan="11">Initialize values for random byte calculation</td>
+<td class="comment-1" rowspan="1">Point at the random state</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56600"></span>DD18</td>
 <td class="instruction">LD A,R</td>
+<td class="comment-1" rowspan="2">Seed the first byte from the refresh register</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56602"></span>DD1A</td>
@@ -54085,34 +54226,42 @@ Sets up a fresh game: clears the object table, places the player at the starting
 <tr>
 <td class="address-1"><span id="56603"></span>DD1B</td>
 <td class="instruction">INC L</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56604"></span>DD1C</td>
 <td class="instruction">XOR $AA</td>
+<td class="comment-1" rowspan="1">Second byte is the first flipped</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56606"></span>DD1E</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56607"></span>DD1F</td>
 <td class="instruction">INC L</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56608"></span>DD20</td>
 <td class="instruction">RRCA</td>
+<td class="comment-1" rowspan="1">Third is that rotated</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56609"></span>DD21</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56610"></span>DD22</td>
 <td class="instruction">XOR $AA</td>
+<td class="comment-1" rowspan="1">Fourth flips it again</td>
 </tr>
 <tr>
 <td class="address-1"><span id="56612"></span>DD24</td>
 <td class="instruction">LD (HL),A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="56613"></span>DD25</td>
@@ -72840,15 +72989,17 @@ Finds a free slot (delay field +$11 = 0) in explosion table $F856 and seeds a ne
 <tr>
 <td class="address-2"><span id="63191"></span>F6D7</td>
 <td class="instruction">PUSH DE</td>
-<td class="comment-1" rowspan="7">Free slot found: rewind to record start</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="63192"></span>F6D8</td>
 <td class="instruction">LD (HL),$07</td>
+<td class="comment-1" rowspan="1">Claim the slot with a delay of $07</td>
 </tr>
 <tr>
 <td class="address-1"><span id="63194"></span>F6DA</td>
 <td class="instruction">XOR A</td>
+<td class="comment-1" rowspan="2">Rewind to the record start</td>
 </tr>
 <tr>
 <td class="address-1"><span id="63195"></span>F6DB</td>
@@ -72857,6 +73008,7 @@ Finds a free slot (delay field +$11 = 0) in explosion table $F856 and seeds a ne
 <tr>
 <td class="address-1"><span id="63197"></span>F6DD</td>
 <td class="instruction">LD A,E</td>
+<td class="comment-1" rowspan="2">Step the column back three</td>
 </tr>
 <tr>
 <td class="address-1"><span id="63198"></span>F6DE</td>
@@ -72865,6 +73017,7 @@ Finds a free slot (delay field +$11 = 0) in explosion table $F856 and seeds a ne
 <tr>
 <td class="address-1"><span id="63200"></span>F6E0</td>
 <td class="instruction">LD E,A</td>
+<td class="comment-1" rowspan="1"></td>
 </tr>
 <tr>
 <td class="address-1"><span id="63201"></span>F6E1</td>
@@ -74284,7 +74437,7 @@ Ticks each explosion in the table, counting its timer down and writing the match
 <td class="comment-1" rowspan="1"></td>
 </tr>
 </table>
-<div id="64913" class="description">FD91: Delay by BC-1 HALTs (redirect)</div>
+<div id="64913" class="description">FD91: Interrupt return trampoline, built in RAM</div>
 <table class="disassembly">
 <tr>
 <td class="routine-comment" colspan="5">
@@ -74296,9 +74449,19 @@ Used by the routine at <a href="asm.html#29527">7357</a>.
 </td>
 </tr>
 <tr>
+<td class="routine-comment" colspan="5">
+<span id="64913"></span>
+<div class="comments">
+<div class="paragraph">
+A three-byte JP built in RAM and used as the interrupt handler's way back. The opcode byte is installed at startup from $7A42 and the target is rewritten on every interrupt by $735E with the address that was interrupted, so <a href="asm.html#29527">7357</a> finishes by jumping through here. These bytes are dual-use: they sit in the variable area yet are executed as code.
+</div>
+</div>
+</td>
+</tr>
+<tr>
 <td class="address-2"><span id="64913"></span>FD91</td>
 <td class="instruction">JP <a href="#31325">$7A5D</a></td>
-<td class="comment-0" rowspan="1"></td>
+<td class="comment-1" rowspan="1">!!MUT-CMD!! opcode byte installed from $7A42 by $7A21; the target is rewritten every interrupt by $735E, so the address shown here is only what the snapshot happened to hold</td>
 </tr>
 </table>
 <div id="64916" class="description">FD94: (IY+xx) variables continued</div>

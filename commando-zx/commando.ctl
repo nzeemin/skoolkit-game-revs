@@ -128,7 +128,10 @@ N $6600 Walks the five fixed-size slots looking for one marked free, and if it f
 R $6600 I:HL Address to store in the slot
 R $6600 I:A Attribute seed (stored as A/2 + $13)
 C $6600,5 Scan for slot marked $80 (free)
-C $6614,7 Fill slot: address, active flag
+C $6614,1 Take the caller address off the stack
+C $6615,1 Store its low byte
+C $6617,1 ...and its high byte
+C $6619,2 Clear the field after it
 C $661C,5 Store derived attribute value
 c $6626 Prepare records and variables at $6648
 N $6626 Initialises the object work-record at $6661 with its clip bounds and marks all five slots in the $6648 table as free ($80).
@@ -336,7 +339,7 @@ c $6AE1 Prepare status bar screen: fill, set scroll handler
 N $6AE1 Prepares the status bar: fills its area, points the interrupt's scroll handler at the status-bar updater, then copies the panel graphic in row by row.
 C $6AEA,3 Fill screen rectangle with byte
 C $6AEE,3 Reset the scroll counter
-C $6AF4,3 Set the scroll handler
+C $6AF4,3 Point the $7391 call at the status-bar fill
 C $6AFB,3 Set up the graphic copy (5 rows)
 C $6B06,4 Copy a row's 20 bytes
 C $6B0D,3 DOWN HL
@@ -692,6 +695,7 @@ C $71B6,3 Print immediate string checking menu keys
 B $71B9,11
 T $71C4,12
 B $71D0,1
+C $71F1,3 Point the $7391 call at the screen wipe instead
 C $71F8,3 Print immediate string checking menu keys
 B $71FB,5
 T $7200,30,15
@@ -737,18 +741,22 @@ t $72B2 Score table
 T $72B2,,15
 c $7357 Game main loop / frame handler
 N $7357 The interrupt handler, and the spine of the frame. It switches to its own stack, verifies the code checksum, reads the controls, ticks the sound and updates the status bar, then restores everything and returns through the delay routine.
+C $735E,3 Patch the $FD91 trampoline to return to the interrupted code
 C $7371,3 Compute code checksum
 C $7374,3 Read input
 C $7377,3 Save the input
 C $738A,3 Sound-effect dispatcher, 7 channels
-C $7391,3 Fill status-bar columns down, calling $699A per column
+C $7391,3 !!MUT-ARG!! target byte patched: $6975 (status-bar fill) by $6AF4, or $68CA (screen wipe) by $71F1
 C $73A1,3 => Delay by BC-1 HALTs
 C $73A4,3 Read Keyboard
 C $73A7,3 Save last key read from keyboard
 C $73B2,3 Scroll the message banner one pixel left
 c $73B7 Read Keyboard
 N $73B7 Reads the keyboard, scanning the half-rows in turn until it finds one with a key down, then working out which column it was and looking the character up in the key map.
-C $73C0,9 Scan half-row, invert bits, loop to next row if no key down
+C $73C0,2 Read the half-row
+C $73C2,3 Keep the five key bits, active high
+C $73C6,2 Any key down? go and identify it
+C $73C8,1 Otherwise step to the next row
 C $73D1,4 Key found: set carry marker, clear column counter
 C $73D5,6 Rotate to find pressed column, advance HL to its map entry
 C $73DB,1 Look up char for (row,column) from keyboard map
@@ -777,7 +785,9 @@ C $74F8,1 XOR page $EF, last of the sweep
 C $74FA,2 Then skip to page $FA
 C $74FC,1 XOR page $FA into the sum
 C $74FF,7 Fold in checksum from $7511, store to ($FD8D)
-C $7509,8 Store both checksum halves to ($FD8D) and ($FD8E)
+C $7509,4 Point at the stored checksum
+C $750D,2 Take the other half
+C $750F,1 Store it alongside
 C $7506,3 XOR AF and AF' with every byte in $F900-F9FF
 c $7511 XOR AF and AF' with every byte in $F900-F9FF
 N $7511 Folds a whole page of memory into a pair of checksum bytes, XORing alternate bytes into each half through the two accumulators.
@@ -1121,7 +1131,8 @@ C $7A16,2 Restore IY/HL context
 C $7A1A,2 Back to IM 1
 c $7A1E Set up interrupt vector table at $FB00
 N $7A1E Builds the interrupt vector table so every entry points at the one handler, then switches the Z80 into mode 2.
-C $7A1E,6 Copy IM2 vector byte, fill $FB00 table
+C $7A1E,3 Copy IM2 vector byte, fill $FB00 table
+C $7A21,3 Install the JP opcode byte at $FD91
 C $7A2E,5 Terminate table, copy 3 more bytes
 c $7A42 Game main loop / frame handler (redirect)
 C $7A42,3 => Game main loop / frame handler
@@ -1471,7 +1482,8 @@ C $8739,3 Fewer rows near the top
 C $8743,3 Get attributes address for the screen line
 C $8746,2 Fill colour = $38
 C $8749,4 Save SP
-C $874D,18 #0-15: sixteen pushes fill the 32-byte attribute row
+C $874D,2 Point SP at the end of the attribute row
+C $874F,1 Sixteen pushes fill it
 C $875F,3 Step up one attribute row
 C $8768,4 Restore SP
 c $876E Draw a wall
@@ -1510,12 +1522,12 @@ C $87F3,2 Align row to the 4-row grid
 C $87F6,2 Act only on every fourth row
 C $8805,3 Get attributes address for the screen line
 C $8808,2 Attribute byte
-C $8811,16 #0-15: sixteen pushes fill the attribute row
+C $8811,1 Sixteen pushes fill the attribute row
 C $8823,3 Get attributes address for the screen line
 C $8826,2 Attribute byte
-C $882F,16 #0-15: sixteen pushes fill the attribute row
+C $882F,1 Sixteen pushes fill the attribute row
 C $8844,2 Attribute byte
-C $8847,16 #0-15: sixteen pushes fill the attribute row
+C $8847,1 Sixteen pushes fill the attribute row
 C $885C,3 Reject if row off bottom edge
 C $8860,3 Reject if above the band
 C $886D,3 Load structure graphic $88E5
@@ -1524,11 +1536,11 @@ C $888B,2 $FE00 - table of even screen lines addresses
 C $888D,4 Get screen line address from table $FE00
 C $8895,1 Now SP = address on the screen
 C $8898,4 Get 1st word from table $88E5
-C $889C,16 #0-15: sixteen pushes fill the attribute row
+C $889C,1 Sixteen pushes fill the attribute row
 C $88AD,1 Next screen line
 C $88B1 Get 2nd word from table $88E5
 
-C $88B5,16 #0-15: sixteen pushes fill the attribute row
+C $88B5,1 Sixteen pushes fill the attribute row
 C $88C5,2 Step down a pixel line
 C $88C7,3 Check screen third boundary
 C $88CC,3 Advance to the next screen row
@@ -1552,9 +1564,9 @@ C $8925,4 Skip the map fill if too low
 C $8929,4 Compute $1600 map row base
 C $8935,4 Combine row/column into map address
 C $8941,1 Switch SP to HL for map fill
-C $8942,16 #0-15: sixteen pushes fill the first 32 map bytes
+C $8942,1 Sixteen pushes fill the first 32 map bytes
 C $8952,5 Check width: 15 or 30 columns
-C $8957,16 #16-31: sixteen more for the wide variant
+C $8957,1 Sixteen more pushes for the wide variant
 c $896D Get attributes address for the screen line
 N $896D Works out where a screen line's colour cells live in the attribute area.
 R $896D I:D Screen line number, divided by 2
@@ -2037,7 +2049,10 @@ C $9218,3 #1 cleared field
 C $921B,3 #2 cleared field
 c $921F Insert entry into $FF00 buffer chain
 N $921F Links a new entry into the scenery buffer chain, walking it until the right place is found so the list stays in order.
-C $921F,8 Swap chain link with new entry
+C $921F,2 Remember the entry being linked
+C $9221,3 Follow the chain to the next slot
+C $9224,1 Write this entry into it
+C $9225,2 Step on to the link field
 C $9228,6 Read buffer offset ($FD88), insert into chain
 C $9228,3 Get Offset in $FF00 buffer
 b $9236 Level 1
@@ -2944,7 +2959,10 @@ R $9922 I:IX Address of the 20-byte object record
 C $9922,4 Mark record draw-active (+$0B bit 5)
 C $9930,4 Reject object past right/bottom edge
 C $993B,3 => Finish sprite off-screen
-C $993E,20 Check object bounds against clip window (IX+8/9 vs B/C)
+C $993E,6 Take the object height and row
+C $9944,6 Clip window top, less the height
+C $994A,4 Above the window? try the lower edge
+C $994E,4 Below it? nothing to draw
 C $995A,3 => Finish sprite off-screen
 C $995D,5 Frame index (IX+$02) * 2 into A
 C $9962,2 lo byte of $98E2
@@ -3566,7 +3584,11 @@ C $DD0B,1 HL = $5BE4
 C $DD0E,1 HL = $5BE5
 C $DD11,1 HL = $5BE6
 C $DD12,3 Clear the projectile/vehicle/explosion tables at $F73C
-C $DD15,16 Initialize values for random byte calculation
+C $DD15,3 Point at the random state
+C $DD18,3 Seed the first byte from the refresh register
+C $DD1C,2 Second byte is the first flipped
+C $DD20,1 Third is that rotated
+C $DD22,2 Fourth flips it again
 C $DD38,4 $01 - Enemy delay (Time until first enemy appears)
 C $DD3C,3 => Game's main loop, Part 1
 b $DD3F Sprite frame table, indexed by object state and direction
@@ -4636,7 +4658,9 @@ N $F6C2 Finds a free slot (delay field +$11 = 0) in explosion table $F856 and se
 R $F6C2 I:DE Spawn position (E pixel X, D Y)
 C $F6C2,4 Load table pointer, check end marker
 C $F6C9,8 Check delay field (+$11) for a free (zero) slot
-C $F6D7,10 Free slot found: rewind to record start
+C $F6D8,2 Claim the slot with a delay of $07
+C $F6DA,3 Rewind to the record start
+C $F6DD,3 Step the column back three
 C $F6E7,2 Derive char X from pixel position
 C $F6EA,1 Write current sprite fields (X, Y, quadrant, frame $17)
 C $F6F6,1 Duplicate into next-frame fields
@@ -4690,7 +4714,9 @@ B $FD88,1 (IY+$08) -  Offset in $FF00 buffer = $00
 W $FD8A,2 Current address in level sequence, starts from $9236
 W $FD8D,2 Saved SP
 W $FD8F,2
-c $FD91 Delay by BC-1 HALTs (redirect)
+c $FD91 Interrupt return trampoline, built in RAM
+C $FD91,3 !!MUT-CMD!! opcode byte installed from $7A42 by $7A21; the target is rewritten every interrupt by $735E, so the address shown here is only what the snapshot happened to hold
+N $FD91 A three-byte JP built in RAM and used as the interrupt handler's way back. The opcode byte is installed at startup from $7A42 and the target is rewritten on every interrupt by $735E with the address that was interrupted, so #R$7357 finishes by jumping through here. These bytes are dual-use: they sit in the variable area yet are executed as code.
 b $FD94 (IY+xx) variables continued
 B $FD95,1 (IY+$15) - ??
 B $FD96,1 (IY+$16) - ?? = $88,$AA

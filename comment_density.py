@@ -86,8 +86,8 @@ for ratio, addr, end, n_instr, n_c in flagged:
     print('${:04X}-${:04X}  instr={:4d}  C-lines={:3d}  ratio={:.1f}'.format(
         addr, end, n_instr, n_c, ratio))
 
-flagged_instr = sum(r[3] for r in flagged)
-flagged_c = sum(r[4] for r in flagged)
-print()
-print('Total (flagged blocks): {} instructions, {} C-lines, 1 per {:.1f}'.format(
-    flagged_instr, flagged_c, flagged_instr / max(flagged_c, 1)))
+# flagged_instr = sum(r[3] for r in flagged)
+# flagged_c = sum(r[4] for r in flagged)
+# print()
+# print('Total (flagged blocks): {} instructions, {} C-lines, 1 per {:.1f}'.format(
+#    flagged_instr, flagged_c, flagged_instr / max(flagged_c, 1)))

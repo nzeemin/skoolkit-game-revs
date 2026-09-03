@@ -146,7 +146,7 @@
 <td class="map-byte">204</td>
 <td class="map-c"><span id="25804"></span><a href="../asm.html#25804">64CC</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25804">Print character to screen using ROM font (pixel-shifted blit)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25804">Print character to screen using ROM font (fattened, double-height)</a></div>
 </td>
 </tr>
 <tr>
@@ -162,7 +162,7 @@
 <td class="map-byte">197</td>
 <td class="map-c"><span id="26053"></span><a href="../asm.html#26053">65C5</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26053">Control code $00: reset $9CC9 row, skip-count 7</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26053">Control code $00: set the top cell's colour, then chain into code $07</a></div>
 </td>
 </tr>
 <tr>
@@ -170,7 +170,7 @@
 <td class="map-byte">206</td>
 <td class="map-c"><span id="26062"></span><a href="../asm.html#26062">65CE</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26062">Control code $07: set $9CCA to code value</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26062">Control code $07: set the bottom cell's colour ($9CCA)</a></div>
 </td>
 </tr>
 <tr>
@@ -178,7 +178,7 @@
 <td class="map-byte">211</td>
 <td class="map-c"><span id="26067"></span><a href="../asm.html#26067">65D3</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26067">Control code $01: set $9CC9 bits 0-2</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26067">Control code $01: set the top cell's ink (bits 0-2 of $9CC9)</a></div>
 </td>
 </tr>
 <tr>
@@ -186,7 +186,7 @@
 <td class="map-byte">220</td>
 <td class="map-c"><span id="26076"></span><a href="../asm.html#26076">65DC</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26076">Control code $02: set $9CC9 bits 3-5</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26076">Control code $02: set the top cell's paper (bits 3-5 of $9CC9)</a></div>
 </td>
 </tr>
 <tr>
@@ -194,7 +194,7 @@
 <td class="map-byte">234</td>
 <td class="map-c"><span id="26090"></span><a href="../asm.html#26090">65EA</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26090">Control code $08: set $9CC7 bits 0-4 (via code $03), skip-count 4</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26090">Control code $08: set the column via code $03, then chain into code $04</a></div>
 </td>
 </tr>
 <tr>
@@ -202,7 +202,7 @@
 <td class="map-byte">242</td>
 <td class="map-c"><span id="26098"></span><a href="../asm.html#26098">65F2</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26098">Control code $03: set $9CC7 bits 0-4</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26098">Control code $03: set the cursor column (bits 0-4 of <a href="../asm.html#40135">9CC7</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -210,7 +210,7 @@
 <td class="map-byte">251</td>
 <td class="map-c"><span id="26107"></span><a href="../asm.html#26107">65FB</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26107">Control code $04: convert $9CC7 to screen pixel address</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26107">Control code $04: fold the row into <a href="../asm.html#40135">9CC7</a> and convert it to a screen address</a></div>
 </td>
 </tr>
 <tr>
@@ -218,7 +218,7 @@
 <td class="map-byte">18</td>
 <td class="map-c"><span id="26130"></span><a href="../asm.html#26130">6612</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26130">Control code $05: add code value to $9CC7 low byte</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26130">Control code $05: advance the cursor by the parameter</a></div>
 </td>
 </tr>
 <tr>
@@ -226,7 +226,7 @@
 <td class="map-byte">25</td>
 <td class="map-c"><span id="26137"></span><a href="../asm.html#26137">6619</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26137">Control code $06: compute C, reuse code $04's conversion</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26137">Control code $06: derive the row from <a href="../asm.html#40135">9CC7</a>, then reuse code $04's conversion</a></div>
 </td>
 </tr>
 <tr>
@@ -402,7 +402,7 @@
 <td class="map-byte">137</td>
 <td class="map-c"><span id="27017"></span><a href="../asm.html#27017">6989</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27017">Check for new high score, congratulate and reset defaults if so</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27017">High-score entry: check the score, shuffle the table and type in initials</a></div>
 </td>
 </tr>
 <tr>
@@ -458,7 +458,7 @@
 <td class="map-byte">64</td>
 <td class="map-b"><span id="27456"></span><a href="../asm.html#27456">6B40</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27456">Data block at 6B40</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27456">Object descriptor-record table: 17-byte records from $6B42, pointed at by an object's IY+$02/$03</a></div>
 </td>
 </tr>
 <tr>
@@ -466,7 +466,7 @@
 <td class="map-byte">185</td>
 <td class="map-b"><span id="27577"></span><a href="../asm.html#27577">6BB9</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27577">Data block at 6BB9</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27577">Spawn-parameter table for the player's bomb (<a href="../asm.html#48962">BF42</a>) and enemy bullets (<a href="../asm.html#50236">enemy_fire_steer</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -506,7 +506,7 @@
 <td class="map-byte">78</td>
 <td class="map-b"><span id="32078"></span><a href="../asm.html#32078">7D4E</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#32078">Data block at 7D4E</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#32078">Title-screen attribute data (IY source for <a href="../asm.html#32092">draw_title_block</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -594,7 +594,7 @@
 <td class="map-byte">199</td>
 <td class="map-t"><span id="40135"></span><a href="../asm.html#40135">9CC7</a></td>
 <td class="map-t-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40135">Message at 9CC7</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40135">Print cursor (screen address $9CC7, coords $9CC9) and animated colour sequence ($9CCC)</a></div>
 </td>
 </tr>
 <tr>
@@ -602,31 +602,63 @@
 <td class="map-byte">209</td>
 <td class="map-b"><span id="40145"></span><a href="../asm.html#40145">9CD1</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40145">Data block at 9CD1</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40145">Colour-sequence tail, input state, and the keyboard scan tables</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-page">156</td>
-<td class="map-byte">250</td>
-<td class="map-t"><span id="40186"></span><a href="../asm.html#40186">9CFA</a></td>
-<td class="map-t-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40186">Message at 9CFA</a></div>
+<td class="map-byte">240</td>
+<td class="map-b"><span id="40176"></span><a href="../asm.html#40176">9CF0</a></td>
+<td class="map-b-desc">
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40176">Keyboard character map (8 half-rows x 5 keys)</a></div>
 </td>
 </tr>
 <tr>
-<td class="map-page">156</td>
-<td class="map-byte">253</td>
-<td class="map-b"><span id="40189"></span><a href="../asm.html#40189">9CFD</a></td>
+<td class="map-page">157</td>
+<td class="map-byte">24</td>
+<td class="map-b"><span id="40216"></span><a href="../asm.html#40216">9D18</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40189">Data block at 9CFD</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40216">Object-group counters (remaining spawn budget per group)</a></div>
 </td>
 </tr>
 <tr>
-<td class="map-page">158</td>
-<td class="map-byte">253</td>
-<td class="map-b"><span id="40701"></span><a href="../asm.html#40701">9EFD</a></td>
+<td class="map-page">157</td>
+<td class="map-byte">28</td>
+<td class="map-w"><span id="40220"></span><a href="../asm.html#40220">9D1C</a></td>
+<td class="map-w-desc">
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40220">Free-object-list head pointer</a></div>
+</td>
+</tr>
+<tr>
+<td class="map-page">157</td>
+<td class="map-byte">30</td>
+<td class="map-b"><span id="40222"></span><a href="../asm.html#40222">9D1E</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40701">Data block at 9EFD</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40222">Persistent object-list head slots (4 x 6 bytes)</a></div>
+</td>
+</tr>
+<tr>
+<td class="map-page">157</td>
+<td class="map-byte">54</td>
+<td class="map-w"><span id="40246"></span><a href="../asm.html#40246">9D36</a></td>
+<td class="map-w-desc">
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40246">Vector record the persistent slots point at</a></div>
+</td>
+</tr>
+<tr>
+<td class="map-page">157</td>
+<td class="map-byte">64</td>
+<td class="map-b"><span id="40256"></span><a href="../asm.html#40256">9D40</a></td>
+<td class="map-b-desc">
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40256">Object pool: 19 objects of 29 bytes</a></div>
+</td>
+</tr>
+<tr>
+<td class="map-page">159</td>
+<td class="map-byte">103</td>
+<td class="map-b"><span id="40807"></span><a href="../asm.html#40807">9F67</a></td>
+<td class="map-b-desc">
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#40807">Spare RAM above the object pool</a></div>
 </td>
 </tr>
 <tr>
@@ -642,7 +674,7 @@
 <td class="map-byte">146</td>
 <td class="map-b"><span id="41106"></span><a href="../asm.html#41106">A092</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#41106">Data block at A092</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#41106">Jump-table terminator, then the score-value table at $A094 (3 bytes/entry, see <a href="../asm.html#26293">add_score</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -722,7 +754,7 @@
 <td class="map-byte">186</td>
 <td class="map-b"><span id="41402"></span><a href="../asm.html#41402">A1BA</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#41402">Data block at A1BA</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#41402">Sound-effect state: pending priority ($A1BA), segment marker ($A1BB), parameter working buffer ($A1BC)</a></div>
 </td>
 </tr>
 <tr>
@@ -1082,7 +1114,7 @@
 <td class="map-byte">141</td>
 <td class="map-c"><span id="44173"></span><a href="../asm.html#44173">AC8D</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#44173">Routine at AC8D</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#44173">Object render pass: clip each object's sprite and emit a drawing program</a></div>
 </td>
 </tr>
 <tr>
@@ -1658,7 +1690,7 @@
 <td class="map-byte">89</td>
 <td class="map-c"><span id="50521"></span><a href="../asm.html#50521">C559</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#50521">Allocate object from free-list pool and initialize</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#50521">Allocate and initialize the player's plane object</a></div>
 </td>
 </tr>
 <tr>
@@ -1818,7 +1850,7 @@
 <td class="map-byte">209</td>
 <td class="map-b"><span id="63185"></span><a href="../asm.html#63185">F6D1</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#63185">Data block at F6D1</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#63185">Scroll ring buffer: staging row at $F6D1 built by <a href="../asm.html#51276">build_scroll_row</a>, ring wrapping at $FA79</a></div>
 </td>
 </tr>
 <tr>
@@ -1834,7 +1866,7 @@
 <td class="map-byte">0</td>
 <td class="map-b"><span id="65024"></span><a href="../asm.html#65024">FE00</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65024">Data block at FE00</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65024">IM 2 vector table (257 bytes of $FD, so every vector reaches the trampoline at <a href="../asm.html#65021">im2_trampoline</a>)</a></div>
 </td>
 </tr>
 <tr>
@@ -1842,7 +1874,7 @@
 <td class="map-byte">0</td>
 <td class="map-b"><span id="65280"></span><a href="../asm.html#65280">FF00</a></td>
 <td class="map-b-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65280">Data block at FF00</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65280">PDS development monitor (left in the snapshot, not game code)</a></div>
 </td>
 </tr>
 <tr>
@@ -1850,7 +1882,7 @@
 <td class="map-byte">196</td>
 <td class="map-t"><span id="65476"></span><a href="../asm.html#65476">FFC4</a></td>
 <td class="map-t-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65476">Message at FFC4</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#65476">PDS monitor banner string</a></div>
 </td>
 </tr>
 <tr>

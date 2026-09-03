@@ -108,11 +108,10 @@ exactly with $D600 being the very next table. All 256 slots have B-lines in
 the ctl now, even though only indices up to $F4 are actually used by any
 room.
 
-Each 16-byte back-tile definition is very likely a 4x4 arrangement of 8x8
-**tile** indices (not raw pixel data - 16 bytes is too small to be 16 rows of
-pixels for a 4-row-tall shape, but fits perfectly as "16 single-byte tile
-indices" for a 4x4 grid). Decoded and copied by `$9914` into a 32x16 room
-tile-index map at `$F800`.
+Each 16-byte back-tile definition is a 4x4 arrangement of 8x8 **tile**
+indices - confirmed by `$9914`, which walks each definition 16 bytes at a
+time and scatters them into a 4x4 block of the room tile-index map at
+`$F800`.
 
 ### $F800 - room tile-index map
 
@@ -135,6 +134,32 @@ So there's no separate "tile bitmap table" address - tile pixel data lives
 wherever `$5B72` currently points (set to `$F000` at game init, `#R$8F47`),
 8 bytes per tile index. `$DF00` is the tile-index -> attribute/color lookup.
 
+### Two tile sets ($918C / $918D)
+
+The upper half of both lookup tables is swappable, so tile indices $80-$FF
+mean different things in different rooms:
+
+| Table | Live, tiles $00-$7F | Live, tiles $80-$FF | Spare copy |
+|---|---|---|---|
+| Pixel bitmaps (8 bytes/tile) | $F000 | $F400 | $FA00 |
+| Attributes (1 byte/tile) | $DF00 | $DF80 | $C580 |
+
+`$918D` exchanges $F400 with $FA00 (1024 bytes) and $DF80 with $C580 (128
+bytes), then flips the flag at `$918C`: 0 = base set, $FF = alternate. It
+swaps rather than copies, so the outgoing set is preserved and rooms can move
+between the two sets freely.
+
+`$9880` calls it on every room entry to make `$918C` match whether the room
+appears in the 15-entry list at $9AC6; `$8F47` and `$9090` force the base set
+back in. The lower half ($00-$7F) is never swapped, so those tile indices are
+shared by both sets.
+
+`$918C` also selects between paired variants elsewhere - the solid-tile and
+special-tile lists used for collision ($A234/$A24B for the base set,
+$A264/$A271 for the alternate), the sparkle effect lists ($9AD5 vs $9AE5) and
+their draw routines ($91C0 vs $92BD). It is not a music flag - the music
+player is the separate paged-bank routine reached via `$9491`.
+
 ## Room setup dispatcher ($9855 / $9880 / $9914)
 
 Called every time `$5C01` changes (edge transition, respawn, or game init) -
@@ -142,17 +167,17 @@ this is the "build new room" entry point:
 
 - `$9855`: entry point. Room-number based special-case check via a
   bit7-terminated list at $9AF5, then falls through to $9880.
-- `$9880`: per-room setup - selects music track (15-entry table at $9AC6),
-  clears/rebuilds a 31-byte command/animation list at $9AD5 via `$9A8C`,
+- `$9880`: per-room setup - looks the room up in the 15-entry list at $9AC6
+  and calls `$918D` as needed so the tileset flag `$918C` matches (see "Two
+  tile sets" above), clears/rebuilds a 31-byte command/animation list at
+  $9AD5 via `$9A8C`,
   resets several per-room counters, tunes `$A6F5` for room $10 (=6, default
   7), and for room $1C (if `$5C24` set) initializes a 12-entry moving-lift
   table at $F808 (pointers to $9998, stride 31 - ties to sprite #31 "Lift").
 - `$9914`: builds the room's tile background (see above).
 
-## Related memory files
+## Related docs
 
-- `project_terramex_map.md` - player-made world maps, 6-level/12-column
-  layout facts.
 - `Items-Format.md` - the $8400 sprite/item table and inventory log at
   $5B7C.
 - `Actors.md` - hero input/movement/status-code machinery, and creature

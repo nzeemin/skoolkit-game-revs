@@ -45,7 +45,7 @@ used by the inventory log (see below) and by the sprite-draw dispatcher at `#R$9
 
 All 32 items are now named.
 
-## Inventory ($5B7C, 26 bytes)
+## Inventory ($5B7C, 27 bytes)
 
 `$5B7C` is a sequential item-pickup log, one byte per collected item, holding the
 item's table index (0-31, see above). `$FF` marks a slot not yet used.
@@ -55,20 +55,17 @@ item's table index (0-31, see above). `$FF` marks a slot not yet used.
 - The **last non-`$FF` entry is the item currently carried/in-hand**.
 - Cleared to all-`$FF` at game init (`#R$8F47`).
 
-Confirmed live via the Emu80 MCP debugger: after collecting Umbrella (#5), ACME
-Expanding Bridge (#11), Unicycle (#0), and a small barrel, the log read
-`01 02 0D 05 0B 00 03 0A 07 0C 06 1B FF FF ...` — the last filled slot ($1B = #27,
-"Barrel Big") matched the barrel actually being held, and #5/#11/#0 both appeared
-earlier in the log, matching Umbrella/Bridge/Unicycle from an earlier pickup.
-
-A "Barrel Medium" (#9) was live-poked into slot 12 of this log via `mem_write` to
-test the theory, and it did equip as the held item — confirming both the log
-mechanism and the "last slot = held item" rule.
+Both rules are confirmed live. A log read during play held
+`01 02 0D 05 0B 00 03 0A 07 0C 06 1B FF FF ...`, with the last filled slot
+($1B = #27, "Barrel Big") matching the item the hero was carrying, and the
+earlier entries matching items picked up before it. Writing a different index
+into the last filled slot changes the held item accordingly.
 
 ## Open questions
 
-- Whether there's a fourth barrel size not yet found (Small/Medium/Big/Beer Barrel
-  confirmed so far).
-- Whether the log has a fixed capacity of 26 (matching $5B7C's 26-byte size) or
-  whether some other mechanism (e.g. wrap-around, or per-bearer slots) kicks in
-  once all 26 are used — not tested.
+- Whether indices 25 and 30 are really both "Busket" - the ctl gives both
+  $8B08 and $8C70 that name, so one of them is probably a different object
+  that has not been told apart from the other yet.
+- What happens once all 27 slots are full - `$BB5D` simply finds no free
+  entry and skips the pickup; whether the game is winnable without ever
+  needing a 28th slot hasn't been checked.

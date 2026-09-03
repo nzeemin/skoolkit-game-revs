@@ -26,17 +26,28 @@ Confirmed fields, offsets from the slot base (IX):
 | +2 | Type/animation-frame byte. `$FF`=inactive, `$FE`=just cleared (see $9D21/$BEDD). For creatures, also doubles as the type ID copied from the room data table ($C152) at spawn. |
 | +3 | Direction/flag byte, bit7 = facing/direction (set by movement code from velocity sign, e.g. $A3C1), also reused by some creatures as an "armed" flag (SET/RES 7 in $B72D's block) |
 
-A second parallel region at slot-base+$40/+41/+42/+43 caches **screen address
-and plot-routine pointer** for the current frame (written by $9B22 from
-$9CEE's output) - but the *same* offsets ($40/$41) are read by $9D3C as a
-**tile-graphic index** when drawing a tile-based icon for a slot. These are
-probably two different consumers of the same scratch bytes at different
-points in the frame (not a real conflict), but this hasn't been fully
-reconciled - see Open Questions.
+A second parallel region at slot-base+$40..+$43 caches, for the current
+frame, the **screen address** (+$40/+$41) and the **plot-routine pointer**
+(+$42/+$43) that $9CEE returned for the slot's position. $9B22 writes all
+four at the top of the frame ($9B3B-$9B3E stores BC, $9B35-$9B38 stores IY)
+and reads them back at $9B6A; $9BEB and $9D3C both re-read +$40/+$41 as that
+screen address ($9BF4 masks it with `AND $5F`, $9D4A aligns it with
+`AND $F8` - both screen-address operations, not tile-index ones). There is
+no second meaning for these bytes. The `(IX+$40)` writes in $9914 look like
+the same field but are not: $9914 runs with IX=$F800, so they address the
+room tile-index map instead.
 
-$5AE4 is a second, structurally identical 5-slot array processed by the same
-restore-background routine ($9BEB) via $9B22 - purpose not confirmed, likely
-UI/inventory-bar icon positions rather than world objects.
+For the array based at $5B04 the cache therefore occupies $5B44-$5B63, and
+for the $5AE4 array it occupies $5B24-$5B43.
+
+
+$5AE4 is not a second object array, despite $9B22 calling $9BEB with it as a
+base. At the end of each frame ($9BD5-$9BDE) the 32-byte cache at $5B44 is
+LDIR-copied down to $5B24, so $5B24 holds the *previous* frame's screen
+addresses. $9BEB reads only (IX+$40)/(IX+$41), so passing IX=$5AE4 is simply
+$5B24-$40 - an addressing trick to point those two reads at the older copy.
+The bytes at $5AE4-$5AF7 that the other object fields would occupy are never
+read or written by any traced code.
 
 ## Hero
 
@@ -77,15 +88,17 @@ tile directly under the hero against the "standing on hazard" tile IDs
 ($BC/$BD). Standing on one of those for 50 frames (`$5C29` reaching `$32`)
 forces `$5C06=$11`. $A2AC/$A2FA/$A31F/$A30B are the shared "scan a tile
 against a solid/special list" primitives, reused by both hero and creature
-code (lists at $A24B/$A271/$A242/$A268, chosen by whether music is on -
-these are almost certainly *pairs of the same list*, one authored for each
-music state, not different tile sets).
+code (lists at $A234/$A24B for the base tileset and $A264/$A271 for the
+alternate one, chosen by the tileset flag `$918C` - these are *not*
+duplicates: the two solid-tile lists share only their first 15 entries,
+then diverge, and the alternate set treats far more tiles as solid).
 
 ### Status code ($5C06)
 
 `$5C06` is the hero's status/trigger code - **not** the hazard timer (that's
 `$5C07`). Every status change funnels through $AE84/$AE85 (`LD A,code; JP
-$AE85`), which also resets `$5C07` to 0 every time. Known values, all
+$AE85`), which also resets `$5C07` to 0 every time ($AE84 stores 0, the
+$AE85 entry stores A). Known values, all
 inferred from call-site context - **none confirmed against the on-screen
 animation yet**:
 
@@ -178,8 +191,8 @@ rather than through the scan). Whether the bit means "armed"/"consumed" or
 something else isn't confirmed - both places *clear* it, so it can't yet
 be read as a simple armed/consumed toggle. Byte1 holds the type ID in its
 low 5 bits (top 3 bits unconfirmed). Byte2 is decoded by $B95F into an X/Y
-sub-position (via a small rotate sequence) - it does **not** hold the slot
-choice, despite an earlier pass through this doc saying so.
+sub-position (via a small rotate sequence); it does not hold the slot
+choice.
 
 $B93F ($9880/$B5DD/$B9FA all call it on room entry) linearly scans all 31
 entries, comparing byte0 against the current room, and spawns each match
@@ -235,14 +248,6 @@ boss encounter tied to a specific room, not spawned via the $C152 table.
 - What each hero status code ($5C06) actually *looks* like on screen -
   none of the table above has been checked against the live sprite/frame.
   Needs a breakpoint-per-write + screen capture pass.
-- Whether the $5B04-slot-base+$40/+41 "screen address cache" (written by
-  $9B22) and "tile-graphic index" (read by $9D3C) are really the same
-  bytes used for two purposes at different points in the frame, or two
-  different fields that happen to share ctl comments written at different
-  times in this project.
-- What $5AE4's 5-slot array actually holds (processed identically to
-  $5B04's array by $9BEB, but never seen written to directly in the
-  routines traced so far).
 - Byte1/byte2 meaning inside a filled $C152 creature sub-record.
 - What $B99D's entries actually represent (creatures? items? one-off
   triggers?), what byte0's bit7 flag actually means (both places that
@@ -252,5 +257,3 @@ boss encounter tied to a specific room, not spawned via the $C152 table.
   layout - a stray `(IX+7)` write seen in $B93F falls outside the 4-field
   record documented above, so the two record shapes haven't been
   reconciled.
-- Whether the $A24B/$A271 and $A242/$A268 tile lists are truly music-on/
-  music-off duplicates of the same list, or carry different tile sets.

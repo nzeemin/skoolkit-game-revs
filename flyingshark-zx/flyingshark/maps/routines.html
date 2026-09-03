@@ -34,61 +34,61 @@
 <tr>
 <td class="map-c"><span id="25804"></span><a href="../asm.html#25804">64CC</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25804">Print character to screen using ROM font (pixel-shifted blit)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#25804">Print character to screen using ROM font (fattened, double-height)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26053"></span><a href="../asm.html#26053">65C5</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26053">Control code $00: reset $9CC9 row, skip-count 7</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26053">Control code $00: set the top cell's colour, then chain into code $07</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26062"></span><a href="../asm.html#26062">65CE</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26062">Control code $07: set $9CCA to code value</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26062">Control code $07: set the bottom cell's colour ($9CCA)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26067"></span><a href="../asm.html#26067">65D3</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26067">Control code $01: set $9CC9 bits 0-2</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26067">Control code $01: set the top cell's ink (bits 0-2 of $9CC9)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26076"></span><a href="../asm.html#26076">65DC</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26076">Control code $02: set $9CC9 bits 3-5</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26076">Control code $02: set the top cell's paper (bits 3-5 of $9CC9)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26090"></span><a href="../asm.html#26090">65EA</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26090">Control code $08: set $9CC7 bits 0-4 (via code $03), skip-count 4</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26090">Control code $08: set the column via code $03, then chain into code $04</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26098"></span><a href="../asm.html#26098">65F2</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26098">Control code $03: set $9CC7 bits 0-4</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26098">Control code $03: set the cursor column (bits 0-4 of <a href="../asm.html#40135">9CC7</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26107"></span><a href="../asm.html#26107">65FB</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26107">Control code $04: convert $9CC7 to screen pixel address</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26107">Control code $04: fold the row into <a href="../asm.html#40135">9CC7</a> and convert it to a screen address</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26130"></span><a href="../asm.html#26130">6612</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26130">Control code $05: add code value to $9CC7 low byte</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26130">Control code $05: advance the cursor by the parameter</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="26137"></span><a href="../asm.html#26137">6619</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26137">Control code $06: compute C, reuse code $04's conversion</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#26137">Control code $06: derive the row from <a href="../asm.html#40135">9CC7</a>, then reuse code $04's conversion</a></div>
 </td>
 </tr>
 <tr>
@@ -214,7 +214,7 @@
 <tr>
 <td class="map-c"><span id="27017"></span><a href="../asm.html#27017">6989</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27017">Check for new high score, congratulate and reset defaults if so</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#27017">High-score entry: check the score, shuffle the table and type in initials</a></div>
 </td>
 </tr>
 <tr>
@@ -580,7 +580,7 @@
 <tr>
 <td class="map-c"><span id="44173"></span><a href="../asm.html#44173">AC8D</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#44173">Routine at AC8D</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#44173">Object render pass: clip each object's sprite and emit a drawing program</a></div>
 </td>
 </tr>
 <tr>
@@ -1012,7 +1012,7 @@
 <tr>
 <td class="map-c"><span id="50521"></span><a href="../asm.html#50521">C559</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#50521">Allocate object from free-list pool and initialize</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#50521">Allocate and initialize the player's plane object</a></div>
 </td>
 </tr>
 <tr>

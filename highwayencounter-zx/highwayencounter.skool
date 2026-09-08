@@ -1,8 +1,4 @@
 ; Screen
-;
-; #UDGTABLE
-; { #SCR(loading) }
-; TABLE#
 s$4000 DEFS $1800    ; Screen pixel data
  $5800 DEFS $0300    ; Screen attributes
 
@@ -851,21 +847,24 @@ b$8F00 DEFB $01                             ; Zone number
 ; Redirects
 ;
 ; Used by the routine at #R$B0DE.
-c$8F79 JP $A367      ;
+c$8F79 JP $A367      ; => Run the DEMO MODE loop
 ; This entry point is used by the routines at #R$B41B and #R$B4D0.
-*$8F7C JP $99D1      ; Draw sprite with shift by 4px
+*$8F7C JP $99D1      ; => Draw sprite with shift by 4px
 ; This entry point is used by the routine at #R$B41B.
-*$8F7F JP $9A26      ; Draw sprite with shift by 2px
+*$8F7F JP $9A26      ; => Draw sprite with shift by 2px
 ; This entry point is used by the routines at #R$B41B and #R$B4D0.
-*$8F82 JP $9A70      ; Draw sprite with no shift
+*$8F82 JP $9A70      ; => Draw sprite with no shift
 ; This entry point is used by the routines at #R$B41B and #R$B4D0.
-*$8F85 JP $9933      ; Draw sprite with shift by -2px
+*$8F85 JP $9933      ; => Draw sprite with shift by -2px
  $8F88 NOP           ;
 
-; Routine ?? work on table $7B00
-c$8F89 DEFB $00      ;
-; This entry point is used by the routine at #R$90F2.
-*$8F8A LD IX,$7B00   ; global objects table
+; Pending object movement-tick count
+b$8F89 DEFB $00
+
+; Advance object movement timers by pending ticks
+;
+; Used by the routine at #R$90F2.
+c$8F8A LD IX,$7B00   ; global objects table
  $8F8E LD A,($8F89)  ;
  $8F91 AND A         ;
  $8F92 RET Z         ;
@@ -913,9 +912,22 @@ w$9000 DEFW $9ED7,$9FDF,$9F20,$9F20,$9F20,$9F20,$9F20,$9ED7
  $90E0 DEFW $9E12,$9E12,$9E12,$9E12,$9E12,$9E12,$9E12,$9E12
  $90F0 DEFW $9E8E
 
-; Routine: GAME MODE
+; GAME MODE
 ;
 ; Used by the routine at #R$B0DE.
+;
+; .
+;
+; Top-level game loop. Zeroes the six score digits, prints the score and
+; initialises the speed level, then runs the per-frame loop from #R$9107. Each
+; tick redraws the intro furniture, polls the abort and pause keys, then
+; removes objects from the shadow screen, runs object logic and movement, sorts
+; the objects by depth and draws them (#R$985A), and flushes the changes to the
+; screen (#R$9A9B). It then tests the zone-30 endgame trigger, counts the
+; Mission Time down, burns a short R-register delay, and walks the object table
+; advancing the Vorton indicators. The loop ends when the player aborts, time
+; runs out, or every Vorton is dead, printing the matching message and
+; returning.
 c$90F2 CALL $A450    ; check score
  $90F5 LD HL,$A481   ; Score
  $90F8 LD B,$06      ; counter = 6
@@ -1082,7 +1094,7 @@ c$90F2 CALL $A450    ; check score
  $9226 ADD HL,DE     ; HL points to (+$0A)
  $9227 LD (HL),$0E   ; set sprite number offset
 ; Reset the scene to continue with the new Main Vorton
- $9229 CALL $92CE    ;
+ $9229 CALL $92CE    ; Prepare objects for the current Zone
  $922C CALL $95EF    ; Show the screen
  $922F JP $910A      ; continue main loop
 
@@ -1222,11 +1234,15 @@ c$92CE LD HL,$8D52   ;
  $938C LD E,A        ;
  $938D ADD HL,DE     ;
  $938E CALL $9394    ; show second ZONE digit
- $9391 JP $93B7      ;
+ $9391 JP $93B7      ; => Build the current-zone object list from the master
+                     ; object table
 
 ; Draw digit with size of 16x24 pixels into the ZONE indicator
 ;
 ; Used by the routine at #R$92CE.
+;
+; HL Pointer to the 6 tile numbers
+; IX Pointer to the 6 screen-position low bytes (page $50)
 c$9394 LD C,$06      ;
 *$9396 LD E,(HL)     ; get sprite number
  $9397 PUSH HL       ;
@@ -1252,7 +1268,7 @@ c$9394 LD C,$06      ;
  $93B4 JR NZ,$9396   ; repeat
  $93B6 RET           ;
 
-; Routine
+; Build the current-zone object list from the master object table
 ;
 ; Used by the routine at #R$92CE.
 ;
@@ -1526,23 +1542,29 @@ c$95EF LD HL,$FD00   ;
 ; Draw zone border line
 ;
 ; Used by the routine at #R$95EF.
-c$9633 LD C,$05      ;
- $9635 LD DE,$0020   ;
-*$9638 LD IX,$7110   ;
- $963C LD B,$04      ;
-*$963E LD A,(IX+$00) ;
- $9641 LD (HL),A     ;
+;
+; HL Screen address to draw the border line at
+;
+; Paints a 5-segment border stripe down the screen: each segment copies a
+; 4-byte pattern into a left column and a right column (from #R$7110, stride
+; 32), then steps one character to the right.
+c$9633 LD C,$05      ; 5. segments
+ $9635 LD DE,$0020   ; stride to the next char-line
+*$9638 LD IX,$7110   ; border pattern data
+ $963C LD B,$04      ; 4. char-lines
+*$963E LD A,(IX+$00) ; {copy one pattern byte
+ $9641 LD (HL),A     ; }
  $9642 INC IX        ;
- $9644 ADD HL,DE     ;
+ $9644 ADD HL,DE     ; down one char-line
  $9645 DJNZ $963E    ;
- $9647 INC HL        ;
- $9648 LD B,$04      ;
+ $9647 INC HL        ; skip a column
+ $9648 LD B,$04      ; 4. char-lines
 *$964A LD A,(IX+$00) ;
  $964D LD (HL),A     ;
  $964E INC IX        ;
  $9650 ADD HL,DE     ;
  $9651 DJNZ $964A    ;
- $9653 INC HL        ;
+ $9653 INC HL        ; next segment column
  $9654 DEC C         ;
  $9655 JR NZ,$9638   ;
  $9657 RET           ;
@@ -1747,76 +1769,80 @@ c$9658 DEFB $0C      ; Pattern column height, in char-lines
  $979F LD (HL),$00   ;
  $97A1 LD BC,$023F   ;
  $97A4 LDDR          ;
- $97A6 LD HL,$D905   ;
- $97A9 LD DE,$4000   ; Screen address
- $97AC LD A,$12      ;
+; Blit the finished land buffer to the real screen: an 18-row block copy of the
+; main field, a full attribute repaint, the 4096-byte middle copy, an
+; edge-strip fixup for the columns the block copy missed, then clear the
+; draw-flags area and chain to #R$A546.
+ $97A6 LD HL,$D905   ; source = shadow land buffer
+ $97A9 LD DE,$4000   ; screen address
+ $97AC LD A,$12      ; 18. char-rows
 *$97AE EX AF,AF'     ;
- $97AF LD A,$08      ;
+ $97AF LD A,$08      ; 8. pixel-lines
  $97B1 PUSH DE       ;
 *$97B2 PUSH DE       ;
- $97B3 LD BC,$0020   ;
- $97B6 LDIR          ;
+ $97B3 LD BC,$0020   ; 32. bytes per line
+ $97B6 LDIR          ; copy one pixel-line
  $97B8 POP DE        ;
- $97B9 INC D         ;
+ $97B9 INC D         ; next pixel-line
  $97BA DEC A         ;
  $97BB JR NZ,$97B2   ;
  $97BD POP DE        ;
  $97BE EX DE,HL      ;
- $97BF RRC H         ;
+ $97BF RRC H         ; {char-row down: rotate H
  $97C1 RRC H         ;
- $97C3 RRC H         ;
- $97C5 LD BC,$0020   ;
- $97C8 ADD HL,BC     ;
- $97C9 RLC H         ;
+ $97C3 RRC H         ; }
+ $97C5 LD BC,$0020   ; {add 32. to the address
+ $97C8 ADD HL,BC     ; }
+ $97C9 RLC H         ; {rotate H back
  $97CB RLC H         ;
- $97CD RLC H         ;
+ $97CD RLC H         ; }
  $97CF EX DE,HL      ;
  $97D0 EX AF,AF'     ;
- $97D1 DEC A         ;
- $97D2 JR NZ,$97AE   ;
- $97D4 LD HL,$FF3F   ;
- $97D7 LD DE,$5A3F   ;
- $97DA LD BC,$0240   ;
- $97DD LDDR          ;
+ $97D1 DEC A         ; {next char-row
+ $97D2 JR NZ,$97AE   ; }
+ $97D4 LD HL,$FF3F   ; fill source = $FF
+ $97D7 LD DE,$5A3F   ; attribute file
+ $97DA LD BC,$0240   ; 576. bytes
+ $97DD LDDR          ; paint every attribute
  $97DF LD HL,$DB05   ;
  $97E2 LD DE,$EB00   ;
  $97E5 LD BC,$1000   ;
  $97E8 LDIR          ; Copy main part, 4096. bytes, 128. lines
- $97EA LD C,$0F      ; 15.
+ $97EA LD C,$0F      ; 15. bytes per strip line
  $97EC LD B,$02      ; 2x8 lines remaining to copy
- $97EE LD HL,$D916   ;
- $97F1 LD DE,$E911   ;
-*$97F4 LD A,$08      ;
+ $97EE LD HL,$D916   ; right-edge source strip
+ $97F1 LD DE,$E911   ; right-edge screen address
+*$97F4 LD A,$08      ; 8. pixel-lines
 *$97F6 PUSH BC       ;
- $97F7 LD B,$00      ;
+ $97F7 LD B,$00      ; byte count high = 0
  $97F9 PUSH HL       ;
  $97FA PUSH DE       ;
- $97FB LDIR          ;
+ $97FB LDIR          ; copy one strip line
  $97FD POP DE        ;
  $97FE POP HL        ;
- $97FF LD BC,$0020   ;
- $9802 ADD HL,BC     ;
- $9803 EX DE,HL      ;
+ $97FF LD BC,$0020   ; {advance the source one line
+ $9802 ADD HL,BC     ; }
+ $9803 EX DE,HL      ; {advance the dest one line
  $9804 ADD HL,BC     ;
- $9805 EX DE,HL      ;
+ $9805 EX DE,HL      ; }
  $9806 POP BC        ;
  $9807 DEC A         ;
  $9808 JR NZ,$97F6   ;
- $980A DEC L         ;
+ $980A DEC L         ; {back up both pointers
  $980B DEC L         ;
  $980C DEC E         ;
- $980D DEC E         ;
- $980E INC C         ;
- $980F INC C         ;
- $9810 DJNZ $97F4    ;
- $9812 LD HL,$FD00   ;
+ $980D DEC E         ; }
+ $980E INC C         ; {shift the strip right by 2
+ $980F INC C         ; }
+ $9810 DJNZ $97F4    ; next char-column
+ $9812 LD HL,$FD00   ; draw-flags area
  $9815 LD DE,$FD01   ;
- $9818 LD (HL),$00   ;
+ $9818 LD (HL),$00   ; clear byte = $00
  $981A LD BC,$0240   ; 576.
  $981D LDIR          ;
  $981F JP $A546      ; Draw flat blockers
 
-; Routine
+; Remove objects from the shadow screen
 ;
 ; Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 c$9822 LD HL,$8D52   ;
@@ -1861,6 +1887,18 @@ c$9822 LD HL,$8D52   ;
 ; Sort Objects
 ;
 ; Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
+;
+; .
+;
+; Builds the far-to-near draw list at $8D52 and then draws it. Walks the active
+; object table (#R$8F01), skipping empty, out-of-zone and non-visible records
+; (movement patterns $16 and $19); for each survivor it derives a depth key
+; from the object's Z position and height and insertion-sorts it into $8D52 -
+; scanning for the first entry with a greater-or-equal key, opening a gap with
+; LDDR, and storing the key plus the record pointer. Once the list is complete
+; it falls through at #R$98DC into the draw pass, which reads the entries back
+; in order, blits each object's sprite and flags the touched cells for redraw
+; (#R$9980).
 c$985A LD IX,($8F01)  ;
  $985E LD HL,$8D52    ; start of table 8D52
  $9861 LD ($8F0B),HL  ; save address in table 8D52
@@ -1968,45 +2006,45 @@ c$985A LD IX,($8F01)  ;
  $9913 EX (SP),HL     ; restore HL and set value on stack
  $9914 JP (HL)        ; Draw the sprite
  $9915 CALL $99D1     ; Draw sprite with shift by 4px
- $9918 JP $9980       ;
+ $9918 JP $9980       ; => Sort Objects
  $991B NOP            ;
  $991C NOP            ;
  $991D CALL $9A26     ; Draw sprite with shift by 2px
- $9920 JP $9980       ;
+ $9920 JP $9980       ; => Sort Objects
  $9923 NOP            ;
  $9924 NOP            ;
  $9925 CALL $9A70     ; Draw sprite with no shift
- $9928 JP $9980       ;
+ $9928 JP $9980       ; => Sort Objects
  $992B NOP            ;
  $992C NOP            ;
  $992D CALL $9933     ; Draw sprite with shift by -2px
- $9930 JP $9980       ;
+ $9930 JP $9980       ; => Sort Objects
 
 ; Draw sprite with shift by -2px
 ;
 ; Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
 ;
-; BC ??
+; BC Screen address to draw the sprite at
 ; DE Mask and Sprite address
 c$9933 LD L,C        ;
  $9934 LD H,B        ;
  $9935 LD A,$18      ; Sprite height = 24.
-*$9937 EX AF,AF'     ;
+*$9937 EX AF,AF'     ; store counter A
  $9938 EX DE,HL      ;
- $9939 LD A,(HL)     ;
+ $9939 LD A,(HL)     ; Get mask byte 0
  $993A INC HL        ;
- $993B LD B,(HL)     ;
+ $993B LD B,(HL)     ; Get mask byte 1
  $993C INC HL        ;
- $993D LD C,(HL)     ;
+ $993D LD C,(HL)     ; Get mask byte 2
  $993E INC HL        ;
- $993F SRA A         ;
+ $993F SRA A         ; {Shift right by 1
  $9941 RR B          ;
- $9943 RR C          ;
- $9945 SRA A         ;
+ $9943 RR C          ; }
+ $9945 SRA A         ; {Shift right by 2
  $9947 RR B          ;
- $9949 RR C          ;
+ $9949 RR C          ; }
  $994B EX DE,HL      ;
- $994C AND (HL)      ;
+ $994C AND (HL)      ; AND the shifted mask into the screen bytes
  $994D LD (HL),A     ;
  $994E LD A,B        ;
  $994F INC HL        ;
@@ -2019,20 +2057,20 @@ c$9933 LD L,C        ;
  $9956 DEC HL        ;
  $9957 DEC HL        ;
  $9958 EX DE,HL      ;
- $9959 LD A,(HL)     ;
+ $9959 LD A,(HL)     ; Get sprite byte 0
  $995A INC HL        ;
- $995B LD B,(HL)     ;
+ $995B LD B,(HL)     ; Get sprite byte 1
  $995C INC HL        ;
- $995D LD C,(HL)     ;
+ $995D LD C,(HL)     ; Get sprite byte 2
  $995E INC HL        ;
- $995F SRL A         ;
+ $995F SRL A         ; {Shift right by 1
  $9961 RR B          ;
- $9963 RR C          ;
- $9965 SRL A         ;
+ $9963 RR C          ; }
+ $9965 SRL A         ; {Shift right by 2
  $9967 RR B          ;
- $9969 RR C          ;
+ $9969 RR C          ; }
  $996B EX DE,HL      ;
- $996C OR (HL)       ;
+ $996C OR (HL)       ; OR the shifted sprite into the screen bytes
  $996D LD (HL),A     ;
  $996E LD A,B        ;
  $996F INC HL        ;
@@ -2042,14 +2080,14 @@ c$9933 LD L,C        ;
  $9973 INC HL        ;
  $9974 OR (HL)       ;
  $9975 LD (HL),A     ;
- $9976 LD BC,$FFDE   ;
+ $9976 LD BC,$FFDE   ; -34. = one line up
  $9979 ADD HL,BC     ;
- $997A EX AF,AF'     ;
- $997B DEC A         ;
- $997C JP NZ,$9937   ;
+ $997A EX AF,AF'     ; restore counter A
+ $997B DEC A         ; {loop by sprite height
+ $997C JP NZ,$9937   ; }
  $997F RET           ;
 
-; Routine
+; Sort Objects: flag a drawn sprite's char-cells for redraw
 ;
 ; Used by the routine at #R$985A.
 c$9980 POP HL        ;
@@ -2112,7 +2150,7 @@ c$9980 POP HL        ;
 ;
 ; Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
 ;
-; BC ??
+; BC Screen address to draw the sprite at
 ; DE Mask and Sprite address
 c$99D1 LD H,B        ;
  $99D2 LD L,C        ;
@@ -2183,28 +2221,28 @@ c$99D1 LD H,B        ;
 ;
 ; Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
 ;
-; BC ??
+; BC Screen address to draw the sprite at
 ; DE Mask and Sprite address
 c$9A26 LD H,B        ;
  $9A27 LD L,C        ;
  $9A28 LD A,$18      ; loop counter = 24.
-*$9A2A EX AF,AF'     ;
+*$9A2A EX AF,AF'     ; store counter A
  $9A2B EX DE,HL      ;
- $9A2C LD A,(HL)     ;
+ $9A2C LD A,(HL)     ; Get mask byte 0
  $9A2D INC HL        ;
- $9A2E LD B,(HL)     ;
+ $9A2E LD B,(HL)     ; Get mask byte 1
  $9A2F INC HL        ;
- $9A30 LD C,(HL)     ;
+ $9A30 LD C,(HL)     ; Get mask byte 2
  $9A31 INC HL        ;
- $9A32 SCF           ;
+ $9A32 SCF           ; {Shift left by 1
  $9A33 RL C          ;
  $9A35 RL B          ;
- $9A37 RLA           ;
- $9A38 RL C          ;
+ $9A37 RLA           ; }
+ $9A38 RL C          ; {Shift left by 2
  $9A3A RL B          ;
- $9A3C RLA           ;
+ $9A3C RLA           ; }
  $9A3D EX DE,HL      ;
- $9A3E AND (HL)      ;
+ $9A3E AND (HL)      ; AND the shifted mask into the screen bytes
  $9A3F LD (HL),A     ;
  $9A40 LD A,B        ;
  $9A41 INC HL        ;
@@ -2217,20 +2255,20 @@ c$9A26 LD H,B        ;
  $9A48 DEC HL        ;
  $9A49 DEC HL        ;
  $9A4A EX DE,HL      ;
- $9A4B LD A,(HL)     ;
+ $9A4B LD A,(HL)     ; Get sprite byte 0
  $9A4C INC HL        ;
- $9A4D LD B,(HL)     ;
+ $9A4D LD B,(HL)     ; Get sprite byte 1
  $9A4E INC HL        ;
- $9A4F LD C,(HL)     ;
+ $9A4F LD C,(HL)     ; Get sprite byte 2
  $9A50 INC HL        ;
- $9A51 SLA C         ;
+ $9A51 SLA C         ; {Shift left by 1
  $9A53 RL B          ;
- $9A55 RLA           ;
- $9A56 SLA C         ;
+ $9A55 RLA           ; }
+ $9A56 SLA C         ; {Shift left by 2
  $9A58 RL B          ;
- $9A5A RLA           ;
+ $9A5A RLA           ; }
  $9A5B EX DE,HL      ;
- $9A5C OR (HL)       ;
+ $9A5C OR (HL)       ; OR the shifted sprite into the screen bytes
  $9A5D LD (HL),A     ;
  $9A5E LD A,B        ;
  $9A5F INC HL        ;
@@ -2240,9 +2278,9 @@ c$9A26 LD H,B        ;
  $9A63 INC HL        ;
  $9A64 OR (HL)       ;
  $9A65 LD (HL),A     ;
- $9A66 LD BC,$FFDE   ;
+ $9A66 LD BC,$FFDE   ; -34. = one line up
  $9A69 ADD HL,BC     ;
- $9A6A EX AF,AF'     ;
+ $9A6A EX AF,AF'     ; restore counter A
  $9A6B DEC A         ; repeat the loop
  $9A6C JP NZ,$9A2A   ;
  $9A6F RET           ;
@@ -2251,43 +2289,43 @@ c$9A26 LD H,B        ;
 ;
 ; Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
 ;
-; BC ??
+; BC Screen address to draw the sprite at
 ; DE Mask and Sprite address
 c$9A70 LD H,B        ;
  $9A71 LD L,C        ;
  $9A72 LD B,$18      ; loop counter = 24.
-*$9A74 LD A,(DE)     ;
+*$9A74 LD A,(DE)     ; {AND mask byte 0 into the screen
  $9A75 AND (HL)      ;
- $9A76 LD (HL),A     ;
+ $9A76 LD (HL),A     ; }
  $9A77 INC DE        ;
  $9A78 INC HL        ;
- $9A79 LD A,(DE)     ;
+ $9A79 LD A,(DE)     ; {AND mask byte 1
  $9A7A AND (HL)      ;
- $9A7B LD (HL),A     ;
+ $9A7B LD (HL),A     ; }
  $9A7C INC DE        ;
  $9A7D INC HL        ;
- $9A7E LD A,(DE)     ;
+ $9A7E LD A,(DE)     ; {AND mask byte 2
  $9A7F AND (HL)      ;
- $9A80 LD (HL),A     ;
+ $9A80 LD (HL),A     ; }
  $9A81 INC DE        ;
- $9A82 DEC HL        ;
- $9A83 DEC HL        ;
- $9A84 LD A,(DE)     ;
+ $9A82 DEC HL        ; {back to the first byte
+ $9A83 DEC HL        ; }
+ $9A84 LD A,(DE)     ; {OR sprite byte 0 into the screen
  $9A85 OR (HL)       ;
- $9A86 LD (HL),A     ;
+ $9A86 LD (HL),A     ; }
  $9A87 INC DE        ;
  $9A88 INC HL        ;
- $9A89 LD A,(DE)     ;
+ $9A89 LD A,(DE)     ; {OR sprite byte 1
  $9A8A OR (HL)       ;
- $9A8B LD (HL),A     ;
+ $9A8B LD (HL),A     ; }
  $9A8C INC DE        ;
  $9A8D INC HL        ;
- $9A8E LD A,(DE)     ;
+ $9A8E LD A,(DE)     ; {OR sprite byte 2
  $9A8F OR (HL)       ;
- $9A90 LD (HL),A     ;
+ $9A90 LD (HL),A     ; }
  $9A91 INC DE        ;
  $9A92 LD A,B        ;
- $9A93 LD BC,$FFDE   ;
+ $9A93 LD BC,$FFDE   ; -34. = one line up
  $9A96 ADD HL,BC     ;
  $9A97 LD B,A        ;
  $9A98 DJNZ $9A74    ; repeat the loop
@@ -2393,7 +2431,7 @@ c$9A9B LD HL,$9BFC   ;
  $9B39 DEC L         ;
  $9B3A JR NZ,$9B31   ; loop
  $9B3C PUSH DE       ;
- $9B3D CALL $A270    ;
+ $9B3D CALL $A270    ; Get the next random number
  $9B40 POP DE        ;
  $9B41 LD A,L        ;
  $9B42 AND C         ;
@@ -2530,7 +2568,7 @@ b$9BFC DEFB $0A,$E9,$FA,$29,$57,$29,$FF
  $9C73 DEFB $0F,$FF,$E9,$1F,$47,$1F,$FD
  $9C7A DEFB $00
 
-; Routine
+; Process object movement
 ;
 ; Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 c$9C7B LD IX,($8F01)   ;
@@ -3006,7 +3044,7 @@ c$9C7B LD IX,($8F01)   ;
  $A039 NOP             ; Temporary storage for HL
  $A03A NOP             ;
 
-; Routine
+; Objects logic
 ;
 ; Used by the routine at #R$90F2.
 c$A03B LD A,($8F88)  ;
@@ -3043,7 +3081,7 @@ c$A03B LD A,($8F88)  ;
  $A079 SET 4,B       ; "O", left
 *$A07B LD A,B        ;
  $A07C LD ($8F14),A  ; set current action byte
- $A07F JP $A11B      ;
+ $A07F JP $A11B      ; => Objects logic
 *$A082 LD A,$EF      ;
  $A084 IN A,($FE)    ;
  $A086 OR $E0        ;
@@ -3068,7 +3106,7 @@ c$A03B LD A,($8F88)  ;
  $A0AA SET 4,B       ;
 *$A0AC LD A,B        ;
  $A0AD LD ($8F14),A  ;
- $A0B0 JP $A11B      ;
+ $A0B0 JP $A11B      ; => Objects logic
 *$A0B3 LD B,$00      ;
  $A0B5 IN A,($1F)    ;
  $A0B7 BIT 4,A       ;
@@ -3088,7 +3126,7 @@ c$A03B LD A,($8F88)  ;
  $A0D3 SET 4,B       ;
 *$A0D5 LD A,B        ;
  $A0D6 LD ($8F14),A  ;
- $A0D9 JP $A11B      ;
+ $A0D9 JP $A11B      ; => Objects logic
 *$A0DC LD B,$00      ;
  $A0DE LD A,$F7      ;
  $A0E0 IN A,($FE)    ;
@@ -3111,9 +3149,9 @@ c$A03B LD A,($8F88)  ;
  $A102 SET 0,B       ;
 *$A104 LD A,B        ;
  $A105 LD ($8F14),A  ;
- $A108 JP $A11B      ;
+ $A108 JP $A11B      ; => Objects logic
 
-; Routine
+; Restore one unit of power
 ;
 ; Used by the routine at #R$A11B.
 c$A10B EX AF,AF'     ;
@@ -3127,7 +3165,7 @@ c$A10B EX AF,AF'     ;
  $A119 EX AF,AF'     ; restore AF
  $A11A RET           ;
 
-; Routine
+; Objects logic: perform the action
 ;
 ; Used by the routines at #R$A03B and #R$A34D.
 c$A11B LD DE,($8F01) ;
@@ -3337,29 +3375,36 @@ c$A11B LD DE,($8F01) ;
 *$A26E LD (HL),A     ; set Ufo sprite phase
  $A26F RET           ;
 
-; Routine
+; Get the next random number
 ;
 ; Used by the routines at #R$9A9B, #R$9C7B and #R$A8D6.
-c$A270 LD DE,($5C76) ;
+;
+; O:A Next pseudo-random byte
+;
+; Steps the 16-bit seed at $5C76 (first sown from the FRAMES counter) through a
+; fixed multiply-and-reduce and returns the new low byte in A.
+c$A270 LD DE,($5C76) ; DE = current seed
  $A274 LD H,E        ;
- $A275 LD L,$FD      ;
+ $A275 LD L,$FD      ; HL = E:$FD
  $A277 LD A,D        ;
  $A278 OR A          ;
- $A279 SBC HL,DE     ;
+ $A279 SBC HL,DE     ; HL -= seed
  $A27B SBC A,$00     ;
- $A27D SBC HL,DE     ;
+ $A27D SBC HL,DE     ; HL -= seed again
  $A27F SBC A,$00     ;
  $A281 LD E,A        ;
  $A282 LD D,$00      ;
- $A284 SBC HL,DE     ;
- $A286 JR NC,$A289   ;
+ $A284 SBC HL,DE     ; fold the borrow count back in
+ $A286 JR NC,$A289   ; fix up if it underflowed
  $A288 INC HL        ;
-*$A289 LD ($5C76),HL ; ; Write RND SEED variable
+*$A289 LD ($5C76),HL ; store the new seed
  $A28C RET           ;
- $A28D DEFB $02      ;
- $A28E DEFB $02      ;
- $A28F DEFB $00      ;
- $A290 DEFB $00      ;
+
+; Data block at A28D
+b$A28D DEFB $02
+ $A28E DEFB $02
+ $A28F DEFB $00
+ $A290 DEFB $00
 
 ; Intro
 ;
@@ -3457,8 +3502,9 @@ c$A291 LD HL,$8F25   ;
 ;
 ; Used by the routines at #R$A291, #R$A617 and #R$A694.
 ;
-; A ??
-; BC Counter
+; A Action code stored at $8F14 (0=none, 1=fire, $0C=rotate right, $14=rotate
+; . left)
+; B Number of update iterations to run
 c$A34D LD ($8F14),A  ;
 *$A350 PUSH BC       ;
  $A351 CALL $9822    ; Remove objects from the shadow screen
@@ -3473,10 +3519,10 @@ c$A34D LD ($8F14),A  ;
  $A363 LD A,($8A07)  ; Main Vorton direction 0..7
  $A366 RET           ;
 
-; Routine
+; Run the DEMO MODE loop
 ;
 ; Used by the routine at #R$8F79.
-c$A367 CALL $A291    ;
+c$A367 CALL $A291    ; Intro
  $A36A JR $A372      ; jump into the loop
 *$A36C CALL $92CE    ; Prepare objects for the current Zone
  $A36F CALL $95EF    ; Show the screen
@@ -3536,7 +3582,7 @@ c$A367 CALL $A291    ;
  $A3D0 JR NZ,$A3BF   ;
  $A3D2 RET           ;
 
-; Routine
+; Prepare screen and indicators
 ;
 ; Used by the routine at #R$A291.
 c$A3D3 LD HL,$5AFF   ;
@@ -3573,9 +3619,11 @@ c$A3D3 LD HL,$5AFF   ;
  $A411 RET           ;
  $A412 LD B,$04      ;
 
-; Routine
+; Increment the score
 ;
 ; Used by the routines at #R$9A9B, #R$9C7B and #R$A617.
+;
+; B Number of score units to add
 c$A414 LD HL,$A486   ;
 *$A417 LD A,(HL)     ;
  $A418 CP $00        ;
@@ -3792,7 +3840,7 @@ c$A546 LD HL,$A8D5   ;
  $A614 DJNZ $A5FC    ;
  $A616 RET           ;
 
-; Routine
+; Animation in Zone 30
 ;
 ; Used by the routine at #R$90F2.
 c$A617 LD B,$05        ;
@@ -3832,14 +3880,17 @@ c$A617 LD B,$05        ;
  $A665 JR NZ,$A65A     ;
  $A667 LD DE,$A875     ;
  $A66A LD L,$88        ;
- $A66C CALL $A677      ;
+ $A66C CALL $A677      ; Zone 30 animation
  $A66F LD L,$A8        ;
- $A671 CALL $A677      ;
- $A674 JP $A694        ;
+ $A671 CALL $A677      ; Zone 30 animation
+ $A674 JP $A694        ; => Zone 30 animation
 
-; Routine
+; Zone 30 animation: draw an 8-column glyph strip to the screen
 ;
 ; Used by the routine at #R$A617.
+;
+; DE Source glyph data
+; L Screen address low byte (page $50..$53)
 c$A677 LD C,$08      ;
 *$A679 LD B,$05      ;
  $A67B LD H,$50      ;
@@ -3860,7 +3911,7 @@ c$A677 LD C,$08      ;
  $A691 JR NZ,$A679   ;
  $A693 RET           ;
 
-; Routine
+; Zone 30 animation: run the DEMO scroll to Zone 36, then tear down
 ;
 ; Used by the routine at #R$A617.
 c$A694 LD HL,$5AB0   ;
@@ -3900,7 +3951,7 @@ c$A694 LD HL,$5AB0   ;
  $A6CE JR $A6BE      ;
 *$A6D0 LD B,$14      ;
  $A6D2 XOR A         ;
- $A6D3 CALL $A34D    ;
+ $A6D3 CALL $A34D    ; Routine
  $A6D6 LD C,$03      ;
 *$A6D8 LD B,$03      ;
 *$A6DA PUSH BC       ;
@@ -3927,83 +3978,87 @@ c$A694 LD HL,$5AB0   ;
  $A701 LD ($A1CF),A  ; replace fireball with laserbeam
  $A704 LD B,$3C      ;
  $A706 LD A,$01      ; action = fire!
- $A708 CALL $A34D    ;
+ $A708 CALL $A34D    ; Routine
  $A70B LD B,$08      ;
  $A70D XOR A         ;
- $A70E CALL $A34D    ;
+ $A70E CALL $A34D    ; Routine
  $A711 LD A,$16      ;
  $A713 LD ($A1CF),A  ; restore fireball sprite
- $A716 LD HL,$5800   ;
+; Reveal phase: repaint the whole attribute file, then masked-blit a graphic
+; block from the $E60C buffer into the $D90C buffer using the mask table at
+; #R$A84B, blank its top row, copy the result to the top of the screen over 13
+; char-rows, and start a sound.
+ $A716 LD HL,$5800   ; attribute file $5800
  $A719 LD DE,$5801   ;
- $A71C LD (HL),$47   ;
- $A71E LD BC,$0240   ;
- $A721 LDIR          ;
- $A723 LD IX,$A84B   ;
- $A727 LD HL,$D90C   ;
- $A72A LD DE,$E60C   ;
+ $A71C LD (HL),$47   ; attr = $47
+ $A71E LD BC,$0240   ; 576. bytes
+ $A721 LDIR          ; fill the attribute file
+ $A723 LD IX,$A84B   ; mask table $A84B
+ $A727 LD HL,$D90C   ; source buffer
+ $A72A LD DE,$E60C   ; destination buffer
 *$A72D PUSH HL       ;
  $A72E PUSH DE       ;
- $A72F LD C,$1A      ;
+ $A72F LD C,$1A      ; 26. rows
 *$A731 PUSH DE       ;
- $A732 LD B,$19      ;
+ $A732 LD B,$19      ; 25. columns
 *$A734 PUSH BC       ;
- $A735 LD B,(IX+$00) ;
- $A738 LD A,(DE)     ;
+ $A735 LD B,(IX+$00) ; mask byte
+ $A738 LD A,(DE)     ; source byte
  $A739 NOP           ;
  $A73A LD C,A        ;
  $A73B LD A,B        ;
  $A73C CPL           ;
- $A73D AND (HL)      ;
+ $A73D AND (HL)      ; {(HL) = ((HL) AND NOT mask) OR source
  $A73E OR C          ;
- $A73F LD (HL),A     ;
+ $A73F LD (HL),A     ; }
  $A740 INC HL        ;
  $A741 INC DE        ;
  $A742 POP BC        ;
  $A743 DJNZ $A734    ;
- $A745 LD DE,$0067   ;
+ $A745 LD DE,$0067   ; advance to the next buffer row
  $A748 ADD HL,DE     ;
  $A749 POP DE        ;
- $A74A LD A,$80      ;
- $A74C ADD A,E       ;
+ $A74A LD A,$80      ; {advance the source pointer
+ $A74C ADD A,E       ; }
  $A74D LD E,A        ;
  $A74E DEC C         ;
  $A74F JR NZ,$A731   ;
- $A751 LD HL,$D90C   ;
+ $A751 LD HL,$D90C   ; top buffer row
  $A754 LD DE,$D90D   ;
- $A757 LD (HL),$FF   ;
+ $A757 LD (HL),$FF   ; fill byte = $FF
  $A759 LD BC,$0019   ;
- $A75C LDIR          ;
- $A75E LD HL,$D90C   ;
- $A761 LD DE,$4007   ;
- $A764 LD A,$0D      ;
+ $A75C LDIR          ; blank the top buffer row
+ $A75E LD HL,$D90C   ; source = buffer
+ $A761 LD DE,$4007   ; screen address
+ $A764 LD A,$0D      ; 13. char-rows
 *$A766 EX AF,AF'     ;
- $A767 LD A,$08      ;
+ $A767 LD A,$08      ; 8. pixel-lines
  $A769 PUSH DE       ;
 *$A76A PUSH DE       ;
- $A76B LD BC,$0019   ;
- $A76E LDIR          ;
+ $A76B LD BC,$0019   ; 25. bytes per line
+ $A76E LDIR          ; copy one pixel-line to the screen
  $A770 POP DE        ;
- $A771 INC D         ;
- $A772 LD BC,$0007   ;
- $A775 ADD HL,BC     ;
+ $A771 INC D         ; down one pixel-line
+ $A772 LD BC,$0007   ; {step over the gap between lines
+ $A775 ADD HL,BC     ; }
  $A776 DEC A         ;
  $A777 JR NZ,$A76A   ;
  $A779 POP DE        ;
  $A77A EX DE,HL      ;
- $A77B RRC H         ;
+ $A77B RRC H         ; {char-row down: rotate H
  $A77D RRC H         ;
- $A77F RRC H         ;
- $A781 LD BC,$0020   ;
- $A784 ADD HL,BC     ;
- $A785 RLC H         ;
+ $A77F RRC H         ; }
+ $A781 LD BC,$0020   ; {add 32. to the address
+ $A784 ADD HL,BC     ; }
+ $A785 RLC H         ; {rotate H back
  $A787 RLC H         ;
- $A789 RLC H         ;
+ $A789 RLC H         ; }
  $A78B EX DE,HL      ;
  $A78C EX AF,AF'     ;
- $A78D DEC A         ;
+ $A78D DEC A         ; next char-row
  $A78E JR NZ,$A766   ;
- $A790 LD HL,$9B46   ;
- $A793 LD (HL),$A2   ;
+ $A790 LD HL,$9B46   ; {set the sound routine's note byte
+ $A793 LD (HL),$A2   ; }
  $A795 LD C,$0A      ;
  $A797 LD D,$7F      ;
  $A799 LD E,$14      ;
@@ -4047,7 +4102,7 @@ c$A694 LD HL,$5AB0   ;
  $A7E5 LD C,$03      ;
 *$A7E7 LD B,$03      ;
 *$A7E9 PUSH BC       ;
- $A7EA CALL $A8C5    ;
+ $A7EA CALL $A8C5    ; Show one screen in DEMO mode
  $A7ED POP BC        ;
  $A7EE DJNZ $A7E9    ;
  $A7F0 LD HL,$8A55   ;
@@ -4057,7 +4112,7 @@ c$A694 LD HL,$5AB0   ;
  $A7F6 JR NZ,$A7E7   ;
  $A7F8 LD B,$14      ;
 *$A7FA PUSH BC       ;
- $A7FB CALL $A8C5    ;
+ $A7FB CALL $A8C5    ; Show one screen in DEMO mode
  $A7FE POP BC        ;
  $A7FF DJNZ $A7FA    ;
  $A801 LD HL,$8A55   ;
@@ -4066,7 +4121,7 @@ c$A694 LD HL,$5AB0   ;
 *$A808 PUSH BC       ;
  $A809 LD HL,$8A58   ;
  $A80C SET 7,(HL)    ;
- $A80E CALL $A8C5    ;
+ $A80E CALL $A8C5    ; Show one screen in DEMO mode
  $A811 POP BC        ;
  $A812 LD A,B        ;
  $A813 CP $87        ;
@@ -4190,10 +4245,10 @@ c$A694 LD HL,$5AB0   ;
  $A8C2 DJNZ $A8C4    ;
 *$A8C4 NOP           ;
 
-; Routine
+; Show one screen in DEMO mode
 ;
 ; Used by the routines at #R$A367 and #R$A694.
-c$A8C5 CALL $9822    ;
+c$A8C5 CALL $9822    ; Remove objects from the shadow screen
  $A8C8 CALL $A1F8    ; DEMO mode objects logic
  $A8CB CALL $9C7B    ; Process object movement
  $A8CE CALL $985A    ; Prepare table 8D52 (sort out objects by depth), and draw
@@ -4206,17 +4261,25 @@ c$A8C5 CALL $9822    ;
 ; Draw zone specials
 ;
 ; Used by the routine at #R$965D.
+;
+; .
+;
+; Per-zone scenery drawn on top of the level: zones 31..36 map to specials
+; 0..5, any other zone falls back to special 1. A jump table at #R$A8EB
+; dispatches to one handler; handlers 2..4 build a curved trajectory into an
+; off-screen buffer via the arc plotters at $A9EE/$AA16 and then blit it with
+; $AA43, and special 5 blits a multi-segment spacecraft sprite.
 c$A8D6 LD A,($8F1C)                         ; get zone number
- $A8D9 SUB $1F                              ;
- $A8DB CP $06                               ;
- $A8DD JR C,$A8E1                           ;
- $A8DF LD A,$01                             ;
-*$A8E1 ADD A,A                              ;
+ $A8D9 SUB $1F                              ; zone number - 31.
+ $A8DB CP $06                               ; {clamp to specials 0..5
+ $A8DD JR C,$A8E1                           ; }
+ $A8DF LD A,$01                             ; any other zone => special 1
+*$A8E1 ADD A,A                              ; {index * 4 = jump-table offset
  $A8E2 ADD A,A                              ;
- $A8E3 LD C,A                               ;
+ $A8E3 LD C,A                               ; }
  $A8E4 LD B,$00                             ;
- $A8E6 LD HL,$A8EB                          ;
- $A8E9 ADD HL,BC                            ;
+ $A8E6 LD HL,$A8EB                          ; {index the jump table at $A8EB
+ $A8E9 ADD HL,BC                            ; }
  $A8EA JP (HL)                              ;
  $A8EB JP $A902                             ; Draw zone special 0
  $A8EE NOP                                  ;
@@ -4230,34 +4293,36 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A8FE NOP                                  ;
  $A8FF JP $AA61                             ; Draw zone special 5
 ; Draw zone special 0
-*$A902 LD HL,$E50D                          ;
- $A905 LD IX,$7100                          ;
- $A909 LD DE,$001F                          ;
- $A90C LD B,$08                             ;
-*$A90E LD A,(IX+$00)                        ;
- $A911 LD (HL),A                            ;
+*$A902 LD HL,$E50D                          ; destination column on the shadow
+                                            ; screen
+ $A905 LD IX,$7100                          ; source = sprite set $7100
+ $A909 LD DE,$001F                          ; stride to the next screen line
+ $A90C LD B,$08                             ; 8. rows
+*$A90E LD A,(IX+$00)                        ; {copy sprite byte 0
+ $A911 LD (HL),A                            ; }
  $A912 INC HL                               ;
- $A913 LD A,(IX+$08)                        ;
- $A916 LD (HL),A                            ;
- $A917 ADD HL,DE                            ;
+ $A913 LD A,(IX+$08)                        ; {copy sprite byte 8
+ $A916 LD (HL),A                            ; }
+ $A917 ADD HL,DE                            ; next screen line
  $A918 INC IX                               ;
  $A91A DJNZ $A90E                           ;
  $A91C RET                                  ;
 ; Draw zone special 1
-*$A91D LD A,$44                             ;
+*$A91D LD A,$44                             ; fill value = attr $44
  $A91F JP $A9CD                             ;
 ; Draw zone special 2
-*$A922 CALL $A9E2                           ;
+*$A922 CALL $A9E2                           ; scroll the shadow strip
  $A925 LD HL,$AA0E                          ;
  $A928 LD (HL),$28                          ;
  $A92A LD BC,$DE05                          ;
  $A92D LD E,$02                             ;
  $A92F LD D,$09                             ;
- $A931 LD HL,$0003                          ;
- $A934 LD ($AA5C),HL                        ;
- $A937 LD A,$04                             ;
- $A939 LD ($AA5E),A                         ;
- $A93C CALL $A9EE                           ;
+ $A931 LD HL,$0003                          ; {per-step position delta
+ $A934 LD ($AA5C),HL                        ; }
+ $A937 LD A,$04                             ; {per-step secondary delta
+ $A939 LD ($AA5E),A                         ; }
+ $A93C CALL $A9EE                           ; plot the first arc into the
+                                            ; buffer
  $A93F LD HL,$AA2F                          ;
  $A942 LD (HL),$0A                          ;
  $A944 LD HL,$AA38                          ;
@@ -4269,11 +4334,12 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A953 LD ($AA5C),HL                        ;
  $A956 LD A,$FE                             ;
  $A958 LD ($AA5E),A                         ;
-*$A95B CALL $AA16                           ;
- $A95E CALL $AA43                           ;
+*$A95B CALL $AA16                           ; plot the second arc into the
+                                            ; buffer
+ $A95E CALL $AA43                           ; blit the buffer and flag redraw
  $A961 RET                                  ;
 ; Draw zone special 3
-*$A962 CALL $A9E2                           ;
+*$A962 CALL $A9E2                           ; scroll the shadow strip
  $A965 LD HL,$AA0E                          ;
  $A968 LD (HL),$18                          ;
  $A96A LD BC,$DE05                          ;
@@ -4283,7 +4349,8 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A974 LD ($AA5C),HL                        ;
  $A977 LD A,$04                             ;
  $A979 LD ($AA5E),A                         ;
- $A97C CALL $A9EE                           ;
+ $A97C CALL $A9EE                           ; plot the first arc into the
+                                            ; buffer
  $A97F LD HL,$AA2F                          ;
  $A982 LD (HL),$FF                          ;
  $A984 LD HL,$AA38                          ;
@@ -4295,9 +4362,9 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A993 LD ($AA5C),HL                        ;
  $A996 LD A,$FE                             ;
  $A998 LD ($AA5E),A                         ;
- $A99B JP $A95B                             ;
+ $A99B JP $A95B                             ; continue as zone special 2
 ; Draw zone special 4
-*$A99E CALL $A9E2                           ;
+*$A99E CALL $A9E2                           ; scroll the shadow strip
  $A9A1 LD BC,$DF09                          ;
  $A9A4 LD E,$08                             ;
  $A9A6 LD D,$07                             ;
@@ -4305,7 +4372,8 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A9AB LD ($AA5C),HL                        ;
  $A9AE LD A,$00                             ;
  $A9B0 LD ($AA5E),A                         ;
- $A9B3 CALL $A9EE                           ;
+ $A9B3 CALL $A9EE                           ; plot the first arc into the
+                                            ; buffer
  $A9B6 LD BC,$EB11                          ;
  $A9B9 LD E,$10                             ;
  $A9BB LD D,$07                             ;
@@ -4313,90 +4381,101 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $A9C0 LD ($AA5C),HL                        ;
  $A9C3 LD A,$02                             ;
  $A9C5 LD ($AA5E),A                         ;
- $A9C8 CALL $A95B                           ;
- $A9CB LD A,$07                             ;
-*$A9CD LD HL,$FD0A                          ;
- $A9D0 LD DE,$0022                          ;
- $A9D3 LD B,$16                             ;
+ $A9C8 CALL $A95B                           ; plot the second arc into the
+                                            ; buffer
+ $A9CB LD A,$07                             ; fill value = attr $07
+; Fill a 22x22 cell block of the draw-flags area with the value in A.
+*$A9CD LD HL,$FD0A                          ; draw-flags area start
+ $A9D0 LD DE,$0022                          ; row stride
+ $A9D3 LD B,$16                             ; 22. rows
 *$A9D5 PUSH HL                              ;
  $A9D6 PUSH BC                              ;
-*$A9D7 LD (HL),A                            ;
+*$A9D7 LD (HL),A                            ; {fill 22. bytes with A
  $A9D8 INC HL                               ;
- $A9D9 DJNZ $A9D7                           ;
+ $A9D9 DJNZ $A9D7                           ; }
  $A9DB POP BC                               ;
  $A9DC POP HL                               ;
- $A9DD ADD HL,DE                            ;
+ $A9DD ADD HL,DE                            ; next row
  $A9DE DEC B                                ;
  $A9DF DJNZ $A9D5                           ;
  $A9E1 RET                                  ;
-*$A9E2 LD DE,$EF05                          ;
+; Shift a $1200-byte strip down the shadow screen.
+*$A9E2 LD DE,$EF05                          ; move a strip down the shadow
+                                            ; screen
  $A9E5 LD HL,$EB05                          ;
  $A9E8 LD BC,$1200                          ;
  $A9EB LDDR                                 ;
  $A9ED RET                                  ;
-*$A9EE LD A,$10                             ;
- $A9F0 LD HL,$C700                          ;
+; Step a point along an arc for 16. iterations, plotting into the buffer at
+; ($AA5F); X and Y advance by the per-step deltas in ($AA5C) and ($AA5E).
+*$A9EE LD A,$10                             ; 16. steps
+ $A9F0 LD HL,$C700                          ; arc point buffer $C700
  $A9F3 LD ($AA5F),HL                        ;
 *$A9F6 PUSH AF                              ;
  $A9F7 PUSH BC                              ;
  $A9F8 PUSH DE                              ;
- $A9F9 CALL $AAB1                           ;
+ $A9F9 CALL $AAB1                           ; compute the next point
  $A9FC POP DE                               ;
  $A9FD POP BC                               ;
  $A9FE PUSH HL                              ;
- $A9FF LD HL,($AA5C)                        ;
- $AA02 ADD HL,BC                            ;
+ $A9FF LD HL,($AA5C)                        ; {advance X by the per-step delta
+ $AA02 ADD HL,BC                            ; }
  $AA03 LD B,H                               ;
  $AA04 LD C,L                               ;
  $AA05 LD A,($AA5E)                         ;
- $AA08 ADD A,E                              ;
- $AA09 LD E,A                               ;
+ $AA08 ADD A,E                              ; {advance Y by the per-step delta
+ $AA09 LD E,A                               ; }
  $AA0A POP HL                               ;
  $AA0B POP AF                               ;
- $AA0C BIT 5,E                              ;
+ $AA0C BIT 5,E                              ; wrap Y at bit 5
  $AA0E JR Z,$AA12                           ;
  $AA10 LD E,$1E                             ;
-*$AA12 DEC D                                ;
+*$AA12 DEC D                                ; loop steps
  $AA13 JR NZ,$A9F6                          ;
  $AA15 RET                                  ;
-*$AA16 LD HL,$C820                          ;
+; Arc plotter variant for the second curve, buffer at $C820, with row-dependent
+; clamping of the Y advance.
+*$AA16 LD HL,$C820                          ; arc point buffer $C820
  $AA19 LD ($AA5F),HL                        ;
- $AA1C LD A,$10                             ;
+ $AA1C LD A,$10                             ; 16. steps
 *$AA1E PUSH AF                              ;
  $AA1F PUSH BC                              ;
  $AA20 PUSH DE                              ;
- $AA21 CALL $AAB1                           ;
+ $AA21 CALL $AAB1                           ; compute the next point
  $AA24 POP DE                               ;
  $AA25 POP BC                               ;
  $AA26 PUSH HL                              ;
- $AA27 LD HL,($AA5C)                        ;
- $AA2A ADD HL,BC                            ;
+ $AA27 LD HL,($AA5C)                        ; {advance X by the per-step delta
+ $AA2A ADD HL,BC                            ; }
  $AA2B LD B,H                               ;
  $AA2C LD C,L                               ;
  $AA2D LD A,D                               ;
- $AA2E CP $0A                               ;
+ $AA2E CP $0A                               ; no Y change on row 10.
  $AA30 JR Z,$AA3D                           ;
  $AA32 LD A,($AA5E)                         ;
- $AA35 ADD A,E                              ;
- $AA36 LD E,A                               ;
- $AA37 CP $06                               ;
+ $AA35 ADD A,E                              ; {advance Y by the per-step delta
+ $AA36 LD E,A                               ; }
+ $AA37 CP $06                               ; past row 6 => pull Y back
  $AA39 JR NC,$AA3D                          ;
  $AA3B DEC E                                ;
  $AA3C DEC E                                ;
 *$AA3D POP HL                               ;
  $AA3E POP AF                               ;
- $AA3F DEC D                                ;
+ $AA3F DEC D                                ; loop steps
  $AA40 JR NZ,$AA1E                          ;
  $AA42 RET                                  ;
+; Blit the drawn arc buffer onto the shadow screen and flag the whole
+; draw-flags area for redraw.
 *$AA43 LD DE,$D905                          ;
  $AA46 LD HL,$DD05                          ;
  $AA49 LD BC,$1200                          ;
- $AA4C LDIR                                 ;
- $AA4E LD HL,$FD00                          ;
+ $AA4C LDIR                                 ; copy the arc buffer to the shadow
+                                            ; screen
+ $AA4E LD HL,$FD00                          ; draw-flags area start
  $AA51 LD DE,$FD01                          ;
- $AA54 LD (HL),$44                          ;
- $AA56 LD BC,$023F                          ;
- $AA59 LDIR                                 ;
+ $AA54 LD (HL),$44                          ; fill byte = attr $44
+ $AA56 LD BC,$023F                          ; {flag 575. cells for redraw
+ $AA59 LDIR                                 ; }
  $AA5B RET                                  ;
  $AA5C NOP                                  ;
  $AA5D NOP                                  ;
@@ -4404,25 +4483,26 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $AA5F NOP                                  ;
  $AA60 NOP                                  ;
 ; Draw zone special 5
-*$AA61 LD HL,$AAFF                          ; Spacecraft sprite data
+*$AA61 LD HL,$AAFF                          ; spacecraft sprite record list
  $AA64 LD IX,$AA90                          ;
- $AA68 LD A,$0B                             ;
+ $AA68 LD A,$0B                             ; 11. segments
 *$AA6A EX AF,AF'                            ;
- $AA6B LD E,(IX+$00)                        ;
- $AA6E LD D,(IX+$01)                        ;
+ $AA6B LD E,(IX+$00)                        ; {segment: destination screen
+ $AA6E LD D,(IX+$01)                        ; address}
  $AA71 LD A,$08                             ; 8. lines
 *$AA73 LD B,$00                             ;
- $AA75 LD C,(IX+$02)                        ;
+ $AA75 LD C,(IX+$02)                        ; segment: row length
  $AA78 PUSH DE                              ;
- $AA79 LDIR                                 ;
+ $AA79 LDIR                                 ; copy one row
  $AA7B POP DE                               ;
  $AA7C EX DE,HL                             ;
  $AA7D LD BC,$0020                          ;
- $AA80 ADD HL,BC                            ; next line
+ $AA80 ADD HL,BC                            ; next screen line
  $AA81 EX DE,HL                             ;
  $AA82 DEC A                                ;
  $AA83 JR NZ,$AA73                          ;
- $AA85 INC IX                               ;
+ $AA85 INC IX                               ; advance to the next segment
+                                            ; record
  $AA87 INC IX                               ;
  $AA89 INC IX                               ;
  $AA8B EX AF,AF'                            ;
@@ -4450,7 +4530,7 @@ c$A8D6 LD A,($8F1C)                         ; get zone number
  $AADF NOP                                  ;
  $AAE0 NOP                                  ;
  $AAE1 CALL $99D1                           ; Draw sprite with shift by 4px
-*$AAE4 CALL $A270                           ;
+*$AAE4 CALL $A270                           ; Get the next random number
  $AAE7 POP BC                               ;
  $AAE8 POP AF                               ;
  $AAE9 EX DE,HL                             ;
@@ -4667,6 +4747,18 @@ b$AAFF DEFB $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
  $B0D7 DEFB $80,$00,$00,$00,$00,$00,$00
 
 ; Start point
+;
+; .
+;
+; .
+;
+; Title screen and main menu. Sets up the display (shadow wipe, two #R$B39A
+; passes, the big #R$B33C sign, the menu text), then runs the poll loop at
+; $B10A. A fire press starts a game via #R$90F2; other keys run the demo
+; (#R$8F79), show the info screen (#R$B4D0) or step the difficulty, and digit
+; keys set the object count at $8F88 and the starting lives. Each sub-mode
+; returns here through #R$B0E1, re-entering the loop until the player picks a
+; game.
 c$B0DE LD BC,$F300   ;
 ; Point of return from block #R$B4D0.
 *$B0E1 LD HL,$785A   ;
@@ -4679,73 +4771,76 @@ c$B0DE LD BC,$F300   ;
 *$B0EF CALL $B2DA    ; Prepare shadow screen
  $B0F2 XOR A         ;
  $B0F3 LD ($B4CF),A  ;
- $B0F6 CALL $B39A    ; Prepare screen with attributes
+ $B0F6 CALL $B39A    ; Prepare screen
  $B0F9 LD A,$44      ;
  $B0FB LD ($B4CF),A  ;
- $B0FE CALL $B39A    ; Prepare screen with attributes
- $B101 CALL $B33C    ; "HIGHWAY ENCOUNTER" big sign
+ $B0FE CALL $B39A    ; Prepare screen
+ $B101 CALL $B33C    ; Draw the "HIGHWAY ENCOUNTER" big sign
  $B104 LD HL,$B21E   ;
  $B107 CALL $B890    ; Print Text
- $B10A LD HL,$5801   ;
- $B10D LD C,$07      ;
+; Title screen loop: paint the menu colour strip and border art, blink the
+; selected option, bump FRAMES, and poll keys - fire starts the game, one key
+; runs the demo, another shows the info screen, digit keys pick the difficulty.
+ $B10A LD HL,$5801   ; menu colour strip: attribute file
+ $B10D LD C,$07      ; 7. rows
  $B10F LD DE,$0018   ;
 *$B112 LD B,$08      ;
-*$B114 LD (HL),$30   ;
+*$B114 LD (HL),$30   ; attr = $30
  $B116 INC HL        ;
  $B117 DJNZ $B114    ;
  $B119 ADD HL,DE     ;
  $B11A DEC C         ;
  $B11B JR NZ,$B112   ;
- $B11D LD HL,$5E60   ;
- $B120 LD DE,$4001   ;
- $B123 LD B,$07      ;
+ $B11D LD HL,$5E60   ; source = menu border art
+ $B120 LD DE,$4001   ; screen: top-left
+ $B123 LD B,$07      ; 7. columns
 *$B125 PUSH BC       ;
 *$B126 PUSH DE       ;
  $B127 LD BC,$0008   ;
- $B12A LDIR          ;
+ $B12A LDIR          ; copy one char-line
  $B12C POP DE        ;
  $B12D INC D         ;
- $B12E LD A,D        ;
+ $B12E LD A,D        ; {past the bottom of the screen?
  $B12F CP $48        ;
- $B131 JR C,$B126    ;
- $B133 LD D,$40      ;
+ $B131 JR C,$B126    ; }
+ $B133 LD D,$40      ; wrap to the top of the next column
  $B135 LD A,$20      ;
  $B137 ADD A,E       ;
  $B138 LD E,A        ;
  $B139 POP BC        ;
  $B13A DJNZ $B125    ;
-*$B13C LD A,($8F88)  ;
+*$B13C LD A,($8F88)  ; selected menu option
  $B13F LD B,A        ;
  $B140 INC B         ;
- $B141 LD HL,$59B6   ;
- $B144 LD DE,$001E   ;
-*$B147 ADD HL,DE     ;
+ $B141 LD HL,$59B6   ; first option's attribute row
+ $B144 LD DE,$001E   ; $1E = one option row
+*$B147 ADD HL,DE     ; step to the selected option's row
  $B148 DJNZ $B147    ;
  $B14A EX DE,HL      ;
- $B14B LD HL,($B2D8) ;
+ $B14B LD HL,($B2D8) ; blink phase counter
  $B14E INC HL        ;
- $B14F LD ($B2D8),HL ;
+ $B14F LD ($B2D8),HL ; bump the phase
  $B152 LD A,H        ;
- $B153 LD B,$47      ;
- $B155 CP $06        ;
- $B157 JR C,$B165    ;
- $B159 LD B,$03      ;
- $B15B CP $0C        ;
- $B15D JR C,$B165    ;
- $B15F LD HL,$0000   ;
- $B162 LD ($B2D8),HL ;
+ $B153 LD B,$47      ; attr = $47 (bright)
+ $B155 CP $06        ; {phase 0..5 => bright
+ $B157 JR C,$B165    ; }
+ $B159 LD B,$03      ; attr = $03 (dim)
+ $B15B CP $0C        ; {phase 6..11 => dim
+ $B15D JR C,$B165    ; }
+ $B15F LD HL,$0000   ; {phase 12 => restart the cycle
+ $B162 LD ($B2D8),HL ; }
 *$B165 EX DE,HL      ;
- $B166 LD (HL),B     ;
- $B167 LD HL,($5C76) ;
+ $B166 LD (HL),B     ; write the option's attribute cell
+ $B167 LD HL,($5C76) ; bump the FRAMES counter
  $B16A INC HL        ;
  $B16B LD ($5C76),HL ;
- $B16E LD A,$EF      ;
- $B170 IN A,($FE)    ;
- $B172 BIT 4,A       ;
- $B174 JR NZ,$B182   ;
- $B176 LD HL,$646E   ;
+ $B16E LD A,$EF      ; {read the fire/start half-row
+ $B170 IN A,($FE)    ; }
+ $B172 BIT 4,A       ; {not pressed => skip
+ $B174 JR NZ,$B182   ; }
+ $B176 LD HL,$646E   ; demo-start sound
  $B179 CALL $B203    ; Sound
- $B17C CALL $8F79    ; JP #R$A367
+ $B17C CALL $8F79    ; Redirects
  $B17F JP $B0E7      ; back to start point
 *$B182 BIT 3,A       ;
  $B184 JR NZ,$B1AD   ;
@@ -4772,7 +4867,7 @@ c$B0DE LD BC,$F300   ;
  $B1B3 JP NZ,$B1BF   ;
  $B1B6 LD HL,$785A   ;
  $B1B9 CALL $B203    ; Sound
- $B1BC JP $B4D0      ; Show Info Screen
+ $B1BC JP $B4D0      ; => Show Info Screen
 *$B1BF LD B,$00      ;
  $B1C1 LD HL,$1E78   ;
  $B1C4 BIT 0,A       ;
@@ -4805,11 +4900,11 @@ c$B0DE LD BC,$F300   ;
  $B1FE JR NZ,$B1F8   ;
  $B200 JP $B13C      ;
 
-; Routine: Sound
+; Sound
 ;
 ; Used by the routine at #R$B0DE.
 ;
-; HL ??
+; HL H = tone duration, L = pitch period
 c$B203 LD C,H        ;
  $B204 XOR A         ; Border 0
  $B205 LD B,A        ;
@@ -4856,60 +4951,67 @@ b$B21E DEFB $40,$2A,$58,$8A,$51,$65,$64,$58,$5F,$62,$4D,$53,$5F,$63,$64,$51
  $B2D4 DEFB $62,$55,$8A,$FE
  $B2D8 DEFB $1C,$03
 
-; Routine: Prepare shadow screen
+; Prepare shadow screen
 ;
 ; Used by the routines at #R$B0DE and #R$B4D0.
-c$B2DA LD HL,$D900   ;
+;
+; .
+;
+; Wipe the shadow screen to $00, then build the draw-flags area at $DF00: 8
+; header rows seeded from the sprite set at $7100, replicated down the whole
+; area, top row forced to $FF, a copy stashed at $F140, and the left/right edge
+; columns flagged.
+c$B2DA LD HL,$D900   ; shadow screen pixel area
  $B2DD LD DE,$D901   ;
- $B2E0 LD (HL),$00   ;
- $B2E2 LD BC,$1B58   ; 7000.
- $B2E5 LDIR          ;
- $B2E7 LD HL,$DF00   ;
+ $B2E0 LD (HL),$00   ; fill byte = $00
+ $B2E2 LD BC,$1B58   ; 7000. bytes
+ $B2E5 LDIR          ; clear the shadow screen
+ $B2E7 LD HL,$DF00   ; draw-flags area $DF00
  $B2EA LD D,H        ;
  $B2EB LD E,L        ;
- $B2EC LD IX,$7100   ;
- $B2F0 LD B,$08      ;
+ $B2EC LD IX,$7100   ; sprite set $7100
+ $B2F0 LD B,$08      ; 8. rows
 *$B2F2 PUSH BC       ;
- $B2F3 LD A,(IX+$08) ;
- $B2F6 LD (DE),A     ;
+ $B2F3 LD A,(IX+$08) ; {row header byte 0 = (IX+$08)
+ $B2F6 LD (DE),A     ; }
  $B2F7 INC DE        ;
- $B2F8 LD A,(IX+$00) ;
- $B2FB LD (DE),A     ;
+ $B2F8 LD A,(IX+$00) ; {row header byte 1 = (IX+$00)
+ $B2FB LD (DE),A     ; }
  $B2FC INC DE        ;
- $B2FD LD BC,$001E   ;
- $B300 LDIR          ;
- $B302 INC IX        ;
- $B304 INC HL        ;
- $B305 INC HL        ;
+ $B2FD LD BC,$001E   ; 30. bytes
+ $B300 LDIR          ; fill the rest of the row
+ $B302 INC IX        ; next sprite
+ $B304 INC HL        ; {advance the source by 2
+ $B305 INC HL        ; }
  $B306 POP BC        ;
  $B307 DJNZ $B2F2    ;
- $B309 DEC H         ;
- $B30A LD BC,$1140   ; 4416.
- $B30D LDIR          ;
- $B30F LD HL,$DF00   ;
+ $B309 DEC H         ; back one page
+ $B30A LD BC,$1140   ; 4416. bytes
+ $B30D LDIR          ; replicate the block down the area
+ $B30F LD HL,$DF00   ; first flags row
  $B312 LD DE,$DF01   ;
- $B315 LD (HL),$FF   ;
- $B317 LD BC,$001F   ;
- $B31A LDIR          ;
+ $B315 LD (HL),$FF   ; fill byte = $FF
+ $B317 LD BC,$001F   ; 31. bytes
+ $B31A LDIR          ; set the whole first row
  $B31C LD HL,$DF00   ;
- $B31F LD DE,$F140   ;
+ $B31F LD DE,$F140   ; copy the row to $F140
  $B322 LD BC,$0020   ;
- $B325 LDIR          ;
- $B327 LD HL,$DF20   ;
- $B32A LD DE,$001F   ;
- $B32D LD B,$92      ;
+ $B325 LDIR          ; copy 32. bytes
+ $B327 LD HL,$DF20   ; flags area, from $DF20
+ $B32A LD DE,$001F   ; column stride
+ $B32D LD B,$92      ; 146. rows
 *$B32F LD A,(HL)     ;
- $B330 OR $80        ;
- $B332 LD (HL),A     ;
- $B333 ADD HL,DE     ;
+ $B330 OR $80        ; {set bit 7 in the left column
+ $B332 LD (HL),A     ; }
+ $B333 ADD HL,DE     ; next row position
  $B334 LD A,(HL)     ;
- $B335 OR $01        ;
- $B337 LD (HL),A     ;
- $B338 INC HL        ;
+ $B335 OR $01        ; {set bit 0 in the right column
+ $B337 LD (HL),A     ; }
+ $B338 INC HL        ; next row
  $B339 DJNZ $B32F    ;
  $B33B RET           ;
 
-; Routine
+; Draw the "HIGHWAY ENCOUNTER" big sign
 ;
 ; Used by the routine at #R$B0DE.
 c$B33C LD HL,$B499   ; "HIGHWAY ENCOUNTER" pixels address
@@ -4919,36 +5021,36 @@ c$B33C LD HL,$B499   ; "HIGHWAY ENCOUNTER" pixels address
  $B347 LD BC,$DF16   ; address on shadow screen
  $B34A LD A,$08      ;
  $B34C LD HL,$D900   ; title sign buffer
- $B34F CALL $B3D8    ;
+ $B34F CALL $B3D8    ; Title screen
  $B352 LD BC,$DF77   ;
  $B355 LD A,$10      ;
- $B357 CALL $B3D8    ;
+ $B357 CALL $B3D8    ; Title screen
  $B35A LD BC,$DFD8   ;
  $B35D LD A,$18      ;
- $B35F CALL $B3D8    ;
+ $B35F CALL $B3D8    ; Title screen
  $B362 LD BC,$E038   ;
  $B365 LD A,$00      ;
- $B367 CALL $B3D8    ;
+ $B367 CALL $B3D8    ; Title screen
  $B36A LD BC,$E099   ;
  $B36D LD A,$08      ;
- $B36F CALL $B3D8    ;
+ $B36F CALL $B3D8    ; Title screen
  $B372 LD BC,$E15B   ;
  $B375 LD A,$18      ;
- $B377 CALL $B3D8    ;
+ $B377 CALL $B3D8    ; Title screen
  $B37A LD BC,$E1BB   ;
  $B37D LD A,$00      ;
- $B37F CALL $B3D8    ;
+ $B37F CALL $B3D8    ; Title screen
  $B382 LD BC,$E21C   ;
  $B385 LD A,$08      ;
- $B387 CALL $B3D8    ;
+ $B387 CALL $B3D8    ; Title screen
  $B38A LD BC,$E27D   ;
  $B38D LD A,$10      ;
- $B38F CALL $B3D8    ;
+ $B38F CALL $B3D8    ; Title screen
  $B392 LD BC,$E2DE   ;
  $B395 LD A,$18      ;
- $B397 CALL $B3D8    ;
+ $B397 CALL $B3D8    ; Title screen
 
-; Routine: Prepare screen
+; Prepare screen
 ;
 ; Used by the routines at #R$B0DE and #R$B4D0.
 c$B39A LD HL,$5B00   ;
@@ -4987,21 +5089,22 @@ c$B39A LD HL,$5B00   ;
  $B3D5 JR NZ,$B3B1   ; loop by char-lines
  $B3D7 RET           ;
 
-; Routine
+; Title screen: animate one pyramid block appearing
 ;
 ; Used by the routine at #R$B33C.
 ;
-; BC ??
-; HL ??
+; A Initial horizontal pixel shift (0, 8, 16 or 24)
+; BC Target address on the shadow screen
+; HL Address of the row-flag strip (sign buffer)
 c$B3D8 LD DE,$BFB0   ; Mask and sprite = #R$BFB0
  $B3DB LD ($B4CD),DE ; -- Pyramid block appears, phase 1
- $B3DF CALL $B41B    ;
+ $B3DF CALL $B41B    ; Draw the current pyramid-block sprite
  $B3E2 LD DE,$B980   ; Mask and sprite = #R$B980
  $B3E5 LD ($B4CD),DE ; -- Pyramid block appears, phase 2
- $B3E9 CALL $B41B    ;
+ $B3E9 CALL $B41B    ; Draw the current pyramid-block sprite
  $B3EC LD DE,$BA10   ; Mask and sprite = #R$BA10
  $B3EF LD ($B4CD),DE ; -- Pyramid block appears, phase 3
- $B3F3 CALL $B41B    ;
+ $B3F3 CALL $B41B    ; Draw the current pyramid-block sprite
  $B3F6 LD DE,$B8F0   ; Mask and sprite = #R$B8F0
  $B3F9 LD ($B4CD),DE ; -- Pyramid block used on the title screen
  $B3FD CALL $B427    ;
@@ -5023,11 +5126,15 @@ c$B3D8 LD DE,$BFB0   ; Mask and sprite = #R$BFB0
  $B419 POP HL        ;
  $B41A RET           ;
 
-; Routine
+; Draw the current pyramid-block sprite (abort on keypress)
 ;
 ; Used by the routine at #R$B3D8.
 ; .
 ; (#R$B4CD)=sprite address
+;
+; A Initial horizontal pixel shift (0, 8, 16 or 24)
+; BC Target address on the shadow screen
+; HL Address of the row-flag strip (sign buffer)
 c$B41B EX AF,AF'                ;
  $B41C XOR A                    ;
  $B41D IN A,($FE)               ; Check keyboard
@@ -5123,6 +5230,14 @@ c$B41B EX AF,AF'                ;
 ; Show Info Screen
 ;
 ; Used by the routine at #R$B0DE.
+;
+; .
+;
+; Builds and shows the instructions screen. Clears the shadow screen, draws the
+; character line-up (four forward-facing Vortons, the Lasertron and the Main
+; Vorton), then paints the screen and prints the small-font captions (#R$B52D)
+; and the body text (#R$B890). Waits for the current key to be released and
+; then for any key press before returning to the menu at #R$B0E1.
 c$B4D0 LD A,$06      ;
  $B4D2 LD ($B4CF),A  ;
  $B4D5 CALL $B2DA    ; Prepare shadow screen
@@ -5144,8 +5259,8 @@ c$B4D0 LD A,$06      ;
  $B505 LD BC,$E722   ;
  $B508 LD DE,$D630   ; Sprite: Main Vorton looking at player
  $B50B CALL $8F7C    ; JP #R$99D1 Draw sprite with shift by 4px
- $B50E CALL $B39A    ; Prepare screen with attributes
- $B511 CALL $B52D    ; Print Small Font Signs
+ $B50E CALL $B39A    ; Prepare screen
+ $B511 CALL $B52D    ; Print Small Font Signs on the Info Screen
  $B514 LD HL,$B7B5   ;
  $B517 CALL $B890    ; Print Text
 *$B51A XOR A         ;
@@ -5355,61 +5470,67 @@ b$B7B5 DEFB $40,$88,$58,$8A,$51,$65,$64,$5F ; {Text to print by #R$B890 routine
  $B885 DEFB $64,$59,$5F,$5E,$8A,$FE,$00,$FE ;
  $B88D DEFB $00,$00,$00                     ; }
 
-; Routine: Print Text
+; Print Text
 ;
 ; Used by the routines at #R$90F2, #R$A367, #R$A694, #R$B0DE and #R$B4D0.
 ;
-; HL ??
-c$B890 PUSH HL       ;
-*$B891 INC HL        ;
+; HL Address of the text record to print
+;
+; Two passes over the same record. The 3-byte header holds a screen address
+; ($40xx), a shared low byte and an attribute address ($58xx); pass 1 walks the
+; payload bytes as colour cells (top 2 bits pick the attribute), pass 2 walks
+; them as glyph codes (low 6 bits index the 5-byte font at $5B00). $FE ends a
+; pass, $FF starts a fresh run at a new address.
+c$B890 PUSH HL       ; save the record start
+*$B891 INC HL        ; {DE = attribute cell address
  $B892 LD E,(HL)     ;
  $B893 INC HL        ;
- $B894 LD D,(HL)     ;
+ $B894 LD D,(HL)     ; }
  $B895 INC HL        ;
-*$B896 LD A,(HL)     ;
- $B897 INC HL        ;
- $B898 CP $FE        ;
+*$B896 LD A,(HL)     ; {next record byte
+ $B897 INC HL        ; }
+ $B898 CP $FE        ; compare the payload byte
  $B89A JR C,$B8A0    ;
- $B89C JR Z,$B8BA    ;
- $B89E JR $B891      ;
-*$B8A0 AND $C0       ;
- $B8A2 LD C,$46      ;
+ $B89C JR Z,$B8BA    ; $FE => switch to the glyph pass
+ $B89E JR $B891      ; $FF => reload the address
+*$B8A0 AND $C0       ; colour from the top 2 bits
+ $B8A2 LD C,$46      ; default attr $46
  $B8A4 AND A         ;
  $B8A5 JR Z,$B8B5    ;
- $B8A7 LD C,$03      ;
- $B8A9 BIT 6,A       ;
+ $B8A7 LD C,$03      ; {bit 6 set => attr $07, else $03
+ $B8A9 BIT 6,A       ; }
  $B8AB JR Z,$B8B5    ;
- $B8AD LD C,$07      ;
- $B8AF BIT 7,A       ;
+ $B8AD LD C,$07      ; {bits 6+7 set => attr $47
+ $B8AF BIT 7,A       ; }
  $B8B1 JR Z,$B8B5    ;
  $B8B3 LD C,$47      ;
 *$B8B5 LD A,C        ;
- $B8B6 LD (DE),A     ;
- $B8B7 INC DE        ;
+ $B8B6 LD (DE),A     ; {write the attribute cell
+ $B8B7 INC DE        ; }
  $B8B8 JR $B896      ;
-*$B8BA POP HL        ;
-*$B8BB LD D,(HL)     ;
+*$B8BA POP HL        ; back to the record start
+*$B8BB LD D,(HL)     ; {DE = screen address
  $B8BC INC HL        ;
  $B8BD LD E,(HL)     ;
  $B8BE INC HL        ;
- $B8BF INC HL        ;
-*$B8C0 LD A,(HL)     ;
- $B8C1 INC HL        ;
- $B8C2 CP $FE        ;
+ $B8BF INC HL        ; }
+*$B8C0 LD A,(HL)     ; {next record byte
+ $B8C1 INC HL        ; }
+ $B8C2 CP $FE        ; compare the payload byte
  $B8C4 JR C,$B8C9    ;
- $B8C6 RET Z         ;
- $B8C7 JR $B8BB      ;
-*$B8C9 AND $3F       ;
+ $B8C6 RET Z         ; $FE => done
+ $B8C7 JR $B8BB      ; $FF => reload the address
+*$B8C9 AND $3F       ; glyph index (0..63)
  $B8CB PUSH HL       ;
- $B8CC LD L,A        ;
+ $B8CC LD L,A        ; {HL = index
  $B8CD LD H,$00      ;
- $B8CF PUSH HL       ;
+ $B8CF PUSH HL       ; }
  $B8D0 ADD HL,HL     ;
  $B8D1 ADD HL,HL     ;
  $B8D2 POP BC        ;
  $B8D3 ADD HL,BC     ; HL <- HL * 5
- $B8D4 LD BC,$5B00   ;
- $B8D7 ADD HL,BC     ;
+ $B8D4 LD BC,$5B00   ; {HL = font glyph address ($5B00 + index * 5)
+ $B8D7 ADD HL,BC     ; }
  $B8D8 PUSH DE       ;
  $B8D9 XOR A         ;
  $B8DA LD (DE),A     ; write to the screen

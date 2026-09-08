@@ -5,7 +5,7 @@ S $5800,768 Screen attributes
 b $5B00 Font
 i $5BD7
 b $7100 Sprites
-  $7100,2048,8
+B $7100,2048,8
 b $7900 Data block
 w $7A00 Table with sprite addresses
 W $7A00,,16
@@ -296,16 +296,18 @@ N $8F25 Initial values for the Variables block
 B $8F4A
 c $8F79 Redirects
 D $8F79 Used by the routine at #R$B0DE.
+C $8F79,3 => Run the DEMO MODE loop
 N $8F7C This entry point is used by the routines at #R$B41B and #R$B4D0.
-  $8F7C,3 Draw sprite with shift by 4px
+C $8F7C,3 => Draw sprite with shift by 4px
 N $8F7F This entry point is used by the routine at #R$B41B.
-  $8F7F,3 Draw sprite with shift by 2px
+C $8F7F,3 => Draw sprite with shift by 2px
 N $8F82 This entry point is used by the routines at #R$B41B and #R$B4D0.
-  $8F82,3 Draw sprite with no shift
+C $8F82,3 => Draw sprite with no shift
 N $8F85 This entry point is used by the routines at #R$B41B and #R$B4D0.
-  $8F85,3 Draw sprite with shift by -2px
-c $8F89 Routine ?? work on table $7B00
-B $8F89
+C $8F85,3 => Draw sprite with shift by -2px
+b $8F89 Pending object movement-tick count
+B $8F89,1
+c $8F8A Advance object movement timers by pending ticks
 D $8F8A Used by the routine at #R$90F2.
 C $8F8A,4 global objects table
 C $8F97,3 get movement pattern
@@ -317,8 +319,9 @@ B $8FB0 Text to print by #R$B890 routine
 w $9000 Continuation points, see 9E6C
 W $9000,240,16
 W $90F0
-c $90F2 Routine: GAME MODE
+c $90F2 GAME MODE
 D $90F2 Used by the routine at #R$B0DE.
+N $90F2 Top-level game loop. Zeroes the six score digits, prints the score and initialises the speed level, then runs the per-frame loop from #R$9107. Each tick redraws the intro furniture, polls the abort and pause keys, then removes objects from the shadow screen, runs object logic and movement, sorts the objects by depth and draws them (#R$985A), and flushes the changes to the screen (#R$9A9B). It then tests the zone-30 endgame trigger, counts the Mission Time down, burns a short R-register delay, and walks the object table advancing the Vorton indicators. The loop ends when the player aborts, time runs out, or every Vorton is dead, printing the matching message and returning.
 C $90F2,3 check score
 C $90F5,3 Score
 C $90F8,2 counter = 6
@@ -383,6 +386,7 @@ C $9221,2 set base sprite number = Main Vorton
 C $9226,1 HL points to (+$0A)
 C $9227,2 set sprite number offset
 N $9229 Reset the scene to continue with the new Main Vorton
+C $9229,3 Prepare objects for the current Zone
 C $922C,3 Show the screen
 C $922F,3 continue main loop
 b $9232 Text
@@ -450,8 +454,11 @@ C $937F,4 address of screen position array for ZONE digits
 C $9383,3 show first ZONE digit
 C $9386,3 address of sprite index list for large digits
 C $938E,3 show second ZONE digit
+C $9391,3 => Build the current-zone object list from the master object table
 c $9394 Draw digit with size of 16x24 pixels into the ZONE indicator
 D $9394 Used by the routine at #R$92CE.
+R $9394 HL Pointer to the 6 tile numbers
+R $9394 IX Pointer to the 6 screen-position low bytes (page $50)
 C $9396,1 get sprite number
 C $93A0,1 * 8.
 C $93A1,1 got 8x8 sprite address
@@ -462,7 +469,7 @@ C $93AB,1 write into screen
 C $93AC,1 next line
 C $93AD,2 repeat
 C $93B4,2 repeat
-c $93B7 Routine
+c $93B7 Build the current-zone object list from the master object table
 D $93B7 Used by the routine at #R$92CE.
 N $93B7 First, we select objects from $7B00 table to $8A90 table
 C $93BB,3 current zone objects
@@ -542,6 +549,17 @@ C $962D,3 Draw zone border
 C $9630,3 go to Draw zone land
 c $9633 Draw zone border line
 D $9633 Used by the routine at #R$95EF.
+R $9633 HL Screen address to draw the border line at
+N $9633 Paints a 5-segment border stripe down the screen: each segment copies a 4-byte pattern into a left column and a right column (from #R$7110, stride 32), then steps one character to the right.
+C $9633,2 5. segments
+C $9635,3 stride to the next char-line
+C $9638,4 border pattern data
+C $963C,2 4. char-lines
+C $963E,4 copy one pattern byte
+C $9644,1 down one char-line
+C $9647,1 skip a column
+C $9648,2 4. char-lines
+C $9653,1 next segment column
 N $9658 Referenced from #R$965F, #R$9692, #R$96E0, #R$96E4, #R$96EC, #R$970D
 c $9658 Draw zone land
 B $9658,1,1 Pattern column height, in char-lines
@@ -594,13 +612,40 @@ C $9783,2 Make bottom line
 C $978B,2 lines
 C $978E,2 Left border
 C $9793,2 Right border
-  $97A9,3 Screen address
+N $97A6 Blit the finished land buffer to the real screen: an 18-row block copy of the main field, a full attribute repaint, the 4096-byte middle copy, an edge-strip fixup for the columns the block copy missed, then clear the draw-flags area and chain to #R$A546.
+C $97A6,3 source = shadow land buffer
+C $97A9,3 screen address
+C $97AC,2 18. char-rows
+C $97AF,2 8. pixel-lines
+C $97B3,3 32. bytes per line
+C $97B6,2 copy one pixel-line
+C $97B9,1 next pixel-line
+C $97BF,6 char-row down: rotate H
+C $97C5,4 add 32. to the address
+C $97C9,6 rotate H back
+C $97D1,3 next char-row
+C $97D4,3 fill source = $FF
+C $97D7,3 attribute file
+C $97DA,3 576. bytes
+C $97DD,2 paint every attribute
 C $97E8,2 Copy main part, 4096. bytes, 128. lines
-C $97EA,2 15.
+C $97EA,2 15. bytes per strip line
 C $97EC,2 2x8 lines remaining to copy
+C $97EE,3 right-edge source strip
+C $97F1,3 right-edge screen address
+C $97F4,2 8. pixel-lines
+C $97F7,2 byte count high = 0
+C $97FB,2 copy one strip line
+C $97FF,4 advance the source one line
+C $9803,3 advance the dest one line
+C $980A,4 back up both pointers
+C $980E,2 shift the strip right by 2
+C $9810,2 next char-column
+C $9812,3 draw-flags area
+C $9818,2 clear byte = $00
 C $981A,3 576.
 C $981F,3 Draw flat blockers
-c $9822 Routine
+c $9822 Remove objects from the shadow screen
 D $9822 Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 C $9826,1 is the table empty?
 C $9827,3 yes => return
@@ -625,6 +670,7 @@ C $9855,1 end of table?
 C $9856,3 no => continue the loop
 c $985A Sort Objects
 D $985A Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
+N $985A Builds the far-to-near draw list at $8D52 and then draws it. Walks the active object table (#R$8F01), skipping empty, out-of-zone and non-visible records (movement patterns $16 and $19); for each survivor it derives a depth key from the object's Z position and height and insertion-sorts it into $8D52 - scanning for the first entry with a greater-or-equal key, opening a gap with LDDR, and storing the key plus the record pointer. Once the list is complete it falls through at #R$98DC into the draw pass, which reads the entries back in order, blits each object's sprite and flags the touched cells for redraw (#R$9980).
 C $985E,3 start of table 8D52
 C $9861,3 save address in table 8D52
 C $9864,2 clear the table
@@ -673,15 +719,35 @@ C $9912,1 BC = address where to draw the sprite
 C $9913,1 restore HL and set value on stack
 C $9914,1 Draw the sprite
 C $9915,3 Draw sprite with shift by 4px
+C $9918,3 => Sort Objects
 C $991D,3 Draw sprite with shift by 2px
+C $9920,3 => Sort Objects
 C $9925,3 Draw sprite with no shift
+C $9928,3 => Sort Objects
 C $992D,3 Draw sprite with shift by -2px
+C $9930,3 => Sort Objects
 c $9933 Draw sprite with shift by -2px
 D $9933 Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
-R $9933 BC ??
+R $9933 BC Screen address to draw the sprite at
 R $9933 DE Mask and Sprite address
 C $9935,2 Sprite height = 24.
-c $9980 Routine
+C $9937,1 store counter A
+C $9939,1 Get mask byte 0
+C $993B,1 Get mask byte 1
+C $993D,1 Get mask byte 2
+C $993F,6 Shift right by 1
+C $9945,6 Shift right by 2
+C $994C,1 AND the shifted mask into the screen bytes
+C $9959,1 Get sprite byte 0
+C $995B,1 Get sprite byte 1
+C $995D,1 Get sprite byte 2
+C $995F,6 Shift right by 1
+C $9965,6 Shift right by 2
+C $996C,1 OR the shifted sprite into the screen bytes
+C $9976,3 -34. = one line up
+C $997A,1 restore counter A
+C $997B,4 loop by sprite height
+c $9980 Sort Objects: flag a drawn sprite's char-cells for redraw
 D $9980 Used by the routine at #R$985A.
 C $9982,2 drawn to the second shadow screen?
 C $9984,3 no => skip
@@ -708,7 +774,7 @@ C $99C9,1 to next line
 C $99CD,3 repeat loop by lines
 c $99D1 Draw sprite with shift by 4px
 D $99D1 Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
-R $99D1 BC ??
+R $99D1 BC Screen address to draw the sprite at
 R $99D1 DE Mask and Sprite address
 C $99D3,2 Sprite height = 24
 C $99D5,1 store counter A
@@ -727,15 +793,38 @@ C $9A20,1 restore counter A
 C $9A22,3 loop by sprite height
 c $9A26 Draw sprite with shift by 2px
 D $9A26 Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
-R $9A26 BC ??
+R $9A26 BC Screen address to draw the sprite at
 R $9A26 DE Mask and Sprite address
 C $9A28,2 loop counter = 24.
+C $9A2A,1 store counter A
+C $9A2C,1 Get mask byte 0
+C $9A2E,1 Get mask byte 1
+C $9A30,1 Get mask byte 2
+C $9A32,6 Shift left by 1
+C $9A38,5 Shift left by 2
+C $9A3E,1 AND the shifted mask into the screen bytes
+C $9A4B,1 Get sprite byte 0
+C $9A4D,1 Get sprite byte 1
+C $9A4F,1 Get sprite byte 2
+C $9A51,5 Shift left by 1
+C $9A56,5 Shift left by 2
+C $9A5C,1 OR the shifted sprite into the screen bytes
+C $9A66,3 -34. = one line up
+C $9A6A,1 restore counter A
 C $9A6B,1 repeat the loop
 c $9A70 Draw sprite with no shift
 D $9A70 Used by the routines at #R$8F79, #R$985A, #R$A546 and #R$A8D6.
-R $9A70 BC ??
+R $9A70 BC Screen address to draw the sprite at
 R $9A70 DE Mask and Sprite address
 C $9A72,2 loop counter = 24.
+C $9A74,3 AND mask byte 0 into the screen
+C $9A79,3 AND mask byte 1
+C $9A7E,3 AND mask byte 2
+C $9A82,2 back to the first byte
+C $9A84,3 OR sprite byte 0 into the screen
+C $9A89,3 OR sprite byte 1
+C $9A8E,3 OR sprite byte 2
+C $9A93,3 -34. = one line up
 C $9A98,2 repeat the loop
 c $9A9B Redraw changes
 D $9A9B Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
@@ -774,18 +863,19 @@ C $9AFE,3 Sound
 C $9B10,3 Sound
 C $9B1F,3 Sound
 N $9B2C Sound. This entry point is used by the routine at #R$A694.
-  $9B30,1 Border 0
-  $9B31,2 Inverse EAR and MIC bits
-  $9B34,2 Output EAR/MIC
-  $9B36,2 wait
-  $9B3A,2 loop
-  $9B4A,2 repeat
+C $9B30,1 Border 0
+C $9B31,2 Inverse EAR and MIC bits
+C $9B34,2 Output EAR/MIC
+C $9B36,2 wait
+C $9B3A,2 loop
+C $9B4A,2 repeat
+C $9B3D,3 Get the next random number
 N $9B5B Sound. This entry point is used by the routine at #R$A694.
-  $9B5B,1 Border 0
-  $9B5D,2 Inverse EAR and MIC bits
-  $9B60,2 Output EAR/MIC
-  $9B62,2 wait
-  $9B65,2 loop
+C $9B5B,1 Border 0
+C $9B5D,2 Inverse EAR and MIC bits
+C $9B60,2 Output EAR/MIC
+C $9B62,2 wait
+C $9B65,2 loop
 C $9B72,3 Lasertron object + 8.
 C $9B75,1 get movement flags
 C $9B76,1 stopped?
@@ -807,7 +897,7 @@ C $9BF5,3 increment score
 C $9BFA,2 show movement indication
 b $9BFC Redraw table: 18 records used to draw the shadow screen
 B $9BFC,,7
-c $9C7B Routine
+c $9C7B Process object movement
 D $9C7B Used by the routines at #R$90F2, #R$A34D and #R$A8C5.
 C $9C82,2 skip?
 C $9C84,3 yes => next record by IX
@@ -1062,7 +1152,7 @@ C $A02F,2 180 degree rotation
 C $A033,3 set direction
 C $A036,3 next record by IX
 C $A039,1 Temporary storage for HL
-c $A03B Routine
+c $A03B Objects logic
 D $A03B Used by the routine at #R$90F2.
 C $A051,2 keyboard 7FFE B - Space
 C $A059,2 fire
@@ -1078,11 +1168,15 @@ C $A074,2 "P", right
 C $A077,2 not "O" -> jump
 C $A079,2 "O", left
 C $A07C,3 set current action byte
-c $A10B Routine
+C $A07F,3 => Objects logic
+C $A0B0,3 => Objects logic
+C $A0D9,3 => Objects logic
+C $A108,3 => Objects logic
+c $A10B Restore one unit of power
 D $A10B Used by the routine at #R$A11B.
 C $A111,1 increase power
 C $A119,1 restore AF
-c $A11B Routine
+c $A11B Objects logic: perform the action
 D $A11B Used by the routines at #R$A03B and #R$A34D.
 C $A11F,2 to movement flags
 C $A122,1 DE points to (+$08)
@@ -1166,9 +1260,18 @@ C $A262,1 set Fire B phase
 C $A263,3 addr of Ufo sprite phase
 C $A268,1 next sprite
 C $A26E,1 set Ufo sprite phase
-c $A270 Routine
+c $A270 Get the next random number
 D $A270 Used by the routines at #R$9A9B, #R$9C7B and #R$A8D6.
-C $A289,3 ; Write RND SEED variable
+R $A270 O:A Next pseudo-random byte
+N $A270 Steps the 16-bit seed at $5C76 (first sown from the FRAMES counter) through a fixed multiply-and-reduce and returns the new low byte in A.
+C $A270,4 DE = current seed
+C $A275,2 HL = E:$FD
+C $A279,2 HL -= seed
+C $A27D,2 HL -= seed again
+C $A284,2 fold the borrow count back in
+C $A286,2 fix up if it underflowed
+C $A289,3 store the new seed
+b $A28D
 B $A28D,1,1
 B $A28E,1,1
 B $A28F,1,1
@@ -1245,21 +1348,22 @@ C $A346,1 to the next record
 C $A347,2 repeat
 c $A34D Routine (the most used one)
 D $A34D Used by the routines at #R$A291, #R$A617 and #R$A694.
-R $A34D A ??
-R $A34D BC Counter
+R $A34D A Action code stored at $8F14 (0=none, 1=fire, $0C=rotate right, $14=rotate left)
+R $A34D B Number of update iterations to run
 C $A351,3 Remove objects from the shadow screen
 C $A354,3 Objects logic, perform the action
 C $A357,3 Process object movement
 C $A35A,3 Prepare table 8D52 (sort out objects by depth), and draw the objects
 C $A35D,3 Draw the shadow screen on the real screen, using draw markers
 C $A363,3 Main Vorton direction 0..7
-c $A367 Routine
+c $A367 Run the DEMO MODE loop
 D $A367 Used by the routine at #R$8F79.
+C $A367,3 Intro
 C $A36A,2 jump into the loop
 C $A36C,3 Prepare objects for the current Zone
 C $A36F,3 Show the screen
 C $A372,3 "DEMO MODE"
-  $A375,3 Print Text
+C $A375,3 Print Text
 C $A378,2 number of iterations in one zone
 C $A37B,3 show one screen in DEMO
 C $A380,2 Check keyboard
@@ -1280,15 +1384,16 @@ C $A3A2,1 DE = obj pos + 176.
 C $A3A3,1 save object position
 C $A3A6,2 repeat in the loop by zones
 C $A3B7,3 "THERE IS ONLY ONE WAY TO ENCOUNTER..."
-  $A3BA,3 Print Text
-c $A3D3 Routine
+C $A3BA,3 Print Text
+c $A3D3 Prepare screen and indicators
 D $A3D3 Used by the routine at #R$A291.
 C $A403,3 Screen attribute area address
 C $A409,2 Fill attributes
 C $A40B,3 Show score
 C $A40E,3 Show score
-c $A414 Routine
+c $A414 Increment the score
 D $A414 Used by the routines at #R$9A9B, #R$9C7B and #R$A617.
+R $A414 B Number of score units to add
 N $A42B This entry point is used by the routines at #R$90F2 and #R$A3D3.
 C $A42E,3 Score
 N $A431 This entry point is used by the routine at #R$A450.
@@ -1312,6 +1417,10 @@ C $A582,3 BC = object offset
 C $A586,3 current zone offset
 C $A58B,1 BC = address where to draw the sprite
 C $A58E,3 Sprite #5 flat blocker
+C $A592,3 Draw sprite with shift by 4px
+C $A59A,3 Draw sprite with shift by 2px
+C $A5A2,3 Draw sprite with no shift
+C $A5AA,3 Draw sprite with shift by -2px
 C $A5C0,2 offset within a single line -- 0..31.
 C $A5C5,1 draw flags area start address
 C $A5C6,3 -34.
@@ -1343,45 +1452,89 @@ C $A64C,3 set object table address
 C $A64F,2 loop counter = 15.
 C $A651,1 action = none
 C $A652,3 do the action
+C $A66C,3 Zone 30 animation
+C $A671,3 Zone 30 animation
+C $A674,3 => Zone 30 animation
 C $A6B1,3 show one screen in DEMO
 C $A6B7,2 Zone 36. ?
 C $A6B9,2 not yet => repeat
+C $A6D3,3 Routine
 C $A6DB,3 show one screen in DEMO
 C $A6E5,1 next sprite
 C $A6EC,3 show one screen in DEMO
 C $A701,3 replace fireball with laserbeam
 C $A706,2 action = fire!
+C $A708,3 Routine
+C $A70E,3 Routine
 C $A713,3 restore fireball sprite
+N $A716 Reveal phase: repaint the whole attribute file, then masked-blit a graphic block from the $E60C buffer into the $D90C buffer using the mask table at #R$A84B, blank its top row, copy the result to the top of the screen over 13 char-rows, and start a sound.
+C $A716,3 attribute file $5800
+C $A71C,2 attr = $47
+C $A71E,3 576. bytes
+C $A721,2 fill the attribute file
+C $A723,4 mask table $A84B
+C $A727,3 source buffer
+C $A72A,3 destination buffer
+C $A72F,2 26. rows
+C $A732,2 25. columns
+C $A735,3 mask byte
+C $A738,1 source byte
+C $A73D,3 (HL) = ((HL) AND NOT mask) OR source
+C $A745,3 advance to the next buffer row
+C $A74A,3 advance the source pointer
+C $A751,3 top buffer row
+C $A757,2 fill byte = $FF
+C $A75C,2 blank the top buffer row
+C $A75E,3 source = buffer
+C $A761,3 screen address
+C $A764,2 13. char-rows
+C $A767,2 8. pixel-lines
+C $A76B,3 25. bytes per line
+C $A76E,2 copy one pixel-line to the screen
+C $A771,1 down one pixel-line
+C $A772,4 step over the gap between lines
+C $A77B,6 char-row down: rotate H
+C $A781,4 add 32. to the address
+C $A785,6 rotate H back
+C $A78D,1 next char-row
+C $A790,5 set the sound routine's note byte
+C $A7EA,3 Show one screen in DEMO mode
+C $A7FB,3 Show one screen in DEMO mode
+C $A80E,3 Show one screen in DEMO mode
 C $A818,3 "PREPARE YOURSELF FOR THE NEXT"
+C $A81B,3 Print Text
+C $A8C5,3 Remove objects from the shadow screen
 C $A8C8,3 DEMO mode objects logic
 C $A8CB,3 Process object movement
 C $A8CE,3 Prepare table 8D52 (sort out objects by depth), and draw the objects
 C $A8D1,3 Draw the shadow screen on the real screen, using draw markers
-  $AA61,3 Spacecraft sprite data
 N $A478 This entry point is used by the routine at #R$A3D3.
 b $A480 Data block
 B $A4C7 Text to print by #R$B890 routine
 B $A4D6 Text to print by #R$B890 routine
 c $A546 Draw Rough
 D $A546 Used by the routine at #R$965D.
-  $A592,3 Draw sprite with shift by 4px
-  $A59A,3 Draw sprite with shift by 2px
-  $A5A2,3 Draw sprite with no shift
-  $A5AA,3 Draw sprite with shift by -2px
-c $A617 Routine
+c $A617 Animation in Zone 30
 D $A617 Used by the routine at #R$90F2.
-c $A677 Routine
+c $A677 Zone 30 animation: draw an 8-column glyph strip to the screen
 D $A677 Used by the routine at #R$A617.
-c $A694 Routine
+R $A677 DE Source glyph data
+R $A677 L Screen address low byte (page $50..$53)
+c $A694 Zone 30 animation: run the DEMO scroll to Zone 36, then tear down
 D $A694 Used by the routine at #R$A617.
-  $A6A9,3 Sound
-  $A79B,3 Sound
-  $A81B,3 Print Text
-c $A8C5 Routine
+C $A6A9,3 Sound
+C $A79B,3 Sound
+c $A8C5 Show one screen in DEMO mode
 D $A8C5 Used by the routines at #R$A367 and #R$A694.
 c $A8D6 Draw zone specials
 C $A8D6,3 get zone number
 D $A8D6 Used by the routine at #R$965D.
+N $A8D6 Per-zone scenery drawn on top of the level: zones 31..36 map to specials 0..5, any other zone falls back to special 1. A jump table at #R$A8EB dispatches to one handler; handlers 2..4 build a curved trajectory into an off-screen buffer via the arc plotters at $A9EE/$AA16 and then blit it with $AA43, and special 5 blits a multi-segment spacecraft sprite.
+C $A8D9,2 zone number - 31.
+C $A8DB,4 clamp to specials 0..5
+C $A8DF,2 any other zone => special 1
+C $A8E1,3 index * 4 = jump-table offset
+C $A8E6,4 index the jump table at $A8EB
 C $A8EB,3 Draw zone special 0
 C $A8EF,3 Draw zone special 1
 C $A8F3,3 Draw zone special 2
@@ -1389,48 +1542,133 @@ C $A8F7,3 Draw zone special 3
 C $A8FB,3 Draw zone special 4
 C $A8FF,3 Draw zone special 5
 N $A902 Draw zone special 0
+C $A902,3 destination column on the shadow screen
+C $A905,4 source = sprite set $7100
+C $A909,3 stride to the next screen line
+C $A90C,2 8. rows
+C $A90E,4 copy sprite byte 0
+C $A913,4 copy sprite byte 8
+C $A917,1 next screen line
 N $A91D Draw zone special 1
+C $A91D,2 fill value = attr $44
 N $A922 Draw zone special 2
+C $A922,3 scroll the shadow strip
+C $A931,6 per-step position delta
+C $A937,5 per-step secondary delta
+C $A93C,3 plot the first arc into the buffer
+C $A95B,3 plot the second arc into the buffer
+C $A95E,3 blit the buffer and flag redraw
 N $A962 Draw zone special 3
+C $A962,3 scroll the shadow strip
+C $A97C,3 plot the first arc into the buffer
+C $A99B,3 continue as zone special 2
 N $A99E Draw zone special 4
+C $A99E,3 scroll the shadow strip
+C $A9B3,3 plot the first arc into the buffer
+C $A9C8,3 plot the second arc into the buffer
+C $A9CB,2 fill value = attr $07
+N $A9CD Fill a 22x22 cell block of the draw-flags area with the value in A.
+C $A9CD,3 draw-flags area start
+C $A9D0,3 row stride
+C $A9D3,2 22. rows
+C $A9D7,4 fill 22. bytes with A
+C $A9DD,1 next row
+N $A9E2 Shift a $1200-byte strip down the shadow screen.
+C $A9E2,3 move a strip down the shadow screen
+N $A9EE Step a point along an arc for 16. iterations, plotting into the buffer at ($AA5F); X and Y advance by the per-step deltas in ($AA5C) and ($AA5E).
+C $A9EE,2 16. steps
+C $A9F0,3 arc point buffer $C700
+C $A9F9,3 compute the next point
+C $A9FF,4 advance X by the per-step delta
+C $AA08,2 advance Y by the per-step delta
+C $AA0C,2 wrap Y at bit 5
+C $AA12,1 loop steps
+N $AA16 Arc plotter variant for the second curve, buffer at $C820, with row-dependent clamping of the Y advance.
+C $AA16,3 arc point buffer $C820
+C $AA1C,2 16. steps
+C $AA21,3 compute the next point
+C $AA27,4 advance X by the per-step delta
+C $AA2E,2 no Y change on row 10.
+C $AA35,2 advance Y by the per-step delta
+C $AA37,2 past row 6 => pull Y back
+C $AA3F,1 loop steps
+N $AA43 Blit the drawn arc buffer onto the shadow screen and flag the whole draw-flags area for redraw.
+C $AA4C,2 copy the arc buffer to the shadow screen
+C $AA4E,3 draw-flags area start
+C $AA54,2 fill byte = attr $44
+C $AA56,5 flag 575. cells for redraw
 N $AA61 Draw zone special 5
+C $AA61,3 spacecraft sprite record list
+C $AA68,2 11. segments
+C $AA6B,6 segment: destination screen address
 C $AA71,2 8. lines
-C $AA80,1 next line
+C $AA75,3 segment: row length
+C $AA79,2 copy one row
+C $AA80,1 next screen line
+C $AA85,2 advance to the next segment record
 B $AA90
+C $AAC9,3 Draw sprite with shift by -2px
+C $AAD1,3 Draw sprite with no shift
+C $AAD9,3 Draw sprite with shift by 2px
+C $AAE1,3 Draw sprite with shift by 4px
+C $AAE4,3 Get the next random number
 B $AAFF
-  $AAC9,3 Draw sprite with shift by -2px
-  $AAD1,3 Draw sprite with no shift
-  $AAD9,3 Draw sprite with shift by 2px
-  $AAE1,3 Draw sprite with shift by 4px
 b $AAFF Spacecraft sprite data
 N $AAFF Number of tiles = 12 + 13 + 17 + 18 + 21 + 21 + 21 + 21 + 19 + 17 + 8 = 188 tiles = 1504 bytes
 c $B0DE Start point
+N $B0DE Title screen and main menu. Sets up the display (shadow wipe, two #R$B39A passes, the big #R$B33C sign, the menu text), then runs the poll loop at $B10A. A fire press starts a game via #R$90F2; other keys run the demo (#R$8F79), show the info screen (#R$B4D0) or step the difficulty, and digit keys set the object count at $8F88 and the starting lives. Each sub-mode returns here through #R$B0E1, re-entering the loop until the player picks a game.
 N $B0E1 Point of return from block #R$B4D0.
-  $B0E4,3 Sound
-  $B0EF,3 Prepare shadow screen
-  $B0F6,3 Prepare screen with attributes
-  $B0FE,3 Prepare screen with attributes
-  $B101,3 "HIGHWAY ENCOUNTER" big sign
-  $B107,3 Print Text
-  $B179,3 Sound
-  $B17C,3 JP #R$A367
+C $B0E4,3 Sound
+C $B0EF,3 Prepare shadow screen
+C $B0F6,3 Prepare screen
+C $B0FE,3 Prepare screen
+C $B101,3 Draw the "HIGHWAY ENCOUNTER" big sign
+C $B107,3 Print Text
+N $B10A Title screen loop: paint the menu colour strip and border art, blink the selected option, bump FRAMES, and poll keys - fire starts the game, one key runs the demo, another shows the info screen, digit keys pick the difficulty.
+C $B10A,3 menu colour strip: attribute file
+C $B10D,2 7. rows
+C $B114,2 attr = $30
+C $B11D,3 source = menu border art
+C $B120,3 screen: top-left
+C $B123,2 7. columns
+C $B12A,2 copy one char-line
+C $B12E,5 past the bottom of the screen?
+C $B133,2 wrap to the top of the next column
+C $B13C,3 selected menu option
+C $B141,3 first option's attribute row
+C $B144,3 $1E = one option row
+C $B147,1 step to the selected option's row
+C $B14B,3 blink phase counter
+C $B14F,3 bump the phase
+C $B153,2 attr = $47 (bright)
+C $B155,4 phase 0..5 => bright
+C $B159,2 attr = $03 (dim)
+C $B15B,4 phase 6..11 => dim
+C $B15F,6 phase 12 => restart the cycle
+C $B166,1 write the option's attribute cell
+C $B167,3 bump the FRAMES counter
+C $B16E,4 read the fire/start half-row
+C $B172,4 not pressed => skip
+C $B176,3 demo-start sound
+C $B179,3 Sound
+C $B17C,3 Redirects
 C $B17F,3 back to start point
-  $B189,3 Sound
+C $B189,3 Sound
 C $B18C,3 GAME MODE
-  $B192,3 Sound
+C $B192,3 Sound
 C $B1AA,3 back to start point
-  $B1B9,3 Sound
-  $B1BC,3 Show Info Screen
-  $B1F5,3 Sound
-c $B203 Routine: Sound
+C $B1B9,3 Sound
+C $B1BC,3 => Show Info Screen
+C $B1F5,3 Sound
+c $B203 Sound
 D $B203 Used by the routine at #R$B0DE.
-R $B203 HL ??
-  $B204,1 Border 0
-  $B209,2 Set/reset EAR and MIC bits
-  $B20F,2 Inverse EAR and MIC bits
-  $B216,2 Inverse EAR and MIC bits
-  $B218,2 repeat
-  $B21B,2 repeat
+R $B203 HL H = tone duration, L = pitch period
+C $B204,1 Border 0
+C $B209,2 Set/reset EAR and MIC bits
+C $B20F,2 Inverse EAR and MIC bits
+C $B216,2 Inverse EAR and MIC bits
+C $B218,2 repeat
+C $B21B,2 repeat
 b $B21E Text
 N $B21E Referenced from #R$B104
 N $B21E Text to print by #R$B890 routine
@@ -1444,64 +1682,109 @@ B $B280,17,17
 B $B291,19,16
 B $B2A4,16,16
 B $B2B4,36,16
-c $B2DA Routine: Prepare shadow screen
+c $B2DA Prepare shadow screen
 D $B2DA Used by the routines at #R$B0DE and #R$B4D0.
-C $B2E2,3 7000.
-C $B30A,3 4416.
-c $B33C Routine
+N $B2DA Wipe the shadow screen to $00, then build the draw-flags area at $DF00: 8 header rows seeded from the sprite set at $7100, replicated down the whole area, top row forced to $FF, a copy stashed at $F140, and the left/right edge columns flagged.
+C $B2DA,3 shadow screen pixel area
+C $B2E0,2 fill byte = $00
+C $B2E2,3 7000. bytes
+C $B2E5,2 clear the shadow screen
+C $B2E7,3 draw-flags area $DF00
+C $B2EC,4 sprite set $7100
+C $B2F0,2 8. rows
+C $B2F3,4 row header byte 0 = (IX+$08)
+C $B2F8,4 row header byte 1 = (IX+$00)
+C $B2FD,3 30. bytes
+C $B300,2 fill the rest of the row
+C $B302,2 next sprite
+C $B304,2 advance the source by 2
+C $B309,1 back one page
+C $B30A,3 4416. bytes
+C $B30D,2 replicate the block down the area
+C $B30F,3 first flags row
+C $B315,2 fill byte = $FF
+C $B317,3 31. bytes
+C $B31A,2 set the whole first row
+C $B31F,3 copy the row to $F140
+C $B325,2 copy 32. bytes
+C $B327,3 flags area, from $DF20
+C $B32A,3 column stride
+C $B32D,2 146. rows
+C $B330,3 set bit 7 in the left column
+C $B333,1 next row position
+C $B335,3 set bit 0 in the right column
+C $B338,1 next row
+c $B33C Draw the "HIGHWAY ENCOUNTER" big sign
 D $B33C Used by the routine at #R$B0DE.
-  $B33C,3 "HIGHWAY ENCOUNTER" pixels address
-  $B33F,3 title sign buffer
-  $B342,3 50 bytes
-  $B345,2 copy
-  $B347,3 address on shadow screen
-  $B34C,3 title sign buffer
-c $B39A Routine: Prepare screen
+C $B33C,3 "HIGHWAY ENCOUNTER" pixels address
+C $B33F,3 title sign buffer
+C $B342,3 50 bytes
+C $B345,2 copy
+C $B347,3 address on shadow screen
+C $B34C,3 title sign buffer
+C $B34F,3 Title screen
+C $B357,3 Title screen
+C $B35F,3 Title screen
+C $B367,3 Title screen
+C $B36F,3 Title screen
+C $B377,3 Title screen
+C $B37F,3 Title screen
+C $B387,3 Title screen
+C $B38F,3 Title screen
+C $B397,3 Title screen
+c $B39A Prepare screen
 D $B39A Used by the routines at #R$B0DE and #R$B4D0.
 N $B3A9 This entry point is used by the routine at #R$B41B.
-  $B3AC,3 Screen address
-  $B3AF,2 24 char-lines
-  $B3B2,2 8 lines
-  $B3B4,1 store screen address
-  $B3B5,1 store screen address
-  $B3B6,3 32 bytes
-  $B3B9,2 copy
-  $B3BB,1 restore screen address
-  $B3BC,1 screen address += 256
-  $B3BE,2 loop by lines
-  $B3C0,1 restore screen address
-  $B3D4,1 char-line counter decrement
-  $B3D5,2 loop by char-lines
-c $B3D8 Routine
+C $B3AC,3 Screen address
+C $B3AF,2 24 char-lines
+C $B3B2,2 8 lines
+C $B3B4,1 store screen address
+C $B3B5,1 store screen address
+C $B3B6,3 32 bytes
+C $B3B9,2 copy
+C $B3BB,1 restore screen address
+C $B3BC,1 screen address += 256
+C $B3BE,2 loop by lines
+C $B3C0,1 restore screen address
+C $B3D4,1 char-line counter decrement
+C $B3D5,2 loop by char-lines
+c $B3D8 Title screen: animate one pyramid block appearing
 D $B3D8 Used by the routine at #R$B33C.
-R $B3D8 BC ??
-R $B3D8 HL ??
-  $B3D8,3 Mask and sprite = #R$BFB0
-  $B3DB,4 -- Pyramid block appears, phase 1
-  $B3E2,3 Mask and sprite = #R$B980
-  $B3E5,4 -- Pyramid block appears, phase 2
-  $B3EC,3 Mask and sprite = #R$BA10
-  $B3EF,4 -- Pyramid block appears, phase 3
-  $B3F6,3 Mask and sprite = #R$B8F0
-  $B3F9,4 -- Pyramid block used on the title screen
-c $B41B Routine
+R $B3D8 A Initial horizontal pixel shift (0, 8, 16 or 24)
+R $B3D8 BC Target address on the shadow screen
+R $B3D8 HL Address of the row-flag strip (sign buffer)
+C $B3D8,3 Mask and sprite = #R$BFB0
+C $B3DB,4 -- Pyramid block appears, phase 1
+C $B3E2,3 Mask and sprite = #R$B980
+C $B3E5,4 -- Pyramid block appears, phase 2
+C $B3EC,3 Mask and sprite = #R$BA10
+C $B3EF,4 -- Pyramid block appears, phase 3
+C $B3F6,3 Mask and sprite = #R$B8F0
+C $B3F9,4 -- Pyramid block used on the title screen
+C $B3DF,3 Draw the current pyramid-block sprite
+C $B3E9,3 Draw the current pyramid-block sprite
+C $B3F3,3 Draw the current pyramid-block sprite
+c $B41B Draw the current pyramid-block sprite (abort on keypress)
 D $B41B Used by the routine at #R$B3D8.
+R $B41B A Initial horizontal pixel shift (0, 8, 16 or 24)
+R $B41B BC Target address on the shadow screen
+R $B41B HL Address of the row-flag strip (sign buffer)
 D $B41B (#R$B4CD)=sprite address
 C $B41D,2 Check keyboard
 N $B427 This entry point is used by the routine at #R$B3D8.
-  $B42A,3 save HL
-  $B431,2 Loop counter = 36
-  $B433,1 save loop counter
-  $B441,4 Get mask and sprite address
+C $B42A,3 save HL
+C $B431,2 Loop counter = 36
+C $B433,1 save loop counter
+C $B441,4 Get mask and sprite address
 C $B445,1 Draw the sprite
-  $B446,3 JP #R$9933 Draw sprite with shift by -2px
-  $B44E,3 JP #R$9A70 Draw sprite with no shift
-  $B456,3 JP #R$9A26 Draw sprite with shift by 2px
-  $B45E,3 JP #R$99D1 Draw sprite with shift by 4px
-  $B472,3 restore HL
-  $B483,1 restore loop counter
-  $B485,2 loop
-  $B487,3 Prepare screen
+C $B446,3 JP #R$9933 Draw sprite with shift by -2px
+C $B44E,3 JP #R$9A70 Draw sprite with no shift
+C $B456,3 JP #R$9A26 Draw sprite with shift by 2px
+C $B45E,3 JP #R$99D1 Draw sprite with shift by 4px
+C $B472,3 restore HL
+C $B483,1 restore loop counter
+C $B485,2 loop
+C $B487,3 Prepare screen
 N $B499 Title screen sign "HIGHWAY ENCOUNTER", used by #R$B33C routine
 B $B499,50,5 width:40px (5 bytes), height:10px
 N $B4CB Variables
@@ -1510,28 +1793,29 @@ W $B4CD,2,2 Mask and Sprite address
 B $B4CF,1,1 Attribute?
 c $B4D0 Show Info Screen
 D $B4D0 Used by the routine at #R$B0DE.
-  $B4D5,3 Prepare shadow screen
-  $B4DB,3 Sprite: Vorton looking forward
-  $B4DE,3 JP #R$9A70 Draw sprite with no shift
-  $B4E4,3 Sprite: Vorton looking forward
-  $B4E7,3 JP #R$9A70 Draw sprite with no shift
-  $B4ED,3 Sprite: Vorton looking forward
-  $B4F0,3 JP #R$9A70 Draw sprite with no shift
-  $B4F6,3 Sprite: Vorton looking forward
-  $B4F9,3 JP #R$9A70 Draw sprite with no shift
-  $B4FF,3 Sprite: Lasertron
-  $B502,3 JP #R$9933 Draw sprite with shift by -2px
-  $B508,3 Sprite: Main Vorton looking at player
-  $B50B,3 JP #R$99D1 Draw sprite with shift by 4px
-  $B50E,3 Prepare screen with attributes
-  $B511,3 Print Small Font Signs
-  $B517,3 Print Text
-  $B520,2 wait for key unpress
-  $B528,2 wait for key press
-  $B52A,3 Return to menu
+N $B4D0 Builds and shows the instructions screen. Clears the shadow screen, draws the character line-up (four forward-facing Vortons, the Lasertron and the Main Vorton), then paints the screen and prints the small-font captions (#R$B52D) and the body text (#R$B890). Waits for the current key to be released and then for any key press before returning to the menu at #R$B0E1.
+C $B4DB,3 Sprite: Vorton looking forward
+C $B4DE,3 JP #R$9A70 Draw sprite with no shift
+C $B4E4,3 Sprite: Vorton looking forward
+C $B4E7,3 JP #R$9A70 Draw sprite with no shift
+C $B4ED,3 Sprite: Vorton looking forward
+C $B4F0,3 JP #R$9A70 Draw sprite with no shift
+C $B4F6,3 Sprite: Vorton looking forward
+C $B4F9,3 JP #R$9A70 Draw sprite with no shift
+C $B4FF,3 Sprite: Lasertron
+C $B502,3 JP #R$9933 Draw sprite with shift by -2px
+C $B508,3 Sprite: Main Vorton looking at player
+C $B50B,3 JP #R$99D1 Draw sprite with shift by 4px
+C $B520,2 wait for key unpress
+C $B528,2 wait for key press
+C $B52A,3 Return to menu
+C $B4D5,3 Prepare shadow screen
+C $B50E,3 Prepare screen
+C $B511,3 Print Small Font Signs on the Info Screen
+C $B517,3 Print Text
 c $B52D Print Small Font Signs on the Info Screen
 D $B52D Used by the routine at #R$B4D0.
-  $B52D,3 Info Screen Small Font Signs
+C $B52D,3 Info Screen Small Font Signs
 C $B550,1 * 5
 C $B551,3 Small Font address
 C $B555,3 temp storage
@@ -1585,10 +1869,31 @@ B $B7A1,3
 T $B7A4,17
 b $B7B5 Info Screen Text
 B $B7B5 Text to print by #R$B890 routine
-c $B890 Routine: Print Text
+c $B890 Print Text
 D $B890 Used by the routines at #R$90F2, #R$A367, #R$A694, #R$B0DE and #R$B4D0.
-R $B890 HL ??
+R $B890 HL Address of the text record to print
+N $B890 Two passes over the same record. The 3-byte header holds a screen address ($40xx), a shared low byte and an attribute address ($58xx); pass 1 walks the payload bytes as colour cells (top 2 bits pick the attribute), pass 2 walks them as glyph codes (low 6 bits index the 5-byte font at $5B00). $FE ends a pass, $FF starts a fresh run at a new address.
+C $B890,1 save the record start
+C $B891,4 DE = attribute cell address
+C $B896,2 next record byte
+C $B898,2 compare the payload byte
+C $B89C,2 $FE => switch to the glyph pass
+C $B89E,2 $FF => reload the address
+C $B8A0,2 colour from the top 2 bits
+C $B8A2,2 default attr $46
+C $B8A7,4 bit 6 set => attr $07, else $03
+C $B8AD,4 bits 6+7 set => attr $47
+C $B8B6,2 write the attribute cell
+C $B8BA,1 back to the record start
+C $B8BB,5 DE = screen address
+C $B8C0,2 next record byte
+C $B8C2,2 compare the payload byte
+C $B8C6,1 $FE => done
+C $B8C7,2 $FF => reload the address
+C $B8C9,2 glyph index (0..63)
+C $B8CC,4 HL = index
 C $B8D3,1 HL <- HL * 5
+C $B8D4,4 HL = font glyph address ($5B00 + index * 5)
 C $B8DA,1 write to the screen
 C $B8DD,1 next line
 C $B8DE,1 write to the screen

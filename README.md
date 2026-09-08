@@ -11,7 +11,7 @@ Volume: about 3900 code instructions.
 
 Browse: https://nzeemin.github.io/skoolkit-game-revs/highwayencounter-zx/highwayencounter/
 
-Status: Not finished (50K .ctl file).
+Status: Not finished (65K .ctl file).
 
 Follow-up projects:
 [uknc-highwayencounter](https://github.com/nzeemin/uknc-highwayencounter) •

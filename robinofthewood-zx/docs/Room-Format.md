@@ -68,6 +68,25 @@ Verified against the raw block data: block `$00` (header `$04`) has 32 pixel row
 
 If the mirror flag ends up set for a placement, `$C1D6` bit-reverses each pixel byte (via the table at `$FD00`) and swaps bytes from the two ends of each row inward, doing the same for the attribute row(s) unless the flat-attribute flag is set.
 
+### Example: the 3 scenario-room figures, each a 2x2 multi-block
+
+Most placed objects are a single block, but a large fixed figure can be built from
+several blocks tiled together. Each of the 3 random scenario rooms (`General.md`) has
+its own fixed token list - `$C56A`/`$C573`/`$C57C` for `$D3B2`/`$D3B4`/`$D3B6` - and
+all 3 use the identical 4-token layout: coordinate bytes `$0A`/`$0B` place a top pair
+at row 1, columns 8 and 12, and `$2A`/`$2B` place a bottom pair at row 5, the same two
+columns - each block being the standard 4-cell-wide, 32-pixel-tall (header `$04`/`$44`)
+unit, so each figure is 8 cells (64px) wide by 8 cells (64px) tall. None of the 12
+blocks use the mirror bit.
+
+| Scenario room | Token table | Blocks | Data addresses | Identity |
+|---|---|---|---|---|
+| `$D3B2` | `$C56A` | `$1C`-`$1F` | `$659B`/`$662C`/`$66BD`/`$673F` | the Ent (confirmed by screenshot) |
+| `$D3B4` | `$C573` | `$24`-`$27` | `$69D8`/`$6A5A`/`$6ADC`/`$6B6D` | the Hermit's hut (confirmed by screenshot) |
+| `$D3B6` | `$C57C` | `$20`-`$23` | `$67C1`/`$6852`/`$68D4`/`$6956` | a "split tree" (confirmed by screenshot); a walkthrough confirms it's a deliberate landmark unique to the starting room, placed nowhere else on the map |
+
+`$D3B2`/`$D3B4` are independently rolled from their own 4-entry tables, but `$D3B6` is not a third independent choice - `$CF71` sets it to a *copy of whatever room Robin's own random start lands on* (from the same roll that sets `$C548`), swapped to `$D2` if that room is `$9C` (the dungeon-gate landmark, to avoid clashing with it). So the plain tree is just decoration dropped into Robin's starting room, not a distinct landmark of its own.
+
 ## Drawing pipeline
 
 1. `$C072` (draw current room): looks up the map byte, sets up the room-type descriptor pointer (`$7B39`) and index (`$C547`), clears bit 7, calls `$C0AF` to draw room-type tokens, then (if room number < 256) repoints to the additional-elements table (`$8511`) and calls `$C0AF` again.
@@ -80,5 +99,4 @@ Between the room-type descriptor table and the additional-elements table sits `$
 
 ## Open questions
 
-- Precise meaning of world-map bit 7 in all its uses (confirmed as an attribute-constant selector in `$C072`; whether it always means "mirror this room's blocks" is not fully verified against every block-drawing path).
 - Purpose of header bit 5 (never read by `$C0D1`) — reserved, or a leftover unused authoring flag.

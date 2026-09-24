@@ -2650,15 +2650,43 @@ b$8511 DEFB $00                             ; Nothing
                                             ; />]
 ; Room $FF
  $8A36 DEFB $00                             ; Nothing
- $8A37 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A3F DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A47 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A4F DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A57 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A5F DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $8A67 DEFB $00,$00,$01,$02,$02,$02,$02,$02
- $8A6F DEFB $FF,$00,$00,$79,$8A,$79,$8A,$8C
- $8A77 DEFB $8C,$03
+ $8A37 DEFB $00,$00
+
+; Per-guard-slot random seed, 16 entries of 3 bytes
+;
+; .
+;
+; .
+;
+; There is no authored per-room guard roster anywhere in the game - this
+; procedural table, seeded once at game start by $CE0A, is it. 48 bytes = 4
+; groups of 12 (4 guards x 3 bytes); #R$C3FA picks the group from bits 4-5 of
+; the room byte, i.e. the map row mod 4, so a row-band's 4 rooms share one
+; group. Per guard: byte 0 = home column 0-15 (#R$AA31 gates on being within 3
+; of the room's own column); byte 1 = patrol cursor 0-$6F, whose wrap carries
+; +/-1 into byte 0 - the actual room-to-room movement; byte 2 = flags (bit 7
+; step direction, bit 6 facing, bit 5 just-hit, bit 4 dead/away - the
+; persistent form #R$AA31 promotes bit 5 into at $AB3E). Nothing here is
+; cleared by entering the guard's own room - see #R$C276 for the row-2 index
+; bias that makes guard and corpse positions persist.
+b$8A39 DEFB $00,$00,$00
+ $8A3C DEFB $00,$00,$00
+ $8A3F DEFB $00,$00,$00
+ $8A42 DEFB $00,$00,$00
+ $8A45 DEFB $00,$00,$00
+ $8A48 DEFB $00,$00,$00
+ $8A4B DEFB $00,$00,$00
+ $8A4E DEFB $00,$00,$00
+ $8A51 DEFB $00,$00,$00
+ $8A54 DEFB $00,$00,$00
+ $8A57 DEFB $00,$00,$00
+ $8A5A DEFB $00,$00,$00
+ $8A5D DEFB $00,$00,$00
+ $8A60 DEFB $00,$00,$00
+ $8A63 DEFB $00,$00,$00
+ $8A66 DEFB $00,$00,$00
+ $8A69 DEFB $01,$02,$02,$02,$02,$02,$FF,$00
+ $8A71 DEFB $00,$79,$8A,$79,$8A,$8C,$8C,$03
 
 ; Play the main menu melody ($8B82), called from #R$CD6C
 ;
@@ -3116,7 +3144,7 @@ w$8D80 DEFW $8E24,$8E87,$8EEA,$8F4D
  $8E08 DEFW $A7D9,$A965,$A998,$A9CB
  $8E10 DEFW $A9FE
 
-; Source-run pointers for the sprite background save, indexed by #R$C790
+; Pointers into the sprite cell-colour run, indexed by #R$C790
 ;
 ; .
 ;
@@ -3131,7 +3159,13 @@ w$8E12 DEFW $8E1C
  $8E16 DEFW $8E21
  $8E18 DEFW $8E22
  $8E1A DEFW $8E23
- $8E1C DEFB $44,$45,$07,$45,$05,$47,$43,$42
+ $8E1C DEFB $44,$45,$07,$45,$05,$47,$43,$42 ; Sprite cell-colour ramp stamped
+                                            ; into #R$E500 by #R$C790:
+                                            ; $44,$45,$07,$45,$05,$47,$43,$42
+                                            ; (bright
+                                            ; green/cyan/white/cyan/cyan/white/magenta/red)
+                                            ; - shared by every sprite, not
+                                            ; per-actor
 
 ; Robin sprites
 b$8E24 DEFB $03,$20,$00
@@ -3212,7 +3246,20 @@ b$8E24 DEFB $03,$20,$00
  $905E DEFB $0F,$C2,$80,$1F,$8D,$00,$2A,$0E ;
  $9066 DEFB $00,$14,$05,$00,$60,$02,$80,$78 ;
  $906E DEFB $01,$80,$1F,$00,$00,$0E,$00,$00 ; }
- $9076 DEFB $02,$20,$00
+ $9076 DEFB $02,$20,$00                     ; $02,$20,$00 - claims width class
+                                            ; 2, but every other run-frame
+                                            ; header here is $03,$20,$00 and
+                                            ; this frame's own data block is a
+                                            ; dense 96-byte (3 bytes/row x 32
+                                            ; rows) sprite identical in shape
+                                            ; to its neighbours (exactly sized
+                                            ; for width 3, matching the gap to
+                                            ; $9079). A genuine bug/typo in the
+                                            ; original data, not an intentional
+                                            ; narrow frame - rendering it at
+                                            ; its stated width 2 desyncs the
+                                            ; row stride into scattered pixels;
+                                            ; width 3 renders correctly.
  $9079 DEFB $00,$00,$00,$00,$17,$00,$00,$20 ; {#HTML[#UDGARRAY3,4,3,3,,($9079-$90D8-1-24)(robin6)]
  $9081 DEFB $80,$00,$40,$40,$00,$00,$20,$00 ; Robin run 6
  $9089 DEFB $80,$00,$03,$20,$80,$02,$01,$E0 ;
@@ -3543,321 +3590,440 @@ b$9454 DEFB $03,$20,$41
  $9A29 DEFB $00,$00,$00,$00,$00,$00,$00,$00
  $9A31 DEFB $00,$00,$00,$00,$00
 
-; Data block at 9A36
-b$9A36 DEFB $86,$00,$00,$00,$00,$00,$00,$00
- $9A3E DEFB $00,$84,$85,$00,$00,$00,$86,$87
- $9A46 DEFB $88,$00,$00,$00,$89,$8A,$8B,$00
- $9A4E DEFB $00,$00,$8C,$8D,$8E,$00,$00,$45
- $9A56 DEFB $86,$00,$00,$00,$00,$00,$00,$00
- $9A5E DEFB $00,$00,$00,$00,$00,$00,$00,$84
- $9A66 DEFB $85,$00,$00,$00,$86,$87,$8F,$00
- $9A6E DEFB $00,$00,$90,$91,$92,$93,$00,$45
- $9A76 DEFB $06,$00,$00,$00,$00,$00,$00,$00
- $9A7E DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9A86 DEFB $00,$00,$00,$00,$94,$95,$85,$00
- $9A8E DEFB $00,$00,$90,$91,$92,$93,$00,$00
- $9A96 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9A9E DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9AA6 DEFB $00,$00,$45,$45,$45,$00,$00,$00
- $9AAE DEFB $45,$45,$45,$45,$00,$00,$00,$00
- $9AB6 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9ABE DEFB $00,$00,$03,$0C,$00,$00,$00,$03
- $9AC6 DEFB $0E,$70,$80,$00,$0B,$40,$0C,$D2
- $9ACE DEFB $22,$3E,$52,$54,$D2,$00,$00,$E0
- $9AD6 DEFB $38,$07,$00,$00,$00,$1C,$1E,$00
- $9ADE DEFB $15,$2A,$53,$43,$A9,$35,$0B,$8D
- $9AE6 DEFB $C3,$C1,$F3,$E1,$22,$00,$00,$00
- $9AEE DEFB $00,$00,$00,$80,$80,$88,$56,$2A
- $9AF6 DEFB $12,$25,$0F,$0F,$1F,$C5,$12,$11
- $9AFE DEFB $2A,$AA,$78,$7C,$7C,$0F,$04,$03
- $9B06 DEFB $07,$07,$0F,$0D,$02,$78,$00,$B0
- $9B0E DEFB $B8,$7C,$7C,$0E,$B2,$1F,$1F,$1E
- $9B16 DEFB $35,$2A,$00,$3F,$3F,$9C,$1F,$15
- $9B1E DEFB $0A,$10,$0F,$0F,$0F,$00,$00,$00
- $9B26 DEFB $00,$00,$00,$00,$0F,$00,$00,$00
- $9B2E DEFB $0F,$00,$20,$E2,$45,$F0,$3C,$06
- $9B36 DEFB $03,$81,$00,$B0,$E2,$00,$00,$00
- $9B3E DEFB $00,$82,$40,$C0,$E0,$43,$41,$24
- $9B46 DEFB $06,$37,$40,$15,$AB,$C1,$10,$8A
- $9B4E DEFB $14,$08,$A4,$B0,$B0,$60,$00,$90
- $9B56 DEFB $30,$20,$20,$20,$20,$57,$AF,$04
- $9B5E DEFB $03,$07,$07,$0F,$1F,$78,$78,$00
- $9B66 DEFB $70,$78,$CC,$B8,$40,$40,$40,$40
- $9B6E DEFB $80,$00,$00,$00,$00,$1F,$00,$1F
- $9B76 DEFB $34,$2A,$00,$3F,$3F,$8C,$3E,$3F
- $9B7E DEFB $0A,$15,$10,$0F,$0F,$00,$00,$00
- $9B86 DEFB $00,$00,$00,$E0,$18,$00,$00,$1F
- $9B8E DEFB $20,$43,$80,$84,$81,$02,$01,$00
- $9B96 DEFB $80,$40,$00,$20,$C0,$00,$80,$C0
- $9B9E DEFB $60,$20,$18,$10,$0C,$03,$15,$0A
- $9BA6 DEFB $05,$00,$00,$00,$00,$47,$5B,$98
- $9BAE DEFB $5A,$05,$BD,$7B,$7B,$8A,$00,$CA
- $9BB6 DEFB $D4,$E8,$C0,$F0,$F0,$AC,$0C,$AC
- $9BBE DEFB $00,$0C,$0C,$0C,$08,$3D,$1C,$00
- $9BC6 DEFB $1E,$1E,$3F,$7F,$7E,$E0,$E0,$00
- $9BCE DEFB $F0,$F0,$71,$7B,$98,$18,$10,$30
- $9BD6 DEFB $60,$C0,$80,$00,$00,$00,$7C,$F8
- $9BDE DEFB $D4,$A8,$00,$FC,$FC,$60,$7C,$3E
- $9BE6 DEFB $2A,$15,$00,$1F,$1F,$00,$10,$10
- $9BEE DEFB $10,$08,$08,$08,$08,$00,$00,$07
- $9BF6 DEFB $08,$10,$20,$20,$51,$00,$00,$00
- $9BFE DEFB $00,$00,$00,$10,$00,$08,$04,$04
- $9C06 DEFB $04,$04,$04,$04,$04,$00,$00,$01
- $9C0E DEFB $02,$05,$0A,$14,$1A,$02,$82,$41
- $9C16 DEFB $9A,$4D,$2E,$0E,$1D,$EA,$D5,$8A
- $9C1E DEFB $74,$60,$D0,$F8,$F8,$AC,$4C,$AC
- $9C26 DEFB $00,$04,$04,$04,$04,$10,$0E,$0F
- $9C2E DEFB $08,$00,$00,$00,$00,$0D,$08,$06
- $9C36 DEFB $1E,$1F,$3F,$3F,$7E,$F0,$10,$E0
- $9C3E DEFB $F0,$78,$3C,$40,$9C,$04,$04,$04
- $9C46 DEFB $04,$08,$08,$08,$08,$00,$00,$00
- $9C4E DEFB $00,$00,$00,$01,$01,$00,$7C,$78
- $9C56 DEFB $50,$A8,$00,$F8,$F8,$7C,$7E,$7E
- $9C5E DEFB $14,$2A,$00,$1F,$1F,$10,$10,$00
- $9C66 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9C6E DEFB $00,$00,$00,$00,$7F,$00,$00,$00
- $9C76 DEFB $00,$00,$00,$00,$FF,$00,$00,$00
- $9C7E DEFB $00,$00,$08,$10,$F0,$FF,$00,$00
- $9C86 DEFB $00,$00,$00,$00,$00,$FF,$00,$02
- $9C8E DEFB $05,$0A,$0B,$13,$09,$D7,$17,$98
- $9C96 DEFB $D2,$C5,$F2,$E1,$22,$00,$00,$00
- $9C9E DEFB $00,$00,$01,$02,$01,$08,$06,$22
- $9CA6 DEFB $52,$A1,$57,$8F,$1F,$00,$80,$00
- $9CAE DEFB $00,$00,$00,$00,$00,$02,$01,$00
- $9CB6 DEFB $03,$01,$00,$00,$00,$8F,$04,$03
- $9CBE DEFB $C7,$87,$0F,$0F,$02,$00,$00,$00
- $9CC6 DEFB $03,$01,$00,$00,$00,$00,$00,$00
- $9CCE DEFB $00,$80,$C0,$60,$30,$18,$0C,$06
- $9CD6 DEFB $03,$81,$06,$80,$C0,$C1,$C2,$95
- $9CDE DEFB $0A,$68,$60,$F0,$F0,$01,$00,$00
- $9CE6 DEFB $00,$00,$00,$00,$00,$F7,$8F,$04
- $9CEE DEFB $03,$07,$03,$0F,$1F,$00,$00,$00
- $9CF6 DEFB $E0,$E0,$80,$40,$A0,$00,$00,$1F
- $9CFE DEFB $20,$40,$81,$93,$97,$00,$00,$00
- $9D06 DEFB $80,$40,$40,$A0,$80,$00,$00,$00
- $9D0E DEFB $00,$00,$01,$06,$0C,$54,$2A,$15
- $9D16 DEFB $02,$01,$00,$00,$00,$57,$8B,$48
- $9D1E DEFB $92,$5D,$9B,$3B,$3D,$90,$6A,$95
- $9D26 DEFB $C6,$E5,$D2,$F2,$F1,$18,$30,$60
- $9D2E DEFB $40,$80,$70,$40,$80,$60,$E0,$E8
- $9D36 DEFB $E8,$14,$0A,$05,$02,$62,$A1,$51
- $9D3E DEFB $AA,$4C,$1B,$9F,$1D,$E0,$DC,$A9
- $9D46 DEFB $7A,$F9,$F2,$E1,$F0,$0D,$18,$05
- $9D4E DEFB $1D,$1B,$3E,$3F,$78,$D1,$08,$9D
- $9D56 DEFB $AC,$20,$B6,$B6,$13,$40,$80,$00
- $9D5E DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9D66 DEFB $00,$00,$00,$00,$1F,$00,$00,$00
- $9D6E DEFB $00,$00,$00,$00,$F8,$00,$00,$00
- $9D76 DEFB $00,$00,$00,$00,$C0,$00,$00,$00
- $9D7E DEFB $00,$00,$80,$40,$80,$F7,$70,$02
- $9D86 DEFB $55,$AA,$8B,$53,$29,$E7,$07,$80
- $9D8E DEFB $C2,$C5,$F2,$E1,$22,$7C,$00,$00
- $9D96 DEFB $00,$00,$00,$00,$80,$18,$0C,$06
- $9D9E DEFB $03,$85,$02,$84,$CA,$00,$00,$00
- $9DA6 DEFB $00,$80,$40,$C0,$E0,$43,$4B,$61
- $9DAE DEFB $08,$36,$2D,$26,$13,$D3,$CC,$B1
- $9DB6 DEFB $56,$A8,$20,$90,$30,$68,$8C,$86
- $9DBE DEFB $03,$01,$00,$00,$00,$18,$0F,$04
- $9DC6 DEFB $03,$07,$03,$0F,$1F,$00,$00,$00
- $9DCE DEFB $00,$00,$05,$07,$0E,$57,$0B,$28
- $9DD6 DEFB $5D,$29,$55,$2A,$05,$32,$18,$0E
- $9DDE DEFB $1D,$1A,$34,$49,$35,$A0,$70,$A0
- $9DE6 DEFB $90,$30,$70,$B8,$98,$02,$74,$F0
- $9DEE DEFB $D4,$A8,$00,$FC,$FC,$0A,$8D,$56
- $9DF6 DEFB $98,$5D,$1B,$3B,$9D,$80,$3C,$60
- $9DFE DEFB $D4,$CA,$D4,$88,$D4,$6C,$34,$06
- $9E06 DEFB $00,$00,$00,$00,$00,$0D,$80,$EE
- $9E0E DEFB $32,$0D,$31,$3C,$7E,$A8,$50,$20
- $9E16 DEFB $00,$B0,$88,$30,$9E,$00,$00,$00
- $9E1E DEFB $00,$00,$03,$03,$03,$00,$00,$00
- $9E26 DEFB $00,$00,$20,$C0,$E1,$00,$00,$00
- $9E2E DEFB $00,$3A,$41,$80,$00,$00,$00,$00
- $9E36 DEFB $00,$00,$00,$80,$00,$51,$A0,$55
- $9E3E DEFB $2A,$14,$0A,$00,$05,$00,$88,$17
- $9E46 DEFB $8E,$8C,$D2,$C6,$EE,$40,$00,$00
- $9E4E DEFB $00,$40,$A2,$5A,$A6,$07,$03,$03
- $9E56 DEFB $04,$07,$0F,$1F,$3E,$DC,$E8,$04
- $9E5E DEFB $E8,$F4,$E6,$DE,$27,$56,$06,$02
- $9E66 DEFB $02,$00,$00,$00,$00,$00,$FF,$00
- $9E6E DEFB $00,$00,$00,$00,$00,$04,$F8,$00
- $9E76 DEFB $00,$00,$00,$00,$00,$01,$3E,$7C
- $9E7E DEFB $54,$A8,$00,$F0,$F0,$18,$1F,$0F
- $9E86 DEFB $0D,$0A,$00,$0F,$0F,$00,$00,$00
- $9E8E DEFB $80,$80,$00,$80,$80,$00,$00,$00
- $9E96 DEFB $00,$00,$E0,$18,$00,$60,$80,$00
- $9E9E DEFB $00,$00,$00,$00,$00,$00,$00,$40
- $9EA6 DEFB $40,$80,$40,$C0,$E0,$00,$00,$00
- $9EAE DEFB $40,$C0,$80,$00,$00,$00,$00,$00
- $9EB6 DEFB $00,$00,$00,$80,$80,$90,$6A,$95
- $9EBE DEFB $C6,$E5,$D2,$EA,$58,$18,$0C,$06
- $9EC6 DEFB $03,$01,$00,$00,$00,$00,$80,$00
- $9ECE DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $9ED6 DEFB $34,$56,$47,$A0,$D7,$00,$00,$00
- $9EDE DEFB $00,$00,$00,$80,$80,$00,$01,$00
- $9EE6 DEFB $01,$00,$01,$00,$00,$F7,$0C,$4C
- $9EEE DEFB $6D,$61,$3F,$80,$AA,$80,$40,$80
- $9EF6 DEFB $C0,$88,$4C,$9C,$DA,$02,$05,$00
- $9EFE DEFB $3F,$00,$06,$03,$00,$54,$29,$C0
- $9F06 DEFB $DE,$C0,$3A,$7A,$FA,$36,$B4,$EC
- $9F0E DEFB $6C,$58,$50,$A0,$A0,$00,$00,$01
- $9F16 DEFB $00,$01,$01,$00,$01,$04,$00,$FE
- $9F1E DEFB $B2,$42,$0A,$A5,$52,$C0,$00,$E0
- $9F26 DEFB $C0,$20,$00,$40,$A0,$80,$40,$80
- $9F2E DEFB $C0,$80,$40,$80,$C0,$02,$00,$00
- $9F36 DEFB $02,$05,$00,$3F,$00,$54,$80,$AA
- $9F3E DEFB $54,$29,$C0,$DE,$C0,$00,$80,$80
- $9F46 DEFB $00,$00,$7F,$BF,$80,$00,$00,$00
- $9F4E DEFB $00,$00,$FC,$EC,$18,$00,$00,$00
- $9F56 DEFB $00,$00,$00,$00,$01,$00,$00,$00
- $9F5E DEFB $34,$56,$47,$A0,$D7,$02,$01,$02
- $9F66 DEFB $01,$00,$02,$01,$02,$00,$00,$00
- $9F6E DEFB $00,$00,$01,$00,$00,$00,$34,$4A
- $9F76 DEFB $BD,$7E,$5A,$7E,$24,$00,$00,$00
- $9F7E DEFB $00,$00,$80,$00,$00,$00,$07,$0F
- $9F86 DEFB $1F,$3F,$3D,$3B,$37,$E7,$7E,$BD
- $9F8E DEFB $C3,$FF,$DB,$FF,$5A,$00,$E0,$F0
- $9F96 DEFB $E8,$F4,$BA,$DA,$ED,$00,$00,$00
- $9F9E DEFB $00,$00,$00,$00,$00,$27,$31,$3A
- $9FA6 DEFB $19,$00,$02,$01,$02,$E7,$67,$FF
- $9FAE DEFB $7F,$BF,$66,$99,$62,$C7,$CE,$9C
- $9FB6 DEFB $58,$80,$40,$80,$40,$07,$01,$02
- $9FBE DEFB $07,$05,$22,$1E,$00,$01,$AA,$3E
- $9FC6 DEFB $C1,$C1,$80,$00,$00,$60,$C0,$20
- $9FCE DEFB $F0,$D0,$A2,$3C,$00,$00,$14,$0A
- $9FD6 DEFB $61,$60,$A8,$F8,$30,$00,$07,$0F
- $9FDE DEFB $17,$2F,$7D,$FB,$F7,$FF,$7E,$BD
- $9FE6 DEFB $C3,$FF,$DB,$FF,$5A,$00,$E0,$F0
- $9FEE DEFB $E8,$F4,$BA,$DA,$ED,$02,$06,$0A
- $9FF6 DEFB $00,$00,$00,$00,$00,$E2,$C1,$02
- $9FFE DEFB $01,$00,$02,$01,$02,$00,$00,$1E
- $A006 DEFB $06,$04,$00,$00,$00,$00,$07,$FF
- $A00E DEFB $17,$EF,$7D,$0B,$07,$00,$00,$00
- $A016 DEFB $00,$00,$00,$67,$E7,$00,$00,$00
- $A01E DEFB $00,$00,$01,$E6,$CC,$00,$00,$00
- $A026 DEFB $00,$00,$60,$B8,$04,$00,$01,$02
- $A02E DEFB $06,$0E,$0C,$09,$01,$2E,$00,$CC
- $A036 DEFB $D7,$CB,$C7,$8B,$80,$F7,$EE,$64
- $A03E DEFB $6C,$C1,$80,$00,$00,$D8,$15,$62
- $A046 DEFB $B9,$56,$68,$0C,$00,$A2,$00,$00
- $A04E DEFB $82,$C2,$E4,$E8,$D0
+; Guard frame $10 (facing front) via the shared $8DC4 base, one of 3 frames
+; picked by #R$AC7B for a room block's bit 5 case, 32 bytes (flat attribute $45
+; at $9A55)
+b$9A36 DEFB $86
+ $9A37 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img
+ $9A3D DEFB $00,$00,$84,$85,$00,$00 ; src="images/9a36_guard_front.png" />]
+ $9A43 DEFB $00,$86,$87,$88,$00,$00 ;
+ $9A49 DEFB $00,$89,$8A,$8B,$00,$00 ;
+ $9A4F DEFB $00,$8C,$8D,$8E,$00,$00 ; }
+ $9A55 DEFB $45
+; Guard frame $11 (dying), 32 bytes (flat attribute $45 at $9A75)
+ $9A56 DEFB $86
+ $9A57 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img
+ $9A5D DEFB $00,$00,$00,$00,$00,$00 ; src="images/9a56_guard_dying.png" />]
+ $9A63 DEFB $00,$00,$84,$85,$00,$00 ;
+ $9A69 DEFB $00,$86,$87,$8F,$00,$00 ;
+ $9A6F DEFB $00,$90,$91,$92,$93,$00 ; }
+ $9A75 DEFB $45
+; Guard frame $12 (dead), 61 bytes (header $06, per-cell attributes - all $45
+; bright cyan where drawn) - unlike its two $86-header siblings above, spans
+; all the way to $9AB3 (the font base), so the old $9A96 boundary here was
+; mid-frame, not real.
+ $9A76 DEFB $06
+ $9A77 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img src="images/9a76_guard.png"
+ $9A7D DEFB $00,$00,$00,$00,$00,$00 ; />]
+ $9A83 DEFB $00,$00,$00,$00,$00,$00 ;
+ $9A89 DEFB $00,$94,$95,$85,$00,$00 ;
+ $9A8F DEFB $00,$90,$91,$92,$93,$00 ; }
+ $9A95 DEFB $00,$00,$00,$00,$00,$00 ; {Attributes
+ $9A9B DEFB $00,$00,$00,$00,$00,$00 ;
+ $9AA1 DEFB $00,$00,$00,$00,$00,$00 ;
+ $9AA7 DEFB $00,$45,$45,$45,$00,$00 ;
+ $9AAD DEFB $00,$45,$45,$45,$45,$00 ; }
 
-; Data block at A053
-b$A053 DEFB $86,$01,$02,$03,$04,$7C,$00,$00
- $A05B DEFB $05,$06,$07,$00,$00,$00,$08,$09
- $A063 DEFB $3F,$00,$00,$00,$0A,$0B,$00,$00
- $A06B DEFB $00,$00,$0C,$0D,$80,$00,$00,$44
+; Sprite/HUD tile sheet, 180 tiles ($00-$B3), 8 bytes each
+;
+; .
+;
+; .
+;
+; Shared glyph font read by #R$C5E4/#R$C648 (base fixed at $9AB3 in the code,
+; "LD BC,$9AB3"), tile = code*8. Despite the name, most tiles aren't text
+; glyphs - they're the interchangeable body-part pieces the wide-class
+; glyph-grid sprite format (see #R$A230, #R$A190) assembles full character
+; sprites from (arms, legs, heads etc, codes roughly $80-$B3 confirmed this
+; session via the Sheriff/guard/Robin frames). Runs up to $A052; #R$A053 is the
+; first real sprite-frame block after it.
+b$9AB3 DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $9ABB DEFB $00,$00,$00,$00,$00,$03,$0C,$00
+ $9AC3 DEFB $00,$00,$03,$0E,$70,$80,$00,$0B
+ $9ACB DEFB $40,$0C,$D2,$22,$3E,$52,$54,$D2
+ $9AD3 DEFB $00,$00,$E0,$38,$07,$00,$00,$00
+ $9ADB DEFB $1C,$1E,$00,$15,$2A,$53,$43,$A9
+ $9AE3 DEFB $35,$0B,$8D,$C3,$C1,$F3,$E1,$22
+ $9AEB DEFB $00,$00,$00,$00,$00,$00,$80,$80
+ $9AF3 DEFB $88,$56,$2A,$12,$25,$0F,$0F,$1F
+ $9AFB DEFB $C5,$12,$11,$2A,$AA,$78,$7C,$7C
+ $9B03 DEFB $0F,$04,$03,$07,$07,$0F,$0D,$02
+ $9B0B DEFB $78,$00,$B0,$B8,$7C,$7C,$0E,$B2
+ $9B13 DEFB $1F,$1F,$1E,$35,$2A,$00,$3F,$3F
+ $9B1B DEFB $9C,$1F,$15,$0A,$10,$0F,$0F,$0F
+ $9B23 DEFB $00,$00,$00,$00,$00,$00,$00,$0F
+ $9B2B DEFB $00,$00,$00,$0F,$00,$20,$E2,$45
+ $9B33 DEFB $F0,$3C,$06,$03,$81,$00,$B0,$E2
+ $9B3B DEFB $00,$00,$00,$00,$82,$40,$C0,$E0
+ $9B43 DEFB $43,$41,$24,$06,$37,$40,$15,$AB
+ $9B4B DEFB $C1,$10,$8A,$14,$08,$A4,$B0,$B0
+ $9B53 DEFB $60,$00,$90,$30,$20,$20,$20,$20
+ $9B5B DEFB $57,$AF,$04,$03,$07,$07,$0F,$1F
+ $9B63 DEFB $78,$78,$00,$70,$78,$CC,$B8,$40
+ $9B6B DEFB $40,$40,$40,$80,$00,$00,$00,$00
+ $9B73 DEFB $1F,$00,$1F,$34,$2A,$00,$3F,$3F
+ $9B7B DEFB $8C,$3E,$3F,$0A,$15,$10,$0F,$0F
+ $9B83 DEFB $00,$00,$00,$00,$00,$00,$E0,$18
+ $9B8B DEFB $00,$00,$1F,$20,$43,$80,$84,$81
+ $9B93 DEFB $02,$01,$00,$80,$40,$00,$20,$C0
+ $9B9B DEFB $00,$80,$C0,$60,$20,$18,$10,$0C
+ $9BA3 DEFB $03,$15,$0A,$05,$00,$00,$00,$00
+ $9BAB DEFB $47,$5B,$98,$5A,$05,$BD,$7B,$7B
+ $9BB3 DEFB $8A,$00,$CA,$D4,$E8,$C0,$F0,$F0
+ $9BBB DEFB $AC,$0C,$AC,$00,$0C,$0C,$0C,$08
+ $9BC3 DEFB $3D,$1C,$00,$1E,$1E,$3F,$7F,$7E
+ $9BCB DEFB $E0,$E0,$00,$F0,$F0,$71,$7B,$98
+ $9BD3 DEFB $18,$10,$30,$60,$C0,$80,$00,$00
+ $9BDB DEFB $00,$7C,$F8,$D4,$A8,$00,$FC,$FC
+ $9BE3 DEFB $60,$7C,$3E,$2A,$15,$00,$1F,$1F
+ $9BEB DEFB $00,$10,$10,$10,$08,$08,$08,$08
+ $9BF3 DEFB $00,$00,$07,$08,$10,$20,$20,$51
+ $9BFB DEFB $00,$00,$00,$00,$00,$00,$10,$00
+ $9C03 DEFB $08,$04,$04,$04,$04,$04,$04,$04
+ $9C0B DEFB $00,$00,$01,$02,$05,$0A,$14,$1A
+ $9C13 DEFB $02,$82,$41,$9A,$4D,$2E,$0E,$1D
+ $9C1B DEFB $EA,$D5,$8A,$74,$60,$D0,$F8,$F8
+ $9C23 DEFB $AC,$4C,$AC,$00,$04,$04,$04,$04
+ $9C2B DEFB $10,$0E,$0F,$08,$00,$00,$00,$00
+ $9C33 DEFB $0D,$08,$06,$1E,$1F,$3F,$3F,$7E
+ $9C3B DEFB $F0,$10,$E0,$F0,$78,$3C,$40,$9C
+ $9C43 DEFB $04,$04,$04,$04,$08,$08,$08,$08
+ $9C4B DEFB $00,$00,$00,$00,$00,$00,$01,$01
+ $9C53 DEFB $00,$7C,$78,$50,$A8,$00,$F8,$F8
+ $9C5B DEFB $7C,$7E,$7E,$14,$2A,$00,$1F,$1F
+ $9C63 DEFB $10,$10,$00,$00,$00,$00,$00,$00
+ $9C6B DEFB $00,$00,$00,$00,$00,$00,$00,$7F
+ $9C73 DEFB $00,$00,$00,$00,$00,$00,$00,$FF
+ $9C7B DEFB $00,$00,$00,$00,$00,$08,$10,$F0
+ $9C83 DEFB $FF,$00,$00,$00,$00,$00,$00,$00
+ $9C8B DEFB $FF,$00,$02,$05,$0A,$0B,$13,$09
+ $9C93 DEFB $D7,$17,$98,$D2,$C5,$F2,$E1,$22
+ $9C9B DEFB $00,$00,$00,$00,$00,$01,$02,$01
+ $9CA3 DEFB $08,$06,$22,$52,$A1,$57,$8F,$1F
+ $9CAB DEFB $00,$80,$00,$00,$00,$00,$00,$00
+ $9CB3 DEFB $02,$01,$00,$03,$01,$00,$00,$00
+ $9CBB DEFB $8F,$04,$03,$C7,$87,$0F,$0F,$02
+ $9CC3 DEFB $00,$00,$00,$03,$01,$00,$00,$00
+ $9CCB DEFB $00,$00,$00,$00,$80,$C0,$60,$30
+ $9CD3 DEFB $18,$0C,$06,$03,$81,$06,$80,$C0
+ $9CDB DEFB $C1,$C2,$95,$0A,$68,$60,$F0,$F0
+ $9CE3 DEFB $01,$00,$00,$00,$00,$00,$00,$00
+ $9CEB DEFB $F7,$8F,$04,$03,$07,$03,$0F,$1F
+ $9CF3 DEFB $00,$00,$00,$E0,$E0,$80,$40,$A0
+ $9CFB DEFB $00,$00,$1F,$20,$40,$81,$93,$97
+ $9D03 DEFB $00,$00,$00,$80,$40,$40,$A0,$80
+ $9D0B DEFB $00,$00,$00,$00,$00,$01,$06,$0C
+ $9D13 DEFB $54,$2A,$15,$02,$01,$00,$00,$00
+ $9D1B DEFB $57,$8B,$48,$92,$5D,$9B,$3B,$3D
+ $9D23 DEFB $90,$6A,$95,$C6,$E5,$D2,$F2,$F1
+ $9D2B DEFB $18,$30,$60,$40,$80,$70,$40,$80
+ $9D33 DEFB $60,$E0,$E8,$E8,$14,$0A,$05,$02
+ $9D3B DEFB $62,$A1,$51,$AA,$4C,$1B,$9F,$1D
+ $9D43 DEFB $E0,$DC,$A9,$7A,$F9,$F2,$E1,$F0
+ $9D4B DEFB $0D,$18,$05,$1D,$1B,$3E,$3F,$78
+ $9D53 DEFB $D1,$08,$9D,$AC,$20,$B6,$B6,$13
+ $9D5B DEFB $40,$80,$00,$00,$00,$00,$00,$00
+ $9D63 DEFB $00,$00,$00,$00,$00,$00,$00,$1F
+ $9D6B DEFB $00,$00,$00,$00,$00,$00,$00,$F8
+ $9D73 DEFB $00,$00,$00,$00,$00,$00,$00,$C0
+ $9D7B DEFB $00,$00,$00,$00,$00,$80,$40,$80
+ $9D83 DEFB $F7,$70,$02,$55,$AA,$8B,$53,$29
+ $9D8B DEFB $E7,$07,$80,$C2,$C5,$F2,$E1,$22
+ $9D93 DEFB $7C,$00,$00,$00,$00,$00,$00,$80
+ $9D9B DEFB $18,$0C,$06,$03,$85,$02,$84,$CA
+ $9DA3 DEFB $00,$00,$00,$00,$80,$40,$C0,$E0
+ $9DAB DEFB $43,$4B,$61,$08,$36,$2D,$26,$13
+ $9DB3 DEFB $D3,$CC,$B1,$56,$A8,$20,$90,$30
+ $9DBB DEFB $68,$8C,$86,$03,$01,$00,$00,$00
+ $9DC3 DEFB $18,$0F,$04,$03,$07,$03,$0F,$1F
+ $9DCB DEFB $00,$00,$00,$00,$00,$05,$07,$0E
+ $9DD3 DEFB $57,$0B,$28,$5D,$29,$55,$2A,$05
+ $9DDB DEFB $32,$18,$0E,$1D,$1A,$34,$49,$35
+ $9DE3 DEFB $A0,$70,$A0,$90,$30,$70,$B8,$98
+ $9DEB DEFB $02,$74,$F0,$D4,$A8,$00,$FC,$FC
+ $9DF3 DEFB $0A,$8D,$56,$98,$5D,$1B,$3B,$9D
+ $9DFB DEFB $80,$3C,$60,$D4,$CA,$D4,$88,$D4
+ $9E03 DEFB $6C,$34,$06,$00,$00,$00,$00,$00
+ $9E0B DEFB $0D,$80,$EE,$32,$0D,$31,$3C,$7E
+ $9E13 DEFB $A8,$50,$20,$00,$B0,$88,$30,$9E
+ $9E1B DEFB $00,$00,$00,$00,$00,$03,$03,$03
+ $9E23 DEFB $00,$00,$00,$00,$00,$20,$C0,$E1
+ $9E2B DEFB $00,$00,$00,$00,$3A,$41,$80,$00
+ $9E33 DEFB $00,$00,$00,$00,$00,$00,$80,$00
+ $9E3B DEFB $51,$A0,$55,$2A,$14,$0A,$00,$05
+ $9E43 DEFB $00,$88,$17,$8E,$8C,$D2,$C6,$EE
+ $9E4B DEFB $40,$00,$00,$00,$40,$A2,$5A,$A6
+ $9E53 DEFB $07,$03,$03,$04,$07,$0F,$1F,$3E
+ $9E5B DEFB $DC,$E8,$04,$E8,$F4,$E6,$DE,$27
+ $9E63 DEFB $56,$06,$02,$02,$00,$00,$00,$00
+ $9E6B DEFB $00,$FF,$00,$00,$00,$00,$00,$00
+ $9E73 DEFB $04,$F8,$00,$00,$00,$00,$00,$00
+ $9E7B DEFB $01,$3E,$7C,$54,$A8,$00,$F0,$F0
+ $9E83 DEFB $18,$1F,$0F,$0D,$0A,$00,$0F,$0F
+ $9E8B DEFB $00,$00,$00,$80,$80,$00,$80,$80
+ $9E93 DEFB $00,$00,$00,$00,$00,$E0,$18,$00
+ $9E9B DEFB $60,$80,$00,$00,$00,$00,$00,$00
+ $9EA3 DEFB $00,$00,$40,$40,$80,$40,$C0,$E0
+ $9EAB DEFB $00,$00,$00,$40,$C0,$80,$00,$00
+ $9EB3 DEFB $00,$00,$00,$00,$00,$00,$80,$80
+ $9EBB DEFB $90,$6A,$95,$C6,$E5,$D2,$EA,$58
+ $9EC3 DEFB $18,$0C,$06,$03,$01,$00,$00,$00
+ $9ECB DEFB $00,$80,$00,$00,$00,$00,$00,$00
+ $9ED3 DEFB $00,$00,$00,$34,$56,$47,$A0,$D7
+ $9EDB DEFB $00,$00,$00,$00,$00,$00,$80,$80
+ $9EE3 DEFB $00,$01,$00,$01,$00,$01,$00,$00
+ $9EEB DEFB $F7,$0C,$4C,$6D,$61,$3F,$80,$AA
+ $9EF3 DEFB $80,$40,$80,$C0,$88,$4C,$9C,$DA
+ $9EFB DEFB $02,$05,$00,$3F,$00,$06,$03,$00
+ $9F03 DEFB $54,$29,$C0,$DE,$C0,$3A,$7A,$FA
+ $9F0B DEFB $36,$B4,$EC,$6C,$58,$50,$A0,$A0
+ $9F13 DEFB $00,$00,$01,$00,$01,$01,$00,$01
+ $9F1B DEFB $04,$00,$FE,$B2,$42,$0A,$A5,$52
+ $9F23 DEFB $C0,$00,$E0,$C0,$20,$00,$40,$A0
+ $9F2B DEFB $80,$40,$80,$C0,$80,$40,$80,$C0
+ $9F33 DEFB $02,$00,$00,$02,$05,$00,$3F,$00
+ $9F3B DEFB $54,$80,$AA,$54,$29,$C0,$DE,$C0
+ $9F43 DEFB $00,$80,$80,$00,$00,$7F,$BF,$80
+ $9F4B DEFB $00,$00,$00,$00,$00,$FC,$EC,$18
+ $9F53 DEFB $00,$00,$00,$00,$00,$00,$00,$01
+ $9F5B DEFB $00,$00,$00,$34,$56,$47,$A0,$D7
+ $9F63 DEFB $02,$01,$02,$01,$00,$02,$01,$02
+ $9F6B DEFB $00,$00,$00,$00,$00,$01,$00,$00
+ $9F73 DEFB $00,$34,$4A,$BD,$7E,$5A,$7E,$24
+ $9F7B DEFB $00,$00,$00,$00,$00,$80,$00,$00
+ $9F83 DEFB $00,$07,$0F,$1F,$3F,$3D,$3B,$37
+ $9F8B DEFB $E7,$7E,$BD,$C3,$FF,$DB,$FF,$5A
+ $9F93 DEFB $00,$E0,$F0,$E8,$F4,$BA,$DA,$ED
+ $9F9B DEFB $00,$00,$00,$00,$00,$00,$00,$00
+ $9FA3 DEFB $27,$31,$3A,$19,$00,$02,$01,$02
+ $9FAB DEFB $E7,$67,$FF,$7F,$BF,$66,$99,$62
+ $9FB3 DEFB $C7,$CE,$9C,$58,$80,$40,$80,$40
+ $9FBB DEFB $07,$01,$02,$07,$05,$22,$1E,$00
+ $9FC3 DEFB $01,$AA,$3E,$C1,$C1,$80,$00,$00
+ $9FCB DEFB $60,$C0,$20,$F0,$D0,$A2,$3C,$00
+ $9FD3 DEFB $00,$14,$0A,$61,$60,$A8,$F8,$30
+ $9FDB DEFB $00,$07,$0F,$17,$2F,$7D,$FB,$F7
+ $9FE3 DEFB $FF,$7E,$BD,$C3,$FF,$DB,$FF,$5A
+ $9FEB DEFB $00,$E0,$F0,$E8,$F4,$BA,$DA,$ED
+ $9FF3 DEFB $02,$06,$0A,$00,$00,$00,$00,$00
+ $9FFB DEFB $E2,$C1,$02,$01,$00,$02,$01,$02
+ $A003 DEFB $00,$00,$1E,$06,$04,$00,$00,$00
+ $A00B DEFB $00,$07,$FF,$17,$EF,$7D,$0B,$07
+ $A013 DEFB $00,$00,$00,$00,$00,$00,$67,$E7
+ $A01B DEFB $00,$00,$00,$00,$00,$01,$E6,$CC
+ $A023 DEFB $00,$00,$00,$00,$00,$60,$B8,$04
+ $A02B DEFB $00,$01,$02,$06,$0E,$0C,$09,$01
+ $A033 DEFB $2E,$00,$CC,$D7,$CB,$C7,$8B,$80
+ $A03B DEFB $F7,$EE,$64,$6C,$C1,$80,$00,$00
+ $A043 DEFB $D8,$15,$62,$B9,$56,$68,$0C,$00
+ $A04B DEFB $A2,$00,$00,$82,$C2,$E4,$E8,$D0
 
-; Data block at A073
-b$A073 DEFB $86,$00,$0E,$58,$00,$00,$00,$00
- $A07B DEFB $0F,$10,$11,$00,$00,$00,$12,$13
- $A083 DEFB $14,$00,$00,$46,$15,$16,$17,$00
- $A08B DEFB $00,$00,$18,$19,$80,$00,$00,$44
+; Robin sprite frame $14 (ARROW SHOT RIGHT, first frame of #R$CCC9 - bow held
+; up), 32 bytes via #R$8D80
+b$A053 DEFB $86
+ $A054 DEFB $01,$02,$03,$04,$7C,$00 ; {#HTML[<img
+ $A05A DEFB $00,$05,$06,$07,$00,$00 ; src="images/a053_robin_bow.png" />]
+ $A060 DEFB $00,$08,$09,$3F,$00,$00 ;
+ $A066 DEFB $00,$0A,$0B,$00,$00,$00 ;
+ $A06C DEFB $00,$0C,$0D,$80,$00,$00 ; }
+ $A072 DEFB $44
 
-; Data block at A093
-b$A093 DEFB $86,$00,$00,$1A,$00,$00,$00,$00
- $A09B DEFB $1B,$1C,$1D,$00,$00,$1E,$1F,$20
- $A0A3 DEFB $21,$83,$00,$00,$22,$23,$24,$00
- $A0AB DEFB $00,$00,$25,$26,$00,$00,$00,$44
+; Robin sprite frame $15 (ARROW SHOT RIGHT, 2nd frame of #R$CCC9 - bow held
+; up), 32 bytes via #R$8D80
+b$A073 DEFB $86
+ $A074 DEFB $00,$0E,$58,$00,$00,$00 ; {#HTML[<img
+ $A07A DEFB $00,$0F,$10,$11,$00,$00 ; src="images/a073_robin_bow.png" />]
+ $A080 DEFB $00,$12,$13,$14,$00,$00 ;
+ $A086 DEFB $46,$15,$16,$17,$00,$00 ;
+ $A08C DEFB $00,$18,$19,$80,$00,$00 ; }
+ $A092 DEFB $44
 
-; Data block at A0B3
-b$A0B3 DEFB $86,$00,$00,$00,$27,$00,$00,$00
- $A0BB DEFB $28,$29,$2A,$00,$00,$2B,$2C,$2D
- $A0C3 DEFB $2E,$00,$00,$2F,$30,$31,$32,$00
- $A0CB DEFB $00,$33,$34,$35,$36,$00,$00,$44
+; Robin sprite frame $16 (ARROW SHOT RIGHT, held frame of #R$CCC9 - release
+; pose), 32 bytes via #R$8D80
+b$A093 DEFB $86
+ $A094 DEFB $00,$00,$1A,$00,$00,$00 ; {#HTML[<img
+ $A09A DEFB $00,$1B,$1C,$1D,$00,$00 ; src="images/a093_robin_bow.png" />]
+ $A0A0 DEFB $1E,$1F,$20,$21,$83,$00 ;
+ $A0A6 DEFB $00,$22,$23,$24,$00,$00 ;
+ $A0AC DEFB $00,$25,$26,$00,$00,$00 ; }
+ $A0B2 DEFB $44
 
-; Data block at A0D3
-b$A0D3 DEFB $86,$37,$38,$39,$00,$00,$00,$3A
- $A0DB DEFB $3B,$3C,$07,$00,$00,$3D,$3E,$09
- $A0E3 DEFB $3F,$00,$00,$40,$41,$0B,$00,$00
- $A0EB DEFB $00,$00,$0C,$0D,$80,$00,$00,$44
+; Robin sprite frame $17 (ARROW SHOT RIGHT, final frame of #R$CCC9 - arrow
+; released, bow lowering), 32 bytes via #R$8D80
+b$A0B3 DEFB $86
+ $A0B4 DEFB $00,$00,$00,$27,$00,$00 ; {#HTML[<img
+ $A0BA DEFB $00,$28,$29,$2A,$00,$00 ; src="images/a0b3_robin_bow.png" />]
+ $A0C0 DEFB $2B,$2C,$2D,$2E,$00,$00 ;
+ $A0C6 DEFB $2F,$30,$31,$32,$00,$00 ;
+ $A0CC DEFB $33,$34,$35,$36,$00,$00 ; }
+ $A0D2 DEFB $44
 
-; Data block at A0F3
-b$A0F3 DEFB $86,$00,$42,$43,$00,$00,$00,$00
- $A0FB DEFB $0F,$44,$7E,$00,$00,$00,$12,$45
- $A103 DEFB $7D,$00,$00,$46,$47,$16,$00,$00
- $A10B DEFB $00,$00,$18,$19,$80,$00,$00,$44
+; Robin sprite frame $18 (SWORD ATTACK MOVING RIGHT, first frame of #R$CC9D -
+; sword raised overhead), 32 bytes via #R$8D80
+b$A0D3 DEFB $86
+ $A0D4 DEFB $37,$38,$39,$00,$00,$00 ; {#HTML[<img
+ $A0DA DEFB $3A,$3B,$3C,$07,$00,$00 ; src="images/a0d3_robin_sword.png" />]
+ $A0E0 DEFB $3D,$3E,$09,$3F,$00,$00 ;
+ $A0E6 DEFB $40,$41,$0B,$00,$00,$00 ;
+ $A0EC DEFB $00,$0C,$0D,$80,$00,$00 ; }
+ $A0F2 DEFB $44
 
-; Data block at A113
-b$A113 DEFB $86,$00,$00,$00,$00,$00,$00,$48
- $A11B DEFB $49,$4A,$4B,$00,$00,$4C,$4D,$4E
- $A123 DEFB $4F,$00,$00,$00,$22,$31,$00,$00
- $A12B DEFB $00,$00,$25,$26,$00,$00,$00,$44
+; Robin sprite frame $19 (SWORD ATTACK MOVING RIGHT, 2nd frame of #R$CC9D), 32
+; bytes via #R$8D80
+b$A0F3 DEFB $86
+ $A0F4 DEFB $00,$42,$43,$00,$00,$00 ; {#HTML[<img
+ $A0FA DEFB $00,$0F,$44,$7E,$00,$00 ; src="images/a0f3_robin_sword.png" />]
+ $A100 DEFB $00,$12,$45,$7D,$00,$00 ;
+ $A106 DEFB $46,$47,$16,$00,$00,$00 ;
+ $A10C DEFB $00,$18,$19,$80,$00,$00 ; }
+ $A112 DEFB $44
 
-; Data block at A133
-b$A133 DEFB $86,$00,$00,$00,$00,$00,$00,$50
- $A13B DEFB $28,$29,$00,$00,$00,$46,$51,$52
- $A143 DEFB $59,$00,$00,$00,$53,$54,$55,$00
- $A14B DEFB $00,$33,$34,$35,$00,$00,$00,$44
+; Robin sprite frame $1A (SWORD ATTACK MOVING RIGHT, mid-swing frame of #R$CC9D
+; - appears twice in the cycle), 32 bytes via #R$8D80
+b$A113 DEFB $86
+ $A114 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img
+ $A11A DEFB $48,$49,$4A,$4B,$00,$00 ; src="images/a113_robin_sword.png" />]
+ $A120 DEFB $4C,$4D,$4E,$4F,$00,$00 ;
+ $A126 DEFB $00,$22,$31,$00,$00,$00 ;
+ $A12C DEFB $00,$25,$26,$00,$00,$00 ; }
+ $A132 DEFB $44
 
-; Data block at A153
-b$A153 DEFB $06,$00,$00,$00,$00,$00,$00,$6D
- $A15B DEFB $6E,$6F,$70,$00,$00,$00,$71,$72
- $A163 DEFB $73,$38,$57,$00,$74,$75,$76,$77
- $A16B DEFB $78,$33,$79,$7A,$7B,$00,$00,$00
- $A173 DEFB $00,$00,$00,$00,$00,$44,$44,$44
- $A17B DEFB $44,$00,$00,$00,$44,$44,$44,$45
- $A183 DEFB $45,$00,$44,$44,$44,$45,$45,$44
- $A18B DEFB $44,$44,$44,$00,$00
+; Robin sprite frame $1B (SWORD ATTACK MOVING RIGHT, sword lowered, held frame
+; of #R$CC9D), 32 bytes via #R$8D80
+b$A133 DEFB $86
+ $A134 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img
+ $A13A DEFB $50,$28,$29,$00,$00,$00 ; src="images/a133_robin_sword.png" />]
+ $A140 DEFB $46,$51,$52,$59,$00,$00 ;
+ $A146 DEFB $00,$53,$54,$55,$00,$00 ;
+ $A14C DEFB $33,$34,$35,$00,$00,$00 ; }
+ $A152 DEFB $44
 
-; Data block at A190
-b$A190 DEFB $86,$38,$56,$57,$57,$00,$00,$3A
- $A198 DEFB $5A,$5B,$5C,$00,$00,$00,$08,$09
- $A1A0 DEFB $3F,$00,$00,$00,$0A,$0B,$00,$00
- $A1A8 DEFB $00,$00,$0C,$0D,$80,$00,$00,$44
+; Robin sprite frame $1C (SWORD ATTACK MOVING RIGHT, final frame of #R$CC9D),
+; 61 bytes via #R$8D80
+;
+; .
+;
+; .
+;
+; Header $06 (bit 7 clear) - unlike its sibling frames in this sequence (all
+; header $86), this one carries a real 30-byte attribute stream at $A172, same
+; format as #R$A230.
+b$A153 DEFB $06
+ $A154 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img
+ $A15A DEFB $6D,$6E,$6F,$70,$00,$00 ; src="images/a153_robin_sword.png" />]
+ $A160 DEFB $00,$71,$72,$73,$38,$57 ;
+ $A166 DEFB $00,$74,$75,$76,$77,$78 ;
+ $A16C DEFB $33,$79,$7A,$7B,$00,$00 ; }
+ $A172 DEFB $00,$00,$00,$00,$00,$00 ; {Attributes
+ $A178 DEFB $44,$44,$44,$44,$00,$00 ;
+ $A17E DEFB $00,$44,$44,$44,$45,$45 ;
+ $A184 DEFB $00,$44,$44,$44,$45,$45 ;
+ $A18A DEFB $44,$44,$44,$44,$00,$00 ; }
 
-; Data block at A1B0
-b$A1B0 DEFB $86,$00,$82,$43,$00,$00,$00,$00
- $A1B8 DEFB $0F,$5D,$5E,$00,$00,$00,$5F,$60
- $A1C0 DEFB $61,$00,$00,$00,$62,$16,$00,$00
- $A1C8 DEFB $00,$00,$18,$19,$80,$00,$00,$44
+; Robin sprite frame $1D (STICK SWING RIGHT, see #R$CCDF), 32 bytes via #R$8D80
+b$A190 DEFB $86
+ $A191 DEFB $38,$56,$57,$57,$00,$00 ; {#HTML[<img src="images/a190_frame1d.png"
+ $A197 DEFB $3A,$5A,$5B,$5C,$00,$00 ; />]
+ $A19D DEFB $00,$08,$09,$3F,$00,$00 ;
+ $A1A3 DEFB $00,$0A,$0B,$00,$00,$00 ;
+ $A1A9 DEFB $00,$0C,$0D,$80,$00,$00 ; }
+ $A1AF DEFB $44
 
-; Data block at A1D0
-b$A1D0 DEFB $86,$00,$00,$00,$00,$00,$00,$00
- $A1D8 DEFB $49,$4A,$63,$7F,$00,$00,$64,$81
- $A1E0 DEFB $4F,$00,$00,$00,$65,$66,$00,$00
- $A1E8 DEFB $00,$00,$67,$26,$00,$00,$00,$44
+; Robin sprite frame $1E (STICK SWING RIGHT), 32 bytes via #R$8D80
+b$A1B0 DEFB $86
+ $A1B1 DEFB $00,$82,$43,$00,$00,$00 ; {#HTML[<img src="images/a1b0_frame1e.png"
+ $A1B7 DEFB $00,$0F,$5D,$5E,$00,$00 ; />]
+ $A1BD DEFB $00,$5F,$60,$61,$00,$00 ;
+ $A1C3 DEFB $00,$62,$16,$00,$00,$00 ;
+ $A1C9 DEFB $00,$18,$19,$80,$00,$00 ; }
+ $A1CF DEFB $44
 
-; Data block at A1F0
-b$A1F0 DEFB $86,$00,$00,$00,$00,$00,$00,$00
- $A1F8 DEFB $28,$29,$00,$00,$00,$2B,$68,$69
- $A200 DEFB $00,$00,$00,$6A,$6B,$6C,$00,$00
- $A208 DEFB $00,$33,$34,$26,$00,$00,$00,$44
+; Robin sprite frame $1F (STICK SWING RIGHT), 32 bytes via #R$8D80
+b$A1D0 DEFB $86
+ $A1D1 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img src="images/a1d0_frame1f.png"
+ $A1D7 DEFB $00,$49,$4A,$63,$7F,$00 ; />]
+ $A1DD DEFB $00,$64,$81,$4F,$00,$00 ;
+ $A1E3 DEFB $00,$65,$66,$00,$00,$00 ;
+ $A1E9 DEFB $00,$67,$26,$00,$00,$00 ; }
+ $A1EF DEFB $44
 
-; Data block at A210
-b$A210 DEFB $86,$00,$00,$00,$00,$00,$00,$00
- $A218 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $A220 DEFB $00,$00,$00,$00,$00,$00,$AC,$AD
- $A228 DEFB $AE,$00,$AF,$B0,$B1,$B2,$B3,$44
+; Robin sprite frame $20 (STICK SWING RIGHT), 32 bytes via #R$8D80
+b$A1F0 DEFB $86
+ $A1F1 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img src="images/a1f0_frame20.png"
+ $A1F7 DEFB $00,$28,$29,$00,$00,$00 ; />]
+ $A1FD DEFB $2B,$68,$69,$00,$00,$00 ;
+ $A203 DEFB $6A,$6B,$6C,$00,$00,$00 ;
+ $A209 DEFB $33,$34,$26,$00,$00,$00 ; }
+ $A20F DEFB $44
 
-; Data block at A230
-b$A230 DEFB $06,$00,$00,$97,$98,$99,$00,$00
- $A238 DEFB $00,$9A,$9B,$9C,$00,$00,$9D,$9E
- $A240 DEFB $9F,$A0,$00,$00,$00,$A1,$A2,$A3
- $A248 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $A250 DEFB $00,$06,$06,$06,$00,$00,$00,$03
- $A258 DEFB $70,$03,$00,$00,$06,$03,$03,$03
- $A260 DEFB $00,$00,$00,$06,$06,$06,$00,$00
- $A268 DEFB $00,$00,$00,$00,$00
+; Robin sprite frame $21 (dead/lying-down pose), 32 bytes via #R$8D80
+;
+; .
+;
+; .
+;
+; Held frame of the stagger-recovery sequence at #R$CD3B ($0C,$0C,$0C,$21,$FF -
+; Robin lies flat before recovering). Same wide-class glyph-grid format as the
+; stick-swing frames (header $86, 6x5 $9AB3 glyph codes) - mostly blank, glyphs
+; only in the bottom two rows.
+b$A210 DEFB $86
+ $A211 DEFB $00,$00,$00,$00,$00,$00 ; {#HTML[<img src="images/a210_frame21.png"
+ $A217 DEFB $00,$00,$00,$00,$00,$00 ; />]
+ $A21D DEFB $00,$00,$00,$00,$00,$00 ;
+ $A223 DEFB $00,$00,$00,$AC,$AD,$AE ;
+ $A229 DEFB $00,$AF,$B0,$B1,$B2,$B3 ; }
+ $A22F DEFB $44
 
-; Data block at A26D
-b$A26D DEFB $06,$00,$00,$97,$A4,$99,$00,$00
- $A275 DEFB $00,$A5,$A6,$A7,$00,$00,$A8,$A9
- $A27D DEFB $9F,$A0,$00,$00,$00,$A1,$A2,$A3
- $A285 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $A28D DEFB $00,$06,$06,$06,$00,$00,$00,$03
- $A295 DEFB $70,$03,$00,$00,$06,$03,$03,$03
- $A29D DEFB $00,$00,$00,$06,$06,$06,$00,$00
- $A2A5 DEFB $00,$00,$00,$00,$00
+; Sprite frame $00 via the shared $8DEA base (drawn here as the Sheriff of
+; Nottingham's idle pose), 61 bytes
+;
+; .
+;
+; .
+;
+; Frame index $0 of $8DEA - the frame base shared by the Sheriff, Bishop, the
+; boars and the digit-blink object. 61-byte format (header + 30 glyph codes +
+; 30 per-cell attribute bytes) - confirmed by rendering and by the 61-byte
+; pointer-table stride. Unlike #R$A190's 32-byte format (header + 30 glyphs + 1
+; flat attribute byte for the whole frame), this variant colours each cell
+; separately.
+b$A230 DEFB $06
+ $A231 DEFB $00,$00,$97,$98,$99,$00 ; {#HTML[<img src="images/a230_sheriff.png"
+ $A237 DEFB $00,$00,$9A,$9B,$9C,$00 ; />]
+ $A23D DEFB $00,$9D,$9E,$9F,$A0,$00 ;
+ $A243 DEFB $00,$00,$A1,$A2,$A3,$00 ;
+ $A249 DEFB $00,$00,$00,$00,$00,$00 ; }
+ $A24F DEFB $00,$00,$06,$06,$06,$00 ; {Attributes
+ $A255 DEFB $00,$00,$03,$70,$03,$00 ;
+ $A25B DEFB $00,$06,$03,$03,$03,$00 ;
+ $A261 DEFB $00,$00,$06,$06,$06,$00 ;
+ $A267 DEFB $00,$00,$00,$00,$00,$00 ; }
 
-; Data block at A2AA
-b$A2AA DEFB $06,$00,$00,$97,$A4,$99,$00,$00
- $A2B2 DEFB $AA,$AB,$A6,$A7,$00,$00,$00,$96
- $A2BA DEFB $9F,$A0,$00,$00,$00,$A1,$A2,$A3
- $A2C2 DEFB $00,$00,$00,$00,$00,$00,$00,$00
- $A2CA DEFB $00,$06,$06,$06,$00,$00,$06,$03
- $A2D2 DEFB $70,$03,$00,$00,$00,$03,$03,$03
- $A2DA DEFB $00,$00,$00,$06,$06,$06,$00,$00
- $A2E2 DEFB $00,$00,$00,$00,$00
+; Sprite frame $01 via the shared $8DEA base (Sheriff, hand raising), 61 bytes
+b$A26D DEFB $06
+ $A26E DEFB $00,$00,$97,$A4,$99,$00 ; {#HTML[<img src="images/a26d_sheriff.png"
+ $A274 DEFB $00,$00,$A5,$A6,$A7,$00 ; />]
+ $A27A DEFB $00,$A8,$A9,$9F,$A0,$00 ;
+ $A280 DEFB $00,$00,$A1,$A2,$A3,$00 ;
+ $A286 DEFB $00,$00,$00,$00,$00,$00 ; }
+ $A28C DEFB $00,$00,$06,$06,$06,$00 ; {Attributes
+ $A292 DEFB $00,$00,$03,$70,$03,$00 ;
+ $A298 DEFB $00,$06,$03,$03,$03,$00 ;
+ $A29E DEFB $00,$00,$06,$06,$06,$00 ;
+ $A2A4 DEFB $00,$00,$00,$00,$00,$00 ; }
+
+; Sprite frame $02 via the shared $8DEA base (Sheriff, hand raised), 61 bytes
+b$A2AA DEFB $06
+ $A2AB DEFB $00,$00,$97,$A4,$99,$00 ; {#HTML[<img src="images/a2aa_sheriff.png"
+ $A2B1 DEFB $00,$AA,$AB,$A6,$A7,$00 ; />]
+ $A2B7 DEFB $00,$00,$96,$9F,$A0,$00 ;
+ $A2BD DEFB $00,$00,$A1,$A2,$A3,$00 ;
+ $A2C3 DEFB $00,$00,$00,$00,$00,$00 ; }
+ $A2C9 DEFB $00,$00,$06,$06,$06,$00 ; {Attributes
+ $A2CF DEFB $00,$06,$03,$70,$03,$00 ;
+ $A2D5 DEFB $00,$00,$03,$03,$03,$00 ;
+ $A2DB DEFB $00,$00,$06,$06,$06,$00 ;
+ $A2E1 DEFB $00,$00,$00,$00,$00,$00 ; }
 
 ; Witch sprites
 b$A2E7 DEFB $00,$00,$00,$00,$04,$00,$00,$02 ; {#HTML[#UDGARRAY3,,3,3,,($A2E7-$A35E-1-24)(witch0)]
@@ -4109,9 +4275,7 @@ b$A83C DEFB $03,$20,$03
 ; .
 ;
 ; Drawn via the "boar" object table at #R$DD05 (frame numbers $10-$13/$90-$93
-; from #R$DD31/#R$DD38, resolved through the shared frame base $8DEA) -
-; confirmed live via Emu80: entry 1's active flags/frame matched a boar visible
-; on screen.
+; from #R$DD31/#R$DD38, resolved through the shared frame base $8DEA).
 b$A965 DEFB $03,$10,$04
  $A968 DEFB $00,$15,$00,$00,$60,$A0,$00,$D5 ; {#HTML[#UDGARRAY3,2,3,3,,($A968-$A997-1-24)(boar0)]
  $A970 DEFB $18,$00,$AA,$AC,$0A,$F7,$D6,$15 ; Boar 0
@@ -4141,37 +4305,39 @@ b$A965 DEFB $03,$10,$04
  $AA21 DEFB $BA,$5C,$7E,$B0,$B0,$64,$70,$00 ;
  $AA29 DEFB $30,$1E,$00,$18,$00,$00,$08,$00 ; }
 
-; Update a patrolling enemy's direction/animation state
+; Update one guard: patrol step, frame list, and firing
 ;
 ; Used by the routines at #R$BF80 and #R$C276.
 ;
 ; .
 ;
-; Steps one guard per call, and only runs its main logic on every 4th call
-; (divider counter at $AA32); IX is derived from that same counter into the
-; object table at ($C54C) rather than being passed in. Picks a new
-; animation-frame-list pointer for (IX+2/3) from one of the frame lists at
-; #R$AC4A based on the object's position relative to the current room ($C548)
-; and a state byte - a room block's bit 5 in particular selects #R$AC7B - then
-; sets flags in (IX+4) and calls #R$C8F7 to advance the frame. Also indexes a
-; per-entry table at #R$AC13 (11 bytes/entry) and a step table at $DEAB - their
-; exact per-guard meaning is unconfirmed. This is also where the "soldiers
-; shoot Robin" mechanic lives ($AB6B onward, confirmed live via Emu80): once a
-; guard is within $30 cells and correctly facing Robin (gated by the arrow flag
-; #R$D59E or a coin-flip otherwise), it claims a free slot in the 3-entry
-; room-hotspot table at #R$BF69 with its own position and switches to a
-; kneel/aim frame (#R$AC6F/#R$AC75) - there is no separate flying-bullet
-; object; #R$BDA3 is what actually damages Robin if he walks into the claimed
-; cell, using the same code path as an authored room hazard.
+; Steps one guard per call, cycling through the 4 slots with the divider
+; counter at $AA32 so each individual guard updates roughly every 16 frames.
+; The routine works on two parallel records for the same guard: the 3-byte
+; #R$8A39 entry that holds its persistent patrol state (home column, cursor,
+; flags) and the 11-byte #R$AC13 object record that holds its on-screen state
+; (frame list, redraw flags, position). It runs in seven stages, each marked
+; below: locate the $8A39 entry; gate on whether the guard is live here; look
+; up a route step in #R$DEAB; decide direction and facing; take the step;
+; resolve the $AC13 record and screen position; then run the frame-list state
+; machine and the shooting check. There is no authored per-room guard roster
+; anywhere in the disassembly - see #R$8A39's N-line: a guard's "home" is
+; randomised at game start and re-rolled only when Robin enters a room two map
+; rows away.
 c$AA31 LD A,$04       ;
  $AA33 LD HL,$AA32    ; {Only every 4th call
  $AA36 DEC (HL)       ; }
  $AA37 JP NZ,$AA3C    ;
  $AA3A LD (HL),$04    ;
-*$AA3C LD A,(HL)      ;
- $AA3D LD B,A         ;
+*$AA3C LD A,(HL)      ; {The counter doubles as the guard number, 1-4
+ $AA3D LD B,A         ; }
  $AA3E LD HL,$8DC4    ; Guards share the frame base at $8DC4
  $AA41 LD ($C6D8),HL  ;
+; Stage 1 - locate the guard's #R$8A39 entry. The divider counter doubles as
+; the guard number, so ($C54C) (this room's 12-byte group base) plus 3 bytes
+; per guard gives the entry. The double PUSH HL / POP IX leaves IX and HL both
+; pointing at byte 0; the pushed copy stays on the stack and is retrieved by
+; the EX (SP),HL at $AB09.
  $AA44 LD HL,($C54C)  ; {HL -> ($C54C)'s table (see its W-line - reused for
  $AA47 LD DE,$0003    ; more than one stride here); add 3 bytes per guard}
 *$AA4A ADD HL,DE      ; {3 bytes per entry
@@ -4180,30 +4346,47 @@ c$AA31 LD A,$04       ;
  $AA4F PUSH HL        ;
  $AA50 PUSH HL        ;
  $AA51 POP IX         ; }
- $AA53 BIT 4,(IX+$02) ; (IX+2) bit 4 already set: straight to the $AC13 lookup
+; Stage 2 - is this guard live in this room? A guard already flagged dead (byte
+; 2 bit 4) skips the whole patrol step and goes straight to the $AC13 lookup,
+; which is what keeps a corpse frozen in place. Otherwise A = (byte 0 - room
+; column + 1) AND $0F must come out under 3, so the guard only simulates in
+; three columns of its row-band: A = 0 when its home is one column left of
+; Robin's room, 1 on the same column, 2 one column right. Out of range, HL is
+; advanced to byte 2 and the patrol step is skipped.
+ $AA53 BIT 4,(IX+$02) ; Byte 2 bit 4 (dead/away) already set: skip the patrol
+                      ; step, straight to the $AC13 lookup
  $AA57 JP NZ,$AAFA    ;
- $AA5A LD A,($C548)   ;
- $AA5D AND $0F        ; {Guard's row against Robin's, mod 16
- $AA5F SUB (HL)       ; }
+ $AA5A LD A,($C548)   ; This room's number; the low nibble is its map column
+ $AA5D AND $0F        ; {Guard's home column (byte 0) against this room's
+ $AA5F SUB (HL)       ; column nibble, mod 16}
  $AA60 NEG            ;
  $AA62 INC A          ;
  $AA63 AND $0F        ;
- $AA65 CP $03         ; Within 3 rows?
+ $AA65 CP $03         ; Under 3: the guard is in one of its three live columns
+                      ; (home-1/home/home+1)
  $AA67 JR C,$AA6E     ;
- $AA69 INC HL         ;
+ $AA69 INC HL         ; {Out of range: skip to byte 2 and take no patrol step
  $AA6A INC HL         ;
- $AA6B JP $AAFA       ;
+ $AA6B JP $AAFA       ; }
+; Stage 3 - look up a route step in #R$DEAB. That same A indexes the table's
+; three 28-byte entries, so a guard follows different route data depending on
+; which of its three columns Robin is standing in. Byte 1 of the $8A39 entry
+; supplies both halves of the lookup: its low 2 bits give a step budget of 3 or
+; 4, and byte 1 >> 2 is an offset into the chosen entry. The loop then scans up
+; to that budget for a non-zero step byte, and whether it finds one decides
+; which of the two direction rules runs next.
 *$AA6E EXX            ;
  $AA6F LD DE,$001C    ; {$1C per entry in the $DEAB route table
  $AA72 LD HL,$DEAB    ; }
  $AA75 INC A          ;
  $AA76 LD B,A         ;
-*$AA77 ADD HL,DE      ; {Index it by the row distance
+*$AA77 ADD HL,DE      ; {Index it by the column distance
  $AA78 DJNZ $AA77     ; }
  $AA7A SBC HL,DE      ;
  $AA7C EXX            ;
  $AA7D INC HL         ;
- $AA7E LD A,(HL)      ; The entry's direction byte
+ $AA7E LD A,(HL)      ; Byte 1 - the patrol cursor, read here for its step
+                      ; budget and table offset
  $AA7F EXX            ;
  $AA80 LD E,A         ;
  $AA81 LD B,$03       ; Its low 2 bits give a 3- or 4-step budget
@@ -4214,18 +4397,29 @@ c$AA31 LD A,$04       ;
  $AA8A SRL E          ; }
  $AA8C LD D,$00       ;
  $AA8E ADD HL,DE      ;
- $AA8F PUSH HL        ;
+ $AA8F PUSH HL        ; Remember where the scan started
 *$AA90 LD A,(HL)      ; {Skip any zero step bytes
  $AA91 OR A           ; }
  $AA92 JR NZ,$AA97    ;
  $AA94 INC HL         ;
- $AA95 DJNZ $AA90     ;
+ $AA95 DJNZ $AA90     ; Budget exhausted: no route step available this update
 *$AA97 POP HL         ;
+; Stage 4 - decide direction and facing. HL is back on byte 2, the flags byte.
+; Bit 7 is the direction the guard now wants to walk and bit 6 is the facing
+; its animation is currently showing; both paths here leave bit 6 holding the
+; PREVIOUS value of bit 7, so the two bits disagree exactly when a turn has
+; just been decided but not yet animated. That disagreement is what stage 7a
+; detects. If stage 3 found a non-zero step the route is dictating the turn:
+; SRA/AND $C0/XOR $80 writes back bit 7 = NOT old bit 7, bit 6 = old bit 7. If
+; every step byte was zero the guard has no route to follow and falls back on
+; Robin instead - his column is compared against the $DEC7 reference (entry 1
+; of #R$DEAB) to work out which side he is on, and about 1 call in 16 that side
+; is rotated into bit 7 while bit 6 again picks up the old bit 7.
  $AA98 EXX            ;
- $AA99 INC HL         ;
- $AA9A JR Z,$AAAB     ;
+ $AA99 INC HL         ; {Byte 2; Z here still reflects the scan above - zero
+ $AA9A JR Z,$AAAB     ; flag set means nothing was found}
  $AA9C LD A,(HL)      ;
- $AA9D SRA A          ; {Toggle the step byte's mirror bits (6-7)
+ $AA9D SRA A          ; {A route step was found: toggle the facing bits (6-7)
  $AA9F AND $C0        ; }
  $AAA1 XOR $80        ;
  $AAA3 LD C,A         ;
@@ -4236,21 +4430,22 @@ c$AA31 LD A,$04       ;
  $AAA9 JR $AAD9       ;
 *$AAAB EXX            ;
  $AAAC EX DE,HL       ;
- $AAAD LD A,($CC85)   ; Robin's column
+ $AAAD LD A,($CC85)   ; No route step: fall back on chasing Robin. His X, /4 to
+                      ; a column
  $AAB0 SRL A          ;
  $AAB2 SRL A          ;
  $AAB4 LD L,A         ;
  $AAB5 LD H,$00       ;
- $AAB7 LD BC,$DEC7    ; {Compare against the reference table at $DEC7
- $AABA ADD HL,BC      ; }
+ $AAB7 LD BC,$DEC7    ; {Compare against the reference table at $DEC7 ($DEAB
+ $AABA ADD HL,BC      ; entry 1)}
  $AABB SBC HL,DE      ;
  $AABD LD A,$80       ; A = $80 or 0 by which side he is on
  $AABF JR NC,$AAC2    ;
  $AAC1 XOR A          ;
 *$AAC2 EXX            ;
  $AAC3 EX AF,AF'      ;
- $AAC4 LD A,R         ; {~1 call in 16 flips the direction
- $AAC6 AND $0F        ; }
+ $AAC4 LD A,R         ; {~1 call in 16 actually applies it - guards turn
+ $AAC6 AND $0F        ; lazily, not instantly}
  $AAC8 JR NZ,$AAD9    ;
  $AACA EX AF,AF'      ;
  $AACB LD C,(HL)      ;
@@ -4261,125 +4456,183 @@ c$AA31 LD A,$04       ;
  $AAD3 BIT 7,C        ; Bit 7 of the old byte decides bit 6
  $AAD5 JR Z,$AAD9     ;
  $AAD7 SET 6,(HL)     ;
+; Stage 5 - take the step. This is not the only writer of the cursor: #R$DDF0
+; re-derives it wholesale on every room entry (see its N-line), so a guard's X
+; can jump between rooms rather than only drifting by these single steps. Byte
+; 2 bit 7 picks the increment or decrement path over byte 1, the fine patrol
+; cursor, which spans 0-$6F. One unit moves per update. The interesting part is
+; the wrap: running off either end reloads the cursor at the far end ($70 is
+; added on underflow, subtracted on overflow) and carries C = -1 or +1 down
+; into byte 0, the home column, masked to 0-15. That carry is the entire
+; room-to-room movement mechanism - a guard walks into the next room-column
+; only by wrapping its cursor.
 *$AAD9 BIT 7,(HL)     ; Bit 7 picks the decrement or increment path
- $AADB DEC HL         ;
+ $AADB DEC HL         ; Back to byte 1, the patrol cursor
  $AADC JR NZ,$AAEA    ;
  $AADE DEC (HL)       ; Step down
- $AADF JP P,$AAFA     ;
+ $AADF JP P,$AAFA     ; Still positive: no wrap, the step is done
  $AAE2 LD A,(HL)      ;
  $AAE3 ADD A,$70      ; {Underflow wraps up past $70
  $AAE5 LD (HL),A      ; }
- $AAE6 LD C,$FF       ;
+ $AAE6 LD C,$FF       ; C = -1, to carry into the home column
  $AAE8 JR $AAF3       ;
 *$AAEA INC (HL)       ; Step up
  $AAEB LD A,(HL)      ;
  $AAEC SUB $70        ; Overflow wraps down past $70
- $AAEE JR C,$AAFA     ;
+ $AAEE JR C,$AAFA     ; Below $70: no wrap, the step is done
  $AAF0 LD (HL),A      ;
- $AAF1 LD C,$01       ;
-*$AAF3 DEC HL         ;
- $AAF4 LD A,(HL)      ;
- $AAF5 ADD A,C        ; {Carry the step into the column nibble
- $AAF6 AND $0F        ; }
+ $AAF1 LD C,$01       ; C = +1, to carry into the home column
+*$AAF3 DEC HL         ; {Back to byte 0, the home column
+ $AAF4 LD A,(HL)      ; }
+ $AAF5 ADD A,C        ; {Carry the wrap into it - this is the move to the next
+ $AAF6 AND $0F        ; room-column}
  $AAF8 LD C,A         ;
  $AAF9 LD (HL),A      ;
+; Stage 6 - resolve the $AC13 record and the guard's screen position. The EX
+; (SP),HL at $AB09 swaps the two pointers: IX becomes the $AC13 record while HL
+; picks the $8A39 entry back up off the stack, so from here IX+n is object
+; state and (HL) is patrol state. The guard is then placed by two separate
+; tests, stricter than stage 2's: if its home column equals the room's, the
+; cursor byte is used directly as the X position; if its home is one column to
+; the right, and the cursor is still under $10, it is drawn at cursor + $70
+; instead, which is how a guard belonging to the next room shows up near this
+; room's edge. Anything else jumps to $ABF0 and the guard is simulated but not
+; drawn - so a guard steps through three columns but is only visible in two.
 *$AAFA LD HL,$AC13    ; The $AC13 guard table, $0B per entry
  $AAFD LD DE,$000B    ;
  $AB00 LD A,($AA32)   ;
  $AB03 LD B,A         ;
 *$AB04 ADD HL,DE      ; {Index by the guard number
  $AB05 DJNZ $AB04     ; }
- $AB07 SBC HL,DE      ; {Another double-push trick: IX = the found $AC13 entry
- $AB09 EX (SP),HL     ;
+ $AB07 SBC HL,DE      ; {EX (SP),HL swaps the pair: IX = the $AC13 record, HL =
+ $AB09 EX (SP),HL     ; back to the $8A39 entry pushed at $AA4F
  $AB0A POP IX         ; }
  $AB0C LD BC,($C548)  ; {C = current room's low nibble
  $AB10 LD A,C         ;
  $AB11 AND $0F        ;
  $AB13 LD C,A         ; }
- $AB14 LD A,(HL)      ;
- $AB15 AND $0F        ; {Exact match on the entry's room nibble?
- $AB17 CP C           ; }
- $AB18 INC HL         ;
+ $AB14 LD A,(HL)      ; Byte 0 - the guard's home column
+ $AB15 AND $0F        ; {Home column equals this room's? Then the cursor is the
+ $AB17 CP C           ; X position as-is}
+ $AB18 INC HL         ; Byte 1 - the patrol cursor
  $AB19 JR NZ,$AB1E    ;
  $AB1B LD A,(HL)      ;
  $AB1C JR $AB31       ;
 *$AB1E EX AF,AF'      ;
- $AB1F INC C          ; {Otherwise try the next room along
+ $AB1F INC C          ; {Otherwise: is its home the next column along instead?
  $AB20 LD A,C         ; }
  $AB21 AND $0F        ;
  $AB23 LD C,A         ;
  $AB24 EX AF,AF'      ;
  $AB25 CP C           ;
  $AB26 JP NZ,$ABF0    ;
- $AB29 LD A,(HL)      ;
- $AB2A CP $10         ; Position under $10 means out of range
+ $AB29 LD A,(HL)      ; Byte 1 again
+ $AB2A CP $10         ; Only a cursor under $10 spills over; $10 or more means
+                      ; not visible here
  $AB2C JP NC,$ABF0    ;
- $AB2F ADD A,$70      ;
+ $AB2F ADD A,$70      ; Drawn at cursor + $70 - the far edge of this room
 *$AB31 LD (IX+$09),A  ; Resolved position into (IX+9)
- $AB34 INC HL         ;
- $AB35 BIT 4,(HL)     ; Block bit 4: nothing more to do
+; Stage 7a - frame-list state machine, reading byte 2's flags. Bit 4 (already
+; dead) leaves the frame list alone, so the corpse keeps whatever $C276 gave
+; it. Bit 5 (hit this frame) is promoted to bit 4 here and switches to #R$AC7B,
+; the death sequence from its first frame. Otherwise the AND $C0 / JP PE at
+; $AB51 is a compare of bits 6 and 7 dressed up as a parity test: AND $C0
+; leaves $00 or $C0 when the two agree (even parity, jump taken) and $40 or $80
+; when they differ (odd parity, fall through). Agreement means the animation
+; already matches the direction, so the frame list is left running untouched.
+; Disagreement means stage 4 turned the guard and the turn still has to be
+; shown, so it installs a lead-in - #R$AC67 for bit 7 set, #R$AC6B for clear,
+; each a single turn frame that runs into the matching walk cycle - and syncs
+; bit 6 to bit 7 so the next update sees them agree again.
+ $AB34 INC HL         ; Byte 2 - the flags
+ $AB35 BIT 4,(HL)     ; Bit 4 (already dead): leave the frame list alone, the
+                      ; corpse keeps its pose
  $AB37 JP NZ,$ABE3    ;
- $AB3A BIT 5,(HL)     ; Bit 5 set: advance the state
+ $AB3A BIT 5,(HL)     ; Bit 5 (hit this frame): promote it to the persistent
+                      ; dead flag
  $AB3C JR Z,$AB50     ;
  $AB3E RES 5,(HL)     ; {Clear bit 5, set bit 4
  $AB40 SET 4,(HL)     ; }
  $AB42 LD DE,$AC7B    ;
- $AB45 BIT 7,(HL)     ; Either way, table $AC7B
+ $AB45 BIT 7,(HL)     ; Either way, table $AC7B - the death sequence from its
+                      ; first turn frame
  $AB47 JP NZ,$ABDD    ;
  $AB4A LD DE,$AC7B    ;
  $AB4D JP $ABDD       ;
 *$AB50 LD A,(HL)      ;
- $AB51 AND $C0        ; Both of bits 6-7 set: skip to the proximity check
+ $AB51 AND $C0        ; Parity test = "do bits 6 and 7 agree?"; even ($00/$C0)
+                      ; means facing matches direction, nothing to change
  $AB53 JP PE,$AB6A    ;
  $AB56 LD DE,$AC67    ;
- $AB59 BIT 7,A        ; Bit 7 picks $AC67 or $AC6B
- $AB5B SET 6,(HL)     ;
+ $AB59 BIT 7,A        ; They differ, so a turn is pending: bit 7 picks $AC67 or
+                      ; $AC6B, a turn frame joining the matching walk cycle
+ $AB5B SET 6,(HL)     ; Sync the facing bit to the direction bit
  $AB5D JR NZ,$AB64    ;
  $AB5F RES 6,(HL)     ;
  $AB61 LD DE,$AC6B    ;
 *$AB64 LD (IX+$02),E  ; {Chosen table into (IX+2/3)
  $AB67 LD (IX+$03),D  ; }
+; Stage 7b - the guard fires a bullet. Note the sense of the range test: $AB79
+; skips the whole thing when the horizontal distance is UNDER $30, so a guard
+; shoots only at range and simply walks into Robin up close. Given the distance
+; and a facing that matches the side Robin is on, it finds a free slot among
+; the 3 guard bullets at #R$BF69 (an empty slot reads $00) and launches one
+; from its own position - $ABC2 writes the guard's column and row as the
+; bullet's starting screen position and $ABC5 sets bit 7 as its direction -
+; then switches to a kneel/fire frame. From there #R$BCC2 flies and draws the
+; bullet every frame exactly as it does Robin's arrow, and #R$BDA3 is the hit
+; test against Robin. The arrow flag #R$D59E removes the coin-flip that
+; otherwise gates this to about half of eligible calls.
 *$AB6A PUSH HL        ;
  $AB6B LD A,($CC85)   ; {Robin's X minus the guard's
  $AB6E SUB (IX+$09)   ; }
- $AB71 PUSH AF        ;
- $AB72 POP BC         ;
+ $AB71 PUSH AF        ; {PUSH AF / POP BC parks the flags byte in C, so bit 0
+ $AB72 POP BC         ; of C is the carry from that subtraction - i.e. "Robin
+                      ; is left of the guard" - preserved across the CP below}
  $AB73 JR NC,$AB77    ;
  $AB75 NEG            ; Absolute distance
-*$AB77 CP $30         ; Within $30 cells?
+*$AB77 CP $30         ; Under $30 apart: too close to shoot, skip to the redraw
  $AB79 JR C,$ABAD     ;
- $AB7B BIT 7,(HL)     ; Facing must match the side he is on
+ $AB7B BIT 7,(HL)     ; Facing must match the side he is on: bit 7 set (facing
+                      ; right) takes the $AB7F branch, which skips when carry
+                      ; was set (Robin left); bit 7 clear (facing left) takes
+                      ; $AB85, which skips when carry was clear (Robin right)
  $AB7D JR Z,$AB85     ;
  $AB7F BIT 0,C        ;
  $AB81 JR NZ,$ABAD    ;
  $AB83 JR $AB89       ;
 *$AB85 BIT 0,C        ;
  $AB87 JR Z,$ABAD     ;
-*$AB89 LD A,($D59E)   ; Arrow flag set: no random gate
+*$AB89 LD A,($D59E)   ; Arrow flag set: no random gate, the guard shoots every
+                      ; eligible call
  $AB8C OR A           ;
  $AB8D JR NZ,$AB95    ;
  $AB8F LD A,R         ; {Else only ~1 call in 2 gets through
  $AB91 AND $01        ; }
  $AB93 JR Z,$ABAD     ;
 *$AB95 LD A,($AA32)   ;
- $AB98 AND $03        ; Guard counter picks a hotspot slot
- $AB9A JP PO,$AB9E    ;
- $AB9D XOR A          ;
+ $AB98 AND $03        ; {Fold the guard counter (1-4) into a slot index 0-2:
+ $AB9A JP PO,$AB9E    ; AND $03 leaves 1, 2, 3, 0, and the parity flag it sets
+ $AB9D XOR A          ; distinguishes them - 1 and 2 have odd parity and are
+                      ; kept by the JP PO, while 3 and 0 have even parity and
+                      ; fall through to XOR A. Net effect is just "3 becomes
+                      ; 0", so guards 2 and 3 both compete for slot 0}
 *$AB9E LD B,A         ;
  $AB9F INC B          ;
- $ABA0 LD HL,$BF69    ; The 3 room hotspots at $BF69, where the guard will
-                      ; claim its shot
+ $ABA0 LD HL,$BF69    ; The 3 guard-bullet slots at $BF69
 *$ABA3 INC HL         ;
  $ABA4 INC HL         ;
  $ABA5 DJNZ $ABA3     ;
  $ABA7 DEC HL         ;
  $ABA8 DEC HL         ;
- $ABA9 LD A,(HL)      ; {Slot already occupied: give up on shooting this frame
- $ABAA OR A           ; }
+ $ABA9 LD A,(HL)      ; {Non-zero means a bullet is already in that slot: give
+ $ABAA OR A           ; up on firing this frame}
  $ABAB JR Z,$ABB0     ;
 *$ABAD POP HL         ;
  $ABAE JR $ABE3       ;
-*$ABB0 LD B,(IX+$0A)  ; Guard's row, /8 and biased by 2
+*$ABB0 LD B,(IX+$0A)  ; Guard's row, /8 and biased by 2 (Robin's own arrow uses
+                      ; bias +1 at #R$BCB5) - the bullet's starting row; always
+                      ; the same value since guards never move vertically
  $ABB3 SRL B          ;
  $ABB5 SRL B          ;
  $ABB7 SRL B          ;
@@ -4388,8 +4641,8 @@ c$AA31 LD A,$04       ;
  $ABBB LD C,(IX+$09)  ; Guard's column
  $ABBE SRL C          ;
  $ABC0 SRL C          ;
- $ABC2 LD (HL),C      ; {Claim the hotspot at the guard's own position - the
- $ABC3 INC HL         ; "shot"
+ $ABC2 LD (HL),C      ; {Launch the bullet from the guard's own position
+ $ABC3 INC HL         ;
  $ABC4 LD (HL),B      ; }
  $ABC5 SET 7,(HL)     ; Bit 7 marks it live
  $ABC7 DEC HL         ;
@@ -4397,10 +4650,15 @@ c$AA31 LD A,$04       ;
  $ABC9 POP HL         ;
  $ABCA LD A,(HL)      ;
  $ABCB EX DE,HL       ;
- $ABCC RL (HL)        ; {Roll the facing bit out of the step byte
- $ABCE RLA            ; }
- $ABCF CCF            ;
- $ABD0 RR (HL)        ;
+ $ABCC RL (HL)        ; {RL / RLA / CCF / RR copies the guard's facing,
+ $ABCE RLA            ; inverted, into bit 7 of the bullet's position byte
+ $ABCF CCF            ; while leaving the column bits untouched - that bit is
+ $ABD0 RR (HL)        ; the bullet's horizontal direction, tested every frame
+                      ; at $BCF7 (set = step left). The column bits are
+                      ; unaffected because the RL and RR cancel; #R$BCC2 masks
+                      ; the flag off with AND $7F at $BCE6, and #R$BDA3 needs
+                      ; no mask because its two SLA A shifts discard bit 7
+                      ; anyway}
  $ABD2 BIT 7,(HL)     ;
  $ABD4 EX DE,HL       ;
  $ABD5 LD DE,$AC75    ; Facing picks $AC75 or $AC6F
@@ -4413,6 +4671,17 @@ c$AA31 LD A,$04       ;
  $ABEB CALL $C8F7     ; Advance an object's animation, unlink it from the list
                       ; if done
  $ABEE JR $AC12       ;
+; The not-drawn tail, reached from stage 6 when the guard belongs to neither
+; this column nor the next. Advances the animation through #R$C8F7 but clears
+; redraw bits 2/0 so nothing is plotted, then picks a plain walk cycle by byte
+; 2 bit 7. This bypasses stages 7a/7b entirely, so bit 6 (facing) is never
+; synced here - only the list, from bit 7 - and if bit 5 (just hit) is set,
+; $ABFE returns before even that, leaving a stale list. Neither breaks the
+; invariant for a LIVE guard though: with bit 5 clear, this branch's own bit-7
+; pick resyncs the list every off-screen update; a guard with bit 5 set gets
+; its list replaced by the death sequence the next time it's drawn (stage 7a)
+; regardless. So a live guard never walks with the wrong-facing cycle, matching
+; hardware.
 *$ABF0 PUSH HL        ;
  $ABF1 RES 2,(IX+$04) ; Same, but bit 2 cleared for a different frame
  $ABF5 CALL $C8F7     ; Advance an object's animation, unlink it from the list
@@ -4436,10 +4705,14 @@ c$AA31 LD A,$04       ;
 ;
 ; .
 ;
-; Rebuilt on every room change by #R$C276 from the room's block flags, then
-; stepped each frame by #R$AA31. Scanned for hits by #R$BD49 (arrows) and
-; #R$BE43 (sword); (IX+4) bit 0 marks an entry active, bit 5 marks it already
-; hit, and (IX+9)/(IX+0A) hold its position.
+; Rebuilt on every room change by #R$C276 from the matching #R$8A39 entry's
+; byte 2 flags (not room block data), then stepped each frame by #R$AA31. No
+; vertical movement: (IX+$0A) is $50 in all five slots' initial data and is
+; never written on the guard path (the game's one LD (IX+$0A), at $C30F,
+; belongs to the Sheriff setup) - $50 is Robin's own spawn row, so every guard
+; is pinned to it. Scanned for hits by #R$BD49 (arrows) and #R$BE43 (sword);
+; (IX+4) bit 0 marks an entry active, bit 5 marks it already hit,
+; (IX+9)/(IX+0A) hold its position.
 b$AC13 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
  $AC1E DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
  $AC29 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
@@ -4452,18 +4725,18 @@ b$AC13 DEFB $00,$00,$51,$AC,$00,$00,$00,$00,$00,$00,$50
 ;
 ; .
 ;
-; Six short frame lists follow the padding above (count byte(s), $FF, then a
-; 2-byte loop pointer), several looping into each other's tails the same way
-; Robin's own tables do (see #R$CC9D): #R$AC5C/#R$AC51 are the two full 8-frame
-; walk cycles (forward/backward); $AC67/$AC6B/$AC6F/$AC75 are short lead-ins (a
-; turn frame or two) that join one of those cycles; #R$AC7B is picked when a
-; room block's bit 5 is set (see #R$C346) and, after two lead-in frames, plays
-; local frames $10-$12 - absolute $32-$34 on the shared guard base $8DC4 (see
-; #R$AA3E) - before looping into its own tail. Those three frames' stored bytes
-; at $9A36/$9A56/$9A76 don't look like the raster+header shape the other sprite
-; blocks use (small sparse values in a narrow range, not pixel rows), so what
-; they actually draw - or whether this path is ever reached live - is
-; unconfirmed.
+; Sprite labels at #R$9454 confirm frames $00-$07 = guard right, $08-$0B =
+; guard left, $0C = guard front, $0D/$0E = right/left firing - separate artwork
+; per direction, not mirrored, hence the different cycle lengths. Six short
+; frame lists follow the padding (count byte(s), $FF, then a 2-byte loop
+; pointer): #R$AC5C/#R$AC51 the two walk cycles; $AC67/$AC6B/$AC6F/$AC75
+; turn/aim lead-ins joining one of them; #R$AC7B the death sequence (picked
+; when #R$8A39 byte 2 flags hit or dead) - two turn frames then local $10-$12
+; (front/dying/dead), looping into its own $12 forever; $AC7F is that same list
+; entered straight at $12, so a corpse shows its final pose with no replay.
+; Format switch: walk/turn/aim frames $00-$0F are all header $03 narrow-class
+; bitmaps, while the three death frames ($9A36/$9A56/$9A76) are wide-class
+; glyph-grid - a guard changes sprite format as it dies.
 b$AC4A DEFB $00
  $AC4B DEFW $0000
  $AC4D DEFW $0000
@@ -4986,10 +5259,24 @@ b$B536 DEFB $00,$9D,$9E,$9F,$01,$A0,$A1,$A2
 ; #R$D94B as the flower-count icon, shown under the energy antlers.
 b$B548 DEFB $00,$A3,$A4,$01,$A5,$A6,$00,$45
  $B550 DEFB $47,$FF,$44,$46,$00,$00
- $B556 DEFB $00,$C6,$01,$C7,$01,$C7,$01,$C8 ; {Arrow icon (custom font glyphs),
- $B55E DEFB $00,$42,$FF,$44,$FF,$44,$FF,$46 ; message index $04 in #R$D7CE -
- $B566 DEFB $00                             ; codes $C6/$C7/$C7/$C8 stacked one
-                                            ; glyph per row}
+
+; Arrow icon (custom font glyphs), message index $04 in #R$D7CE
+;
+; .
+;
+; .
+;
+; #HTML[<img src="images/b556_arrow.png" />]
+; .
+; 4 glyphs ($C6/$C7/$C7/$C8), one per row (the $01 bytes between them are
+; #R$D6AB's "start next row" control code, not glyph data), attrs
+; $42/$44/$44/$46 (fletching red, shaft green, head yellow, all bright) -
+; confirmed by rendering the font bytes as pixels. Uses the message-printer's
+; own font at $AC33 (#R$D6B2), not the $9AB3 sprite-tile sheet - codes above
+; $B3 fall outside that sheet's 180 tiles entirely.
+b$B556 DEFB $00,$C6,$01,$C7,$01,$C7,$01,$C8
+ $B55E DEFB $00,$42,$FF,$44,$FF,$44,$FF,$46
+ $B566 DEFB $00
 
 ; Quiver icon, upright/HUD (custom font glyphs), for the Ent's bow sale
 ; (#R$DF03)
@@ -5460,7 +5747,7 @@ c$B919 LD A,($BB9F)   ;
 ; DE Stashed to $BAFB for the #R$BA93 entry point
 ; BC Stashed to $BB6B for the #R$BA93 entry point
 ;
-; IX -> its object record. (IX+10/11) holds the enemy's current world-map
+; IX -> its object record. (IX+10/11) holds Bishop's current world-map
 ; position, packed as two nibbles (X in bits 0-3, Y in bits 4-7 of the low byte
 ; plus the high byte). Depending on a facing bit at (IX+11) and comparisons
 ; against target coordinates at (IX+0C..0F), the low or high nibble of the
@@ -5745,10 +6032,12 @@ b$BC59 DEFB $00,$01,$00,$00,$00,$00,$00,$50
 ; Called from the arrow-shot facing/state handlers (#R$CB03/#R$CB0A). Only
 ; fires when the animation timer $CC7A is exactly 7 and the arrow object at
 ; $BF67 is inactive. Plays the launch sound (#R$BF54, B=$40), derives the
-; arrow's start cell from Robin's position ($CC85/$CC86, halved to character
-; cells) and facing ($CC87), range-checks the column ($02..$1D), then writes
-; the column/row into the arrow object and sets its active/direction flags so
-; #R$BCC2 can step it each frame.
+; arrow's start column and row from Robin's own position ($CC85/$CC86, halved
+; to character cells, row biased +1) and facing ($CC87), range-checks the
+; column ($02..$1D), writes column into byte 0 and row into byte 1, sets byte 1
+; bit 7 (skip the first erase, see #R$BCC2), then uses the same RL/RLA/CCF/RR
+; trick as #R$ABCC to fold Robin's facing into byte 0's bit 7 (the arrow's
+; persistent horizontal direction) without disturbing the column bits.
 c$BC81 LD A,($CC7A)  ;
  $BC84 CP $07        ; Only at timer value 7
  $BC86 RET NZ        ;
@@ -5787,21 +6076,24 @@ c$BC81 LD A,($CC7A)  ;
  $BCBF RR (HL)       ; }
  $BCC1 RET           ;
 
-; Step the arrow one pixel along its diagonal flight, drawing it
+; Step all 4 projectiles one segment along their flight, drawing each
 ;
 ; Used by the routine at #R$BF80.
 ;
 ; .
 ;
-; (HL) = the arrow object's direction byte at $BF68: bit 7/6 select which of
-; two constants get patched into the self-modified operands at $BCF2/$BD03
-; (arrow moving right/left, up/down). Reads the arrow's screen position from
-; the byte below ($BF67, bit 7 = "arrow gone" flag), plots it via #R$BD2A, then
-; steps the column (C) and row (L) by +-1 based on whether the draw collided
-; (bit 7 of the plotted byte), tracing the arrow's diagonal path one segment
-; per call.
-c$BCC2 LD HL,$BF68   ; {HL -> arrow direction byte at $BF68; B = 4 (unused loop
- $BCC5 LD B,$04      ; count)}
+; Walks the 4 two-byte projectile objects at #R$BF67 - Robin's arrow first,
+; then the 3 guard bullets - stepping and redrawing each per call. The loop
+; closes at $BD23 (POP BC / POP HL / INC HL / INC HL / DJNZ $BCC7), so the B =
+; 4 loaded here is the object count, not a leftover. Byte 1's bits 7/6 are
+; one-shot requests, read and RES'd before the row value itself is used: bit 7
+; skips this step's erase (set once at launch, nothing to erase yet); bit 6
+; kills the object without a collision check (set by #R$BDA3/#R$BD49 on a hit,
+; so it erases once more then vanishes). Byte 0 (column) of $00 means the slot
+; is empty and the object is skipped. Live objects are plotted through #R$BD2A,
+; then stepped +-1 in column and row, tracing a diagonal one segment per call.
+c$BCC2 LD HL,$BF68   ; {HL -> the first projectile's direction byte at $BF68; B
+ $BCC5 LD B,$04      ; = 4 projectiles to step}
 ; This entry point is used by the routine at #R$BD09.
 *$BCC7 PUSH HL       ;
  $BCC8 PUSH BC       ;
@@ -5830,7 +6122,8 @@ c$BCC2 LD HL,$BF68   ; {HL -> arrow direction byte at $BF68; B = 4 (unused loop
  $BCED LD HL,$EB00   ;
  $BCF0 ADD HL,BC     ;
  $BCF1 JR $BCF3      ; !!MUT-ARG!! arrow's horizontal step direction
-*$BCF3 CALL $BD2A    ; Mark the arrow's screen cell dirty in the $E500 buffer
+*$BCF3 CALL $BD2A    ; Draw the projectile: XOR an 8x1 bar in, mark the cell
+                     ; bright yellow
  $BCF6 EX DE,HL      ;
  $BCF7 BIT 7,(HL)    ;
  $BCF9 EX DE,HL      ;
@@ -5866,7 +6159,8 @@ c$BD04 EX DE,HL      ;
 ; after the draw): columns 0-1 or 30-37 clear the collision byte (arrow
 ; off-screen); otherwise rotates a bit from A into (HL), marking a mid-flight
 ; collision cell. Loops back to #R$BCC7 for the next arrow step.
-c$BD09 CALL $BD2A    ; Mark the arrow's screen cell dirty in the $E500 buffer
+c$BD09 CALL $BD2A    ; Draw the projectile: XOR an 8x1 bar in, mark the cell
+                     ; bright yellow
  $BD0C LD A,L        ;
  $BD0D EX DE,HL      ;
  $BD0E CP $02        ;
@@ -5877,10 +6171,11 @@ c$BD09 CALL $BD2A    ; Mark the arrow's screen cell dirty in the $E500 buffer
  $BD18 JR C,$BD1E    ; collision byte
  $BD1A LD (HL),$00   ;
  $BD1C JR $BD23      ; }
-*$BD1E RLA           ; {Otherwise: rotate a bit from A into the collision byte
- $BD1F RL (HL)       ; at (HL)
- $BD21 RRA           ;
- $BD22 LD (HL),A     ; }
+*$BD1E RLA           ; {Otherwise store the stepped position back, preserving
+ $BD1F RL (HL)       ; bit 7: RLA pushes A's top bit out, RL (HL) brings the
+ $BD21 RRA           ; old position's bit 7 (the direction flag) into carry,
+ $BD22 LD (HL),A     ; RRA folds it back into A's bit 7, then LD (HL),A writes
+                     ; the new position with its direction bit intact}
 ; This entry point is used by the routines at #R$BCC2 and #R$BD04.
 *$BD23 POP BC        ; {Restore state and loop back to #R$BCC7 for the next
  $BD24 POP HL        ; arrow step
@@ -5889,7 +6184,8 @@ c$BD09 CALL $BD2A    ; Mark the arrow's screen cell dirty in the $E500 buffer
  $BD27 DJNZ $BCC7    ;
  $BD29 RET           ; }
 
-; Mark the arrow's screen cell dirty in the $E500 buffer (glyph $46)
+; Draw a projectile: XOR an 8x1 bar into the shadow screen, mark the cell
+; bright yellow
 ;
 ; Used by the routines at #R$BCC2 and #R$BD09.
 ;
@@ -5897,11 +6193,14 @@ c$BD09 CALL $BD2A    ; Mark the arrow's screen cell dirty in the $E500 buffer
 ; B Row (its low 3 bits fold into the $E500 offset)
 ; C Column
 ;
-; Called from #R$BCC2's arrow-step loop and #R$BD09. Toggles (HL) - the arrow's
-; collision byte - by XORing $FF into it, then packs B/C (row/column) into an
-; offset into the $E500 change-buffer (the same buffer #R$C85C later flushes to
-; the real screen) and writes glyph code $46 there, so the arrow
-; appears/disappears at its new position.
+; Called from #R$BCC2's projectile loop and #R$BD09 - draws Robin's arrow and
+; the guard bullets alike. (HL) points into the $EB00 shadow pixel buffer;
+; XORing $FF into it flips all 8 pixels of that byte, so a projectile is a
+; solid 8-pixel-wide, 1-pixel-tall bar, and the same call at the old position
+; next step erases it again (no separate erase pass needed). It then packs B/C
+; into an $E500 offset and writes $46 there, which #R$C85C treats as the cell's
+; attribute - bright yellow. The XOR also doubles as the collision test: if the
+; pixels were already set, the result tells #R$BCC2 the shot hit something.
 c$BD2A PUSH AF       ; {Save AF/BC/DE/HL
  $BD2B PUSH BC       ;
  $BD2C PUSH DE       ;
@@ -5933,21 +6232,24 @@ c$BD2A PUSH AF       ; {Save AF/BC/DE/HL
 ;
 ; .
 ;
-; (HL) is the arrow object at $BF67; does nothing if it's inactive, or if its
-; animation frame ($BF68 low 7 bits) isn't one of the "in flight" frames
-; $0A..$0D. Otherwise scans 5 guard entries at #R$AC13 (skipping
-; inactive/already-hit ones) for one whose position (IX+9) is close to the
-; arrow's column, and on a match sets a "hit" flag on the guard and calls
-; #R$BF1A. #R$BD84 (also entered from #R$BE43's sword check) then plays a
-; longer border-flash effect ($14 outer x C inner loops, C counting 1..$27) as
-; the hit/scream sound.
+; (HL) is the arrow object at $BF67; does nothing if it's inactive (column byte
+; 0). Otherwise it tests the arrow's ROW (byte 1, masked to drop the flag bits)
+; against $0A..$0D - not an animation frame, there is no such field: guards are
+; pinned to a fixed Y (#R$AC13's N-line) which converts to a fixed row of $0C,
+; so this is a coarse vertical proximity band centred on that row, cheaper than
+; comparing against every guard's actual Y. Only an arrow inside that band goes
+; on to scan the 5 guard entries at #R$AC13 (skipping inactive/already-hit
+; ones) for one whose position (IX+9) is close to the arrow's column, and on a
+; match sets a "hit" flag on the guard and calls #R$BF1A. #R$BD84 (also entered
+; from #R$BE43's sword check) then plays a longer border-flash effect ($14
+; outer x C inner loops, C counting 1..$27) as the hit/scream sound.
 c$BD49 LD HL,$BF67    ;
  $BD4C LD A,(HL)      ; {Arrow inactive: nothing to hit
  $BD4D OR A           ; }
  $BD4E RET Z          ;
  $BD4F INC HL         ;
- $BD50 LD A,(HL)      ; {Frames $0A..$0D mean it is in flight
- $BD51 AND $7F        ; }
+ $BD50 LD A,(HL)      ; {Row band $0A..$0D: is the arrow near a guard's fixed
+ $BD51 AND $7F        ; Y?}
  $BD53 CP $0A         ;
  $BD55 RET C          ;
  $BD56 CP $0E         ;
@@ -5994,31 +6296,30 @@ c$BD49 LD HL,$BF67    ;
  $BDA0 DJNZ $BD60     ;
  $BDA2 RET            ;
 
-; Check Robin against up to 3 room hotspots at $BF69
+; Check Robin against the 3 guard bullets in flight at $BF69
 ;
 ; Used by the routine at #R$BF80.
 ;
 ; .
 ;
-; Only runs while Robin is idle ($CC7B=0). Scans 3 two-byte entries at $BF69
-; (row byte, then a second byte read at +1); a non-$FF row byte is scaled (x4,
-; then compared within an 8-pixel band against $CC85; x8 compared within a
-; 24-pixel band against $CC86) to test whether Robin's position falls within
-; the hotspot. On a hit, sets bit 6 of the entry and calls #R$BE25 then #R$BF54
-; (B=0) - likely starting a climb/interact state. This is the delivery side of
-; the "guards shoot Robin" mechanic (see #R$AA31): a guard in range claims one
-; of these same 3 slots at its own position instead of an authored room hazard
-; using it, so the same contact/damage code fires whether the slot holds a real
-; hazard or a guard's aim - there is no separate flying-bullet object. Exact
-; meaning of the entry's second byte and the two helper calls is not fully
-; confirmed.
+; The hit test for the 3 guard bullets, run every frame but only while Robin is
+; idle ($CC7B=0). Each bullet's current screen position is the first of its 2
+; bytes and a zero there means the slot is empty, so it is skipped (the test is
+; OR A / JR Z, so $00 marks a free slot, not $FF). For a bullet in flight it
+; checks (position + 2) * 4 against Robin's X within a band of 8, and the
+; direction byte * 8 against his Y within a band of 24, so the bullet connects
+; across roughly two characters by three rows around its own cell. On a hit it
+; marks the bullet with bit 6, damages Robin via #R$BE25 and plays a rising
+; border flash via #R$BF54. The bullets themselves are flown and drawn by
+; #R$BCC2 along with Robin's arrow; this routine only resolves them against
+; Robin.
 c$BDA3 LD A,($CC7B)  ; {Only run while Robin is idle ($CC7B = 0)
  $BDA6 OR A          ;
  $BDA7 RET NZ        ; }
  $BDA8 LD B,$03      ; {B = 3 entries; HL -> table $BF69; DE = Robin's position
  $BDAA LD HL,$BF69   ; ($CC85/$CC86)
  $BDAD LD DE,($CC85) ; }
-*$BDB1 LD A,(HL)     ; {(HL) = $FF marks an unused entry; skip it
+*$BDB1 LD A,(HL)     ; {A zero column byte marks an unused entry; skip it
  $BDB2 OR A          ;
  $BDB3 INC HL        ;
  $BDB4 JR Z,$BDDC    ; }
@@ -6218,7 +6519,7 @@ c$BEB1 LD A,($BC5D)  ; {Bail out unless bit 0 of $BC5D is set
  $BEB9 RLA           ; set
  $BEBA RLA           ; }
  $BEBB RET C         ;
- $BEBC LD BC,($BC62) ; {BC/DE = the enemy's position and hit-box size; EXX for
+ $BEBC LD BC,($BC62) ; {BC/DE = the Hermit's position and hit-box size; EXX for
  $BEC0 LD DE,$200C   ; Robin's own
  $BEC3 EXX           ;
  $BEC4 LD BC,($CC85) ;
@@ -6231,8 +6532,8 @@ c$BEB1 LD A,($BC5D)  ; {Bail out unless bit 0 of $BC5D is set
  $BED7 CALL $BF37    ; Draw the energy bar
  $BEDA CALL $D91A    ; Print an extra-life-count message, increment the counter
                      ; and its displayed digit
- $BEDD LD HL,$BC67   ; {Mark the enemy defeated (set bit 6 of $BC67)
- $BEE0 SET 6,(HL)    ; }
+ $BEDD LD HL,$BC67   ; {Mark the Hermit's reward as used up (set bit 6 of
+ $BEE0 SET 6,(HL)    ; $BC67)}
  $BEE2 RET           ;
 
 ; Bounding-box overlap test: |B-B'| < D and |C-C'| < E
@@ -6390,23 +6691,31 @@ c$BF54 PUSH AF       ; {A = 0; save AF/BC
  $BF65 POP AF        ;
  $BF66 RET           ;
 
-; Arrow object, room hotspots and Robin's energy level
+; Projectile array (4 objects of 2 bytes) and Robin's energy level
 ;
 ; .
 ;
 ; .
 ;
-; Cleared on every room change by #R$C276. The arrow is launched by #R$BC81,
-; stepped each frame by #R$BCC2 and tested against guards by #R$BD49.
-b$BF67 DEFB $00                     ; Arrow screen position (bit 7 = "arrow
-                                    ; gone" flag)
- $BF68 DEFB $AA                     ; Arrow direction (bits 6-7) and animation
-                                    ; frame (bits 0-6); $0A-$0D = in flight
- $BF69 DEFB $00,$00,$00,$00,$00,$00 ; 3 room hotspots, 2 bytes each: row byte
-                                    ; ($FF = unused, bit 6 = triggered), then a
-                                    ; second byte (see #R$BDA3) - also claimed
-                                    ; by #R$AA31 for a guard's ranged threat,
-                                    ; confirmed live via Emu80
+; Four 2-byte projectiles, stepped and drawn together by #R$BCC2's 4-iteration
+; loop: object 0 is Robin's arrow, objects 1-3 the guard bullets. Byte 0 =
+; column ($00 = empty; bit 7 = persistent horizontal direction). Byte 1 = row,
+; with bits 7/6 as one-shot skip-erase/destroy flags consumed by #R$BCC2 before
+; the row is used. Object 0 launched by #R$BC81, tested by #R$BD49; objects 1-3
+; launched by #R$AA31 (always at the firing guard's fixed row, since guards
+; never move vertically - #R$AC13), tested by #R$BDA3. All four cleared each
+; room change by #R$C276's fill at $C3BF.
+b$BF67 DEFB $00                     ; Object 0 (Robin's arrow) column ($00 =
+                                    ; gone; bit 7 = horizontal direction)
+ $BF68 DEFB $AA                     ; Object 0 row (bit 7 = skip-erase, bit 6 =
+                                    ; destroy - both one-shot, see #R$BCC2)
+ $BF69 DEFB $00,$00,$00,$00,$00,$00 ; Guard bullets - objects 1-3 of the
+                                    ; #R$BF67 projectile array, 2 bytes each in
+                                    ; the same column/row format. Launched by
+                                    ; #R$AA31 when a guard fires, flown and
+                                    ; drawn every frame by #R$BCC2 exactly like
+                                    ; Robin's arrow, and tested against Robin
+                                    ; by #R$BDA3
  $BF6F DEFB $0F                     ; Energy level
 
 ; START point after game loading
@@ -6446,7 +6755,8 @@ c$BF79 DI            ; Disable interrupts
 ;
 ; Called once per frame from the game's top level. Enables interrupts, then in
 ; turn: checks for a menu key via #R$C53B (falling back to #R$BF79 if pressed),
-; moves Robin via #R$C6A2, steps the arrow (#R$BCC2) and every guard/boar/enemy
+; moves Robin via #R$C6A2, steps all 4 projectiles - Robin's arrow and the 3
+; guard bullets - via #R$BCC2, then one guard, one boar, the Hermit and Bishop
 ; (#R$AA31/#R$DBF8/#R$BBC1/#R$B919), runs all the collision/hit checks
 ; (#R$BD49/#R$BDA3/#R$BDE0/#R$BE43), flushes the changed screen cells
 ; (#R$C85C), scans event triggers (#R$D7F3/#R$DF03), draws HUD elements
@@ -6460,13 +6770,14 @@ c$BF80 EI            ;
  $BF84 JP NC,$BF79   ; => Reset the stack and re-enter the menu procedure at
                      ; $CD89
  $BF87 CALL $C6A2    ; Update Robin
- $BF8A CALL $BCC2    ; Step the arrow one pixel along its diagonal flight,
-                     ; drawing it
- $BF8D CALL $AA31    ; Update a patrolling enemy's direction/animation state
+ $BF8A CALL $BCC2    ; Step all 4 projectiles one segment along their flight,
+                     ; drawing each
+ $BF8D CALL $AA31    ; Update one guard: patrol step, frame list, and firing
  $BF90 CALL $DBF8    ; Cycle through and step one boar object per call
  $BF93 CALL $BD49    ; Check an arrow hit against nearby guards, then a
                      ; border-flash sound
- $BF96 CALL $BDA3    ; Check Robin against up to 3 room hotspots at $BF69
+ $BF96 CALL $BDA3    ; Check Robin against the 3 guard bullets in flight at
+                     ; $BF69
  $BF99 CALL $BDE0    ; Check Robin against the boar table ($DD05) for a bump
  $BF9C CALL $BE43    ; Check a sword swing against nearby guards
  $BF9F CALL $B867    ; Trigger the Sheriff of Nottingham's scripted ambush when
@@ -7016,18 +7327,33 @@ c$C22F LD E,A        ; {HL = current room x16 (room number's column nibble x
 ; Compares the current room ($C548) to the last-drawn room
 ; ($D3B8/#R$C54C-relative). If unchanged, just blinks one room-indicator digit
 ; cell on the shadow screen. If the room changed: sets up Robin's object record
-; at $B8FB (position/frame via #R$C8F7), clears and re-initialises the 4-guard
-; table at #R$AC13 from the room's block flags (bits 4/7 of the map block
-; select which movement-table pair each guard starts with, mirroring #R$AA31's
-; own logic), calls #R$AA31 once per guard, and rebuilds a second 4-entry table
-; at $DD05 from door/exit data at $DD3F. Also resets several per-room state
-; bytes ($BF67.., $BC5D, $BBC2, $BBA0, $BB91, $AC43) and a second special
-; object at $CC7C.
+; at $B8FB (position/frame via #R$C8F7); re-randomises the low nibble of byte 0
+; (XORed with the R register) and clears bits 4-5 of byte 2 for 4 entries of
+; the #R$8A39 table (not #R$AC13 - there is no per-room authored guard roster,
+; see #R$8A39's N-line). Those 4 entries are NOT the ones the room being
+; entered actually uses: the re-roll indexes #R$C3FA with (room - $20) at
+; $C278, i.e. map row - 2, while the live group pointer saved to $C54C at $C291
+; indexes with the unbiased room number - so entering a room respawns the guard
+; group of the row-band 2 rows away and leaves its own band untouched. That is
+; why guards and their corpses hold position when Robin steps out of a room and
+; straight back (any move that keeps the row, or shifts it by 1, re-rolls some
+; other band), and why they are only replaced once he reaches a room 2 map rows
+; away, whose entry re-rolls the band he started in. The re-roll is also a full
+; respawn rather than a revive: byte 0 gets a fresh random home column and byte
+; 2's bits 4-5 clear the dead and just-hit flags, while byte 1's patrol cursor
+; is left running. Then calls #R$DDF0 to refresh route-availability; then sets
+; only (IX+2/3) (a movement-table pair, chosen from bits 4/7 of the matching
+; #R$8A39 byte 2, not the room's own map block) and (IX+4) (redraw flags) on
+; the 4 live #R$AC13 slots, calls #R$AA31 once per guard, and rebuilds a second
+; 4-entry table at $DD05 from door/exit data at $DD3F. Also resets several
+; per-room state bytes ($BF67.., $BC5D, $BBC2, $BBA0, $BB91, $AC43) and a
+; second special object at $CC7C.
 @label=handle_room_entry
 c$C276 PUSH AF         ;
  $C277 PUSH AF         ;
- $C278 LD A,($C548)    ; {Room number, biased to the $8A39 table
- $C27B SUB $20         ; }
+ $C278 LD A,($C548)    ; {Room number less $20 - map row minus 2, so the
+ $C27B SUB $20         ; respawn below hits the guard band 2 rows away, not
+                       ; this room's own}
  $C27D CALL $C3FA      ; Compute an address in the 12-byte-stride table at
                        ; $8A39
  $C280 LD B,$04        ;
@@ -7042,8 +7368,8 @@ c$C276 PUSH AF         ;
  $C28E INC HL          ;
  $C28F DJNZ $C282      ;
  $C291 LD A,($C548)    ;
- $C294 CALL $C3FA      ; Compute an address in the 12-byte-stride table at
-                       ; $8A39
+ $C294 CALL $C3FA      ; Same lookup, this time on the unbiased room number -
+                       ; the band Robin is actually in
  $C297 LD ($C54C),HL   ; Remember the table base for this room
  $C29A LD DE,$0000     ; {Clear the direction latch at $D1F1
  $C29D LD ($D1F1),DE   ; }
@@ -7125,12 +7451,16 @@ c$C276 PUSH AF         ;
  $C340 INC HL          ;
  $C341 INC HL          ;
 *$C342 LD (IX+$04),$00 ; Clear this guard's redraw flags
- $C346 BIT 4,(HL)      ; Block bit 4: the guard starts "away"
+ $C346 BIT 4,(HL)      ; #R$8A39 byte 2 bit 4: this guard was killed earlier
+                       ; and is still dead
  $C348 JR Z,$C353      ;
- $C34A LD DE,$AC7F     ; Direction table $AC7F
+ $C34A LD DE,$AC7F     ; Frame list $AC7F - #R$AC7B entered at its $12 byte, so
+                       ; the corpse shows its final pose at once
  $C34D SET 5,(IX+$04)  ;
  $C351 JR $C361        ;
-*$C353 BIT 7,(HL)      ; Otherwise block bit 7 chooses
+*$C353 BIT 7,(HL)      ; Alive: byte 2 bit 7 (direction) chooses the walk
+                       ; cycle, and bit 6 is forced to match it so the guard
+                       ; starts without a pending turn
  $C355 SET 6,(HL)      ;
  $C357 LD DE,$AC5C     ;
  $C35A JR NZ,$C361     ;
@@ -7145,7 +7475,7 @@ c$C276 PUSH AF         ;
  $C36F DJNZ $C342      ;
  $C371 LD B,$04        ;
 *$C373 PUSH BC         ;
- $C374 CALL $AA31      ; Update a patrolling enemy's direction/animation state
+ $C374 CALL $AA31      ; Update one guard: patrol step, frame list, and firing
  $C377 POP BC          ;
  $C378 DJNZ $C373      ;
  $C37A LD HL,($C548)   ;
@@ -7210,8 +7540,12 @@ c$C276 PUSH AF         ;
 ;   A Index in bits 4-5
 ; O:HL -> the matching 12-byte entry in the table at $8A39
 ;
-; Extracts bits 4-5 of A (0-3) and returns HL = that index x 12 + $8A39. Called
-; from #R$C276 while setting up the score/room-indicator digit blink.
+; Extracts bits 4-5 of A (0-3) and returns HL = that index x 12 + $8A39. A room
+; byte packs as (row << 4) | column, so for a room number those two bits are
+; the map row mod 4 - the guard band. #R$C276 calls this twice per room entry
+; with two different inputs (room - $20 for the respawn, the plain room number
+; for the live group pointer at $C54C), which is what puts a 2-row offset
+; between the band that gets respawned and the band Robin is standing in.
 c$C3FA RRA           ; {Shift bits 4-5 down
  $C3FB RRA           ;
  $C3FC RRA           ;
@@ -7627,9 +7961,10 @@ c$C585 LD E,A        ;
 ; Split from #R$C585 by the disassembler even though it's one routine: #R$C585
 ; sets up self-modified branch targets (patched bytes at $C603/$C5E3/$C647,
 ; chosen from the glyph width nibble at (HL)) and jumps here; this block does
-; the actual row lookup and XOR-plot of glyph pixels into $E500-relative screen
-; data using the bit-reverse table at $FD00 (as in #R$C1D6/#R$C6D6), then loops
-; back into #R$C585's counters via #R$C5D8/#R$C5DB. The exact meaning of each
+; the actual row lookup and XOR-plot of glyph pixels ($AE XOR (HL), never
+; patched) into the $EB00 shadow screen at the address $C5D1 computed, using
+; the bit-reverse table at $FD00 (as in #R$C1D6/#R$C6D6), then loops back into
+; #R$C585's counters via #R$C5D8/#R$C5DB. The exact meaning of each
 ; self-modified branch is not fully confirmed.
 c$C5E4 LD BC,$C682   ; {Character code indexes the table at $C682
  $C5E7 ADD HL,BC     ; }
@@ -7832,8 +8167,8 @@ c$C6D6 PUSH HL       ;
  $C6E2 LD D,(HL)     ; }
  $C6E3 EX DE,HL      ;
  $C6E4 CALL $C585    ; Set up a glyph draw
- $C6E7 CALL $C790    ; Save the background under a sprite frame to the buffer
-                     ; at $E500
+ $C6E7 CALL $C790    ; Stamp the sprite frame's cell-colour pattern into the
+                     ; $E500 flag area
  $C6EA CALL $C8B7    ; Horizontally mirror a sprite frame's row data
  $C6ED EX AF,AF'     ;
  $C6EE INC HL        ;
@@ -7957,7 +8292,7 @@ c$C74D XOR A         ;
  $C78D RR B          ; }
  $C78F RET           ;
 
-; Save the background under a sprite frame to the buffer at $E500
+; Stamp a sprite frame's cell-colour pattern into the $E500 flag area
 ;
 ; Used by the routine at #R$C6D6.
 ;
@@ -7965,12 +8300,15 @@ c$C74D XOR A         ;
 ; B Row
 ; C Column
 ;
-; Called from #R$C6D6 while setting up a sprite frame. (HL) supplies
-; width/height nibbles and a flag byte (bit 7/6 select self-modified skip logic
-; at $C7F0/$C7FB for mirrored frames); a pointer table at $8E12 (indexed by the
-; flag byte) gives the screen block to copy row by row into the save-buffer at
-; $E500, so the original background can later be restored when the sprite moves
-; or is erased.
+; Called from #R$C6D6 while drawing a sprite frame. Not a background save: it
+; copies the fixed attribute run at #R$8E1C ($44,$45,$07,$45,$05,$47,$43,$42 -
+; a shared bright-colour ramp, not per-actor) into #R$E500 over the frame's
+; footprint, one byte per cell. (HL) supplies width/height and a flag byte;
+; $8E12 (indexed by that flag byte) picks the start offset and length. Bit 7/6
+; of the flag byte NOP the $C7F0/$C7FB row-step increments for mirrored frames,
+; so one colour repeats. #R$C85C later uses these bytes as the cell's
+; real-screen attribute wherever the shadow attribute under the sprite is $00 -
+; giving actors their colour over untiled black background.
 c$C790 PUSH AF       ;
  $C791 PUSH BC       ;
  $C792 PUSH DE       ;
@@ -8115,11 +8453,14 @@ c$C806 LD HL,$EAFE   ; HL = destination base $EAFE
 ;
 ; .
 ;
-; Scans the flag area at #R$E500 (28 flag bytes per row x 18 rows, IXl counts
-; rows) for a non-zero "changed" marker. For each one found, computes the real
-; Spectrum screen pixel address ($4000-region) from the cell's row/column and
-; copies its 8-byte glyph from the shadow buffer at $EB00+$8D00 onto the
-; screen, then clears the flag and continues scanning.
+; Scans the flag area at #R$E500 (28 flag bytes per row x 18 rows) for a
+; non-zero "changed" marker. The flag byte is not a boolean - draw routines
+; write an attribute value into it ($44 for actors, $46 for the arrow). For
+; each flagged cell it writes the real-screen attribute: the cell's shadow
+; attribute if non-zero (scenery keeps its colour), else the flag byte itself
+; (EX AF,AF' at $C877/$C883) - painting actors' colour over untiled $00
+; background. Then it copies the cell's 8-byte glyph from the shadow buffer at
+; $EB00+$8D00 to the real screen, clears the flag, continues.
 @label=flush_e500_buffer
 c$C85C LD HL,$E502   ; The change-flag area at $E502
  $C85F LD IXl,$12    ; 18 rows to scan
@@ -8137,18 +8478,21 @@ c$C85C LD HL,$E502   ; The change-flag area at $E502
  $C870 DEC IXl       ; {Loop all 18 rows
  $C872 JP NZ,$C864   ; }
  $C875 RET           ;
-*$C876 LD (HL),C     ; Consume the flag
+*$C876 LD (HL),C     ; Consume the flag; the flag byte value (an attribute) is
+                     ; now in A via #R$C866's OR
  $C877 EX AF,AF'     ;
- $C878 LD DE,$0300   ; {$0300 on reaches the real attribute byte
- $C87B ADD HL,DE     ; }
+ $C878 LD DE,$0300   ; {$0300 on from the flag address reaches the cell's
+ $C87B ADD HL,DE     ; shadow attribute byte}
  $C87C LD DE,$7000   ;
- $C87F LD A,(HL)     ; {A black attribute swaps in the alternate accumulator
- $C880 OR A          ; }
+ $C87F LD A,(HL)     ; {Read the shadow attribute; if it is $00 (blank
+ $C880 OR A          ; scenery), swap the flag-byte attribute back in as the
+                     ; fallback colour}
  $C881 JR NZ,$C884   ;
  $C883 EX AF,AF'     ;
-*$C884 ADD HL,DE     ;
- $C885 AND $7F       ; {Store it back with bit 7 cleared
- $C887 LD (HL),A     ; }
+*$C884 ADD HL,DE     ; $7000 on from the shadow attribute reaches the matching
+                     ; real-screen attribute
+ $C885 AND $7F       ; {Store the attribute to the real screen with bit 7
+ $C887 LD (HL),A     ; (flash) cleared}
  $C888 PUSH HL       ;
  $C889 EXX           ;
  $C88A POP HL        ;
@@ -8241,56 +8585,66 @@ c$C8B7 PUSH AF       ;
  $C8F5 POP AF        ;
  $C8F6 RET           ;
 
-; Advance an object's animation, unlink it from the list if done
+; Advance an object's animation, walking its frame-list cursor if due
 ;
 ; Used by the routines at #R$AA31, #R$B867, #R$BA85, #R$BBC1, #R$C276, #R$C6A2
 ; and #R$DBF8.
 ;
 ; IX Object record
 ;
-; IX -> object record. Does nothing unless (IX+4) bit 0 is set. Then a
-; countdown byte at IX is decremented; on reaching -1, the record is spliced
-; out of its linked list (the next record's link is copied over this one, with
-; a $FF marker handled as end-of-list). A status byte's bit 1, if set, redraws
-; the current frame via #R$C6D6 to erase it; bit 2, if set, advances to the
-; next frame and redraws it the same way.
+; IX -> object record. Does nothing unless (IX+4) bit 0 is set. A countdown
+; byte at IX is decremented; on reaching -1, the frame-list cursor (IX+2/3)
+; advances: the next byte is read from the list, an $FF there is chased as a
+; loop-back address (2 bytes following it), and the resolved frame number is
+; written to (IX+8). A status byte's bit 1, if set, redraws the current frame
+; via #R$C6D6 to erase it; bit 2, if set, promotes (IX+8) into (IX+5..7) and
+; redraws it the same way - and the draw branch itself does RES 2/SET 1, so
+; every draw arms its own erase for the FOLLOWING call, never as a response to
+; becoming invisible (see #R$AA31's $ABE3/$ABF0 for how a caller exploits this
+; to erase-only). Bit 0 gates the whole routine including the erase, so nothing
+; fires while it's clear. The erase always uses the saved triple at (IX+5..7),
+; refreshed from (IX+8..10) by the LDDR at $C950 immediately before each draw,
+; so it holds exactly what's on screen even after the live position has moved
+; on; the countdown byte gates only the cursor advance, not the erase/draw
+; flags.
 @label=advance_object_animation
 c$C8F7 BIT 0,(IX+$04) ; (IX+4) bit 0 clear: this record is not animated
  $C8FB JP Z,$C959     ;
  $C8FE PUSH IX        ;
  $C900 POP HL         ;
  $C901 DEC (HL)       ; Tick the countdown byte down
- $C902 JP M,$C90B     ; Only -1 unlinks the record
+ $C902 JP M,$C90B     ; Only -1 advances the frame-list cursor
  $C905 LD BC,$0004    ; {Otherwise skip straight to the status byte at +4
  $C908 ADD HL,BC      ; }
  $C909 JR $C92A       ;
-*$C90B LD D,H         ; {DE = this record
+*$C90B LD D,H         ; {DE = the record's own address
  $C90C LD E,L         ; }
  $C90D INC HL         ;
- $C90E LD A,(HL)      ; {Copy the next record's first byte over it
+ $C90E LD A,(HL)      ; {Copy (IX+1) down into the countdown byte at (IX+0)
  $C90F LD (DE),A      ; }
  $C910 INC HL         ;
- $C911 LD E,(HL)      ; {D:E = the next record
+ $C911 LD E,(HL)      ; {D:E = the frame-list cursor at (IX+2/3)
  $C912 INC HL         ;
  $C913 LD D,(HL)      ; }
  $C914 LD A,(DE)      ;
  $C915 INC DE         ;
  $C916 DEC HL         ;
- $C917 CP $FF         ; $FF marks a record that is itself gone
+ $C917 CP $FF         ; $FF in the list means chase the loop-back address that
+                      ; follows it
  $C919 JR NZ,$C923    ;
- $C91B EX DE,HL       ; {Chase past it to the one after
- $C91C LD A,(HL)      ;
+ $C91B EX DE,HL       ; {Read the loop-back address and the byte (frame number)
+ $C91C LD A,(HL)      ; after it
  $C91D INC HL         ;
  $C91E LD H,(HL)      ;
  $C91F LD L,A         ;
  $C920 EX DE,HL       ; }
  $C921 LD A,(DE)      ;
  $C922 INC DE         ;
-*$C923 LD (HL),E      ; {Write the resolved link back
+*$C923 LD (HL),E      ; {Write the (possibly looped) cursor back to (IX+2/3)
  $C924 INC HL         ;
  $C925 LD (HL),D      ; }
  $C926 INC HL         ;
- $C927 LD (IX+$08),A  ; Marker byte into (IX+8)
+ $C927 LD (IX+$08),A  ; Resolved frame number into (IX+8)
 *$C92A LD A,(HL)      ;
  $C92B BIT 1,A        ; Status bit 1 asks for an erase
  $C92D JR Z,$C93C     ;
@@ -8517,7 +8871,10 @@ c$CA44 LD HL,$CAEF   ; {Push a return address; E = 1 (sword variant)
 ; message printed via #R$D619 when it reaches zero. Otherwise checks the sword
 ; flag at $D59D, then the movement bits at $CC8B, to choose between
 ; sword/attack, walk, or idle frame tables (at $CC9D/$CCA8, $CCB3/$CCBE,
-; $CCDF/$CCEA, $CCC9/$CCD4).
+; $CCDF/$CCEA, $CCC9/$CCD4). Without the sword, pressing fire lands here with
+; $D59D clear regardless of movement, landing on $CCDF/$CCEA - despite the
+; "walk" naming these are never used for actual movement (see #R$CCDF); they're
+; Robin's dedicated pre-sword stick-swing display, confirmed live.
 @label=pick_robin_frame_table
 c$CA4C LD HL,$CAEF    ; {Push the default return frame; E = 0 (arrow variant)
  $CA4F PUSH HL        ;
@@ -8569,8 +8926,8 @@ c$CA4C LD HL,$CAEF    ; {Push the default return frame; E = 0 (arrow variant)
  $CAAF JR Z,$CAB4     ;
  $CAB1 LD HL,$CCD4    ;
 *$CAB4 RET            ;
-*$CAB5 LD A,($D59D)   ; {$D59D (sword flag) clear: use the walk tables ($CAE1)
- $CAB8 OR A           ; }
+*$CAB5 LD A,($D59D)   ; {$D59D (sword flag) clear: use the stick-swing tables
+ $CAB8 OR A           ; ($CAE1, #R$CCDF) - never movement, see its N-line}
  $CAB9 JR Z,$CAE1     ;
  $CABB LD A,$06       ;
  $CABD ADD A,D        ;
@@ -8591,7 +8948,9 @@ c$CA4C LD HL,$CAEF    ; {Push the default return frame; E = 0 (arrow variant)
  $CADB JR Z,$CAE0     ;
  $CADD LD HL,$CCA8    ;
 *$CAE0 RET            ;
-*$CAE1 LD A,$0A       ;
+*$CAE1 LD A,$0A       ; A = $0A + D (facing bit) - the new facing/state byte,
+                      ; committed to $CC87 by #R$CAEF; this is the sit-$00/$01
+                      ; -> $0A/$0B transition on fire press, confirmed live
  $CAE3 ADD A,D        ;
  $CAE4 LD HL,$CCDF    ; Frame table $CCDF, mirror $CCEA
  $CAE7 BIT 0,D        ;
@@ -8639,11 +8998,11 @@ c$CB0A CALL $BC81    ; Launch Robin's arrow when he shoots, if none is already
  $CB0D CALL $CB21    ; Per-direction handler
  $CB10 RET           ;
 
-; Facing/state $0A handler: run the per-direction handler #R$CB21
+; STICK RIGHT ($0A) handler: run the per-direction handler #R$CB21
 c$CB11 CALL $CB21    ; Per-direction handler
  $CB14 RET           ;
 
-; Facing/state $0B handler: run the per-direction handler #R$CB21
+; STICK LEFT ($0B) handler: run the per-direction handler #R$CB21
 c$CB15 CALL $CB21    ; Per-direction handler
  $CB18 RET           ;
 
@@ -8743,12 +9102,12 @@ c$CB6B AND $0F       ; A = movement bits (fire bit masked off)
  $CB8D LD HL,$CD11   ; }
  $CB90 RET           ;
 ; This entry point is used by the routines at #R$CC1F and #R$CC52.
-*$CB91 LD A,$04      ; {Bit 2 (down): A=4, HL=$CD26
- $CB93 LD HL,$CD26   ; }
+*$CB91 LD A,$04      ; {Reached from bit 3 (up): A=4, HL=$CD26 - run-up
+ $CB93 LD HL,$CD26   ; (back-facing) frames}
  $CB96 RET           ;
 ; This entry point is used by the routines at #R$CC1F and #R$CC47.
-*$CB97 LD A,$05      ; {Bit 3 (up): A=5, HL=$CD2D
- $CB99 LD HL,$CD2D   ; }
+*$CB97 LD A,$05      ; {Reached from bit 2 (down): A=5, HL=$CD2D - run-down
+ $CB99 LD HL,$CD2D   ; (front-facing) frames}
  $CB9C RET           ;
 
 ; Robin's critical-hit stagger: penalise the counter, recover after a timer
@@ -8983,9 +9342,12 @@ c$CC52 AND $0F       ; {Low nibble 0: fall to #R$CC73
 ; .
 ;
 ; $CC7A/$CC7B are the animation timers tested by #R$CB21 and #R$C9E7. $CC7C is
-; Robin's own object record (standard layout, see #R$AC13). $CC87 right after
-; it is the facing/state byte indexing #R$CD42; $CC88/$CC89 cache a frame
-; pointer read back by #R$CC73.
+; Robin's own object record (standard layout, see #R$AC13). $CC7E (+2/+3) is
+; dual-role: #R$CBF7 writes it as a frame-list pointer on a state transition,
+; but #R$C8F7/#R$C90B then advances the same word in place as a live cursor -
+; so later reads (e.g. #R$BE43's "current animation frame" check) normally see
+; the frame just drawn, not the list's start. $CC87 is the facing/state byte
+; indexing #R$CD42; $CC88/$CC89 cache a frame pointer read back by #R$CC73.
 b$CC7A DEFB $00                             ; Sword/arrow/pickup action timer
                                             ; (see #R$CB21/#R$BC81)
  $CC7B DEFB $00                             ; Idle flag (0 = idle; gates
@@ -9037,11 +9399,18 @@ b$CC9D DEFB $18,$19,$1A,$1B,$1B,$1A,$1C,$FF
  $CCD4 DEFB $94,$95,$96,$96,$96,$97,$97,$FF
  $CCDC DEFW $CCDA                           ; then loop back to $CCDA
  $CCDE DEFB $0C
-; Frame table for WALK RIGHT, used by #R$CA4C when the sword flag is clear.
+; STICK SWING RIGHT (mislabeled "WALK RIGHT" - not used for movement): played
+; by #R$CA4C/#R$CAE1 whenever fire is pressed before Robin owns the sword
+; ($D59D clear) - Robin stands with both arms raised holding a stick overhead,
+; not a walking stride. Frames $1D-$20 are used by no other table (the real RUN
+; tables use $00-$0C). Since $D59D never resets once the sword is bought, this
+; table is permanently unreachable for the rest of the game after that.
  $CCDF DEFB $1D,$1D,$1E,$1E,$1F,$1F,$20,$FF
  $CCE7 DEFW $CCE5                           ; then loop back to $CCE5
  $CCE9 DEFB $8C
-; Frame table for WALK LEFT, mirror of #R$CCDF.
+; STICK SWING LEFT, mirror of #R$CCDF - same caveat, never used for movement.
+; Live-confirmed mirrored: $CC7E=$CCEC (frame $9E = $1E|$80), facing state
+; $CC87=$0B/STICK LEFT, $D59D=$00.
  $CCEA DEFB $9D,$9D,$9E,$9E,$9F,$9F,$A0,$FF
  $CCF2 DEFW $CCF0                           ; then loop back to $CCF0
 ; Frame table for #R$CBFE's A=3 case. Loops into #R$CD11's own "RUN LEFT" list
@@ -9086,7 +9455,8 @@ b$CC9D DEFB $18,$19,$1A,$1B,$1B,$1A,$1C,$FF
  $CD34 DEFB $8C,$8C,$8C,$A1,$FF
  $CD39 DEFW $CD37                           ; then loop back to $CD37
 ; Frame table for stagger-recovery state $0E (facing bit 0 clear), used by
-; #R$CB9D.
+; #R$CB9D. Ends on frame $21 (#R$A210), Robin lying flat, held until he
+; recovers.
  $CD3B DEFB $0C,$0C,$0C,$21,$FF
  $CD40 DEFW $CD3E                           ; then loop back to $CD3E
 
@@ -9098,12 +9468,13 @@ b$CC9D DEFB $18,$19,$1A,$1B,$1B,$1A,$1C,$FF
 ;
 ; 16 word entries, indexed by Robin's facing/state byte ($CC87, doubled) -
 ; Robin's animation state machine. #R$C9E7 jumps to the selected handler with A
-; = E = the FUDLR bitmask (bit 0 right, 1 left, 2 down, 3 up, 4 fire) - the
-; same layout every #R$D1E9 input handler returns. States: $00/$01 sit
-; right/left, $02/$03 run right/left, $04 run up, $05 run down, $06/$07 sword
-; swing right/left (probable), $08/$09 arrow right/left, $0A-$0D per-direction
-; handlers (see #R$CB21), $0E/$0F stagger recovery (lay down, then refill
-; energy - entered only from #R$CB9D).
+; = E = the FUDLR bitmask (bit 0 right, 1 left, 2 down, 3 up, 4 fire), the same
+; layout every #R$D1E9 input handler returns. States: $00/$01 sit right/left,
+; $02/$03 run right/left, $04 run up, $05 run down, $06/$07 sword swing
+; (probable), $08/$09 arrow, $0A/$0B STICK RIGHT/LEFT (fire pressed without the
+; sword, #R$CAE1's walk-table fallback), $0C/$0D per-direction handlers
+; (#R$CB21, meaning unconfirmed), $0E/$0F stagger recovery, entered only from
+; #R$CB9D.
 b$CD42 DEFW $CB6B                           ; $00 - SIT RIGHT - Pick a
                                             ; walking-frame table by movement
                                             ; bit (low nibble of A)
@@ -9132,12 +9503,16 @@ b$CD42 DEFW $CB6B                           ; $00 - SIT RIGHT - Pick a
                                             ; arrow (#R$BC81), then #R$CB21
  $CD54 DEFW $CB0A                           ; $09 - ARROW LEFT: launch an arrow
                                             ; (#R$BC81), then #R$CB21
- $CD56 DEFW $CB11                           ; $0A - Facing/state $0A handler:
-                                            ; run the per-direction handler
-                                            ; #R$CB21
- $CD58 DEFW $CB15                           ; $0B - Facing/state $0B handler:
-                                            ; run the per-direction handler
-                                            ; #R$CB21
+ $CD56 DEFW $CB11                           ; $0A - STICK RIGHT (confirmed
+                                            ; live): run the per-direction
+                                            ; handler #R$CB21 - reached via
+                                            ; #R$CAE1 when fire is pressed
+                                            ; without the sword; walk table
+                                            ; #R$CCDF doubles as this pose
+ $CD58 DEFW $CB15                           ; $0B - STICK LEFT (confirmed
+                                            ; live): run the per-direction
+                                            ; handler #R$CB21 - mirror of $0A,
+                                            ; walk table #R$CCEA
  $CD5A DEFW $CB19                           ; $0C - Facing/state $0C handler:
                                             ; run the per-direction handler
                                             ; #R$CB21
@@ -9234,17 +9609,23 @@ c$CD6C LD A,$0B      ; Delay for sound procedure
  $CE01 LD ($CC8B),A  ;
  $CE04 LD HL,$DB17   ;
  $CE07 LD ($C4D3),HL ;
+; Seeds all 16 #R$8A39 entries (every guard, all 4 row-bands) once per game
+; with three random draws each: byte 0 AND $0F = home column, byte 1 taken
+; whole as the patrol cursor (can start outside 0-$6F; the first wrap in
+; #R$AA31 or #R$DDF0's re-derivation normalises it), byte 2 masked to bit 7
+; only - a coin-flip direction with facing/hit/dead all starting clear, so
+; every guard begins alive and already facing the way it walks.
  $CE0A LD IX,$8A39   ;
  $CE0E LD B,$10      ;
  $CE10 LD DE,$0003   ;
 *$CE13 CALL $CE6D    ; Stir the pseudorandom seed at $D38D using the R register
- $CE16 AND $0F       ;
- $CE18 LD (IX+$00),A ;
+ $CE16 AND $0F       ; {Byte 0 - home column, 0-15
+ $CE18 LD (IX+$00),A ; }
  $CE1B CALL $CE6D    ; Stir the pseudorandom seed at $D38D using the R register
- $CE1E LD (IX+$01),A ;
+ $CE1E LD (IX+$01),A ; Byte 1 - patrol cursor, unmasked
  $CE21 CALL $CE6D    ; Stir the pseudorandom seed at $D38D using the R register
- $CE24 SLA A         ;
- $CE26 AND $80       ;
+ $CE24 SLA A         ; {Byte 2 - keep bit 7 only: random direction, and
+ $CE26 AND $80       ; facing/hit/dead all clear}
  $CE28 LD (IX+$02),A ;
  $CE2B ADD IX,DE     ;
  $CE2D DJNZ $CE13    ;
@@ -12155,7 +12536,8 @@ c$DD9F LD A,H        ; {Only test at cell boundaries (H bits 0-2 clear)
 ; (HL) -> a shadow attribute address (from #R$DDD6). Checks 2 cells, one screen
 ; row apart ($0020 stride), each testing bit 7 (solid) or a non-zero attribute
 ; (occupied); returns with A=0 (Z set) if both are clear, non-zero otherwise.
-; Used by the vertical movement checks #R$DD6F/#R$DD80.
+; Used by the horizontal movement checks #R$DD6F/#R$DD80 (left/right - two
+; cells stacked vertically at the target column, spanning Robin's height).
 c$DDB1 LD B,$02      ; {B = 2 cells; DE = one-row stride ($0020)
  $DDB3 LD DE,$0020   ; }
  $DDB6 XOR A         ;
@@ -12177,7 +12559,8 @@ c$DDB1 LD B,$02      ; {B = 2 cells; DE = one-row stride ($0020)
 ; HL Pointer to the first of the 3 attribute cells to test
 ;
 ; Same test as #R$DDB1 but for 3 adjacent cells in the same row (HL
-; incrementing). Used by the horizontal movement checks #R$DD93/#R$DD9F.
+; incrementing). Used by the vertical movement checks #R$DD93/#R$DD9F (up/down
+; - three cells spanning Robin's width at the target row).
 c$DDC5 LD B,$03      ; B = 3 cells
  $DDC7 XOR A         ;
 *$DDC8 BIT 7,(HL)    ; {Blocked if bit 7 (solid) or any non-zero attribute
@@ -12198,8 +12581,13 @@ c$DDC5 LD B,$03      ; B = 3 cells
 ;   HL Pixel coordinates
 ; O:HL -> the matching shadow attribute address
 ;
-; Combines bits from H and L into an offset added to the shadow attribute area
-; base at $E800.
+; Builds an offset into the shadow attribute area at $E800: result = $E800 +
+; (Y>>3)*32 + (X>>2) - 2 for pixel coordinates (X=L, Y=H). The 4
+; movement-collision probes build on this base: right (#R$DD80) = base+$23,
+; left (#R$DD6F) = base+$1F, testing 2 cells one row apart via #R$DDB1; up
+; (#R$DD93) = base, down (#R$DD9F) = base+$60, testing 3 cells across the row
+; via #R$DDC5. Boundary gates: left/right only test when X AND 3 = 0, up/down
+; only when Y AND 7 = 0.
 c$DDD6 SRL L         ; {Column component: L >>= 2, stashed in A'
  $DDD8 SRL L         ;
  $DDDA LD A,L        ; }
@@ -12225,12 +12613,20 @@ c$DDD6 SRL L         ; {Column component: L >>= 2, stashed in A'
 ;
 ; IX -> the 4-entry guard table at ($C54C)
 ;
-; IX -> the 4-entry guard table at ($C54C) (set up by #R$C276). For each guard,
-; finds the entry in the 28-byte-stride table at $DEAB matching the guard's
-; home room nibble (IX+0), tests one of its 3 flag bytes via #R$DE51 (picked by
-; IX+1 bits 0-1) and, if clear, scans up to 25 further bytes to find where the
-; guard's route re-opens, packing the result back into (IX+1). Exact meaning of
-; the per-route flag bytes is not confirmed.
+; The second writer of a guard's patrol cursor, and the only one that
+; re-derives it outright rather than stepping by one - so a guard's X can jump
+; on room entry. IX walks the 4-entry #R$8A39 group at ($C54C); for each guard
+; it finds the #R$DEAB entry matching the guard's home column against room
+; column -1/0/+1 (skipping the guard if none match), masks the cursor's low 2
+; bits (AND $FC at $DE1E) and uses cursor>>2 as an offset into that entry.
+; #R$DE51 tests the 3-byte window there: all-zero leaves the cursor alone,
+; otherwise it scans forward up to 25 bytes for the first all-zero window and
+; stores 4x the distance back into the cursor - "snap to the next open spot on
+; the route, x4". Since #R$C276 calls this right before its #R$AA31 calls, and
+; stage 6 copies the cursor straight into (IX+9), this is what positions the
+; guard on the room's first frame. It also leaves the low 2 bits clear, so
+; #R$AA31's step budget is always 3 right after entry. What the route bytes
+; encode is still unconfirmed.
 c$DDF0 LD IX,($C54C) ; {IX -> guard table at ($C54C); B = 4 guards
  $DDF4 LD B,$04      ; }
 *$DDF6 PUSH BC       ;
@@ -12319,27 +12715,28 @@ c$DE5D LD HL,$E982   ;
  $DE66 LDIR          ;
  $DE68 RET           ;
 
-; Copy the $DEE7 template into $DECB (see #R$DE6E)
+; Copy the current column's route body out to $DEE7 (see #R$DE6E)
 ;
 ; Used by the routine at #R$DE97.
 ;
 ; .
 ;
-; Trivial: picks $DEE7 as the source, falls into #R$DE6E's shared 28-byte LDIR
-; into $DECB. Part of the still-unresolved $DEAB/$DECB template system (see
-; Actors.md's open question) - #R$DE97 uses this entry, #R$DEA1 uses #R$DE6E
-; directly for the other template.
+; Picks $DEE7 as the DESTINATION and falls into #R$DE6E's shared LDIR. Note the
+; direction: $DE71 loads HL (the source) with $DECB, so the copy runs $DECB ->
+; $DEE7, not the other way round.
 c$DE69 LD DE,$DEE7   ;
  $DE6C JR $DE71      ;
 
-; Copy a 28-byte template ($DEAF or, via #R$DE69, $DEE7) into $DECB
+; Copy the current column's route body ($DECB) out to $DEAF or $DEE7
 ;
 ; Used by the routine at #R$DEA1.
 ;
 ; .
 ;
-; Both entries just pick a source template before falling into the same LDIR;
-; DECB is the same buffer filled directly by #R$DE5D.
+; Both entries pick a destination in DE and then share the LDIR at $DE71, whose
+; source HL is always $DECB - entry 1's body, i.e. the column Robin is standing
+; in. So this shifts the current column's route data sideways into one of the
+; neighbour slots; #R$DE5D then reloads $DECB itself from $E982.
 c$DE6E LD DE,$DEAF   ;
 ; This entry point is used by the routine at #R$DE69.
 *$DE71 LD HL,$DECB   ;
@@ -12347,7 +12744,7 @@ c$DE6E LD DE,$DEAF   ;
  $DE77 LDIR          ;
  $DE79 RET           ;
 
-; Blank the template at $DEAF (see #R$DE7F)
+; Blank entry 0's route body at $DEAF (see #R$DE7F)
 ;
 ; Used by the routines at #R$DE8D and #R$DE97.
 ;
@@ -12360,7 +12757,7 @@ c$DE6E LD DE,$DEAF   ;
 c$DE7A LD HL,$DEAF   ;
  $DE7D JR $DE82      ;
 
-; Blank a 27-byte template ($DEE7, or via #R$DE7A, $DEAF), keep byte 0
+; Blank a 27-byte route body ($DEE7, or via #R$DE7A, $DEAF), keep byte 0
 ;
 ; Used by the routines at #R$DE8D and #R$DEA1.
 ;
@@ -12384,15 +12781,14 @@ c$DE7F LD HL,$DEE7   ;
 ;
 ; .
 ;
-; Blanks both 28-byte templates (#R$DE7A for $DEAF, #R$DE7F directly for $DEE7
-; - byte 0 of each left untouched), then refreshes the working copy at $DECB
-; from $E982 via #R$DE5D. One of the three room-block-flag-selected variants
-; called from #R$C276; see Actors.md's `$DEAB` open question for how this
-; template system relates to the (separately-addressed) 28-byte-stride table
-; `$DDF0` scans.
-c$DE8D CALL $DE7A    ; Blank the template at $DEAF
- $DE90 CALL $DE7F    ; Blank a 27-byte template ($DEE7, or via #R$DE7A, $DEAF),
-                     ; keep byte 0
+; The "neither neighbour carries over" variant of the three #R$C276 selects
+; between: blanks both neighbour bodies ($DEAF/$DEE7, byte 0 of each
+; untouched), then loads entry 1's body at $DECB fresh from $E982. The three
+; variants together form a shift register over #R$DEAB's entry bodies - see
+; #R$DE97/#R$DEA1 for the two shifting cases.
+c$DE8D CALL $DE7A    ; Blank entry 0's route body at $DEAF
+ $DE90 CALL $DE7F    ; Blank a 27-byte route body ($DEE7, or via #R$DE7A,
+                     ; $DEAF), keep byte 0
  $DE93 CALL $DE5D    ; Copy the $001C-byte block at $E982 to $DECB
  $DE96 RET           ;
 
@@ -12402,12 +12798,13 @@ c$DE8D CALL $DE7A    ; Blank the template at $DEAF
 ;
 ; .
 ;
-; Copies the $DEE7 template into $DECB (#R$DE69), blanks $DEAF (#R$DE7A), then
-; refreshes $DECB from $E982 via #R$DE5D. One of the three
-; room-block-flag-selected variants called from #R$C276; see #R$DE8D and
-; Actors.md's `$DEAB` open question.
-c$DE97 CALL $DE69    ; Copy the $DEE7 template into $DECB
- $DE9A CALL $DE7A    ; Blank the template at $DEAF
+; Shifts the current column's route body out to entry 2 ($DECB -> $DEE7 via
+; #R$DE69), blanks entry 0 ($DEAF via #R$DE7A), then reloads $DECB from $E982.
+; So the room Robin just left becomes the "one column right" neighbour and the
+; newly adjacent column on the other side starts empty - the mirror of #R$DEA1.
+; See #R$DE8D for the shift-register overview.
+c$DE97 CALL $DE69    ; Copy the current column's route body out to $DEE7
+ $DE9A CALL $DE7A    ; Blank entry 0's route body at $DEAF
  $DE9D CALL $DE5D    ; Copy the $001C-byte block at $E982 to $DECB
  $DEA0 RET           ;
 
@@ -12417,14 +12814,13 @@ c$DE97 CALL $DE69    ; Copy the $DEE7 template into $DECB
 ;
 ; .
 ;
-; #R$DE8D/#R$DE97/#R$DEA1 (called from #R$C276 based on the room's block flags)
-; each pick a different combination of the two 28-byte templates at $DEAF/$DEE7
-; to write and blank, before refreshing the working copy at $DECB from $E982
-; via #R$DE5D.
-c$DEA1 CALL $DE6E    ; Copy a 28-byte template ($DEAF or, via #R$DE69, $DEE7)
-                     ; into $DECB
- $DEA4 CALL $DE7F    ; Blank a 27-byte template ($DEE7, or via #R$DE7A, $DEAF),
-                     ; keep byte 0
+; Shifts the current column's route body out to entry 0 ($DECB -> $DEAF via
+; #R$DE6E), blanks entry 2 ($DEE7 via #R$DE7F), then reloads $DECB from $E982 -
+; the mirror of #R$DE97, for a room change in the opposite direction. See
+; #R$DE8D for the shift-register overview.
+c$DEA1 CALL $DE6E    ; Copy the current column's route body out to $DEAF
+ $DEA4 CALL $DE7F    ; Blank a 27-byte route body ($DEE7, or via #R$DE7A,
+                     ; $DEAF), keep byte 0
  $DEA7 CALL $DE5D    ; Copy the $001C-byte block at $E982 to $DECB
  $DEAA RET           ;
 
@@ -12434,11 +12830,17 @@ c$DEA1 CALL $DE6E    ; Copy a 28-byte template ($DEAF or, via #R$DE69, $DEE7)
 ;
 ; .
 ;
-; Scanned by #R$DDF0 as 28-byte entries keyed by a guard's home room nibble,
-; and used by #R$DE8D/#R$DE97/#R$DEA1 as two templates ($DEAF/$DEE7) copied
-; around a working copy at $DECB. Those two readings overlap, so the exact
-; entry boundaries are unconfirmed; #R$AA31 also reads a column reference at
-; $DEC7.
+; Three 28-byte entries ($DEAB/$DEC7/$DEE3), each a 4-byte header plus a
+; 24-byte body at start+4 ($DEAF/$DECB/$DEE7). #R$AA31 picks the entry by A =
+; (home column - room column + 1): 0/1/2 = Robin one column right of the
+; guard's home, on it, or one column left. #R$DE8D/#R$DE97/#R$DEA1 run the
+; bodies as a shift register on room entry - entry 1 always reloads from $E982
+; for Robin's new column, the column he left shifts into a neighbour or both
+; blank. Nothing pre-fills this with route data at game start: it ships holding
+; one-shot startup code (screen/menu setup from $DEB1, ending CALL #R$AC83),
+; recycled once that code has run - so all-zero live reads are that code
+; blanked by #R$DE7A/#R$DE7F, not an empty table. What seeds $E982 is not yet
+; traced.
 b$DEAB DEFB $00,$00,$00,$00,$59,$D0,$CD,$EE
  $DEB3 DEFB $CF,$CD,$04,$D0,$CD,$95,$D0,$CD
  $DEBB DEFB $67,$D0,$21,$C3,$D2,$CD,$E1,$CF
@@ -12457,39 +12859,18 @@ b$DEAB DEFB $00,$00,$00,$00,$59,$D0,$CD,$EE
 ;
 ; .
 ;
-; The Ent's weapon-purchase transaction: called every frame from #R$BF80, but
-; only acts while Robin stands in the Ent's room (#R$D3B2). $D5A1 (a shared
-; quest-stage counter, also read by #R$C462's forest-door hints) caps this at 3
-; total advances. $DFE6 is cleared on every room entry (#R$D5A7/#R$D5B6) and
-; set here once a transaction completes, so at most one payment is processed
-; per visit - Robin must leave and come back to pay again. While unset, a
-; 1-in-256 R-register roll throttles the check to roughly once a second. Each
-; check counts how many of the 8 event-status bytes at $D595 read $02 (money
-; bags robbed from the Bishop of Peterborough via #R$B919); fewer than 3 and
-; nothing happens (silently retried next tick). With 3 or more: flashes the
-; border, removes 3 of those $02 slots from $D595 (#R$DB82), prints per-slot
-; status messages (#R$DB98), knocks 3 off the arrow-hit counter #R$D5A5, then
-; resolves the purchase itself. If the sword flag #R$D59D is clear, this
-; payment buys the sword: sets it and prints message $B495. Otherwise, if the
-; arrow flag #R$D59E is clear, this payment buys the bow: sets it, prints
-; messages $B567 then $B4C1, and extends the $D5A0 countdown by 10. Otherwise
-; (sword and bow already owned), it prints one of 3 messages selected by the
-; current $D5A1 (offsets into $B556 by $0C for stage 1, $10 for stage 2) and
-; then advances $D5A1 - confirmed against a player-sourced walkthrough: these
-; are the 3 magic arrows, one per payment, sword and bow having already used
-; the first two of the 4 possible transactions. The one transaction a visit
-; allows also marks an attribute cell (#R$79F9's mirror bit picks $588D vs
-; $5894) with a patched colour (#R$DFCA): first with $12, then - since $DFE6 is
-; still clear the first (and only) time this runs per visit - after a long
-; busy-wait delay (~8M iterations) it re-marks the same cell with $04 and sets
-; $DFE6. This code is shared with other special-event rooms (where $588D/$5894
-; sit near the door), but in the Ent's own room $588D lands on attribute row 4,
-; column 13 - inside block #R$662C's own cells (the Ent's top-right quarter) -
-; so what plays out as a generic "mark near the door" flash elsewhere is, here,
-; the Ent's eye: $12 (red ink/red paper) turns the cell solid red, then after
-; the delay $04 (green ink/black paper) restores it to the eye's normal look -
-; one character cell blinking red and back, confirmed by a player screenshot of
-; the effect mid-transaction.
+; The Ent's weapon-purchase transaction: called every frame from #R$BF80, only
+; acts in the Ent's room (#R$D3B2), throttled to ~once/second and at most one
+; payment per room visit ($DFE6). Needs 3 of the 8 event-status bytes at $D595
+; reading $02 (gold bags from Bishop, #R$B919); with 3+, resolves in order
+; sword ($D59D) -> bow ($D59E, extends #R$D5A0) -> one of 3 magic arrows
+; selected/advanced by $D5A1. $D5A1 only counts arrow purchases, not the total
+; - sword and bow are gated purely by their own flags and never touch it - so
+; there are 5 Ent transactions total (sword, bow, 3 arrows), not the 4 an
+; earlier note claimed. The one payment per visit also flashes the Ent's eye:
+; an attribute cell shared with other special-event rooms' generic door-flash
+; code, but landing inside block #R$662C's own cells here, so it reads as the
+; Ent blinking rather than a door marker.
 c$DF03 LD HL,($D3B2) ;
  $DF06 LD DE,($C548) ;
  $DF0A OR A          ; {Only in the designated scenario room

@@ -70,7 +70,7 @@
 <tr>
 <td class="map-c"><span id="43569"></span><a href="../asm.html#43569">AA31</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#43569">Update a patrolling enemy's direction/animation state</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#43569">Update one guard: patrol step, frame list, and firing</a></div>
 </td>
 </tr>
 <tr>
@@ -112,7 +112,7 @@
 <tr>
 <td class="map-c"><span id="48322"></span><a href="../asm.html#48322">BCC2</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48322">Step the arrow one pixel along its diagonal flight, drawing it</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48322">Step all 4 projectiles one segment along their flight, drawing each</a></div>
 </td>
 </tr>
 <tr>
@@ -130,7 +130,7 @@
 <tr>
 <td class="map-c"><span id="48426"></span><a href="../asm.html#48426">BD2A</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48426">Mark the arrow's screen cell dirty in the $E500 buffer (glyph $46)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48426">Draw a projectile: XOR an 8x1 bar into the shadow screen, mark the cell bright yellow</a></div>
 </td>
 </tr>
 <tr>
@@ -142,7 +142,7 @@
 <tr>
 <td class="map-c"><span id="48547"></span><a href="../asm.html#48547">BDA3</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48547">Check Robin against up to 3 room hotspots at $BF69</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#48547">Check Robin against the 3 guard bullets in flight at $BF69</a></div>
 </td>
 </tr>
 <tr>
@@ -364,7 +364,7 @@
 <tr>
 <td class="map-c"><span id="51088"></span><a href="../asm.html#51088">C790</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51088">Save the background under a sprite frame to the buffer at $E500</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51088">Stamp a sprite frame's cell-colour pattern into the $E500 flag area</a></div>
 </td>
 </tr>
 <tr>
@@ -388,7 +388,7 @@
 <tr>
 <td class="map-c"><span id="51447"></span><a href="../asm.html#51447">C8F7</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51447">Advance an object's animation, unlink it from the list if done</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51447">Advance an object's animation, walking its frame-list cursor if due</a></div>
 </td>
 </tr>
 <tr>
@@ -448,13 +448,13 @@
 <tr>
 <td class="map-c"><span id="51985"></span><a href="../asm.html#51985">CB11</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51985">Facing/state $0A handler: run the per-direction handler <a href="../asm.html#52001">CB21</a></a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51985">STICK RIGHT ($0A) handler: run the per-direction handler <a href="../asm.html#52001">CB21</a></a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="51989"></span><a href="../asm.html#51989">CB15</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51989">Facing/state $0B handler: run the per-direction handler <a href="../asm.html#52001">CB21</a></a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#51989">STICK LEFT ($0B) handler: run the per-direction handler <a href="../asm.html#52001">CB21</a></a></div>
 </td>
 </tr>
 <tr>
@@ -892,25 +892,25 @@
 <tr>
 <td class="map-c"><span id="56937"></span><a href="../asm.html#56937">DE69</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56937">Copy the $DEE7 template into $DECB (see <a href="../asm.html#56942">DE6E</a>)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56937">Copy the current column's route body out to $DEE7 (see <a href="../asm.html#56942">DE6E</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="56942"></span><a href="../asm.html#56942">DE6E</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56942">Copy a 28-byte template ($DEAF or, via <a href="../asm.html#56937">DE69</a>, $DEE7) into $DECB</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56942">Copy the current column's route body ($DECB) out to $DEAF or $DEE7</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="56954"></span><a href="../asm.html#56954">DE7A</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56954">Blank the template at $DEAF (see <a href="../asm.html#56959">DE7F</a>)</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56954">Blank entry 0's route body at $DEAF (see <a href="../asm.html#56959">DE7F</a>)</a></div>
 </td>
 </tr>
 <tr>
 <td class="map-c"><span id="56959"></span><a href="../asm.html#56959">DE7F</a></td>
 <td class="map-c-desc">
-<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56959">Blank a 27-byte template ($DEE7, or via <a href="../asm.html#56954">DE7A</a>, $DEAF), keep byte 0</a></div>
+<div class="map-entry-title-10"><a class="map-entry-title" href="../asm.html#56959">Blank a 27-byte route body ($DEE7, or via <a href="../asm.html#56954">DE7A</a>, $DEAF), keep byte 0</a></div>
 </td>
 </tr>
 <tr>

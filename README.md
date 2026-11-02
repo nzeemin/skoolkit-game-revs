@@ -76,7 +76,8 @@ Browse: https://nzeemin.github.io/skoolkit-game-revs/scubadive-zx/scuba/
 Status: Work in progress (109K .ctl file).
 
 Follow-up projects:
-[vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive)
+[vector06c-scubadive](https://github.com/nzeemin/vector06c-scubadive) •
+[Amstrad CPC+/GX4000 Scuba Dive](https://www.youtube.com/watch?v=McmnvNZkYEo)
 
 
 ## Saboteur (ZX Spectrum)
